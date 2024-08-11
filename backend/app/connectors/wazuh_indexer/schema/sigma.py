@@ -65,6 +65,32 @@ class SigmaQueryOutResponse(BaseModel):
     success: bool
     message: str
 
+class ActivateSigmaQueryResponse(BaseModel):
+    """
+    Represents the Sigma query activation response.
+    """
+
+    success: bool
+    message: str
+    enabled_queries: List[str] = []
+
+class DeactivateSigmaQueryResponse(BaseModel):
+    """
+    Represents the Sigma query deactivation response.
+    """
+
+    success: bool
+    message: str
+    disabled_queries: List[str] = []
+
+class DeleteSigmaQueryResponse(BaseModel):
+    """
+    Represents the Sigma query deletion response.
+    """
+
+    success: bool
+    message: str
+    deleted_queries: List[str] = []
 
 class RunActiveSigmaQueries(BaseModel):
     query: str = Field(

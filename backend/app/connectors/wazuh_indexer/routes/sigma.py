@@ -16,11 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse, SigmaRuleUploadRequest
+from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse, SigmaRuleUploadRequest, DeleteSigmaQueryResponse
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
-from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest
+from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest, ActivateSigmaQueryResponse
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, DeactivateSigmaQueryResponse
 from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaActive
 from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaTimeInterval
 from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
@@ -37,7 +37,7 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     delete_sigma_rule,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    list_active_sigma_queries,
+    list_active_sigma_queries, list_inactive_sigma_queries
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     list_sigma_queries,
@@ -106,6 +106,25 @@ async def get_active_sigma_queries_endpoint(
     )
 
 
+@wazuh_indexer_sigma_router.get("/queries/inactive", response_model=SigmaQueryOutResponse)
+async def get_inactive_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Retrieves a list of inactive Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        List[SigmaQuery]: A list of Sigma queries.
+    """
+    return SigmaQueryOutResponse(
+        sigma_queries=await list_inactive_sigma_queries(db),
+        success=True,
+        message="Successfully retrieved the inactive Sigma queries.",
+    )
+
 @wazuh_indexer_sigma_router.post("/queries/create", response_model=SigmaQueryOutResponse)
 async def create_sigma_query_endpoint(
     sigma_query: CreateSigmaQuery,
@@ -169,7 +188,7 @@ async def upload_sigma_queries_to_db_endpoint(
     return BulkUploadToDBResponse(success=True, message="Successfully uploaded the Sigma queries to the database.")
 
 
-@wazuh_indexer_sigma_router.post("/activate-all-queries", response_model=SigmaQueryOutResponse)
+@wazuh_indexer_sigma_router.post("/activate-all-queries", response_model=ActivateSigmaQueryResponse)
 async def activate_all_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -181,18 +200,21 @@ async def activate_all_sigma_queries_endpoint(
         db (AsyncSession): The database session.
 
     Returns:
-        SigmaQueryOutResponse: The Sigma queries response.
+        ActivateSigmaQueryResponse: The Sigma queries response.
     """
     sigma_queries = await list_sigma_queries(db)
+    enabled_queries = []
     for query in sigma_queries:
         await set_sigma_query_active(query.rule_name, True, db)
-    return SigmaQueryOutResponse(
+        enabled_queries.append(query.rule_name)
+    return ActivateSigmaQueryResponse(
         success=True,
         message="Successfully activated all Sigma queries.",
+        enabled_queries=enabled_queries,
     )
 
 
-@wazuh_indexer_sigma_router.post("/deactivate-all-queries", response_model=SigmaQueryOutResponse)
+@wazuh_indexer_sigma_router.post("/deactivate-all-queries", response_model=DeactivateSigmaQueryResponse)
 async def deactivate_all_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -203,14 +225,17 @@ async def deactivate_all_sigma_queries_endpoint(
         db (AsyncSession): The database session.
 
     Returns:
-        SigmaQueryOutResponse: The Sigma queries response.
+        DeactivateSigmaQueryResponse: The Sigma queries response.
     """
     sigma_queries = await list_sigma_queries(db)
+    disabled_queries = []
     for query in sigma_queries:
         await set_sigma_query_active(query.rule_name, False, db)
-    return SigmaQueryOutResponse(
+        disabled_queries.append(query.rule_name)
+    return DeactivateSigmaQueryResponse(
         success=True,
         message="Successfully deactivated all Sigma queries.",
+        disabled_queries=disabled_queries,
     )
 
 
@@ -277,8 +302,8 @@ async def set_sigma_query_active_endpoint(
     Returns:
         SigmaQueryOutResponse: The Sigma queries response.
     """
-    await set_sigma_query_active(request.rule_name, request.active, db)
     return SigmaQueryOutResponse(
+        sigma_queries=[await set_sigma_query_active(request.rule_name, request.active, db)],
         success=True,
         message=f"Successfully set the active status of the Sigma query: {request.rule_name} to {request.active}",
     )
@@ -300,14 +325,14 @@ async def set_sigma_query_time_interval_endpoint(
     Returns:
         SigmaQueryOutResponse: The Sigma queries response.
     """
-    await update_sigma_time_interval(request.rule_name, request.time_interval, db)
     return SigmaQueryOutResponse(
+        sigma_queries=[await update_sigma_time_interval(request.rule_name, request.time_interval, db)],
         success=True,
         message=f"Successfully set the time interval of the Sigma query: {request.rule_name} to {request.time_interval}",
     )
 
 
-@wazuh_indexer_sigma_router.delete("/queries/delete", response_model=SigmaQueryOutResponse)
+@wazuh_indexer_sigma_router.delete("/queries/delete", response_model=DeleteSigmaQueryResponse)
 async def delete_sigma_rule_endpoint(
     rule_name: str = Query(...),
     db: AsyncSession = Depends(get_db),
@@ -323,13 +348,14 @@ async def delete_sigma_rule_endpoint(
         SigmaQueryOutResponse: The Sigma queries response.
     """
     await delete_sigma_rule(rule_name, db)
-    return SigmaQueryOutResponse(
+    return DeleteSigmaQueryResponse(
+        deleted_queries=[rule_name],
         success=True,
         message=f"Successfully deleted the Sigma query: {rule_name}",
     )
 
 
-@wazuh_indexer_sigma_router.delete("/queries/delete-all", response_model=SigmaQueryOutResponse)
+@wazuh_indexer_sigma_router.delete("/queries/delete-all", response_model=DeleteSigmaQueryResponse)
 async def delete_all_sigma_rules_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -340,12 +366,15 @@ async def delete_all_sigma_rules_endpoint(
         db (AsyncSession): The database session.
 
     Returns:
-        SigmaQueryOutResponse: The Sigma queries response.
+        DeleteSigmaQueryResponse: The Sigma queries response.
     """
     sigma_queries = await list_sigma_queries(db)
+    deleted_queries = []
     for query in sigma_queries:
         await delete_sigma_rule(query.rule_name, db)
-    return SigmaQueryOutResponse(
+        deleted_queries.append(query.rule_name)
+    return DeleteSigmaQueryResponse(
+        deleted_queries=deleted_queries,
         success=True,
         message="Successfully deleted all Sigma queries.",
     )

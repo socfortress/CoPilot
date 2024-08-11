@@ -141,6 +141,24 @@ async def list_active_sigma_queries(
 
     return sigma_queries
 
+async def list_inactive_sigma_queries(
+    db: AsyncSession,
+) -> List[SigmaQuery]:
+    """
+    Retrieves a list of inactive Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        List[SigmaQuery]: A list of inactive Sigma queries.
+    """
+    # Retrieve the inactive Sigma queries
+    sigma_queries = await db.execute(select(SigmaQuery).filter_by(active=False))
+    sigma_queries = sigma_queries.scalars().all()
+
+    return sigma_queries
+
 
 async def create_sigma_query(
     sigma_query: CreateSigmaQuery,
@@ -261,7 +279,7 @@ async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession)
             status_code=404,
             detail="The Sigma rule does not exist.",
         )
-    return None
+    return query
 
 
 async def update_sigma_time_interval(rule_name: str, time_interval: str, db: AsyncSession):
@@ -275,4 +293,4 @@ async def update_sigma_time_interval(rule_name: str, time_interval: str, db: Asy
             status_code=404,
             detail="The Sigma rule does not exist.",
         )
-    return None
+    return query
