@@ -5,8 +5,10 @@ from datetime import timedelta
 from typing import List
 
 import yaml
+from fastapi import File
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import UploadFile
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
@@ -34,7 +36,7 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     create_sigma_query,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    delete_sigma_rule,
+    delete_sigma_rule, read_sigma_rule, process_sigma_file
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     list_active_sigma_queries, list_inactive_sigma_queries
@@ -64,6 +66,36 @@ from app.connectors.wazuh_indexer.utils.universal import (
 from app.db.db_session import get_db
 
 wazuh_indexer_sigma_router = APIRouter()
+
+def save_file(file: UploadFile, file_path: str):
+    """
+    Save the uploaded file to the specified path.
+
+    Args:
+        file (UploadFile): The uploaded file.
+        file_path (str): The path to save the file.
+    """
+    try:
+        with open(file_path, "wb") as f:
+            f.write(file.file.read())
+        logger.info(f"File saved to {file_path}")
+    except Exception as e:
+        logger.error(f"Error saving file: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while saving the file.")
+
+def cleanup_file(file_path: str):
+    """
+    Remove the file from the specified path.
+
+    Args:
+        file_path (str): The path of the file to remove.
+    """
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"File {file_path} removed")
+    except Exception as e:
+        logger.error(f"Error removing file: {e}")
 
 
 @wazuh_indexer_sigma_router.get("/queries/available", response_model=SigmaQueryOutResponse)
@@ -285,6 +317,35 @@ async def run_active_sigma_queries_endpoint(
         message="Successfully ran the active Sigma queries.",
     )
 
+@wazuh_indexer_sigma_router.post("/upload")
+async def upload_sigma_queries_endpoint(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Uploads the Sigma queries to the database.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    if not file.filename.endswith(".yml"):
+        raise HTTPException(status_code=400, detail="File must be a YAML file.")
+
+    file_path = f"app/connectors/wazuh_indexer/sigma_artifacts/{file.filename}"
+
+    try:
+        save_file(file, file_path)
+        await process_sigma_file(file=file_path, db=db)
+    except Exception as e:
+        logger.error(f"Error processing Sigma file: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while processing the file.")
+    finally:
+        cleanup_file(file_path)
+
+    return {"message": "Successfully uploaded the Sigma queries to the database.", "success": True}
 
 @wazuh_indexer_sigma_router.put("/queries/set-active", response_model=SigmaQueryOutResponse)
 async def set_sigma_query_active_endpoint(
