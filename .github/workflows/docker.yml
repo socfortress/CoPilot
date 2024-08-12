@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [main]
+        branches: [incident-management]
 
 jobs:
     build-backend:
