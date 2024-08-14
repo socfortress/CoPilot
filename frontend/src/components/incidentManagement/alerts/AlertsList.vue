@@ -1,7 +1,7 @@
 <template>
 	<div class="alerts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
-			<div class="info grow flex gap-2 lg:hidden">
+			<div class="info grow flex gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
 						<div class="bg-color border-radius">
