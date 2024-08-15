@@ -273,6 +273,7 @@ async def deactivate_all_sigma_queries_endpoint(
 
 @wazuh_indexer_sigma_router.post("/run-active-queries", response_model=SigmaQueryOutResponse)
 async def run_active_sigma_queries_endpoint(
+    index_name: str = Query(default="wazuh*"),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -301,7 +302,7 @@ async def run_active_sigma_queries_endpoint(
                     time_interval=query.time_interval,
                     last_execution_time=query.last_execution_time,
                     rule_name=query.rule_name,
-                    index="new-wazuh*",
+                    index=index_name,
                 ),
                 session=db,
             )
