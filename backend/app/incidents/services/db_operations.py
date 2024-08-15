@@ -67,6 +67,7 @@ async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
     return result.scalars().first()
 
+# ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def get_customer_code_names(source: str, session: AsyncSession):
     result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
     return result.scalars().first()
@@ -128,6 +129,7 @@ async def add_alert_title_name(source: str, alert_title_name: str, session: Asyn
         alert_title = AlertTitleFieldName(source=source, field_name=alert_title_name)
         session.add(alert_title)
 
+# ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def add_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     result = await session.execute(
         select(CustomerCodeFieldName).where((CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name)),
@@ -193,6 +195,7 @@ async def replace_alert_title_name(source: str, alert_title_name: str, session: 
     # Commit the changes
     await session.commit()
 
+# ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def replace_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     # Load the current customer_code for this source from the DB, then delete it and replace it with `customer_code_name`
     result = await session.execute(select(CustomerCodeFieldName).where(CustomerCodeFieldName.source == source))
@@ -243,6 +246,7 @@ async def delete_alert_title_name(source: str, alert_title_name: str, session: A
     if alert_title:
         await session.delete(alert_title)
 
+# ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def delete_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     logger.info(f"Deleting customer code name {customer_code_name} for source {source}")
     customer_code = await session.execute(

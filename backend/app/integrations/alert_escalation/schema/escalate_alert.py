@@ -13,6 +13,7 @@ class CustomerCodeKeys(Enum):
     AGENT_LABELS_CUSTOMER = "agent_labels_customer"
     DATA_OFFICE365_ORGANIZATION_ID = "data_office365_OrganizationId"
     SYSLOG_CUSTOMER = "syslog_customer"
+    CUSTOMER_CODE = "customer_code"
 
 
 class SyslogLevelMapping(Enum):

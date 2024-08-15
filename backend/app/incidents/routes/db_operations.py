@@ -180,7 +180,6 @@ async def get_source_fields_and_assets(source: str, session: AsyncSession = Depe
         asset_name=await get_asset_names(source, session),
         timefield_name=await get_timefield_names(source, session),
         alert_title_name=await get_alert_title_names(source, session),
-        customer_code_name=await get_customer_code_names(source, session),
         source=source,
         success=True,
         message="Field names and asset names retrieved successfully",
@@ -197,8 +196,6 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
     await add_timefield_name(names.source, names.timefield_name, session)
 
     await add_alert_title_name(names.source, names.alert_title_name, session)
-
-    await add_customer_code_name(names.source, names.customer_code_name, session)
 
     logger.info(f"Field names and asset names created successfully for source {names.source}")
 
@@ -217,8 +214,6 @@ async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSess
 
     await replace_alert_title_name(names.source, names.alert_title_name, session)
 
-    await replace_customer_code_name(names.source, names.customer_code_name, session)
-
     return {"message": "Field names and asset names created successfully", "success": True}
 
 
@@ -232,8 +227,6 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
     await delete_timefield_name(names.source, names.timefield_name, session)
 
     await delete_alert_title_name(names.source, names.alert_title_name, session)
-
-    await delete_customer_code_name(names.source, names.customer_code_name, session)
 
     await session.commit()
 
