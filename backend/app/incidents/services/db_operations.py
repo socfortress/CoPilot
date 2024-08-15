@@ -19,7 +19,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
-from app.incidents.models import FieldName, Notification
+from app.incidents.models import FieldName, Notification, CustomerCodeFieldName
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
@@ -65,6 +65,10 @@ async def get_timefield_names(source: str, session: AsyncSession):
 
 async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
+    return result.scalars().first()
+
+async def get_customer_code_names(source: str, session: AsyncSession):
+    result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
     return result.scalars().first()
 
 
@@ -124,6 +128,15 @@ async def add_alert_title_name(source: str, alert_title_name: str, session: Asyn
         alert_title = AlertTitleFieldName(source=source, field_name=alert_title_name)
         session.add(alert_title)
 
+async def add_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
+    result = await session.execute(
+        select(CustomerCodeFieldName).where((CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name)),
+    )
+    existing_customer_code = result.scalars().first()
+    if existing_customer_code is None:
+        customer_code = CustomerCodeFieldName(source=source, field_name=customer_code_name)
+        session.add(customer_code)
+
 
 async def replace_field_name(source: str, field_names: List[str], session: AsyncSession):
     # First delete all the field names for this source, then add the new field names
@@ -180,6 +193,18 @@ async def replace_alert_title_name(source: str, alert_title_name: str, session: 
     # Commit the changes
     await session.commit()
 
+async def replace_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
+    # Load the current customer_code for this source from the DB, then delete it and replace it with `customer_code_name`
+    result = await session.execute(select(CustomerCodeFieldName).where(CustomerCodeFieldName.source == source))
+    customer_codes = result.scalars().all()
+
+    # Assuming you want to update the field_name for all customer_codes matching the source
+    for customer_code in customer_codes:
+        customer_code.field_name = customer_code_name
+
+    # Commit the changes
+    await session.commit()
+
 
 async def delete_field_name(source: str, field_name: str, session: AsyncSession):
     logger.info(f"Deleting field name {field_name} for source {source}")
@@ -217,6 +242,15 @@ async def delete_alert_title_name(source: str, alert_title_name: str, session: A
     alert_title = alert_title.scalar_one_or_none()
     if alert_title:
         await session.delete(alert_title)
+
+async def delete_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
+    logger.info(f"Deleting customer code name {customer_code_name} for source {source}")
+    customer_code = await session.execute(
+        select(CustomerCodeFieldName).where((CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name)),
+    )
+    customer_code = customer_code.scalar_one_or_none()
+    if customer_code:
+        await session.delete(customer_code)
 
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:

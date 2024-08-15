@@ -112,6 +112,7 @@ class FieldAndAssetNames(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    customer_code_name: str
     source: str
 
 
@@ -120,6 +121,7 @@ class FieldAndAssetNamesResponse(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    customer_code_name: str
     source: str
     success: bool
     message: str
