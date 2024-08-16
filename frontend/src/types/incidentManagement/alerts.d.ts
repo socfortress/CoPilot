@@ -1,3 +1,5 @@
+import type { Case } from "./cases.d"
+
 export interface Alert {
 	id: number
 	alert_creation_time: Date
@@ -11,6 +13,7 @@ export interface Alert {
 	comments: AlertComment[]
 	assets: AlertAsset[]
 	tags: AlertTag[]
+	linked_cases: Omit<Case, "alerts">[]
 }
 
 export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS"
