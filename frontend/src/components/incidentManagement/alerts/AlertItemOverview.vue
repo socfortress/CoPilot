@@ -125,7 +125,7 @@
 					<KVCard>
 						<template #key>tags</template>
 						<template #value>
-							<div class="flex flex-wrap gap-2">
+							<div class="flex flex-wrap gap-2" v-if="alert.tags?.length">
 								<n-tag
 									closable
 									@close="deleteTag(tag)"
@@ -136,16 +136,18 @@
 									{{ tag }}
 								</n-tag>
 							</div>
+							<span v-else>-</span>
 						</template>
 					</KVCard>
 				</div>
 			</div>
 
 			<div class="footer-box px-7 py-4 flex justify-between">
-				<n-button secondary @click="createCase()" v-if="!hideCreateCaseButton">
+				<n-button secondary @click="createCase()" :loading="creating" v-if="!hideCreateCaseButton">
 					<template #icon><Icon :name="DangerIcon" /></template>
 					Create case
 				</n-button>
+				<div class="grow"></div>
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon><Icon :name="TrashIcon" /></template>
 					Delete
@@ -186,13 +188,30 @@ const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
+const creating = ref(false)
 
 function updateAlert(updatedAlert: Alert) {
 	emit("updated", updatedAlert)
 }
 
 function createCase() {
-	// TODO: to implement
+	creating.value = true
+
+	Api.incidentManagement
+		.createCase(alert.value.id)
+		.then(res => {
+			if (res.data.success) {
+				message.success(res.data?.message || "Case created successfully")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			creating.value = false
+		})
 }
 
 function handleDelete() {
