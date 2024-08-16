@@ -3,9 +3,12 @@
 		<n-spin :show="loading">
 			<div class="flex flex-col" v-if="incidentCase">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
 						<span>#{{ incidentCase.id }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
+					</div>
+					<div class="time" v-if="incidentCase.case_creation_time">
+						{{ formatDate(incidentCase.case_creation_time, dFormats.datetime) }}
 					</div>
 				</div>
 
@@ -128,34 +131,31 @@
 
 		<n-modal
 			v-model:show="showDetails"
-			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(482px, 90vh)', overflow: 'hidden' }"
 		>
 			<n-card
 				content-class="flex flex-col !p-0"
 				:title="caseNameTruncated"
 				closable
-				@close="showDetails = false"
+				@close="closeDetails()"
 				:bordered="false"
 				segmented
 				role="modal"
 			>
-				details
-				<!--
-				<AlertItemDetails
-				v-if="alert"
-				:caseData="alert"
-				:availableUsers
-				@deleted="emitDelete()"
-				@updated="updateCase($event)"
+				<CaseDetails
+					v-if="incidentCase"
+					:caseData="incidentCase"
+					:availableUsers
+					@deleted="emitDelete()"
+					@updated="updateCase($event)"
 				/>
-				-->
 			</n-card>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import { NModal, NButton, NCollapse, NCollapseItem, NSpin, NCard, NEmpty, useMessage, useDialog } from "naive-ui"
 import _clone from "lodash/cloneDeep"
 import Api from "@/api"
@@ -163,15 +163,18 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
+import CaseDetails from "./CaseDetails.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import AlertItem from "../alerts/AlertItem.vue"
+import { formatDate } from "@/utils"
 import { handleDeleteCase } from "./utils"
 import _truncate from "lodash/truncate"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import { useSettingsStore } from "@/stores/settings"
 
-const props = defineProps<{ caseData?: Case; caseId?: number; availableUsers?: string[] }>()
-const { caseData, caseId, availableUsers } = toRefs(props)
+const props = defineProps<{ caseData?: Case; caseId?: number; availableUsers?: string[]; detailsOnMounted?: boolean }>()
+const { caseData, caseId, availableUsers, detailsOnMounted } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -183,6 +186,7 @@ const EditIcon = "uil:edit-alt"
 
 const dialog = useDialog()
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const showDetails = ref(false)
 const incidentCase = ref<Case | null>(null)
@@ -237,11 +241,25 @@ function emitDelete() {
 	emit("deleted")
 }
 
+function openDetails() {
+	showDetails.value = true
+}
+
+function closeDetails() {
+	showDetails.value = false
+}
+
 onBeforeMount(() => {
 	if (caseId.value) {
 		getCase(caseId.value)
 	} else if (caseData.value) {
 		incidentCase.value = _clone(caseData.value)
+	}
+})
+
+onMounted(() => {
+	if (detailsOnMounted.value) {
+		openDetails()
 	}
 })
 </script>
@@ -286,19 +304,6 @@ onBeforeMount(() => {
 
 	&:hover {
 		box-shadow: 0px 0px 0px 1px var(--primary-040-color);
-	}
-
-	@container (max-width: 600px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.footer-box {
-			.time {
-				display: flex;
-			}
-		}
 	}
 }
 </style>

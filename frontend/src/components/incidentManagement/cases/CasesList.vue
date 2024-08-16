@@ -134,6 +134,7 @@
 						:key="item.id"
 						:caseData="item"
 						:availableUsers
+						:detailsOnMounted="highlight === item.id.toString()"
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
 						@updated="updateCase($event)"
@@ -157,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch } from "vue"
+import { ref, onBeforeMount, computed, watch, toRefs } from "vue"
 import {
 	useMessage,
 	NSpin,
@@ -185,6 +186,9 @@ export interface CasesListFilter {
 	value: string | AlertStatus
 }
 
+const props = defineProps<{ highlight: string | null | undefined }>()
+const { highlight } = toRefs(props)
+
 const message = useMessage()
 const loading = ref(false)
 const showFilters = ref(false)
@@ -203,7 +207,7 @@ const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
-	const list = _orderBy(casesList.value, ["alert_creation_time", "time_closed"], ["desc", "desc"])
+	const list = _orderBy(casesList.value, ["id"], ["desc"])
 
 	return list.slice(from, to)
 })
