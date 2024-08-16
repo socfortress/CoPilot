@@ -307,6 +307,7 @@ async def run_active_sigma_queries_endpoint(
                 session=db,
             )
             # Update the last execution time to the current time and commit the changes
+            # ! Remove commented out code after testing ! #
             query.last_execution_time = current_time
             await db.commit()
         else:
