@@ -252,6 +252,7 @@ class CaseOut(BaseModel):
     assigned_to: Optional[str] = None
     alerts: Optional[List[AlertOut]] = []
     case_status: Optional[str] = None
+    case_creation_time: Optional[datetime] = None
 
 
 class CaseOutResponse(BaseModel):

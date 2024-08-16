@@ -610,6 +610,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         case_description=case.case_description,
         assigned_to=case.assigned_to,
         alerts=alerts_out,
+        case_creation_time=case.case_creation_time,
     )
     return case_out
 
@@ -655,6 +656,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            case_creation_time=case.case_creation_time,
         )
         cases_out.append(case_out)
     return cases_out
