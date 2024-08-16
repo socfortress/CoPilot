@@ -103,6 +103,34 @@ async def extract_title(file_path):
 
     return title
 
+async def get_sigma_query_by_id(
+    db: AsyncSession,
+    sigma_query_id: int,
+) -> SigmaQuery:
+    """
+    Retrieves a Sigma query by ID.
+
+    Args:
+        db (AsyncSession): The database session.
+        sigma_query_id (int): The ID of the Sigma query.
+
+    Returns:
+        SigmaQuery: The Sigma query.
+    """
+    # Retrieve the Sigma query
+    sigma_query = await db.execute(
+        select(SigmaQuery).filter_by(id=sigma_query_id)
+    )
+    sigma_query = sigma_query.scalars().first()
+
+    if not sigma_query:
+        raise HTTPException(
+            status_code=404,
+            detail="The Sigma query does not exist.",
+        )
+
+    return sigma_query
+
 
 async def list_sigma_queries(
     db: AsyncSession,

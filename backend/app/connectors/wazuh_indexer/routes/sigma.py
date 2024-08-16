@@ -48,7 +48,7 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     parse_time_interval,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    set_sigma_query_active,
+    set_sigma_query_active, get_sigma_query_by_id
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     update_sigma_time_interval,
@@ -314,6 +314,47 @@ async def run_active_sigma_queries_endpoint(
             time_comparison = current_time - query.last_execution_time
             logger.info(f"Time comparison: {time_comparison}")
             logger.info(f"Skipping Sigma query because the time interval has not passed: {query.rule_name}")
+    return SigmaQueryOutResponse(
+        success=True,
+        message="Successfully ran the active Sigma queries.",
+    )
+
+@wazuh_indexer_sigma_router.post("/run-single-query", response_model=SigmaQueryOutResponse)
+async def run_single_sigma_query_endpoint(
+    index_name: str = Query(default="wazuh*"),
+    rule_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Runs a single Sigma query.
+
+    Args:
+        db (AsyncSession): The database session.
+        rule_id (int): The rule ID to run.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    query = await get_sigma_query_by_id(db=db, sigma_query_id=rule_id)
+    time_interval_delta = parse_time_interval(query.time_interval)
+    current_time = datetime.now()
+    if current_time < query.last_execution_time or current_time - query.last_execution_time >= time_interval_delta:
+        await execute_query(
+            RunActiveSigmaQueries(
+                query=query.rule_query,
+                time_interval=query.time_interval,
+                last_execution_time=query.last_execution_time,
+                rule_name=query.rule_name,
+                index=index_name,
+            ),
+            session=db,
+        )
+        query.last_execution_time = current_time
+        await db.commit()
+    else:
+        time_comparison = current_time - query.last_execution_time
+        logger.info(f"Time comparison: {time_comparison}")
+        logger.info(f"Skipping Sigma query because the time interval has not passed: {query.rule_name}")
     return SigmaQueryOutResponse(
         success=True,
         message="Successfully ran the active Sigma queries.",

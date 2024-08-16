@@ -575,6 +575,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
         ),
     )
     case = result.scalars().first()
@@ -586,6 +587,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -599,6 +601,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             comments=comments,
             assets=assets,
             tags=tags,
+            linked_cases=linked_cases,
         )
         alerts_out.append(alert_out)
     case_out = CaseOut(
@@ -617,6 +620,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
         ),
     )
     cases = result.scalars().all()
@@ -628,6 +632,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
             alert_out = AlertOut(
                 id=alert.id,
                 alert_creation_time=alert.alert_creation_time,
@@ -641,6 +646,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 comments=comments,
                 assets=assets,
                 tags=tags,
+                linked_cases=linked_cases,
             )
             alerts_out.append(alert_out)
         case_out = CaseOut(
