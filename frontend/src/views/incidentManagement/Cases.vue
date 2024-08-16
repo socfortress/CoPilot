@@ -1,9 +1,21 @@
 <template>
 	<div class="page">
-		<CasesList />
+		<CasesList :highlight />
 	</div>
 </template>
 
 <script setup lang="ts">
 import CasesList from "@/components/incidentManagement/cases/CasesList.vue"
+import { onBeforeMount, ref } from "vue"
+import { useRoute } from "vue-router"
+
+const route = useRoute()
+
+const highlight = ref<string | undefined>(undefined)
+
+onBeforeMount(() => {
+	if (route.query?.case_id) {
+		highlight.value = route.query.case_id.toString() || undefined
+	}
+})
 </script>

@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<SocUsersList :highlight="highlight" />
+		<SocUsersList :highlight />
 	</div>
 </template>
 
