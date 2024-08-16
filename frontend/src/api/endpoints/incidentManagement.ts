@@ -1,14 +1,8 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import type {
-	Alert,
-	AlertComment,
-	AlertContext,
-	AlertStatus,
-	AlertTag,
-	Case
-} from "@/types/incidentManagement/alerts.d"
+import type { Alert, AlertComment, AlertContext, AlertStatus, AlertTag } from "@/types/incidentManagement/alerts.d"
+import type { Case } from "@/types/incidentManagement/cases.d"
 
 export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
 
