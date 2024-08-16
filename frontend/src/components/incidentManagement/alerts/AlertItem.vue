@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="alert-item"
-		:class="['status-' + alert?.status, { compact, 'cursor-pointer': compact }]"
+		:class="['status-' + alert?.status, { compact, embedded, 'cursor-pointer': compact }]"
 		@click="compact ? openDetails() : undefined"
 	>
 		<n-spin :show="loading">
@@ -231,7 +231,6 @@
 					v-if="alert"
 					:alertData="alert"
 					:availableUsers
-					:hide-create-case-button="compact"
 					@deleted="emitDelete()"
 					@updated="updateAlert($event)"
 				/>
@@ -260,8 +259,14 @@ import { handleDeleteAlert } from "./utils"
 import _truncate from "lodash/truncate"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
-const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[]; compact?: boolean }>()
-const { alertData, alertId, availableUsers, compact } = toRefs(props)
+const props = defineProps<{
+	alertData?: Alert
+	alertId?: number
+	availableUsers?: string[]
+	compact?: boolean
+	embedded?: boolean
+}>()
+const { alertData, alertId, availableUsers, compact, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -344,6 +349,8 @@ function closeDetails() {
 onBeforeMount(() => {
 	if (alertId.value) {
 		getAlert(alertId.value)
+	} else if (alertData.value?.id && alertData.value?.linked_cases === undefined) {
+		getAlert(alertData.value.id)
 	} else if (alertData.value) {
 		alert.value = _clone(alertData.value)
 	}
@@ -382,6 +389,10 @@ onBeforeMount(() => {
 		.time {
 			display: none;
 		}
+	}
+
+	&.embedded {
+		background-color: var(--bg-secondary-color);
 	}
 
 	&:hover {
