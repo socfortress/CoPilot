@@ -63,13 +63,13 @@ from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import create_alert
+from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, replace_customer_code_name
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
-from app.incidents.services.db_operations import create_case_from_alert
+from app.incidents.services.db_operations import create_case_from_alert, add_customer_code_name
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_tag

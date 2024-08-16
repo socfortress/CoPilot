@@ -15,6 +15,38 @@ from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.utils.universal import send_get_request
 
 
+# async def get_indices_full() -> GraylogIndicesResponse:
+#     """Get indices from Graylog.
+
+#     Returns:
+#         GraylogIndicesResponse: The response object containing the collected indices.
+
+#     Raises:
+#         HTTPException: If there is an error collecting the indices.
+#     """
+#     logger.info("Getting indices from Graylog")
+#     indices_collected = await send_get_request(endpoint="/api/system/indexer/indices")
+#     if indices_collected["success"]:
+#         try:
+#             indices_data = indices_collected["data"]["all"]["indices"]
+#         except KeyError:
+#             raise HTTPException(status_code=500, detail="Failed to collect indices key")
+
+#         # Convert the dictionary to a list of GraylogIndexItem
+#         indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]
+
+#         return GraylogIndicesResponse(
+#             indices=indices_list,
+#             success=True,
+#             message="Indices collected successfully",
+#         )
+#     else:
+#         return GraylogIndicesResponse(
+#             indices=[],
+#             success=False,
+#             message="Failed to collect indices",
+#         )
+
 async def get_indices_full() -> GraylogIndicesResponse:
     """Get indices from Graylog.
 
@@ -32,8 +64,13 @@ async def get_indices_full() -> GraylogIndicesResponse:
         except KeyError:
             raise HTTPException(status_code=500, detail="Failed to collect indices key")
 
-        # Convert the dictionary to a list of GraylogIndexItem
-        indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]
+        # Check if indices_data is a dictionary or a list and process accordingly
+        if isinstance(indices_data, dict):
+            indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]
+        elif isinstance(indices_data, list):
+            indices_list = [GraylogIndexItem(index_name=index["index_name"], index_info=index) for index in indices_data]
+        else:
+            raise HTTPException(status_code=500, detail="Unexpected format for indices data")
 
         return GraylogIndicesResponse(
             indices=indices_list,
@@ -46,7 +83,6 @@ async def get_indices_full() -> GraylogIndicesResponse:
             success=False,
             message="Failed to collect indices",
         )
-
 
 async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
     """
