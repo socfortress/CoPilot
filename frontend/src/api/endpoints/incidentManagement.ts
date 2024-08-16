@@ -1,7 +1,14 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import type { Alert, AlertComment, AlertContext, AlertStatus, AlertTag } from "@/types/incidentManagement/alerts.d"
+import type {
+	Alert,
+	AlertComment,
+	AlertContext,
+	AlertDetails,
+	AlertStatus,
+	AlertTag
+} from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
 export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
@@ -72,6 +79,12 @@ export default {
 	},
 	getAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(`/incidents/db_operations/alert/${alertId}`)
+	},
+	getAlertDetails(indexId: string, indexName: string) {
+		return HttpClient.post<FlaskBaseResponse & { alert_details: AlertDetails }>(`/incidents/alerts/alert/details`, {
+			index_id: indexId,
+			index_name: indexName
+		})
 	},
 	getAvailableUsers() {
 		return HttpClient.get<FlaskBaseResponse & { available_users: string[] }>(

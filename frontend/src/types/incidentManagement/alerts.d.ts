@@ -47,8 +47,20 @@ export interface AlertContext {
 }
 
 export interface AlertContextDetails {
-	rule_description: string
-	data_win_eventdata_image: string
-	data_win_eventdata_parentImage: string
+	[key: string]: string | string[] | number | object
 	process_name: string[]
+}
+
+export interface AlertDetails {
+	asset_type_id: null | number
+	ioc_value: null | string
+	ioc_type: null | string
+	time_field: string
+	syslog_type: string
+	_index: string
+	_version: number
+	_id: string
+	_source: {
+		[key: string]: string | string[] | number | object
+	}
 }
