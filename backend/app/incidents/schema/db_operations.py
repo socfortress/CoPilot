@@ -165,6 +165,14 @@ class CaseCreate(BaseModel):
     case_status: str
     assigned_to: str
 
+class LinkedCaseCreate(BaseModel):
+    case_name: str
+    case_description: str
+    case_creation_time: datetime
+    case_status: str
+    assigned_to: Optional[str ] = None
+    id: int
+
 
 class CaseCreateFromAlert(BaseModel):
     alert_id: int
@@ -228,6 +236,7 @@ class AlertOut(BaseModel):
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
+    linked_cases: List[LinkedCaseCreate] = []
 
 
 class AlertOutResponse(BaseModel):

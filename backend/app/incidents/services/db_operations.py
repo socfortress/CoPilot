@@ -29,7 +29,7 @@ from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate, PutNotification
-from app.incidents.schema.db_operations import CaseCreate
+from app.incidents.schema.db_operations import CaseCreate, LinkedCaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
@@ -437,12 +437,46 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
     return alert_out
 
 
+# async def list_alerts(db: AsyncSession) -> List[AlertOut]:
+#     result = await db.execute(
+#         select(Alert).options(
+#             selectinload(Alert.comments),
+#             selectinload(Alert.assets),
+#             selectinload(Alert.cases),
+#             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+#         ),
+#     )
+#     alerts = result.scalars().all()
+#     alerts_out = []
+#     for alert in alerts:
+#         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+#         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+#         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+#         linked_cases = [CaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+#         alert_out = AlertOut(
+#             id=alert.id,
+#             alert_creation_time=alert.alert_creation_time,
+#             time_closed=alert.time_closed,
+#             alert_name=alert.alert_name,
+#             alert_description=alert.alert_description,
+#             status=alert.status,
+#             customer_code=alert.customer_code,
+#             source=alert.source,
+#             assigned_to=alert.assigned_to,
+#             comments=comments,
+#             assets=assets,
+#             tags=tags,
+#             linked_cases=linked_cases,
+#         )
+#         alerts_out.append(alert_out)
+#     return alerts_out
+
 async def list_alerts(db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
         select(Alert).options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
-            selectinload(Alert.cases),
+            selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         ),
     )
@@ -452,6 +486,7 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -465,6 +500,7 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
             comments=comments,
             assets=assets,
             tags=tags,
+            linked_cases=linked_cases,
         )
         alerts_out.append(alert_out)
     return alerts_out
