@@ -408,6 +408,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
         .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
+            selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         ),
     )
@@ -418,6 +419,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
     comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
     assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
     tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+    linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
 
     alert_out = AlertOut(
         id=alert.id,
@@ -432,6 +434,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
         comments=comments,
         assets=assets,
         tags=tags,
+        linked_cases=linked_cases,
     )
 
     return alert_out
