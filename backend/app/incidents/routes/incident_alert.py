@@ -11,14 +11,15 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AutoCreateAlertResponse
-from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import AlertDetailsResponse
 from app.incidents.schema.incident_alert import CreateAlertResponse
-from app.incidents.schema.incident_alert import IndexNamesResponse
+from app.incidents.schema.incident_alert import IndexNamesResponse, CreateAlertRequest
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
+from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import create_alert
 
 incidents_alerts_router = APIRouter()
@@ -51,6 +52,27 @@ async def get_alerts_not_created_route() -> AlertsPayload:
         List[AlertPayloadItem]: The list of alerts that have not been created in CoPilot.
     """
     return await get_alerts_not_created_in_copilot()
+
+@incidents_alerts_router.post(
+    "/alert/details",
+    description="Get the details of a single alert",
+)
+async def get_single_alert_details_route(
+    create_alert_request: CreateAlertRequest,
+) -> AlertDetailsResponse:
+    """
+    Get the details of a single alert. Get the details of a single alert based on the alert id.
+    Takes the alert id and the index name as input.
+
+    Args:
+        create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
+
+    Returns:
+        class AlertDetailsResponse(BaseModel): The response object containing the details of the alert.
+    """
+    return AlertDetailsResponse(success=True, message="Alert details retrieved", alert_details=await get_single_alert_details(create_alert_request))
+
+
 
 
 @incidents_alerts_router.post(

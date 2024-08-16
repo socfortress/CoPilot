@@ -100,6 +100,10 @@ class GenericAlertModel(BaseModel):
     class Config:
         extra = Extra.allow
 
+class AlertDetailsResponse(BaseModel):
+    alert_details: GenericAlertModel
+    success: bool
+    message: str
 
 class CreatedAlertPayload(BaseModel):
     alert_context_payload: dict
