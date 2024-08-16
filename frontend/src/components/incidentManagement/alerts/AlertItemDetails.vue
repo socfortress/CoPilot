@@ -13,7 +13,6 @@
 					<AlertItemOverview
 						:alert
 						:availableUsers
-						:hideCreateCaseButton
 						@updated="updateAlert($event)"
 						@deleted="emit('deleted')"
 					/>
@@ -57,9 +56,8 @@ const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
 	availableUsers?: string[]
-	hideCreateCaseButton?: boolean
 }>()
-const { alertData, alertId, availableUsers, hideCreateCaseButton } = toRefs(props)
+const { alertData, alertId, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void

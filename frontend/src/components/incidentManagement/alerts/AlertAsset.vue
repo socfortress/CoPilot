@@ -94,7 +94,13 @@
 										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
 									</code>
 								</div>
-								<div v-else>{{ value === "" ? "-" : value ?? "-" }}</div>
+								<div v-else-if="key === 'index_id'">
+									<code class="cursor-pointer text-primary-color" @click.stop="openAlertDetails()">
+										{{ asset.index_id }}
+										<Icon :name="ViewIcon" :size="14" class="top-0.5 relative" />
+									</code>
+								</div>
+								<div v-else>{{ value === "" ? "-" : (value ?? "-") }}</div>
 							</template>
 						</KVCard>
 					</div>
@@ -163,6 +169,43 @@
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
+
+		<n-modal
+			v-model:show="showAlertDetails"
+			preset="card"
+			content-class="!p-0"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
+			:bordered="false"
+			title="Alert Details"
+			segmented
+		>
+			<n-spin :show="loading" class="min-h-40">
+				<n-tabs type="line" animated :tabs-padding="24">
+					<n-tab-pane name="Info" tab="Info" display-directive="show">
+						<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+							<KVCard v-for="(value, key) of alertDetailsInfo" :key="key">
+								<template #key>{{ key }}</template>
+								<template #value>
+									{{ value ?? "-" }}
+								</template>
+							</KVCard>
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="Source" tab="Source" display-directive="show">
+						<div class="p-7 pt-4" v-if="alertDetailsSource">
+							<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+								<div
+									class="scrollbar-styled overflow-hidden code-bg-transparent"
+									v-shiki="{ lang: 'json', decode: false }"
+								>
+									<pre>{{ alertDetailsSource }}</pre>
+								</div>
+							</n-card>
+						</div>
+					</n-tab-pane>
+				</n-tabs>
+			</n-spin>
+		</n-modal>
 	</div>
 </template>
 
@@ -175,30 +218,42 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { useGoto } from "@/composables/useGoto"
+import _omit from "lodash/omit"
 import _truncate from "lodash/truncate"
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
+import type { AlertAsset, AlertContext, AlertDetails } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const { asset, embedded } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
+const ViewIcon = "iconoir:eye-alt"
 const { gotoAgent, gotoIndex, gotoCustomer } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
+const showAlertDetails = ref(false)
 const assetNameTruncated = computed(() => _truncate(asset.value.asset_name, { length: 50 }))
 const alertContext = ref<AlertContext | null>(null)
+const alertDetails = ref<AlertDetails | null>(null)
 const processNameList = computed<string[]>(() => alertContext.value?.context?.["process_name"] || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)
+const alertDetailsInfo = computed(() => _omit(alertDetails.value, ["_source"]))
+const alertDetailsSource = computed(() => alertDetails.value?._source)
 
 watch(showDetails, val => {
 	if (val && !alertContext.value) {
 		getAlertContext(asset.value.alert_context_id)
+	}
+})
+
+watch(showAlertDetails, val => {
+	if (val && !alertDetails.value) {
+		getAlertDetails(asset.value.index_id, asset.value.index_name)
 	}
 })
 
@@ -220,6 +275,36 @@ function getAlertContext(alertContextId: number) {
 		.finally(() => {
 			loading.value = false
 		})
+}
+
+function getAlertDetails(indexId: string, indexName: string) {
+	loading.value = true
+
+	Api.incidentManagement
+		.getAlertDetails(indexId, indexName)
+		.then(res => {
+			if (res.data.success) {
+				alertDetails.value = res.data?.alert_details || null
+			} else {
+				closeAlertDetails()
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			closeAlertDetails()
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
+}
+
+function openAlertDetails() {
+	showAlertDetails.value = true
+}
+
+function closeAlertDetails() {
+	showAlertDetails.value = false
 }
 </script>
 
