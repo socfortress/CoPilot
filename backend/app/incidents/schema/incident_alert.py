@@ -20,6 +20,13 @@ class CreateAlertRequest(BaseModel):
     )
     alert_id: str = Field(..., description="The alert id.")
 
+class CreateAlertRequestRoute(BaseModel):
+    index_name: str = Field(
+        ...,
+        description="The name of the index to search alerts for.",
+    )
+    index_id: str = Field(..., description="The index id.")
+
 
 class CreateAlertResponse(BaseModel):
     success: bool
