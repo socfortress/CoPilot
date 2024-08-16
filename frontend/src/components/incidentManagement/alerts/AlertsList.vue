@@ -229,7 +229,7 @@ const typeOptions = [
 	{ label: "Assigned To", value: "assignedTo" }
 ]
 
-const statusOptions = [
+const statusOptions: { label: string; value: AlertStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }

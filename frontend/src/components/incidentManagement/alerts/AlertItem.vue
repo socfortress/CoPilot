@@ -1,14 +1,25 @@
 <template>
-	<div class="alert-item" :class="'status-' + alert?.status">
+	<div
+		class="alert-item"
+		:class="['status-' + alert?.status, { compact, 'cursor-pointer': compact }]"
+		@click="compact ? openDetails() : undefined"
+	>
 		<n-spin :show="loading">
 			<div class="flex flex-col" v-if="alert">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon :name="InfoIcon" :size="16"></Icon>
+						<Icon :name="InfoIcon" :size="16" v-if="!compact"></Icon>
 					</div>
 					<div class="time">
-						<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
+						<n-popover
+							overlap
+							placement="top-end"
+							style="max-height: 240px"
+							scrollable
+							to="body"
+							v-if="!compact"
+						>
 							<template #trigger>
 								<div class="flex items-center gap-2 cursor-help">
 									<span v-if="alert.alert_creation_time">
@@ -21,6 +32,9 @@
 								<AlertTimeline :alert v-if="alert" />
 							</div>
 						</n-popover>
+						<span v-if="compact && alert.alert_creation_time">
+							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+						</span>
 					</div>
 				</div>
 
@@ -31,7 +45,48 @@
 						</div>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3">
+					<div class="badges-box flex flex-wrap items-center gap-3" v-if="compact">
+						<Badge
+							type="splitted"
+							class="cursor-pointer"
+							bright
+							:color="
+								alert.status === 'OPEN'
+									? 'danger'
+									: alert.status === 'IN_PROGRESS'
+										? 'warning'
+										: 'success'
+							"
+						>
+							<template #iconLeft>
+								<StatusIcon :status="alert.status" />
+							</template>
+							<template #label>Status</template>
+							<template #value>
+								<div class="flex gap-2 items-center">
+									{{ alert.status || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+
+						<Badge
+							type="splitted"
+							class="cursor-pointer"
+							bright
+							:color="alert.assigned_to ? 'success' : undefined"
+						>
+							<template #iconLeft>
+								<AssigneeIcon :assignee="alert.assigned_to" />
+							</template>
+							<template #label>Assignee</template>
+							<template #value>
+								<div class="flex gap-2 items-center">
+									{{ alert.assigned_to || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+					</div>
+					<div class="badges-box flex flex-wrap items-center gap-3" v-else>
 						<AlertStatusSwitch :alert v-slot="{ loading: loadingStatus }" @updated="updateAlert($event)">
 							<Badge
 								type="splitted"
@@ -41,8 +96,8 @@
 									alert.status === 'OPEN'
 										? 'danger'
 										: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
+											? 'warning'
+											: 'success'
 								"
 							>
 								<template #iconLeft>
@@ -51,7 +106,7 @@
 										:show="loadingStatus"
 										content-class="flex flex-col justify-center"
 									>
-										<AlertStatusIcon :status="alert.status" />
+										<StatusIcon :status="alert.status" />
 									</n-spin>
 								</template>
 								<template #label>Status</template>
@@ -82,7 +137,7 @@
 										:show="loadingAssignee"
 										content-class="flex flex-col justify-center"
 									>
-										<AlertAssigneeIcon :assignee="alert.assigned_to" />
+										<AssigneeIcon :assignee="alert.assigned_to" />
 									</n-spin>
 								</template>
 								<template #label>Assignee</template>
@@ -112,7 +167,7 @@
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center">
+				<div class="footer-box px-5 py-3 flex justify-between items-center" v-if="!compact">
 					<div class="details flex gap-3 items-center">
 						<Badge type="splitted" v-if="alert.alert_creation_time" class="time">
 							<template #iconLeft>
@@ -161,12 +216,13 @@
 		<n-modal
 			v-model:show="showDetails"
 			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
+			display-directive="show"
 		>
 			<n-card
 				content-class="flex flex-col !p-0"
 				:title="alertNameTruncated"
 				closable
-				@close="showDetails = false"
+				@close="closeDetails()"
 				:bordered="false"
 				segmented
 				role="modal"
@@ -175,6 +231,7 @@
 					v-if="alert"
 					:alertData="alert"
 					:availableUsers
+					:hide-create-case-button="compact"
 					@deleted="emitDelete()"
 					@updated="updateAlert($event)"
 				/>
@@ -196,15 +253,15 @@ import Badge from "@/components/common/Badge.vue"
 import AlertTimeline from "./AlertTimeline.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
-import AlertStatusIcon from "./AlertStatusIcon.vue"
-import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
 import AlertItemDetails from "./AlertItemDetails.vue"
 import { handleDeleteAlert } from "./utils"
 import _truncate from "lodash/truncate"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
-const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[] }>()
-const { alertData, alertId, availableUsers } = toRefs(props)
+const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[]; compact?: boolean }>()
+const { alertData, alertId, availableUsers, compact } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -276,6 +333,14 @@ function emitDelete() {
 	emit("deleted")
 }
 
+function openDetails() {
+	showDetails.value = true
+}
+
+function closeDetails() {
+	showDetails.value = false
+}
+
 onBeforeMount(() => {
 	if (alertId.value) {
 		getAlert(alertId.value)
@@ -301,10 +366,6 @@ onBeforeMount(() => {
 		.id {
 			word-break: break-word;
 			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
 		}
 	}
 	.main-box {
@@ -327,15 +388,25 @@ onBeforeMount(() => {
 		box-shadow: 0px 0px 0px 1px var(--primary-color);
 	}
 
-	@container (max-width: 600px) {
+	&:not(.compact) {
 		.header-box {
-			.time {
-				display: none;
+			.id {
+				&:hover {
+					color: var(--primary-color);
+				}
 			}
 		}
-		.footer-box {
-			.time {
-				display: flex;
+
+		@container (max-width: 600px) {
+			.header-box {
+				.time {
+					display: none;
+				}
+			}
+			.footer-box {
+				.time {
+					display: flex;
+				}
 			}
 		}
 	}

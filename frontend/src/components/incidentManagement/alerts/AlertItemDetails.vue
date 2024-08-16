@@ -13,6 +13,7 @@
 					<AlertItemOverview
 						:alert
 						:availableUsers
+						:hideCreateCaseButton
 						@updated="updateAlert($event)"
 						@deleted="emit('deleted')"
 					/>
@@ -52,8 +53,13 @@ import AlertCommentsList from "./AlertCommentsList.vue"
 import AlertItemOverview from "./AlertItemOverview.vue"
 import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
 
-const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[] }>()
-const { alertData, alertId, availableUsers } = toRefs(props)
+const props = defineProps<{
+	alertData?: Alert
+	alertId?: number
+	availableUsers?: string[]
+	hideCreateCaseButton?: boolean
+}>()
+const { alertData, alertId, availableUsers, hideCreateCaseButton } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void

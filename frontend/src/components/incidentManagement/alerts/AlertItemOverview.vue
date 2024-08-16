@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
 		<div class="flex flex-col gap-4 grow justify-between">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:flex-row flex-col gap-4">
+				<div class="px-7 flex sm:!flex-row flex-col gap-4">
 					<KVCard
 						:color="
 							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
@@ -12,7 +12,7 @@
 					>
 						<template #key>
 							<div class="flex gap-2 items-center">
-								<AlertStatusIcon :status="alert.status" />
+								<StatusIcon :status="alert.status" />
 								<span>Status</span>
 							</div>
 						</template>
@@ -47,7 +47,7 @@
 					<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
 						<template #key>
 							<div class="flex gap-2 items-center">
-								<AlertAssigneeIcon :assignee="alert.assigned_to" />
+								<AssigneeIcon :assignee="alert.assigned_to" />
 								<span>Assigned to</span>
 							</div>
 						</template>
@@ -142,7 +142,7 @@
 			</div>
 
 			<div class="footer-box px-7 py-4 flex justify-between">
-				<n-button secondary @click="createCase()">
+				<n-button secondary @click="createCase()" v-if="!hideCreateCaseButton">
 					<template #icon><Icon :name="DangerIcon" /></template>
 					Create case
 				</n-button>
@@ -160,8 +160,8 @@ import { ref, toRefs } from "vue"
 import { NButton, NSpin, NTag, useMessage, useDialog } from "naive-ui"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
-import AlertStatusIcon from "./AlertStatusIcon.vue"
-import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -169,8 +169,8 @@ import { handleDeleteAlert } from "./utils"
 import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
-const props = defineProps<{ alert: Alert; availableUsers?: string[] }>()
-const { alert, availableUsers } = toRefs(props)
+const props = defineProps<{ alert: Alert; availableUsers?: string[]; hideCreateCaseButton?: boolean }>()
+const { alert, availableUsers, hideCreateCaseButton } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
