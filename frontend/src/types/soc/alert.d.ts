@@ -1,4 +1,4 @@
-import type { AlertSourceContent } from "../alerts"
+import type { AlertSourceContent } from "../alerts.d"
 
 export interface SocAlert {
 	alert_classification_id: string | null

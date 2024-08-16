@@ -1,9 +1,18 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import type { Alert, AlertComment, AlertContext, AlertStatus, AlertTag } from "@/types/incidentManagement/alerts.d"
+import type {
+	Alert,
+	AlertComment,
+	AlertContext,
+	AlertStatus,
+	AlertTag,
+	Case
+} from "@/types/incidentManagement/alerts.d"
 
 export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
+
+export type CasesFilter = { status: AlertStatus } | { assignedTo: string }
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
@@ -105,6 +114,47 @@ export default {
 			`/incidents/db_operations/alert/comment`,
 			payload
 		)
+	},
+	// #endregion
+
+	// #region Cases
+	getCasesList(filters?: CasesFilter) {
+		let url = `/incidents/db_operations/cases`
+
+		if (filters && "status" in filters) {
+			url = `/incidents/db_operations/case/status/${filters.status}`
+		}
+		if (filters && "assignedTo" in filters) {
+			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+		}
+
+		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(url)
+	},
+	getCase(caseId: number) {
+		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
+	},
+	createCase(alertId: number) {
+		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
+			`/incidents/db_operations/case/from-alert`,
+			{
+				alert_id: alertId
+			}
+		)
+	},
+	updateCaseStatus(caseId: number, status: AlertStatus) {
+		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
+			case_id: caseId,
+			status
+		})
+	},
+	updateCaseAssignedUser(caseId: number, user: string) {
+		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/assigned-to`, {
+			case_id: caseId,
+			assigned_to: user
+		})
+	},
+	deleteCase(caseId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
 	}
 	// #endregion
 }
