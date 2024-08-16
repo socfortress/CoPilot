@@ -60,7 +60,8 @@ async def create_alert_payload(sigma_rule_name, syslog_type, index_name, index_i
 
 async def format_opensearch_query(query: str, time_interval: str, last_execution_time: datetime) -> dict:
     logger.info(f"Last execution time: {last_execution_time}")
-    formatted_last_execution_time = last_execution_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    #formatted_last_execution_time = last_execution_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    formatted_last_execution_time = last_execution_time.isoformat() + "Z"
     return {
         "query": {
             "bool": {
