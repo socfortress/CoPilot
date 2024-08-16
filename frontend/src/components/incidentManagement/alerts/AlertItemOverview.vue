@@ -221,6 +221,7 @@ function createCase() {
 							id: res.data.case_alert_link.case_id,
 							case_name: "",
 							case_description: "",
+							case_creation_time: new Date(),
 							assigned_to: null,
 							case_status: null
 						}
