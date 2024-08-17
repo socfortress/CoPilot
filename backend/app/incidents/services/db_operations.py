@@ -365,22 +365,21 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
 
-
-async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
-    result = await db.execute(select(AlertTag).where(AlertTag.tag == tag))
+async def delete_alert_tag(alert_id: int, tag_id: int, db: AsyncSession):
+    result = await db.execute(select(AlertTag).where(AlertTag.id == tag_id))
     alert_tag = result.scalars().first()
     if not alert_tag:
         raise HTTPException(status_code=404, detail="Alert tag not found")
 
-    result = await db.execute(select(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id)))
+    result = await db.execute(select(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == tag_id)))
     alert_to_tag = result.scalars().first()
     if not alert_to_tag:
         raise HTTPException(status_code=404, detail="Alert to tag link not found")
 
-    await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id)))
+    await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == tag_id)))
 
     # Delete the tag from the AlertTag table
-    await db.execute(delete(AlertTag).where(AlertTag.id == alert_tag.id))
+    await db.execute(delete(AlertTag).where(AlertTag.id == tag_id))
 
     try:
         await db.commit()
@@ -389,6 +388,7 @@ async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
         raise HTTPException(status_code=400, detail="Error deleting alert tag")
 
     return alert_tag
+
 
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:

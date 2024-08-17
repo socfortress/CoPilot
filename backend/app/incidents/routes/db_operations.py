@@ -56,7 +56,7 @@ from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
-from app.incidents.schema.db_operations import MappingsResponse
+from app.incidents.schema.db_operations import MappingsResponse, AlertTagDelete
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
@@ -325,9 +325,9 @@ async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_d
 
 
 @incidents_db_operations_router.delete("/alert/tag", response_model=AlertTagResponse)
-async def delete_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
+async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession = Depends(get_db)):
     return AlertTagResponse(
-        alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag, db),
+        alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag_id, db),
         success=True,
         message="Alert tag deleted successfully",
     )

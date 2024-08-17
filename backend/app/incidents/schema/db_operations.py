@@ -203,6 +203,10 @@ class AlertTagCreate(BaseModel):
     alert_id: int
     tag: str
 
+class AlertTagDelete(BaseModel):
+    alert_id: int
+    tag_id: int
+
 
 class CommentBase(BaseModel):
     user_name: str
