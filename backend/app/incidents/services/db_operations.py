@@ -379,6 +379,9 @@ async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
 
     await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id)))
 
+    # Delete the tag from the AlertTag table
+    await db.execute(delete(AlertTag).where(AlertTag.id == alert_tag.id))
+
     try:
         await db.commit()
     except IntegrityError:
