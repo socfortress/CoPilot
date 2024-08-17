@@ -196,6 +196,7 @@ class AssetCreate(BaseModel):
 
 class AlertTagBase(BaseModel):
     tag: str
+    id: int
 
 
 class AlertTagCreate(BaseModel):
