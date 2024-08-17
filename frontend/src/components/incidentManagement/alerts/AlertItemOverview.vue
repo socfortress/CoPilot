@@ -125,7 +125,7 @@
 					<KVCard>
 						<template #key>tags</template>
 						<template #value>
-							<div class="flex flex-wrap gap-2" v-if="alert.tags?.length">
+							<n-spin :show="deletingTag" size="small" content-class="flex flex-wrap gap-2">
 								<n-tag
 									closable
 									@close="deleteTag(tag)"
@@ -135,8 +135,25 @@
 								>
 									{{ tag }}
 								</n-tag>
-							</div>
-							<span v-else>-</span>
+
+								<n-dynamic-tags @create="newAlertTag" size="small" :value="[]">
+									<template #trigger="{ activate, disabled }">
+										<n-button
+											size="tiny"
+											type="primary"
+											dashed
+											:loading="creatingTag"
+											:disabled="disabled"
+											@click="activate()"
+										>
+											<template #icon>
+												<Icon :name="AddIcon" />
+											</template>
+											New Tag
+										</n-button>
+									</template>
+								</n-dynamic-tags>
+							</n-spin>
 						</template>
 					</KVCard>
 				</div>
@@ -171,7 +188,7 @@
 
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
-import { NButton, NSpin, NTag, useMessage, useDialog } from "naive-ui"
+import { NButton, NSpin, NTag, NDynamicTags, useMessage, useDialog } from "naive-ui"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import StatusIcon from "../common/StatusIcon.vue"
@@ -180,6 +197,7 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { handleDeleteAlert } from "./utils"
+import _trim from "lodash/trim"
 import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
@@ -195,12 +213,15 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const DangerIcon = "majesticons:exclamation-line"
 const EditIcon = "uil:edit-alt"
+const AddIcon = "carbon:add"
 
 const { gotoCustomer, gotoIncidentManagementCases } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
 const creating = ref(false)
+const creatingTag = ref(false)
+const deletingTag = ref(false)
 const linkedCases = computed(() => alert.value.linked_cases)
 
 function updateAlert(updatedAlert: Alert) {
@@ -260,14 +281,12 @@ function handleDelete() {
 }
 
 function deleteTag(tag: string) {
-	loading.value = true
+	deletingTag.value = true
 
 	Api.incidentManagement
 		.deleteAlertTag(alert.value.id, tag)
 		.then(res => {
 			if (res.data.success) {
-				message.success("Alert tag was successfully deleted.")
-
 				alert.value.tags = alert.value.tags.filter(o => o.tag !== tag)
 				updateAlert(alert.value)
 			} else {
@@ -282,8 +301,35 @@ function deleteTag(tag: string) {
 			}
 		})
 		.finally(() => {
-			loading.value = false
+			deletingTag.value = false
 		})
+}
+
+function newAlertTag(text: string): string | { label: string; value: string } {
+	const tag = _trim(text)
+
+	if (tag && alert.value.tags.filter(o => o.tag.toLowerCase() === tag.toLowerCase()).length === 0) {
+		creatingTag.value = true
+
+		Api.incidentManagement
+			.newAlertTag(alert.value.id, tag)
+			.then(res => {
+				if (res.data.success) {
+					alert.value.tags.push(res.data.alert_tag)
+					updateAlert(alert.value)
+				} else {
+					message.warning(res.data?.message || "An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				creatingTag.value = false
+			})
+	}
+
+	return ""
 }
 </script>
 

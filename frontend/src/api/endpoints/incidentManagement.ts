@@ -122,6 +122,12 @@ export default {
 			payload
 		)
 	},
+	newAlertTag(alertId: number, tag: string) {
+		return HttpClient.post<FlaskBaseResponse & { alert_tag: AlertTag }>(`/incidents/db_operations/alert/tag`, {
+			alert_id: alertId,
+			tag
+		})
+	},
 	// #endregion
 
 	// #region Cases
