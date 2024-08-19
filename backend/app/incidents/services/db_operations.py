@@ -36,6 +36,10 @@ from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 
+async def alert_total(db: AsyncSession) -> int:
+    result = await db.execute(select(Alert))
+    return len(result.scalars().all())
+
 
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source

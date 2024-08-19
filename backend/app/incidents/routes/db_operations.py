@@ -61,7 +61,7 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
-from app.incidents.services.db_operations import add_field_name
+from app.incidents.services.db_operations import add_field_name, alert_total
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name
 from app.incidents.services.db_operations import create_alert_context
@@ -377,8 +377,7 @@ async def list_alerts_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    alerts = await list_alerts(db, page=page, page_size=page_size)
-    return AlertOutResponse(alerts=alerts, total=len(alerts), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(alerts=await list_alerts(db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
