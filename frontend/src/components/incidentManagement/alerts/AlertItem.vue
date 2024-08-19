@@ -119,12 +119,7 @@
 							</Badge>
 						</AlertStatusSwitch>
 
-						<AlertAssignUser
-							:alert
-							:users="availableUsers"
-							v-slot="{ loading: loadingAssignee }"
-							@updated="updateAlert($event)"
-						>
+						<AlertAssignUser :alert v-slot="{ loading: loadingAssignee }" @updated="updateAlert($event)">
 							<Badge
 								type="splitted"
 								class="cursor-pointer"
@@ -227,10 +222,10 @@
 				segmented
 				role="modal"
 			>
-				<AlertItemDetails
+				<AlertDetails
 					v-if="alert"
 					:alertData="alert"
-					:availableUsers
+					:mergeCases
 					@deleted="emitDelete()"
 					@updated="updateAlert($event)"
 				/>
@@ -254,19 +249,20 @@ import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
-import AlertItemDetails from "./AlertItemDetails.vue"
+import AlertDetails from "./AlertDetails.vue"
 import { handleDeleteAlert } from "./utils"
 import _truncate from "lodash/truncate"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
-	availableUsers?: string[]
+	mergeCases?: Case[]
 	compact?: boolean
 	embedded?: boolean
 }>()
-const { alertData, alertId, availableUsers, compact, embedded } = toRefs(props)
+const { alertData, alertId, mergeCases, compact, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void

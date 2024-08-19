@@ -126,7 +126,7 @@
 						v-for="alert of itemsPaginated"
 						:key="alert.id"
 						:alertData="alert"
-						:availableUsers
+						:mergeCases
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
 						@updated="updateAlert($event)"
@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch } from "vue"
+import { ref, onBeforeMount, computed, watch, provide } from "vue"
 import {
 	useMessage,
 	NSpin,
@@ -171,6 +171,7 @@ import { useResizeObserver } from "@vueuse/core"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { AlertsFilter } from "@/api/endpoints/incidentManagement"
 import AlertItem from "./AlertItem.vue"
+import type { Case } from "@/types/incidentManagement/cases.d"
 
 export interface AlertsListFilter {
 	type: "status" | "assetName" | "assignedTo"
@@ -182,6 +183,7 @@ const loading = ref(false)
 const showFilters = ref(false)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
+const mergeCases = ref<Case[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -250,6 +252,10 @@ watch(
 	}
 )
 
+provide("assignable-users", availableUsers)
+
+provide("linkable-cases", mergeCases)
+
 function resetFilters() {
 	filters.value.type = undefined
 	showFilters.value = false
@@ -309,6 +315,21 @@ function getAvailableUsers() {
 		})
 }
 
+function getCases() {
+	Api.incidentManagement
+		.getCasesList()
+		.then(res => {
+			if (res.data.success) {
+				mergeCases.value = res.data?.cases || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -320,6 +341,7 @@ useResizeObserver(header, entries => {
 onBeforeMount(() => {
 	getData()
 	getAvailableUsers()
+	getCases()
 })
 </script>
 
