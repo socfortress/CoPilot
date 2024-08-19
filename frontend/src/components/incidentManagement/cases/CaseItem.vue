@@ -1,27 +1,27 @@
 <template>
-	<div class="case-item" :class="'status-' + incidentCase?.case_status">
+	<div class="case-item" :class="'status-' + caseEntity?.case_status">
 		<n-spin :show="loading">
-			<div class="flex flex-col" v-if="incidentCase">
+			<div class="flex flex-col" v-if="caseEntity">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
-						<span>#{{ incidentCase.id }}</span>
+						<span>#{{ caseEntity.id }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
-					<div class="time" v-if="incidentCase.case_creation_time">
-						{{ formatDate(incidentCase.case_creation_time, dFormats.datetime) }}
+					<div class="time" v-if="caseEntity.case_creation_time">
+						{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
 					</div>
 				</div>
 
 				<div class="main-box flex flex-col gap-3 px-5 py-3">
 					<div class="content flex flex-col gap-1 grow">
 						<div class="title">
-							{{ incidentCase.case_name }}
+							{{ caseEntity.case_name }}
 						</div>
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3">
 						<CaseStatusSwitch
-							:caseData="incidentCase"
+							:caseData="caseEntity"
 							v-slot="{ loading: loadingStatus }"
 							@updated="updateCase($event)"
 						>
@@ -30,11 +30,11 @@
 								class="cursor-pointer"
 								bright
 								:color="
-									incidentCase.case_status === 'OPEN'
+									caseEntity.case_status === 'OPEN'
 										? 'danger'
-										: incidentCase.case_status === 'IN_PROGRESS'
+										: caseEntity.case_status === 'IN_PROGRESS'
 											? 'warning'
-											: incidentCase.case_status === 'CLOSED'
+											: caseEntity.case_status === 'CLOSED'
 												? 'success'
 												: undefined
 								"
@@ -45,13 +45,13 @@
 										:show="loadingStatus"
 										content-class="flex flex-col justify-center"
 									>
-										<StatusIcon :status="incidentCase.case_status" />
+										<StatusIcon :status="caseEntity.case_status" />
 									</n-spin>
 								</template>
 								<template #label>Status</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
-										{{ incidentCase.case_status || "n/d" }}
+										{{ caseEntity.case_status || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
 								</template>
@@ -59,8 +59,7 @@
 						</CaseStatusSwitch>
 
 						<CaseAssignUser
-							:caseData="incidentCase"
-							:users="availableUsers"
+							:caseData="caseEntity"
 							v-slot="{ loading: loadingAssignee }"
 							@updated="updateCase($event)"
 						>
@@ -68,7 +67,7 @@
 								type="splitted"
 								class="cursor-pointer"
 								bright
-								:color="incidentCase.assigned_to ? 'success' : undefined"
+								:color="caseEntity.assigned_to ? 'success' : undefined"
 							>
 								<template #iconLeft>
 									<n-spin
@@ -76,13 +75,13 @@
 										:show="loadingAssignee"
 										content-class="flex flex-col justify-center"
 									>
-										<AssigneeIcon :assignee="incidentCase.assigned_to" />
+										<AssigneeIcon :assignee="caseEntity.assigned_to" />
 									</n-spin>
 								</template>
 								<template #label>Assignee</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
-										{{ incidentCase.assigned_to || "n/d" }}
+										{{ caseEntity.assigned_to || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
 								</template>
@@ -96,7 +95,7 @@
 						<n-collapse-item name="alerts-list">
 							<template #header>
 								Alerts
-								<code class="ml-2">{{ incidentCase.alerts.length }}</code>
+								<code class="ml-2">{{ caseEntity.alerts.length }}</code>
 							</template>
 							<template #header-extra>
 								<div class="actions-box">
@@ -104,15 +103,14 @@
 								</div>
 							</template>
 							<div>
-								<template v-if="incidentCase.alerts.length">
+								<template v-if="caseEntity.alerts.length">
 									<AlertItem
-										v-for="alert of incidentCase.alerts"
+										v-for="alert of caseEntity.alerts"
 										:key="alert.id"
 										:alertData="alert"
-										:availableUsers
 										compact
-										@deleted="getCase(incidentCase.id)"
-										@updated="getCase(incidentCase.id)"
+										@deleted="getCase(caseEntity.id)"
+										@updated="getCase(caseEntity.id)"
 									/>
 								</template>
 								<template v-else>
@@ -143,9 +141,8 @@
 				role="modal"
 			>
 				<CaseDetails
-					v-if="incidentCase"
-					:caseData="incidentCase"
-					:availableUsers
+					v-if="caseEntity"
+					:caseData="caseEntity"
 					@deleted="emitDelete()"
 					@updated="updateCase($event)"
 				/>
@@ -173,8 +170,8 @@ import _truncate from "lodash/truncate"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import { useSettingsStore } from "@/stores/settings"
 
-const props = defineProps<{ caseData?: Case; caseId?: number; availableUsers?: string[]; detailsOnMounted?: boolean }>()
-const { caseData, caseId, availableUsers, detailsOnMounted } = toRefs(props)
+const props = defineProps<{ caseData?: Case; caseId?: number; detailsOnMounted?: boolean }>()
+const { caseData, caseId, detailsOnMounted } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -189,11 +186,11 @@ const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const showDetails = ref(false)
-const incidentCase = ref<Case | null>(null)
-const caseNameTruncated = computed(() => _truncate(incidentCase.value?.case_name, { length: 50 }))
+const caseEntity = ref<Case | null>(null)
+const caseNameTruncated = computed(() => _truncate(caseEntity.value?.case_name, { length: 50 }))
 
 function updateCase(updatedCase: Case) {
-	incidentCase.value = updatedCase
+	caseEntity.value = updatedCase
 	emit("updated", updatedCase)
 }
 
@@ -204,7 +201,7 @@ function getCase(caseId: number) {
 		.getCase(caseId)
 		.then(res => {
 			if (res.data.success) {
-				incidentCase.value = res.data?.cases?.[0] || null
+				caseEntity.value = res.data?.cases?.[0] || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -218,9 +215,9 @@ function getCase(caseId: number) {
 }
 
 function handleDelete() {
-	if (incidentCase.value) {
+	if (caseEntity.value) {
 		handleDeleteCase({
-			caseData: incidentCase.value,
+			caseData: caseEntity.value,
 			cbBefore: () => {
 				loading.value = true
 			},
@@ -253,7 +250,7 @@ onBeforeMount(() => {
 	if (caseId.value) {
 		getCase(caseId.value)
 	} else if (caseData.value) {
-		incidentCase.value = _clone(caseData.value)
+		caseEntity.value = _clone(caseData.value)
 	}
 })
 

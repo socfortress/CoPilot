@@ -133,7 +133,6 @@
 						v-for="item of itemsPaginated"
 						:key="item.id"
 						:caseData="item"
-						:availableUsers
 						:detailsOnMounted="highlight === item.id.toString()"
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
@@ -158,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, toRefs } from "vue"
+import { ref, onBeforeMount, computed, watch, toRefs, provide } from "vue"
 import {
 	useMessage,
 	NSpin,
@@ -263,6 +262,8 @@ watch(
 		filters.value.value = undefined
 	}
 )
+
+provide("assignable-users", availableUsers)
 
 function resetFilters() {
 	filters.value.type = undefined

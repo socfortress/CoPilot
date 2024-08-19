@@ -4,30 +4,24 @@
 			type="line"
 			animated
 			:tabs-padding="24"
-			v-if="incidentCase"
+			v-if="caseEntity"
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
 				<div class="pt-1">
-					<CaseOverview
-						:caseData="incidentCase"
-						:availableUsers
-						@updated="updateCase($event)"
-						@deleted="emit('deleted')"
-					/>
+					<CaseOverview :caseData="caseEntity" @updated="updateCase($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
 				<div class="p-7 pt-4 flex flex-col gap-2">
 					<AlertItem
-						v-for="alert of incidentCase.alerts"
+						v-for="alert of caseEntity.alerts"
 						:key="alert.id"
 						:alertData="alert"
-						:availableUsers
 						embedded
-						@deleted="getCase(incidentCase.id)"
-						@updated="getCase(incidentCase.id)"
+						@deleted="getCase(caseEntity.id)"
+						@updated="getCase(caseEntity.id)"
 					/>
 				</div>
 			</n-tab-pane>
@@ -47,9 +41,8 @@ import type { Case } from "@/types/incidentManagement/cases.d"
 const props = defineProps<{
 	caseData?: Case
 	caseId?: number
-	availableUsers?: string[]
 }>()
-const { caseData, caseId, availableUsers } = toRefs(props)
+const { caseData, caseId } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -58,10 +51,10 @@ const emit = defineEmits<{
 
 const message = useMessage()
 const loading = ref(false)
-const incidentCase = ref<Case | null>(null)
+const caseEntity = ref<Case | null>(null)
 
 function updateCase(updatedCase: Case) {
-	incidentCase.value = updatedCase
+	caseEntity.value = updatedCase
 	emit("updated", updatedCase)
 }
 
@@ -72,7 +65,7 @@ function getCase(caseId: number) {
 		.getCase(caseId)
 		.then(res => {
 			if (res.data.success) {
-				incidentCase.value = res.data?.cases?.[0] || null
+				caseEntity.value = res.data?.cases?.[0] || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -89,7 +82,7 @@ onBeforeMount(() => {
 	if (caseId.value) {
 		getCase(caseId.value)
 	} else if (caseData.value) {
-		incidentCase.value = _clone(caseData.value)
+		caseEntity.value = _clone(caseData.value)
 	}
 })
 </script>

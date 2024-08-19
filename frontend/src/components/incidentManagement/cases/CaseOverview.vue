@@ -61,7 +61,6 @@
 							<div class="flex">
 								<CaseAssignUser
 									:caseData
-									:users="availableUsers"
 									v-slot="{ loading: loadingAssignee }"
 									@updated="updateCase($event)"
 								>
@@ -131,8 +130,8 @@ import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
-const props = defineProps<{ caseData: Case; availableUsers?: string[] }>()
-const { caseData, availableUsers } = toRefs(props)
+const props = defineProps<{ caseData: Case }>()
+const { caseData } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void

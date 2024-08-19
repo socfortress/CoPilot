@@ -13,22 +13,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { computed, inject, onBeforeMount, ref, toRefs, watch, type Ref } from "vue"
 import { useMessage, NPopselect } from "naive-ui"
 import Api from "@/api"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{
 	caseData: Case
-	users?: string[]
 }>()
-const { caseData, users } = toRefs(props)
+const { caseData } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "updated", value: Case): void
 }>()
 
 const loadingUsers = ref(false)
+const users = inject<Ref<string[]>>("assignable-users", ref([]))
 const message = useMessage()
 const usersListVisible = ref(false)
 const assignedTo = computed(() => caseData.value.assigned_to)
@@ -87,14 +87,11 @@ function parseUsers(users: string[]) {
 	usersOptions.value = users.map(o => ({ label: o, value: o }))
 }
 
-watch(
-	() => users?.value,
-	val => {
-		if (val !== undefined && val.length) {
-			parseUsers(val)
-		}
+watch(users, val => {
+	if (val !== undefined && val.length) {
+		parseUsers(val)
 	}
-)
+})
 
 watch(userSelected, () => {
 	assignUser()
@@ -111,7 +108,7 @@ onBeforeMount(() => {
 		userSelected.value = assignedTo.value
 	}
 
-	if (users?.value?.length) {
+	if (users.value.length) {
 		parseUsers(users.value)
 	}
 })
