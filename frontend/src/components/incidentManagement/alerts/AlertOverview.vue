@@ -131,27 +131,17 @@
 			</div>
 
 			<div class="footer-box px-7 py-4 flex items-center gap-2">
-				<n-button secondary type="primary" @click="createCase()" :loading="creating" v-if="!linkedCases.length">
-					<template #icon><Icon :name="DangerIcon" /></template>
-					Create case
-				</n-button>
-				<n-button secondary @click="createCase()" :loading="creating" v-if="!linkedCases.length">
-					<template #icon><Icon :name="MergeIcon" /></template>
-					Merge into Case
-				</n-button>
-				<div v-else class="flex flex-wrap gap-3 items-center">
+				<AlertCreateCaseButton :alert @updated="updateAlert" v-if="!linkedCases.length" />
+
+				<AlertMergeCaseButton :alert @updated="updateAlert" v-if="!linkedCases.length" />
+
+				<div v-if="linkedCases.length" class="flex flex-wrap gap-3 items-center">
 					<span>Linked Cases:</span>
-					<code
-						class="cursor-pointer text-primary-color"
-						v-for="linkedCase of linkedCases"
-						:key="linkedCase.id"
-						@click="gotoIncidentManagementCases(linkedCase.id)"
-					>
-						#{{ linkedCase.id }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-					</code>
+					<AlertLinkedCases :alert />
 				</div>
+
 				<div class="grow"></div>
+
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon><Icon :name="TrashIcon" /></template>
 					Delete
@@ -162,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
@@ -173,13 +163,13 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { handleDeleteAlert } from "./utils"
-import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
+const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
+const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
+const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
-// TODO: for mergeCases use inject/provide
-const props = defineProps<{ alert: Alert; mergeCases?: Case[] }>()
-const { alert, mergeCases } = toRefs(props)
+const props = defineProps<{ alert: Alert }>()
+const { alert } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -188,52 +178,16 @@ const emit = defineEmits<{
 
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
-const DangerIcon = "majesticons:exclamation-line"
 const EditIcon = "uil:edit-alt"
-const MergeIcon = "carbon:ibm-cloud-direct-link-1-connect"
 
-const { gotoCustomer, gotoIncidentManagementCases } = useGoto()
+const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
-const creating = ref(false)
 const linkedCases = computed(() => alert.value.linked_cases)
 
 function updateAlert(updatedAlert: Alert) {
 	emit("updated", updatedAlert)
-}
-
-function createCase() {
-	creating.value = true
-
-	Api.incidentManagement
-		.createCase(alert.value.id)
-		.then(res => {
-			if (res.data.success) {
-				updateAlert({
-					...alert.value,
-					linked_cases: [
-						{
-							id: res.data.case_alert_link.case_id,
-							case_name: "",
-							case_description: "",
-							case_creation_time: new Date(),
-							assigned_to: null,
-							case_status: null
-						}
-					]
-				})
-				message.success(res.data?.message || "Case created successfully")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			creating.value = false
-		})
 }
 
 function handleDelete() {

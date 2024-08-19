@@ -126,7 +126,6 @@
 						v-for="alert of itemsPaginated"
 						:key="alert.id"
 						:alertData="alert"
-						:mergeCases
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
 						@updated="updateAlert($event)"
@@ -183,7 +182,7 @@ const loading = ref(false)
 const showFilters = ref(false)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
-const mergeCases = ref<Case[]>([])
+const linkableCases = ref<Case[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -254,7 +253,7 @@ watch(
 
 provide("assignable-users", availableUsers)
 
-provide("linkable-cases", mergeCases)
+provide("linkable-cases", linkableCases)
 
 function resetFilters() {
 	filters.value.type = undefined
@@ -320,7 +319,7 @@ function getCases() {
 		.getCasesList()
 		.then(res => {
 			if (res.data.success) {
-				mergeCases.value = res.data?.cases || []
+				linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

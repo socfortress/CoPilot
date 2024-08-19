@@ -1,11 +1,14 @@
 <template>
-	<div class="case-item" :class="'status-' + caseEntity?.case_status">
+	<div
+		class="case-item"
+		:class="['status-' + caseEntity?.case_status, { compact, embedded, 'cursor-pointer': compact }]"
+	>
 		<n-spin :show="loading">
 			<div class="flex flex-col" v-if="caseEntity">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
+					<div class="id flex items-center gap-2 cursor-pointer" @click="compact ? undefined : openDetails()">
 						<span>#{{ caseEntity.id }}</span>
-						<Icon :name="InfoIcon" :size="16"></Icon>
+						<Icon :name="InfoIcon" :size="16" v-if="!compact"></Icon>
 					</div>
 					<div class="time" v-if="caseEntity.case_creation_time">
 						{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
@@ -19,7 +22,51 @@
 						</div>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3">
+					<div class="badges-box flex flex-wrap items-center gap-3" v-if="compact">
+						<Badge
+							type="splitted"
+							class="cursor-pointer"
+							bright
+							:color="
+								caseEntity.case_status === 'OPEN'
+									? 'danger'
+									: caseEntity.case_status === 'IN_PROGRESS'
+										? 'warning'
+										: caseEntity.case_status === 'CLOSED'
+											? 'success'
+											: undefined
+							"
+						>
+							<template #iconLeft>
+								<StatusIcon :status="caseEntity.case_status" />
+							</template>
+							<template #label>Status</template>
+							<template #value>
+								<div class="flex gap-2 items-center">
+									{{ caseEntity.case_status || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+
+						<Badge
+							type="splitted"
+							class="cursor-pointer"
+							bright
+							:color="caseEntity.assigned_to ? 'success' : undefined"
+						>
+							<template #iconLeft>
+								<AssigneeIcon :assignee="caseEntity.assigned_to" />
+							</template>
+							<template #label>Assignee</template>
+							<template #value>
+								<div class="flex gap-2 items-center">
+									{{ caseEntity.assigned_to || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+					</div>
+
+					<div class="badges-box flex flex-wrap items-center gap-3" v-else>
 						<CaseStatusSwitch
 							:caseData="caseEntity"
 							v-slot="{ loading: loadingStatus }"
@@ -90,7 +137,7 @@
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center">
+				<div class="footer-box px-5 py-3 flex justify-between items-center" v-if="!compact">
 					<n-collapse :trigger-areas="['main', 'arrow']">
 						<n-collapse-item name="alerts-list">
 							<template #header>
@@ -170,8 +217,14 @@ import _truncate from "lodash/truncate"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import { useSettingsStore } from "@/stores/settings"
 
-const props = defineProps<{ caseData?: Case; caseId?: number; detailsOnMounted?: boolean }>()
-const { caseData, caseId, detailsOnMounted } = toRefs(props)
+const props = defineProps<{
+	caseData?: Case
+	caseId?: number
+	detailsOnMounted?: boolean
+	compact?: boolean
+	embedded?: boolean
+}>()
+const { caseData, caseId, detailsOnMounted, compact, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -297,6 +350,10 @@ onMounted(() => {
 		.time {
 			display: none;
 		}
+	}
+
+	&.embedded {
+		background-color: var(--bg-secondary-color);
 	}
 
 	&:hover {

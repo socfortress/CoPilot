@@ -35,7 +35,8 @@ export default {
 				"50vw": "50vw"
 			},
 			maxHeight: {
-				"50vh": "50vh"
+				"50vh": "50vh",
+				150: "37.5rem"
 			},
 			maxWidth: {
 				"90vw": "90vw"

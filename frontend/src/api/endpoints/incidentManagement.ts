@@ -154,6 +154,15 @@ export default {
 			}
 		)
 	},
+	linkCase(alertId: number, caseId: number) {
+		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
+			`/incidents/db_operations/case/alert-link`,
+			{
+				alert_id: alertId,
+				case_id: caseId
+			}
+		)
+	},
 	updateCaseStatus(caseId: number, status: AlertStatus) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
 			case_id: caseId,
