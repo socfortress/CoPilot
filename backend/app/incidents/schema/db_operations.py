@@ -16,7 +16,25 @@ from app.incidents.models import Comment
 
 
 class SocfortressRecommendsWazuhFieldNames(Enum):
+    # ! Windows Events
     data_win_eventdata_commandLine = "data_win_eventdata_commandLine"
+    data_win_eventdata_parentCommandLine = "data_win_eventdata_parentCommandLine"
+    data_win_eventdata_parentImage = "data_win_eventdata_parentImage"
+    data_win_eventdata_parentUser = "data_win_eventdata_parentUser"
+    data_win_eventdata_image = "data_win_eventdata_image"
+    data_win_eventdata_user = "data_win_eventdata_user"
+    rule_mitre_id = "rule_mitre_id"
+    rule_mitre_tactic = "rule_mitre_tactic"
+    rule_mitre_technique = "rule_mitre_technique"
+    data_win_eventdata_company = "data_win_eventdata_company"
+    data_win_eventdata_hashes = "data_win_eventdata_hashes"
+    data_win_eventdata_currentDirectory = "data_win_eventdata_currentDirectory"
+    data_win_eventdata_originalFileName = "data_win_eventdata_originalFileName"
+    # ! Windows SIGCHECK HITS
+    data_Path = "data_Path"
+    # ! Extra Use
+    process_id = "process_id"
+    sha256 = "sha256"
 
 class SocfortressRecommendsWazuhAssetName(Enum):
     agent_name = "agent_name"
