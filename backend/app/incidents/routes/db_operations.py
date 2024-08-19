@@ -391,9 +391,13 @@ async def list_alerts_by_status_endpoint(
     return AlertOutResponse(alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alerts/assigned-to/{assigned_to}", response_model=AlertOutResponse)
-async def list_alerts_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
-    return AlertOutResponse(alerts=await list_alert_by_assigned_to(assigned_to, db), success=True, message="Alerts retrieved successfully")
-
+async def list_alerts_by_assigned_to_endpoint(
+    assigned_to: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    db: AsyncSession = Depends(get_db)
+):
+    return AlertOutResponse(alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=AlertOutResponse)
 async def list_alerts_by_asset_name_endpoint(

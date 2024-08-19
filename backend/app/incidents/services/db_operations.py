@@ -882,7 +882,8 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
     return alerts_out
 
 
-async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[AlertOut]:
+async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+    offset = (page - 1) * page_size
     result = await db.execute(
         select(Alert)
         .where(Alert.assigned_to == assigned_to)
@@ -891,7 +892,9 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-        ),
+        )
+        .offset(offset)
+        .limit(page_size)
     )
     alerts = result.scalars().all()
     alerts_out = []
