@@ -32,13 +32,13 @@
 	"dependencies": {
 		"@ajoelp/json-to-formdata": "^1.5.0",
 		"@f3ve/vue-markdown-it": "^0.2.2",
-		"@fontsource/jetbrains-mono": "^5.0.20",
-		"@fontsource/lexend": "^5.0.20",
+		"@fontsource/jetbrains-mono": "^5.0.21",
+		"@fontsource/lexend": "^5.0.21",
 		"@fontsource/public-sans": "^5.0.18",
 		"@popperjs/core": "^2.11.8",
-		"@shikijs/markdown-it": "^1.13.0",
-		"@vueuse/components": "^11.0.0",
-		"@vueuse/core": "^11.0.0",
+		"@shikijs/markdown-it": "^1.14.1",
+		"@vueuse/components": "^11.0.1",
+		"@vueuse/core": "^11.0.1",
 		"apexcharts": "^3.52.0",
 		"axios": "^1.7.4",
 		"bytes": "^3.1.2",
@@ -49,7 +49,7 @@
 		"echarts": "^5.5.1",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.5.2",
-		"jose": "^5.6.3",
+		"jose": "^5.7.0",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
@@ -58,7 +58,7 @@
 		"pinia": "^2.2.2",
 		"pinia-plugin-persistedstate": "^3.2.1",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.13.0",
+		"shiki": "^1.14.1",
 		"validator": "^13.12.0",
 		"vue": "^3.4.38",
 		"vue-advanced-cropper": "^2.8.9",
@@ -80,7 +80,7 @@
 		"@types/inquirer": "^9.0.7",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.7",
-		"@types/node": "^22.4.0",
+		"@types/node": "^22.4.1",
 		"@types/validator": "^13.12.0",
 		"@vitejs/plugin-vue": "^5.1.2",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
@@ -118,7 +118,7 @@
 		"vue-tsc": "^2.0.29"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.20.0"
+		"@rollup/rollup-linux-x64-gnu": "^4.21.0"
 	},
 	"overrides": {
 		"@vue/eslint-config-typescript": {
