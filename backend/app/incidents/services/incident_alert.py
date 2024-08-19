@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from typing import Dict
 from typing import List
@@ -598,7 +598,9 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
     """
     alert_details = await get_alert_details(alert)
     if alert_details._source.process_id is not None:
-        return await fetch_alert_timeline(alert.index_name, alert_details._source.process_id, alert_details._source.agent_name)
+        alert_timestamp = alert_details._source.timestamp
+        start_of_day, end_of_day = calculate_day_range(alert_timestamp)
+        return await fetch_alert_timeline(alert.index_name, alert_details._source.process_id, alert_details._source.agent_name, start_of_day, end_of_day)
     return []
 
 async def get_alert_details(alert: CreateAlertRequestRoute) -> Any:
@@ -613,7 +615,22 @@ async def get_alert_details(alert: CreateAlertRequestRoute) -> Any:
     """
     return await get_single_alert_details(CreateAlertRequest(index_name=alert.index_name, alert_id=alert.index_id))
 
-async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str) -> List[Dict[str, Any]]:
+def calculate_day_range(timestamp: str) -> (str, str):
+    """
+    Calculate the start and end of the day for the given timestamp.
+
+    Args:
+        timestamp (str): The timestamp.
+
+    Returns:
+        (str, str): The start and end of the day in the required format.
+    """
+    dt = datetime.fromisoformat(timestamp)
+    start_of_day = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    return start_of_day.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], end_of_day.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str, start_of_day: str, end_of_day: str) -> List[Dict[str, Any]]:
     """
     Fetch the alert timeline from the indexer.
 
@@ -621,6 +638,8 @@ async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str
         index_name (str): The name of the index.
         process_id (str): The process ID.
         agent_name (str): The agent name.
+        start_of_day (str): The start of the day in the required format.
+        end_of_day (str): The end of the day in the required format.
 
     Returns:
         List[Dict[str, Any]]: The alert timeline.
@@ -634,7 +653,7 @@ async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str
                     "must": [
                         {"match": {"process_id": process_id}},
                         {"match": {"agent_name": agent_name}},
-                        {"range": {"timestamp": {"gte": "now-24h"}}},
+                        {"range": {"timestamp": {"gte": start_of_day, "lt": end_of_day}}},
                     ],
                 },
             },
