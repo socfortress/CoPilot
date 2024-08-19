@@ -97,7 +97,6 @@ async def create_alert_route(
         CreateAlertResponse: The response object containing the result of the alert creation.
     """
     logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
-    # return await create_alert(create_alert_request, session)
     return CreateAlertResponse(success=True, message="Alert created in CoPilot", alert_id=await create_alert(create_alert_request, session))
 
 

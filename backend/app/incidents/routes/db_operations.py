@@ -30,7 +30,7 @@ from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
-from app.incidents.schema.db_operations import AlertOutResponse
+from app.incidents.schema.db_operations import AlertOutResponse, SocfortressRecommendsWazuhFieldNames, SocfortressRecommendsWazuhAssetName, SocfortressRecommendsWazuhTimeFieldName, SocfortressRecommendsWazuhAlertTitleName, SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
@@ -128,6 +128,18 @@ async def get_available_indices(source: str, session: AsyncSession = Depends(get
         indices=await get_available_indices_via_source(source),
         success=True,
         message="Indices retrieved successfully",
+    )
+
+@incidents_db_operations_router.get("/socfortress/recommends/wazuh", response_model=SocfortressRecommendsWazuhResponse)
+async def get_socfortress_recommends_wazuh(session: AsyncSession = Depends(get_db)):
+    return SocfortressRecommendsWazuhResponse(
+        field_names=[field.value for field in SocfortressRecommendsWazuhFieldNames],
+        asset_name=SocfortressRecommendsWazuhAssetName.agent_name.value,
+        timefield_name=SocfortressRecommendsWazuhTimeFieldName.timestamp_utc.value,
+        alert_title_name=SocfortressRecommendsWazuhAlertTitleName.rule_description.value,
+        source="wazuh",
+        success=True,
+        message="Field names and asset names retrieved successfully",
     )
 
 

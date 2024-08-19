@@ -15,6 +15,28 @@ from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 
 
+class SocfortressRecommendsWazuhFieldNames(Enum):
+    data_win_eventdata_commandLine = "data_win_eventdata_commandLine"
+
+class SocfortressRecommendsWazuhAssetName(Enum):
+    agent_name = "agent_name"
+
+class SocfortressRecommendsWazuhTimeFieldName(Enum):
+    timestamp_utc = "timestamp_utc"
+
+class SocfortressRecommendsWazuhAlertTitleName(Enum):
+    rule_description = "rule_description"
+
+class SocfortressRecommendsWazuhResponse(BaseModel):
+    field_names: List[str]
+    asset_name: str
+    timefield_name: str
+    alert_title_name: str
+    source: str
+    success: bool
+    message: str
+
+
 class AvailableSourcesResponse(BaseModel):
     source: str
     success: bool
