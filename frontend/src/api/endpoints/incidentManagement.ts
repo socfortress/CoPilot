@@ -103,9 +103,9 @@ export default {
 			assigned_to: user
 		})
 	},
-	deleteAlertTag(alertId: number, tag: string) {
+	deleteAlertTag(alertId: number, tagId: number) {
 		return HttpClient.delete<FlaskBaseResponse & { alert_tag: AlertTag }>(`/incidents/db_operations/alert/tag`, {
-			data: { alert_id: alertId, tag }
+			data: { alert_id: alertId, tag_id: tagId }
 		})
 	},
 	deleteAlert(alertId: number) {

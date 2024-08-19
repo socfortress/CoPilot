@@ -55,7 +55,6 @@
 							<div class="flex">
 								<AlertAssignUser
 									:alert
-									:users="availableUsers"
 									v-slot="{ loading: loadingAssignee }"
 									@updated="updateAlert($event)"
 								>
@@ -125,44 +124,20 @@
 					<KVCard>
 						<template #key>tags</template>
 						<template #value>
-							<n-spin :show="deletingTag" size="small" content-class="flex flex-wrap gap-2">
-								<n-tag
-									closable
-									@close="deleteTag(tag)"
-									v-for="{ tag } of alert.tags"
-									:key="tag"
-									size="small"
-								>
-									{{ tag }}
-								</n-tag>
-
-								<n-dynamic-tags @create="newAlertTag" size="small" :value="[]">
-									<template #trigger="{ activate, disabled }">
-										<n-button
-											size="tiny"
-											type="primary"
-											dashed
-											:loading="creatingTag"
-											:disabled="disabled"
-											@click="activate()"
-										>
-											<template #icon>
-												<Icon :name="AddIcon" />
-											</template>
-											New Tag
-										</n-button>
-									</template>
-								</n-dynamic-tags>
-							</n-spin>
+							<AlertTags :alert @updated="updateAlert" />
 						</template>
 					</KVCard>
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 flex justify-between">
-				<n-button secondary @click="createCase()" :loading="creating" v-if="!linkedCases.length">
+			<div class="footer-box px-7 py-4 flex items-center gap-2">
+				<n-button secondary type="primary" @click="createCase()" :loading="creating" v-if="!linkedCases.length">
 					<template #icon><Icon :name="DangerIcon" /></template>
 					Create case
+				</n-button>
+				<n-button secondary @click="createCase()" :loading="creating" v-if="!linkedCases.length">
+					<template #icon><Icon :name="MergeIcon" /></template>
+					Merge into Case
 				</n-button>
 				<div v-else class="flex flex-wrap gap-3 items-center">
 					<span>Linked Cases:</span>
@@ -188,21 +163,23 @@
 
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
-import { NButton, NSpin, NTag, NDynamicTags, useMessage, useDialog } from "naive-ui"
+import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
+import AlertTags from "./AlertTags.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { handleDeleteAlert } from "./utils"
-import _trim from "lodash/trim"
 import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Case } from "@/types/incidentManagement/cases.d"
 
-const props = defineProps<{ alert: Alert; availableUsers?: string[] }>()
-const { alert, availableUsers } = toRefs(props)
+// TODO: for mergeCases use inject/provide
+const props = defineProps<{ alert: Alert; mergeCases?: Case[] }>()
+const { alert, mergeCases } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
@@ -213,15 +190,13 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const DangerIcon = "majesticons:exclamation-line"
 const EditIcon = "uil:edit-alt"
-const AddIcon = "carbon:add"
+const MergeIcon = "carbon:ibm-cloud-direct-link-1-connect"
 
 const { gotoCustomer, gotoIncidentManagementCases } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
 const creating = ref(false)
-const creatingTag = ref(false)
-const deletingTag = ref(false)
 const linkedCases = computed(() => alert.value.linked_cases)
 
 function updateAlert(updatedAlert: Alert) {
@@ -278,58 +253,6 @@ function handleDelete() {
 			dialog
 		})
 	}
-}
-
-function deleteTag(tag: string) {
-	deletingTag.value = true
-
-	Api.incidentManagement
-		.deleteAlertTag(alert.value.id, tag)
-		.then(res => {
-			if (res.data.success) {
-				alert.value.tags = alert.value.tags.filter(o => o.tag !== tag)
-				updateAlert(alert.value)
-			} else {
-				message.error(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Alert tag Delete returned Unauthorized.")
-			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.finally(() => {
-			deletingTag.value = false
-		})
-}
-
-function newAlertTag(text: string): string | { label: string; value: string } {
-	const tag = _trim(text)
-
-	if (tag && alert.value.tags.filter(o => o.tag.toLowerCase() === tag.toLowerCase()).length === 0) {
-		creatingTag.value = true
-
-		Api.incidentManagement
-			.newAlertTag(alert.value.id, tag)
-			.then(res => {
-				if (res.data.success) {
-					alert.value.tags.push(res.data.alert_tag)
-					updateAlert(alert.value)
-				} else {
-					message.warning(res.data?.message || "An error occurred. Please try again later.")
-				}
-			})
-			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			})
-			.finally(() => {
-				creatingTag.value = false
-			})
-	}
-
-	return ""
 }
 </script>
 

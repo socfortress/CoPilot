@@ -39,7 +39,7 @@ export interface AlertComment {
 }
 
 export interface AlertTag {
-	id?: number
+	id: number
 	tag: string
 }
 
