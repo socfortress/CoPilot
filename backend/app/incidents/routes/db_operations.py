@@ -92,7 +92,7 @@ from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_cases
-from app.incidents.services.db_operations import list_cases_by_assigned_to
+from app.incidents.services.db_operations import list_cases_by_assigned_to, list_alerts_by_title
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
@@ -407,6 +407,16 @@ async def list_alerts_by_asset_name_endpoint(
     db: AsyncSession = Depends(get_db)
 ):
     return AlertOutResponse(alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
+
+@incidents_db_operations_router.get("/alerts/title/{title}", response_model=AlertOutResponse)
+async def list_alerts_by_title_endpoint(
+    title: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    db: AsyncSession = Depends(get_db)
+):
+    return AlertOutResponse(alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
+
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
 async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
