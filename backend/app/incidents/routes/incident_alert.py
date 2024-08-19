@@ -19,7 +19,7 @@ from app.incidents.services.alert_collection import get_alerts_not_created_in_co
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
-from app.incidents.services.incident_alert import get_single_alert_details
+from app.incidents.services.incident_alert import get_single_alert_details, retrieve_alert_timeline
 from app.incidents.services.incident_alert import create_alert
 
 incidents_alerts_router = APIRouter()
@@ -73,7 +73,27 @@ async def get_single_alert_details_route(
     return AlertDetailsResponse(success=True, message="Alert details retrieved", alert_details=await get_single_alert_details(CreateAlertRequest(index_name=create_alert_request.index_name, alert_id=create_alert_request.index_id)))
 
 
+@incidents_alerts_router.post(
+    "/alert/timeline",
+    description="Get the timeline of an alert",
+)
+async def get_alert_timeline_route(
+    alert: CreateAlertRequestRoute,
+    session: AsyncSession = Depends(get_db),
+) -> AlertDetailsResponse:
+    """
+    Get the timeline of an alert. This route obtains the process_id from the alert details if it exists
+    and queries the Indexer for all events with the same process_id and hostname within a 24 hour period.
 
+    Args:
+        create_alert_request (CreateAlertRequestRoute): The request object containing the details of the alert to be created.
+
+
+    Returns:
+        class AlertDetailsResponse(BaseModel): The response object containing the details of the alert.
+    """
+    await retrieve_alert_timeline(alert, session)
+    return None
 
 @incidents_alerts_router.post(
     "/create/manual",

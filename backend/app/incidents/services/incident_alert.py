@@ -21,7 +21,7 @@ from app.incidents.routes.db_operations import get_configured_sources
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertResponse
 from app.incidents.schema.incident_alert import CreatedAlertPayload
-from app.incidents.schema.incident_alert import FieldNames
+from app.incidents.schema.incident_alert import FieldNames, CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
 from app.incidents.services.db_operations import get_alert_title_names
@@ -545,7 +545,7 @@ async def create_alert(
     simga_alert: str = None,
 ) -> CreateAlertResponse:
     """
-    Creates an alert in IRIS.
+    Creates an alert in CoPilot.
 
     Args:
         alert (CreateAlertRequest): The request object containing the alert details.
@@ -582,3 +582,20 @@ async def create_alert(
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
+
+
+
+async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: AsyncSession) -> List[Dict[str, Any]]:
+    """
+    Retrieve the alert timeline for the given alert.
+
+    Args:
+        alert (CreateAlertRequest): The alert details.
+        session (AsyncSession): The database session.
+
+    Returns:
+        List[Dict[str, Any]]: The alert timeline.
+    """
+    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=alert.index_name, alert_id=alert.index_id))
+    logger.info(f"Alert details: {alert_details}")
+    return None
