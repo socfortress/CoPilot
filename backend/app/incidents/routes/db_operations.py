@@ -380,11 +380,15 @@ async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db
 
 
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=AlertOutResponse)
-async def list_alerts_by_status_endpoint(status: AlertStatus, db: AsyncSession = Depends(get_db)):
+async def list_alerts_by_status_endpoint(
+    status: AlertStatus,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    db: AsyncSession = Depends(get_db)
+):
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
-    return AlertOutResponse(alerts=await list_alert_by_status(status.value, db), success=True, message="Alerts retrieved successfully")
-
+    return AlertOutResponse(alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alerts/assigned-to/{assigned_to}", response_model=AlertOutResponse)
 async def list_alerts_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):

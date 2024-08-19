@@ -805,7 +805,8 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
     return alerts_out
 
 
-async def list_alert_by_status(status: str, db: AsyncSession) -> List[AlertOut]:
+async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+    offset = (page - 1) * page_size
     result = await db.execute(
         select(Alert)
         .where(Alert.status == status)
@@ -814,7 +815,9 @@ async def list_alert_by_status(status: str, db: AsyncSession) -> List[AlertOut]:
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-        ),
+        )
+        .offset(offset)
+        .limit(page_size)
     )
     alerts = result.scalars().all()
     alerts_out = []
