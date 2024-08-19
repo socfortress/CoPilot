@@ -10,7 +10,7 @@
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
 				<div class="pt-1">
-					<AlertOverview :alert :mergeCases @updated="updateAlert($event)" @deleted="emit('deleted')" />
+					<AlertOverview :alert @updated="updateAlert($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
@@ -46,14 +46,12 @@ import AlertAssetsList from "./AlertAssetsList.vue"
 import AlertCommentsList from "./AlertCommentsList.vue"
 import AlertOverview from "./AlertOverview.vue"
 import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
-	mergeCases?: Case[]
 }>()
-const { alertData, alertId, mergeCases } = toRefs(props)
+const { alertData, alertId } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void

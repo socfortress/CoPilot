@@ -222,13 +222,7 @@
 				segmented
 				role="modal"
 			>
-				<AlertDetails
-					v-if="alert"
-					:alertData="alert"
-					:mergeCases
-					@deleted="emitDelete()"
-					@updated="updateAlert($event)"
-				/>
+				<AlertDetails v-if="alert" :alertData="alert" @deleted="emitDelete()" @updated="updateAlert($event)" />
 			</n-card>
 		</n-modal>
 	</div>
@@ -253,16 +247,14 @@ import AlertDetails from "./AlertDetails.vue"
 import { handleDeleteAlert } from "./utils"
 import _truncate from "lodash/truncate"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
-	mergeCases?: Case[]
 	compact?: boolean
 	embedded?: boolean
 }>()
-const { alertData, alertId, mergeCases, compact, embedded } = toRefs(props)
+const { alertData, alertId, compact, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deleted"): void
