@@ -8,7 +8,7 @@
 				</div>
 			</div>
 			<div class="time">
-				<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
+				<n-popover overlap placement="top-end" class="max-h-64" scrollable to="body">
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
@@ -74,7 +74,7 @@
 					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
-							<template #value>{{ value === "" ? "-" : value ?? "-" }}</template>
+							<template #value>{{ value === "" ? "-" : (value ?? "-") }}</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -138,6 +138,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Collect" tab="Collect" display-directive="show:lazy">
+					<!-- TODO: replace max-height or similar with TailWind classes -->
 					<n-scrollbar style="max-height: 430px" trigger="none">
 						<div class="px-7">
 							<AgentFlowCollectList :flow="flow" />
