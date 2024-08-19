@@ -61,7 +61,7 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
-from app.incidents.services.db_operations import add_field_name, alert_total
+from app.incidents.services.db_operations import add_field_name, alert_total, alerts_closed, alerts_in_progress, alerts_open
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name
 from app.incidents.services.db_operations import create_alert_context
@@ -333,7 +333,15 @@ async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession 
 
 @incidents_db_operations_router.get("/alert/tag/{tag}", response_model=AlertOutResponse)
 async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
-    return AlertOutResponse(alerts=await list_alerts_by_tag(tag, db), total=await alert_total(db), success=True, message="Alert's tags retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alerts_by_tag(tag, db),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alert's tags retrieved successfully"
+        )
 
 
 @incidents_db_operations_router.delete("/alert/tag", response_model=AlertTagResponse)
@@ -377,7 +385,14 @@ async def list_alerts_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    return AlertOutResponse(alerts=await list_alerts(db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alerts(db, page=page, page_size=page_size),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
@@ -400,7 +415,15 @@ async def list_alerts_by_status_endpoint(
 ):
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
-    return AlertOutResponse(alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alerts retrieved successfully"
+        )
 
 @incidents_db_operations_router.get("/alerts/assigned-to/{assigned_to}", response_model=AlertOutResponse)
 async def list_alerts_by_assigned_to_endpoint(
@@ -409,7 +432,15 @@ async def list_alerts_by_assigned_to_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    return AlertOutResponse(alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alerts retrieved successfully"
+        )
 
 @incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=AlertOutResponse)
 async def list_alerts_by_asset_name_endpoint(
@@ -418,7 +449,15 @@ async def list_alerts_by_asset_name_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    return AlertOutResponse(alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alerts retrieved successfully"
+        )
 
 @incidents_db_operations_router.get("/alerts/title/{title}", response_model=AlertOutResponse)
 async def list_alerts_by_title_endpoint(
@@ -427,7 +466,15 @@ async def list_alerts_by_title_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    return AlertOutResponse(alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size), total=await alert_total(db), success=True, message="Alerts retrieved successfully")
+    return AlertOutResponse(
+        alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size),
+        total=await alert_total(db),
+        open=await alerts_open(db),
+        in_progress=await alerts_in_progress(db),
+        closed=await alerts_closed(db),
+        success=True,
+        message="Alerts retrieved successfully"
+        )
 
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)

@@ -40,6 +40,18 @@ async def alert_total(db: AsyncSession) -> int:
     result = await db.execute(select(Alert))
     return len(result.scalars().all())
 
+async def alerts_closed(db: AsyncSession) -> int:
+    result = await db.execute(select(Alert).where(Alert.status == "CLOSED"))
+    return len(result.scalars().all())
+
+async def alerts_in_progress(db: AsyncSession) -> int:
+    result = await db.execute(select(Alert).where(Alert.status == "IN_PROGRESS"))
+    return len(result.scalars().all())
+
+async def alerts_open(db: AsyncSession) -> int:
+    result = await db.execute(select(Alert).where(Alert.status == "OPEN"))
+    return len(result.scalars().all())
+
 
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
