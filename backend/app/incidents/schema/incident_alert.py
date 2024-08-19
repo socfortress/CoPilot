@@ -70,6 +70,14 @@ class GenericSourceModel(BaseModel):
         None,
         description="The timefield of the alert to be used when creating the IRIS alert.",
     )
+    process_id: Optional[str] = Field(
+        None,
+        description="The process id of the alert.",
+    )
+    agent_name: Optional[str] = Field(
+        None,
+        description="The agent name of the alert.",
+    )
 
     class Config:
         extra = Extra.allow
@@ -120,3 +128,9 @@ class CreatedAlertPayload(BaseModel):
     source: str
     index_name: Optional[str] = None
     index_id: Optional[str] = None
+
+
+class AlertTimelineResponse(BaseModel):
+    alert_timeline: List[Dict[str, Any]]
+    success: bool
+    message: str

@@ -590,12 +590,54 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
     Retrieve the alert timeline for the given alert.
 
     Args:
-        alert (CreateAlertRequest): The alert details.
+        alert (CreateAlertRequestRoute): The alert details.
         session (AsyncSession): The database session.
 
     Returns:
         List[Dict[str, Any]]: The alert timeline.
     """
-    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=alert.index_name, alert_id=alert.index_id))
-    logger.info(f"Alert details: {alert_details}")
-    return None
+    alert_details = await get_alert_details(alert)
+    if alert_details._source.process_id is not None:
+        return await fetch_alert_timeline(alert.index_name, alert_details._source.process_id, alert_details._source.agent_name)
+    return []
+
+async def get_alert_details(alert: CreateAlertRequestRoute) -> Any:
+    """
+    Get the details of a single alert.
+
+    Args:
+        alert (CreateAlertRequestRoute): The alert details.
+
+    Returns:
+        Any: The alert details.
+    """
+    return await get_single_alert_details(CreateAlertRequest(index_name=alert.index_name, alert_id=alert.index_id))
+
+async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str) -> List[Dict[str, Any]]:
+    """
+    Fetch the alert timeline from the indexer.
+
+    Args:
+        index_name (str): The name of the index.
+        process_id (str): The process ID.
+        agent_name (str): The agent name.
+
+    Returns:
+        List[Dict[str, Any]]: The alert timeline.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    alert_timeline = es_client.search(
+        index=index_name,
+        body={
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match": {"process_id": process_id}},
+                        {"match": {"agent_name": agent_name}},
+                        {"range": {"timestamp": {"gte": "now-24h"}}},
+                    ],
+                },
+            },
+        },
+    )
+    return alert_timeline["hits"]["hits"]

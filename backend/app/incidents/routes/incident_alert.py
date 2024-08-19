@@ -12,7 +12,7 @@ from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AutoCreateAlertResponse
 from app.incidents.schema.incident_alert import AlertDetailsResponse
-from app.incidents.schema.incident_alert import CreateAlertResponse, CreateAlertRequestRoute
+from app.incidents.schema.incident_alert import CreateAlertResponse, CreateAlertRequestRoute, AlertTimelineResponse
 from app.incidents.schema.incident_alert import IndexNamesResponse, CreateAlertRequest
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
@@ -80,7 +80,7 @@ async def get_single_alert_details_route(
 async def get_alert_timeline_route(
     alert: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
-) -> AlertDetailsResponse:
+) -> AlertTimelineResponse:
     """
     Get the timeline of an alert. This route obtains the process_id from the alert details if it exists
     and queries the Indexer for all events with the same process_id and hostname within a 24 hour period.
@@ -90,10 +90,10 @@ async def get_alert_timeline_route(
 
 
     Returns:
-        class AlertDetailsResponse(BaseModel): The response object containing the details of the alert.
+        class AlertTimelineResponse(BaseModel): The response object containing the details of the alert.
     """
-    await retrieve_alert_timeline(alert, session)
-    return None
+    #await retrieve_alert_timeline(alert, session)
+    return AlertTimelineResponse(success=True, message="Alert timeline retrieved", alert_timeline=await retrieve_alert_timeline(alert, session))
 
 @incidents_alerts_router.post(
     "/create/manual",
