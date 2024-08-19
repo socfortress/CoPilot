@@ -32,7 +32,7 @@ class SocfortressRecommendsWazuhFieldNames(Enum):
     data_win_eventdata_originalFileName = "data_win_eventdata_originalFileName"
     # ! Windows SIGCHECK HITS
     data_Path = "data_Path"
-    # ! Extra Use
+    # ! Extra Use for Within CoPilot
     process_id = "process_id"
     sha256 = "sha256"
 
