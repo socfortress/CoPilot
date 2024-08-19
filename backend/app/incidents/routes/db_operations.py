@@ -396,9 +396,13 @@ async def list_alerts_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession
 
 
 @incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=AlertOutResponse)
-async def list_alerts_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
-    return AlertOutResponse(alerts=await list_alerts_by_asset_name(asset_name, db), success=True, message="Alerts retrieved successfully")
-
+async def list_alerts_by_asset_name_endpoint(
+    asset_name: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    db: AsyncSession = Depends(get_db)
+):
+    return AlertOutResponse(alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
 async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
