@@ -377,7 +377,8 @@ async def list_alerts_endpoint(
     page_size: int = Query(25, ge=1),
     db: AsyncSession = Depends(get_db)
 ):
-    return AlertOutResponse(alerts=await list_alerts(db, page=page, page_size=page_size), success=True, message="Alerts retrieved successfully")
+    alerts = await list_alerts(db, page=page, page_size=page_size)
+    return AlertOutResponse(alerts=alerts, total=len(alerts), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):

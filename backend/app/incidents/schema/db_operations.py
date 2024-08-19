@@ -286,6 +286,7 @@ class AlertOut(BaseModel):
 
 class AlertOutResponse(BaseModel):
     alerts: List[AlertOut]
+    total: Optional[int] = None
     success: bool
     message: str
 
