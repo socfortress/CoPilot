@@ -658,5 +658,6 @@ async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str
                 },
             },
         },
+        size=50,
     )
     return alert_timeline["hits"]["hits"]
