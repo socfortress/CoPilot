@@ -12,7 +12,7 @@ from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody, CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
@@ -23,7 +23,7 @@ from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
-from app.connectors.velociraptor.services.artifacts import run_artifact_collection
+from app.connectors.velociraptor.services.artifacts import run_artifact_collection, run_file_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
@@ -476,3 +476,41 @@ async def get_artifact_recommendation(request: ArtifactReccomendationAIRequest):
             prompt=request.prompt,
         ),
     )
+
+# ! WIP ! #
+@velociraptor_artifacts_router.post(
+    "/collect/file",
+    response_model=CollectArtifactResponse,
+    description="Run an the artifact to collect a file",
+)
+async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSession = Depends(get_db)):
+    """
+    Collects a file based on the artifact.
+
+    Returns:
+        CollectArtifactResponse: The response containing the collected file.
+    """
+    logger.info(f"Received request to collect artifact {collect_artifact_body}")
+    # result = await get_all_artifacts_for_hostname(
+    #     collect_artifact_body.hostname,
+    #     session,
+    # )
+    # artifact_names = [artifact.name for artifact in result.artifacts]
+
+    # if collect_artifact_body.artifact_name not in artifact_names:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
+    #     )
+
+    # collect_artifact_body.velociraptor_id = await get_velociraptor_id(
+    #     session,
+    #     collect_artifact_body.hostname,
+    # )
+
+    # collect_artifact_body.velociraptor_org = await get_velociraptor_org(
+    #     session,
+    #     collect_artifact_body.hostname,
+    # )
+    return await run_file_collection(collect_artifact_body)
+
