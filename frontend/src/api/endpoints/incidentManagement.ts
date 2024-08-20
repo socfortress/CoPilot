@@ -116,6 +116,15 @@ export default {
 			index_name: indexName
 		})
 	},
+	getAlertTimeline(indexId: string, indexName: string) {
+		return HttpClient.post<FlaskBaseResponse & { alert_timeline: AlertTimeline[] }>(
+			`/incidents/alerts/alert/timeline`,
+			{
+				index_id: indexId,
+				index_name: indexName
+			}
+		)
+	},
 	getAvailableUsers() {
 		return HttpClient.get<FlaskBaseResponse & { available_users: string[] }>(
 			`/incidents/db_operations/alert/available-users`

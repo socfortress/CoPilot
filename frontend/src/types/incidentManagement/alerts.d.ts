@@ -67,3 +67,14 @@ export interface AlertDetails {
 		[key: string]: string | string[] | number | object
 	}
 }
+
+export interface AlertTimeline {
+	_index: string
+	_id: string
+	_score: number
+	_source: {
+		rule_description: string
+		timestamp: string
+		[key: string]: string | string[] | number | object
+	}
+}
