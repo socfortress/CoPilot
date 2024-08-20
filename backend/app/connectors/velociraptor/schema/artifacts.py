@@ -5,7 +5,8 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Field
+from pydantic import Field, validator
+from fastapi import HTTPException
 
 
 class Artifacts(BaseModel):
@@ -81,6 +82,20 @@ class CollectArtifactBody(BaseBody):
         None,
         description="Name of the artifact for collection or command running",
     )
+
+class CollectFileBody(BaseBody):
+    artifact_name: str = Field(
+        'Generic.Collectors.File',
+        description="Name of the artifact for collection or command running",
+    )
+    file: str = Field('Glob\nUsers\\Administrator\\Documents\\*\n', description="File to collect")
+    root_disk: Optional[str] = Field('C:', description="Root disk to collect from")
+
+    @validator('artifact_name')
+    def validate_artifact_name(cls, value):
+        if value != 'Generic.Collectors.File':
+            raise HTTPException(status_code=400, detail="Invalid artifact name. Name should be 'Generic.Collectors.File'")
+        return value
 
 
 class RunCommandBody(BaseBody):
