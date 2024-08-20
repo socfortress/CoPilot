@@ -123,7 +123,7 @@
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsList.length">
 					<AlertItem
-						v-for="alert of itemsPaginated"
+						v-for="alert of alertsList"
 						:key="alert.id"
 						:alertData="alert"
 						class="item-appear item-appear-bottom item-appear-005"
@@ -142,7 +142,7 @@
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
+				v-if="alertsList.length > 3"
 			/>
 		</div>
 	</div>
@@ -168,7 +168,7 @@ import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { AlertsFilter } from "@/api/endpoints/incidentManagement"
+import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
 import AlertItem from "./AlertItem.vue"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
@@ -176,6 +176,9 @@ export interface AlertsListFilter {
 	type: "status" | "assetName" | "assignedTo"
 	value: string | AlertStatus
 }
+
+const FilterIcon = "carbon:filter-edit"
+const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loading = ref(false)
@@ -192,30 +195,10 @@ const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
 
-const itemsPaginated = computed(() => {
-	const from = (currentPage.value - 1) * pageSize.value
-	const to = currentPage.value * pageSize.value
-
-	const list = _orderBy(alertsList.value, ["alert_creation_time", "time_closed"], ["desc", "desc"])
-
-	return list.slice(from, to)
-})
-
-const FilterIcon = "carbon:filter-edit"
-const InfoIcon = "carbon:information"
-
-const total = computed<number>(() => {
-	return alertsList.value.length || 0
-})
-const statusOpenTotal = computed<number>(() => {
-	return alertsList.value.filter(o => o.status === "OPEN").length || 0
-})
-const statusInProgressTotal = computed<number>(() => {
-	return alertsList.value.filter(o => o.status === "IN_PROGRESS").length || 0
-})
-const statusCloseTotal = computed<number>(() => {
-	return alertsList.value.filter(o => o.status === "CLOSED").length || 0
-})
+const total = ref(0)
+const statusOpenTotal = ref(0)
+const statusInProgressTotal = ref(0)
+const statusCloseTotal = ref(0)
 
 const filters = ref<Partial<AlertsListFilter>>({})
 const lastFilters = ref<Partial<AlertsListFilter>>({})
@@ -227,7 +210,9 @@ const filtered = computed<boolean>(() => {
 const typeOptions = [
 	{ label: "Status", value: "status" },
 	{ label: "Asset Name", value: "assetName" },
-	{ label: "Assigned To", value: "assignedTo" }
+	{ label: "Assigned To", value: "assignedTo" },
+	{ label: "Tag", value: "tag" },
+	{ label: "Title", value: "title" }
 ]
 
 const statusOptions: { label: string; value: AlertStatus }[] = [
@@ -251,12 +236,25 @@ watch(
 	}
 )
 
+watch(currentPage, () => {
+	getData()
+})
+
+watch(pageSize, () => {
+	if (currentPage.value === 1) {
+		getData()
+	} else {
+		currentPage.value = 1
+	}
+})
+
 provide("assignable-users", availableUsers)
 
 provide("linkable-cases", linkableCases)
 
 function resetFilters() {
 	filters.value.type = undefined
+	filters.value.value = undefined
 	showFilters.value = false
 	getData()
 }
@@ -274,10 +272,14 @@ function getData() {
 
 	lastFilters.value = _cloneDeep(filters.value)
 
-	let query: AlertsFilter | undefined = undefined
+	const query: Partial<AlertsQuery> = {
+		page: currentPage.value,
+		pageSize: pageSize.value
+	}
+
 	if (filtered.value) {
 		// @ts-expect-error filters properties infer are ignored
-		query = { [filters.value.type]: filters.value.value }
+		query.filters = { [filters.value.type]: filters.value.value }
 	}
 
 	Api.incidentManagement
@@ -285,6 +287,10 @@ function getData() {
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []
+				total.value = res.data.total || 0
+				statusCloseTotal.value = res.data.closed || 0
+				statusInProgressTotal.value = res.data.in_progress || 0
+				statusOpenTotal.value = res.data.open || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

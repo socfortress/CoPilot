@@ -7,11 +7,23 @@ import type {
 	AlertContext,
 	AlertDetails,
 	AlertStatus,
-	AlertTag
+	AlertTag,
+	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
-export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
+export type AlertsFilter =
+	| { status: AlertStatus }
+	| { assetName: string }
+	| { assignedTo: string }
+	| { tag: string }
+	| { title: string }
+
+export interface AlertsQuery {
+	page: number
+	pageSize: number
+	filters: AlertsFilter
+}
 
 export type CasesFilter = { status: AlertStatus } | { assignedTo: string }
 
