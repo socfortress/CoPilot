@@ -63,7 +63,7 @@ from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name, alert_total, alerts_closed, alerts_in_progress, alerts_open
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name
+from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name, alert_total_by_assest_name, alerts_open_by_assest_name, alerts_closed_by_asset_name, alerts_in_progress_by_assest_name
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag, replace_customer_code_name
 from app.incidents.services.db_operations import create_asset
@@ -100,7 +100,7 @@ from app.incidents.services.db_operations import replace_field_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
-from app.incidents.services.db_operations import update_case_assigned_to
+from app.incidents.services.db_operations import update_case_assigned_to, alert_total_by_alert_title, alerts_closed_by_alert_title, alerts_in_progress_by_alert_title, alerts_open_by_alert_title
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import validate_source_exists, get_customer_notification, put_customer_notification
 from app.db.universal_models import Customers
@@ -451,10 +451,10 @@ async def list_alerts_by_asset_name_endpoint(
 ):
     return AlertOutResponse(
         alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size),
-        total=await alert_total(db),
-        open=await alerts_open(db),
-        in_progress=await alerts_in_progress(db),
-        closed=await alerts_closed(db),
+        total=await alert_total_by_assest_name(db, asset_name),
+        open=await alerts_open_by_assest_name(db, asset_name),
+        in_progress=await alerts_in_progress_by_assest_name(db, asset_name),
+        closed=await alerts_closed_by_asset_name(db, asset_name),
         success=True,
         message="Alerts retrieved successfully"
         )
@@ -468,10 +468,10 @@ async def list_alerts_by_title_endpoint(
 ):
     return AlertOutResponse(
         alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size),
-        total=await alert_total(db),
-        open=await alerts_open(db),
-        in_progress=await alerts_in_progress(db),
-        closed=await alerts_closed(db),
+        total=await alert_total_by_alert_title(db, title),
+        open=await alerts_open_by_alert_title(db, title),
+        in_progress=await alerts_in_progress_by_alert_title(db, title),
+        closed=await alerts_closed_by_alert_title(db, title),
         success=True,
         message="Alerts retrieved successfully"
         )

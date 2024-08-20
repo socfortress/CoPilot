@@ -52,6 +52,65 @@ async def alerts_open(db: AsyncSession) -> int:
     result = await db.execute(select(Alert).where(Alert.status == "OPEN"))
     return len(result.scalars().all())
 
+async def alert_total_by_assest_name(db: AsyncSession, asset_name: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(Asset, Alert.id == Asset.alert_linked)
+        .where(Asset.asset_name == asset_name)
+    )
+    return len(result.scalars().all())
+
+async def alerts_closed_by_asset_name(db: AsyncSession, asset_name: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(Asset, Alert.id == Asset.alert_linked)
+        .where((Alert.status == "CLOSED") & (Asset.asset_name == asset_name))
+    )
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_assest_name(db: AsyncSession, asset_name: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(Asset, Alert.id == Asset.alert_linked)
+        .where((Alert.status == "IN_PROGRESS") & (Asset.asset_name == asset_name))
+    )
+    return len(result.scalars().all())
+
+async def alerts_open_by_assest_name(db: AsyncSession, asset_name: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(Asset, Alert.id == Asset.alert_linked)
+        .where((Alert.status == "OPEN") & (Asset.asset_name == asset_name))
+    )
+    return len(result.scalars().all())
+
+async def alert_total_by_alert_title(db: AsyncSession, alert_title: str) -> int:
+    result = await db.execute(select(Alert).where(Alert.alert_name.like(f"%{alert_title}%")))
+    return len(result.scalars().all())
+
+async def alerts_closed_by_alert_title(db: AsyncSession, alert_title: str) -> int:
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "CLOSED") & (Alert.alert_name.like(f"%{alert_title}%"))
+        )
+    )
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_alert_title(db: AsyncSession, alert_title: str) -> int:
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "IN_PROGRESS") & (Alert.alert_name.like(f"%{alert_title}%"))
+        )
+    )
+    return len(result.scalars().all())
+
+async def alerts_open_by_alert_title(db: AsyncSession, alert_title: str) -> int:
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "OPEN") & (Alert.alert_name.like(f"%{alert_title}%"))
+        )
+    )
+    return len(result.scalars().all())
 
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
