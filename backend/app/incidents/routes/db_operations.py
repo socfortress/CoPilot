@@ -67,7 +67,7 @@ from app.incidents.services.db_operations import create_alert, get_customer_code
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag, replace_customer_code_name
 from app.incidents.services.db_operations import create_asset
-from app.incidents.services.db_operations import create_case
+from app.incidents.services.db_operations import create_case, alerts_total_by_assigned_to, alerts_closed_by_assigned_to, alerts_in_progress_by_assigned_to, alerts_open_by_assigned_to
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_from_alert, add_customer_code_name
 from app.incidents.services.db_operations import create_comment
@@ -434,10 +434,10 @@ async def list_alerts_by_assigned_to_endpoint(
 ):
     return AlertOutResponse(
         alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size),
-        total=await alert_total(db),
-        open=await alerts_open(db),
-        in_progress=await alerts_in_progress(db),
-        closed=await alerts_closed(db),
+        total=await alerts_total_by_assigned_to(db, assigned_to),
+        open=await alerts_open_by_assigned_to(db, assigned_to),
+        in_progress=await alerts_in_progress_by_assigned_to(db, assigned_to),
+        closed=await alerts_closed_by_assigned_to(db, assigned_to),
         success=True,
         message="Alerts retrieved successfully"
         )

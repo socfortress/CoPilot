@@ -112,6 +112,28 @@ async def alerts_open_by_alert_title(db: AsyncSession, alert_title: str) -> int:
     )
     return len(result.scalars().all())
 
+async def alerts_total_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
+    result = await db.execute(select(Alert).where(Alert.assigned_to == assigned_to))
+    return len(result.scalars().all())
+
+async def alerts_closed_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
+    result = await db.execute(
+        select(Alert).where((Alert.status == "CLOSED") & (Alert.assigned_to == assigned_to))
+    )
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
+    result = await db.execute(
+        select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.assigned_to == assigned_to))
+    )
+    return len(result.scalars().all())
+
+async def alerts_open_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
+    result = await db.execute(
+        select(Alert).where((Alert.status == "OPEN") & (Alert.assigned_to == assigned_to))
+    )
+    return len(result.scalars().all())
+
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
     field_names = await get_field_names(source, session)
