@@ -56,26 +56,44 @@ export default {
 			}
 		)
 	},
+	getSocfortressRecommendsWazuh() {
+		return HttpClient.get<FlaskBaseResponse & SourceConfiguration>(
+			`/incidents/db_operations/socfortress/recommends/wazuh`
+		)
+	},
 	deleteSourceConfiguration(source: SourceName) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/configured/sources/${source}`)
 	},
 	// #endregion
 
 	// #region Alerts
-	getAlertsList(filters?: AlertsFilter) {
+	getAlertsList(args?: Partial<AlertsQuery>) {
 		let url = `/incidents/db_operations/alerts`
 
-		if (filters && "status" in filters) {
-			url = `/incidents/db_operations/alerts/status/${filters.status}`
+		if (args?.filters && "status" in args.filters) {
+			url = `/incidents/db_operations/alerts/status/${args.filters.status}`
 		}
-		if (filters && "assetName" in filters) {
-			url = `/incidents/db_operations/alerts/asset/${filters.assetName}`
+		if (args?.filters && "assetName" in args.filters) {
+			url = `/incidents/db_operations/alerts/asset/${args.filters.assetName}`
 		}
-		if (filters && "assignedTo" in filters) {
-			url = `/incidents/db_operations/alerts/assigned-to/${filters.assignedTo}`
+		if (args?.filters && "assignedTo" in args.filters) {
+			url = `/incidents/db_operations/alerts/assigned-to/${args.filters.assignedTo}`
+		}
+		if (args?.filters && "tag" in args.filters) {
+			url = `/incidents/db_operations/alert/tag/${args.filters.tag}`
+		}
+		if (args?.filters && "title" in args.filters) {
+			url = `/incidents/db_operations/alerts/title/${args.filters.title}`
 		}
 
-		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(url)
+		return HttpClient.get<
+			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
+		>(url, {
+			params: {
+				page: args?.page || 1,
+				page_size: args?.pageSize || 25
+			}
+		})
 	},
 	getAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(`/incidents/db_operations/alert/${alertId}`)

@@ -15,7 +15,27 @@
 							:loading="loadingIndexNames"
 						/>
 					</n-form-item>
-					<n-form-item label="Source" path="source" v-if="showSourceField">
+					<n-form-item path="source" :show-require-mark="false" v-if="showSourceField" class="source-field">
+						<template #label>
+							<div class="flex justify-between items-end gap-2">
+								<span>
+									Source
+									<span class="n-form-item-label__asterisk">*</span>
+								</span>
+
+								<span v-if="isSocfortressRecommendsAvailable">
+									<n-button
+										@click="getSocfortressRecommendsWazuh()"
+										:loading="loadingSocfortressRecommendsWazuh"
+										size="tiny"
+										ghost
+										type="primary"
+									>
+										SOCFortress Recommends
+									</n-button>
+								</span>
+							</div>
+						</template>
 						<n-input
 							v-model:value.trim="form.source"
 							placeholder="Please insert Source"
@@ -158,6 +178,8 @@ const submitting = ref(false)
 const loadingSource = ref(false)
 const loadingIndexNames = ref(false)
 const loadingAvailableMappings = ref(false)
+const loadingSocfortressRecommendsWazuh = ref(false)
+const socfortressRecommendsWazuh = ref<SourceConfiguration | null>(null)
 const loading = computed(() => loadingAvailableMappings.value || loadingIndexNames.value || loadingSource.value)
 const message = useMessage()
 const form = ref<SourceConfigurationModel>(getSourceConfigurationForm())
@@ -214,6 +236,8 @@ const isValid = computed(() => {
 
 	return true
 })
+
+const isSocfortressRecommendsAvailable = computed(() => form.value.source?.toLowerCase() === "wazuh")
 
 watch(sourceConfigurationModel, () => {
 	reset()
@@ -327,6 +351,47 @@ function resetSource() {
 	form.value.source = ""
 }
 
+function setSocfortressRecommendsWazuh() {
+	form.value.field_names = socfortressRecommendsWazuh.value?.field_names || []
+	form.value.asset_name = socfortressRecommendsWazuh.value?.asset_name || null
+	form.value.timefield_name = socfortressRecommendsWazuh.value?.timefield_name || null
+	form.value.alert_title_name = socfortressRecommendsWazuh.value?.alert_title_name || null
+	form.value.source = socfortressRecommendsWazuh.value?.source || ""
+}
+
+function getSocfortressRecommendsWazuh() {
+	if (socfortressRecommendsWazuh.value) {
+		setSocfortressRecommendsWazuh()
+		return
+	}
+
+	loadingSocfortressRecommendsWazuh.value = true
+
+	Api.incidentManagement
+		.getSocfortressRecommendsWazuh()
+		.then(res => {
+			if (res.data.success) {
+				socfortressRecommendsWazuh.value = {
+					field_names: res.data.field_names,
+					asset_name: res.data.asset_name,
+					timefield_name: res.data.timefield_name,
+					alert_title_name: res.data.alert_title_name,
+					source: res.data.source
+				}
+
+				setSocfortressRecommendsWazuh()
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingSocfortressRecommendsWazuh.value = false
+		})
+}
+
 function getAvailableMappings(indexName: string) {
 	loadingAvailableMappings.value = true
 
@@ -422,3 +487,13 @@ onMounted(() => {
 	})
 })
 </script>
+
+<style lang="scss" scoped>
+.source-field {
+	:deep() {
+		.n-form-item-label__text {
+			width: 100%;
+		}
+	}
+}
+</style>
