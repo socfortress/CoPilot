@@ -71,7 +71,7 @@ from app.incidents.services.db_operations import create_case, alerts_total_by_as
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_from_alert, add_customer_code_name
 from app.incidents.services.db_operations import create_comment
-from app.incidents.services.db_operations import delete_alert
+from app.incidents.services.db_operations import delete_alert, alerts_total_by_tag, alerts_closed_by_tag, alerts_in_progress_by_tag, alerts_open_by_tag
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
@@ -332,16 +332,21 @@ async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession 
 
 
 @incidents_db_operations_router.get("/alert/tag/{tag}", response_model=AlertOutResponse)
-async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
+async def list_alerts_by_tag_endpoint(
+    tag: str,
+    db: AsyncSession = Depends(get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1)
+):
     return AlertOutResponse(
-        alerts=await list_alerts_by_tag(tag, db),
-        total=await alert_total(db),
-        open=await alerts_open(db),
-        in_progress=await alerts_in_progress(db),
-        closed=await alerts_closed(db),
+        alerts=await list_alerts_by_tag(tag, db, page, page_size),
+        total=await alerts_total_by_tag(db, tag),
+        open=await alerts_open_by_tag(db, tag),
+        in_progress=await alerts_in_progress_by_tag(db, tag),
+        closed=await alerts_closed_by_tag(db, tag),
         success=True,
         message="Alert's tags retrieved successfully"
-        )
+    )
 
 
 @incidents_db_operations_router.delete("/alert/tag", response_model=AlertTagResponse)

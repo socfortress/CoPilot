@@ -134,6 +134,42 @@ async def alerts_open_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
     )
     return len(result.scalars().all())
 
+async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(AlertToTag, Alert.id == AlertToTag.alert_id)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
+        .where(AlertTag.tag == tag)
+    )
+    return len(result.scalars().all())
+
+async def alerts_closed_by_tag(db: AsyncSession, tag: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(AlertToTag, Alert.id == AlertToTag.alert_id)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
+        .where((Alert.status == "CLOSED") & (AlertTag.tag == tag))
+    )
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_tag(db: AsyncSession, tag: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(AlertToTag, Alert.id == AlertToTag.alert_id)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
+        .where((Alert.status == "IN_PROGRESS") & (AlertTag.tag == tag))
+    )
+    return len(result.scalars().all())
+
+async def alerts_open_by_tag(db: AsyncSession, tag: str) -> int:
+    result = await db.execute(
+        select(Alert)
+        .join(AlertToTag, Alert.id == AlertToTag.alert_id)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
+        .where((Alert.status == "OPEN") & (AlertTag.tag == tag))
+    )
+    return len(result.scalars().all())
+
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
     field_names = await get_field_names(source, session)
@@ -865,7 +901,8 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     return alert_context
 
 
-async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
+async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+    offset = (page - 1) * page_size
     result = await db.execute(
         select(Alert)
         .join(AlertToTag)
@@ -876,7 +913,9 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-        ),
+        )
+        .offset(offset)
+        .limit(page_size)
     )
     alerts = result.scalars().all()
     alerts_out = []
