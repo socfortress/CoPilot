@@ -138,12 +138,12 @@ async def initialize_job_metadata():
                 "description": "Resizes the Wazuh index fields.",
             },
             # TODO: ! COMMENTING OUT UNTIL INCIDENT MANAGEMENT IS IMPLEMENTED ! #
-            # {
-            #     "job_id": "invoke_alert_creation_collect",
-            #     "time_interval": 5,
-            #     "function": invoke_alert_creation_collect,
-            #     "description": "Invokes alert creation collection.",
-            # }
+            {
+                "job_id": "invoke_alert_creation_collect",
+                "time_interval": 5,
+                "function": invoke_alert_creation_collect,
+                "description": "Invokes alert creation collection.",
+            }
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
