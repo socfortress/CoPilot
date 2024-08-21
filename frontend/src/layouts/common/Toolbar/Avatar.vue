@@ -16,6 +16,7 @@ const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
 const LogsIcon = "carbon:cloud-logging"
 const ContactIcon = "ic:outline-alternate-email"
+const UsersIcon = "carbon:group-security"
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -32,6 +33,11 @@ const options = ref([
 		label: "License",
 		key: "route-License",
 		icon: renderIcon(LicenseIcon)
+	},
+	{
+		label: "Users",
+		key: "route-Users",
+		icon: renderIcon(UsersIcon)
 	},
 	{
 		label: "Logs",

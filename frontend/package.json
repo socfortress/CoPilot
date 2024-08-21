@@ -80,7 +80,7 @@
 		"@types/inquirer": "^9.0.7",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.7",
-		"@types/node": "^22.4.1",
+		"@types/node": "^22.5.0",
 		"@types/validator": "^13.12.0",
 		"@vitejs/plugin-vue": "^5.1.2",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
