@@ -143,7 +143,7 @@ async def create_alert_auto_route(
     alerts = await get_alerts_not_created_in_copilot()
     logger.info(f"Alerts to create in CoPilot: {alerts}")
     if len(alerts.alerts) == 0:
-        raise HTTPException(status_code=404, detail="No alerts found to create in CoPilot")
+        return AutoCreateAlertResponse(success=False, message="No alerts to create in CoPilot")
     for alert in alerts.alerts:
         logger.info(f"Creating alert {alert} in CoPilot")
         create_alert_request = CreateAlertRequest(
