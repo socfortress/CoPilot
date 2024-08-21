@@ -119,8 +119,39 @@ class AlertsByRulePerHostResponse(BaseModel):
     message: str
 
 
+class GraylogAlertsSearchBody(BaseModel):
+    size: int = Field(10, description="The number of alerts to return.")
+    timerange: str = Field("24h", description="The time range to search alerts in.")
+    index_prefix: str = Field(
+        "gl-events*",
+        description="The index prefix to search alerts in.",
+    )
+
+    @validator("timerange")
+    def validate_timerange(cls, value):
+        if value[-1] not in ("h", "d", "w"):
+            raise ValueError(
+                "Invalid timerange format. The string should end with either 'h', 'd', 'w'.",
+            )
+
+        # Optionally, you can check that the prefix is a number
+        if not value[:-1].isdigit():
+            raise ValueError(
+                "Invalid timerange format. The string should start with a number.",
+            )
+
+        return value
+
 ############# ! PASSABLE MESSAGES FROM ES CLIENT ! #############
 class SkippableWazuhIndexerClientErrors(Enum):
     NO_MAPPING_FOR_TIMESTAMP = "No mapping found for [timestamp_utc] in order to sort on"
     # Add other error messages here, for example:
     # ANOTHER_ERROR = "Another specific error message"
+
+class AlertNotFound(BaseModel):
+    index: str = Field(alias="_index")
+    id: str = Field(alias="_id")
+    source: Dict[str, str] = Field(alias="_source")
+
+    def to_dict(self) -> Dict[str, str]:
+        return self.dict(by_alias=True)
