@@ -92,6 +92,7 @@ const router = createRouter({
 			component: () => import("@/views/Artifacts.vue"),
 			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
 		},
+		/*
 		{
 			path: "/soc",
 			redirect: "/soc/alerts",
@@ -126,6 +127,7 @@ const router = createRouter({
 				}
 			]
 		},
+		*/
 		{
 			path: "/incident-management",
 			redirect: "/incident-management/alerts",

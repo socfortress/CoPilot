@@ -12,10 +12,9 @@ const ConnectorsIcon = "carbon:hybrid-networking"
 const GraylogIcon = "majesticons:pulse-line"
 const AlertsIcon = "carbon:warning-hex"
 const ArtifactsIcon = "carbon:document-multiple-01"
-const SocIcon = "carbon:security"
+// const SocIcon = "carbon:security"
 const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
-const UsersIcon = "carbon:group-security"
 const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
@@ -152,6 +151,7 @@ export default function getItems(): MenuMixedOption[] {
 			key: "Artifacts",
 			icon: renderIcon(ArtifactsIcon)
 		},
+		/*
 		{
 			label: "SOC",
 			key: "Soc",
@@ -211,6 +211,7 @@ export default function getItems(): MenuMixedOption[] {
 				}
 			]
 		},
+		*/
 		{
 			label: "Incident Management",
 			key: "IncidentManagement",
@@ -284,20 +285,6 @@ export default function getItems(): MenuMixedOption[] {
 				),
 			key: "Customers",
 			icon: renderIcon(CustomersIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Users"
-						}
-					},
-					{ default: () => "Users" }
-				),
-			key: "Users",
-			icon: renderIcon(UsersIcon)
 		},
 		{
 			label: "External Services",
