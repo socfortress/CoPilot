@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, toRefs, provide } from "vue"
+import { ref, onBeforeMount, computed, watch, toRefs, provide, nextTick } from "vue"
 import {
 	useMessage,
 	NSpin,
@@ -196,11 +196,11 @@ const showFilters = ref(false)
 const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
 
-const pageSize = ref(5)
+const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
-const pageSizes = [5, 10, 25, 50, 100]
+const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
 
@@ -280,11 +280,14 @@ watch(
 		const totalPages = Math.ceil(casesList.value.length / pageSize.value)
 
 		if (
+			itemsPaginated.value.length &&
 			!itemsPaginated.value.find(o => o.id.toString() === highlight.value) &&
 			currentPage.value < totalPages &&
 			!highlightedItemFound.value
 		) {
-			currentPage.value++
+			nextTick(() => {
+				currentPage.value++
+			})
 		}
 
 		if (itemsPaginated.value.find(o => o.id.toString() === highlight.value)) {

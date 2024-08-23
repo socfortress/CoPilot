@@ -126,7 +126,10 @@
 						v-for="alert of alertsList"
 						:key="alert.id"
 						:alertData="alert"
+						:highlight="highlight === alert.id.toString()"
+						:detailsOnMounted="highlight === alert.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
+						@opened="highlightedItemOpened = true"
 						@deleted="getData()"
 						@updated="updateAlert($event)"
 					/>
@@ -149,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, provide } from "vue"
+import { ref, onBeforeMount, computed, watch, provide, toRefs, nextTick } from "vue"
 import {
 	useMessage,
 	NSpin,
@@ -176,6 +179,9 @@ export interface AlertsListFilter {
 	type: "status" | "assetName" | "assignedTo"
 	value: string | AlertStatus
 }
+
+const props = defineProps<{ highlight: string | null | undefined }>()
+const { highlight } = toRefs(props)
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
@@ -223,6 +229,9 @@ const statusOptions: { label: string; value: AlertStatus }[] = [
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
 
+const highlightedItemFound = ref(!highlight.value)
+const highlightedItemOpened = ref(!highlight.value)
+
 watch(showFilters, val => {
 	if (!val) {
 		filters.value = _cloneDeep(lastFilters.value)
@@ -247,6 +256,27 @@ watch(pageSize, () => {
 		currentPage.value = 1
 	}
 })
+
+watch(
+	alertsList,
+	() => {
+		if (
+			alertsList.value.length &&
+			!alertsList.value.find(o => o.id.toString() === highlight.value) &&
+			currentPage.value < total.value &&
+			!highlightedItemFound.value
+		) {
+			nextTick(() => {
+				currentPage.value++
+			})
+		}
+
+		if (alertsList.value.find(o => o.id.toString() === highlight.value)) {
+			highlightedItemFound.value = true
+		}
+	},
+	{ immediate: true }
+)
 
 provide("assignable-users", availableUsers)
 

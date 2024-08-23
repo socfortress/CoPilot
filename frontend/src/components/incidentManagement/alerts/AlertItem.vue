@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="alert-item"
-		:class="['status-' + alert?.status, { compact, embedded, 'cursor-pointer': compact }]"
+		:class="['status-' + alert?.status, { compact, embedded, 'cursor-pointer': compact, highlight }]"
 		@click="compact ? openDetails() : undefined"
 	>
 		<n-spin :show="loading">
@@ -229,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import { NModal, NPopover, NButton, NSpin, NTooltip, NCard, useMessage, useDialog } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
@@ -253,10 +253,13 @@ const props = defineProps<{
 	alertId?: number
 	compact?: boolean
 	embedded?: boolean
+	detailsOnMounted?: boolean
+	highlight?: boolean
 }>()
-const { alertData, alertId, compact, embedded } = toRefs(props)
+const { alertData, alertId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const emit = defineEmits<{
+	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
 }>()
@@ -327,6 +330,7 @@ function emitDelete() {
 }
 
 function openDetails() {
+	emit("opened")
 	showDetails.value = true
 }
 
@@ -341,6 +345,12 @@ onBeforeMount(() => {
 		getAlert(alertData.value.id)
 	} else if (alertData.value) {
 		alert.value = _clone(alertData.value)
+	}
+})
+
+onMounted(() => {
+	if (detailsOnMounted.value) {
+		openDetails()
 	}
 })
 </script>
@@ -384,6 +394,10 @@ onBeforeMount(() => {
 	}
 
 	&:hover {
+		box-shadow: 0px 0px 0px 1px var(--primary-color);
+	}
+
+	&.highlight {
 		box-shadow: 0px 0px 0px 1px var(--primary-color);
 	}
 

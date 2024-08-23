@@ -220,12 +220,12 @@ import { useSettingsStore } from "@/stores/settings"
 const props = defineProps<{
 	caseData?: Case
 	caseId?: number
-	detailsOnMounted?: boolean
 	compact?: boolean
 	embedded?: boolean
+	detailsOnMounted?: boolean
 	highlight?: boolean
 }>()
-const { caseData, caseId, detailsOnMounted, compact, embedded, highlight } = toRefs(props)
+const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "opened"): void
