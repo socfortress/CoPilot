@@ -11,6 +11,12 @@ import type {
 
 export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 
+export interface GraylogAlertsQuery {
+	size: number
+	timerange: AlertsQueryTimeRange
+	index_prefix: string
+}
+
 interface AlertsQuery {
 	size: number
 	timerange: AlertsQueryTimeRange
@@ -48,7 +54,26 @@ function getQueryByFilter(filter?: AlertsSummaryQuery): AlertsQuery {
 	return query
 }
 
+function getGraylogQueryByFilter(filter?: Partial<GraylogAlertsQuery>): GraylogAlertsQuery {
+	const query: GraylogAlertsQuery = {
+		size: filter?.size || 10,
+		timerange: filter?.timerange || "24h",
+		index_prefix: "gl-events*"
+	}
+
+	return query
+}
+
 export default {
+	getGraylogAlertsList(filter?: Partial<GraylogAlertsQuery>, signal?: AbortSignal) {
+		const query = getGraylogQueryByFilter(filter)
+
+		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
+			`/alerts/alerts/graylog`,
+			query,
+			signal ? { signal } : {}
+		)
+	},
 	getAll(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 

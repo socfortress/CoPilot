@@ -83,7 +83,7 @@ const router = createRouter({
 		{
 			path: "/alerts",
 			name: "Alerts",
-			component: () => import("@/views/Alerts.vue"),
+			component: () => import("@/views/AlertsGraylog.vue"),
 			meta: { title: "Alerts", auth: true, roles: UserRole.All }
 		},
 		{
