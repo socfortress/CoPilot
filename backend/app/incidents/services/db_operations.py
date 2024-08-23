@@ -3,7 +3,6 @@ from typing import List
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import delete
-from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -19,7 +18,9 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
-from app.incidents.models import FieldName, Notification, CustomerCodeFieldName
+from app.incidents.models import CustomerCodeFieldName
+from app.incidents.models import FieldName
+from app.incidents.models import Notification
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
@@ -28,147 +29,142 @@ from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate, PutNotification
-from app.incidents.schema.db_operations import CaseCreate, LinkedCaseCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import LinkedCaseCreate
+from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+
 
 async def alert_total(db: AsyncSession) -> int:
     result = await db.execute(select(Alert))
     return len(result.scalars().all())
 
+
 async def alerts_closed(db: AsyncSession) -> int:
     result = await db.execute(select(Alert).where(Alert.status == "CLOSED"))
     return len(result.scalars().all())
+
 
 async def alerts_in_progress(db: AsyncSession) -> int:
     result = await db.execute(select(Alert).where(Alert.status == "IN_PROGRESS"))
     return len(result.scalars().all())
 
+
 async def alerts_open(db: AsyncSession) -> int:
     result = await db.execute(select(Alert).where(Alert.status == "OPEN"))
     return len(result.scalars().all())
 
+
 async def alert_total_by_assest_name(db: AsyncSession, asset_name: str) -> int:
-    result = await db.execute(
-        select(Alert)
-        .join(Asset, Alert.id == Asset.alert_linked)
-        .where(Asset.asset_name == asset_name)
-    )
+    result = await db.execute(select(Alert).join(Asset, Alert.id == Asset.alert_linked).where(Asset.asset_name == asset_name))
     return len(result.scalars().all())
+
 
 async def alerts_closed_by_asset_name(db: AsyncSession, asset_name: str) -> int:
     result = await db.execute(
-        select(Alert)
-        .join(Asset, Alert.id == Asset.alert_linked)
-        .where((Alert.status == "CLOSED") & (Asset.asset_name == asset_name))
+        select(Alert).join(Asset, Alert.id == Asset.alert_linked).where((Alert.status == "CLOSED") & (Asset.asset_name == asset_name)),
     )
     return len(result.scalars().all())
+
 
 async def alerts_in_progress_by_assest_name(db: AsyncSession, asset_name: str) -> int:
     result = await db.execute(
-        select(Alert)
-        .join(Asset, Alert.id == Asset.alert_linked)
-        .where((Alert.status == "IN_PROGRESS") & (Asset.asset_name == asset_name))
+        select(Alert).join(Asset, Alert.id == Asset.alert_linked).where((Alert.status == "IN_PROGRESS") & (Asset.asset_name == asset_name)),
     )
     return len(result.scalars().all())
 
+
 async def alerts_open_by_assest_name(db: AsyncSession, asset_name: str) -> int:
     result = await db.execute(
-        select(Alert)
-        .join(Asset, Alert.id == Asset.alert_linked)
-        .where((Alert.status == "OPEN") & (Asset.asset_name == asset_name))
+        select(Alert).join(Asset, Alert.id == Asset.alert_linked).where((Alert.status == "OPEN") & (Asset.asset_name == asset_name)),
     )
     return len(result.scalars().all())
+
 
 async def alert_total_by_alert_title(db: AsyncSession, alert_title: str) -> int:
     result = await db.execute(select(Alert).where(Alert.alert_name.like(f"%{alert_title}%")))
     return len(result.scalars().all())
 
+
 async def alerts_closed_by_alert_title(db: AsyncSession, alert_title: str) -> int:
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "CLOSED") & (Alert.alert_name.like(f"%{alert_title}%"))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.alert_name.like(f"%{alert_title}%"))))
     return len(result.scalars().all())
+
 
 async def alerts_in_progress_by_alert_title(db: AsyncSession, alert_title: str) -> int:
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "IN_PROGRESS") & (Alert.alert_name.like(f"%{alert_title}%"))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.alert_name.like(f"%{alert_title}%"))))
     return len(result.scalars().all())
 
+
 async def alerts_open_by_alert_title(db: AsyncSession, alert_title: str) -> int:
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "OPEN") & (Alert.alert_name.like(f"%{alert_title}%"))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.alert_name.like(f"%{alert_title}%"))))
     return len(result.scalars().all())
+
 
 async def alerts_total_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
     result = await db.execute(select(Alert).where(Alert.assigned_to == assigned_to))
     return len(result.scalars().all())
 
+
 async def alerts_closed_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
-    result = await db.execute(
-        select(Alert).where((Alert.status == "CLOSED") & (Alert.assigned_to == assigned_to))
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.assigned_to == assigned_to)))
     return len(result.scalars().all())
+
 
 async def alerts_in_progress_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
-    result = await db.execute(
-        select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.assigned_to == assigned_to))
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.assigned_to == assigned_to)))
     return len(result.scalars().all())
 
+
 async def alerts_open_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
-    result = await db.execute(
-        select(Alert).where((Alert.status == "OPEN") & (Alert.assigned_to == assigned_to))
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.assigned_to == assigned_to)))
     return len(result.scalars().all())
+
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
         select(Alert)
         .join(AlertToTag, Alert.id == AlertToTag.alert_id)
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
-        .where(AlertTag.tag == tag)
+        .where(AlertTag.tag == tag),
     )
     return len(result.scalars().all())
+
 
 async def alerts_closed_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
         select(Alert)
         .join(AlertToTag, Alert.id == AlertToTag.alert_id)
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
-        .where((Alert.status == "CLOSED") & (AlertTag.tag == tag))
+        .where((Alert.status == "CLOSED") & (AlertTag.tag == tag)),
     )
     return len(result.scalars().all())
+
 
 async def alerts_in_progress_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
         select(Alert)
         .join(AlertToTag, Alert.id == AlertToTag.alert_id)
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
-        .where((Alert.status == "IN_PROGRESS") & (AlertTag.tag == tag))
+        .where((Alert.status == "IN_PROGRESS") & (AlertTag.tag == tag)),
     )
     return len(result.scalars().all())
+
 
 async def alerts_open_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
         select(Alert)
         .join(AlertToTag, Alert.id == AlertToTag.alert_id)
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id)
-        .where((Alert.status == "OPEN") & (AlertTag.tag == tag))
+        .where((Alert.status == "OPEN") & (AlertTag.tag == tag)),
     )
     return len(result.scalars().all())
+
 
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
@@ -200,6 +196,7 @@ async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
     return result.scalars().first()
 
+
 # ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def get_customer_code_names(source: str, session: AsyncSession):
     result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
@@ -211,6 +208,7 @@ async def get_customer_notification(customer_code: str, session: AsyncSession):
     notification = result.scalars().first()
     logger.info(f"Notification: {notification}")
     return [notification] if notification is not None else []
+
 
 async def put_customer_notification(notification: PutNotification, session: AsyncSession):
     result = await session.execute(select(Notification).where(Notification.customer_code == notification.customer_code))
@@ -262,10 +260,13 @@ async def add_alert_title_name(source: str, alert_title_name: str, session: Asyn
         alert_title = AlertTitleFieldName(source=source, field_name=alert_title_name)
         session.add(alert_title)
 
+
 # ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def add_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     result = await session.execute(
-        select(CustomerCodeFieldName).where((CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name)),
+        select(CustomerCodeFieldName).where(
+            (CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name),
+        ),
     )
     existing_customer_code = result.scalars().first()
     if existing_customer_code is None:
@@ -328,6 +329,7 @@ async def replace_alert_title_name(source: str, alert_title_name: str, session: 
     # Commit the changes
     await session.commit()
 
+
 # ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def replace_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     # Load the current customer_code for this source from the DB, then delete it and replace it with `customer_code_name`
@@ -379,11 +381,14 @@ async def delete_alert_title_name(source: str, alert_title_name: str, session: A
     if alert_title:
         await session.delete(alert_title)
 
+
 # ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def delete_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     logger.info(f"Deleting customer code name {customer_code_name} for source {source}")
     customer_code = await session.execute(
-        select(CustomerCodeFieldName).where((CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name)),
+        select(CustomerCodeFieldName).where(
+            (CustomerCodeFieldName.source == source) & (CustomerCodeFieldName.field_name == customer_code_name),
+        ),
     )
     customer_code = customer_code.scalar_one_or_none()
     if customer_code:
@@ -498,6 +503,7 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
 
+
 async def delete_alert_tag(alert_id: int, tag_id: int, db: AsyncSession):
     result = await db.execute(select(AlertTag).where(AlertTag.id == tag_id))
     alert_tag = result.scalars().first()
@@ -521,7 +527,6 @@ async def delete_alert_tag(alert_id: int, tag_id: int, db: AsyncSession):
         raise HTTPException(status_code=400, detail="Error deleting alert tag")
 
     return alert_tag
-
 
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:
@@ -610,6 +615,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
 #         alerts_out.append(alert_out)
 #     return alerts_out
 
+
 async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
     offset = (page - 1) * page_size
     result = await db.execute(
@@ -621,7 +627,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> L
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -915,7 +921,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -953,7 +959,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -992,7 +998,7 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -1030,7 +1036,7 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -1055,6 +1061,7 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
         alerts_out.append(alert_out)
     return alerts_out
 
+
 async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
     offset = (page - 1) * page_size
     result = await db.execute(
@@ -1067,7 +1074,7 @@ async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
         .offset(offset)
-        .limit(page_size)
+        .limit(page_size),
     )
     alerts = result.scalars().all()
     alerts_out = []

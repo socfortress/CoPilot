@@ -2,9 +2,11 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+
 from fastapi import HTTPException
 from pydantic import BaseModel
-from pydantic import Field, root_validator
+from pydantic import Field
+from pydantic import root_validator
 
 
 class IntegrationRequest(BaseModel):
@@ -26,6 +28,7 @@ class IntegrationRequest(BaseModel):
         example=True,
     )
 
+
 class ExecuteWorkflowRequest(BaseModel):
     workflow_id: str = Field(..., description="The ID of the workflow", example="workflow_id")
     execution_arguments: Optional[Dict[str, Any]] = Field(
@@ -37,7 +40,7 @@ class ExecuteWorkflowRequest(BaseModel):
 
     @root_validator
     def check_customer_code(cls, values):
-        execution_arguments = values.get('execution_arguments', {})
-        if 'customer_code' not in execution_arguments or not execution_arguments['customer_code']:
+        execution_arguments = values.get("execution_arguments", {})
+        if "customer_code" not in execution_arguments or not execution_arguments["customer_code"]:
             raise HTTPException(status_code=400, detail="customer_code is required")
         return values

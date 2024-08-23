@@ -1,8 +1,6 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any
-from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -10,12 +8,15 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+
 class SigmaRulesLevel(str, Enum):
     """
     Represents the Sigma rules level.
     """
+
     high = "high"
     critical = "critical"
+
 
 class SigmaRuleUploadRequest(BaseModel):
     rule_levels: List[SigmaRulesLevel] = Field(
@@ -65,6 +66,7 @@ class SigmaQueryOutResponse(BaseModel):
     success: bool
     message: str
 
+
 class ActivateSigmaQueryResponse(BaseModel):
     """
     Represents the Sigma query activation response.
@@ -73,6 +75,7 @@ class ActivateSigmaQueryResponse(BaseModel):
     success: bool
     message: str
     enabled_queries: List[str] = []
+
 
 class DeactivateSigmaQueryResponse(BaseModel):
     """
@@ -83,6 +86,7 @@ class DeactivateSigmaQueryResponse(BaseModel):
     message: str
     disabled_queries: List[str] = []
 
+
 class DeleteSigmaQueryResponse(BaseModel):
     """
     Represents the Sigma query deletion response.
@@ -91,6 +95,7 @@ class DeleteSigmaQueryResponse(BaseModel):
     success: bool
     message: str
     deleted_queries: List[str] = []
+
 
 class RunActiveSigmaQueries(BaseModel):
     query: str = Field(

@@ -4,17 +4,7 @@ import zipfile
 from typing import List
 
 import requests
-from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import delete
-from sqlalchemy import update
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-
-from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
-from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
 
 
 async def download_and_extract_zip(url: str) -> None:

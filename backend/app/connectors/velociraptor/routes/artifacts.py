@@ -12,8 +12,9 @@ from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody, CollectFileBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
@@ -23,7 +24,8 @@ from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
-from app.connectors.velociraptor.services.artifacts import run_artifact_collection, run_file_collection
+from app.connectors.velociraptor.services.artifacts import run_artifact_collection
+from app.connectors.velociraptor.services.artifacts import run_file_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
@@ -477,6 +479,7 @@ async def get_artifact_recommendation(request: ArtifactReccomendationAIRequest):
         ),
     )
 
+
 # ! WIP ! #
 @velociraptor_artifacts_router.post(
     "/collect/file",
@@ -513,4 +516,3 @@ async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSes
     #     collect_artifact_body.hostname,
     # )
     return await run_file_collection(collect_artifact_body)
-

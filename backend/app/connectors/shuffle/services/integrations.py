@@ -1,6 +1,7 @@
 from loguru import logger
 
-from app.connectors.shuffle.schema.integrations import IntegrationRequest, ExecuteWorkflowRequest
+from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
+from app.connectors.shuffle.schema.integrations import IntegrationRequest
 from app.connectors.shuffle.utils.universal import send_post_request
 
 
@@ -18,6 +19,7 @@ async def execute_integration(request: IntegrationRequest) -> dict:
     response = await send_post_request("/api/v1/apps/categories/run", request.dict())
     logger.info(f"Response: {response}")
     return response
+
 
 async def execute_workflow(request: ExecuteWorkflowRequest) -> dict:
     """

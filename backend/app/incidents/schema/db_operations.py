@@ -36,14 +36,18 @@ class SocfortressRecommendsWazuhFieldNames(Enum):
     process_id = "process_id"
     sha256 = "sha256"
 
+
 class SocfortressRecommendsWazuhAssetName(Enum):
     agent_name = "agent_name"
+
 
 class SocfortressRecommendsWazuhTimeFieldName(Enum):
     timestamp_utc = "timestamp_utc"
 
+
 class SocfortressRecommendsWazuhAlertTitleName(Enum):
     rule_description = "rule_description"
+
 
 class SocfortressRecommendsWazuhResponse(BaseModel):
     field_names: List[str]
@@ -205,12 +209,13 @@ class CaseCreate(BaseModel):
     case_status: str
     assigned_to: str
 
+
 class LinkedCaseCreate(BaseModel):
     case_name: str
     case_description: str
     case_creation_time: datetime
     case_status: str
-    assigned_to: Optional[str ] = None
+    assigned_to: Optional[str] = None
     id: int
 
 
@@ -242,6 +247,7 @@ class AlertTagBase(BaseModel):
 class AlertTagCreate(BaseModel):
     alert_id: int
     tag: str
+
 
 class AlertTagDelete(BaseModel):
     alert_id: int
@@ -309,16 +315,19 @@ class CaseOutResponse(BaseModel):
     success: bool
     message: str
 
+
 class Notification(BaseModel):
     id: int
     customer_code: str
     shuffle_workflow_id: str
     enabled: bool
 
+
 class NotificationResponse(BaseModel):
     notifications: Optional[List[Notification]] = []
     success: bool
     message: str
+
 
 class PutNotification(BaseModel):
     customer_code: str

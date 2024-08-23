@@ -1,34 +1,27 @@
 import os
-import re
 from datetime import datetime
-from datetime import timedelta
-from typing import List
 
-import yaml
-from fastapi import File
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import UploadFile
+from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
-from fastapi import Security
+from fastapi import UploadFile
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.services.universal import select_all_users
-from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse, SigmaRuleUploadRequest, DeleteSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import ActivateSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
-from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest, ActivateSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import DeactivateSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import DeleteSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, DeactivateSigmaQueryResponse
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse
+from app.connectors.wazuh_indexer.schema.sigma import SigmaRuleUploadRequest
 from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaActive
 from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaTimeInterval
 from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
-from app.connectors.wazuh_indexer.services.sigma.generate_query import (
-    create_sigma_query_from_rule,
-)
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     add_sigma_queries_to_db,
 )
@@ -36,10 +29,16 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     create_sigma_query,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    delete_sigma_rule, read_sigma_rule, process_sigma_file
+    delete_sigma_rule,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    list_active_sigma_queries, list_inactive_sigma_queries
+    get_sigma_query_by_id,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    list_active_sigma_queries,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    list_inactive_sigma_queries,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     list_sigma_queries,
@@ -48,7 +47,10 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     parse_time_interval,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
-    set_sigma_query_active, get_sigma_query_by_id
+    process_sigma_file,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    set_sigma_query_active,
 )
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
     update_sigma_time_interval,
@@ -56,16 +58,13 @@ from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
     download_and_extract_zip,
 )
-from app.connectors.wazuh_indexer.services.sigma.sigma_download import find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
     keep_only_folder_directory,
-)
-from app.connectors.wazuh_indexer.utils.universal import (
-    get_available_indices_via_source,
 )
 from app.db.db_session import get_db
 
 wazuh_indexer_sigma_router = APIRouter()
+
 
 def save_file(file: UploadFile, file_path: str):
     """
@@ -82,6 +81,7 @@ def save_file(file: UploadFile, file_path: str):
     except Exception as e:
         logger.error(f"Error saving file: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while saving the file.")
+
 
 def cleanup_file(file_path: str):
     """
@@ -156,6 +156,7 @@ async def get_inactive_sigma_queries_endpoint(
         success=True,
         message="Successfully retrieved the inactive Sigma queries.",
     )
+
 
 @wazuh_indexer_sigma_router.post("/queries/create", response_model=SigmaQueryOutResponse)
 async def create_sigma_query_endpoint(
@@ -319,6 +320,7 @@ async def run_active_sigma_queries_endpoint(
         message="Successfully ran the active Sigma queries.",
     )
 
+
 @wazuh_indexer_sigma_router.post("/run-single-query", response_model=SigmaQueryOutResponse)
 async def run_single_sigma_query_endpoint(
     index_name: str = Query(default="wazuh*"),
@@ -360,6 +362,7 @@ async def run_single_sigma_query_endpoint(
         message="Successfully ran the active Sigma queries.",
     )
 
+
 @wazuh_indexer_sigma_router.post("/upload")
 async def upload_sigma_queries_endpoint(
     file: UploadFile = File(...),
@@ -389,6 +392,7 @@ async def upload_sigma_queries_endpoint(
         cleanup_file(file_path)
 
     return {"message": "Successfully uploaded the Sigma queries to the database.", "success": True}
+
 
 @wazuh_indexer_sigma_router.put("/queries/set-active", response_model=SigmaQueryOutResponse)
 async def set_sigma_query_active_endpoint(

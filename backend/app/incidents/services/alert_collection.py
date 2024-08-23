@@ -1,23 +1,12 @@
-from typing import List
-
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import Security
 from loguru import logger
-from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import (
     return_graylog_events_index_names,
 )
-from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertPayloadItem
 from app.incidents.schema.alert_collection import AlertsPayload
-from app.incidents.schema.alert_collection import Source
 from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse
 from app.incidents.schema.incident_alert import IndexNamesResponse
 
 

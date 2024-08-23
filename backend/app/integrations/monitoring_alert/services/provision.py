@@ -24,9 +24,6 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionNotification,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotificationSettings,
 )
 from app.integrations.monitoring_alert.schema.provision import (
@@ -276,37 +273,38 @@ async def provision_wazuh_monitoring_alert(
     logger.info(
         f"Invoking provision_wazuh_monitoring_alert with request: {request.dict()}",
     )
-    notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
-    if not notification_exists:
-        # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
-        # ! Therefore, we need to send to API port of Copilot over HTTP
-        url_whitelisted = await check_if_url_whitelist_entry_exists(
-            f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
-        )
-        if not url_whitelisted:
-            logger.info("Provisioning URL Whitelist")
-            whitelisted_urls = await build_url_whitelisted_entries(
-                whitelist_url_model=GraylogUrlWhitelistEntryConfig(
-                    id=await generate_random_id(),
-                    value=f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
-                    title="SEND TO COPILOT",
-                    type="literal",
-                ),
-            )
-            await provision_webhook_url_whitelist(whitelisted_urls)
+    # ! TODO Commenting out for now since the plan is to pull from gl-events ! #
+    # notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
+    # if not notification_exists:
+    #     # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
+    #     # ! Therefore, we need to send to API port of Copilot over HTTP
+    #     url_whitelisted = await check_if_url_whitelist_entry_exists(
+    #         f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
+    #     )
+    #     if not url_whitelisted:
+    #         logger.info("Provisioning URL Whitelist")
+    #         whitelisted_urls = await build_url_whitelisted_entries(
+    #             whitelist_url_model=GraylogUrlWhitelistEntryConfig(
+    #                 id=await generate_random_id(),
+    #                 value=f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
+    #                 title="SEND TO COPILOT",
+    #                 type="literal",
+    #             ),
+    #         )
+    #         await provision_webhook_url_whitelist(whitelisted_urls)
 
-        logger.info("Provisioning SEND TO COPILOT Webhook")
-        notification_id = await provision_webhook(
-            GraylogAlertWebhookNotificationModel(
-                title="SEND TO COPILOT",
-                description="Send alert to Copilot",
-                config={
-                    "url": f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
-                    "type": "http-notification-v1",
-                },
-            ),
-        )
-    notification_id = await get_notification_id("SEND TO COPILOT")
+    #     logger.info("Provisioning SEND TO COPILOT Webhook")
+    #     notification_id = await provision_webhook(
+    #         GraylogAlertWebhookNotificationModel(
+    #             title="SEND TO COPILOT",
+    #             description="Send alert to Copilot",
+    #             config={
+    #                 "url": f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
+    #                 "type": "http-notification-v1",
+    #             },
+    #         ),
+    #     )
+    # notification_id = await get_notification_id("SEND TO COPILOT")
     await provision_alert_definition(
         GraylogAlertProvisionModel(
             title="WAZUH SYSLOG LEVEL ALERT",

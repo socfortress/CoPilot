@@ -7,7 +7,8 @@ from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationR
 from app.connectors.velociraptor.schema.artifacts import Artifacts
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse, CollectFileBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
@@ -164,6 +165,7 @@ async def run_artifact_collection(
             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
         )
 
+
 async def run_file_collection(
     collect_artifact_body: CollectFileBody,
 ) -> CollectArtifactResponse:
@@ -236,6 +238,7 @@ async def run_file_collection(
             status_code=500,
             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
         )
+
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     """

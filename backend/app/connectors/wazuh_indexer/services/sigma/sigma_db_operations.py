@@ -7,25 +7,17 @@ from typing import List
 import yaml
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import delete
-from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
-from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery, SigmaRuleUploadRequest
+from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
+from app.connectors.wazuh_indexer.schema.sigma import SigmaRuleUploadRequest
 from app.connectors.wazuh_indexer.services.sigma.generate_query import (
     create_sigma_query_from_rule,
 )
-from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
-    download_and_extract_zip,
-)
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import find_yaml_files
-from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
-    keep_only_folder_directory,
-)
 
 
 def parse_time_interval(interval: str) -> timedelta:
@@ -103,6 +95,7 @@ async def extract_title(file_path):
 
     return title
 
+
 async def get_sigma_query_by_id(
     db: AsyncSession,
     sigma_query_id: int,
@@ -118,9 +111,7 @@ async def get_sigma_query_by_id(
         SigmaQuery: The Sigma query.
     """
     # Retrieve the Sigma query
-    sigma_query = await db.execute(
-        select(SigmaQuery).filter_by(id=sigma_query_id)
-    )
+    sigma_query = await db.execute(select(SigmaQuery).filter_by(id=sigma_query_id))
     sigma_query = sigma_query.scalars().first()
 
     if not sigma_query:
@@ -168,6 +159,7 @@ async def list_active_sigma_queries(
     sigma_queries = sigma_queries.scalars().all()
 
     return sigma_queries
+
 
 async def list_inactive_sigma_queries(
     db: AsyncSession,

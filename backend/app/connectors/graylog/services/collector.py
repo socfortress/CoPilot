@@ -14,7 +14,6 @@ from app.connectors.graylog.schema.collector import RunningInputsResponse
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.utils.universal import send_get_request
 
-
 # async def get_indices_full() -> GraylogIndicesResponse:
 #     """Get indices from Graylog.
 
@@ -46,6 +45,7 @@ from app.connectors.graylog.utils.universal import send_get_request
 #             success=False,
 #             message="Failed to collect indices",
 #         )
+
 
 async def get_indices_full() -> GraylogIndicesResponse:
     """Get indices from Graylog.
@@ -83,6 +83,7 @@ async def get_indices_full() -> GraylogIndicesResponse:
             success=False,
             message="Failed to collect indices",
         )
+
 
 async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
     """

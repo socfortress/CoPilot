@@ -199,7 +199,9 @@ class LuceneBackend(TextQueryBackend):
         return super().convert_condition_not(cond, state)
 
     def convert_condition_field_eq_val_cidr(
-        self, cond: ConditionFieldEqualsValueExpression, state: ConversionState,
+        self,
+        cond: ConditionFieldEqualsValueExpression,
+        state: ConversionState,
     ) -> Union[str, DeferredQueryExpression]:
         if ":" in cond.value.cidr:
             return super().convert_condition_field_eq_val_cidr(cond, state).replace(":", r"\:").replace(r"\:", ":", 1)

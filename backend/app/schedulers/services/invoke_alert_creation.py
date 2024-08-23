@@ -3,8 +3,8 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.future import select
 
-from app.incidents.routes.incident_alert import create_alert_auto_route
 from app.db.db_session import get_db_session
+from app.incidents.routes.incident_alert import create_alert_auto_route
 from app.schedulers.models.scheduler import JobMetadata
 
 

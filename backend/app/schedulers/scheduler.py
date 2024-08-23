@@ -14,13 +14,13 @@ from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
+from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
 from app.schedulers.services.invoke_darktrace import (
     invoke_darktrace_integration_collect,
 )
-from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
 from app.schedulers.services.invoke_duo import invoke_duo_integration_collect
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
@@ -143,7 +143,7 @@ async def initialize_job_metadata():
                 "time_interval": 5,
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
-            }
+            },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:

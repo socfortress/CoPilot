@@ -1,77 +1,92 @@
-from typing import List
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
-from fastapi import Security
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
-from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
 from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
 from app.connectors.wazuh_indexer.utils.universal import get_index_source
+from app.customer_provisioning.routes.provision import check_customer_exists
 from app.db.db_session import get_db
+from app.db.universal_models import Customers
 from app.incidents.models import Alert
-from app.incidents.models import AlertContext
-from app.incidents.models import AlertTag
-from app.incidents.models import Asset
-from app.incidents.models import AssetFieldName
-from app.incidents.models import Case
-from app.incidents.models import CaseAlertLink
-from app.incidents.models import Comment
-from app.incidents.models import FieldName, Notification
+from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
-from app.incidents.schema.db_operations import AlertOut
-from app.incidents.schema.db_operations import AlertOutResponse, SocfortressRecommendsWazuhFieldNames, SocfortressRecommendsWazuhAssetName, SocfortressRecommendsWazuhTimeFieldName, SocfortressRecommendsWazuhAlertTitleName, SocfortressRecommendsWazuhResponse
+from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
+from app.incidents.schema.db_operations import AlertTagDelete
 from app.incidents.schema.db_operations import AlertTagResponse
-from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
-from app.incidents.schema.db_operations import AvailableSourcesResponse, NotificationResponse
+from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
-from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentBase, PutNotification
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
-from app.incidents.schema.db_operations import MappingsResponse, AlertTagDelete
+from app.incidents.schema.db_operations import MappingsResponse
+from app.incidents.schema.db_operations import NotificationResponse
+from app.incidents.schema.db_operations import PutNotification
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhFieldNames
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
-from app.incidents.services.db_operations import add_field_name, alert_total, alerts_closed, alerts_in_progress, alerts_open
+from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import create_alert, get_customer_code_names, delete_customer_code_name, alert_total_by_assest_name, alerts_open_by_assest_name, alerts_closed_by_asset_name, alerts_in_progress_by_assest_name
+from app.incidents.services.db_operations import alert_total
+from app.incidents.services.db_operations import alert_total_by_alert_title
+from app.incidents.services.db_operations import alert_total_by_assest_name
+from app.incidents.services.db_operations import alerts_closed
+from app.incidents.services.db_operations import alerts_closed_by_alert_title
+from app.incidents.services.db_operations import alerts_closed_by_asset_name
+from app.incidents.services.db_operations import alerts_closed_by_assigned_to
+from app.incidents.services.db_operations import alerts_closed_by_tag
+from app.incidents.services.db_operations import alerts_in_progress
+from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
+from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
+from app.incidents.services.db_operations import alerts_in_progress_by_assigned_to
+from app.incidents.services.db_operations import alerts_in_progress_by_tag
+from app.incidents.services.db_operations import alerts_open
+from app.incidents.services.db_operations import alerts_open_by_alert_title
+from app.incidents.services.db_operations import alerts_open_by_assest_name
+from app.incidents.services.db_operations import alerts_open_by_assigned_to
+from app.incidents.services.db_operations import alerts_open_by_tag
+from app.incidents.services.db_operations import alerts_total_by_assigned_to
+from app.incidents.services.db_operations import alerts_total_by_tag
+from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag, replace_customer_code_name
+from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
-from app.incidents.services.db_operations import create_case, alerts_total_by_assigned_to, alerts_closed_by_assigned_to, alerts_in_progress_by_assigned_to, alerts_open_by_assigned_to
+from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
-from app.incidents.services.db_operations import create_case_from_alert, add_customer_code_name
+from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
-from app.incidents.services.db_operations import delete_alert, alerts_total_by_tag, alerts_closed_by_tag, alerts_in_progress_by_tag, alerts_open_by_tag
+from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
@@ -83,6 +98,7 @@ from app.incidents.services.db_operations import get_alert_context_by_id
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
+from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.incidents.services.db_operations import is_alert_linked_to_case
@@ -91,31 +107,50 @@ from app.incidents.services.db_operations import list_alert_by_status
 from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_tag
+from app.incidents.services.db_operations import list_alerts_by_title
 from app.incidents.services.db_operations import list_cases
-from app.incidents.services.db_operations import list_cases_by_assigned_to, list_alerts_by_title
+from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_status
+from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
 from app.incidents.services.db_operations import replace_field_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
-from app.incidents.services.db_operations import update_case_assigned_to, alert_total_by_alert_title, alerts_closed_by_alert_title, alerts_in_progress_by_alert_title, alerts_open_by_alert_title
+from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_status
-from app.incidents.services.db_operations import validate_source_exists, get_customer_notification, put_customer_notification
-from app.db.universal_models import Customers
-from app.customer_provisioning.routes.provision import check_customer_exists
+from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
 
+
 @incidents_db_operations_router.get("/notification/{customer_code}", response_model=NotificationResponse)
-async def get_customer_notification_endpoint(customer_code: str, _customer: Customers = Depends(check_customer_exists), db: AsyncSession = Depends(get_db)):
-    return NotificationResponse(notifications=await get_customer_notification(customer_code, db), success=True, message="Notification retrieved successfully")
+async def get_customer_notification_endpoint(
+    customer_code: str,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
+    return NotificationResponse(
+        notifications=await get_customer_notification(customer_code, db),
+        success=True,
+        message="Notification retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.put("/notification", response_model=NotificationResponse)
-async def put_customer_notification_endpoint(notification: PutNotification, _customer: Customers = Depends(check_customer_exists), db: AsyncSession = Depends(get_db)):
+async def put_customer_notification_endpoint(
+    notification: PutNotification,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
     await put_customer_notification(notification, db)
-    return NotificationResponse(notifications=await get_customer_notification(notification.customer_code, db), success=True, message="Notification updated successfully")
+    return NotificationResponse(
+        notifications=await get_customer_notification(notification.customer_code, db),
+        success=True,
+        message="Notification updated successfully",
+    )
+
 
 @incidents_db_operations_router.get("/available-source/{index_name}", response_model=AvailableSourcesResponse)
 async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):
@@ -129,6 +164,7 @@ async def get_available_indices(source: str, session: AsyncSession = Depends(get
         success=True,
         message="Indices retrieved successfully",
     )
+
 
 @incidents_db_operations_router.get("/socfortress/recommends/wazuh", response_model=SocfortressRecommendsWazuhResponse)
 async def get_socfortress_recommends_wazuh(session: AsyncSession = Depends(get_db)):
@@ -336,7 +372,7 @@ async def list_alerts_by_tag_endpoint(
     tag: str,
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1)
+    page_size: int = Query(25, ge=1),
 ):
     return AlertOutResponse(
         alerts=await list_alerts_by_tag(tag, db, page, page_size),
@@ -345,7 +381,7 @@ async def list_alerts_by_tag_endpoint(
         in_progress=await alerts_in_progress_by_tag(db, tag),
         closed=await alerts_closed_by_tag(db, tag),
         success=True,
-        message="Alert's tags retrieved successfully"
+        message="Alert's tags retrieved successfully",
     )
 
 
@@ -385,11 +421,7 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
 
 
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
-async def list_alerts_endpoint(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1),
-    db: AsyncSession = Depends(get_db)
-):
+async def list_alerts_endpoint(page: int = Query(1, ge=1), page_size: int = Query(25, ge=1), db: AsyncSession = Depends(get_db)):
     return AlertOutResponse(
         alerts=await list_alerts(db, page=page, page_size=page_size),
         total=await alert_total(db),
@@ -397,7 +429,9 @@ async def list_alerts_endpoint(
         in_progress=await alerts_in_progress(db),
         closed=await alerts_closed(db),
         success=True,
-        message="Alerts retrieved successfully")
+        message="Alerts retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
@@ -416,7 +450,7 @@ async def list_alerts_by_status_endpoint(
     status: AlertStatus,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
@@ -427,15 +461,16 @@ async def list_alerts_by_status_endpoint(
         in_progress=await alerts_in_progress(db),
         closed=await alerts_closed(db),
         success=True,
-        message="Alerts retrieved successfully"
-        )
+        message="Alerts retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/alerts/assigned-to/{assigned_to}", response_model=AlertOutResponse)
 async def list_alerts_by_assigned_to_endpoint(
     assigned_to: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
         alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size),
@@ -444,15 +479,16 @@ async def list_alerts_by_assigned_to_endpoint(
         in_progress=await alerts_in_progress_by_assigned_to(db, assigned_to),
         closed=await alerts_closed_by_assigned_to(db, assigned_to),
         success=True,
-        message="Alerts retrieved successfully"
-        )
+        message="Alerts retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=AlertOutResponse)
 async def list_alerts_by_asset_name_endpoint(
     asset_name: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
         alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size),
@@ -461,15 +497,16 @@ async def list_alerts_by_asset_name_endpoint(
         in_progress=await alerts_in_progress_by_assest_name(db, asset_name),
         closed=await alerts_closed_by_asset_name(db, asset_name),
         success=True,
-        message="Alerts retrieved successfully"
-        )
+        message="Alerts retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/alerts/title/{title}", response_model=AlertOutResponse)
 async def list_alerts_by_title_endpoint(
     title: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
         alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size),
@@ -478,8 +515,8 @@ async def list_alerts_by_title_endpoint(
         in_progress=await alerts_in_progress_by_alert_title(db, title),
         closed=await alerts_closed_by_alert_title(db, title),
         success=True,
-        message="Alerts retrieved successfully"
-        )
+        message="Alerts retrieved successfully",
+    )
 
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)

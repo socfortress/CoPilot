@@ -1,8 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,17 +7,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
-from app.incidents.schema.incident_alert import AutoCreateAlertResponse
 from app.incidents.schema.incident_alert import AlertDetailsResponse
-from app.incidents.schema.incident_alert import CreateAlertResponse, CreateAlertRequestRoute, AlertTimelineResponse
-from app.incidents.schema.incident_alert import IndexNamesResponse, CreateAlertRequest
+from app.incidents.schema.incident_alert import AlertTimelineResponse
+from app.incidents.schema.incident_alert import AutoCreateAlertResponse
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertRequestRoute
+from app.incidents.schema.incident_alert import CreateAlertResponse
+from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
-from app.incidents.services.incident_alert import get_single_alert_details, retrieve_alert_timeline
 from app.incidents.services.incident_alert import create_alert
+from app.incidents.services.incident_alert import get_single_alert_details
+from app.incidents.services.incident_alert import retrieve_alert_timeline
 
 incidents_alerts_router = APIRouter()
 
@@ -53,6 +54,7 @@ async def get_alerts_not_created_route() -> AlertsPayload:
     """
     return await get_alerts_not_created_in_copilot()
 
+
 @incidents_alerts_router.post(
     "/alert/details",
     description="Get the details of a single alert",
@@ -70,7 +72,13 @@ async def get_single_alert_details_route(
     Returns:
         class AlertDetailsResponse(BaseModel): The response object containing the details of the alert.
     """
-    return AlertDetailsResponse(success=True, message="Alert details retrieved", alert_details=await get_single_alert_details(CreateAlertRequest(index_name=create_alert_request.index_name, alert_id=create_alert_request.index_id)))
+    return AlertDetailsResponse(
+        success=True,
+        message="Alert details retrieved",
+        alert_details=await get_single_alert_details(
+            CreateAlertRequest(index_name=create_alert_request.index_name, alert_id=create_alert_request.index_id),
+        ),
+    )
 
 
 @incidents_alerts_router.post(
@@ -92,8 +100,13 @@ async def get_alert_timeline_route(
     Returns:
         class AlertTimelineResponse(BaseModel): The response object containing the details of the alert.
     """
-    #await retrieve_alert_timeline(alert, session)
-    return AlertTimelineResponse(success=True, message="Alert timeline retrieved", alert_timeline=await retrieve_alert_timeline(alert, session))
+    # await retrieve_alert_timeline(alert, session)
+    return AlertTimelineResponse(
+        success=True,
+        message="Alert timeline retrieved",
+        alert_timeline=await retrieve_alert_timeline(alert, session),
+    )
+
 
 @incidents_alerts_router.post(
     "/create/manual",

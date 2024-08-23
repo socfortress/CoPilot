@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.incidents.routes.incident_alert import create_alert_manual_route
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
-from app.integrations.alert_escalation.services.general_alert import create_alert
-from app.incidents.routes.incident_alert import create_alert_manual_route
 
 integration_general_alerts_router = APIRouter()
+
 
 # ! TODO: Remove this route and file after the new route is implemented ! #
 @integration_general_alerts_router.post(
@@ -37,5 +37,5 @@ async def create_alert_route(
     """
     logger.info(f"Creating alert {create_alert_request.alert_id} in IRIS")
     return None
-    #return await create_alert(create_alert_request, session)
+    # return await create_alert(create_alert_request, session)
     return await create_alert_manual_route(create_alert_request, session)

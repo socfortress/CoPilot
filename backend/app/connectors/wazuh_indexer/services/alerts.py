@@ -1,28 +1,34 @@
+from collections import defaultdict
+from datetime import datetime
+from datetime import timedelta
 from typing import Dict
 from typing import List
 from typing import Optional
-from collections import defaultdict
-from typing import Type, Tuple
+from typing import Tuple
+from typing import Type
 
-from elasticsearch7.exceptions import RequestError, NotFoundError
+from elasticsearch7.exceptions import NotFoundError
+from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
-from datetime import datetime, timedelta
 
-from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost, Alert
+from app.connectors.wazuh_indexer.schema.alerts import Alert
+from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRule
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
-from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse, GraylogAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import CollectAlertsResponse
+from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
-from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors, AlertNotFound
+from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
@@ -334,6 +340,7 @@ async def get_alerts_by_rule_per_host(
         message="Successfully collected alerts by rule per host",
     )
 
+
 def parse_timerange(timerange: str) -> str:
     """
     Parses the timerange string and returns the corresponding datetime string for Elasticsearch.
@@ -341,11 +348,11 @@ def parse_timerange(timerange: str) -> str:
     unit = timerange[-1]
     amount = int(timerange[:-1])
 
-    if unit == 'h':
+    if unit == "h":
         delta = timedelta(hours=amount)
-    elif unit == 'd':
+    elif unit == "d":
         delta = timedelta(days=amount)
-    elif unit == 'w':
+    elif unit == "w":
         delta = timedelta(weeks=amount)
     else:
         raise HTTPException(
@@ -354,7 +361,8 @@ def parse_timerange(timerange: str) -> str:
         )
 
     start_time = datetime.utcnow() - delta
-    return start_time.isoformat() + 'Z'
+    return start_time.isoformat() + "Z"
+
 
 async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
     """
@@ -368,6 +376,7 @@ async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
     """
     index_name, index_id = origin_context.split(":")[-2:]
     return index_name, index_id
+
 
 async def get_single_alert_details(
     index_name: str,
@@ -390,11 +399,8 @@ async def get_single_alert_details(
         return alert
     except NotFoundError:
         logger.warning(f"Alert not found for index {index_name} and id {index_id}")
-        return AlertNotFound(
-            _index=index_name,
-            _id=index_id,
-            _source={"message": "alert not found"}
-        ).to_dict()
+        return AlertNotFound(_index=index_name, _id=index_id, _source={"message": "alert not found"}).to_dict()
+
 
 async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str) -> List[Dict]:
     """
@@ -430,6 +436,7 @@ async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str
     logger.info(f"Graylog alerts response: {response}")
     return response["hits"]["hits"]
 
+
 async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
     """
     Processes the hits from the Graylog alert search response.
@@ -454,11 +461,11 @@ async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
         alerts_dict[index_name]["alerts"].append(alert_details)
 
     alerts = [
-        Alert(index_name=index_name, total_alerts=data["total_alerts"], alerts=data["alerts"])
-        for index_name, data in alerts_dict.items()
+        Alert(index_name=index_name, total_alerts=data["total_alerts"], alerts=data["alerts"]) for index_name, data in alerts_dict.items()
     ]
 
     return alerts
+
 
 async def get_graylog_alerts(
     request: GraylogAlertsSearchBody,

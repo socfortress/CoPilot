@@ -1,31 +1,34 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from typing import Any
 from typing import Dict
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
+from app.connectors.shuffle.services.integrations import execute_workflow
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
-from app.connectors.shuffle.services.integrations import execute_workflow
-from app.incidents.services.db_operations import get_customer_notification
-from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.incidents.models import Asset
 from app.incidents.routes.db_operations import get_configured_sources
 from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
 from app.incidents.schema.incident_alert import CreatedAlertPayload
-from app.incidents.schema.incident_alert import FieldNames, CreateAlertRequestRoute
+from app.incidents.schema.incident_alert import FieldNames
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
@@ -392,18 +395,22 @@ async def build_alert_payload(
         index_id=index_id,
     )
 
+
 async def handle_customer_notifications(customer_code: str, alert_payload: CreatedAlertPayload, session: AsyncSession):
     customer_notifications = await get_customer_notification(customer_code, session)
     if customer_notifications and customer_notifications[0].enabled:
         logger.info(f"Executing workflow for customer code {customer_code}")
-        await execute_workflow(ExecuteWorkflowRequest(
-            workflow_id=customer_notifications[0].shuffle_workflow_id,
-            execution_arguments={
-                "customer_code": customer_code,
-                "alert_context_payload": alert_payload.alert_context_payload,
-            },
-            start="",
-        ))
+        await execute_workflow(
+            ExecuteWorkflowRequest(
+                workflow_id=customer_notifications[0].shuffle_workflow_id,
+                execution_arguments={
+                    "customer_code": customer_code,
+                    "alert_context_payload": alert_payload.alert_context_payload,
+                },
+                start="",
+            ),
+        )
+
 
 async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
     """
@@ -645,11 +652,13 @@ async def create_alert(
         logger.info(
             f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}",
         )
-        await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), existing_alert)
+        await add_alert_to_document(
+            CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id),
+            existing_alert,
+        )
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
-
 
 
 async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: AsyncSession) -> List[Dict[str, Any]]:
@@ -667,8 +676,15 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
     if alert_details._source.process_id is not None:
         alert_timestamp = alert_details._source.timestamp
         start_of_day, end_of_day = calculate_day_range(alert_timestamp)
-        return await fetch_alert_timeline(alert.index_name, alert_details._source.process_id, alert_details._source.agent_name, start_of_day, end_of_day)
+        return await fetch_alert_timeline(
+            alert.index_name,
+            alert_details._source.process_id,
+            alert_details._source.agent_name,
+            start_of_day,
+            end_of_day,
+        )
     return []
+
 
 async def get_alert_details(alert: CreateAlertRequestRoute) -> Any:
     """
@@ -681,6 +697,7 @@ async def get_alert_details(alert: CreateAlertRequestRoute) -> Any:
         Any: The alert details.
     """
     return await get_single_alert_details(CreateAlertRequest(index_name=alert.index_name, alert_id=alert.index_id))
+
 
 def calculate_day_range(timestamp: str) -> (str, str):
     """
@@ -695,9 +712,16 @@ def calculate_day_range(timestamp: str) -> (str, str):
     dt = datetime.fromisoformat(timestamp)
     start_of_day = dt.replace(hour=0, minute=0, second=0, microsecond=0)
     end_of_day = start_of_day + timedelta(days=1)
-    return start_of_day.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], end_of_day.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    return start_of_day.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3], end_of_day.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-async def fetch_alert_timeline(index_name: str, process_id: str, agent_name: str, start_of_day: str, end_of_day: str) -> List[Dict[str, Any]]:
+
+async def fetch_alert_timeline(
+    index_name: str,
+    process_id: str,
+    agent_name: str,
+    start_of_day: str,
+    end_of_day: str,
+) -> List[Dict[str, Any]]:
     """
     Fetch the alert timeline from the indexer.
 

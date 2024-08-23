@@ -6,7 +6,6 @@ from typing import Dict
 from typing import Iterable
 from typing import Tuple
 
-import requests
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger

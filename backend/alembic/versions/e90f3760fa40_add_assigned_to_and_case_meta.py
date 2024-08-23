@@ -9,7 +9,6 @@ from typing import Sequence
 from typing import Union
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 from alembic import op
 

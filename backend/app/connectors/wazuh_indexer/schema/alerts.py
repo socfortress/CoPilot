@@ -142,11 +142,13 @@ class GraylogAlertsSearchBody(BaseModel):
 
         return value
 
+
 ############# ! PASSABLE MESSAGES FROM ES CLIENT ! #############
 class SkippableWazuhIndexerClientErrors(Enum):
     NO_MAPPING_FOR_TIMESTAMP = "No mapping found for [timestamp_utc] in order to sort on"
     # Add other error messages here, for example:
     # ANOTHER_ERROR = "Another specific error message"
+
 
 class AlertNotFound(BaseModel):
     index: str = Field(alias="_index")

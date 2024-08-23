@@ -1,15 +1,7 @@
 from datetime import datetime
-from typing import Dict
-from typing import List
 from typing import Optional
-from uuid import uuid4
 
-from sqlalchemy import ForeignKey
-from sqlalchemy import PrimaryKeyConstraint
-from sqlmodel import JSON
-from sqlmodel import Column
 from sqlmodel import Field
-from sqlmodel import Relationship
 from sqlmodel import SQLModel
 from sqlmodel import Text
 

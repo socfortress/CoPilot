@@ -10,7 +10,6 @@ from sqlalchemy.future import select
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
-from app.integrations.monitoring_alert.services.wazuh import handle_customer_notifications
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import Agents
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
@@ -26,6 +25,9 @@ from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertCon
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
+from app.integrations.monitoring_alert.services.wazuh import (
+    handle_customer_notifications,
+)
 from app.integrations.utils.alerts import get_asset_type_id
 
 

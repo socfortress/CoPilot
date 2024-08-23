@@ -1,17 +1,10 @@
-import os
 from datetime import datetime
 from typing import List
-from typing import Optional
 
-from elasticsearch7 import ElasticsearchException
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
-from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
-from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
-from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.incidents.schema.incident_alert import CreatedAlertPayload
@@ -105,7 +98,11 @@ async def format_opensearch_query(query: str, time_interval: str, last_execution
 
 
 async def send_query_to_opensearch(
-    es_client, query: dict, rule_name: str, index: str = "wazuh*", session: AsyncSession = None,
+    es_client,
+    query: dict,
+    rule_name: str,
+    index: str = "wazuh*",
+    session: AsyncSession = None,
 ) -> List[dict]:
     try:
         response = es_client.search(index=index, body=query)
@@ -138,7 +135,10 @@ async def process_hits(hits, rule_name, session: AsyncSession):
         if existing_alert:
             logger.info(f"Alert already exists: {existing_alert}")
             await add_asset_to_copilot_alert(
-                alert_payload=alert_payload, alert_id=existing_alert, customer_code=customer_code, session=session,
+                alert_payload=alert_payload,
+                alert_id=existing_alert,
+                customer_code=customer_code,
+                session=session,
             )
             results.append(existing_alert)
         else:

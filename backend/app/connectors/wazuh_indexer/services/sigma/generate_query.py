@@ -1,6 +1,3 @@
-import json
-
-from loguru import logger
 from sigma.collection import SigmaCollection
 from sigma.processing.resolver import ProcessingPipelineResolver
 
@@ -26,7 +23,10 @@ async def create_sigma_query_from_rule(rule: str) -> SigmaQueryGenerationRespons
     # Instantiate backend, using our resolved pipeline
     # and some backend parameter
     backend = OpensearchLuceneBackend(
-        resolved_pipeline, index_names=["logs-*-*", "beats-*"], monitor_interval=10, monitor_interval_unit="MINUTES",
+        resolved_pipeline,
+        index_names=["logs-*-*", "beats-*"],
+        monitor_interval=10,
+        monitor_interval_unit="MINUTES",
     )
 
     rules = SigmaCollection.from_yaml(rule)
