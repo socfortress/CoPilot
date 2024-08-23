@@ -27,7 +27,7 @@ class CreateAlertResponse(BaseModel):
     success: bool
     message: str
     alert_id: int = Field(..., description="The alert id as created in IRIS.")
-    alert_url: str = Field(..., description="The alert url as created in IRIS.")
+    alert_url: Optional[str] = Field(None, description="The alert url as created in IRIS.")
 
 
 class GenericSourceModel(BaseModel):

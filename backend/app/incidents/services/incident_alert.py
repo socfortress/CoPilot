@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Any
 from typing import Dict
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from loguru import logger
@@ -206,6 +206,70 @@ async def get_customer_code(alert_details: dict):
     )
 
 
+async def add_alert_to_document(
+    alert: CreateAlertRequest,
+    soc_alert_id: int,
+) -> Optional[str]:
+    """
+    Update the alert document in Elasticsearch with the provided SOC alert ID URL.
+
+    Parameters:
+    - es_client: The Elasticsearch client instance to use for the update.
+    - alert: The alert request object containing alert_id and index_name.
+    - soc_alert_id: The alert ID as it exists within IRIS.
+    - session: The database session for retrieving connector information.
+
+    Returns:
+    - True if the update is successful, False otherwise.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        es_client.update(
+            index=alert.index_name,
+            id=alert.alert_id,
+            body={"doc": {"alert_id": soc_alert_id}},
+        )
+        logger.info(
+            f"Added alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name}",
+        )
+        return soc_alert_id
+    except Exception as e:
+        logger.error(
+            f"Failed to add alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name}: {e}",
+        )
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(
+                index=alert.index_name,
+                body={"index.blocks.write": None},
+            )
+            logger.info(
+                f"Removed read-only block from index {alert.index_name}. Retrying update.",
+            )
+
+            # Retry the update operation
+            es_client.update(
+                index=alert.index_name,
+                id=alert.alert_id,
+                body={"doc": {"alert_id": soc_alert_id}},
+            )
+            logger.info(
+                f"Added alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name} after removing read-only block",
+            )
+
+            # Reenable the write block
+            es_client.indices.put_settings(
+                index=alert.index_name,
+                body={"index.blocks.write": True},
+            )
+            return soc_alert_id
+        except Exception as e2:
+            logger.error(
+                f"Failed to remove read-only block from index {alert.index_name}: {e2}",
+            )
+            return False
+
+
 async def retrieve_agent_details_from_db(agent_name: str, session: AsyncSession):
     """
     Retrieve agent details from the database.
@@ -371,6 +435,8 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
     ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
     await handle_customer_notifications(customer_code, alert_payload, session)
+
+    await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 
     return alert_id
 
@@ -579,6 +645,7 @@ async def create_alert(
         logger.info(
             f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}",
         )
+        await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), existing_alert)
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)

@@ -101,7 +101,7 @@ async def get_alert_timeline_route(
     description="Manually create an incident alert in CoPilot",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_route(
+async def create_alert_manual_route(
     create_alert_request: CreateAlertRequest,
     session: AsyncSession = Depends(get_db),
 ) -> CreateAlertResponse:
