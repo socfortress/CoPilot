@@ -56,7 +56,6 @@ async def verify_required_tools() -> None:
     await verify_connection("Graylog", verify_graylog_connection)
     await verify_connection("Wazuh-Manager", verify_wazuh_manager_connection)
     await verify_connection("Grafana", verify_grafana_connection)
-    await verify_connection("DFIR-IRIS", verify_dfir_iris_connection)
 
 
 # ! MAIN FUNCTION ! #
