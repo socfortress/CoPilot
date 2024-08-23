@@ -129,16 +129,6 @@ async def provision_wazuh_customer(
         ),
     )
 
-    try:
-        provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
-    except Exception:
-        provision_meta_data["iris_customer_id"] = 2
-
-    if request.dfir_iris_username is not None:
-        await add_user_to_all_customers(
-            request.dfir_iris_username,
-        )
-
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(
         request,
