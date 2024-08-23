@@ -61,7 +61,7 @@
 			:class="{ 'opacity-0': loadingFilters }"
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
-				<AlertsGraylogFilters :filters="filters" @search="startSearch(true)" />
+				<AlertsGraylogFilters :filters @search="startSearch(true)" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
@@ -72,7 +72,7 @@
 // import { alerts_summary } from "./mock"
 // import type { AlertsSummary } from "@/types/alerts.d"
 
-import { ref, onBeforeMount, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue"
+import { ref, onBeforeMount, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent, provide } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent } from "naive-ui"
 import Api from "@/api"
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
@@ -82,6 +82,7 @@ import Icon from "@/components/common/Icon.vue"
 import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
+import type { SocAlertField } from "./type.d"
 
 const message = useMessage()
 const loading = ref(false)
@@ -159,6 +160,8 @@ function startSearch(closeDrawer?: boolean) {
 function cancelSearch() {
 	abortController?.abort()
 }
+
+provide<SocAlertField>("soc-alert-creation-field", "alert_id")
 
 onBeforeMount(() => {
 	nextTick(() => {

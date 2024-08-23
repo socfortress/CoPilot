@@ -44,6 +44,7 @@ export interface AlertSourceContent {
 	agent_labels_customer: string
 	agent_name: string
 	alert_url?: string
+	alert_id?: number
 	ask_socfortress_message?: string
 	data_action?: string
 	data_authors?: string
