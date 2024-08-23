@@ -120,7 +120,7 @@ class CustomerProvisionMeta(BaseModel):
     grafana_organization_id: int
     wazuh_datasource_uid: str
     grafana_edr_folder_id: int
-    iris_customer_id: int
+    iris_customer_id: Optional[int] = None
 
 
 class CustomerProvisionResponse(BaseModel):
