@@ -133,8 +133,10 @@
 						v-for="item of itemsPaginated"
 						:key="item.id"
 						:caseData="item"
-						:detailsOnMounted="highlight === item.id.toString()"
+						:highlight="highlight === item.id.toString()"
+						:detailsOnMounted="highlight === item.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
+						@opened="highlightedItemOpened = true"
 						@deleted="getData()"
 						@updated="updateCase($event)"
 					/>
@@ -194,11 +196,11 @@ const showFilters = ref(false)
 const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
 
-const pageSize = ref(25)
+const pageSize = ref(5)
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
-const pageSizes = [10, 25, 50, 100]
+const pageSizes = [5, 10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
 
@@ -250,6 +252,15 @@ const statusOptions: { label: string; value: AlertStatus }[] = [
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
 
+const highlightedItemFound = ref(!highlight.value)
+const highlightedItemOpened = ref(!highlight.value)
+
+watch(pageSize, () => {
+	if (currentPage.value !== 1) {
+		currentPage.value = 1
+	}
+})
+
 watch(showFilters, val => {
 	if (!val) {
 		filters.value = _cloneDeep(lastFilters.value)
@@ -261,6 +272,26 @@ watch(
 	() => {
 		filters.value.value = undefined
 	}
+)
+
+watch(
+	itemsPaginated,
+	() => {
+		const totalPages = Math.ceil(casesList.value.length / pageSize.value)
+
+		if (
+			!itemsPaginated.value.find(o => o.id.toString() === highlight.value) &&
+			currentPage.value < totalPages &&
+			!highlightedItemFound.value
+		) {
+			currentPage.value++
+		}
+
+		if (itemsPaginated.value.find(o => o.id.toString() === highlight.value)) {
+			highlightedItemFound.value = true
+		}
+	},
+	{ immediate: true }
 )
 
 provide("assignable-users", availableUsers)

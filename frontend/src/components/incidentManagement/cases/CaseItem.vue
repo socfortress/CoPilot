@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="case-item"
-		:class="['status-' + caseEntity?.case_status, { compact, embedded, 'cursor-pointer': compact }]"
+		:class="['status-' + caseEntity?.case_status, { compact, embedded, 'cursor-pointer': compact, highlight }]"
 	>
 		<n-spin :show="loading">
 			<div class="flex flex-col" v-if="caseEntity">
@@ -223,10 +223,12 @@ const props = defineProps<{
 	detailsOnMounted?: boolean
 	compact?: boolean
 	embedded?: boolean
+	highlight?: boolean
 }>()
-const { caseData, caseId, detailsOnMounted, compact, embedded } = toRefs(props)
+const { caseData, caseId, detailsOnMounted, compact, embedded, highlight } = toRefs(props)
 
 const emit = defineEmits<{
+	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
@@ -292,6 +294,7 @@ function emitDelete() {
 }
 
 function openDetails() {
+	emit("opened")
 	showDetails.value = true
 }
 
@@ -358,6 +361,14 @@ onMounted(() => {
 
 	&:hover {
 		box-shadow: 0px 0px 0px 1px var(--primary-040-color);
+	}
+
+	&:hover {
+		box-shadow: 0px 0px 0px 1px var(--primary-040-color);
+	}
+
+	&.highlight {
+		box-shadow: 0px 0px 0px 1px var(--primary-color);
 	}
 }
 </style>
