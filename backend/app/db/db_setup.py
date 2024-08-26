@@ -19,7 +19,7 @@ from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
 from app.db.db_populate import add_available_integrations_if_not_exist
 from app.db.db_populate import add_available_network_connectors_auth_keys_if_not_exist
 from app.db.db_populate import add_available_network_connectors_if_not_exist
-from app.db.db_populate import add_connectors_if_not_exist
+from app.db.db_populate import add_connectors_if_not_exist, delete_connectors_if_exist
 from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_session import SQLALCHEMY_DATABASE_URI
 from app.db.db_session import db_password
@@ -123,6 +123,24 @@ async def add_connectors(async_engine):
         async with session.begin():  # Start a transaction
             await add_connectors_if_not_exist(session)
     logger.info("Connectors added successfully")
+
+async def delete_connectors(async_engine):
+    """
+    Deletes connectors from the database.
+
+    Args:
+        async_engine (AsyncEngine): The async engine used to connect to the database.
+
+    Returns:
+        None
+    """
+    logger.info("Deleting connectors")
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
+        async with session.begin():  # Start a transaction
+            await delete_connectors_if_exist(session)
+    logger.info("Connectors deleted successfully")
 
 
 async def create_tables(async_engine):

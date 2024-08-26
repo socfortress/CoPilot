@@ -13,7 +13,7 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
-from app.db.db_setup import add_connectors
+from app.db.db_setup import add_connectors, delete_connectors
 from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
 from app.db.db_setup import create_available_network_connectors
@@ -165,6 +165,7 @@ async def init_db():
         await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
     apply_migrations()
     await add_connectors(async_engine)
+    await delete_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await create_available_network_connectors(async_engine)
