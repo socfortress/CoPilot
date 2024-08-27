@@ -139,6 +139,13 @@
 							:customerName="customer.customer_name"
 						/>
 					</n-tab-pane>
+					<n-tab-pane
+						name="Notification Workflows"
+						tab="Notification Workflows"
+						display-directive="show:lazy"
+					>
+						<CustomerNotificationsWorkflows :customerCode="customer.customer_code" />
+					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
 							Agents
@@ -186,20 +193,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
+import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import CustomerInfo from "./CustomerInfo.vue"
-import CustomerAgents from "./CustomerAgents.vue"
-import CustomerProvision from "./provision/CustomerProvision.vue"
-import CustomerHealthcheckList from "./healthcheck/CustomerHealthcheckList.vue"
-import CustomerIntegrations from "./integrations/CustomerIntegrations.vue"
-import CustomerNetworkConnectors from "./networkConnectors/CustomerNetworkConnectors.vue"
 import Api from "@/api"
-import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
-import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"
+import type { Customer, CustomerMeta } from "@/types/customers.d"
+
+const CustomerInfo = defineAsyncComponent(() => import("./CustomerInfo.vue"))
+const CustomerAgents = defineAsyncComponent(() => import("./CustomerAgents.vue"))
+const CustomerProvision = defineAsyncComponent(() => import("./provision/CustomerProvision.vue"))
+const CustomerHealthcheckList = defineAsyncComponent(() => import("./healthcheck/CustomerHealthcheckList.vue"))
+const CustomerIntegrations = defineAsyncComponent(() => import("./integrations/CustomerIntegrations.vue"))
+const CustomerNetworkConnectors = defineAsyncComponent(
+	() => import("./networkConnectors/CustomerNetworkConnectors.vue")
+)
+const CustomerNotificationsWorkflows = defineAsyncComponent(
+	() => import("./notifications/CustomerNotificationsWorkflows.vue")
+)
 
 const emit = defineEmits<{
 	(e: "delete"): void
