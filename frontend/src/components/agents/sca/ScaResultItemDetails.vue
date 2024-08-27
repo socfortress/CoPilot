@@ -38,7 +38,7 @@
 				</n-card>
 			</div>
 
-			<div class="grid gap-2 grid-auto-flow-200 px-7" v-if="properties">
+			<div class="grid gap-2 grid-auto-fit-200 px-7" v-if="properties">
 				<KVCard v-for="(value, key) of properties" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>{{ value ?? "-" }}</template>
@@ -142,7 +142,7 @@ import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
 import { computed } from "vue"
 import { NTabs, NTabPane, NStatistic, NInput, NCard } from "naive-ui"
-import type { ScaPolicyResult } from "@/types/agents"
+import type { ScaPolicyResult } from "@/types/agents.d"
 
 const { data } = defineProps<{
 	data: ScaPolicyResult

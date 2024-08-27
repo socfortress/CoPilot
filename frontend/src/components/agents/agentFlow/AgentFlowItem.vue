@@ -8,7 +8,7 @@
 				</div>
 			</div>
 			<div class="time">
-				<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
+				<n-popover overlap placement="top-end" class="max-h-64" scrollable to="body">
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
@@ -30,15 +30,15 @@
 				</span>
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>State</template>
 					<template #value>{{ flow.state || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Status</template>
 					<template #value>{{ flow.status || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Exec. time</template>
 					<template #value>{{ executionDuration }}</template>
 				</Badge>
@@ -71,7 +71,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value === "" ? "-" : value ?? "-" }}</template>
@@ -138,6 +138,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Collect" tab="Collect" display-directive="show:lazy">
+					<!-- TODO: replace max-height or similar with TailWind classes -->
 					<n-scrollbar style="max-height: 430px" trigger="none">
 						<div class="px-7">
 							<AgentFlowCollectList :flow="flow" />
@@ -150,21 +151,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
 import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils"
 import type { FlowResult } from "@/types/flow.d"
 import Icon from "@/components/common/Icon.vue"
-import AgentFlowTimeline from "./AgentFlowTimeline.vue"
-import AgentFlowQueryStat from "./AgentFlowQueryStat.vue"
-import AgentFlowCollectList from "./AgentFlowCollectList.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import { computed, ref } from "vue"
 import _pick from "lodash/pick"
 import Badge from "@/components/common/Badge.vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
+
+const AgentFlowTimeline = defineAsyncComponent(() => import("./AgentFlowTimeline.vue"))
+const AgentFlowQueryStat = defineAsyncComponent(() => import("./AgentFlowQueryStat.vue"))
+const AgentFlowCollectList = defineAsyncComponent(() => import("./AgentFlowCollectList.vue"))
 
 const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
 

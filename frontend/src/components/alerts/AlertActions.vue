@@ -1,6 +1,6 @@
 <template>
 	<div class="alert-actions flex flex-col gap-2 justify-end">
-		<n-button type="success" secondary :size="size" v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
+		<n-button type="success" secondary :size="size" v-if="socAlertFieldValue" @click="gotoSocAlertUrl()">
 			<template #icon><Icon :name="ViewIcon"></Icon></template>
 			View SOC Alert
 		</n-button>
@@ -10,7 +10,7 @@
 			secondary
 			:size="size"
 			@click="createAlert()"
-			v-if="!alertUrl"
+			v-if="!socAlertFieldValue"
 		>
 			<template #icon><Icon :name="DangerIcon"></Icon></template>
 			Create SOC Alert
@@ -82,21 +82,29 @@ import AlertWazuhRules from "./AlertWazuhRules.vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
+import type { SocAlertField } from "./type.d"
+import { useRouter } from "vue-router"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
 	(e: "updatedUrl", value: string): void
+	(e: "updatedId", value: number): void
 	(e: "updatedAskMessage", value: string): void
 }>()
 
-const { alert, size } = defineProps<{ alert: Alert; size?: "tiny" | "small" | "medium" | "large" }>()
+const { alert, size, socAlertField } = defineProps<{
+	alert: Alert
+	size?: "tiny" | "small" | "medium" | "large"
+	socAlertField: SocAlertField
+}>()
 
 const DangerIcon = "majesticons:exclamation-line"
 const AskIcon = "majesticons:question-mark-circle-line"
 const ViewIcon = "iconoir:eye-alt"
 const RulesIcon = "carbon:rule-cancelled"
 
+const router = useRouter()
 const message = useMessage()
 const showSocResponse = ref(false)
 const showWazuhRuleExclude = ref(false)
@@ -106,8 +114,11 @@ const loadingWazuhRuleExclude = ref(false)
 const loading = computed(() => loadingSocAlert.value || loadingAskSoc.value || loadingWazuhRuleExclude.value)
 
 const alertUrl = ref("")
+const alertId = ref(0)
 const alertAskMessage = ref("")
 const wazuhRuleData = ref<WazuhRuleExclude | null>(null)
+
+const socAlertFieldValue = computed(() => (socAlertField === "alert_id" ? alertId.value : alertUrl.value))
 
 const isAskVisible = computed(() => alert._source?.rule_group3 === "sigma" && !alertAskMessage.value)
 const isWazuhRulesVisible = computed(() => alert._source)
@@ -126,11 +137,25 @@ watch(alertUrl, val => {
 	}
 })
 
+watch(alertId, val => {
+	if (val) {
+		emit("updatedId", val)
+	}
+})
+
 watch(alertAskMessage, val => {
 	if (val) {
 		emit("updatedAskMessage", val)
 	}
 })
+
+function gotoSocAlertUrl() {
+	if (socAlertField === "alert_url") {
+		window.open(alertUrl.value, "_blank")
+	} else if (socAlertField === "alert_id") {
+		router.push({ name: "IncidentManagement-Alerts", query: alertId.value ? { alert_id: alertId.value } : {} })
+	}
+}
 
 function askSOCFortress() {
 	loadingAskSoc.value = true
@@ -190,6 +215,7 @@ function createAlert() {
 		.then(res => {
 			if (res.data.success) {
 				res.data.alert_url && (alertUrl.value = res.data.alert_url)
+				res.data.alert_id && (alertId.value = res.data.alert_id)
 				message.success(res.data?.message || "SOC Alert created.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -205,6 +231,7 @@ function createAlert() {
 
 onBeforeMount(() => {
 	alertUrl.value = alert._source.alert_url || ""
+	alertId.value = alert._source.alert_id || 0
 	alertAskMessage.value = alert._source.ask_socfortress_message || ""
 })
 </script>

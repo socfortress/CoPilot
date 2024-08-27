@@ -83,7 +83,7 @@ const router = createRouter({
 		{
 			path: "/alerts",
 			name: "Alerts",
-			component: () => import("@/views/Alerts.vue"),
+			component: () => import("@/views/AlertsGraylog.vue"),
 			meta: { title: "Alerts", auth: true, roles: UserRole.All }
 		},
 		{
@@ -92,6 +92,7 @@ const router = createRouter({
 			component: () => import("@/views/Artifacts.vue"),
 			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
 		},
+		/*
 		{
 			path: "/soc",
 			redirect: "/soc/alerts",
@@ -123,6 +124,35 @@ const router = createRouter({
 					name: "Soc-PendingAlerts",
 					component: () => import("@/views/soc/PendingAlerts.vue"),
 					meta: { title: "SOC Pending Alerts" }
+				}
+			]
+		},
+		*/
+		{
+			path: "/incident-management",
+			redirect: "/incident-management/alerts",
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "sources",
+					name: "IncidentManagement-Sources",
+					component: () => import("@/views/incidentManagement/Sources.vue"),
+					meta: { title: "Incident Sources" }
+				},
+				{
+					path: "alerts",
+					name: "IncidentManagement-Alerts",
+					component: () => import("@/views/incidentManagement/Alerts.vue"),
+					meta: { title: "Incident Alerts" }
+				},
+				{
+					path: "cases",
+					name: "IncidentManagement-Cases",
+					component: () => import("@/views/incidentManagement/Cases.vue"),
+					meta: { title: "Incident Cases" }
 				}
 			]
 		},

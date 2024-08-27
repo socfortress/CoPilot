@@ -1,5 +1,5 @@
 <template>
-	<n-spin class="sca-section" :show="loading">
+	<n-spin class="sca-table" :show="loading">
 		<n-scrollbar x-scrollable style="width: 100%">
 			<n-table :bordered="true" class="min-w-max">
 				<thead>
@@ -144,24 +144,3 @@ onBeforeMount(() => {
 	if (agent?.value?.agent_id) getSCA(agent.value.agent_id)
 })
 </script>
-
-<style lang="scss" scoped>
-.sca-section {
-	container-type: inline-size;
-	min-height: 100px;
-
-	.group {
-		@apply gap-4;
-		width: 100%;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-		grid-auto-flow: row dense;
-	}
-
-	@container (max-width: 500px) {
-		.group {
-			grid-template-columns: repeat(auto-fit, 100%);
-		}
-	}
-}
-</style>

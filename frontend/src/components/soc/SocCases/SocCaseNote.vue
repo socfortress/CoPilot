@@ -31,15 +31,15 @@
 
 					<!--
 						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-							<Badge type="splitted">
+							<Badge type="splitted" color="primary">
 								<template #label>Status</template>
 								<template #value>{{ asset.analysis_status }}</template>
 							</Badge>
-							<Badge type="splitted">
+							<Badge type="splitted" color="primary">
 								<template #label>Type</template>
 								<template #value>{{ asset.asset_type }}</template>
 							</Badge>
-							<Badge type="splitted" v-for="tag of tags" :key="tag.key">
+							<Badge type="splitted" color="primary" v-for="tag of tags" :key="tag.key">
 								<template #label>{{ tag.key }}</template>
 								<template #value v-if="tag.value !== undefined">{{ tag.value || "-" }}</template>
 							</Badge>
@@ -63,7 +63,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value || "-" }}</template>
@@ -96,15 +96,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
+import { NModal, NTabs, NTabPane, NInput, NPopover } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import SocCaseNoteTimeline from "./SocCaseNoteTimeline.vue"
-import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NInput, NPopover } from "naive-ui"
 import _omit from "lodash/omit"
-import type { SocNote } from "@/types/soc/note.d"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import type { SocNote } from "@/types/soc/note.d"
+
+const SocCaseNoteTimeline = defineAsyncComponent(() => import("./SocCaseNoteTimeline.vue"))
 
 const { note } = defineProps<{ note: SocNote }>()
 

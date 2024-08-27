@@ -61,6 +61,10 @@ export function useGoto() {
 		router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 	}
 
+	function gotoIncidentManagementCases(caseId?: number) {
+		router.push({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
+	}
+
 	return {
 		gotoCustomer,
 		gotoAgent,
@@ -73,6 +77,7 @@ export function useGoto() {
 		gotoGraylogPipelines,
 		gotoSocUsers,
 		gotoAlerts,
-		gotoConnectors
+		gotoConnectors,
+		gotoIncidentManagementCases
 	}
 }

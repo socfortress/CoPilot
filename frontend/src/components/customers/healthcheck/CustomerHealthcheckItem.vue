@@ -24,19 +24,19 @@
 			</div>
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<Badge type="splitted" v-if="agentVersion">
+				<Badge type="splitted" color="primary" v-if="agentVersion">
 					<template #label>Agent version</template>
 					<template #value>{{ agentVersion }}</template>
 				</Badge>
 
-				<Badge type="splitted" v-if="source === 'velociraptor'">
+				<Badge type="splitted" color="primary" v-if="source === 'velociraptor'">
 					<template #label>Velociraptor Id</template>
 					<template #value>{{ healthData.velociraptor_id }}</template>
 				</Badge>
 
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<Badge type="splitted" hint-cursor>
+						<Badge type="splitted" color="primary" hint-cursor>
 							<template #iconLeft>
 								<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 							</template>
@@ -72,7 +72,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-flow-200 px-7 py-6">
+			<div class="grid gap-2 grid-auto-fit-200 px-7 py-6">
 				<KVCard v-for="(value, key) of healthData" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>{{ value || "-" }}</template>

@@ -18,7 +18,7 @@ import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import JobCard from "./Item.vue"
-import type { Job } from "@/types/scheduler"
+import type { Job } from "@/types/scheduler.d"
 
 const message = useMessage()
 const loadingJobs = ref(false)

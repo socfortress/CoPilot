@@ -34,7 +34,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { NButton, NCard, NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import type { LicenseKey } from "@/types/license"
+import type { LicenseKey } from "@/types/license.d"
 import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()

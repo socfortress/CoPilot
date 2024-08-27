@@ -77,10 +77,6 @@ import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 
-const QuarantinedIcon = "ph:seal-warning-light"
-const StarIcon = "carbon:star"
-const DeleteIcon = "ph:trash"
-
 const emit = defineEmits<{
 	(e: "delete"): void
 }>()
@@ -92,6 +88,9 @@ const props = defineProps<{
 }>()
 const { agent, showActions, bgSecondary } = toRefs(props)
 
+const QuarantinedIcon = "ph:seal-warning-light"
+const StarIcon = "carbon:star"
+const DeleteIcon = "ph:trash"
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const message = useMessage()

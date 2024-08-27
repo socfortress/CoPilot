@@ -28,7 +28,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import type { Size } from "naive-ui/es/button/src/interface"
-import type { ApiCommonResponse } from "@/types/common"
+import type { ApiCommonResponse } from "@/types/common.d"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void

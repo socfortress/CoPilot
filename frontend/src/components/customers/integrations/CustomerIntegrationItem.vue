@@ -49,7 +49,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-flow-200">
+			<div class="grid gap-2 grid-auto-fit-200">
 				<KVCard v-for="ak of authKeys" :key="ak.key">
 					<template #key>{{ ak.key }}</template>
 					<template #value>{{ ak.value || "-" }}</template>

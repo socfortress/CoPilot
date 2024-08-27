@@ -82,14 +82,6 @@ class ProvisionNewCustomer(BaseModel):
         False,
         description="Whether to only insert the customer into the database without provisioning any services",
     )
-    dfir_iris_id: Optional[int] = Field(
-        None,
-        description="ID of the DFIR Iris customer",
-    )
-    dfir_iris_username: Optional[str] = Field(
-        "administrator",
-        description="Username of the DFIR Iris customer",
-    )
     graylog_index_id: Optional[str] = Field(
         None,
         description="ID of the Graylog index set",
@@ -128,7 +120,7 @@ class CustomerProvisionMeta(BaseModel):
     grafana_organization_id: int
     wazuh_datasource_uid: str
     grafana_edr_folder_id: int
-    iris_customer_id: int
+    iris_customer_id: Optional[int] = None
 
 
 class CustomerProvisionResponse(BaseModel):

@@ -84,14 +84,14 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="casesList.length">
 					<SocCaseItem
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
 						:caseData="caseData"
 						@deleted="getData()"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
@@ -131,7 +131,7 @@ import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
-import type { CasesFilter } from "@/api/soc"
+import type { CasesFilter } from "@/api/endpoints/soc"
 import type { DateFormatted, SocCase } from "@/types/soc/case.d"
 import SocCaseItem from "./SocCaseItem.vue"
 import dayjs from "@/utils/dayjs"

@@ -3,7 +3,7 @@
 		<div class="form-box">
 			<n-spin v-model:show="loading">
 				<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
-					<div class="grid gap-6 grid-auto-flow-200">
+					<div class="grid gap-6 grid-auto-fit-200">
 						<n-form-item label="Action" path="action">
 							<n-select v-model:value="form.action" :options="invokeActionOptions" />
 						</n-form-item>
@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from "vue"
 import {
 	NButton,
 	NForm,
@@ -35,18 +36,16 @@ import {
 	NInput,
 	NSelect,
 	NSpin,
+	useMessage,
 	type FormItemRule,
 	type FormRules,
 	type FormInst,
-	type FormValidationError,
-	useMessage
+	type FormValidationError
 } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
-import { watch } from "vue"
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import isIP from "validator/es/lib/isIP"
-import type { InvokeRequest, InvokeRequestAction } from "@/api/activeResponse"
 import Api from "@/api"
+import isIP from "validator/es/lib/isIP"
+import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 
 interface InvokeForm {
 	action: null | InvokeRequestAction

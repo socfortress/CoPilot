@@ -43,13 +43,13 @@
 		<n-spin :show="loading">
 			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
 						:alertsSummary="alertsSummary"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
@@ -132,17 +132,17 @@
 <script setup lang="ts">
 // MOCK
 // import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts"
+// import type { AlertsSummary } from "@/types/alerts.d"
 
-import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
 import Api from "@/api"
-import ThreatIntelButton from "./ThreatIntelButton.vue"
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
 import Icon from "@/components/common/Icon.vue"
-import type { AlertsSummaryQuery } from "@/api/alerts"
+import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import type { Agent } from "@/types/agents.d"

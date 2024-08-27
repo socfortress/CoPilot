@@ -123,10 +123,6 @@ onBeforeMount(() => {
 	@container (max-width: 500px) {
 		flex-direction: column;
 
-		.kv-card {
-			flex-basis: initial;
-			flex-grow: initial;
-		}
 		.hide-mobile {
 			display: none;
 		}

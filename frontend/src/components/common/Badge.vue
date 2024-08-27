@@ -3,7 +3,7 @@
 		:is="!!href ? 'a' : 'div'"
 		class="badge"
 		:href="href"
-		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor, fluid }]"
+		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor, fluid, bright }]"
 	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">
 			<slot name="iconLeft"></slot>
@@ -23,7 +23,8 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	hintCursor?: boolean
 	pointCursor?: boolean
 	fluid?: boolean
-	color?: "danger" | "warning" | "success"
+	bright?: boolean
+	color?: "danger" | "warning" | "success" | "primary"
 	href?: string
 }>()
 </script>
@@ -65,6 +66,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 
 	span:not(:last-child) {
 		border-right: var(--border-small-100);
+		padding-right: 8px;
 	}
 
 	&.splitted {
@@ -78,8 +80,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 			line-height: 24px;
 
 			&:first-child {
-				background-color: var(--primary-005-color);
-				line-height: 1.1;
+				background-color: var(--divider-005-color);
 				white-space: nowrap;
 			}
 			&:last-child {
@@ -102,11 +103,56 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 				}
 			}
 		}
-
 		&.success {
 			& > span {
 				&:first-child {
 					background-color: var(--success-005-color);
+				}
+			}
+		}
+		&.primary {
+			& > span {
+				&:first-child {
+					background-color: var(--primary-005-color);
+				}
+			}
+		}
+
+		&.bright {
+			&.danger {
+				border-color: var(--secondary4-opacity-030-color);
+
+				& > span {
+					&:first-child {
+						background-color: var(--secondary4-opacity-020-color);
+					}
+				}
+			}
+			&.warning {
+				border-color: var(--secondary3-opacity-030-color);
+
+				& > span {
+					&:first-child {
+						background-color: var(--secondary3-opacity-020-color);
+					}
+				}
+			}
+			&.success {
+				border-color: rgba(var(--success-color-rgb), 0.3);
+
+				& > span {
+					&:first-child {
+						background-color: rgba(var(--success-color-rgb), 0.2);
+					}
+				}
+			}
+			&.primary {
+				border-color: var(--primary-030-color);
+
+				& > span {
+					&:first-child {
+						background-color: var(--primary-020-color);
+					}
 				}
 			}
 		}

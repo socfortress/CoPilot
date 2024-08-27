@@ -12,8 +12,11 @@ from app.agents.routes.agents import get_agent_by_hostname
 from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
+from app.connectors.shuffle.services.integrations import execute_workflow
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import CustomersMeta
+from app.incidents.services.db_operations import get_customer_notification
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
@@ -425,6 +428,22 @@ async def build_alert_payload(
         )
 
 
+async def handle_customer_notifications(customer_code: str, alert_payload: dict, session: AsyncSession):
+    customer_notifications = await get_customer_notification(customer_code, session)
+    if customer_notifications and customer_notifications[0].enabled:
+        logger.info(f"Executing workflow for customer code {customer_code}")
+        await execute_workflow(
+            ExecuteWorkflowRequest(
+                workflow_id=customer_notifications[0].shuffle_workflow_id,
+                execution_arguments={
+                    "customer_code": customer_code,
+                    "alert_context_payload": alert_payload,
+                },
+                start="",
+            ),
+        )
+
+
 async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertRequest:
     """
     Create an alert details object from the Wazuh alert details.
@@ -507,6 +526,11 @@ async def create_and_update_alert_in_iris(
             alert_id,
             {"iocs": [dict(IrisIoc(**iris_alert_payload.alert_iocs[0].to_dict()))]},
         )
+    await handle_customer_notifications(
+        customer_code=alert_details._source.agent_labels_customer,
+        alert_payload=iris_alert_payload,
+        session=session,
+    )
     return alert_id
 
 

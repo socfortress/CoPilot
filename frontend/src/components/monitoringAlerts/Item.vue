@@ -27,7 +27,7 @@
 							<template #label>Customer #{{ alert.customer_code }}</template>
 						</Badge>
 
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Source</template>
 							<template #value>{{ alert.alert_source }}</template>
 						</Badge>
@@ -70,7 +70,7 @@ import { computed, ref } from "vue"
 import AlertActions from "./ItemActions.vue"
 import { NSpin } from "naive-ui"
 import { useGoto } from "@/composables/useGoto"
-import type { MonitoringAlert } from "@/types/monitoringAlerts"
+import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 const { alert, embedded } = defineProps<{
 	alert: MonitoringAlert

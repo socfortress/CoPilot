@@ -23,7 +23,7 @@
 				</n-button>
 			</div>
 
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of customer" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>{{ value || "-" }}</template>
@@ -34,12 +34,12 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { h, ref, toRefs, watch } from "vue"
+import { useMessage, NButton, useDialog } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import CustomerForm from "./CustomerForm.vue"
 import Api from "@/api"
-import { useMessage, NButton, useDialog } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 
 const emit = defineEmits<{

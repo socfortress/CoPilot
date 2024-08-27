@@ -25,6 +25,9 @@ from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertCon
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
+from app.integrations.monitoring_alert.services.wazuh import (
+    handle_customer_notifications,
+)
 from app.integrations.utils.alerts import get_asset_type_id
 
 
@@ -491,6 +494,11 @@ async def create_alert(
         iris_alert_payload.to_dict(),
     )
     alert_id = result["data"]["alert_id"]
+    await handle_customer_notifications(
+        customer_code=customer_code,
+        alert_payload=iris_alert_payload,
+        session=session,
+    )
 
     await add_asset_if_wazuh(alert_details, alert_id, iris_alert_payload, session)
 

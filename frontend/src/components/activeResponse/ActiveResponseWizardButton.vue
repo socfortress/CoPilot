@@ -11,8 +11,7 @@
 		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
 		title="Active Response Wizard"
 		:bordered="false"
-		content-style="padding:0"
-		content-class="flex flex-col"
+		content-class="flex flex-col !p-0"
 		segmented
 	>
 		<ActiveResponseWizard @mounted="activeResponseWizardCTX = $event" v-model:loading="loading" />

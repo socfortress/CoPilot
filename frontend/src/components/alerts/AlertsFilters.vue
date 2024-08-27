@@ -61,7 +61,7 @@ import { NSelect, NButton, NInput, NInputGroup, NEmpty, NFormItem, type SelectOp
 import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
-import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/alerts"
+import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
 
 const props = defineProps<{ filters: AlertsSummaryQuery }>()
 const { filters } = toRefs(props)

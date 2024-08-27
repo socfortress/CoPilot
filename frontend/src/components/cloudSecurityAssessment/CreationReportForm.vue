@@ -75,7 +75,7 @@ import {
 } from "@/types/cloudSecurityAssessment.d"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
-import type { ApiError, ApiCommonResponse } from "@/types/common"
+import type { ApiError, ApiCommonResponse } from "@/types/common.d"
 
 type BaseFormPayload = Omit<ScoutSuiteReportPayload, "report_type"> & { report_type: ScoutSuiteReportType | null }
 type TypeFormPayload = ScoutSuiteAwsReportPayload | ScoutSuiteAzureReportPayload

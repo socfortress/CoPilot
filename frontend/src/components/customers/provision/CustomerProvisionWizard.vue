@@ -54,7 +54,12 @@
 									clearable
 								/>
 							</n-form-item>
-							<n-form-item label="DFIR-IRIS Username" path="dfir_iris_username" class="grow">
+							<n-form-item
+								label="DFIR-IRIS Username"
+								path="dfir_iris_username"
+								class="grow"
+								v-if="showDfirIrisUsername"
+							>
 								<n-input
 									v-model:value.trim="form.dfir_iris_username"
 									placeholder="The Username of the API Key CoPilot uses to connect to DFIR-IRIS..."
@@ -280,8 +285,9 @@ const props = defineProps<{
 	customerCode: string
 	customerName: string
 	mode?: "new" | "update"
+	showDfirIrisUsername?: boolean
 }>()
-const { customerCode, customerName, mode } = toRefs(props)
+const { customerCode, customerName, mode, showDfirIrisUsername } = toRefs(props)
 
 const SkipIcon = "carbon:subtract"
 const ArrowRightIcon = "carbon:arrow-right"

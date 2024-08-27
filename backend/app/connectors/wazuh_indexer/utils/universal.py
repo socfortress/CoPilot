@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -73,7 +74,7 @@ async def verify_wazuh_indexer_connection(connector_name: str) -> str:
     return await verify_wazuh_indexer_credentials(attributes)
 
 
-async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
+async def create_wazuh_indexer_client(connector_name: str = "Wazuh-Indexer") -> Elasticsearch:
     """
     Returns an Elasticsearch client for the Wazuh Indexer service.
 
@@ -476,3 +477,90 @@ class LogsQueryBuilder:
 
     def build(self):
         return self.query
+
+
+async def get_index_mappings_key_names(index_name: str):
+    """
+    Get the mappings of an index.
+
+    Args:
+        index_name (str): The Name of the index.
+
+    Returns:
+        list: The field names of the index.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    mappings = es_client.indices.get_mapping(index=index_name)
+    # return only the field names
+    return list(mappings[index_name]["mappings"]["properties"].keys())
+
+
+async def return_graylog_events_index_names():
+    """
+    Return the index names of the Graylog events.
+
+    Returns:
+        list: The index names of the Graylog events.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    indices = es_client.indices.get_alias("gl-events*")
+    return list(indices.keys())
+
+
+async def get_index_source(index_name: str):
+    """
+    Get the 10 latest results from the index and search for where the source contains a field name of `syslog_type` or `integration`
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    query = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
+    response = es_client.search(index=index_name, body=query)
+    for hit in response["hits"]["hits"]:  # Loop through each hit in the response
+        if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
+            if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
+                return hit["_source"]["integration"]  # Return the value of 'integration' if 'syslog_type' equals 'integration'
+            return hit["_source"]["syslog_type"]  # Return the value of 'syslog_type' for other cases
+    raise HTTPException(status_code=404, detail=f"Source not found in index {index_name}")
+
+
+async def get_available_indices_via_source(source: str):
+    """
+    Get the available indices based on the source using regex matching.
+
+    Args:
+        source (str): The regex pattern for the source of the index.
+
+    Returns:
+        list: The available indices based on the source regex match.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        indices = es_client.indices.get_alias("*")
+        logger.info(f"Indices: {indices.keys()}")
+        available_indices = []
+        source_pattern = re.compile(source)  # Compile the regex pattern for the source
+        exclude_patterns = [re.compile("wazuh-monitoring"), re.compile("wazuh-statistics")]
+        for index in indices.keys():
+            if source_pattern.search(index) and not any(exclude.search(index) for exclude in exclude_patterns):
+                available_indices.append(index)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        available_indices = []
+
+    logger.info(f"Available indices: {available_indices}")
+    return available_indices
+
+
+async def resize_wazuh_index_fields():
+    """
+    Resize the Wazuh index fields to the correct size.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+
+    settings = {"index.mapping.total_fields.limit": 2000}
+
+    try:
+        es_client.indices.put_settings(index="wazuh*", body=settings)
+        logger.info("Successfully resized the Wazuh index fields")
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return None

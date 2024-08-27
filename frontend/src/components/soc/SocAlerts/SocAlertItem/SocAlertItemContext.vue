@@ -6,14 +6,18 @@
 			</template>
 		</n-input>
 
-		<div class="grid gap-2 grid-auto-flow-200">
+		<div class="grid gap-2 grid-auto-fit-200">
 			<KVCard v-for="{ value, key } of contextFiltered" :key="key">
 				<template #key>{{ key }}</template>
 				<template #value>
 					<template v-if="key === 'process_name'">
 						<template v-if="value && value !== '-' && value.toString() && processNameList.length">
 							<div class="flex flex-wrap gap-2">
-								<SocAlertItemEvaluation v-for="pn of processNameList" :key="pn" :process-name="pn" />
+								<ThreatIntelProcessEvaluationBadge
+									v-for="pn of processNameList"
+									:key="pn"
+									:process-name="pn"
+								/>
 							</div>
 						</template>
 						<template v-else>-</template>
@@ -36,7 +40,9 @@ import { computed, defineAsyncComponent, ref } from "vue"
 import _split from "lodash/split"
 import _compact from "lodash/compact"
 import _uniq from "lodash/uniq"
-const SocAlertItemEvaluation = defineAsyncComponent(() => import("./SocAlertItemEvaluation.vue"))
+const ThreatIntelProcessEvaluationBadge = defineAsyncComponent(
+	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationBadge.vue")
+)
 const ExpandableText = defineAsyncComponent(() => import("@/components/common/ExpandableText.vue"))
 
 const { alert } = defineProps<{

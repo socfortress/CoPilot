@@ -51,7 +51,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-flow-200">
+			<div class="grid gap-2 grid-auto-fit-200">
 				<KVCard v-for="ak of authKeys" :key="ak.key">
 					<template #key>{{ ak.key }}</template>
 					<template #value>{{ ak.value || "-" }}</template>
@@ -62,14 +62,14 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
 import { NModal, NButton } from "naive-ui"
 import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
+import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 
 const props = defineProps<{
 	networkConnector: CustomerNetworkConnector

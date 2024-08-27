@@ -1,5 +1,6 @@
 import { colord } from "colord"
 import _get from "lodash/get"
+import { type ColorAction, type ColorKey, type ColorType, type ThemeColor } from "@/types/theme.d"
 
 export type PrimaryShade = "005" | "010" | "015" | "020" | "030" | "040" | "050" | "060"
 
@@ -59,4 +60,26 @@ export function getTypeValue(origin: object, val: string) {
 	}
 
 	return val
+}
+
+export function getThemeColors(colors: Record<ColorType, string>) {
+	const colorActions: ColorAction[] = [
+		{ scene: "", handler: color => color },
+		{ scene: "Suppl", handler: color => exposure(color, 0.1) },
+		{ scene: "Hover", handler: color => exposure(color, 0.05) },
+		{ scene: "Pressed", handler: color => exposure(color, -0.2) }
+	]
+
+	const themeColor: ThemeColor = {}
+
+	for (const colorType in colors) {
+		const colorValue = colors[colorType as ColorType]
+
+		colorActions.forEach(action => {
+			const colorKey: ColorKey = `${colorType as ColorType}Color${action.scene}`
+			themeColor[colorKey] = action.handler(colorValue)
+		})
+	}
+
+	return themeColor
 }

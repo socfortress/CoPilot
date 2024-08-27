@@ -34,14 +34,13 @@
 			/>
 		</div>
 		<n-scrollbar class="my-3">
-			<div class="list">
+			<div class="list flex flex-col gap-2">
 				<template v-if="itemsFiltered.length">
 					<InputItem
 						v-for="input of itemsFiltered"
 						:key="input.id"
 						:input="input"
 						@updated="getData('running')"
-						class="mb-2"
 					/>
 				</template>
 				<template v-else>

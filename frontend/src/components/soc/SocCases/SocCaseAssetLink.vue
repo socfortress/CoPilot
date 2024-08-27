@@ -13,15 +13,15 @@
 					<div class="description mt-2" v-if="link.asset_description">{{ link.asset_description }}</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Case open date</template>
 							<template #value>{{ formatDate(link.case_open_date) }}</template>
 						</Badge>
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Asset id</template>
 							<template #value>{{ link.asset_id }}</template>
 						</Badge>
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Compromise status</template>
 							<template #value>{{ link.asset_compromise_status_id || "-" }}</template>
 						</Badge>

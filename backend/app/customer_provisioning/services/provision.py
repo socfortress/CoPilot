@@ -6,7 +6,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.routes.agents import check_wazuh_manager_version
-from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import verify_grafana_connection
@@ -20,8 +19,6 @@ from app.customer_provisioning.schema.provision import ProvisionHaProxyRequest
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
-from app.customer_provisioning.services.dfir_iris import add_user_to_all_customers
-from app.customer_provisioning.services.dfir_iris import create_customer
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
@@ -56,7 +53,6 @@ async def verify_required_tools() -> None:
     await verify_connection("Graylog", verify_graylog_connection)
     await verify_connection("Wazuh-Manager", verify_wazuh_manager_connection)
     await verify_connection("Grafana", verify_grafana_connection)
-    await verify_connection("DFIR-IRIS", verify_dfir_iris_connection)
 
 
 # ! MAIN FUNCTION ! #
@@ -129,16 +125,6 @@ async def provision_wazuh_customer(
             grafana_url=request.grafana_url,
         ),
     )
-
-    try:
-        provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
-    except Exception:
-        provision_meta_data["iris_customer_id"] = 2
-
-    if request.dfir_iris_username is not None:
-        await add_user_to_all_customers(
-            request.dfir_iris_username,
-        )
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(

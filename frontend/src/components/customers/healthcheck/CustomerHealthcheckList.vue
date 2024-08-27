@@ -61,7 +61,7 @@ import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 import { useMessage, NSpin, NEmpty, NSelect, NInputGroup, NInputNumber } from "naive-ui"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
-import type { CustomerAgentsHealthcheckQuery } from "@/api/customers"
+import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 
 const { source, customerCode } = defineProps<{
 	source: CustomerHealthcheckSource

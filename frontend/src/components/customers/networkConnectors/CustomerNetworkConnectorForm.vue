@@ -86,7 +86,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import NetworkConnectorsList from "@/components/networkConnectors/NetworkConnectorsList.vue"
 import type { ServiceItemData } from "@/components/services/types"
-import type { NewNetworkConnector } from "@/api/networkConnectors"
+import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
 
 interface AuthKeysInput {
 	key: string

@@ -15,7 +15,7 @@
 				<div class="rule-groups">{{ alert._source.rule_groups }}</div>
 
 				<div class="badges-box flex flex-wrap items-center gap-3" v-if="alert._id">
-					<Badge type="splitted">
+					<Badge type="splitted" color="primary">
 						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
 						</template>
@@ -32,7 +32,7 @@
 
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
-							<Badge type="splitted" hint-cursor>
+							<Badge type="splitted" color="primary" hint-cursor>
 								<template #iconLeft>
 									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 								</template>
@@ -73,19 +73,19 @@
 							</div>
 						</div>
 					</n-popover>
-					<Badge type="splitted">
+					<Badge type="splitted" color="primary">
 						<template #label>syslog</template>
 						<template #value>{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>manager</template>
 						<template #value>{{ alert._source.manager_name }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>decoder</template>
 						<template #value>{{ alert._source.decoder_name }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>source</template>
 						<template #value>{{ alert._source.source }}</template>
 					</Badge>
@@ -94,10 +94,12 @@
 			<AlertActions
 				v-if="!hideActions"
 				class="actions-box"
-				:alert="alert"
+				:alert
+				:socAlertField="socAlertCreationField"
 				@start-loading="loading = true"
 				@stop-loading="loading = false"
 				@updated-url="alert._source.alert_url = $event"
+				@updated-id="alert._source.alert_id = $event"
 				@updated-ask-message="alert._source.ask_socfortress_message = $event"
 			/>
 		</div>
@@ -105,11 +107,13 @@
 			<AlertActions
 				v-if="!hideActions"
 				class="actions-box"
-				:alert="alert"
+				:alert
+				:socAlertField="socAlertCreationField"
 				:size="'small'"
 				@start-loading="loading = true"
 				@stop-loading="loading = false"
 				@updated-url="alert._source.alert_url = $event"
+				@updated-id="alert._source.alert_id = $event"
 				@updated-ask-message="alert._source.ask_socfortress_message = $event"
 			/>
 			<div class="time">{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}</div>
@@ -126,7 +130,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Agent" tab="Agent" display-directive="show" v-if="alert._id">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="agentProperties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="agentProperties">
 						<KVCard v-for="(value, key) of agentProperties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>
@@ -173,16 +177,14 @@
 				</n-tab-pane>
 				<n-tab-pane name="Message" tab="Message" v-if="alert._source.message" display-directive="show">
 					<div class="p-7 pt-4">
-						<n-input
-							:value="alert._source.message"
-							type="textarea"
-							readonly
-							placeholder="Empty"
-							size="large"
-							:autosize="{
-								minRows: 3
-							}"
-						/>
+						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+							<div
+								class="scrollbar-styled overflow-hidden code-bg-transparent"
+								v-shiki="{ decode: false }"
+							>
+								<pre>{{ alert._source.message }}</pre>
+							</div>
+						</n-card>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -206,11 +208,14 @@
 				</n-tab-pane>
 				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
 					<div class="p-7 pt-4">
-						<SimpleJsonViewer
-							class="vuesjv-override"
-							:model-value="alert._source"
-							:initialExpandedDepth="2"
-						/>
+						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+							<div
+								class="scrollbar-styled overflow-hidden code-bg-transparent"
+								v-shiki="{ lang: 'json', decode: false }"
+							>
+								<pre>{{ alert._source }}</pre>
+							</div>
+						</n-card>
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -219,19 +224,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
-import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
+import { NPopover, NModal, NTabs, NTabPane, NInput, NCard } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 import type { Alert } from "@/types/alerts.d"
-import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
+import type { SocAlertField } from "./type.d"
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const { alert, hideActions } = toRefs(props)
@@ -260,6 +265,8 @@ const agentProperties = computed(() => {
 		"agent_name"
 	])
 })
+
+const socAlertCreationField = ref(inject<SocAlertField>("soc-alert-creation-field", "alert_url"))
 </script>
 
 <style lang="scss" scoped>

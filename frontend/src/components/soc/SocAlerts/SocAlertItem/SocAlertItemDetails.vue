@@ -9,7 +9,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of alert.customer" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>
@@ -38,7 +38,7 @@
 					<template #label>Go to users page</template>
 				</Badge>
 			</div>
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard>
 					<template #key>user_login</template>
 					<template #value>
@@ -89,20 +89,21 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
+import { computed, defineAsyncComponent } from "vue"
+import { NTabs, NTabPane, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
-import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
-import SocAssignUser from "./SocAssignUser.vue"
-import SocAlertItemContext from "./SocAlertItemContext.vue"
-import SocAlertAssetsList from "../SocAlertAssets/SocAlertAssetsList.vue"
+import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import { NTabs, NTabPane, NSpin } from "naive-ui"
 import { useGoto } from "@/composables/useGoto"
-import type { SocUser } from "@/types/soc/user"
+import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocUser } from "@/types/soc/user.d"
+
+const SocAlertItemTimeline = defineAsyncComponent(() => import("./SocAlertItemTimeline.vue"))
+const SocAssignUser = defineAsyncComponent(() => import("./SocAssignUser.vue"))
+const SocAlertItemContext = defineAsyncComponent(() => import("./SocAlertItemContext.vue"))
+const SocAlertAssetsList = defineAsyncComponent(() => import("../SocAlertAssets/SocAlertAssetsList.vue"))
 
 const emit = defineEmits<{
 	(e: "updated", value: SocAlert): void

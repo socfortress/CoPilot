@@ -22,9 +22,9 @@
 			</div>
 			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="messages.length">
-				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" class="mb-2" />
+				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -49,7 +49,7 @@ import Api from "@/api"
 import MessageItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
-import type { MessageExtended } from "@/types/graylog/index.d"
+import type { MessageExtended } from "@/types/graylog/messages.d"
 
 const InfoIcon = "carbon:information"
 

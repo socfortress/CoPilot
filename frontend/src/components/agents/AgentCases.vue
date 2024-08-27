@@ -8,14 +8,14 @@
 				</div>
 			</div>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="casesList.length">
 				<SocCaseItem
 					v-for="item of casesList"
 					:key="item"
 					:caseId="item"
 					@deleted="getData()"
-					class="mb-2 item-appear item-appear-bottom item-appear-005"
+					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</template>
 			<template v-else>

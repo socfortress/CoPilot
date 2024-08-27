@@ -33,14 +33,14 @@
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted" v-if="asset.date_added">
+						<Badge type="splitted" color="primary" v-if="asset.date_added">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
 							<template #label>Added</template>
 							<template #value>{{ formatDate(asset.date_added) }}</template>
 						</Badge>
-						<Badge type="splitted" v-if="asset.date_update">
+						<Badge type="splitted" color="primary" v-if="asset.date_update">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
@@ -69,7 +69,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>
@@ -92,7 +92,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Type" tab="Type" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-250 p-7 pt-4" v-if="assetType">
+					<div class="grid gap-2 grid-auto-fit-250 p-7 pt-4" v-if="assetType">
 						<KVCard v-for="(value, key) of assetType" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value || "-" }}</template>
@@ -145,6 +145,7 @@ import { isUrlLike } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
+
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()

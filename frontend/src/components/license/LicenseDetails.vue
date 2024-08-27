@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading" content-class=" grow flex flex-col" class="flex flex-col overflow-hidden">
 		<div v-if="license" class="flex flex-col gap-4">
-			<KVCard v-if="!hideKey" class="!basis-auto">
+			<KVCard v-if="!hideKey">
 				<template #key>
 					<span class="flex gap-3 items-center">
 						<Icon :name="KeyIcon" :size="14"></Icon>
@@ -10,7 +10,7 @@
 				</template>
 				<template #value>{{ license.key }}</template>
 			</KVCard>
-			<KVCard v-if="!hideFeatures" class="!basis-auto">
+			<KVCard v-if="!hideFeatures">
 				<template #key>
 					<span class="flex gap-3 items-center">
 						<Icon :name="FeaturesIcon" :size="14"></Icon>
@@ -18,7 +18,7 @@
 					</span>
 				</template>
 				<template #value>
-					<div v-if="features.length" class="grid gap-2 grid-auto-flow-200">
+					<div v-if="features.length" class="grid gap-2 grid-auto-fit-200">
 						<KVCard v-for="feature of features" :key="feature">
 							<template #value>
 								<span class="flex gap-3 items-center">
@@ -31,7 +31,7 @@
 					<template v-else>No feature enabled</template>
 				</template>
 			</KVCard>
-			<KVCard class="!basis-auto">
+			<KVCard>
 				<template #key>
 					<span class="flex gap-3 items-center">
 						<Icon :name="ExpiresIcon" :size="14"></Icon>
@@ -43,7 +43,7 @@
 					<span class="text-secondary-color">({{ periodText }})</span>
 				</template>
 			</KVCard>
-			<KVCard class="!basis-auto">
+			<KVCard>
 				<template #key>
 					<span class="flex gap-3 items-center">
 						<Icon :name="CustomerIcon" :size="14"></Icon>
@@ -52,7 +52,13 @@
 				</template>
 				<template #value>
 					<div class="flex flex-wrap gap-2">
-						<Badge type="splitted" v-for="(value, key) of license.customer" :key="key" fluid>
+						<Badge
+							type="splitted"
+							color="primary"
+							v-for="(value, key) of license.customer"
+							:key="key"
+							fluid
+						>
 							<template #label>{{ sanitizeKey(key) }}</template>
 							<template #value>
 								<template v-if="key === 'created'">
@@ -64,7 +70,7 @@
 					</div>
 				</template>
 			</KVCard>
-			<KVCard class="!basis-auto" v-if="dockerCompose">
+			<KVCard v-if="dockerCompose">
 				<template #key>
 					<span class="flex gap-3 items-center">
 						<Icon :name="ConfigIcon" :size="14"></Icon>

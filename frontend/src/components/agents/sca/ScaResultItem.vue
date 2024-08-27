@@ -31,17 +31,17 @@
 					<template #label>{{ data.result }}</template>
 				</Badge>
 
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Compliance</template>
 					<template #value>{{ data.compliance?.length || "-" }}</template>
 				</Badge>
 
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Condition</template>
 					<template #value>{{ data.condition || "-" }}</template>
 				</Badge>
 
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Rules</template>
 					<template #value>{{ data.rules?.length || "-" }}</template>
 				</Badge>
@@ -67,7 +67,7 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { ref } from "vue"
 import { NModal, NButton } from "naive-ui"
-import type { ScaPolicyResult } from "@/types/agents"
+import type { ScaPolicyResult } from "@/types/agents.d"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 
 const { data, embedded } = defineProps<{

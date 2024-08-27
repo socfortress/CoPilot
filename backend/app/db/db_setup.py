@@ -21,6 +21,7 @@ from app.db.db_populate import add_available_network_connectors_auth_keys_if_not
 from app.db.db_populate import add_available_network_connectors_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
+from app.db.db_populate import delete_connectors_if_exist
 from app.db.db_session import SQLALCHEMY_DATABASE_URI
 from app.db.db_session import db_password
 
@@ -101,7 +102,7 @@ def apply_migrations():
     # Apply migrations to the latest revision
     try:
         command.upgrade(alembic_cfg, "head")
-    except OperationalError as e:
+    except Exception as e:  # Catch any exception
         logger.error(f"Error applying migrations: {e}")
         raise e
 
@@ -122,6 +123,26 @@ async def add_connectors(async_engine):
     ) as session:  # Create an AsyncSession, not just a connection
         async with session.begin():  # Start a transaction
             await add_connectors_if_not_exist(session)
+    logger.info("Connectors added successfully")
+
+
+async def delete_connectors(async_engine):
+    """
+    Deletes connectors from the database.
+
+    Args:
+        async_engine (AsyncEngine): The async engine used to connect to the database.
+
+    Returns:
+        None
+    """
+    logger.info("Deleting connectors")
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
+        async with session.begin():  # Start a transaction
+            await delete_connectors_if_exist(session)
+    logger.info("Connectors deleted successfully")
 
 
 async def create_tables(async_engine):

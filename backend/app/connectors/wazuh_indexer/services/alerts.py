@@ -1,12 +1,19 @@
+from collections import defaultdict
+from datetime import datetime
+from datetime import timedelta
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Type
 
+from elasticsearch7.exceptions import NotFoundError
 from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.wazuh_indexer.schema.alerts import Alert
+from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRule
@@ -16,6 +23,7 @@ from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import CollectAlertsResponse
+from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
@@ -331,3 +339,148 @@ async def get_alerts_by_rule_per_host(
         success=bool(alerts_by_rule_per_host_list),
         message="Successfully collected alerts by rule per host",
     )
+
+
+def parse_timerange(timerange: str) -> str:
+    """
+    Parses the timerange string and returns the corresponding datetime string for Elasticsearch.
+    """
+    unit = timerange[-1]
+    amount = int(timerange[:-1])
+
+    if unit == "h":
+        delta = timedelta(hours=amount)
+    elif unit == "d":
+        delta = timedelta(days=amount)
+    elif unit == "w":
+        delta = timedelta(weeks=amount)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid timerange unit. Must be one of 'h', 'd', or 'w'.",
+        )
+
+    start_time = datetime.utcnow() - delta
+    return start_time.isoformat() + "Z"
+
+
+async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
+    """
+    Extracts the index name and id from the origin_context field of an alert.
+
+    Args:
+        origin_context (str): The origin_context field of an alert.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the index name and id of the alert.
+    """
+    index_name, index_id = origin_context.split(":")[-2:]
+    return index_name, index_id
+
+
+async def get_single_alert_details(
+    index_name: str,
+    index_id: str,
+) -> Dict:
+    """
+    Retrieves the details of a single alert based on the index name and id.
+
+    Args:
+        es_client: The Elasticsearch client.
+        index_name (str): The name of the index to search for the alert.
+        index_id (str): The id of the alert to retrieve.
+
+    Returns:
+        dict: The details of the alert.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        alert = es_client.get(index=index_name, id=index_id)
+        return alert
+    except NotFoundError:
+        logger.warning(f"Alert not found for index {index_name} and id {index_id}")
+        return AlertNotFound(_index=index_name, _id=index_id, _source={"message": "alert not found"}).to_dict()
+
+
+async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str) -> List[Dict]:
+    """
+    Fetches alerts from the Graylog Alert Index.
+
+    Args:
+        es_client: The Elasticsearch client.
+        index_prefix (str): The prefix of the index to search for alerts.
+        size (int): The number of alerts to retrieve.
+
+    Returns:
+        List[Dict]: A list of alerts.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    es_query = {
+        "size": size,
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "range": {
+                            "timestamp": {
+                                "gte": parse_timerange(timerange),
+                                "format": "strict_date_optional_time",
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    }
+    response = es_client.search(index=index_prefix, body=es_query)
+    logger.info(f"Graylog alerts response: {response}")
+    return response["hits"]["hits"]
+
+
+async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
+    """
+    Processes the hits from the Graylog alert search response.
+
+    Args:
+        es_client: The Elasticsearch client.
+        hits (List[Dict]): The hits from the search response.
+
+    Returns:
+        List[Dict]: A list of detailed alerts.
+    """
+    alerts_dict = defaultdict(lambda: {"total_alerts": 0, "alerts": []})
+
+    for hit in hits:
+        origin_context = hit["_source"]["origin_context"]
+        index_name, index_id = await get_original_alert_id(origin_context)
+        logger.info(f"Fetching alert details for index {index_name} and id {index_id}")
+        alert_details = await get_single_alert_details(index_name, index_id)
+        logger.info(f"Alert details: {alert_details}")
+
+        alerts_dict[index_name]["total_alerts"] += 1
+        alerts_dict[index_name]["alerts"].append(alert_details)
+
+    alerts = [
+        Alert(index_name=index_name, total_alerts=data["total_alerts"], alerts=data["alerts"]) for index_name, data in alerts_dict.items()
+    ]
+
+    return alerts
+
+
+async def get_graylog_alerts(
+    request: GraylogAlertsSearchBody,
+) -> AlertsSearchResponse:
+    """
+    Retrieves alerts from the Graylog Alert Index.
+    Looks up the actual alert details via the origin_context field.
+    Strips out the index name and id from the origin_context field.
+    Example: urn:graylog:message:es:huntress_00002_0:b4d2c721-f690-11ee-ac73-8600007a2218
+    Looks up each alert by the index name and id.
+    Adds each alert to the response.
+    """
+    logger.info(f"Fetching Graylog alerts for request: {request}")
+
+    hits = await fetch_alerts_from_graylog(request.index_prefix, request.size, request.timerange)
+    alerts = await process_alert_hits(hits)
+
+    return alerts

@@ -36,14 +36,13 @@
 			/>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alerts.length">
 					<MonitoringAlert
 						v-for="alert of itemsPaginated"
 						:key="alert.name"
 						:alert="alert"
 						:is-enabled="isEnabled(alert)"
-						class="mb-2"
 						@provisioned="getData()"
 					/>
 				</template>

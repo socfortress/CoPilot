@@ -17,7 +17,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { computed, watch, ref } from "vue"
 import type { Size } from "naive-ui/es/button/src/interface"
-import type { MonitoringAlert } from "@/types/monitoringAlerts"
+import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 const emit = defineEmits<{
 	(e: "startInvoking"): void

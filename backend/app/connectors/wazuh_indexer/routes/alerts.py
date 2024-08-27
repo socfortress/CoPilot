@@ -12,6 +12,7 @@ from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostRespon
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
@@ -20,6 +21,7 @@ from app.connectors.wazuh_indexer.services.alerts import get_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
+from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
@@ -196,3 +198,16 @@ async def get_all_alerts_by_rule_per_host(
     """
     logger.info("Fetching number of all alerts for all rules per host")
     return await get_alerts_by_rule_per_host(alerts_search_body)
+
+
+@wazuh_indexer_alerts_router.post(
+    "/alerts/graylog",
+    response_model=AlertsSearchResponse,
+    description="Get alerts that are configured Via Graylog",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alerts_not_created_in_copilot(request: GraylogAlertsSearchBody) -> AlertsSearchResponse:
+    """
+    Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
+    """
+    return AlertsSearchResponse(success=True, message="Alerts retrieved", alerts_summary=await get_graylog_alerts(request))

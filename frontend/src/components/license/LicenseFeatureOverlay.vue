@@ -28,7 +28,7 @@ import { NAlert, NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount } from "vue"
-import type { LicenseFeatures } from "@/types/license"
+import type { LicenseFeatures } from "@/types/license.d"
 import { useGoto } from "@/composables/useGoto"
 
 const { feature } = defineProps<{ feature: LicenseFeatures }>()

@@ -182,7 +182,7 @@ class GraylogAlertProvisionModel(BaseModel):
     field_spec: Dict[str, GraylogAlertProvisionFieldSpecItem]
     key_spec: List
     notification_settings: GraylogAlertProvisionNotificationSettings
-    notifications: List[GraylogAlertProvisionNotification]
+    notifications: Optional[List[GraylogAlertProvisionNotification]] = []
     alert: bool
 
 

@@ -13,12 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-import Api from "@/api"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { useMessage, NPopselect } from "naive-ui"
+import Api from "@/api"
+import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import { watch } from "vue"
 
 const props = defineProps<{
 	alert: SocAlert

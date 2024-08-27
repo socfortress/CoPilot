@@ -9,6 +9,7 @@ from alembic import context
 # from app.db.all_models import *
 from app.auth.models.users import User
 from app.connectors.models import Connectors
+from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 
 # from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
 from app.customer_provisioning.models.default_settings import (
@@ -21,6 +22,19 @@ from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
+from app.incidents.models import Alert
+from app.incidents.models import AlertContext
+from app.incidents.models import AlertTag
+from app.incidents.models import AlertTitleFieldName
+from app.incidents.models import AlertToTag
+from app.incidents.models import Asset
+from app.incidents.models import AssetFieldName
+from app.incidents.models import Case
+from app.incidents.models import CaseAlertLink
+from app.incidents.models import Comment
+from app.incidents.models import CustomerCodeFieldName
+from app.incidents.models import FieldName
+from app.incidents.models import Notification
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )

@@ -33,15 +33,15 @@
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Status</template>
 							<template #value>{{ asset.analysis_status }}</template>
 						</Badge>
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Type</template>
 							<template #value>{{ asset.asset_type }}</template>
 						</Badge>
-						<Badge type="splitted" v-for="tag of tags" :key="tag.key">
+						<Badge type="splitted" color="primary" v-for="tag of tags" :key="tag.key">
 							<template #label>{{ tag.key }}</template>
 							<template #value v-if="tag.value !== undefined">{{ tag.value || "-" }}</template>
 						</Badge>
@@ -61,7 +61,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value || "-" }}</template>
@@ -104,17 +104,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
+import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
-import SocCaseAssetLink from "./SocCaseAssetLink.vue"
-import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
 import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"
 import type { SocCaseAsset } from "@/types/soc/asset.d"
+
+const SocCaseAssetLink = defineAsyncComponent(() => import("./SocCaseAssetLink.vue"))
 
 const { asset } = defineProps<{ asset: SocCaseAsset }>()
 

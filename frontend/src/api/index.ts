@@ -1,27 +1,28 @@
-import agents from "./agents"
-import alerts from "./alerts"
-import artifacts from "./artifacts"
-import auth from "./auth"
-import connectors from "./connectors"
-import graylog from "./graylog"
-import indices from "./indices"
-import soc from "./soc"
-import healthchecks from "./healthchecks"
-import threatIntel from "./threatIntel"
-import askSocfortress from "./askSocfortress"
-import customers from "./customers"
-import logs from "./logs"
-import flow from "./flow"
-import integrations from "./integrations"
-import monitoringAlerts from "./monitoringAlerts"
-import activeResponse from "./activeResponse"
-import stackProvisioning from "./stackProvisioning"
-import reporting from "./reporting"
-import license from "./license"
-import scheduler from "./scheduler"
-import networkConnectors from "./networkConnectors"
-import cloudSecurityAssessment from "./cloudSecurityAssessment"
-import webVulnerabilityAssessment from "./webVulnerabilityAssessment"
+import agents from "./endpoints/agents"
+import alerts from "./endpoints/alerts"
+import artifacts from "./endpoints/artifacts"
+import auth from "./endpoints/auth"
+import connectors from "./endpoints/connectors"
+import graylog from "./endpoints/graylog"
+import indices from "./endpoints/indices"
+import soc from "./endpoints/soc"
+import healthchecks from "./endpoints/healthchecks"
+import threatIntel from "./endpoints/threatIntel"
+import askSocfortress from "./endpoints/askSocfortress"
+import customers from "./endpoints/customers"
+import logs from "./endpoints/logs"
+import flow from "./endpoints/flow"
+import integrations from "./endpoints/integrations"
+import monitoringAlerts from "./endpoints/monitoringAlerts"
+import activeResponse from "./endpoints/activeResponse"
+import stackProvisioning from "./endpoints/stackProvisioning"
+import reporting from "./endpoints/reporting"
+import license from "./endpoints/license"
+import scheduler from "./endpoints/scheduler"
+import networkConnectors from "./endpoints/networkConnectors"
+import cloudSecurityAssessment from "./endpoints/cloudSecurityAssessment"
+import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
+import incidentManagement from "./endpoints/incidentManagement"
 
 export default {
 	agents,
@@ -47,5 +48,6 @@ export default {
 	scheduler,
 	networkConnectors,
 	cloudSecurityAssessment,
-	webVulnerabilityAssessment
+	webVulnerabilityAssessment,
+	incidentManagement
 }

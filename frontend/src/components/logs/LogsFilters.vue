@@ -60,9 +60,14 @@ import { ref, onBeforeMount, computed, watch, toRefs } from "vue"
 import { NButton, NSelect, NInputGroup, NInputNumber, NInput } from "naive-ui"
 import _cloneDeep from "lodash/cloneDeep"
 import _toSafeInteger from "lodash/toSafeInteger"
-import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
 import Api from "@/api"
-import { LogEventType } from "@/types/logs.d"
+import {
+	type LogsQueryEventType,
+	type LogsQueryTimeRange,
+	type LogsQueryTypes,
+	type LogsQueryValues,
+	LogEventType
+} from "@/types/logs.d"
 import type { AuthUser } from "@/types/auth.d"
 
 const emit = defineEmits<{

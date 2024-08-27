@@ -20,6 +20,7 @@ from app.db.db_setup import create_available_network_connectors
 from app.db.db_setup import create_copilot_user_if_not_exists
 from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
+from app.db.db_setup import delete_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
@@ -47,6 +48,7 @@ from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
 from app.routers import huntress
+from app.routers import incidents
 from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license
@@ -149,6 +151,7 @@ api_router.include_router(crowdstrike.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
+api_router.include_router(incidents.router)
 api_router.include_router(darktrace.router)
 
 # Include the APIRouter in the FastAPI app
@@ -163,6 +166,7 @@ async def init_db():
         await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
     apply_migrations()
     await add_connectors(async_engine)
+    await delete_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await create_available_network_connectors(async_engine)

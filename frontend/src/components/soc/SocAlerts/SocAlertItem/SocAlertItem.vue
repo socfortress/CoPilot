@@ -108,7 +108,7 @@
 				<div class="whitespace-nowrap">SOC Alert: {{ alert?.alert_id }}</div>
 			</template>
 			<template #header-extra>
-				<SocAlertItemRecommendation v-if="alert" :alert />
+				<ArtifactRecommendation v-if="alert" :context="alert.alert_context" />
 			</template>
 			<SocAlertItemDetails v-if="alert" :alert :users @updated="updateAlert" />
 		</n-modal>
@@ -128,7 +128,7 @@ import { NCollapse, useMessage, NCollapseItem, NModal, NSpin, NCheckbox, NCollap
 import type { SocUser } from "@/types/soc/user.d"
 const SocAlertItemDetails = defineAsyncComponent(() => import("./SocAlertItemDetails.vue"))
 const SocAlertItemBadges = defineAsyncComponent(() => import("./SocAlertItemBadges.vue"))
-const SocAlertItemRecommendation = defineAsyncComponent(() => import("./SocAlertItemRecommendation.vue"))
+const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const AlertItem = defineAsyncComponent(() => import("@/components/alerts/Alert.vue"))
 
 const checked = defineModel<boolean>("checked", { default: false })

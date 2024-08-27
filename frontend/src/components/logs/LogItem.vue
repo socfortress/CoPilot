@@ -20,7 +20,7 @@
 				<div class="description px-1" v-if="log.additional_info">{{ log.additional_info }}</div>
 
 				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-					<Badge type="splitted" :color="log.event_type === LogEventType.ERROR ? 'danger' : undefined">
+					<Badge type="splitted" :color="log.event_type === LogEventType.ERROR ? 'danger' : 'primary'">
 						<template #iconLeft>
 							<Icon
 								:name="log.event_type === LogEventType.ERROR ? ErrorIcon : InfoIcon"
@@ -30,7 +30,7 @@
 						<template #label>Type</template>
 						<template #value>{{ log.event_type }}</template>
 					</Badge>
-					<Badge type="splitted" v-if="log.user_id">
+					<Badge type="splitted" color="primary" v-if="log.user_id">
 						<template #iconLeft>
 							<Icon :name="UserIcon" :size="14"></Icon>
 						</template>

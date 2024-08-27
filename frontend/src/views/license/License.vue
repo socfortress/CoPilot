@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import LicenseViewer from "@/components/license/LicenseViewer.vue"
-import type { LicenseKey } from "@/types/license"
+import type { LicenseKey } from "@/types/license.d"
 import { ref } from "vue"
 
 const licenseKey = ref<LicenseKey | undefined>(undefined)

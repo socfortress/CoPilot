@@ -35,7 +35,8 @@ export default {
 				"50vw": "50vw"
 			},
 			maxHeight: {
-				"50vh": "50vh"
+				"50vh": "50vh",
+				150: "37.5rem"
 			},
 			maxWidth: {
 				"90vw": "90vw"
@@ -55,7 +56,8 @@ export default {
 		"gap-5",
 		"w-72",
 		"max-h-50vh",
-		"max-w-90vw"
+		"max-w-90vw",
+		"!h-0.75"
 	],
 	plugins: [
 		plugin(function ({ addBase, theme }) {

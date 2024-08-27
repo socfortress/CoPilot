@@ -68,14 +68,14 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="logsList.length">
 					<LogItem
 						v-for="log of itemsPaginated"
 						:key="log.id"
 						:log="log"
 						:users="usersList"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
@@ -125,8 +125,14 @@ import { nanoid } from "nanoid"
 import { useResizeObserver } from "@vueuse/core"
 import LogsFilters from "./LogsFilters.vue"
 import LogItem from "./LogItem.vue"
-import { LogEventType, type Log } from "@/types/logs.d"
-import type { LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
+import {
+	type Log,
+	type LogsQuery,
+	type LogsQueryTimeRange,
+	type LogsQueryTypes,
+	type LogsQueryValues,
+	LogEventType
+} from "@/types/logs.d"
 import type { AuthUser } from "@/types/auth.d"
 
 interface LogExt extends Log {
