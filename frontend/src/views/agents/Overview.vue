@@ -123,25 +123,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, nextTick } from "vue"
+import { ref, onBeforeMount, computed, nextTick, defineAsyncComponent } from "vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
-import { AgentStatus, type Agent } from "@/types/agents.d"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
-import VulnerabilitiesGrid from "@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue"
-import ScaTable from "@/components/agents/sca/ScaTable.vue"
-import AlertsList from "@/components/alerts/AlertsList.vue"
-import OverviewSection from "@/components/agents/OverviewSection.vue"
-import AgentCases from "@/components/agents/AgentCases.vue"
-import AgentFlowList from "@/components/agents/agentFlow/AgentFlowList.vue"
 import Icon from "@/components/common/Icon.vue"
-import type { Artifact } from "@/types/artifacts.d"
-import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
-import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
-import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
-import ActiveResponseAgent from "@/components/activeResponse/ActiveResponseAgent.vue"
 import { useGoto } from "@/composables/useGoto"
+import type { Artifact } from "@/types/artifacts.d"
+import { AgentStatus, type Agent } from "@/types/agents.d"
+
+const VulnerabilitiesGrid = defineAsyncComponent(
+	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")
+)
+const ScaTable = defineAsyncComponent(() => import("@/components/agents/sca/ScaTable.vue"))
+const AlertsList = defineAsyncComponent(() => import("@/components/alerts/AlertsList.vue"))
+const OverviewSection = defineAsyncComponent(() => import("@/components/agents/OverviewSection.vue"))
+const AgentCases = defineAsyncComponent(() => import("@/components/agents/AgentCases.vue"))
+const AgentFlowList = defineAsyncComponent(() => import("@/components/agents/agentFlow/AgentFlowList.vue"))
+const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
+const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCommand.vue"))
+const ArtifactsQuarantine = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsQuarantine.vue"))
+const ActiveResponseAgent = defineAsyncComponent(() => import("@/components/activeResponse/ActiveResponseAgent.vue"))
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"

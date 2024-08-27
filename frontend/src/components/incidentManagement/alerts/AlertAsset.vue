@@ -145,6 +145,8 @@ import Badge from "@/components/common/Badge.vue"
 import vShiki from "@/directives/v-shiki"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
+import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
+
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
@@ -152,7 +154,6 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const { asset, embedded } = toRefs(props)

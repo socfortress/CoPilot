@@ -245,17 +245,7 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, watch } from "vue"
-import SocCaseTimeline from "./SocCaseTimeline.vue"
-import SocCaseAssetsList from "./SocCaseAssetsList.vue"
-import SocCaseNoteForm from "./SocCaseNoteForm.vue"
-import SocCaseNotesList from "./SocCaseNotesList.vue"
-import SocCaseItemActions from "./SocCaseItemActions.vue"
-import SocAlertItem from "../SocAlerts/SocAlertItem/SocAlertItem.vue"
-import Api from "@/api"
+import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 import {
 	useMessage,
 	NPopover,
@@ -270,12 +260,23 @@ import {
 	NCollapse,
 	NCollapseItem
 } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import Badge from "@/components/common/Badge.vue"
+import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import { useGoto } from "@/composables/useGoto"
+import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
+
+const SocCaseTimeline = defineAsyncComponent(() => import("./SocCaseTimeline.vue"))
+const SocCaseAssetsList = defineAsyncComponent(() => import("./SocCaseAssetsList.vue"))
+const SocCaseNoteForm = defineAsyncComponent(() => import("./SocCaseNoteForm.vue"))
+const SocCaseNotesList = defineAsyncComponent(() => import("./SocCaseNotesList.vue"))
+const SocCaseItemActions = defineAsyncComponent(() => import("./SocCaseItemActions.vue"))
+const SocAlertItem = defineAsyncComponent(() => import("../SocAlerts/SocAlertItem/SocAlertItem.vue"))
 
 const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defineProps<{
 	caseData?: SocCase

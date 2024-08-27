@@ -104,17 +104,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
+import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
-import SocCaseAssetLink from "./SocCaseAssetLink.vue"
-import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
 import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"
 import type { SocCaseAsset } from "@/types/soc/asset.d"
+
+const SocCaseAssetLink = defineAsyncComponent(() => import("./SocCaseAssetLink.vue"))
 
 const { asset } = defineProps<{ asset: SocCaseAsset }>()
 

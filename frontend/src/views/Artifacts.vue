@@ -33,14 +33,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { defineAsyncComponent, ref } from "vue"
 import { NTabs, NTabPane } from "naive-ui"
-import ArtifactsList from "@/components/artifacts/ArtifactsList.vue"
-import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
-import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
-import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 import type { Artifact } from "@/types/artifacts.d"
 import type { Agent } from "@/types/agents.d"
+
+const ArtifactsList = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsList.vue"))
+const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
+const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCommand.vue"))
+const ArtifactsQuarantine = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsQuarantine.vue"))
 
 const artifacts = ref<Artifact[]>([])
 const agents = ref<Agent[]>([])

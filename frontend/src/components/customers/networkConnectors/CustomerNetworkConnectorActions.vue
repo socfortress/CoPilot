@@ -70,11 +70,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed, h, watch, ref } from "vue"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { computed, h, ref } from "vue"
-import { watch } from "vue"
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import type { FortinetProvision } from "@/api/endpoints/networkConnectors"

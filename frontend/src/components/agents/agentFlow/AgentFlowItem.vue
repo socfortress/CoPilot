@@ -74,7 +74,7 @@
 					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
-							<template #value>{{ value === "" ? "-" : value ?? "-" }}</template>
+							<template #value>{{ value === "" ? "-" : (value ?? "-") }}</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -151,21 +151,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
 import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils"
 import type { FlowResult } from "@/types/flow.d"
 import Icon from "@/components/common/Icon.vue"
-import AgentFlowTimeline from "./AgentFlowTimeline.vue"
-import AgentFlowQueryStat from "./AgentFlowQueryStat.vue"
-import AgentFlowCollectList from "./AgentFlowCollectList.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import { computed, ref } from "vue"
 import _pick from "lodash/pick"
 import Badge from "@/components/common/Badge.vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
+
+const AgentFlowTimeline = defineAsyncComponent(() => import("./AgentFlowTimeline.vue"))
+const AgentFlowQueryStat = defineAsyncComponent(() => import("./AgentFlowQueryStat.vue"))
+const AgentFlowCollectList = defineAsyncComponent(() => import("./AgentFlowCollectList.vue"))
 
 const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
 

@@ -145,6 +145,7 @@ import { isUrlLike } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
+
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()

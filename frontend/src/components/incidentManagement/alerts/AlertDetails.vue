@@ -37,15 +37,16 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import { NTabs, NTabPane, NSpin, useMessage } from "naive-ui"
 import _clone from "lodash/cloneDeep"
 import Api from "@/api"
-import AlertTimeline from "./AlertTimeline.vue"
-import AlertAssetsList from "./AlertAssetsList.vue"
-import AlertCommentsList from "./AlertCommentsList.vue"
-import AlertOverview from "./AlertOverview.vue"
 import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
+
+const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
+const AlertAssetsList = defineAsyncComponent(() => import("./AlertAssetsList.vue"))
+const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList.vue"))
+const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
 
 const props = defineProps<{
 	alertData?: Alert

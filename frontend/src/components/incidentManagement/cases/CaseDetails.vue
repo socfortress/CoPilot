@@ -30,13 +30,14 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import { NTabs, NTabPane, NSpin, useMessage } from "naive-ui"
 import _clone from "lodash/cloneDeep"
 import Api from "@/api"
-import CaseOverview from "./CaseOverview.vue"
-import AlertItem from "../alerts/AlertItem.vue"
 import type { Case } from "@/types/incidentManagement/cases.d"
+
+const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
+const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
 
 const props = defineProps<{
 	caseData?: Case

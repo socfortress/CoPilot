@@ -96,15 +96,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent, ref } from "vue"
+import { NModal, NTabs, NTabPane, NInput, NPopover } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import SocCaseNoteTimeline from "./SocCaseNoteTimeline.vue"
-import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NInput, NPopover } from "naive-ui"
 import _omit from "lodash/omit"
-import type { SocNote } from "@/types/soc/note.d"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import type { SocNote } from "@/types/soc/note.d"
+
+const SocCaseNoteTimeline = defineAsyncComponent(() => import("./SocCaseNoteTimeline.vue"))
 
 const { note } = defineProps<{ note: SocNote }>()
 

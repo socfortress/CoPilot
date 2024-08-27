@@ -36,17 +36,17 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 import { NTabs, NTabPane, NButton, NDrawer, NDrawerContent } from "naive-ui"
-import Messages from "@/components/graylog/Messages/List.vue"
-import Alerts from "@/components/graylog/Alerts/List.vue"
-import Events from "@/components/graylog/Events/List.vue"
-import Streams from "@/components/graylog/Streams/List.vue"
-import MonitoringAlerts from "@/components/graylog/MonitoringAlerts/List.vue"
-import Inputs from "@/components/graylog/Inputs/List.vue"
-import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import { useRoute, useRouter } from "vue-router"
-import { watch } from "vue"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
+
+const Messages = defineAsyncComponent(() => import("@/components/graylog/Messages/List.vue"))
+const Alerts = defineAsyncComponent(() => import("@/components/graylog/Alerts/List.vue"))
+const Events = defineAsyncComponent(() => import("@/components/graylog/Events/List.vue"))
+const Streams = defineAsyncComponent(() => import("@/components/graylog/Streams/List.vue"))
+const MonitoringAlerts = defineAsyncComponent(() => import("@/components/graylog/MonitoringAlerts/List.vue"))
+const Inputs = defineAsyncComponent(() => import("@/components/graylog/Inputs/List.vue"))
 
 const tabsList = ["messages", "alerts", "events", "streams", "provisioning"]
 const drawersList = ["inputs"]

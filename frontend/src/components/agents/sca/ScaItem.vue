@@ -77,15 +77,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed, defineAsyncComponent } from "vue"
 import { NTabs, NTabPane, NInput, NStatistic, NCard } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { type Agent, type AgentSca } from "@/types/agents.d"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
-import { computed } from "vue"
-import ScaResults from "./ScaResults.vue"
 import _pick from "lodash/pick"
+
+const ScaResults = defineAsyncComponent(() => import("./ScaResults.vue"))
 
 const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
