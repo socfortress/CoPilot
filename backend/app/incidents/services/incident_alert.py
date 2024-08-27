@@ -406,6 +406,7 @@ async def handle_customer_notifications(customer_code: str, alert_payload: Creat
                 execution_arguments={
                     "customer_code": customer_code,
                     "alert_context_payload": alert_payload.alert_context_payload,
+                    "alert_title": alert_payload.alert_title_payload,
                 },
                 start="",
             ),
