@@ -31,10 +31,10 @@
 								caseEntity.case_status === 'OPEN'
 									? 'danger'
 									: caseEntity.case_status === 'IN_PROGRESS'
-									? 'warning'
-									: caseEntity.case_status === 'CLOSED'
-									? 'success'
-									: undefined
+										? 'warning'
+										: caseEntity.case_status === 'CLOSED'
+											? 'success'
+											: undefined
 							"
 						>
 							<template #iconLeft>
@@ -80,10 +80,10 @@
 									caseEntity.case_status === 'OPEN'
 										? 'danger'
 										: caseEntity.case_status === 'IN_PROGRESS'
-										? 'warning'
-										: caseEntity.case_status === 'CLOSED'
-										? 'success'
-										: undefined
+											? 'warning'
+											: caseEntity.case_status === 'CLOSED'
+												? 'success'
+												: undefined
 								"
 							>
 								<template #iconLeft>
