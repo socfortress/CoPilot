@@ -11,6 +11,7 @@ import type {
 	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 
 export type AlertsFilter =
 	| { status: AlertStatus }
@@ -216,6 +217,25 @@ export default {
 	},
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
+	},
+	// #endregion
+
+	// #region Notification
+	getNotifications(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { notifications: IncidentNotification[] }>(
+			`/incidents/db_operations/notification/${customerCode}`
+		)
+	},
+	setNotification(notification: IncidentNotificationPayload) {
+		return HttpClient.put<FlaskBaseResponse & { notifications: IncidentNotification[] }>(
+			`/incidents/db_operations/notification`,
+			notification,
+			{
+				params: {
+					customer_code: notification.customer_code
+				}
+			}
+		)
 	}
 	// #endregion
 }
