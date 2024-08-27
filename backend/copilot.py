@@ -13,13 +13,14 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
-from app.db.db_setup import add_connectors, delete_connectors
+from app.db.db_setup import add_connectors
 from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
 from app.db.db_setup import create_available_network_connectors
 from app.db.db_setup import create_copilot_user_if_not_exists
 from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
+from app.db.db_setup import delete_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed

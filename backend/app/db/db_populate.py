@@ -82,7 +82,7 @@ def get_connectors_list():
         ),
         ("Graylog", "5.0.7", "username_password", "Connection to Graylog."),
         ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle."),
-        #("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS."),
+        # ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS."),
         (
             "Velociraptor",
             "0.6.8",
@@ -148,6 +148,7 @@ def get_connectors_list():
 
     return [load_connector_data(*connector) for connector in connectors]
 
+
 def delete_connectors_list():
     """
     Get a list of connectors with their respective versions and authentication methods.
@@ -160,7 +161,6 @@ def delete_connectors_list():
     ]
 
     return connectors
-
 
 
 async def add_connectors_if_not_exist(session: AsyncSession):
@@ -190,6 +190,7 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             logger.info(f"Added new connector: {connector_data['connector_name']}")
 
     await session.commit()
+
 
 async def delete_connectors_if_exist(session: AsyncSession):
     """
