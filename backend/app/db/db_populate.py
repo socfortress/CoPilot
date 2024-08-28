@@ -97,24 +97,24 @@ def get_connectors_list():
             "Connection to InfluxDB.",
             "INFLUXDB_ORG_AND_BUCKET",
         ),
-        (
-            "AskSocfortress",
-            "3",
-            "api_key",
-            "Connection to AskSocfortress. Make sure you have requested an API key.",
-        ),
-        (
-            "SocfortressThreatIntel",
-            "3",
-            "api_key",
-            "Connection to Socfortress Threat Intel. Make sure you have requested an API key.",
-        ),
-        (
-            "Cortex",
-            "3",
-            "api_key",
-            "Connection to Cortex. Make sure you have created an API key.",
-        ),
+        # (
+        #     "AskSocfortress",
+        #     "3",
+        #     "api_key",
+        #     "Connection to AskSocfortress. Make sure you have requested an API key.",
+        # ),
+        # (
+        #     "SocfortressThreatIntel",
+        #     "3",
+        #     "api_key",
+        #     "Connection to Socfortress Threat Intel. Make sure you have requested an API key.",
+        # ),
+        # (
+        #     "Cortex",
+        #     "3",
+        #     "api_key",
+        #     "Connection to Cortex. Make sure you have created an API key.",
+        # ),
         ("Grafana", "3", "username_password", "Connection to Grafana."),
         (
             "Wazuh Worker Provisioning",
@@ -158,6 +158,9 @@ def delete_connectors_list():
     """
     connectors = [
         "DFIR-IRIS",
+        "AskSocfortress",
+        "SocfortressThreatIntel",
+        "Cortex",
     ]
 
     return connectors
