@@ -16,12 +16,12 @@ class CustomerCodeKeys(Enum):
     CUSTOMER_CODE = "customer_code"
     CLUSTER_NODE = "cluster_node"
 
-    def get_processed_value(self):
-        if self == CustomerCodeKeys.CLUSTER_NODE:
-            value = self.value
+    @staticmethod
+    def get_processed_value(key, value):
+        if key == CustomerCodeKeys.CLUSTER_NODE:
             if value.startswith("wazuh.worker."):
                 return value.replace("wazuh.worker.", "").lower()
-        return self.value
+        return value
 
 
 class SyslogLevelMapping(Enum):
