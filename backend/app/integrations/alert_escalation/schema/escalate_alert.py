@@ -14,6 +14,14 @@ class CustomerCodeKeys(Enum):
     DATA_OFFICE365_ORGANIZATION_ID = "data_office365_OrganizationId"
     SYSLOG_CUSTOMER = "syslog_customer"
     CUSTOMER_CODE = "customer_code"
+    CLUSTER_NODE = "cluster_node"
+
+    def get_processed_value(self):
+        if self == CustomerCodeKeys.CLUSTER_NODE:
+            value = self.value
+            if value.startswith("wazuh.worker."):
+                return value.replace("wazuh.worker.", "").lower()
+        return self.value
 
 
 class SyslogLevelMapping(Enum):

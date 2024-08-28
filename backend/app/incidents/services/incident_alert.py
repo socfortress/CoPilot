@@ -199,6 +199,10 @@ async def get_customer_code(alert_details: dict):
     for key in CustomerCodeKeys:
         logger.info(f"Checking for key {key.value}")
         if key.value in alert_details:
+            if key == CustomerCodeKeys.CLUSTER_NODE:
+                processed_value = key.get_processed_value()
+                logger.info(f"Processed value for {key.value} is {processed_value}")
+                return processed_value
             return alert_details[key.value]
 
     # If none of the keys are present, raise an exception
