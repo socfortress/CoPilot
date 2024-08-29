@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import asc, desc
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -580,44 +581,10 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
 
     return alert_out
 
-
-# async def list_alerts(db: AsyncSession) -> List[AlertOut]:
-#     result = await db.execute(
-#         select(Alert).options(
-#             selectinload(Alert.comments),
-#             selectinload(Alert.assets),
-#             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
-#             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-#         ),
-#     )
-#     alerts = result.scalars().all()
-#     alerts_out = []
-#     for alert in alerts:
-#         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
-#         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
-#         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-#         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
-#         alert_out = AlertOut(
-#             id=alert.id,
-#             alert_creation_time=alert.alert_creation_time,
-#             time_closed=alert.time_closed,
-#             alert_name=alert.alert_name,
-#             alert_description=alert.alert_description,
-#             status=alert.status,
-#             customer_code=alert.customer_code,
-#             source=alert.source,
-#             assigned_to=alert.assigned_to,
-#             comments=comments,
-#             assets=assets,
-#             tags=tags,
-#             linked_cases=linked_cases,
-#         )
-#         alerts_out.append(alert_out)
-#     return alerts_out
-
-
-async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .options(
@@ -626,9 +593,11 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> L
             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
+
     alerts = result.scalars().all()
     alerts_out = []
     for alert in alerts:

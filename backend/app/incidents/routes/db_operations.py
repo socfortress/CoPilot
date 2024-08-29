@@ -421,9 +421,9 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
 
 
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
-async def list_alerts_endpoint(page: int = Query(1, ge=1), page_size: int = Query(25, ge=1), db: AsyncSession = Depends(get_db)):
+async def list_alerts_endpoint(page: int = Query(1, ge=1), page_size: int = Query(25, ge=1), order: str = Query("desc", regex="^(asc|desc)$"), db: AsyncSession = Depends(get_db)):
     return AlertOutResponse(
-        alerts=await list_alerts(db, page=page, page_size=page_size),
+        alerts=await list_alerts(db, page=page, page_size=page_size, order=order),
         total=await alert_total(db),
         open=await alerts_open(db),
         in_progress=await alerts_in_progress(db),
