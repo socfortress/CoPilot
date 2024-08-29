@@ -8,6 +8,8 @@ export interface SigmaQuery {
 	last_execution_time: Date
 }
 
-export type SigmaTimeInterval = `${number}${"m" | "h" | "d"}`
+export type SigmaTimeIntervalValue = number
+export type SigmaTimeIntervalUnit = "m" | "h" | "d"
+export type SigmaTimeInterval = `${SigmaTimeIntervalValue}${SigmaTimeIntervalUnit}`
 
 export type SigmaRuleLevels = "high" | "critical"
