@@ -3,7 +3,7 @@
 		:is="!!href ? 'a' : 'div'"
 		class="badge"
 		:href="href"
-		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor, fluid, bright }]"
+		:class="[type, color, { 'cursor-help': hintCursor, cursor: pointCursor, fluid, bright }]"
 	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">
 			<slot name="iconLeft"></slot>
