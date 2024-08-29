@@ -23,6 +23,7 @@ import networkConnectors from "./endpoints/networkConnectors"
 import cloudSecurityAssessment from "./endpoints/cloudSecurityAssessment"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
 import incidentManagement from "./endpoints/incidentManagement"
+import sigma from "./endpoints/sigma"
 
 export default {
 	agents,
@@ -49,5 +50,6 @@ export default {
 	networkConnectors,
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
-	incidentManagement
+	incidentManagement,
+	sigma
 }
