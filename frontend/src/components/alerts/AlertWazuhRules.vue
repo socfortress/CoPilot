@@ -1,8 +1,8 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Wazuh Rules" tab="Wazuh Rules" display-directive="show">
-			<div class="p-7 pt-4 scrollbar-styled code-bg-transparent" v-shiki="{ lang: 'xml' }">
-				<pre v-html="wazuh_rule"></pre>
+			<div class="p-7 pt-4">
+				<CodeSource :code="wazuh_rule" lang="xml" />
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Explanation" tab="Explanation" display-directive="show">
@@ -23,10 +23,11 @@
 </template>
 
 <script setup lang="ts">
-import vShiki from "@/directives/v-shiki"
-import { computed, toRefs } from "vue"
+import { computed, defineAsyncComponent, toRefs } from "vue"
 import { NTabs, NTabPane, NInput } from "naive-ui"
 import type { WazuhRuleExclude } from "@/types/alerts.d"
+
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const props = defineProps<{ data: WazuhRuleExclude }>()
 const { data } = toRefs(props)

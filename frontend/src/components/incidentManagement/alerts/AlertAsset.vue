@@ -78,14 +78,7 @@
 								</Badge>
 							</div>
 
-							<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-								<div
-									class="scrollbar-styled overflow-hidden code-bg-transparent"
-									v-shiki="{ lang: 'json', decode: false }"
-								>
-									<pre>{{ alertContext.context }}</pre>
-								</div>
-							</n-card>
+							<CodeSource :code="alertContext.context" lang="json" />
 						</div>
 					</n-spin>
 				</n-tab-pane>
@@ -142,7 +135,6 @@ import { NModal, NSpin, NCard, NTabs, NTabPane, useMessage } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import vShiki from "@/directives/v-shiki"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
@@ -154,6 +146,7 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const { asset, embedded } = toRefs(props)
