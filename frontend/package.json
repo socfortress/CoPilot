@@ -56,7 +56,7 @@
 		"naive-ui": "^2.39.0",
 		"password-validator": "^5.3.0",
 		"pinia": "^2.2.2",
-		"pinia-plugin-persistedstate": "^3.2.1",
+		"pinia-plugin-persistedstate": "^3.2.3",
 		"secure-ls": "^2.0.0",
 		"shiki": "^1.14.1",
 		"validator": "^13.12.0",
@@ -80,7 +80,7 @@
 		"@types/inquirer": "^9.0.7",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.7",
-		"@types/node": "^22.5.0",
+		"@types/node": "^22.5.1",
 		"@types/validator": "^13.12.1",
 		"@vitejs/plugin-vue": "^5.1.2",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
@@ -89,7 +89,7 @@
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.20",
-		"cypress": "^13.13.3",
+		"cypress": "^13.14.0",
 		"eslint": "^9.9.1",
 		"eslint-plugin-cypress": "^3.5.0",
 		"eslint-plugin-vue": "^9.27.0",
@@ -107,7 +107,7 @@
 		"tailwind-config-viewer": "^2.0.4",
 		"tailwindcss": "^3.4.10",
 		"taze": "^0.16.7",
-		"type-fest": "^4.25.0",
+		"type-fest": "^4.26.0",
 		"unplugin-vue-components": "^0.27.4",
 		"vite": "^5.4.2",
 		"vite-bundle-analyzer": "^0.10.6",
@@ -115,7 +115,7 @@
 		"vite-plugin-vue-devtools": "^7.3.9",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^2.0.5",
-		"vue-tsc": "^2.0.29"
+		"vue-tsc": "^2.1.2"
 	},
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "^4.21.1"
