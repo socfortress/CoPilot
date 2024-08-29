@@ -10,7 +10,6 @@ from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.connectors.graylog.services.streams import get_streams
 from app.db.db_session import get_db
-from app.integrations.monitoring_alert.routes.monitoring_alert import get_customer_meta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
@@ -41,8 +40,40 @@ from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
+from sqlalchemy.future import select
+from app.db.universal_models import CustomersMeta
 
 monitoring_alerts_provision_router = APIRouter()
+
+async def get_customer_meta(customer_code: str, session: AsyncSession) -> CustomersMeta:
+    """
+    Get the customer meta for the given customer_code.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomersMeta: The customer meta.
+    """
+    logger.info(f"Getting customer meta for customer_code: {customer_code}")
+
+    customer_meta = await session.execute(
+        select(CustomersMeta).where(CustomersMeta.customer_code == customer_code),
+    )
+    customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {customer_code}")
+        customer_meta = await session.execute(
+            select(CustomersMeta).where(CustomersMeta.customer_meta_office365_organization_id == customer_code),
+        )
+        customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    return customer_meta
 
 
 async def return_stream_ids(stream_names: List[str]) -> List[str]:

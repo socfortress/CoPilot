@@ -12,7 +12,6 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
 from app.agents.schema.agents import AgentWazuhUpgradeResponse
@@ -517,7 +516,7 @@ async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get
         SocCasesResponse: The response containing the agent SOC cases.
     """
     logger.info(f"Fetching agent {agent_id} SOC cases")
-    return await collect_agent_soc_cases(agent_id, session)
+    #return await collect_agent_soc_cases(agent_id, session)
 
 
 @agents_router.get(

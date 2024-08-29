@@ -30,12 +30,13 @@ from app.integrations.modules.routes.sap_siem import (
     invoke_sap_siem_successful_user_login_with_different_ip_route,
 )
 from app.integrations.modules.schema.sap_siem import InvokeSapSiemAnalysis
-from app.integrations.monitoring_alert.routes.monitoring_alert import (
-    run_sap_siem_multiple_logins_same_ip_analysis,
-)
-from app.integrations.monitoring_alert.routes.monitoring_alert import (
-    run_sap_siem_suspicious_logins_analysis,
-)
+# ! Commenting out for now, will revist later if needed ! #
+# from app.integrations.monitoring_alert.routes.monitoring_alert import (
+#     run_sap_siem_multiple_logins_same_ip_analysis,
+# )
+# from app.integrations.monitoring_alert.routes.monitoring_alert import (
+#     run_sap_siem_suspicious_logins_analysis,
+# )
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
 from app.schedulers.models.scheduler import JobMetadata
@@ -96,13 +97,14 @@ async def invoke_sap_siem_integration_suspicious_logins_analysis() -> InvokeSAPS
         result = await session.execute(stmt)
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
-        for customer_code in customer_codes:
-            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_suspicious_logins_analysis")).extra_data
-            threshold = int(extra_data) if extra_data is not None else 3
-            await run_sap_siem_suspicious_logins_analysis(
-                threshold=threshold,
-                session=session,
-            )
+        # ! Commenting out for now, will revist later if needed ! #
+        # for customer_code in customer_codes:
+        #     extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_suspicious_logins_analysis")).extra_data
+        #     threshold = int(extra_data) if extra_data is not None else 3
+        #     await run_sap_siem_suspicious_logins_analysis(
+        #         threshold=threshold,
+        #         session=session,
+        #     )
     # Close the session
     await session.close()
     with get_sync_db_session() as session:
@@ -132,21 +134,22 @@ async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> Invo
         result = await session.execute(stmt)
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
-        for customer_code in customer_codes:
-            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_multiple_logins_same_ip_analysis")).extra_data
-            if extra_data is not None:
-                data_parts = extra_data.split(",")
-                for part in data_parts:
-                    key, value = part.split("=")
-                    if key == "threshold":
-                        threshold = int(value)
-                    elif key == "time_range":
-                        time_range = int(value)
-            await run_sap_siem_multiple_logins_same_ip_analysis(
-                threshold=threshold,
-                time_range=time_range,
-                session=session,
-            )
+        # ! Commenting out for now, will revist later if needed ! #
+        # for customer_code in customer_codes:
+        #     extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_multiple_logins_same_ip_analysis")).extra_data
+        #     if extra_data is not None:
+        #         data_parts = extra_data.split(",")
+        #         for part in data_parts:
+        #             key, value = part.split("=")
+        #             if key == "threshold":
+        #                 threshold = int(value)
+        #             elif key == "time_range":
+        #                 time_range = int(value)
+        #     await run_sap_siem_multiple_logins_same_ip_analysis(
+        #         threshold=threshold,
+        #         time_range=time_range,
+        #         session=session,
+        #     )
     # Close the session
     await session.close()
     with get_sync_db_session() as session:

@@ -14,7 +14,6 @@ from sqlalchemy.future import select
 from werkzeug.utils import secure_filename
 
 from app.connectors.cortex.utils.universal import verify_cortex_connection
-from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
 from app.connectors.influxdb.utils.universal import verify_influxdb_connection
@@ -25,9 +24,6 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-from app.integrations.ask_socfortress.services.ask_socfortress import (
-    verify_ask_socfortress_connector,
-)
 from app.integrations.utils.event_shipper import verify_event_shipper_connection
 from app.threat_intel.services.socfortress import (
     verifiy_socfortress_threat_intel_connector,
@@ -87,15 +83,6 @@ class GraylogService(ConnectorServiceInterface):
         connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
-
-
-# DFIR-IRIS Service
-class DfirIrisService(ConnectorServiceInterface):
-    async def verify_authentication(
-        self,
-        connector: ConnectorResponse,
-    ) -> Optional[ConnectorResponse]:
-        return await verify_dfir_iris_connection(connector.connector_name)
 
 
 # Cortex Service
