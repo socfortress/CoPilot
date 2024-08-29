@@ -99,14 +99,6 @@ async def invoke_provision_wazuh_monitoring_alert(
 ):
     # Provision the Wazuh monitoring alert
     await provision_wazuh_monitoring_alert(request)
-    # ! No longer needed since we have the invoke_alert_creation_collect scheduled job ! #
-    # await add_scheduler_jobs(
-    #     CreateSchedulerRequest(
-    #         function_name="invoke_wazuh_monitoring_alert",
-    #         time_interval=5,
-    #         job_id="invoke_wazuh_monitoring_alert",
-    #     ),
-    # )
 
 
 async def invoke_provision_suricata_monitoring_alert(
@@ -114,13 +106,6 @@ async def invoke_provision_suricata_monitoring_alert(
 ):
     # Provision the Suricata monitoring alert
     await provision_suricata_monitoring_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_suricata_monitoring_alert",
-            time_interval=5,
-            job_id="invoke_suricata_monitoring_alert",
-        ),
-    )
 
 
 async def invoke_provision_office365_exchange_online_alert(
@@ -128,13 +113,6 @@ async def invoke_provision_office365_exchange_online_alert(
 ):
     # Provision the Office365 Exchange Online monitoring alert
     await provision_office365_exchange_online_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_office365_exchange_online_alert",
-            time_interval=5,
-            job_id="invoke_office365_exchange_online_alert",
-        ),
-    )
 
 
 async def invoke_provision_office365_threat_intel_alert(
@@ -142,13 +120,6 @@ async def invoke_provision_office365_threat_intel_alert(
 ):
     # Provision the Office365 Threat Intel monitoring alert
     await provision_office365_threat_intel_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_office365_threat_intel_alert",
-            time_interval=5,
-            job_id="invoke_office365_threat_intel_alert",
-        ),
-    )
 
 
 async def invoke_provision_custom_monitoring_alert(
