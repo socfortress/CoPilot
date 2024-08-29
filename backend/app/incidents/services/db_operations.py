@@ -876,8 +876,10 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     return alert_context
 
 
-async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .join(AlertToTag)
@@ -889,6 +891,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -916,8 +919,10 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
     return alerts_out
 
 
-async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.status == status)
@@ -927,9 +932,11 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
+
     alerts = result.scalars().all()
     alerts_out = []
     for alert in alerts:
@@ -954,8 +961,10 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
     return alerts_out
 
 
-async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .join(Asset)
@@ -966,6 +975,7 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -993,8 +1003,10 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
     return alerts_out
 
 
-async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.assigned_to == assigned_to)
@@ -1004,6 +1016,7 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -1031,8 +1044,10 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
     return alerts_out
 
 
-async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.alert_name.like(f"%{alert_title}%"))
@@ -1042,6 +1057,7 @@ async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )

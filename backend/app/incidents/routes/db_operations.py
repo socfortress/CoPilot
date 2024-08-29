@@ -450,12 +450,13 @@ async def list_alerts_by_status_endpoint(
     status: AlertStatus,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
     return AlertOutResponse(
-        alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size),
+        alerts=await list_alert_by_status(status.value, db, page=page, page_size=page_size, order=order),
         total=await alert_total(db),
         open=await alerts_open(db),
         in_progress=await alerts_in_progress(db),
@@ -470,10 +471,11 @@ async def list_alerts_by_assigned_to_endpoint(
     assigned_to: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
-        alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size),
+        alerts=await list_alert_by_assigned_to(assigned_to, db, page=page, page_size=page_size, order=order),
         total=await alerts_total_by_assigned_to(db, assigned_to),
         open=await alerts_open_by_assigned_to(db, assigned_to),
         in_progress=await alerts_in_progress_by_assigned_to(db, assigned_to),
@@ -488,10 +490,11 @@ async def list_alerts_by_asset_name_endpoint(
     asset_name: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
-        alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size),
+        alerts=await list_alerts_by_asset_name(asset_name, db, page=page, page_size=page_size, order=order),
         total=await alert_total_by_assest_name(db, asset_name),
         open=await alerts_open_by_assest_name(db, asset_name),
         in_progress=await alerts_in_progress_by_assest_name(db, asset_name),
@@ -506,10 +509,11 @@ async def list_alerts_by_title_endpoint(
     title: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
     return AlertOutResponse(
-        alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size),
+        alerts=await list_alerts_by_title(title, db, page=page, page_size=page_size, order=order),
         total=await alert_total_by_alert_title(db, title),
         open=await alerts_open_by_alert_title(db, title),
         in_progress=await alerts_in_progress_by_alert_title(db, title),
