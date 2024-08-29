@@ -153,6 +153,12 @@ const router = createRouter({
 					name: "IncidentManagement-Cases",
 					component: () => import("@/views/incidentManagement/Cases.vue"),
 					meta: { title: "Incident Cases" }
+				},
+				{
+					path: "sigma",
+					name: "IncidentManagement-Sigma",
+					component: () => import("@/views/incidentManagement/Sigma.vue"),
+					meta: { title: "Sigma rules" }
 				}
 			]
 		},
