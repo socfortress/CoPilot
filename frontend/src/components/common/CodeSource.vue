@@ -12,7 +12,7 @@
 
 		<n-input
 			v-if="showSource"
-			:value="code"
+			:value="source"
 			type="textarea"
 			readonly
 			placeholder="Empty"
@@ -26,15 +26,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import { NCard, NInput, NButton } from "naive-ui"
 import vShiki from "@/directives/v-shiki"
 
 const { code, lang } = defineProps<{
-	code: string
+	code: string | object | number
 	lang?: string
 	decode?: boolean
 }>()
 
 const showSource = ref(false)
+const source = computed(() => code.toString())
 </script>

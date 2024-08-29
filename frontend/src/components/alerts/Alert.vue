@@ -177,14 +177,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Message" tab="Message" v-if="alert._source.message" display-directive="show">
 					<div class="p-7 pt-4">
-						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-							<div
-								class="scrollbar-styled overflow-hidden code-bg-transparent"
-								v-shiki="{ decode: false }"
-							>
-								<pre>{{ alert._source.message }}</pre>
-							</div>
-						</n-card>
+						<CodeSource :code="alert._source.message" :decode="false" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -208,14 +201,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
 					<div class="p-7 pt-4">
-						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-							<div
-								class="scrollbar-styled overflow-hidden code-bg-transparent"
-								v-shiki="{ lang: 'json', decode: false }"
-							>
-								<pre>{{ alert._source }}</pre>
-							</div>
-						</n-card>
+						<CodeSource :code="alert._source" lang="json" :decode="false" />
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -225,18 +211,19 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
-import { NPopover, NModal, NTabs, NTabPane, NInput, NCard } from "naive-ui"
+import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
-import type { Alert } from "@/types/alerts.d"
-import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
+import type { Alert } from "@/types/alerts.d"
 import type { SocAlertField } from "./type.d"
+
+const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const { alert, hideActions } = toRefs(props)
