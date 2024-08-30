@@ -27,7 +27,7 @@ export interface AlertsQuery {
 	filters: AlertsFilter
 }
 
-export type CasesFilter = { status: AlertStatus } | { assignedTo: string }
+export type CasesFilter = { status: AlertStatus } | { assignedTo: string } | { hostname: string }
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
@@ -182,6 +182,9 @@ export default {
 		}
 		if (filters && "assignedTo" in filters) {
 			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+		}
+		if (filters && "hostname" in filters) {
+			url = `/agents/${filters.hostname}/cases`
 		}
 
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(url)
