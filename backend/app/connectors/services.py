@@ -208,7 +208,6 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Wazuh-Indexer": WazuhIndexerService,
         "Velociraptor": VelociraptorService,
         "Graylog": GraylogService,
-        "DFIR-IRIS": DfirIrisService,
         "Cortex": CortexService,
         "Shuffle": ShuffleService,
         "Sublime": SublimeService,
