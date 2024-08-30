@@ -464,7 +464,7 @@ async def get_agent_vulnerabilities(
     return await collect_agent_vulnerabilities(agent_id, vulnerability_severity.value)
 
 @agents_router.get(
-    "/{agent_id}/vulnerabilities/csv",
+    "/{agent_id}/csv/vulnerabilities",
     description="Get agent vulnerabilities as CSV",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -482,10 +482,12 @@ async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = D
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
         logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
-        vulnerabilities = await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity="Critical")
+        vulnerabilities = (await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity="High")).vulnerabilities
     else:
         vulnerabilities = await collect_agent_vulnerabilities(agent_id, vulnerability_severity="Critical")
     # Create a CSV file
+    logger.info(f"Creating CSV file for agent {agent_id} with {len(vulnerabilities)} vulnerabilities")
+    logger.info(f"Vulnerabilities: {vulnerabilities}")
     output = io.StringIO()
     writer = csv.writer(output)
     # Write the header

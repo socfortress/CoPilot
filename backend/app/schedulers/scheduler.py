@@ -163,8 +163,8 @@ async def schedule_enabled_jobs(scheduler):
     Schedules jobs that are enabled in the database.
     """
     async with AsyncSession(async_engine) as session:
-        # First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
-        logger.info("Disabling job: invoke_wazuh_monitoring_alert")
+        # ! First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
+        # TODO ! Inefficient as hell but I will come back to this later
         stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_wazuh_monitoring_alert")
         result = await session.execute(stmt)
         job_metadata = result.scalars().one_or_none()
