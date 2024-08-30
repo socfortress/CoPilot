@@ -57,7 +57,6 @@ from app.schedulers.services.invoke_sap_siem import (
 )
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
-
 def scheduler_listener(event):
     if event.exception:
         logger.error(f"Job {event.job_id} crashed: {event.exception}")
@@ -164,6 +163,16 @@ async def schedule_enabled_jobs(scheduler):
     Schedules jobs that are enabled in the database.
     """
     async with AsyncSession(async_engine) as session:
+        # First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
+        logger.info("Disabling job: invoke_wazuh_monitoring_alert")
+        stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_wazuh_monitoring_alert")
+        result = await session.execute(stmt)
+        job_metadata = result.scalars().one_or_none()
+        if job_metadata:
+            logger.info("Disabling job: invoke_wazuh_monitoring_alert")
+            job_metadata.enabled = False
+            await session.commit()
+
         stmt = select(JobMetadata).where(JobMetadata.enabled == True)
         result = await session.execute(stmt)
         job_metadatas = result.scalars().all()
@@ -196,6 +205,7 @@ async def schedule_enabled_jobs(scheduler):
                 logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
+
 
 
 def get_function_by_name(function_name: str):
