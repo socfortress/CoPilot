@@ -14,8 +14,8 @@ from sqlalchemy.future import select
 
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
-from app.incidents.services.db_operations import list_cases_by_asset_name, list_alerts_by_asset_name, alert_total_by_assest_name, alerts_open_by_assest_name, alerts_in_progress_by_assest_name, alerts_closed_by_asset_name
-from app.incidents.schema.db_operations import AlertOutResponse, CaseOutResponse
+from app.incidents.services.db_operations import list_cases_by_asset_name
+from app.incidents.schema.db_operations import CaseOutResponse
 from app.agents.schema.agents import AgentWazuhUpgradeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
@@ -500,32 +500,6 @@ async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAg
     logger.info(f"Fetching agent {agent_id} sca policy results")
     return await collect_agent_sca_policy_results(agent_id, policy_id)
 
-@agents_router.get(
-    "/{agent_hostname}/alerts",
-    response_model=AlertOutResponse,
-    description="Get alerts that have been created for a specific agent",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-)
-async def get_agent_alerts(agent_hostname: str, session: AsyncSession = Depends(get_db)) -> AlertOutResponse:
-    """
-    Fetches the alerts of a specific agent.
-
-    Args:
-        agent_hostname (str): The hostname of the agent.
-
-    Returns:
-        WazuhAgentScaPolicyResultsResponse: The response containing the agent alerts.
-    """
-    logger.info(f"Fetching agent {agent_hostname} alerts")
-    return AlertOutResponse(
-        alerts=await list_alerts_by_asset_name(asset_name=agent_hostname, db=session),
-        total=await alert_total_by_assest_name(db=session, asset_name=agent_hostname),
-        open=await alerts_open_by_assest_name(db=session, asset_name=agent_hostname),
-        in_progress=await alerts_in_progress_by_assest_name(db=session, asset_name=agent_hostname),
-        closed=await alerts_closed_by_asset_name(db=session, asset_name=agent_hostname),
-        success=True,
-        message="Alerts retrieved successfully",
-    )
 
 
 
