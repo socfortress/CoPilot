@@ -14,8 +14,8 @@ from sqlalchemy.future import select
 
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
-from app.incidents.services.db_operations import list_alerts_by_asset_name, alert_total_by_assest_name, alerts_open_by_assest_name, alerts_in_progress_by_assest_name, alerts_closed_by_asset_name
-from app.incidents.schema.db_operations import AlertOutResponse
+from app.incidents.services.db_operations import list_cases_by_asset_name, list_alerts_by_asset_name, alert_total_by_assest_name, alerts_open_by_assest_name, alerts_in_progress_by_assest_name, alerts_closed_by_asset_name
+from app.incidents.schema.db_operations import AlertOutResponse, CaseOutResponse
 from app.agents.schema.agents import AgentWazuhUpgradeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
@@ -530,12 +530,12 @@ async def get_agent_alerts(agent_hostname: str, session: AsyncSession = Depends(
 
 
 @agents_router.get(
-    "/{agent_id}/soc_cases",
-    # response_model=SocCasesResponse,
-    description="Get SOC cases for agent",
+    "/{agent_hostname}/cases",
+    response_model=CaseOutResponse,
+    description="Get cases for agent",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get_db)):
+async def get_agent_soc_cases(agent_hostname: str, session: AsyncSession = Depends(get_db)):
     """
     Fetches the SOC cases of a specific agent.
 
@@ -545,8 +545,8 @@ async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get
     Returns:
         SocCasesResponse: The response containing the agent SOC cases.
     """
-    logger.info(f"Fetching agent {agent_id} SOC cases")
-    #return await collect_agent_soc_cases(agent_id, session)
+    logger.info(f"Fetching agent {agent_hostname} cases")
+    return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name=agent_hostname, db=session), success=True, message="Cases retrieved successfully")
 
 
 @agents_router.get(

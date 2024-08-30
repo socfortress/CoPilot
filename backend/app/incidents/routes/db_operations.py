@@ -120,7 +120,7 @@ from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_status
-from app.incidents.services.db_operations import validate_source_exists
+from app.incidents.services.db_operations import validate_source_exists, list_cases_by_asset_name
 
 incidents_db_operations_router = APIRouter()
 
@@ -567,3 +567,7 @@ async def list_cases_by_status_endpoint(status: AlertStatus, db: AsyncSession = 
 @incidents_db_operations_router.get("/case/assigned-to/{assigned_to}", response_model=CaseOutResponse)
 async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_assigned_to(assigned_to, db), success=True, message="Cases retrieved successfully")
+
+@incidents_db_operations_router.get("/case/asset/{asset_name}", response_model=CaseOutResponse)
+async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
