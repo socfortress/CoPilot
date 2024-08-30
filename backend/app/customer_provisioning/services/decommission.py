@@ -98,8 +98,19 @@ async def decommission_wazuh_worker(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
+    # Check if the connector is verified
+    if await get_connector_attribute(
+        connector_name="Wazuh Worker Provisioning",
+        column_name="connector_verified",
+        session=session,
+    ) is False:
+        logger.info("Wazuh Worker Provisioning connector is not verified, skipping ...")
+        return DecommissionWorkerResponse(
+            success=False,
+            message="Wazuh Worker Provisioning connector is not verified",
+        )
     api_endpoint = await get_connector_attribute(
-        connector_id=13,
+        connector_name="Wazuh Worker Provisioning",
         column_name="connector_url",
         session=session,
     )
