@@ -90,7 +90,15 @@
 					</n-tab-pane>
 					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
 						<div class="section">
-							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+							<!--
+								<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+							-->
+							<AlertsList
+								v-if="agent"
+								class="px-1"
+								:preset="{ type: 'assetName', value: agent.hostname }"
+								hide-filters
+							/>
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
@@ -145,7 +153,8 @@ const VulnerabilitiesGrid = defineAsyncComponent(
 	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")
 )
 const ScaTable = defineAsyncComponent(() => import("@/components/agents/sca/ScaTable.vue"))
-const AlertsList = defineAsyncComponent(() => import("@/components/alerts/AlertsList.vue"))
+// const AlertsList = defineAsyncComponent(() => import("@/components/alerts/AlertsList.vue"))
+const AlertsList = defineAsyncComponent(() => import("@/components/incidentManagement/alerts/AlertsList.vue"))
 const OverviewSection = defineAsyncComponent(() => import("@/components/agents/OverviewSection.vue"))
 // const AgentCases = defineAsyncComponent(() => import("@/components/agents/AgentCases.vue"))
 const CasesList = defineAsyncComponent(() => import("@/components/incidentManagement/cases/CasesList.vue"))
