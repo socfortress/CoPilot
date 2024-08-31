@@ -4,6 +4,9 @@ import asyncio
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
+import csv
+import io
 from fastapi import Path
 from fastapi import Security
 from loguru import logger
@@ -459,6 +462,77 @@ async def get_agent_vulnerabilities(
         logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
         return await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity.value)
     return await collect_agent_vulnerabilities(agent_id, vulnerability_severity.value)
+
+@agents_router.get(
+    "/{agent_id}/csv/vulnerabilities",
+    description="Get agent vulnerabilities as CSV",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = Depends(get_db)):
+    """
+    Fetches the vulnerabilities of a specific agent and returns them as a CSV file.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        StreamingResponse: The response containing the agent vulnerabilities in CSV format.
+    """
+    logger.info(f"Fetching agent {agent_id} vulnerabilities as CSV")
+    wazuh_new = await check_wazuh_manager_version()
+    if wazuh_new is True:
+        logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
+        vulnerabilities = (await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity="High")).vulnerabilities
+    else:
+        vulnerabilities = await collect_agent_vulnerabilities(agent_id, vulnerability_severity="Critical")
+    # Create a CSV file
+    logger.info(f"Creating CSV file for agent {agent_id} with {len(vulnerabilities)} vulnerabilities")
+    logger.info(f"Vulnerabilities: {vulnerabilities}")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Write the header
+    writer.writerow(
+        [
+            "Severity",
+            "Version",
+            "Type",
+            "Name",
+            "External References",
+            "Detection Time",
+            "CVSS3 Score",
+            "Published",
+            "Architecture",
+            "CVE",
+            "Status",
+            "Title",
+        ],
+    )
+    # Write the rows
+    for vulnerability in vulnerabilities:
+        writer.writerow(
+            [
+                vulnerability.severity,
+                vulnerability.version,
+                vulnerability.type,
+                vulnerability.name,
+                ', '.join(vulnerability.external_references) if vulnerability.external_references else "",
+                vulnerability.detection_time,
+                vulnerability.cvss3_score,
+                vulnerability.published,
+                vulnerability.architecture,
+                vulnerability.cve,
+                vulnerability.status,
+                vulnerability.title,
+            ],
+        )
+    # Return the CSV file as a streaming response
+    output.seek(0)
+    return StreamingResponse(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={agent_id}_vulnerabilities.csv"},
+    )
+
 
 
 @agents_router.get(

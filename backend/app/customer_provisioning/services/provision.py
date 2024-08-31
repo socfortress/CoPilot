@@ -288,6 +288,7 @@ async def provision_wazuh_worker(
         url=f"{api_endpoint}/provision_worker",
         json=request.dict(),
     )
+    logger.info(f"Status code from Wazuh Worker: {response.status_code}")
     # Check the response status code
     if response.status_code != 200:
         return ProvisionWorkerResponse(
