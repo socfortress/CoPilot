@@ -271,7 +271,9 @@ watch(showFilters, val => {
 watch(
 	() => filters.value.type,
 	() => {
-		filters.value.value = undefined
+		if (!preset.value) {
+			filters.value.value = undefined
+		}
 	}
 )
 

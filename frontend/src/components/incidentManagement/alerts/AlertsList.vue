@@ -62,7 +62,7 @@
 				class="max-w-20"
 				:disabled="loading"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0" v-if="!hideFilters">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -185,12 +185,12 @@ import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
 export interface AlertsListFilter {
-	type: "status" | "assetName" | "assignedTo"
+	type: "status" | "assetName" | "assignedTo" | "tag" | "title"
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight: string | null | undefined }>()
-const { highlight } = toRefs(props)
+const props = defineProps<{ highlight?: string | null; preset?: AlertsListFilter; hideFilters?: boolean }>()
+const { highlight, preset, hideFilters } = toRefs(props)
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
@@ -256,7 +256,9 @@ watch(showFilters, val => {
 watch(
 	() => filters.value.type,
 	() => {
-		filters.value.value = undefined
+		if (!preset.value) {
+			filters.value.value = undefined
+		}
 	}
 )
 
@@ -393,6 +395,11 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
+	if (preset.value?.type && preset.value.value) {
+		filters.value.type = preset.value.type
+		filters.value.value = preset.value.value
+	}
+
 	getData()
 	getAvailableUsers()
 	getCases()
