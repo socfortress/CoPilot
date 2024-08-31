@@ -29,14 +29,15 @@ export default {
 	},
 	uploadRulesFile(file: File) {
 		const form = new FormData()
-		form.append("file", new Blob([file]))
-		// form.append("file", new Blob([file], { type: connector_file.type }), connector_file.name)
+		form.append("file", new Blob([file], { type: file.type }), file.name)
 
 		return HttpClient.post<FlaskBaseResponse>(`/sigma/upload`, form)
 	},
+	/** It may take several minutes */
 	activateAllQueries() {
 		return HttpClient.post<FlaskBaseResponse & { enabled_queries: string[] }>(`/sigma/activate-all-queries`)
 	},
+	/** It may take several minutes */
 	deactivateAllQueries() {
 		return HttpClient.post<FlaskBaseResponse & { disabled_queries: string[] }>(`/sigma/deactivate-all-queries`)
 	},
