@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.agents.schema.agents import AgentModifyResponse
+from app.threat_intel.services.epss import collect_epss_score
+from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.agents.schema.agents import AgentsResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.schema.db_operations import CaseOutResponse
@@ -464,11 +466,11 @@ async def get_agent_vulnerabilities(
     return await collect_agent_vulnerabilities(agent_id, vulnerability_severity.value)
 
 @agents_router.get(
-    "/{agent_id}/csv/vulnerabilities",
+    "/{agent_id}/csv/vulnerabilities/{vulnerability_severity}",
     description="Get agent vulnerabilities as CSV",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = Depends(get_db)):
+async def get_agent_vulnerabilities_csv(agent_id: str, vulnerability_severity: VulnSeverity = Path(...)) -> StreamingResponse:
     """
     Fetches the vulnerabilities of a specific agent and returns them as a CSV file.
 
@@ -482,9 +484,9 @@ async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = D
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
         logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
-        vulnerabilities = (await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity="High")).vulnerabilities
+        vulnerabilities = (await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity=vulnerability_severity.value)).vulnerabilities
     else:
-        vulnerabilities = await collect_agent_vulnerabilities(agent_id, vulnerability_severity="Critical")
+        vulnerabilities = (await collect_agent_vulnerabilities(agent_id, vulnerability_severity=vulnerability_severity.value)).vulnerabilities
     # Create a CSV file
     logger.info(f"Creating CSV file for agent {agent_id} with {len(vulnerabilities)} vulnerabilities")
     logger.info(f"Vulnerabilities: {vulnerabilities}")
@@ -505,10 +507,12 @@ async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = D
             "CVE",
             "Status",
             "Title",
+            "EPSS Score",
         ],
     )
     # Write the rows
     for vulnerability in vulnerabilities:
+        epss_score = await collect_epss_score(EpssThreatIntelRequest(cve=vulnerability.cve))
         writer.writerow(
             [
                 vulnerability.severity,
@@ -523,12 +527,13 @@ async def get_agent_vulnerabilities_csv(agent_id: str, session: AsyncSession = D
                 vulnerability.cve,
                 vulnerability.status,
                 vulnerability.title,
+                epss_score.data[0].epss if epss_score.data else "",
             ],
         )
     # Return the CSV file as a streaming response
     output.seek(0)
     return StreamingResponse(
-        content=output.getvalue(),
+        output,  # Use the StringIO object directly
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={agent_id}_vulnerabilities.csv"},
     )
