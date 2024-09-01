@@ -579,7 +579,67 @@ async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAg
     logger.info(f"Fetching agent {agent_id} sca policy results")
     return await collect_agent_sca_policy_results(agent_id, policy_id)
 
+@agents_router.get(
+    "/{agent_id}/csv/sca/{policy_id}",
+    description="Get agent sca results as CSV",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_sca_policy_results_csv(agent_id: str, policy_id: str) -> StreamingResponse:
+    """
+    Fetches the sca results of a specific agent and returns them as a CSV file.
 
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        StreamingResponse: The response containing the agent sca in CSV format.
+    """
+    logger.info(f"Fetching agent {agent_id} sca policy results as CSV")
+    sca_results = (await collect_agent_sca_policy_results(agent_id, policy_id)).sca_policy_results
+    # Create a CSV file
+    logger.info(f"Creating CSV file for agent {agent_id} with {len(sca_results)} sca policy results")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Write the header
+    writer.writerow(
+        [
+            "Description",
+            "Policy ID",
+            "Reason",
+            "Command",
+            "Rationale",
+            "Condition",
+            "Title",
+            "Result",
+            "Remediation",
+            "Compliance",
+            "Rules",
+        ],
+    )
+    # Write the rows
+    for sca_result in sca_results:
+        writer.writerow(
+            [
+                sca_result.description,
+                sca_result.policy_id,
+                sca_result.reason,
+                sca_result.command,
+                sca_result.rationale,
+                sca_result.condition,
+                sca_result.title,
+                sca_result.result,
+                sca_result.remediation,
+                ', '.join([f"{compliance.key}: {compliance.value}" for compliance in sca_result.compliance]) if sca_result.compliance else "",
+                ', '.join([f"{rule.type}: {rule.rule}" for rule in sca_result.rules]) if sca_result.rules else "",
+            ],
+        )
+    # Return the CSV file as a streaming response
+    output.seek(0)
+    return StreamingResponse(
+        output,  # Use the StringIO object directly
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={agent_id}_sca_policy_results.csv"},
+    )
 
 
 @agents_router.get(
