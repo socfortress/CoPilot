@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [vuln-csv-export]
+        branches: [main]
 
 jobs:
     build-backend:
