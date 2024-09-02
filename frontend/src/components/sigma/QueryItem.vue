@@ -1,7 +1,7 @@
 <template>
 	<div class="sigma-query-item" :class="{ embedded }" @click="openDetails()">
 		<n-spin :show="loading">
-			<div class="flex flex-col" v-if="query">
+			<div class="flex flex-col">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
 						<span>#{{ query.id }}</span>
@@ -23,12 +23,12 @@
 
 				<div class="footer-box px-5 py-3 flex justify-between items-center gap-4">
 					<div class="badges-box flex flex-wrap items-center gap-3">
-						<QueryTimeIntervalFormProvider
+						<QueryTimeIntervalForm
 							:query
-							v-slot="{ loading: loadingTimeInterval }"
+							v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
 							@updated="updateQuery($event)"
 						>
-							<Badge type="splitted" bright pointCursor>
+							<Badge type="splitted" bright pointCursor @click.stop="toggleTimeIntervalPopup()">
 								<template #iconLeft>
 									<n-spin
 										:size="12"
@@ -46,7 +46,7 @@
 									</div>
 								</template>
 							</Badge>
-						</QueryTimeIntervalFormProvider>
+						</QueryTimeIntervalForm>
 
 						<Badge type="splitted" bright fluid class="!hidden sm:!flex">
 							<template #iconLeft>
@@ -65,13 +65,15 @@
 						</Badge>
 					</div>
 					<div class="actions-box">
-						<QueryDeleteProvider
+						<QueryDeleteOne
 							:query
-							v-slot="{ loading: loadingDelete }"
+							v-slot="{ loading: loadingDelete, togglePopup: toggleDeletePopup }"
 							@deleted="emit('deleted', query)"
 						>
-							<n-button quaternary size="tiny" :loading="loadingDelete">Delete</n-button>
-						</QueryDeleteProvider>
+							<n-button quaternary size="tiny" :loading="loadingDelete" @click.stop="toggleDeletePopup()">
+								Delete
+							</n-button>
+						</QueryDeleteOne>
 					</div>
 				</div>
 			</div>
@@ -91,7 +93,7 @@
 				segmented
 				role="modal"
 			>
-				<QueryDetails v-if="query" :query @deleted="emitDelete(query)" @updated="updateQuery($event)" />
+				<QueryDetails :query @deleted="emitDelete(query)" @updated="updateQuery($event)" />
 			</n-card>
 		</n-modal>
 	</div>
@@ -104,21 +106,21 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import QueryTimeIntervalFormProvider from "./QueryTimeIntervalFormProvider.vue"
-import QueryDeleteProvider from "./QueryDeleteProvider.vue"
+import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"
+import QueryDeleteOne from "./actionsProviders/QueryDeleteOne.vue"
 import QueryDetails from "./QueryDetails.vue"
 import type { SigmaQuery } from "@/types/sigma.d"
+
+const emit = defineEmits<{
+	(e: "deleted", value: SigmaQuery): void
+	(e: "updated", value: SigmaQuery): void
+}>()
 
 const props = defineProps<{
 	query: SigmaQuery
 	embedded?: boolean
 }>()
 const { query, embedded } = toRefs(props)
-
-const emit = defineEmits<{
-	(e: "deleted", value: SigmaQuery): void
-	(e: "updated", value: SigmaQuery): void
-}>()
 
 const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
@@ -135,7 +137,7 @@ function updateQuery(updatedQuery: SigmaQuery) {
 }
 
 function emitDelete(updatedQuery: SigmaQuery) {
-	showDetails.value = false
+	closeDetails()
 	emit("deleted", updatedQuery)
 }
 
@@ -177,10 +179,6 @@ function closeDetails() {
 		border-top: var(--border-small-100);
 		font-size: 13px;
 		background-color: var(--bg-secondary-color);
-
-		.time {
-			display: none;
-		}
 	}
 
 	&.embedded {
@@ -189,19 +187,6 @@ function closeDetails() {
 
 	&:hover {
 		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-
-	@container (max-width: 600px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.footer-box {
-			.time {
-				display: flex;
-			}
-		}
 	}
 }
 </style>

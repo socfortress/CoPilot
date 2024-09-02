@@ -30,7 +30,7 @@
 					</div>
 				</n-popover>
 
-				<n-button size="small" type="primary" secondary strong v-if="queriesList.length">
+				<n-button size="small" type="primary" secondary strong @click="showActionsView = !showActionsView">
 					<div class="flex items-center gap-2">
 						<Icon :name="ToolsIcon" :size="16"></Icon>
 						<span class="hidden xs:block">Actions</span>
@@ -71,13 +71,27 @@
 							class="!w-56"
 						/>
 					</div>
-					<div class="px-3 flex justify-end gap-2">
-						<n-button size="small" @click="showFilters = false" secondary>Close</n-button>
-						<n-button size="small" @click="getData()" type="primary" secondary>Submit</n-button>
+					<div class="px-3 flex justify-between gap-2">
+						<div class="flex justify-start gap-2">
+							<n-button size="small" @click="showFilters = false" quaternary>Close</n-button>
+						</div>
+						<div class="flex justify-end gap-2">
+							<n-button size="small" @click="resetFilters()" secondary>Reset</n-button>
+							<n-button size="small" @click="getData()" type="primary" secondary :loading>
+								Submit
+							</n-button>
+						</div>
 					</div>
 				</div>
 			</n-popover>
 		</div>
+
+		<div class="actions-box" :class="{ open: showActionsView }">
+			<n-card size="small" content-class="bg-secondary-color" class="overflow-hidden" :bordered="false">
+				<QueriesActions @updated="getData()" />
+			</n-card>
+		</div>
+
 		<n-spin :show="loading">
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="queriesList.length">
@@ -95,6 +109,7 @@
 				</template>
 			</div>
 		</n-spin>
+
 		<div class="footer flex justify-end">
 			<n-pagination
 				v-model:page="currentPage"
@@ -109,23 +124,28 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed, watch } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NBadge } from "naive-ui"
+import { NCard, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NBadge, useMessage } from "naive-ui"
 import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
-import { useResizeObserver } from "@vueuse/core"
+import { useResizeObserver, useStorage } from "@vueuse/core"
 import QueryItem from "./QueryItem.vue"
+import QueriesActions from "./QueriesActions.vue"
 import type { SigmaQuery } from "@/types/sigma.d"
 
 interface QueriesFilter {
 	active: "active" | "inactive"
 }
 
-// const dialog = useDialog()
+const FilterIcon = "carbon:filter-edit"
+const InfoIcon = "carbon:information"
+const ToolsIcon = "carbon:tools"
+
 const message = useMessage()
 const loading = ref(false)
 const showFilters = ref(false)
+const showActionsView = useStorage<boolean>("sigma-queries-list-actions-view-state", false, localStorage)
 const queriesList = ref<SigmaQuery[]>([])
 
 const pageSize = ref(25)
@@ -144,10 +164,6 @@ const itemsPaginated = computed(() => {
 
 	return list.slice(from, to)
 })
-
-const FilterIcon = "carbon:filter-edit"
-const InfoIcon = "carbon:information"
-const ToolsIcon = "carbon:tools"
 
 const total = computed<number>(() => {
 	return queriesList.value.length || 0
@@ -186,7 +202,13 @@ function updateQueryItem(query: SigmaQuery) {
 
 function deleteQueryItem(query: SigmaQuery) {
 	const index = queriesList.value.findIndex(o => o.id === query.id)
-	queriesList.value = queriesList.value.splice(index, 1)
+	queriesList.value.splice(index, 1)
+}
+
+function resetFilters() {
+	filters.value.active = undefined
+	showFilters.value = false
+	getData()
 }
 
 function getData() {
@@ -214,43 +236,7 @@ function getData() {
 			loading.value = false
 		})
 }
-/*
-function handlePurge() {
-	dialog.warning({
-		title: "Confirm",
-		content: "This will remove ALL cases, are you sure you want to proceed?",
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			purge()
-		},
-		onNegativeClick: () => {
-			message.info("Purge canceled")
-		}
-	})
-}
 
-function purge() {
-	loadingPurge.value = true
-
-	Api.soc
-		.purgeAllCases()
-		.then(res => {
-			if (res.data.success) {
-				getData()
-				message.success(res.data?.message || "SOC Cases purged successfully")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingPurge.value = false
-		})
-}
-*/
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -269,6 +255,24 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
+	}
+
+	.actions-box {
+		overflow: hidden;
+		display: grid;
+		grid-template-rows: 0fr;
+		padding-top: 0px;
+		opacity: 0;
+		transition:
+			opacity var(--router-transition-duration) ease-out,
+			grid-template-rows var(--router-transition-duration) ease-out,
+			padding-top var(--router-transition-duration) ease-out;
+
+		&.open {
+			grid-template-rows: 1fr;
+			opacity: 1;
+			@apply pt-3;
+		}
 	}
 }
 </style>
