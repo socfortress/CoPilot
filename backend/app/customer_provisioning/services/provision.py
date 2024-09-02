@@ -278,15 +278,17 @@ async def provision_wazuh_worker(
     """
     logger.info(f"Provisioning Wazuh worker {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=13,
+        connector_name="Wazuh Worker Provisioning",
         column_name="connector_url",
         session=session,
     )
+    logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
     # Send the POST request to the Wazuh worker
     response = requests.post(
         url=f"{api_endpoint}/provision_worker",
         json=request.dict(),
     )
+    logger.info(f"Status code from Wazuh Worker: {response.status_code}")
     # Check the response status code
     if response.status_code != 200:
         return ProvisionWorkerResponse(
@@ -317,7 +319,7 @@ async def provision_haproxy(
     """
     logger.info(f"Provisioning HAProxy {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=15,
+        connector_name="HAProxy Provisioning",
         column_name="connector_url",
         session=session,
     )

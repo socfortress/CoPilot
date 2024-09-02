@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
-from app.customer_provisioning.services.dfir_iris import delete_customer
 from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.services.graylog import delete_index_set
 from app.customer_provisioning.services.graylog import delete_stream
@@ -40,9 +39,6 @@ async def decomission_wazuh_customer(
     """
     logger.info(f"Decomissioning customer {customer_meta.customer_name}")
 
-    # Delete DFIR-IRIS Customer
-    await delete_customer(customer_id=customer_meta.customer_meta_iris_customer_id)
-
     # Delete the Wazuh Agents
     agents = await gather_wazuh_agents(customer_meta.customer_code)
     agents_deleted = await delete_wazuh_agents(agents)
@@ -66,6 +62,12 @@ async def decomission_wazuh_customer(
 
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(
+        request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name),
+        session=session,
+    )
+
+    # Decommission HAProxy
+    await decommission_haproxy(
         request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name),
         session=session,
     )
@@ -102,8 +104,22 @@ async def decommission_wazuh_worker(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
+    # Check if the connector is verified
+    if (
+        await get_connector_attribute(
+            connector_name="Wazuh Worker Provisioning",
+            column_name="connector_verified",
+            session=session,
+        )
+        is False
+    ):
+        logger.info("Wazuh Worker Provisioning connector is not verified, skipping ...")
+        return DecommissionWorkerResponse(
+            success=False,
+            message="Wazuh Worker Provisioning connector is not verified",
+        )
     api_endpoint = await get_connector_attribute(
-        connector_id=13,
+        connector_name="Wazuh Worker Provisioning",
         column_name="connector_url",
         session=session,
     )
@@ -122,4 +138,57 @@ async def decommission_wazuh_worker(
     return DecommissionWorkerResponse(
         success=True,
         message="Wazuh worker provisioned successfully",
+    )
+
+
+######### ! Decommission HAProxy ! ############
+async def decommission_haproxy(
+    request: DecommissionWorkerRequest,
+    session: AsyncSession,
+) -> DecommissionWorkerResponse:
+    """
+    Decomissions a HAProxy worker.
+
+    Args:
+        request (DecommissionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
+    logger.info(f"Decommissioning HAProxy worker {request}")
+    # Check if the connector is verified
+    if (
+        await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_verified",
+            session=session,
+        )
+        is False
+    ):
+        logger.info("HAProxy Provisioning connector is not verified, skipping ...")
+        return DecommissionWorkerResponse(
+            success=False,
+            message="HAProxy Provisioning connector is not verified",
+        )
+    api_endpoint = await get_connector_attribute(
+        connector_name="HAProxy Provisioning",
+        column_name="connector_url",
+        session=session,
+    )
+    # Send the POST request to the HAProxy worker
+    response = requests.post(
+        url=f"{api_endpoint}/provision_worker/haproxy/decommission",
+        json=request.dict(),
+    )
+    # Check the response status code
+    if response.status_code != 200:
+        return DecommissionWorkerResponse(
+            success=False,
+            message=f"Failed to provision HAProxy worker: {response.text}",
+        )
+    # Return the response
+    return DecommissionWorkerResponse(
+        success=True,
+        message="HAProxy worker provisioned successfully",
     )

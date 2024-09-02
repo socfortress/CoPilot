@@ -41,14 +41,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
 					<div class="p-7 pt-4" v-if="timelineDetailsSource">
-						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-							<div
-								class="scrollbar-styled overflow-hidden code-bg-transparent"
-								v-shiki="{ lang: 'json', decode: false }"
-							>
-								<pre>{{ timelineDetailsSource }}</pre>
-							</div>
-						</n-card>
+						<CodeSource :code="timelineDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -57,14 +50,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
-import { NModal, NCard, NTabs, NTabPane } from "naive-ui"
-import vShiki from "@/directives/v-shiki"
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
+import { NModal, NTabs, NTabPane } from "naive-ui"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
 import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 const { timelineData, embedded } = toRefs(props)

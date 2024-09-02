@@ -53,14 +53,14 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { onBeforeMount, ref, watch } from "vue"
+import { useMessage, NSpin, NEmpty, NSelect, NInputGroup, NInputNumber } from "naive-ui"
+import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
+import Icon from "@/components/common/Icon.vue"
 import _get from "lodash/get"
 import Api from "@/api"
-import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
-import { useMessage, NSpin, NEmpty, NSelect, NInputGroup, NInputNumber } from "naive-ui"
-import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
+import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 
 const { source, customerCode } = defineProps<{

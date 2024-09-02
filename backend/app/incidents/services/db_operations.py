@@ -2,7 +2,9 @@ from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import asc
 from sqlalchemy import delete
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -581,43 +583,10 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
     return alert_out
 
 
-# async def list_alerts(db: AsyncSession) -> List[AlertOut]:
-#     result = await db.execute(
-#         select(Alert).options(
-#             selectinload(Alert.comments),
-#             selectinload(Alert.assets),
-#             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
-#             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-#         ),
-#     )
-#     alerts = result.scalars().all()
-#     alerts_out = []
-#     for alert in alerts:
-#         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
-#         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
-#         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-#         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
-#         alert_out = AlertOut(
-#             id=alert.id,
-#             alert_creation_time=alert.alert_creation_time,
-#             time_closed=alert.time_closed,
-#             alert_name=alert.alert_name,
-#             alert_description=alert.alert_description,
-#             status=alert.status,
-#             customer_code=alert.customer_code,
-#             source=alert.source,
-#             assigned_to=alert.assigned_to,
-#             comments=comments,
-#             assets=assets,
-#             tags=tags,
-#             linked_cases=linked_cases,
-#         )
-#         alerts_out.append(alert_out)
-#     return alerts_out
-
-
-async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .options(
@@ -626,9 +595,11 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25) -> L
             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
+
     alerts = result.scalars().all()
     alerts_out = []
     for alert in alerts:
@@ -899,6 +870,54 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
     return cases_out
 
 
+async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case)
+        .join(CaseAlertLink)
+        .join(Alert)
+        .join(Asset)
+        .where(Asset.asset_name == asset_name)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+        )
+        cases_out.append(case_out)
+    return cases_out
+
+
 async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> AlertContext:
     result = await db.execute(select(AlertContext).where(AlertContext.id == alert_context_id))
     alert_context = result.scalars().first()
@@ -907,8 +926,10 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     return alert_context
 
 
-async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .join(AlertToTag)
@@ -920,6 +941,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -947,8 +969,10 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
     return alerts_out
 
 
-async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.status == status)
@@ -958,9 +982,11 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
+
     alerts = result.scalars().all()
     alerts_out = []
     for alert in alerts:
@@ -985,8 +1011,16 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
     return alerts_out
 
 
-async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_asset_name(
+    asset_name: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .join(Asset)
@@ -997,6 +1031,7 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -1024,8 +1059,16 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
     return alerts_out
 
 
-async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alert_by_assigned_to(
+    assigned_to: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.assigned_to == assigned_to)
@@ -1035,6 +1078,7 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )
@@ -1062,8 +1106,16 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
     return alerts_out
 
 
-async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1, page_size: int = 25) -> List[AlertOut]:
+async def list_alerts_by_title(
+    alert_title: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
     result = await db.execute(
         select(Alert)
         .where(Alert.alert_name.like(f"%{alert_title}%"))
@@ -1073,6 +1125,7 @@ async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
         )
+        .order_by(order_by)
         .offset(offset)
         .limit(page_size),
     )

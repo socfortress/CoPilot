@@ -6,13 +6,7 @@
 			<n-card class="image-cropper-modal flex flex-col" content-class="!p-5">
 				<div class="aspect-square">
 					<div class="upload-box" v-if="!img">
-						<n-upload
-							accept="image/*"
-							:show-file-list="false"
-							@change="setImage"
-							v-show="!img"
-							ref="uploader"
-						>
+						<n-upload accept="image/*" :show-file-list="false" @change="setImage" v-show="!img">
 							<n-upload-dragger>
 								<div>{{ placeholder }}</div>
 							</n-upload-dragger>

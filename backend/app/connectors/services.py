@@ -14,7 +14,6 @@ from sqlalchemy.future import select
 from werkzeug.utils import secure_filename
 
 from app.connectors.cortex.utils.universal import verify_cortex_connection
-from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
 from app.connectors.influxdb.utils.universal import verify_influxdb_connection
@@ -25,13 +24,7 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-from app.integrations.ask_socfortress.services.ask_socfortress import (
-    verify_ask_socfortress_connector,
-)
 from app.integrations.utils.event_shipper import verify_event_shipper_connection
-from app.threat_intel.services.socfortress import (
-    verifiy_socfortress_threat_intel_connector,
-)
 from app.utils import verify_alert_creation_provisioning_connection
 from app.utils import verify_haproxy_provisioning_connection
 from app.utils import verify_wazuh_worker_provisioning_connection
@@ -87,15 +80,6 @@ class GraylogService(ConnectorServiceInterface):
         connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
-
-
-# DFIR-IRIS Service
-class DfirIrisService(ConnectorServiceInterface):
-    async def verify_authentication(
-        self,
-        connector: ConnectorResponse,
-    ) -> Optional[ConnectorResponse]:
-        return await verify_dfir_iris_connection(connector.connector_name)
 
 
 # Cortex Service
@@ -165,26 +149,6 @@ class HAProxyProvisioningService(ConnectorServiceInterface):
         )
 
 
-# SOCFortress Threat Intel Service
-class SocfortressThreatIntelService(ConnectorServiceInterface):
-    async def verify_authentication(
-        self,
-        connector: ConnectorResponse,
-    ) -> Optional[ConnectorResponse]:
-        return await verifiy_socfortress_threat_intel_connector(
-            connector.connector_name,
-        )
-
-
-# ASK SOCFortress Service
-class AskSocfortressService(ConnectorServiceInterface):
-    async def verify_authentication(
-        self,
-        connector: ConnectorResponse,
-    ) -> Optional[ConnectorResponse]:
-        return await verify_ask_socfortress_connector(connector.connector_name)
-
-
 # Event Shipper Service
 class EventShipperService(ConnectorServiceInterface):
     async def verify_authentication(
@@ -221,7 +185,6 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Wazuh-Indexer": WazuhIndexerService,
         "Velociraptor": VelociraptorService,
         "Graylog": GraylogService,
-        "DFIR-IRIS": DfirIrisService,
         "Cortex": CortexService,
         "Shuffle": ShuffleService,
         "Sublime": SublimeService,
@@ -229,8 +192,6 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Grafana": GrafanaService,
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
         "HAProxy Provisioning": HAProxyProvisioningService,
-        "SocfortressThreatIntel": SocfortressThreatIntelService,
-        "AskSocfortress": AskSocfortressService,
         "Event Shipper": EventShipperService,
         "Alert Creation Provisioning": AlertCreationService,
     }

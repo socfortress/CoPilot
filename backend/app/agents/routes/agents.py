@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 
 # from fastapi import BackgroundTasks
 from fastapi import APIRouter
@@ -6,13 +8,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Security
+from fastapi.responses import StreamingResponse
 from loguru import logger
 from packaging import version
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
 from app.agents.schema.agents import AgentWazuhUpgradeResponse
@@ -43,6 +45,10 @@ from app.db.db_session import get_db
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
+from app.incidents.schema.db_operations import CaseOutResponse
+from app.incidents.services.db_operations import list_cases_by_asset_name
+from app.threat_intel.schema.epss import EpssThreatIntelRequest
+from app.threat_intel.services.epss import collect_epss_score
 
 
 async def get_wazuh_manager_version() -> str:
@@ -461,6 +467,84 @@ async def get_agent_vulnerabilities(
 
 
 @agents_router.get(
+    "/{agent_id}/csv/vulnerabilities/{vulnerability_severity}",
+    description="Get agent vulnerabilities as CSV",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_vulnerabilities_csv(agent_id: str, vulnerability_severity: VulnSeverity = Path(...)) -> StreamingResponse:
+    """
+    Fetches the vulnerabilities of a specific agent and returns them as a CSV file.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        StreamingResponse: The response containing the agent vulnerabilities in CSV format.
+    """
+    logger.info(f"Fetching agent {agent_id} vulnerabilities as CSV")
+    wazuh_new = await check_wazuh_manager_version()
+    if wazuh_new is True:
+        logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
+        vulnerabilities = (
+            await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity=vulnerability_severity.value)
+        ).vulnerabilities
+    else:
+        vulnerabilities = (
+            await collect_agent_vulnerabilities(agent_id, vulnerability_severity=vulnerability_severity.value)
+        ).vulnerabilities
+    # Create a CSV file
+    logger.info(f"Creating CSV file for agent {agent_id} with {len(vulnerabilities)} vulnerabilities")
+    logger.info(f"Vulnerabilities: {vulnerabilities}")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Write the header
+    writer.writerow(
+        [
+            "Severity",
+            "Version",
+            "Type",
+            "Name",
+            "External References",
+            "Detection Time",
+            "CVSS3 Score",
+            "Published",
+            "Architecture",
+            "CVE",
+            "Status",
+            "Title",
+            "EPSS Score",
+        ],
+    )
+    # Write the rows
+    for vulnerability in vulnerabilities:
+        epss_score = await collect_epss_score(EpssThreatIntelRequest(cve=vulnerability.cve))
+        writer.writerow(
+            [
+                vulnerability.severity,
+                vulnerability.version,
+                vulnerability.type,
+                vulnerability.name,
+                ", ".join(vulnerability.external_references) if vulnerability.external_references else "",
+                vulnerability.detection_time,
+                vulnerability.cvss3_score,
+                vulnerability.published,
+                vulnerability.architecture,
+                vulnerability.cve,
+                vulnerability.status,
+                vulnerability.title,
+                epss_score.data[0].epss if epss_score.data else "",
+            ],
+        )
+    # Return the CSV file as a streaming response
+    output.seek(0)
+    return StreamingResponse(
+        output,  # Use the StringIO object directly
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={agent_id}_vulnerabilities.csv"},
+    )
+
+
+@agents_router.get(
     "/{agent_id}/sca",
     response_model=WazuhAgentScaResponse,
     description="Get agent sca results",
@@ -501,12 +585,77 @@ async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAg
 
 
 @agents_router.get(
-    "/{agent_id}/soc_cases",
-    # response_model=SocCasesResponse,
-    description="Get SOC cases for agent",
+    "/{agent_id}/csv/sca/{policy_id}",
+    description="Get agent sca results as CSV",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get_db)):
+async def get_agent_sca_policy_results_csv(agent_id: str, policy_id: str) -> StreamingResponse:
+    """
+    Fetches the sca results of a specific agent and returns them as a CSV file.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        StreamingResponse: The response containing the agent sca in CSV format.
+    """
+    logger.info(f"Fetching agent {agent_id} sca policy results as CSV")
+    sca_results = (await collect_agent_sca_policy_results(agent_id, policy_id)).sca_policy_results
+    # Create a CSV file
+    logger.info(f"Creating CSV file for agent {agent_id} with {len(sca_results)} sca policy results")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Write the header
+    writer.writerow(
+        [
+            "Description",
+            "Policy ID",
+            "Reason",
+            "Command",
+            "Rationale",
+            "Condition",
+            "Title",
+            "Result",
+            "Remediation",
+            "Compliance",
+            "Rules",
+        ],
+    )
+    # Write the rows
+    for sca_result in sca_results:
+        writer.writerow(
+            [
+                sca_result.description,
+                sca_result.policy_id,
+                sca_result.reason,
+                sca_result.command,
+                sca_result.rationale,
+                sca_result.condition,
+                sca_result.title,
+                sca_result.result,
+                sca_result.remediation,
+                ", ".join([f"{compliance.key}: {compliance.value}" for compliance in sca_result.compliance])
+                if sca_result.compliance
+                else "",
+                ", ".join([f"{rule.type}: {rule.rule}" for rule in sca_result.rules]) if sca_result.rules else "",
+            ],
+        )
+    # Return the CSV file as a streaming response
+    output.seek(0)
+    return StreamingResponse(
+        output,  # Use the StringIO object directly
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={agent_id}_sca_policy_results.csv"},
+    )
+
+
+@agents_router.get(
+    "/{agent_hostname}/cases",
+    response_model=CaseOutResponse,
+    description="Get cases for agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_soc_cases(agent_hostname: str, session: AsyncSession = Depends(get_db)):
     """
     Fetches the SOC cases of a specific agent.
 
@@ -516,8 +665,12 @@ async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get
     Returns:
         SocCasesResponse: The response containing the agent SOC cases.
     """
-    logger.info(f"Fetching agent {agent_id} SOC cases")
-    return await collect_agent_soc_cases(agent_id, session)
+    logger.info(f"Fetching agent {agent_hostname} cases")
+    return CaseOutResponse(
+        cases=await list_cases_by_asset_name(asset_name=agent_hostname, db=session),
+        success=True,
+        message="Cases retrieved successfully",
+    )
 
 
 @agents_router.get(

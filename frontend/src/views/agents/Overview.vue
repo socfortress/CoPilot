@@ -57,32 +57,48 @@
 				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
-							<OverviewSection v-if="agent" :agent="agent" @updated="getAgent()" />
+							<OverviewSection v-if="agent" :agent @updated="getAgent()" />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
 						<div class="section">
-							<VulnerabilitiesGrid v-if="agent" :agent="agent" />
+							<VulnerabilitiesGrid v-if="agent" :agent />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="SCA" tab="SCA" display-directive="show:lazy">
 						<div class="section">
-							<ScaTable v-if="agent" :agent="agent" />
+							<ScaTable v-if="agent" :agent />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Cases" tab="Cases" display-directive="show:lazy">
 						<div class="section">
-							<AgentCases v-if="agent" :agent="agent" />
+							<!--
+								<AgentCases v-if="agent" :agent />
+							-->
+							<CasesList
+								v-if="agent"
+								class="px-1"
+								:preset="{ type: 'hostname', value: agent.hostname }"
+								hide-filters
+							/>
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Artifacts" tab="Artifacts" display-directive="show:lazy">
 						<div class="section">
-							<AgentFlowList v-if="agent" :agent="agent" />
+							<AgentFlowList v-if="agent" :agent />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
 						<div class="section">
-							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+							<!--
+								<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+							-->
+							<AlertsList
+								v-if="agent"
+								class="px-1"
+								:preset="{ type: 'assetName', value: agent.hostname }"
+								hide-filters
+							/>
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
@@ -137,9 +153,11 @@ const VulnerabilitiesGrid = defineAsyncComponent(
 	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")
 )
 const ScaTable = defineAsyncComponent(() => import("@/components/agents/sca/ScaTable.vue"))
-const AlertsList = defineAsyncComponent(() => import("@/components/alerts/AlertsList.vue"))
+// const AlertsList = defineAsyncComponent(() => import("@/components/alerts/AlertsList.vue"))
+const AlertsList = defineAsyncComponent(() => import("@/components/incidentManagement/alerts/AlertsList.vue"))
 const OverviewSection = defineAsyncComponent(() => import("@/components/agents/OverviewSection.vue"))
-const AgentCases = defineAsyncComponent(() => import("@/components/agents/AgentCases.vue"))
+// const AgentCases = defineAsyncComponent(() => import("@/components/agents/AgentCases.vue"))
+const CasesList = defineAsyncComponent(() => import("@/components/incidentManagement/cases/CasesList.vue"))
 const AgentFlowList = defineAsyncComponent(() => import("@/components/agents/agentFlow/AgentFlowList.vue"))
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCommand.vue"))

@@ -615,24 +615,33 @@ def allowed_file(filename):
 
 ################## ! DATABASE UTILS ! ##################
 async def get_connector_attribute(
-    connector_id: int,
     column_name: str,
+    connector_id: Optional[int] = None,
+    connector_name: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
 ) -> Optional[Any]:
     """
     Retrieve the value of a specific column from a connector.
 
     Args:
-        connector_id (int): The ID of the connector.
+        connector_id (Optional[int]): The ID of the connector.
+        connector_name (Optional[str]): The name of the connector.
         column_name (str): The name of the column to retrieve.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
 
     Returns:
         Optional[Any]: The value of the column, or None if the connector or column does not exist.
     """
-    result = await session.execute(
-        select(Connectors).filter(Connectors.id == connector_id),
-    )
+    if not connector_id and not connector_name:
+        raise ValueError("Either connector_id or connector_name must be provided.")
+
+    query = select(Connectors)
+    if connector_id:
+        query = query.filter(Connectors.id == connector_id)
+    if connector_name:
+        query = query.filter(Connectors.connector_name == connector_name)
+
+    result = await session.execute(query)
     connector = result.scalars().first()
 
     if connector:

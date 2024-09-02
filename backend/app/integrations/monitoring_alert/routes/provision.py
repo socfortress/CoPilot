@@ -5,12 +5,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.connectors.graylog.services.streams import get_streams
 from app.db.db_session import get_db
-from app.integrations.monitoring_alert.routes.monitoring_alert import get_customer_meta
+from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
@@ -39,10 +40,39 @@ from app.integrations.monitoring_alert.services.provision import (
 )
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
-from app.schedulers.models.scheduler import CreateSchedulerRequest
-from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
+
+
+async def get_customer_meta(customer_code: str, session: AsyncSession) -> CustomersMeta:
+    """
+    Get the customer meta for the given customer_code.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomersMeta: The customer meta.
+    """
+    logger.info(f"Getting customer meta for customer_code: {customer_code}")
+
+    customer_meta = await session.execute(
+        select(CustomersMeta).where(CustomersMeta.customer_code == customer_code),
+    )
+    customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {customer_code}")
+        customer_meta = await session.execute(
+            select(CustomersMeta).where(CustomersMeta.customer_meta_office365_organization_id == customer_code),
+        )
+        customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    return customer_meta
 
 
 async def return_stream_ids(stream_names: List[str]) -> List[str]:
@@ -68,14 +98,6 @@ async def invoke_provision_wazuh_monitoring_alert(
 ):
     # Provision the Wazuh monitoring alert
     await provision_wazuh_monitoring_alert(request)
-    # ! No longer needed since we have the invoke_alert_creation_collect scheduled job ! #
-    # await add_scheduler_jobs(
-    #     CreateSchedulerRequest(
-    #         function_name="invoke_wazuh_monitoring_alert",
-    #         time_interval=5,
-    #         job_id="invoke_wazuh_monitoring_alert",
-    #     ),
-    # )
 
 
 async def invoke_provision_suricata_monitoring_alert(
@@ -83,13 +105,6 @@ async def invoke_provision_suricata_monitoring_alert(
 ):
     # Provision the Suricata monitoring alert
     await provision_suricata_monitoring_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_suricata_monitoring_alert",
-            time_interval=5,
-            job_id="invoke_suricata_monitoring_alert",
-        ),
-    )
 
 
 async def invoke_provision_office365_exchange_online_alert(
@@ -97,13 +112,6 @@ async def invoke_provision_office365_exchange_online_alert(
 ):
     # Provision the Office365 Exchange Online monitoring alert
     await provision_office365_exchange_online_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_office365_exchange_online_alert",
-            time_interval=5,
-            job_id="invoke_office365_exchange_online_alert",
-        ),
-    )
 
 
 async def invoke_provision_office365_threat_intel_alert(
@@ -111,13 +119,6 @@ async def invoke_provision_office365_threat_intel_alert(
 ):
     # Provision the Office365 Threat Intel monitoring alert
     await provision_office365_threat_intel_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_office365_threat_intel_alert",
-            time_interval=5,
-            job_id="invoke_office365_threat_intel_alert",
-        ),
-    )
 
 
 async def invoke_provision_custom_monitoring_alert(

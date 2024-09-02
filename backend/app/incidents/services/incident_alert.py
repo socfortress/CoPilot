@@ -199,7 +199,12 @@ async def get_customer_code(alert_details: dict):
     for key in CustomerCodeKeys:
         logger.info(f"Checking for key {key.value}")
         if key.value in alert_details:
-            return alert_details[key.value]
+            value = alert_details[key.value]
+            if key == CustomerCodeKeys.CLUSTER_NODE:
+                processed_value = CustomerCodeKeys.get_processed_value(key, value)
+                logger.info(f"Processed value for {key.value} is {processed_value}")
+                return processed_value
+            return value
 
     # If none of the keys are present, raise an exception
     logger.info(f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}")
@@ -406,6 +411,7 @@ async def handle_customer_notifications(customer_code: str, alert_payload: Creat
                 execution_arguments={
                     "customer_code": customer_code,
                     "alert_context_payload": alert_payload.alert_context_payload,
+                    "alert_title": alert_payload.alert_title_payload,
                 },
                 start="",
             ),

@@ -24,6 +24,7 @@ from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_populate import delete_connectors_if_exist
 from app.db.db_session import SQLALCHEMY_DATABASE_URI
 from app.db.db_session import db_password
+from app.schedulers.routes.scheduler import delete_job
 
 
 async def create_database_if_not_exists(db_url: str, db_name: str):
@@ -297,6 +298,24 @@ async def ensure_scheduler_user(async_engine):
         async with session.begin():
             # Pass the session to the inner function
             await create_scheduler_user(session)
+
+
+async def delete_job_if_exists(async_engine):
+    """
+    Deletes a job from the database if it exists.
+
+    Args:
+        job_id (str): The ID of the job to delete.
+
+    Returns:
+        None
+    """
+    job_id = "wazuh_index_fields_resize"
+    logger.info(f"Deleting job with ID {job_id}")
+    async with AsyncSession(async_engine) as session:
+        async with session.begin():
+            # Pass the session to the inner function
+            await delete_job(session, job_id)
 
 
 async def ensure_scheduler_user_removed(async_engine):

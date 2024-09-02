@@ -101,6 +101,28 @@ async def add_copilot_alert_id(index_data: CreateAlertRequest, alert_id: int):
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     body = {"doc": {"fields": {"COPILOT_ALERT_ID": f"{alert_id}"}}}
-    es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
-    logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
+    try:
+        es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
+        logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
+    except Exception as e:
+        logger.error(
+            f"Failed to add CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}: {e}",
+        )
+
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": None})
+            logger.info(f"Removed read-only block from index {index_data.index_name}. Retrying update.")
+
+            # Retry the update operation
+            es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
+            logger.info(
+                f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name} after removing read-only block",
+            )
+
+            # Re-enable the write block
+            es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": True})
+        except Exception as e2:
+            logger.error(f"Failed to remove read-only block from index {index_data.index_name}: {e2}")
+
     return None

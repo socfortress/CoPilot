@@ -7,8 +7,7 @@
 				:show-file-list="true"
 				@change="handleChange"
 				@remove="handleChange"
-				ref="uploadRef"
-				accept=".yaml, .YAML"
+				accept=".yaml, .YAML, .yml, .YML"
 			>
 				<n-upload-dragger>
 					<div>
@@ -32,7 +31,6 @@ import {
 	type FormRules,
 	type FormInst,
 	type FormItemRule,
-	type UploadInst,
 	type UploadFileInfo
 } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
@@ -53,7 +51,6 @@ const props = defineProps<{
 const { form } = toRefs(props)
 
 const formRef = ref<FormInst>()
-const uploadRef = ref<UploadInst>()
 
 const handleChange = ({ file }: { file: UploadFileInfo }) => {
 	if (file.status === "removed") {

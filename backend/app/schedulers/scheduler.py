@@ -55,12 +55,6 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
-from app.schedulers.services.monitoring_alert import (
-    invoke_office365_exchange_online_alert,
-)
-from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
-from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
-from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 
@@ -137,7 +131,6 @@ async def initialize_job_metadata():
                 "function": resize_wazuh_index_fields,
                 "description": "Resizes the Wazuh index fields.",
             },
-            # TODO: ! COMMENTING OUT UNTIL INCIDENT MANAGEMENT IS IMPLEMENTED ! #
             {
                 "job_id": "invoke_alert_creation_collect",
                 "time_interval": 5,
@@ -171,6 +164,16 @@ async def schedule_enabled_jobs(scheduler):
     Schedules jobs that are enabled in the database.
     """
     async with AsyncSession(async_engine) as session:
+        # ! First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
+        # TODO ! Inefficient as hell but I will come back to this later
+        stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_wazuh_monitoring_alert")
+        result = await session.execute(stmt)
+        job_metadata = result.scalars().one_or_none()
+        if job_metadata:
+            logger.info("Disabling job: invoke_wazuh_monitoring_alert")
+            job_metadata.enabled = False
+            await session.commit()
+
         stmt = select(JobMetadata).where(JobMetadata.enabled == True)
         result = await session.execute(stmt)
         job_metadatas = result.scalars().all()
@@ -215,10 +218,6 @@ def get_function_by_name(function_name: str):
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
-        "invoke_wazuh_monitoring_alert": invoke_wazuh_monitoring_alert,
-        "invoke_office365_exchange_online_alert": invoke_office365_exchange_online_alert,
-        "invoke_office365_threat_intel_alert": invoke_office365_threat_intel_alert,
-        "invoke_suricata_monitoring_alert": invoke_suricata_monitoring_alert,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collection,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,

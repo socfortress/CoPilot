@@ -68,14 +68,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
 					<div class="p-7 pt-4" v-if="alertDetailsSource">
-						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-							<div
-								class="scrollbar-styled overflow-hidden code-bg-transparent"
-								v-shiki="{ lang: 'json', decode: false }"
-							>
-								<pre>{{ alertDetailsSource }}</pre>
-							</div>
-						</n-card>
+						<CodeSource :code="alertDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -84,15 +77,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs, watch } from "vue"
-import { NModal, NSpin, NCard, NTabs, NTabPane, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
+import { NModal, NSpin, NTabs, NTabPane, useMessage } from "naive-ui"
 import Api from "@/api"
-import vShiki from "@/directives/v-shiki"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
 import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
+
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const props = defineProps<{ asset: AlertAsset }>()
 const { asset } = toRefs(props)

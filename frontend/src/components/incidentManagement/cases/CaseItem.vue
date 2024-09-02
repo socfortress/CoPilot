@@ -149,7 +149,7 @@
 									<n-button quaternary size="tiny" @click="handleDelete()">Delete Case</n-button>
 								</div>
 							</template>
-							<div>
+							<div class="flex flex-col gap-2">
 								<template v-if="caseEntity.alerts.length">
 									<AlertItem
 										v-for="alert of caseEntity.alerts"

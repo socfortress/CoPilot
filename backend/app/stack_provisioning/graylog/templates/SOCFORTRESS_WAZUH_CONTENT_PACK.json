@@ -1,23 +1,21 @@
 {
-	"id": "261577fe-d9a2-4141-af74-635f085eee54",
-	"rev": 1,
 	"v": "1",
+	"id": "261577fe-d9a2-4141-af74-635f085eee54",
+	"rev": 3,
 	"name": "SOCFORTRESS_WAZUH_CONTENT_PACK",
 	"summary": "Content Pack for Wazuh",
 	"description": "",
 	"vendor": "SOCFortress - info@socfortress.co",
 	"url": "https://github.com/socfortress/CoPilot/tree/main/backend/app/stack_provisioning/graylog/templates/wazuh_content_pack.json",
-	"created_at": "2024-02-17T15:43:29.597Z",
-	"server_version": "5.0.13+083613e",
 	"parameters": [],
 	"entities": [
 		{
-			"id": "4fbce4a8-897e-4c2f-8030-8fa884c34fd8",
+			"v": "1",
 			"type": {
 				"name": "input",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "4fbce4a8-897e-4c2f-8030-8fa884c34fd8",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -74,7 +72,7 @@
 					},
 					"tls_key_password": {
 						"@type": "string",
-						"@value": "na)R]Q`7q9>qxjqLdn-T[=sX"
+						"@value": "na"
 					}
 				},
 				"static_fields": {
@@ -858,12 +856,12 @@
 			]
 		},
 		{
-			"id": "9b317b42-770d-46fb-b740-96c679c38f73",
+			"v": "1",
 			"type": {
 				"name": "lookup_adapter",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "9b317b42-770d-46fb-b740-96c679c38f73",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -924,12 +922,12 @@
 			]
 		},
 		{
-			"id": "41437203-db84-46a2-9ea1-0db7ed2c699e",
+			"v": "1",
 			"type": {
 				"name": "lookup_adapter",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "41437203-db84-46a2-9ea1-0db7ed2c699e",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -990,12 +988,12 @@
 			]
 		},
 		{
-			"id": "5f2980e7-a0ea-46f1-99aa-da8b93365663",
+			"v": "1",
 			"type": {
 				"name": "lookup_adapter",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5f2980e7-a0ea-46f1-99aa-da8b93365663",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1044,12 +1042,12 @@
 			]
 		},
 		{
-			"id": "1405cf60-dda4-43d4-bb60-53ceb06e1bf1",
+			"v": "1",
 			"type": {
 				"name": "lookup_adapter",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "1405cf60-dda4-43d4-bb60-53ceb06e1bf1",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1112,12 +1110,12 @@
 			]
 		},
 		{
-			"id": "731af176-a847-4a28-bf32-bd5ba4462d79",
+			"v": "1",
 			"type": {
 				"name": "lookup_adapter",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "731af176-a847-4a28-bf32-bd5ba4462d79",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1178,12 +1176,12 @@
 			]
 		},
 		{
-			"id": "009f38c0-0cf3-4010-8c8c-e4ea87e6f4f5",
+			"v": "1",
 			"type": {
 				"name": "lookup_cache",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "009f38c0-0cf3-4010-8c8c-e4ea87e6f4f5",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1232,12 +1230,12 @@
 			]
 		},
 		{
-			"id": "d8301ead-3d48-46bf-875f-7994a5dbe558",
+			"v": "1",
 			"type": {
 				"name": "lookup_cache",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "d8301ead-3d48-46bf-875f-7994a5dbe558",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1286,12 +1284,12 @@
 			]
 		},
 		{
-			"id": "55ff2d16-b318-4717-893f-fed63ca005fc",
+			"v": "1",
 			"type": {
 				"name": "lookup_cache",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "55ff2d16-b318-4717-893f-fed63ca005fc",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1340,12 +1338,12 @@
 			]
 		},
 		{
-			"id": "2a2edc22-1d0b-4ebb-adc6-068d0017a602",
+			"v": "1",
 			"type": {
 				"name": "lookup_cache",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "2a2edc22-1d0b-4ebb-adc6-068d0017a602",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1394,12 +1392,12 @@
 			]
 		},
 		{
-			"id": "bf37d686-3cb7-4eeb-9eb9-e08c0adc724b",
+			"v": "1",
 			"type": {
 				"name": "lookup_cache",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "bf37d686-3cb7-4eeb-9eb9-e08c0adc724b",
 			"data": {
 				"_scope": {
 					"@type": "string",
@@ -1448,12 +1446,12 @@
 			]
 		},
 		{
-			"id": "5d81905e-723d-4e57-9b2b-e088ffb5241d",
+			"v": "1",
 			"type": {
 				"name": "lookup_table",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5d81905e-723d-4e57-9b2b-e088ffb5241d",
 			"data": {
 				"default_single_value_type": {
 					"@type": "string",
@@ -1504,12 +1502,12 @@
 			]
 		},
 		{
-			"id": "55c75b17-7e24-4859-b230-a4122fc8ec19",
+			"v": "1",
 			"type": {
 				"name": "lookup_table",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "55c75b17-7e24-4859-b230-a4122fc8ec19",
 			"data": {
 				"default_single_value_type": {
 					"@type": "string",
@@ -1560,12 +1558,12 @@
 			]
 		},
 		{
-			"id": "d1b3ac8a-ac53-4e8b-be76-abc431a5a80f",
+			"v": "1",
 			"type": {
 				"name": "lookup_table",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "d1b3ac8a-ac53-4e8b-be76-abc431a5a80f",
 			"data": {
 				"default_single_value_type": {
 					"@type": "string",
@@ -1616,12 +1614,12 @@
 			]
 		},
 		{
-			"id": "37164c4c-c986-4c7c-a5e3-d9a8f1ddc337",
+			"v": "1",
 			"type": {
 				"name": "lookup_table",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "37164c4c-c986-4c7c-a5e3-d9a8f1ddc337",
 			"data": {
 				"default_single_value_type": {
 					"@type": "string",
@@ -1672,12 +1670,12 @@
 			]
 		},
 		{
-			"id": "0d0105b5-0256-4a15-8f26-eff5b18ae614",
+			"v": "1",
 			"type": {
 				"name": "lookup_table",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "0d0105b5-0256-4a15-8f26-eff5b18ae614",
 			"data": {
 				"default_single_value_type": {
 					"@type": "string",
@@ -1728,12 +1726,12 @@
 			]
 		},
 		{
-			"id": "aa38e373-4bad-4bed-b6fe-fe707d749fdb",
+			"v": "1",
 			"type": {
 				"name": "pipeline",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "aa38e373-4bad-4bed-b6fe-fe707d749fdb",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1745,7 +1743,7 @@
 				},
 				"source": {
 					"@type": "string",
-					"@value": "pipeline \"WAZUH PROCESSING PIPELINES\"\nstage 0 match pass\nrule \"DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE\"\nstage 1 match either\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nrule \"Linux Sysmon Timestamp - UTC\"\nrule \"Office365 Timestamp - UTC\"\nrule \"Osquery Epoch Timestamp - UTC\"\nrule \"Packetbeat Timestamp - UTC\"\nrule \"Windows Timestamp - UTC\"\nrule \"URL Encode data_name field for ASK SOCFortress API\"\nrule \"NIST 800-53 TO CUI MAPPING\"\nstage 2 match pass\nrule \"USER ADDED TO PRIVILEGE ADMIN GROUP\"\nrule \"ASK SOCFORTRESS WINDOWS - CHAINSAW\"\nstage 3 match either\nrule \"LINUX SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT DNS LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 2 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 22 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 7 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 10 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 12 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 13 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 17 LOG NORMALIZATION\"\nrule \"LINUX OSQUERY PROCESS LIST LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT NETWORK LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 15 LOG NORMALIZATION\"\nrule \"OSSEC SYSCHECK ADDED EVENT NORMALIZATION\"\nrule \"EPSS CVE Criticality\"\nrule \"EPSS CVE Criticality - NMAP\"\nrule \"WINDOWS PROCESS ID - No EventData Field\"\nrule \"WINDOWS PROCESS ID - Non SOCFortress Sysmon\"\nrule \"Timestamp Failsafe - UTC\"\nrule \"LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_ProcessId\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId\"\nrule \"LINUX OSQUERY PROCESS ID - GENERIC\"\nrule \"MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION\"\nrule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained\"\nrule \"OpenAudit Remove field - data_system_software_item_install_date\"\nstage 4 match pass\nrule \"WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - NETWORK PORTS\"\nstage 5 match pass\nrule \"WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - UNCOMMON PORT\"\nstage 7 match either\nrule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nstage 6 match either\nrule \"LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL\"\nend"
+					"@value": "pipeline \"WAZUH PROCESSING PIPELINES\"\nstage 0 match pass\nrule \"DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE\"\nstage 1 match either\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nrule \"Linux Sysmon Timestamp - UTC\"\nrule \"Office365 Timestamp - UTC\"\nrule \"Osquery Epoch Timestamp - UTC\"\nrule \"Packetbeat Timestamp - UTC\"\nrule \"Windows Timestamp - UTC\"\nrule \"URL Encode data_name field for ASK SOCFortress API\"\nrule \"NIST 800-53 TO CUI MAPPING\"\nrule \"SYSLOG TYPE OFFICE365\"\nrule \"SYSLOG TYPE SURICATA\"\nstage 2 match pass\nrule \"USER ADDED TO PRIVILEGE ADMIN GROUP\"\nrule \"ASK SOCFORTRESS WINDOWS - CHAINSAW\"\nstage 3 match either\nrule \"LINUX SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT DNS LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 2 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 22 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 7 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 10 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 12 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 13 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 17 LOG NORMALIZATION\"\nrule \"LINUX OSQUERY PROCESS LIST LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT NETWORK LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 15 LOG NORMALIZATION\"\nrule \"OSSEC SYSCHECK ADDED EVENT NORMALIZATION\"\nrule \"EPSS CVE Criticality\"\nrule \"EPSS CVE Criticality - NMAP\"\nrule \"WINDOWS PROCESS ID - No EventData Field\"\nrule \"WINDOWS PROCESS ID - Non SOCFortress Sysmon\"\nrule \"Timestamp Failsafe - UTC\"\nrule \"LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_ProcessId\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId\"\nrule \"LINUX OSQUERY PROCESS ID - GENERIC\"\nrule \"MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION\"\nrule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained\"\nrule \"OpenAudit Remove field - data_system_software_item_install_date\"\nrule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_expires\"\nstage 4 match pass\nrule \"WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - NETWORK PORTS\"\nstage 5 match pass\nrule \"WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - UNCOMMON PORT\"\nstage 7 match either\nrule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nstage 6 match either\nrule \"LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL\"\nend"
 				},
 				"connected_streams": [
 					{
@@ -1762,12 +1760,12 @@
 			]
 		},
 		{
-			"id": "5a6fdec9-fa76-41f2-be92-158fa380db42",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5a6fdec9-fa76-41f2-be92-158fa380db42",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1790,12 +1788,12 @@
 			]
 		},
 		{
-			"id": "1d4217e1-28ab-4950-b8be-a25fc8e9555c",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "1d4217e1-28ab-4950-b8be-a25fc8e9555c",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1818,12 +1816,12 @@
 			]
 		},
 		{
-			"id": "5745b55a-7958-45d6-bdbf-67b8feca5b3a",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5745b55a-7958-45d6-bdbf-67b8feca5b3a",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1846,12 +1844,12 @@
 			]
 		},
 		{
-			"id": "cf069904-64d8-4b2f-b57a-25fbc07dd47e",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "cf069904-64d8-4b2f-b57a-25fbc07dd47e",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1874,12 +1872,12 @@
 			]
 		},
 		{
-			"id": "fcf8bf1f-5280-474a-88bd-0ef50f2049db",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "fcf8bf1f-5280-474a-88bd-0ef50f2049db",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1902,12 +1900,12 @@
 			]
 		},
 		{
-			"id": "81633691-fa79-4ca8-a5ff-c67fc55ede49",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "81633691-fa79-4ca8-a5ff-c67fc55ede49",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1930,12 +1928,12 @@
 			]
 		},
 		{
-			"id": "ed57ba97-b339-41cf-91c1-1837feecf032",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "ed57ba97-b339-41cf-91c1-1837feecf032",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1958,12 +1956,12 @@
 			]
 		},
 		{
-			"id": "a711be64-131f-494f-9068-9dcd56da1b02",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "a711be64-131f-494f-9068-9dcd56da1b02",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -1986,12 +1984,12 @@
 			]
 		},
 		{
-			"id": "de7d8e04-ad04-4185-8811-569f0cc17bd5",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "de7d8e04-ad04-4185-8811-569f0cc17bd5",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2014,12 +2012,12 @@
 			]
 		},
 		{
-			"id": "73af67a1-87a4-4e61-bd96-f68557603a92",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "73af67a1-87a4-4e61-bd96-f68557603a92",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2042,12 +2040,12 @@
 			]
 		},
 		{
-			"id": "4105240a-13b3-4cf0-b62f-566227d522cb",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "4105240a-13b3-4cf0-b62f-566227d522cb",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2070,12 +2068,12 @@
 			]
 		},
 		{
-			"id": "546e667e-b3c4-482f-9f43-a836097290ed",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "546e667e-b3c4-482f-9f43-a836097290ed",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2098,12 +2096,12 @@
 			]
 		},
 		{
-			"id": "5452ff04-d03a-4876-8417-63b00ecdd2ed",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5452ff04-d03a-4876-8417-63b00ecdd2ed",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2126,12 +2124,12 @@
 			]
 		},
 		{
-			"id": "04371a3b-aaaf-4440-8cb4-4f53d0a74508",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "04371a3b-aaaf-4440-8cb4-4f53d0a74508",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2154,12 +2152,12 @@
 			]
 		},
 		{
-			"id": "d501207b-5195-4a20-be79-342b824e36fa",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "d501207b-5195-4a20-be79-342b824e36fa",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2182,12 +2180,12 @@
 			]
 		},
 		{
-			"id": "ba83edb5-a196-42b8-9367-04d44e9c2402",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "ba83edb5-a196-42b8-9367-04d44e9c2402",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2210,12 +2208,12 @@
 			]
 		},
 		{
-			"id": "f19ebc4f-2a74-4e0e-844c-4b86087ff753",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f19ebc4f-2a74-4e0e-844c-4b86087ff753",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2238,12 +2236,12 @@
 			]
 		},
 		{
-			"id": "90ec68d3-bf43-477d-8b1e-a9accf50b60e",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "90ec68d3-bf43-477d-8b1e-a9accf50b60e",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2266,12 +2264,12 @@
 			]
 		},
 		{
-			"id": "7a45ad2d-e6f1-4d2b-8f9f-1f8b44a73f0b",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "7a45ad2d-e6f1-4d2b-8f9f-1f8b44a73f0b",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2294,12 +2292,12 @@
 			]
 		},
 		{
-			"id": "b807c042-0124-4a55-a92c-230c13fc1ca9",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "b807c042-0124-4a55-a92c-230c13fc1ca9",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2322,12 +2320,12 @@
 			]
 		},
 		{
-			"id": "b3d62cc1-de49-4e29-a39a-88d19ac6da02",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "b3d62cc1-de49-4e29-a39a-88d19ac6da02",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2350,12 +2348,12 @@
 			]
 		},
 		{
-			"id": "f709c6a9-8e24-4a37-a86d-3507ffb67010",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f709c6a9-8e24-4a37-a86d-3507ffb67010",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2378,12 +2376,12 @@
 			]
 		},
 		{
-			"id": "dbad257a-932d-48e5-8a70-ac3313857a9c",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "dbad257a-932d-48e5-8a70-ac3313857a9c",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2406,12 +2404,12 @@
 			]
 		},
 		{
-			"id": "31918fde-a64c-4ad6-b3c2-5a4407236ee4",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "31918fde-a64c-4ad6-b3c2-5a4407236ee4",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2434,12 +2432,12 @@
 			]
 		},
 		{
-			"id": "2596c531-6959-4955-bfef-b32c5ce296fd",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "2596c531-6959-4955-bfef-b32c5ce296fd",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2462,12 +2460,12 @@
 			]
 		},
 		{
-			"id": "3a47b63b-504a-4884-aac3-7c782988fa52",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "3a47b63b-504a-4884-aac3-7c782988fa52",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2490,12 +2488,12 @@
 			]
 		},
 		{
-			"id": "731ca120-24f1-4d56-ab8c-6706d4592ac8",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "731ca120-24f1-4d56-ab8c-6706d4592ac8",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2518,12 +2516,12 @@
 			]
 		},
 		{
-			"id": "794068e2-fc89-41e8-a390-5f947695ba28",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "794068e2-fc89-41e8-a390-5f947695ba28",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2546,12 +2544,12 @@
 			]
 		},
 		{
-			"id": "b4de7d44-01b1-4ec6-b4e4-92e991dcf6be",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "b4de7d44-01b1-4ec6-b4e4-92e991dcf6be",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2574,12 +2572,12 @@
 			]
 		},
 		{
-			"id": "0f3bd968-508b-4fd4-9662-953b5a34e1e9",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "0f3bd968-508b-4fd4-9662-953b5a34e1e9",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2602,12 +2600,12 @@
 			]
 		},
 		{
-			"id": "f663f3fd-955e-4b78-85f4-93571a64c252",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f663f3fd-955e-4b78-85f4-93571a64c252",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2630,12 +2628,12 @@
 			]
 		},
 		{
-			"id": "694f2402-bb3e-4d24-b892-bcbcc73fecfb",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "694f2402-bb3e-4d24-b892-bcbcc73fecfb",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2658,12 +2656,12 @@
 			]
 		},
 		{
-			"id": "bf6d21ee-ab54-465f-a786-44ac833d3416",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "bf6d21ee-ab54-465f-a786-44ac833d3416",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2686,12 +2684,12 @@
 			]
 		},
 		{
-			"id": "76aec17e-8048-46ce-9bd3-6dad333b66e5",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "76aec17e-8048-46ce-9bd3-6dad333b66e5",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2714,12 +2712,12 @@
 			]
 		},
 		{
-			"id": "96a20a8a-1da1-48d4-81f0-0ef51a2c9e8e",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "96a20a8a-1da1-48d4-81f0-0ef51a2c9e8e",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2742,12 +2740,12 @@
 			]
 		},
 		{
-			"id": "a47cbbda-bf0f-4b22-85c2-4ca03472c8dc",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "a47cbbda-bf0f-4b22-85c2-4ca03472c8dc",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2770,12 +2768,12 @@
 			]
 		},
 		{
-			"id": "cae472b1-4e92-43d1-9433-4f29eca82916",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "cae472b1-4e92-43d1-9433-4f29eca82916",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2798,12 +2796,12 @@
 			]
 		},
 		{
-			"id": "b709bcd4-70e1-4bf0-9a9c-c09ed9b5b09e",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "b709bcd4-70e1-4bf0-9a9c-c09ed9b5b09e",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2826,12 +2824,12 @@
 			]
 		},
 		{
-			"id": "891d4cde-6e67-4b9d-98a7-52e9e73c5f4d",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "891d4cde-6e67-4b9d-98a7-52e9e73c5f4d",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2854,12 +2852,12 @@
 			]
 		},
 		{
-			"id": "286ba66f-f2c2-49c3-a1c4-e7360db4fb11",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "286ba66f-f2c2-49c3-a1c4-e7360db4fb11",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2882,12 +2880,12 @@
 			]
 		},
 		{
-			"id": "c18f97ef-48f9-47b8-ac56-9c7d870bbe6a",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "c18f97ef-48f9-47b8-ac56-9c7d870bbe6a",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2910,12 +2908,12 @@
 			]
 		},
 		{
-			"id": "9544ca5f-1bd5-4c23-afab-ea30aa39e4c3",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "9544ca5f-1bd5-4c23-afab-ea30aa39e4c3",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2938,12 +2936,12 @@
 			]
 		},
 		{
-			"id": "917d7a35-5a98-4e8e-9b3a-daacc76e3d31",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "917d7a35-5a98-4e8e-9b3a-daacc76e3d31",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2966,12 +2964,12 @@
 			]
 		},
 		{
-			"id": "81cfe56d-b154-4be5-a7db-c062a863915c",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "81cfe56d-b154-4be5-a7db-c062a863915c",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -2994,12 +2992,12 @@
 			]
 		},
 		{
-			"id": "6f33986b-32cf-4c5c-bc9a-8e5626e29cce",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "6f33986b-32cf-4c5c-bc9a-8e5626e29cce",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3022,12 +3020,12 @@
 			]
 		},
 		{
-			"id": "f70e4aea-2343-45d1-8b19-224c5bdb8632",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f70e4aea-2343-45d1-8b19-224c5bdb8632",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3050,12 +3048,12 @@
 			]
 		},
 		{
-			"id": "4cf85cca-5ab5-4b1a-a503-e4f2d1d75bd6",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "4cf85cca-5ab5-4b1a-a503-e4f2d1d75bd6",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3078,12 +3076,12 @@
 			]
 		},
 		{
-			"id": "50303dca-8cc3-4367-9974-6fa0091d73a7",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "50303dca-8cc3-4367-9974-6fa0091d73a7",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3106,12 +3104,12 @@
 			]
 		},
 		{
-			"id": "bfe85101-5ed8-442d-a0c2-3b3c6d3f1cd6",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "bfe85101-5ed8-442d-a0c2-3b3c6d3f1cd6",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3134,12 +3132,12 @@
 			]
 		},
 		{
-			"id": "66d12fb9-3e88-4060-b17f-512ac5dac6a7",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "66d12fb9-3e88-4060-b17f-512ac5dac6a7",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3162,12 +3160,12 @@
 			]
 		},
 		{
-			"id": "da125db2-5391-4fa7-8cfc-effabd40641c",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "da125db2-5391-4fa7-8cfc-effabd40641c",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3190,12 +3188,12 @@
 			]
 		},
 		{
-			"id": "571ffe1c-0220-4b91-bc0f-04302d1e800c",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "571ffe1c-0220-4b91-bc0f-04302d1e800c",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3218,12 +3216,12 @@
 			]
 		},
 		{
-			"id": "721afb39-b970-4636-b1e9-a3bec5b3c8da",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "721afb39-b970-4636-b1e9-a3bec5b3c8da",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3246,12 +3244,12 @@
 			]
 		},
 		{
-			"id": "056eeb4e-36ff-4ebe-9a79-77adc2f7106e",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "056eeb4e-36ff-4ebe-9a79-77adc2f7106e",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3274,12 +3272,12 @@
 			]
 		},
 		{
-			"id": "0fd58b5c-991c-418a-92dd-dadc2c1df8ee",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "0fd58b5c-991c-418a-92dd-dadc2c1df8ee",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3302,12 +3300,12 @@
 			]
 		},
 		{
-			"id": "169eaa47-8de6-4cd8-aa18-adb37ff884c0",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "169eaa47-8de6-4cd8-aa18-adb37ff884c0",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3330,12 +3328,12 @@
 			]
 		},
 		{
-			"id": "09c78369-36ac-4956-a1de-fa636aadae92",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "09c78369-36ac-4956-a1de-fa636aadae92",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3358,12 +3356,12 @@
 			]
 		},
 		{
-			"id": "64b2b33d-f5a9-4365-9233-e9901abbf4c1",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "64b2b33d-f5a9-4365-9233-e9901abbf4c1",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3386,12 +3384,12 @@
 			]
 		},
 		{
-			"id": "e71eaeef-b11b-4c97-afca-7f5875cd7459",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "e71eaeef-b11b-4c97-afca-7f5875cd7459",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3414,12 +3412,12 @@
 			]
 		},
 		{
-			"id": "af6d5827-98f8-4470-b580-05365c9562cc",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "af6d5827-98f8-4470-b580-05365c9562cc",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3442,12 +3440,12 @@
 			]
 		},
 		{
-			"id": "be2a3538-26f8-4b0c-8df4-dea7ed241ecc",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "be2a3538-26f8-4b0c-8df4-dea7ed241ecc",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3470,12 +3468,12 @@
 			]
 		},
 		{
-			"id": "ad3d829e-ca93-42dc-b49e-4cc5104a8f69",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "ad3d829e-ca93-42dc-b49e-4cc5104a8f69",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3498,12 +3496,12 @@
 			]
 		},
 		{
-			"id": "af720a8a-6293-48cf-a8a6-a5edea7b7e0b",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "af720a8a-6293-48cf-a8a6-a5edea7b7e0b",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3526,12 +3524,12 @@
 			]
 		},
 		{
-			"id": "1ab185cc-0e73-4a98-b9aa-2cb5045fd4e3",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "1ab185cc-0e73-4a98-b9aa-2cb5045fd4e3",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3554,12 +3552,12 @@
 			]
 		},
 		{
-			"id": "bc32db42-cff2-4750-ad22-00d82a01924b",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "bc32db42-cff2-4750-ad22-00d82a01924b",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3582,12 +3580,12 @@
 			]
 		},
 		{
-			"id": "76773053-f1c5-4e98-93be-69baf05f95b5",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "76773053-f1c5-4e98-93be-69baf05f95b5",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3610,12 +3608,12 @@
 			]
 		},
 		{
-			"id": "0f68d0d0-3555-4da1-8ef0-6fa3a028b8af",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "0f68d0d0-3555-4da1-8ef0-6fa3a028b8af",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3638,12 +3636,12 @@
 			]
 		},
 		{
-			"id": "46b3df32-92c5-4cc7-8026-a66cc2623a52",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "46b3df32-92c5-4cc7-8026-a66cc2623a52",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3666,12 +3664,12 @@
 			]
 		},
 		{
-			"id": "bb76d44c-45e5-4b3c-9414-a72c44370a7f",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "bb76d44c-45e5-4b3c-9414-a72c44370a7f",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3694,12 +3692,12 @@
 			]
 		},
 		{
-			"id": "992c3888-0fa5-42d8-8748-6a61c2b8464b",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "992c3888-0fa5-42d8-8748-6a61c2b8464b",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3722,12 +3720,12 @@
 			]
 		},
 		{
-			"id": "4d70e0a5-2a88-43aa-b659-16933a41c5da",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "4d70e0a5-2a88-43aa-b659-16933a41c5da",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3750,12 +3748,12 @@
 			]
 		},
 		{
-			"id": "d049995b-2c18-407a-bdd2-141c94b93568",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "d049995b-2c18-407a-bdd2-141c94b93568",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3778,12 +3776,12 @@
 			]
 		},
 		{
-			"id": "fad6eb39-5771-42ec-b95c-0b363c33bdb1",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "fad6eb39-5771-42ec-b95c-0b363c33bdb1",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3806,12 +3804,12 @@
 			]
 		},
 		{
-			"id": "833dcc65-5743-4525-a9a0-cb08f5358d67",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "833dcc65-5743-4525-a9a0-cb08f5358d67",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3834,12 +3832,12 @@
 			]
 		},
 		{
-			"id": "862acb0a-e994-47fe-b3b7-ea8474cf953a",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "862acb0a-e994-47fe-b3b7-ea8474cf953a",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3862,12 +3860,12 @@
 			]
 		},
 		{
-			"id": "f8767b41-6060-40d2-b47b-949421652dbc",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f8767b41-6060-40d2-b47b-949421652dbc",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3890,12 +3888,12 @@
 			]
 		},
 		{
-			"id": "f11d88a6-077a-4b62-9979-f78e79920c54",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "f11d88a6-077a-4b62-9979-f78e79920c54",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3918,12 +3916,12 @@
 			]
 		},
 		{
-			"id": "a08b82b7-6df9-4643-9d6e-549ed2f87c6d",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "a08b82b7-6df9-4643-9d6e-549ed2f87c6d",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3946,12 +3944,12 @@
 			]
 		},
 		{
-			"id": "6233a285-38ea-48ef-bb17-fc85f94a75fc",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "6233a285-38ea-48ef-bb17-fc85f94a75fc",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -3974,12 +3972,12 @@
 			]
 		},
 		{
-			"id": "5e400ee7-a24d-4e5f-970d-9f20e01278f5",
+			"v": "1",
 			"type": {
 				"name": "pipeline_rule",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "5e400ee7-a24d-4e5f-970d-9f20e01278f5",
 			"data": {
 				"title": {
 					"@type": "string",
@@ -4002,12 +4000,96 @@
 			]
 		},
 		{
-			"id": "feb9e1d7-9346-4a2a-9566-59ed483c1b83",
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "679674f1-8e0e-4d87-b8a2-fb2b7a64bf56",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_network_item_dhcp_lease_expires"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_network_item_dhcp_lease_expires"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_expires\"\nwhen\n // Apply the rule when the specified field is present\n has_field(\"data_system_network_item_dhcp_lease_expires\")\nthen\n // Remove the specified field\n remove_field(\"data_system_network_item_dhcp_lease_expires\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "e3d86661-b008-4a88-bfc9-2ea479ab56b3",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "SYSLOG TYPE OFFICE365"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "SYSLOG TYPE OFFICE365"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"SYSLOG TYPE OFFICE365\"\nwhen\n $message.rule_group1 == \"office365\"\nthen\n set_field(\"syslog_type\", \"office365\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "94285f06-b069-45f8-a88f-34d20d0d83e4",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "SYSLOG TYPE SURICATA"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "SYSLOG TYPE SURICATA"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"SYSLOG TYPE SURICATA\"\nwhen\n $message.rule_group1 == \"suricata\"\nthen\n set_field(\"syslog_type\", \"suricata\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
 			"type": {
 				"name": "stream",
 				"version": "1"
 			},
-			"v": "1",
+			"id": "feb9e1d7-9346-4a2a-9566-59ed483c1b83",
 			"data": {
 				"alarm_callbacks": [],
 				"outputs": [],

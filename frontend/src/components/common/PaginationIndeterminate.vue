@@ -37,10 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
+import { computed, toRefs, watch } from "vue"
 import { NSelect, NInputNumber } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import { watch } from "vue"
 
 const page = defineModel<number>("page", { default: 1 })
 const pageSize = defineModel<number>("pageSize", { default: 10 })

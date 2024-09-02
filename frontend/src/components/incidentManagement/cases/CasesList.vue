@@ -61,7 +61,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0" v-if="!hideFilters">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -183,12 +183,12 @@ import type { CasesFilter } from "@/api/endpoints/incidentManagement"
 import CaseItem from "./CaseItem.vue"
 
 export interface CasesListFilter {
-	type: "status" | "assignedTo"
+	type: "status" | "assignedTo" | "hostname"
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight: string | null | undefined }>()
-const { highlight } = toRefs(props)
+const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter; hideFilters?: boolean }>()
+const { highlight, preset, hideFilters } = toRefs(props)
 
 const message = useMessage()
 const loading = ref(false)
@@ -241,7 +241,8 @@ const filtered = computed<boolean>(() => {
 
 const typeOptions = [
 	{ label: "Status", value: "status" },
-	{ label: "Assigned To", value: "assignedTo" }
+	{ label: "Assigned To", value: "assignedTo" },
+	{ label: "Hostname", value: "hostname" }
 ]
 
 const statusOptions: { label: string; value: AlertStatus }[] = [
@@ -270,7 +271,9 @@ watch(showFilters, val => {
 watch(
 	() => filters.value.type,
 	() => {
-		filters.value.value = undefined
+		if (!preset.value) {
+			filters.value.value = undefined
+		}
 	}
 )
 
@@ -367,6 +370,11 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
+	if (preset.value?.type && preset.value.value) {
+		filters.value.type = preset.value.type
+		filters.value.value = preset.value.value
+	}
+
 	getData()
 	getAvailableUsers()
 })

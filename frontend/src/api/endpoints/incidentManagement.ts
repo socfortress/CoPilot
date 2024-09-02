@@ -23,10 +23,11 @@ export type AlertsFilter =
 export interface AlertsQuery {
 	page: number
 	pageSize: number
+	sort: "asc" | "desc"
 	filters: AlertsFilter
 }
 
-export type CasesFilter = { status: AlertStatus } | { assignedTo: string }
+export type CasesFilter = { status: AlertStatus } | { assignedTo: string } | { hostname: string }
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
@@ -80,7 +81,7 @@ export default {
 	// #endregion
 
 	// #region Alerts
-	getAlertsList(args?: Partial<AlertsQuery>) {
+	getAlertsList(args: Partial<AlertsQuery>, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/alerts`
 
 		if (args?.filters && "status" in args.filters) {
@@ -103,9 +104,11 @@ export default {
 			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
 		>(url, {
 			params: {
-				page: args?.page || 1,
-				page_size: args?.pageSize || 25
-			}
+				page: args.page || 1,
+				page_size: args.pageSize || 25,
+				order: args.sort || "desc"
+			},
+			signal
 		})
 	},
 	getAlert(alertId: number) {
@@ -179,6 +182,9 @@ export default {
 		}
 		if (filters && "assignedTo" in filters) {
 			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+		}
+		if (filters && "hostname" in filters) {
+			url = `/agents/${filters.hostname}/cases`
 		}
 
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(url)

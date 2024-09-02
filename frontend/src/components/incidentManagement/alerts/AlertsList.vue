@@ -54,7 +54,15 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-select
+				size="small"
+				v-model:value="sort"
+				:options="sortOptions"
+				:show-checkmark="false"
+				class="max-w-20"
+				:disabled="loading"
+			/>
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0" v-if="!hideFilters">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -166,22 +174,23 @@ import {
 	NInput
 } from "naive-ui"
 import Api from "@/api"
+import AlertItem from "./AlertItem.vue"
+import Icon from "@/components/common/Icon.vue"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
-import Icon from "@/components/common/Icon.vue"
+import axios from "axios"
 import { useResizeObserver } from "@vueuse/core"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
-import AlertItem from "./AlertItem.vue"
 import type { Case } from "@/types/incidentManagement/cases.d"
 
 export interface AlertsListFilter {
-	type: "status" | "assetName" | "assignedTo"
+	type: "status" | "assetName" | "assignedTo" | "tag" | "title"
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight: string | null | undefined }>()
-const { highlight } = toRefs(props)
+const props = defineProps<{ highlight?: string | null; preset?: AlertsListFilter; hideFilters?: boolean }>()
+const { highlight, preset, hideFilters } = toRefs(props)
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
@@ -192,6 +201,7 @@ const showFilters = ref(false)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
 const linkableCases = ref<Case[]>([])
+let abortController: AbortController | null = null
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -200,6 +210,11 @@ const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
+const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
+const sortOptions = [
+	{ label: "Desc", value: "desc" },
+	{ label: "Asc", value: "asc" }
+]
 
 const total = ref(0)
 const statusOpenTotal = ref(0)
@@ -241,11 +256,13 @@ watch(showFilters, val => {
 watch(
 	() => filters.value.type,
 	() => {
-		filters.value.value = undefined
+		if (!preset.value) {
+			filters.value.value = undefined
+		}
 	}
 )
 
-watch(currentPage, () => {
+watch([currentPage, sort], () => {
 	getData()
 })
 
@@ -297,14 +314,17 @@ function updateAlert(updatedAlert: Alert) {
 }
 
 function getData() {
+	abortController?.abort()
+	abortController = new AbortController()
+
 	showFilters.value = false
 	loading.value = true
-
 	lastFilters.value = _cloneDeep(filters.value)
 
 	const query: Partial<AlertsQuery> = {
 		page: currentPage.value,
-		pageSize: pageSize.value
+		pageSize: pageSize.value,
+		sort: sort.value
 	}
 
 	if (filtered.value) {
@@ -313,7 +333,7 @@ function getData() {
 	}
 
 	Api.incidentManagement
-		.getAlertsList(query)
+		.getAlertsList(query, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []
@@ -324,14 +344,15 @@ function getData() {
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
+			loading.value = false
 		})
 		.catch(err => {
-			alertsList.value = []
+			if (!axios.isCancel(err)) {
+				alertsList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				loading.value = false
+			}
 		})
 }
 
@@ -374,6 +395,11 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
+	if (preset.value?.type && preset.value.value) {
+		filters.value.type = preset.value.type
+		filters.value.value = preset.value.value
+	}
+
 	getData()
 	getAvailableUsers()
 	getCases()
