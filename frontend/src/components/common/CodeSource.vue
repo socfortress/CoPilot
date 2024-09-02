@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-2">
 		<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden" v-if="!showSource">
 			<div class="scrollbar-styled overflow-hidden code-bg-transparent" v-shiki="{ lang, decode }">
-				<pre v-html="code"></pre>
+				<pre v-html="source"></pre>
 			</div>
 		</n-card>
 
@@ -37,5 +37,5 @@ const { code, lang } = defineProps<{
 }>()
 
 const showSource = ref(false)
-const source = computed(() => code.toString())
+const source = computed(() => JSON.stringify(code, null, "\t"))
 </script>
