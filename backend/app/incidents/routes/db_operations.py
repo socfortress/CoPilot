@@ -109,6 +109,7 @@ from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
 from app.incidents.services.db_operations import list_cases
+from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import put_customer_notification
@@ -120,7 +121,7 @@ from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_status
-from app.incidents.services.db_operations import validate_source_exists, list_cases_by_asset_name
+from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
 
@@ -421,7 +422,12 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
 
 
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
-async def list_alerts_endpoint(page: int = Query(1, ge=1), page_size: int = Query(25, ge=1), order: str = Query("desc", regex="^(asc|desc)$"), db: AsyncSession = Depends(get_db)):
+async def list_alerts_endpoint(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+):
     return AlertOutResponse(
         alerts=await list_alerts(db, page=page, page_size=page_size, order=order),
         total=await alert_total(db),
@@ -567,6 +573,7 @@ async def list_cases_by_status_endpoint(status: AlertStatus, db: AsyncSession = 
 @incidents_db_operations_router.get("/case/assigned-to/{assigned_to}", response_model=CaseOutResponse)
 async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_assigned_to(assigned_to, db), success=True, message="Cases retrieved successfully")
+
 
 @incidents_db_operations_router.get("/case/asset/{asset_name}", response_model=CaseOutResponse)
 async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):

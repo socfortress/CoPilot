@@ -5,11 +5,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.connectors.graylog.services.streams import get_streams
 from app.db.db_session import get_db
+from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
@@ -38,12 +40,9 @@ from app.integrations.monitoring_alert.services.provision import (
 )
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
-from app.schedulers.models.scheduler import CreateSchedulerRequest
-from app.schedulers.scheduler import add_scheduler_jobs
-from sqlalchemy.future import select
-from app.db.universal_models import CustomersMeta
 
 monitoring_alerts_provision_router = APIRouter()
+
 
 async def get_customer_meta(customer_code: str, session: AsyncSession) -> CustomersMeta:
     """

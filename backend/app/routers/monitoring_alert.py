@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-
 from app.integrations.monitoring_alert.routes.provision import (
     monitoring_alerts_provision_router,
 )

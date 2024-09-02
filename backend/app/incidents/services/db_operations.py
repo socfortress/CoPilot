@@ -2,12 +2,13 @@ from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import asc
 from sqlalchemy import delete
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import asc, desc
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -581,6 +582,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
 
     return alert_out
 
+
 async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
@@ -867,6 +869,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
         cases_out.append(case_out)
     return cases_out
 
+
 async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
         select(Case)
@@ -1008,7 +1011,13 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
     return alerts_out
 
 
-async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
+async def list_alerts_by_asset_name(
+    asset_name: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
 
@@ -1050,7 +1059,13 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession, page: int
     return alerts_out
 
 
-async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
+async def list_alert_by_assigned_to(
+    assigned_to: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
 
@@ -1091,7 +1106,13 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession, page: in
     return alerts_out
 
 
-async def list_alerts_by_title(alert_title: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
+async def list_alerts_by_title(
+    alert_title: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
 

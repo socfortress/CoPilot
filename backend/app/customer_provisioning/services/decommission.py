@@ -105,11 +105,14 @@ async def decommission_wazuh_worker(
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
     # Check if the connector is verified
-    if await get_connector_attribute(
-        connector_name="Wazuh Worker Provisioning",
-        column_name="connector_verified",
-        session=session,
-    ) is False:
+    if (
+        await get_connector_attribute(
+            connector_name="Wazuh Worker Provisioning",
+            column_name="connector_verified",
+            session=session,
+        )
+        is False
+    ):
         logger.info("Wazuh Worker Provisioning connector is not verified, skipping ...")
         return DecommissionWorkerResponse(
             success=False,
@@ -155,11 +158,14 @@ async def decommission_haproxy(
     """
     logger.info(f"Decommissioning HAProxy worker {request}")
     # Check if the connector is verified
-    if await get_connector_attribute(
-        connector_name="HAProxy Provisioning",
-        column_name="connector_verified",
-        session=session,
-    ) is False:
+    if (
+        await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_verified",
+            session=session,
+        )
+        is False
+    ):
         logger.info("HAProxy Provisioning connector is not verified, skipping ...")
         return DecommissionWorkerResponse(
             success=False,

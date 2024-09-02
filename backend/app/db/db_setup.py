@@ -13,7 +13,6 @@ from sqlmodel import SQLModel
 from alembic import command
 from alembic.config import Config
 from app.auth.services.universal import create_admin_user
-from app.schedulers.routes.scheduler import delete_job
 from app.auth.services.universal import create_scheduler_user
 from app.auth.services.universal import remove_scheduler_user
 from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
@@ -25,6 +24,7 @@ from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_populate import delete_connectors_if_exist
 from app.db.db_session import SQLALCHEMY_DATABASE_URI
 from app.db.db_session import db_password
+from app.schedulers.routes.scheduler import delete_job
 
 
 async def create_database_if_not_exists(db_url: str, db_name: str):
@@ -298,6 +298,7 @@ async def ensure_scheduler_user(async_engine):
         async with session.begin():
             # Pass the session to the inner function
             await create_scheduler_user(session)
+
 
 async def delete_job_if_exists(async_engine):
     """

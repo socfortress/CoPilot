@@ -57,6 +57,7 @@ from app.schedulers.services.invoke_sap_siem import (
 )
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
+
 def scheduler_listener(event):
     if event.exception:
         logger.error(f"Job {event.job_id} crashed: {event.exception}")
@@ -205,7 +206,6 @@ async def schedule_enabled_jobs(scheduler):
                 logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
-
 
 
 def get_function_by_name(function_name: str):

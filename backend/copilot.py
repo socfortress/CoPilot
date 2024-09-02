@@ -28,10 +28,11 @@ from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
+
+# from app.routers import ask_socfortress
 from app.routers import active_response
 from app.routers import agents
 from app.routers import alert_creation_settings
-#from app.routers import ask_socfortress
 from app.routers import auth
 from app.routers import carbonblack
 from app.routers import connectors
@@ -131,7 +132,7 @@ api_router.include_router(grafana.router)
 api_router.include_router(customer_provisioning.router)
 api_router.include_router(threat_intel.router)
 # ! Commenting out for now, will revist later if needed ! #
-#api_router.include_router(ask_socfortress.router)
+# api_router.include_router(ask_socfortress.router)
 api_router.include_router(alert_creation_settings.router)
 api_router.include_router(integrations.router)
 api_router.include_router(office365.router)
