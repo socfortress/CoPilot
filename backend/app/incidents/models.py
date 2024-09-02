@@ -22,7 +22,7 @@ class Alert(SQLModel, table=True):
     customer_code: str = Field(max_length=50, nullable=False)
     time_closed: Optional[datetime] = Field(default=None)
     source: str = Field(max_length=50, nullable=False)
-    assigned_to: str = Field(max_length=50, nullable=True)
+    assigned_to: Optional[str] = Field(max_length=50, nullable=True)
 
     comments: List["Comment"] = Relationship(back_populates="alert")
     assets: List["Asset"] = Relationship(back_populates="alert")
@@ -125,7 +125,7 @@ class Case(SQLModel, table=True):
     case_description: str = Field(sa_column=Text)
     case_creation_time: datetime = Field(default_factory=datetime.utcnow)
     case_status: str = Field(max_length=50, nullable=False)
-    assigned_to: str = Field(max_length=50, nullable=True)
+    assigned_to: Optional[str] = Field(max_length=50, nullable=True)
 
     alerts: List["CaseAlertLink"] = Relationship(back_populates="case")
 
