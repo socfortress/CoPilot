@@ -31,7 +31,6 @@ Copilot's true power comes from the ability to integrate with your existing secu
 
 -   [Wazuh](https://wazuh.com/)
 -   [Graylog](https://www.graylog.org/)
--   [DFIR-IRIS](https://dfir-iris.org/)
 -   [Velociraptor](https://docs.velociraptor.app/)
 -   [Grafana](https://grafana.com/)
 -   [InfluxDB](https://www.influxdata.com/)
