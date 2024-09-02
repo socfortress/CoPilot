@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [cleanup]
+        branches: [main]
 
 jobs:
     build-backend:
