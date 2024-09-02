@@ -12,12 +12,13 @@
 						</template>
 						<template #value>
 							<div class="flex">
-								<QueryActiveFormProvider
+								<QueryActiveForm
 									:query
-									v-slot="{ loading: loadingActive }"
+									v-slot="{ loading: loadingActive, togglePopup: toggleActivePopup }"
 									@updated="updateQuery($event)"
 								>
 									<div
+										@click.stop="toggleActivePopup()"
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingActive,
@@ -33,7 +34,7 @@
 											<Icon :name="EditIcon" />
 										</n-spin>
 									</div>
-								</QueryActiveFormProvider>
+								</QueryActiveForm>
 							</div>
 						</template>
 					</KVCard>
@@ -47,12 +48,13 @@
 						</template>
 						<template #value>
 							<div class="flex">
-								<QueryTimeIntervalFormProvider
+								<QueryTimeIntervalForm
 									:query
-									v-slot="{ loading: loadingTimeInterval }"
+									v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
 									@updated="updateQuery($event)"
 								>
 									<div
+										@click.stop="toggleTimeIntervalPopup()"
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingTimeInterval,
@@ -68,7 +70,7 @@
 											<Icon :name="EditIcon" />
 										</n-spin>
 									</div>
-								</QueryTimeIntervalFormProvider>
+								</QueryTimeIntervalForm>
 							</div>
 						</template>
 					</KVCard>
@@ -105,12 +107,16 @@
 			<div class="footer-box px-7 py-4 flex items-center gap-2">
 				<div class="grow"></div>
 
-				<QueryDeleteProvider :query v-slot="{ loading: loadingDelete }" @deleted="emit('deleted', query)">
-					<n-button type="error" secondary :loading="loadingDelete">
+				<QueryDeleteOne
+					:query
+					v-slot="{ loading: loadingDelete, togglePopup: toggleDeletePopup }"
+					@deleted="emit('deleted', query)"
+				>
+					<n-button type="error" secondary :loading="loadingDelete" @click.stop="toggleDeletePopup()">
 						<template #icon><Icon :name="TrashIcon" /></template>
 						Delete
 					</n-button>
-				</QueryDeleteProvider>
+				</QueryDeleteOne>
 			</div>
 		</div>
 	</n-spin>
@@ -119,22 +125,22 @@
 <script setup lang="ts">
 import { ref, toRefs } from "vue"
 import { NButton, NSpin } from "naive-ui"
-import QueryActiveFormProvider from "./QueryActiveFormProvider.vue"
-import QueryTimeIntervalFormProvider from "./QueryTimeIntervalFormProvider.vue"
-import QueryDeleteProvider from "./QueryDeleteProvider.vue"
+import QueryActiveForm from "./actionsProviders/QueryActiveForm.vue"
+import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"
+import QueryDeleteOne from "./actionsProviders/QueryDeleteOne.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import type { SigmaQuery } from "@/types/sigma.d"
 
-const props = defineProps<{ query: SigmaQuery }>()
-const { query } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted", value: SigmaQuery): void
 	(e: "updated", value: SigmaQuery): void
 }>()
+
+const props = defineProps<{ query: SigmaQuery }>()
+const { query } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
 const TimeIntervalIcon = "material-symbols:autoplay"

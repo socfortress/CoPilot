@@ -1,31 +1,42 @@
 <template>
-	<n-popover trigger="click" to="body" content-class="px-0" v-model:show="show">
+	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading />
+			<slot :loading :togglePopup />
 		</template>
 
-		<div class="py-1 flex gap-2">
-			<n-input-group>
-				<n-select
-					v-model:value="model.unit"
-					:options="unitOptions"
-					placeholder="Time unit"
-					:disabled="loading"
-					class="!w-28"
-				/>
-				<n-input-number
-					v-model:value="model.time"
-					:min="1"
-					clearable
-					placeholder="Time"
-					class="!w-32"
-					:disabled="loading"
-				/>
-			</n-input-group>
+		<div class="py-1 flex flex-col gap-4">
+			<div class="flex gap-2 items-center">
+				<n-input-group>
+					<n-select
+						v-model:value="model.unit"
+						:options="unitOptions"
+						placeholder="Time unit"
+						:disabled="loading"
+						class="!w-28"
+					/>
+					<n-input-number
+						v-model:value="model.time"
+						:min="1"
+						clearable
+						placeholder="Time"
+						class="!w-32"
+						:disabled="loading"
+					/>
+				</n-input-group>
+			</div>
 
-			<n-button :disabled="!dirty || !isValid" :loading @click="updateTimeInterval()" type="primary">
-				Save
-			</n-button>
+			<div class="flex gap-2 justify-between">
+				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
+				<n-button
+					:disabled="!dirty || !isValid"
+					:loading
+					@click="updateTimeInterval()"
+					type="primary"
+					size="small"
+				>
+					Save
+				</n-button>
+			</div>
 		</div>
 	</n-popover>
 </template>
@@ -36,17 +47,19 @@ import { NSelect, NInputGroup, NButton, NInputNumber, NPopover, useMessage } fro
 import Api from "@/api"
 import type { SigmaQuery, SigmaTimeInterval, SigmaTimeIntervalUnit } from "@/types/sigma.d"
 
+const emit = defineEmits<{
+	(e: "updated", value: SigmaQuery): void
+}>()
+
 const props = defineProps<{
 	query: SigmaQuery
 }>()
 const { query } = toRefs(props)
 
-const emit = defineEmits<{
-	(e: "updated", value: SigmaQuery): void
-}>()
+const loading = defineModel<boolean | undefined>("loading", { default: false })
 
 const show = ref(false)
-const loading = ref(false)
+const lastShow = ref(new Date().getTime())
 const message = useMessage()
 const model = ref<{ time: number; unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
 const unitOptions = [
@@ -69,6 +82,17 @@ watch(show, val => {
 	}
 })
 
+function togglePopup() {
+	if (new Date().getTime() - lastShow.value > 500) {
+		show.value = !show.value
+	}
+}
+
+function closePopup() {
+	lastShow.value = new Date().getTime()
+	show.value = false
+}
+
 function setModel() {
 	if (query.value.time_interval) {
 		timeUnit.value = (
@@ -90,6 +114,7 @@ function updateTimeInterval() {
 			.then(res => {
 				if (res.data.success) {
 					emit("updated", res.data.sigma_queries[0])
+					message.success(res.data?.message || "Sigma query updated successfully")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}

@@ -1,5 +1,5 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" v-if="query" class="grow" pane-wrapper-class="flex flex-col grow">
+	<n-tabs type="line" animated :tabs-padding="24" class="grow" pane-wrapper-class="flex flex-col grow">
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
 			<div class="pt-1">
 				<QueryOverview :query @updated="updateQuery($event)" @deleted="emit('deleted', query)" />
@@ -21,15 +21,15 @@ import type { SigmaQuery } from "@/types/sigma.d"
 const QueryOverview = defineAsyncComponent(() => import("./QueryOverview.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{
-	query: SigmaQuery
-}>()
-const { query } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted", value: SigmaQuery): void
 	(e: "updated", value: SigmaQuery): void
 }>()
+
+const props = defineProps<{
+	query: SigmaQuery
+}>()
+const { query } = toRefs(props)
 
 function updateQuery(updatedQuery: SigmaQuery) {
 	emit("updated", updatedQuery)

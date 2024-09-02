@@ -54,8 +54,8 @@
 								alert.status === 'OPEN'
 									? 'danger'
 									: alert.status === 'IN_PROGRESS'
-									? 'warning'
-									: 'success'
+										? 'warning'
+										: 'success'
 							"
 						>
 							<template #iconLeft>
@@ -96,8 +96,8 @@
 									alert.status === 'OPEN'
 										? 'danger'
 										: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
+											? 'warning'
+											: 'success'
 								"
 							>
 								<template #iconLeft>
