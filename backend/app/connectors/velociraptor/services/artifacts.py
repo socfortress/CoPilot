@@ -241,7 +241,6 @@ async def run_file_collection(
         )
 
 
-
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     """
     Run a remote command on a client.
