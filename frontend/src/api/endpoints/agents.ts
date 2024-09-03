@@ -31,10 +31,14 @@ export default {
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
-	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType) {
+	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
-			`/agents/${agentId}/vulnerabilities/${severity}`
+			`/agents/${agentId}/vulnerabilities/${severity}`,
+			signal ? { signal } : {}
 		)
+	},
+	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
+		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
 	},
 	getSocCases(agentId: string | number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_ids: number[] }>(
