@@ -10,6 +10,37 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
+# async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
+#     """
+#     Collect agent vulnerabilities from Wazuh Manager.
+#     Used when Wazuh Manager is below 4.8.0
+
+#     Args:
+#         agent_id (str): The ID of the agent.
+
+#     Returns:
+#         WazuhAgentVulnerabilitiesResponse: An object containing the collected vulnerabilities.
+
+#     Raises:
+#         HTTPException: If there is an error collecting the vulnerabilities.
+#     """
+#     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Manager")
+#     agent_vulnerabilities = await send_get_request(
+#         endpoint=f"/vulnerability/{agent_id}",
+#         params={"severity": vulnerability_severity},
+#     )
+#     if agent_vulnerabilities["success"] is False:
+#         raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
+
+#     processed_vulnerabilities = process_agent_vulnerabilities(
+#         agent_vulnerabilities["data"],
+#     )
+#     return WazuhAgentVulnerabilitiesResponse(
+#         vulnerabilities=processed_vulnerabilities,
+#         success=True,
+#         message="Vulnerabilities collected successfully",
+#     )
+
 async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
     """
     Collect agent vulnerabilities from Wazuh Manager.
@@ -17,6 +48,7 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
 
     Args:
         agent_id (str): The ID of the agent.
+        vulnerability_severity (str): The severity of the vulnerabilities to collect.
 
     Returns:
         WazuhAgentVulnerabilitiesResponse: An object containing the collected vulnerabilities.
@@ -25,16 +57,21 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
         HTTPException: If there is an error collecting the vulnerabilities.
     """
     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Manager")
-    agent_vulnerabilities = await send_get_request(
-        endpoint=f"/vulnerability/{agent_id}",
-        params={"severity": vulnerability_severity},
-    )
-    if agent_vulnerabilities["success"] is False:
-        raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
 
-    processed_vulnerabilities = process_agent_vulnerabilities(
-        agent_vulnerabilities["data"],
-    )
+    severities = ["Low", "Medium", "High", "Critical"] if vulnerability_severity == "All" else [vulnerability_severity]
+
+    agent_vulnerabilities = []
+    for severity in severities:
+        response = await send_get_request(
+            endpoint=f"/vulnerability/{agent_id}",
+            params={"severity": severity},
+        )
+        if response["success"] is False:
+            raise HTTPException(status_code=500, detail=response["message"])
+        agent_vulnerabilities.extend(response["data"])
+
+    processed_vulnerabilities = process_agent_vulnerabilities(agent_vulnerabilities)
+
     return WazuhAgentVulnerabilitiesResponse(
         vulnerabilities=processed_vulnerabilities,
         success=True,
@@ -107,9 +144,29 @@ def filter_vulnerabilities_indices(indices_list):
 async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
     agent_vulnerabilities = []
     for index in vulnerabilities_indices:
-        query = {
-            "query": {"bool": {"must": [{"match": {"agent.id": agent_id}}, {"match": {"vulnerability.severity": vulnerability_severity}}]}},
-        }
+        if vulnerability_severity == "All":
+            query = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"match": {"agent.id": agent_id}},
+                            {"terms": {"vulnerability.severity": ["Low", "Medium", "High", "Critical"]}}
+                        ]
+                    }
+                }
+            }
+        else:
+            query = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"match": {"agent.id": agent_id}},
+                            {"match": {"vulnerability.severity": vulnerability_severity}}
+                        ]
+                    }
+                }
+            }
+
         page = es.search(index=index, body=query, scroll="2m")
         sid = page["_scroll_id"]
         scroll_size = len(page["hits"]["hits"])
