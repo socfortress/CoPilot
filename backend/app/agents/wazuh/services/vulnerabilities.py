@@ -121,6 +121,7 @@ def process_agent_vulnerabilities(
     Raises:
         HTTPException: If there is an error processing the agent vulnerabilities.
     """
+    logger.info(f"Processing agent vulnerabilities: {agent_vulnerabilities}")
     try:
         return [WazuhAgentVulnerabilities(**vuln) for vuln in agent_vulnerabilities]
     except Exception as e:
