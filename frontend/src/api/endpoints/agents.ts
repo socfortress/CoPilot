@@ -13,7 +13,7 @@ export interface AgentPayload {
 	velociraptor_id: string
 }
 
-export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical"
+export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
 export default {
 	getAgents(agentId?: string) {
@@ -31,10 +31,14 @@ export default {
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
-	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType) {
+	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
-			`/agents/${agentId}/vulnerabilities/${severity}`
+			`/agents/${agentId}/vulnerabilities/${severity}`,
+			signal ? { signal } : {}
 		)
+	},
+	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
+		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
 	},
 	getSocCases(agentId: string | number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_ids: number[] }>(
@@ -53,6 +57,9 @@ export default {
 			`/agents/${agentId}/sca/${policyId}`,
 			signal ? { signal } : {}
 		)
+	},
+	scaResultsDownload(agentId: string | number, policyId: string) {
+		return HttpClient.get<string>(`/agents/${agentId}/csv/sca/${policyId}`)
 	},
 	updateAgent(agentId: string, payload: AgentPayload) {
 		return HttpClient.put<FlaskBaseResponse>(

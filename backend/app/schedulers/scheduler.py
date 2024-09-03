@@ -15,6 +15,7 @@ from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
+from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -137,6 +138,12 @@ async def initialize_job_metadata():
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
             },
+            {
+                "job_id": "invoke_sigma_queries_collect",
+                "time_interval": 5,
+                "function": invoke_sigma_queries_collect,
+                "description": "Invokes Sigma queries collection.",
+            },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -158,21 +165,40 @@ async def initialize_job_metadata():
                 job_metadata.enabled = True
         await session.commit()
 
+async def disable_job(session, job_id):
+    """
+    Disables a job in the database based on the job ID.
+
+    Args:
+        session (AsyncSession): The database session.
+        job_id (str): The ID of the job to disable.
+    """
+    stmt = select(JobMetadata).where(JobMetadata.job_id == job_id)
+    result = await session.execute(stmt)
+    job_metadata = result.scalars().one_or_none()
+    logger.info(f"Job Metadata: {job_metadata}")
+    if job_metadata:
+        logger.info(f"Disabling job: {job_id}")
+        job_metadata.enabled = False
+        await session.commit()
+
 
 async def schedule_enabled_jobs(scheduler):
     """
     Schedules jobs that are enabled in the database.
     """
     async with AsyncSession(async_engine) as session:
-        # ! First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
-        # TODO ! Inefficient as hell but I will come back to this later
-        stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_wazuh_monitoring_alert")
-        result = await session.execute(stmt)
-        job_metadata = result.scalars().one_or_none()
-        if job_metadata:
-            logger.info("Disabling job: invoke_wazuh_monitoring_alert")
-            job_metadata.enabled = False
-            await session.commit()
+        # ! First prexisiting jobs for alert monitoring prior to Graylog Alert Integration ! #
+        job_ids_to_disable = [
+            "invoke_wazuh_monitoring_alert",
+            "invoke_suricata_monitoring_alert",
+            "invoke_office365_exchange_online_alert",
+            "invoke_office365_threat_intel_alert"
+        ]
+
+        # Disable each job in the list
+        for job_id in job_ids_to_disable:
+            await disable_job(session, job_id)
 
         stmt = select(JobMetadata).where(JobMetadata.enabled == True)
         result = await session.execute(stmt)
@@ -216,6 +242,7 @@ def get_function_by_name(function_name: str):
         "agent_sync": agent_sync,
         "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
+        "invoke_sigma_queries_collect": invoke_sigma_queries_collect,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collection,

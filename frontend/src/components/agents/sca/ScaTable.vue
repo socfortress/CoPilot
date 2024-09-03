@@ -16,9 +16,25 @@
 				<tbody>
 					<tr v-for="item of scaList" :key="item.policy_id">
 						<td class="w-6">
-							<n-button size="small" @click="showScaDetails(item)">
-								<template #icon><Icon :name="InfoIcon"></Icon></template>
-							</n-button>
+							<div class="flex items-center gap-2">
+								<n-tooltip trigger="hover">
+									<template #trigger>
+										<n-button size="small" @click="showScaDetails(item)">
+											<template #icon><Icon :name="InfoIcon"></Icon></template>
+										</n-button>
+									</template>
+									Details
+								</n-tooltip>
+
+								<n-tooltip trigger="hover">
+									<template #trigger>
+										<n-button size="small" @click="scaDownload(item)" :loading="item.downloading">
+											<template #icon><Icon :name="DownloadIcon"></Icon></template>
+										</n-button>
+									</template>
+									Download CSV
+								</n-tooltip>
+							</div>
 						</td>
 						<td>
 							<div class="flex flex-col gap-1">
@@ -79,18 +95,20 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, toRefs } from "vue"
+import { NTooltip, NSpin, NEmpty, NScrollbar, NTable, NButton, NPopover, NModal, useMessage } from "naive-ui"
 import Api from "@/api"
-import { type Agent, type AgentSca } from "@/types/agents.d"
-import { useMessage, NSpin, NEmpty, NScrollbar, NTable, NButton, NPopover, NModal } from "naive-ui"
+import ScaItem from "./ScaItem.vue"
+import Icon from "@/components/common/Icon.vue"
+import { saveAs } from "file-saver"
+import _truncate from "lodash/truncate"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import Icon from "@/components/common/Icon.vue"
-import _truncate from "lodash/truncate"
-import ScaItem from "./ScaItem.vue"
+import { type Agent, type AgentSca } from "@/types/agents.d"
 
 interface SCAExt extends AgentSca {
 	end_scan_text?: string
 	extract?: string
+	downloading: boolean
 }
 
 const props = defineProps<{
@@ -98,6 +116,7 @@ const props = defineProps<{
 }>()
 const { agent } = toRefs(props)
 
+const DownloadIcon = "carbon:document-download"
 const InfoIcon = "carbon:information"
 const message = useMessage()
 const loading = ref(false)
@@ -106,16 +125,17 @@ const scaList = ref<SCAExt[]>([])
 const dFormats = useSettingsStore().dateFormat
 const selectedSca = ref<SCAExt | null>(null)
 
-function getSCA(id: string) {
+function getSCA(agentId: string) {
 	loading.value = true
 
 	Api.agents
-		.getSCA(id)
+		.getSCA(agentId)
 		.then(res => {
 			if (res.data.success) {
 				scaList.value = (res.data.sca || []).map(o => {
 					return {
 						...o,
+						downloading: false,
 						end_scan_text: formatDate(o.end_scan, dFormats.datetime).toString(),
 						extract: _truncate(o.description, {
 							length: 50,
@@ -138,6 +158,28 @@ function getSCA(id: string) {
 function showScaDetails(sca: SCAExt) {
 	showDetails.value = true
 	selectedSca.value = sca
+}
+
+function scaDownload(sca: SCAExt) {
+	sca.downloading = true
+
+	const fileName = `sca-${sca.policy_id}_${new Date().getTime()}.csv`
+
+	Api.agents
+		.scaResultsDownload(agent.value.agent_id, sca.policy_id)
+		.then(res => {
+			if (res.data) {
+				saveAs(new Blob([res.data], { type: "text/csv;charset=utf-8" }), fileName)
+			} else {
+				message.warning("An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			sca.downloading = false
+		})
 }
 
 onBeforeMount(() => {

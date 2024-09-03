@@ -3,6 +3,7 @@
 		class="agent-card py-3 px-4"
 		:class="{ critical: agent.critical_asset, 'bg-secondary': bgSecondary }"
 		content-style="padding:0"
+		bordered
 	>
 		<n-spin :show="loading">
 			<div class="wrapper">
@@ -144,12 +145,10 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 .agent-card {
 	container-type: inline-size;
 	overflow: hidden;
-	border: 2px solid transparent;
 	max-width: 100%;
 	box-sizing: border-box;
 	cursor: pointer;
 	transition: all 0.3s;
-	border: var(--border-small-050);
 
 	&.bg-secondary {
 		background-color: var(--bg-secondary-color);
