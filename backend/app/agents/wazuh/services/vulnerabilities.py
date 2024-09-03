@@ -68,7 +68,7 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
         )
         if response["success"] is False:
             raise HTTPException(status_code=500, detail=response["message"])
-        agent_vulnerabilities.extend(response["data"])
+        agent_vulnerabilities.extend(response["data"].get("affected_items", []))
 
     processed_vulnerabilities = process_agent_vulnerabilities(agent_vulnerabilities)
 
@@ -79,14 +79,41 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
     )
 
 
+# def process_agent_vulnerabilities(
+#     agent_vulnerabilities: dict,
+# ) -> List[WazuhAgentVulnerabilities]:
+#     """
+#     Process agent vulnerabilities and return a list of WazuhAgentVulnerabilities objects.
+
+#     Args:
+#         agent_vulnerabilities (dict): A dictionary containing agent vulnerabilities data.
+
+#     Returns:
+#         List[WazuhAgentVulnerabilities]: A list of WazuhAgentVulnerabilities objects.
+
+#     Raises:
+#         HTTPException: If there is an error processing the agent vulnerabilities.
+#     """
+#     try:
+#         vulnerabilities = agent_vulnerabilities.get("data", {}).get(
+#             "affected_items",
+#             [],
+#         )
+#         return [WazuhAgentVulnerabilities(**vuln) for vuln in vulnerabilities]
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Failed to process agent vulnerabilities: {e}",
+#         )
+
 def process_agent_vulnerabilities(
-    agent_vulnerabilities: dict,
+    agent_vulnerabilities: List[dict],
 ) -> List[WazuhAgentVulnerabilities]:
     """
     Process agent vulnerabilities and return a list of WazuhAgentVulnerabilities objects.
 
     Args:
-        agent_vulnerabilities (dict): A dictionary containing agent vulnerabilities data.
+        agent_vulnerabilities (List[dict]): A list of dictionaries containing agent vulnerabilities data.
 
     Returns:
         List[WazuhAgentVulnerabilities]: A list of WazuhAgentVulnerabilities objects.
@@ -95,17 +122,12 @@ def process_agent_vulnerabilities(
         HTTPException: If there is an error processing the agent vulnerabilities.
     """
     try:
-        vulnerabilities = agent_vulnerabilities.get("data", {}).get(
-            "affected_items",
-            [],
-        )
-        return [WazuhAgentVulnerabilities(**vuln) for vuln in vulnerabilities]
+        return [WazuhAgentVulnerabilities(**vuln) for vuln in agent_vulnerabilities]
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process agent vulnerabilities: {e}",
         )
-
 
 async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severity: str):
     """
