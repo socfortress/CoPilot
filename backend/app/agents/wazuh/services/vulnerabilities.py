@@ -68,6 +68,7 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
         )
         if response["success"] is False:
             raise HTTPException(status_code=500, detail=response["message"])
+        logger.info(f"Vulnerabilities collected for severity {severity}: {response}")
         agent_vulnerabilities.extend(response["data"].get("affected_items", []))
 
     processed_vulnerabilities = process_agent_vulnerabilities(agent_vulnerabilities)
