@@ -15,7 +15,6 @@ from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
-from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -56,6 +55,7 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
+from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 
@@ -165,6 +165,7 @@ async def initialize_job_metadata():
                 job_metadata.enabled = True
         await session.commit()
 
+
 async def disable_job(session, job_id):
     """
     Disables a job in the database based on the job ID.
@@ -193,7 +194,7 @@ async def schedule_enabled_jobs(scheduler):
             "invoke_wazuh_monitoring_alert",
             "invoke_suricata_monitoring_alert",
             "invoke_office365_exchange_online_alert",
-            "invoke_office365_threat_intel_alert"
+            "invoke_office365_threat_intel_alert",
         ]
 
         # Disable each job in the list

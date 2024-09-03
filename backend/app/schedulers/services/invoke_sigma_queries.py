@@ -3,8 +3,8 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.future import select
 
-from app.db.db_session import get_db_session
 from app.connectors.wazuh_indexer.routes.sigma import run_active_sigma_queries_endpoint
+from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
 
 

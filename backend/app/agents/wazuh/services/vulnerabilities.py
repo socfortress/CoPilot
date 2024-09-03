@@ -9,7 +9,6 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
-
 # async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
 #     """
 #     Collect agent vulnerabilities from Wazuh Manager.
@@ -40,6 +39,7 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 #         success=True,
 #         message="Vulnerabilities collected successfully",
 #     )
+
 
 async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
     """
@@ -150,21 +150,16 @@ async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnera
                     "bool": {
                         "must": [
                             {"match": {"agent.id": agent_id}},
-                            {"terms": {"vulnerability.severity": ["Low", "Medium", "High", "Critical"]}}
-                        ]
-                    }
-                }
+                            {"terms": {"vulnerability.severity": ["Low", "Medium", "High", "Critical"]}},
+                        ],
+                    },
+                },
             }
         else:
             query = {
                 "query": {
-                    "bool": {
-                        "must": [
-                            {"match": {"agent.id": agent_id}},
-                            {"match": {"vulnerability.severity": vulnerability_severity}}
-                        ]
-                    }
-                }
+                    "bool": {"must": [{"match": {"agent.id": agent_id}}, {"match": {"vulnerability.severity": vulnerability_severity}}]},
+                },
             }
 
         page = es.search(index=index, body=query, scroll="2m")
