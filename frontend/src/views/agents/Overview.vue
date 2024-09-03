@@ -316,9 +316,9 @@ onBeforeMount(() => {
 	}
 
 	.agent-header {
-		border: 2px solid transparent;
 		border-radius: var(--border-radius);
 		background-color: var(--bg-color);
+		border: var(--border-small-050);
 
 		.title {
 			display: flex;

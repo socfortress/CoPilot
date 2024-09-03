@@ -58,6 +58,9 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
+	scaResultsDownload(agentId: string | number, policyId: string) {
+		return HttpClient.get<string>(`/agents/${agentId}/csv/sca/${policyId}`)
+	},
 	updateAgent(agentId: string, payload: AgentPayload) {
 		return HttpClient.put<FlaskBaseResponse>(
 			`/agents/${agentId}/update`,
