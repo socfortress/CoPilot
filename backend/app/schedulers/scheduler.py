@@ -15,6 +15,7 @@ from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
+from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -137,6 +138,12 @@ async def initialize_job_metadata():
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
             },
+            {
+                "job_id": "invoke_sigma_queries_collect",
+                "time_interval": 5,
+                "function": invoke_sigma_queries_collect,
+                "description": "Invokes Sigma queries collection.",
+            },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -216,6 +223,7 @@ def get_function_by_name(function_name: str):
         "agent_sync": agent_sync,
         "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
+        "invoke_sigma_queries_collect": invoke_sigma_queries_collect,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collection,
