@@ -13,7 +13,7 @@ export interface AgentPayload {
 	velociraptor_id: string
 }
 
-export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical"
+export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
 export default {
 	getAgents(agentId?: string) {

@@ -52,6 +52,7 @@ const vulnerabilitiesCache = ref<{ [key in VulnerabilitySeverityType | string]: 
 const vulnerabilities = computed<AgentVulnerabilities[]>(() => vulnerabilitiesCache.value[severity.value] || [])
 
 const severityOptions: { label: string; value: VulnerabilitySeverityType }[] = [
+	{ label: "All", value: "All" },
 	{ label: "Critical", value: "Critical" },
 	{ label: "High", value: "High" },
 	{ label: "Medium", value: "Medium" },
