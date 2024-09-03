@@ -165,21 +165,40 @@ async def initialize_job_metadata():
                 job_metadata.enabled = True
         await session.commit()
 
+async def disable_job(session, job_id):
+    """
+    Disables a job in the database based on the job ID.
+
+    Args:
+        session (AsyncSession): The database session.
+        job_id (str): The ID of the job to disable.
+    """
+    stmt = select(JobMetadata).where(JobMetadata.job_id == job_id)
+    result = await session.execute(stmt)
+    job_metadata = result.scalars().one_or_none()
+    logger.info(f"Job Metadata: {job_metadata}")
+    if job_metadata:
+        logger.info(f"Disabling job: {job_id}")
+        job_metadata.enabled = False
+        await session.commit()
+
 
 async def schedule_enabled_jobs(scheduler):
     """
     Schedules jobs that are enabled in the database.
     """
     async with AsyncSession(async_engine) as session:
-        # ! First disable the job of `invoke_wazuh_monitoring_alert` if it is enabled
-        # TODO ! Inefficient as hell but I will come back to this later
-        stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_wazuh_monitoring_alert")
-        result = await session.execute(stmt)
-        job_metadata = result.scalars().one_or_none()
-        if job_metadata:
-            logger.info("Disabling job: invoke_wazuh_monitoring_alert")
-            job_metadata.enabled = False
-            await session.commit()
+        # ! First prexisiting jobs for alert monitoring prior to Graylog Alert Integration ! #
+        job_ids_to_disable = [
+            "invoke_wazuh_monitoring_alert",
+            "invoke_suricata_monitoring_alert",
+            "invoke_office365_exchange_online_alert",
+            "invoke_office365_threat_intel_alert"
+        ]
+
+        # Disable each job in the list
+        for job_id in job_ids_to_disable:
+            await disable_job(session, job_id)
 
         stmt = select(JobMetadata).where(JobMetadata.enabled == True)
         result = await session.execute(stmt)
