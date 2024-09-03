@@ -12,6 +12,7 @@ class VulnSeverity(Enum):
     Medium = "Medium"
     High = "High"
     Critical = "Critical"
+    All = "All"
 
 
 class WazuhAgent(BaseModel):
