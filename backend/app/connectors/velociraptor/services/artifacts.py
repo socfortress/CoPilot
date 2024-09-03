@@ -191,7 +191,7 @@ async def run_file_collection(
                 f"    'artifact': '{collect_artifact_body.artifact_name}',"
                 f"    'parameters': {{"
                 f"        'env': ["
-                f"            {{'key': 'collectionSpec', 'value': 'Glob\n{collect_artifact_body.file}\n'}},"
+                f"            {{'key': 'collectionSpec', 'value': '{collect_artifact_body.file}'}},"
                 f"            {{'key': 'Root', 'value': '{collect_artifact_body.root_disk}'}}"
                 f"        ]"
                 f"    }}"
@@ -239,6 +239,7 @@ async def run_file_collection(
             status_code=500,
             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
         )
+
 
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:

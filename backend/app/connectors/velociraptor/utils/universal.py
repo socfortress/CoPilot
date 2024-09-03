@@ -181,6 +181,9 @@ class UniversalService:
             for response in self.stub.Query(client_request, timeout=30):
                 if response.Response:
                     results += json.loads(response.Response)
+                elif response.log:
+                    logger.info(f"Log: {response.log}")
+
             return {
                 "success": True,
                 "message": "Successfully executed query",
