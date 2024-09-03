@@ -49,6 +49,7 @@ async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: s
         message="Vulnerabilities collected successfully",
     )
 
+
 def process_agent_vulnerabilities(
     agent_vulnerabilities: List[dict],
 ) -> List[WazuhAgentVulnerabilities]:
@@ -71,6 +72,7 @@ def process_agent_vulnerabilities(
             status_code=500,
             detail=f"Failed to process agent vulnerabilities: {e}",
         )
+
 
 async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severity: str):
     """
