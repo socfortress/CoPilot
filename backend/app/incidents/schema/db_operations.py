@@ -207,7 +207,7 @@ class CaseCreate(BaseModel):
     case_description: str
     case_creation_time: datetime
     case_status: str
-    assigned_to: str
+    assigned_to: Optional[str] = None
 
 
 class LinkedCaseCreate(BaseModel):
