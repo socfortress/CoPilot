@@ -17,21 +17,21 @@ class AvailableMonitoringAlerts(str, Enum):
 
     WAZUH_SYSLOG_LEVEL_ALERT = (
         "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, "
-        "it triggers an alert that is created within DFIR-IRIS. Ensure that you have a pipeline "
+        "it triggers an alert that is created within CoPilot. Ensure that you have a pipeline "
         "rule that sets the SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
     )
     SURICATA_ALERT_SEVERITY_1 = (
         "This alert monitors the Suricata logs. When an the alert_severity field is 1, it triggers "
-        "an alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets "
+        "an alert that is created within CoPilot. Ensure that you have a pipeline rule that sets "
     )
     OFFICE365_EXCHANGE_ONLINE = (
         "This alert monitors the Office365 Exchange events. When an alert is detected, it triggers an "
-        "alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+        "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the Office365 alert is detected."
     )
     OFFICE365_THREAT_INTEL = (
         "This alert monitors the Office365 Threat Intelligence events. When an alert is detected, it triggers an "
-        "alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+        "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the Office365 alert is detected."
     )
 
