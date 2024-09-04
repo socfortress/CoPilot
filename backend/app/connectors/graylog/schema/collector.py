@@ -37,7 +37,7 @@ class Routing(BaseModel):
     node_id: str
     node_name: str
     primary: bool
-    relocating_to: Optional[None]  # Assuming this is always None based on your example
+    relocating_to: Optional[str] = Field(None, description="Relocating to")
     state: str
 
 
