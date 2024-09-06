@@ -15,14 +15,19 @@
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
 				<div class="p-7 pt-4 flex flex-col gap-2">
-					<AlertItem
-						v-for="alert of caseEntity.alerts"
-						:key="alert.id"
-						:alertData="alert"
-						embedded
-						@deleted="getCase(caseEntity.id)"
-						@updated="getCase(caseEntity.id)"
-					/>
+					<template v-if="caseEntity.alerts.length">
+						<AlertItem
+							v-for="alert of caseEntity.alerts"
+							:key="alert.id"
+							:alertData="alert"
+							embedded
+							@deleted="getCase(caseEntity.id)"
+							@updated="getCase(caseEntity.id)"
+						/>
+					</template>
+					<template v-else>
+						<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					</template>
 				</div>
 			</n-tab-pane>
 		</n-tabs>
@@ -31,7 +36,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
-import { NTabs, NTabPane, NSpin, useMessage } from "naive-ui"
+import { NTabs, NTabPane, NSpin, NEmpty, useMessage } from "naive-ui"
 import _clone from "lodash/cloneDeep"
 import Api from "@/api"
 import type { Case } from "@/types/incidentManagement/cases.d"

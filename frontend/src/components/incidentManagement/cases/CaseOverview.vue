@@ -8,10 +8,10 @@
 							caseData.case_status === 'OPEN'
 								? 'danger'
 								: caseData.case_status === 'IN_PROGRESS'
-								? 'warning'
-								: caseData.case_status === 'CLOSED'
-								? 'success'
-								: undefined
+									? 'warning'
+									: caseData.case_status === 'CLOSED'
+										? 'success'
+										: undefined
 						"
 						size="lg"
 						class="grow w-full"
@@ -89,7 +89,11 @@
 				<div class="px-7">
 					<KVCard>
 						<template #key>description</template>
-						<template #value>{{ caseData.case_description ?? "-" }}</template>
+						<template #value>
+							<span class="whitespace-pre-wrap">
+								{{ caseData.case_description ?? "-" }}
+							</span>
+						</template>
 					</KVCard>
 				</div>
 
