@@ -9,3 +9,5 @@ export interface Case {
 	alerts: Alert[]
 	case_status: null | AlertStatus
 }
+
+export type CasePayload = Omit<Case, "id" | "alerts">
