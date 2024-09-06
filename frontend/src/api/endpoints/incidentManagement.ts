@@ -10,7 +10,7 @@ import type {
 	AlertTag,
 	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 
 export type AlertsFilter =
@@ -192,7 +192,10 @@ export default {
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},
-	createCase(alertId: number) {
+	createCase(payload: CasePayload) {
+		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload)
+	},
+	createCaseFromAlert(alertId: number) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
 			`/incidents/db_operations/case/from-alert`,
 			{

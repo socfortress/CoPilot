@@ -32,7 +32,7 @@ function createCase() {
 	creating.value = true
 
 	Api.incidentManagement
-		.createCase(alert.value.id)
+		.createCaseFromAlert(alert.value.id)
 		.then(res => {
 			if (res.data.success) {
 				updateAlert({

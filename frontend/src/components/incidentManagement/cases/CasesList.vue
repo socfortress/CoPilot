@@ -1,7 +1,7 @@
 <template>
 	<div class="cases-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
-			<div class="info grow flex gap-2 lg:!hidden">
+			<div class="info grow flex gap-2">
 				<n-popover overlap placement="left">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -35,22 +35,8 @@
 						</div>
 					</div>
 				</n-popover>
-			</div>
-			<div class="info grow lg:flex gap-2 hidden text-sm">
-				Total :
-				<code>{{ total }}</code>
-				<span>/</span>
-				<span class="text-secondary-color">Open :</span>
-				<code class="text-error-color">{{ statusOpenTotal }}</code>
-				<span>/</span>
-				<span class="text-secondary-color">In Progress :</span>
-				<code class="text-warning-color">{{ statusInProgressTotal }}</code>
-				<span>/</span>
-				<span class="text-secondary-color">Close :</span>
-				<code class="text-success-color">{{ statusCloseTotal }}</code>
-				<span>/</span>
-				<span class="text-secondary-color">N/D :</span>
-				<code>{{ statusUndefinedTotal }}</code>
+
+				<CaseCreationButton @submitted="getData()" :only-icon="caseCreationButtonOnlyIcon" />
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -176,6 +162,7 @@ import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
+import CaseCreationButton from "./CaseCreationButton.vue"
 import { useResizeObserver } from "@vueuse/core"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
@@ -199,6 +186,7 @@ const availableUsers = ref<string[]>([])
 const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
+const caseCreationButtonOnlyIcon = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
 const header = ref()
@@ -367,6 +355,8 @@ useResizeObserver(header, entries => {
 
 	pageSlot.value = width < 700 ? 5 : 8
 	simpleMode.value = width < 550
+
+	caseCreationButtonOnlyIcon.value = (width < 580 && width > 549) || width < 390
 })
 
 onBeforeMount(() => {
