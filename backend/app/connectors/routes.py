@@ -213,10 +213,10 @@ async def upload_yaml_file(
     Raises:
         HTTPException: An exception with a 400 status code is raised if the file format is incorrect or connector ID is not 6.
     """
-    if connector_id != 6:
+    if connector_id not in [5, 6]:
         raise HTTPException(
             status_code=400,
-            detail="Only the Velociraptor connector is allowed for YAML file uploads.",
+            detail="Only the Velociraptor or another specific connector is allowed for YAML file uploads.",
         )
     if not file.filename.endswith(".yaml"):
         raise HTTPException(status_code=400, detail="Only .yaml files are allowed.")
