@@ -47,7 +47,7 @@ async def create_wazuh_group(group_code):
         dict: The response from the Wazuh API.
 
     """
-    endpoint = "groups"
+    endpoint = "/groups"
     data = {"group_id": group_code}
     return await send_wazuh_post_request(endpoint=endpoint, data=data)
 
