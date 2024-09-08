@@ -240,7 +240,7 @@ async def delete_wazuh_agents(agent_ids: List[str]):
         logger.info(f"Deleting agent {agent_id}")
         try:
             response = await send_wazuh_delete_request(
-                endpoint="agents",
+                endpoint="/agents",
                 params={
                     "older_than": "0s",
                     "agents_list": agent_id,
@@ -278,7 +278,7 @@ async def delete_wazuh_groups(customer_meta_wazuh_group: str):
         logger.info(f"Deleting group {group_code}")
         try:
             response = await send_wazuh_delete_request(
-                endpoint="groups",
+                endpoint="/groups",
                 params={
                     "groups_list": group_code,
                 },
