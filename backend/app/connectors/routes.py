@@ -221,7 +221,7 @@ async def upload_yaml_file(
     if not file.filename.endswith(".yaml"):
         raise HTTPException(status_code=400, detail="Only .yaml files are allowed.")
     try:
-        save_file_result = await ConnectorServices.save_file(file, session=session)
+        save_file_result = await ConnectorServices.save_file(file, connector_id, session=session)
         if save_file_result:
             await ConnectorServices.verify_connector_by_id(
                 connector_id,

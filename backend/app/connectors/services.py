@@ -379,6 +379,7 @@ class ConnectorServices:
     async def save_file(
         cls,
         file: UploadFile,
+        connector_id: int,
         session: AsyncSession,
     ) -> Union[ConnectorResponse, bool]:
         """
@@ -403,7 +404,7 @@ class ConnectorServices:
                 )  # Assuming file doesn't need to be read in chunks
 
             # Update connector using async session and ORM
-            query = select(Connectors).where(Connectors.id == 6)
+            query = select(Connectors).where(Connectors.id == connector_id)
             connector_record = (await session.execute(query)).scalars().first()
 
             if connector_record:
