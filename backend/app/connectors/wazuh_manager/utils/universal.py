@@ -151,7 +151,7 @@ async def send_get_request(
         # if params is {"raw": True} then we want to return the raw response
         if params == {"raw": True}:
             response = requests.get(
-                f"{attributes['connector_url']}/{endpoint}",
+                f"{attributes['connector_url']}{endpoint}",
                 headers=wazuh_manager_client,
                 params=params,
                 verify=False,
@@ -163,7 +163,7 @@ async def send_get_request(
                 "message": "Successfully retrieved data",
             }
         response = requests.get(
-            f"{attributes['connector_url']}/{endpoint}",
+            f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             verify=False,
@@ -207,7 +207,7 @@ async def send_post_request(
         return None
     try:
         response = requests.post(
-            f"{attributes['connector_url']}/{endpoint}",
+            f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             json=data,
             verify=False,
@@ -264,7 +264,7 @@ async def send_put_request(
     try:
         logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
         response = requests.put(
-            f"{attributes['connector_url']}/{endpoint}",
+            f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             data=data,
@@ -309,7 +309,7 @@ async def send_delete_request(
         return None
     try:
         response = requests.delete(
-            f"{attributes['connector_url']}/{endpoint}",
+            f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             verify=False,

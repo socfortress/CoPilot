@@ -245,7 +245,7 @@ async def update_wazuh_configuration(
     Args:
         provision_office365_auth_keys (ProvisionOffice365AuthKeys): The Office365 authentication keys.
     """
-    endpoint = "manager/configuration"
+    endpoint = "/manager/configuration"
 
     # Get the directory of the current module
     dir_path = os.path.dirname(os.path.realpath(__file__))
