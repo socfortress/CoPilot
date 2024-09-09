@@ -197,7 +197,7 @@ async def upgrade_wazuh_agent(agent_id: str) -> AgentWazuhUpgradeResponse:
     }
 
     try:
-        agent_upgraded = await send_put_request(endpoint="agents/upgrade", data=None, params=params)
+        agent_upgraded = await send_put_request(endpoint="/agents/upgrade", data=None, params=params)
         logger.info(f"Agent upgrade response: {agent_upgraded}")
         return handle_agent_upgrade_response(agent_upgraded)
 
