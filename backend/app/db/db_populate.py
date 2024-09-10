@@ -322,6 +322,7 @@ def get_available_integrations_list():
         ("Crowdstrike", "Integrate Crowdstrike with SOCFortress."),
         ("DUO", "Integrate DUO with SOCFortress."),
         ("Darktrace", "Integrate Darktrace with SOCFortress."),
+        ("BitDefender", "Integrate BitDefender with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -441,6 +442,12 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("Darktrace", "PRIVATE_TOKEN"),
         ("Darktrace", "HOST"),
         ("Darktrace", "PORT"),
+        ("BitDefender", "BASIC_AUTH_USERNAME"),
+        ("BitDefender", "BASIC_AUTH_PASSWORD"),
+        ("BitDefender", "WEBSERVER_HOSTNAME"),
+        ("BitDefender", "WEBSERVER_PORT"),
+        ("BitDefender", "GRAYLOG_PORT"),
+        ("BitDefender", "API_KEY"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")
