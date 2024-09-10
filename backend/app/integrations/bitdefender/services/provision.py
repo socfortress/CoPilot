@@ -240,7 +240,7 @@ async def get_stream_and_index_ids(customer_details):
     content_pack_stream_id = await get_content_pack_id_by_content_pack_name(
         content_pack_name=f"{customer_details.customer_name}_BITDEFENDER_STREAM",
     )
-    if customer_details.protocal_type == "TCP":
+    if customer_details.protocal_type == "Tcp":
         content_pack_input_id = await get_content_pack_id_by_content_pack_name(
             content_pack_name=f"{customer_details.customer_name}_BITDEFENDER_INPUT_TCP",
         )
