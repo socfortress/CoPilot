@@ -13,7 +13,7 @@ from app.connectors.grafana.schema.dashboards import FortinetDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
 from app.connectors.grafana.schema.dashboards import HuntressDashboard
-from app.connectors.grafana.schema.dashboards import MimecastDashboard
+from app.connectors.grafana.schema.dashboards import MimecastDashboard, BitdefenderDashboard
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import SapSiemDashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
@@ -185,6 +185,7 @@ async def provision_dashboards(
         + list(CrowdstrikeDashboard)
         + list(DuoDashboard)
         + list(DarktraceDashboard)
+        + list(BitdefenderDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

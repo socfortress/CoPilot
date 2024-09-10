@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-#from app.connectors.grafana.schema.dashboards import BitdefenderDashboard
+from app.connectors.grafana.schema.dashboards import BitdefenderDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
@@ -270,7 +270,7 @@ async def create_customer_network_connector_meta(
         network_connector_name="BITDEFENDER",
         graylog_stream_id=stream_id,
         graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - BITDEFENDER LOGS AND EVENTS")),
-        graylog_pipeline_id=((await get_pipeline_id(subscription="BITDEFENDER"))[0]),
+        graylog_pipeline_id="NONE",
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
         grafana_org_id=(
@@ -340,8 +340,9 @@ async def provision_bitdefender(
         session,
     )
     await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
-    pipeline_id = await get_pipeline_id(subscription="BITDEFENDER")
-    await connect_stream_to_pipeline(stream_and_pipeline=StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id))
+    # ! Commenting out the pipeline ID retrieval for now since I don't have the pipeline template ! #
+    #   pipeline_id = await get_pipeline_id(subscription="BITDEFENDER")
+    #   await connect_stream_to_pipeline(stream_and_pipeline=StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id))
     # Grafana Deployment
     customer_network_connector_meta.grafana_datasource_uid = (
         await create_grafana_datasource(
@@ -377,13 +378,15 @@ async def provision_bitdefender(
         session=session,
     )
     await create_customer_directory_if_needed(customer_name=customer_details.customer_name)
-    file = await load_and_replace_docker_compose(customer_name=customer_details.customer_name)
+    file = await load_and_replace_docker_compose(customer_name=customer_details.customer_name, port=keys.WEBSERVER_PORT)
     await save_uploaded_file(
         file=file,
-        filename=f"{customer_details.customer_name}_docker-compose.yml",
+        filename=f"{customer_details.customer_name}_bitdefender_docker-compose.yml",
         customer_name=customer_details.customer_name,
     )
-    await load_and_replace_falconhose_cfg(customer_details=customer_details, keys=keys, session=session)
+    # ! LEFT OFF HERE ! #
+    return None
+    await load_and_replace_config_json(customer_details=customer_details, keys=keys, session=session)
 
     await update_customer_integration_table(
         customer_code=customer_details.customer_code,
@@ -440,7 +443,7 @@ async def create_customer_directory_if_needed(customer_name: str):
         os.makedirs(customer_directory)
 
 
-async def load_and_replace_docker_compose(customer_name: str):
+async def load_and_replace_docker_compose(customer_name: str, port: str):
     """
     Load the docker-compose.yml file and replace the placeholder with the customer name.
 
@@ -461,6 +464,7 @@ async def load_and_replace_docker_compose(customer_name: str):
     with open(os.path.join(parent_directory, "templates", "docker-compose.yml"), "r") as file:
         data = file.read()
     data = data.replace("CUSTOMER_NAME", customer_name)
+    data = data.replace("PORT", port)
     return data
 
 
@@ -484,7 +488,7 @@ async def save_uploaded_file(file, filename, customer_name):
     return os.path.join(customer_upload_folder, filename)
 
 
-async def load_and_replace_falconhose_cfg(
+async def load_and_replace_config_json(
     customer_details: BitdefenderCustomerDetails,
     keys: ProvisionBitdefenderAuthKeys,
     session: AsyncSession,
