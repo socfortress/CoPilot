@@ -119,7 +119,7 @@ async def provision_bitdefender_route(
         customer_details=BitdefenderCustomerDetails(
             customer_code=provision_bitdefender_request.customer_code,
             customer_name=customer_integration.customer_name,
-            protocal_type="TCP",
+            protocal_type="Tcp",
             syslog_port=int(auth_keys.GRAYLOG_PORT),
             hot_data_retention=provision_bitdefender_request.hot_data_retention,
             index_replicas=provision_bitdefender_request.index_replicas,

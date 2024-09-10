@@ -6,6 +6,9 @@ import aiofiles
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import and_
+import base64
+import httpx
+import asyncio
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,6 +53,75 @@ from app.stack_provisioning.graylog.services.provision import (
 )
 from app.utils import get_connector_attribute
 from app.utils import get_customer_meta_attribute
+
+async def base64_encode(api_key: str):
+    """
+    Base64 encode the given API key.
+
+    Args:
+        api_key (str): The API key to encode.
+
+    Returns:
+        str: The base64 encoded API key.
+    """
+    # Add a : at the end then encode (Required for Basic Auth)
+    return base64.b64encode(f"{api_key}:".encode()).decode()
+
+
+async def send_configuration_to_bitdefender(keys: ProvisionBitdefenderAuthKeys):
+    url = "https://cloud.gravityzone.bitdefender.com/api/v1.0/jsonrpc/push"
+    headers = {
+        'authorization': f'Basic {await base64_encode(keys.API_KEY)}',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json'
+    }
+    data = {
+        "id": "1",
+        "jsonrpc": "2.0",
+        "method": "setPushEventSettings",
+        "params": {
+            "serviceSettings": {
+                "requireValidSslCertificate": False,
+                "authorization": await base64_auth_header_generator(keys.BASIC_AUTH_USERNAME, keys.BASIC_AUTH_PASSWORD),
+                "url": f"https://{keys.WEBSERVER_HOSTNAME}:{keys.WEBSERVER_PORT}/api",
+            },
+            "serviceType": "cef",
+            "status": 1,
+            "subscribeToEventTypes": {
+                "adcloudgz": True,
+                "antiexploit": True,
+                "aph": True,
+                "av": True,
+                "avc": True,
+                "dp": True,
+                "endpoint-moved-in": True,
+                "endpoint-moved-out": True,
+                "exchange-malware": True,
+                "exchange-user-credentials": True,
+                "fw": True,
+                "hd": True,
+                "hwid-change": True,
+                "install": True,
+                "modules": True,
+                "network-monitor": True,
+                "network-sandboxing": True,
+                "new-incident": True,
+                "ransomware-mitigation": True,
+                "registration": True,
+                "supa-update-status": True,
+                "sva": True,
+                "sva-load": True,
+                "task-status": True,
+                "troubleshooting-activity": True,
+                "uc": True,
+                "uninstall": True
+            }
+        }
+    }
+
+    async with httpx.AsyncClient(verify=False) as client:
+        response = await client.post(url, headers=headers, json=data)
+        return response.json()
 
 
 #### ! GRAYLOG ! ####
@@ -384,14 +456,13 @@ async def provision_bitdefender(
         filename=f"{customer_details.customer_name}_bitdefender_docker-compose.yml",
         customer_name=customer_details.customer_name,
     )
-    # ! LEFT OFF HERE ! #
-    return None
     await load_and_replace_config_json(customer_details=customer_details, keys=keys, session=session)
-
     await update_customer_integration_table(
         customer_code=customer_details.customer_code,
         session=session,
     )
+
+    await send_configuration_to_bitdefender(keys)
 
     return ProvisionBitdefenderResponse(
         message="Bitdefender customer provisioned successfully",
@@ -487,6 +558,19 @@ async def save_uploaded_file(file, filename, customer_name):
         await f.write(file.encode())
     return os.path.join(customer_upload_folder, filename)
 
+async def base64_auth_header_generator(username: str, password: str):
+    """
+    Generate the basic authentication header for the given username and password.
+
+    Args:
+        username (str): The username.
+        password (str): The password.
+
+    Returns:
+        str: The basic authentication header.
+    """
+    return f"Basic {base64.b64encode(f'{username}:{password}'.encode()).decode()}"
+
 
 async def load_and_replace_config_json(
     customer_details: BitdefenderCustomerDetails,
@@ -494,14 +578,14 @@ async def load_and_replace_config_json(
     session: AsyncSession,
 ):
     """
-    Load the falconhose.cfg file and replace the placeholders with the customer details.
+    Load the config.json file and replace the placeholders with the customer details.
 
     Args:
         customer_details (BitdefenderCustomerDetails): The details of the customer.
         keys (ProvisionBitdefenderAuthKeys): The authentication keys for Bitdefender.
 
     Returns:
-        str: The content of the falconhose.cfg file with the placeholders replaced.
+        str: The path to the modified config.json file.
     """
     # Get the current directory:
     current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -509,22 +593,35 @@ async def load_and_replace_config_json(
     parent_directory = os.path.dirname(current_directory)
     connector_url = str(await get_connector_attribute(connector_id=3, column_name="connector_url", session=session))
     connector_url = connector_url.replace("https://", "").replace("http://", "").replace(":9000", "")
-    # Open the falconhose.cfg file and read the content
-    with open(os.path.join(parent_directory, "templates", "cs.falconhoseclient.cfg"), "r") as file:
-        data = file.read()
-    data = data.replace("REPLACE_BASE_URL", keys.BASE_URL)
-    data = data.replace("REPLACE_CLIENT_ID", keys.CLIENT_ID)
-    data = data.replace("REPLACE_CLIENT_SECRET", keys.CLIENT_SECRET)
-    data = data.replace("REPLACE_SYSLOG_HOST", connector_url)
-    data = data.replace("REPLACE_SYSLOG_PORT", keys.SYSLOG_PORT)
-    # Save the file
+    encoded_string = await base64_auth_header_generator(keys.BASIC_AUTH_USERNAME, keys.BASIC_AUTH_PASSWORD)
+
+    # Define the JSON structure
+    data = {
+        "port": int(keys.WEBSERVER_PORT),
+        "syslog_port": int(keys.GRAYLOG_PORT),
+        "transport": customer_details.protocal_type,
+        "target": connector_url,
+        "authentication_string": encoded_string,
+        "secure": {
+            "enabled": True,
+            "key": "api/config/server.key",
+            "cert": "api/config/server.crt",
+        }
+    }
+
     # If customer name contains a space, replace it with a _
     if " " in customer_details.customer_name:
         customer_details.customer_name = customer_details.customer_name.replace(" ", "_")
+
     customer_upload_folder = os.path.join(UPLOAD_FOLDER, customer_details.customer_name)
-    async with aiofiles.open(os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg"), "w") as f:
-        await f.write(data)
-    return os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg")
+    os.makedirs(customer_upload_folder, exist_ok=True)
+
+    # Save the modified content back to the config.json file
+    config_path = os.path.join(customer_upload_folder, "config.json")
+    async with aiofiles.open(config_path, "w") as f:
+        await f.write(json.dumps(data, indent=4))
+
+    return config_path
 
 
 async def update_customer_integration_table(
