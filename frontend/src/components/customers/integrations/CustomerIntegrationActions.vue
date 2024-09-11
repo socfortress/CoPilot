@@ -59,9 +59,15 @@ const isMimecast = computed(() => serviceName.value === "Mimecast")
 const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
 const isDuo = computed(() => serviceName.value === "DUO")
 const isDarktrace = computed(() => serviceName.value === "Darktrace")
+const isBitdefender = computed(() => serviceName.value === "BitDefender")
 const isDeployEnabled = computed(
 	() =>
-		(isOffice365.value || isMimecast.value || isCrowdstrike.value || isDuo.value || isDarktrace.value) &&
+		(isOffice365.value ||
+			isMimecast.value ||
+			isCrowdstrike.value ||
+			isDuo.value ||
+			isDarktrace.value ||
+			isBitdefender.value) &&
 		!integration.deployed
 )
 
@@ -90,6 +96,9 @@ function provision() {
 	}
 	if (isDarktrace.value) {
 		apiCall = Api.integrations.darktraceProvision(customerCode.value, serviceName.value)
+	}
+	if (isBitdefender.value) {
+		apiCall = Api.integrations.bitdefenderProvision(customerCode.value, serviceName.value)
 	}
 
 	if (!apiCall) {
