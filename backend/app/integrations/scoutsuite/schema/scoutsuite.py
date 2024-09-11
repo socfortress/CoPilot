@@ -51,6 +51,9 @@ class AzureScoutSuiteReportRequest(BaseModel):
             raise HTTPException(status_code=400, detail="Invalid report type.")
         return values
 
+class GCPScoutSuiteReportRequest(BaseModel):
+    report_name: str = Field(..., description="The name of the report", example="aws-report")
+    file_path: str = Field(..., description="The path to the GCP credentials file", example="gcp-credentials.json")
 
 class ScoutSuiteReportResponse(BaseModel):
     success: bool

@@ -1,11 +1,12 @@
 import asyncio
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 from loguru import logger
 
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
-from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest, GCPScoutSuiteReportRequest
 
 
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
@@ -55,6 +56,33 @@ def construct_azure_command(request: AzureScoutSuiteReportRequest):
         "--force",
         "--no-browser",
     ]
+
+async def generate_gcp_report_background(request: GCPScoutSuiteReportRequest):
+    logger.info("Generating GCP ScoutSuite report in the background")
+
+    command = construct_gcp_command(request)
+    await run_command_in_background(command)
+
+    # Delete the file after the report is generated
+    try:
+        os.remove(request.file_path)
+        logger.info(f"Deleted GCP credentials file: {request.file_path}")
+    except Exception as e:
+        logger.error(f"Error deleting GCP credentials file: {e}")
+
+def construct_gcp_command(request: GCPScoutSuiteReportRequest):
+    """Construct the scout command."""
+    return [
+        "scout",
+        "gcp",
+        "--service-account",
+        request.file_path,
+        "--report-name",
+        request.report_name,
+        "--force",
+        "--no-browser",
+    ]
+
 
 
 def run_command(command):

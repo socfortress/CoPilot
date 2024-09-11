@@ -1,22 +1,22 @@
 import os
-
+import aiofiles
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile, File
 from loguru import logger
 
 from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
-from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest, GCPScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
 from app.integrations.scoutsuite.schema.scoutsuite import (
     ScoutSuiteReportOptionsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportResponse
 from app.integrations.scoutsuite.services.scoutsuite import (
-    generate_aws_report_background,
+    generate_aws_report_background, generate_gcp_report_background
 )
 from app.integrations.scoutsuite.services.scoutsuite import (
     generate_azure_report_background,
@@ -119,6 +119,44 @@ async def generate_azure_report(
     return ScoutSuiteReportResponse(
         success=True,
         message="Azure ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
+    )
+
+@integration_scoutsuite_router.post(
+    "/generate-gcp-report",
+    response_model=ScoutSuiteReportResponse,
+)
+async def generate_gcp_report(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    report_name: str = "gcp-report",
+):
+    """
+    Endpoint to generate a GCP ScoutSuite report.
+
+    Args:
+        background_tasks (BackgroundTasks): The background tasks object.
+        file (UploadFile): The uploaded JSON file.
+    """
+    try:
+        # Ensure the scoutsuite directory exists
+        directory = os.path.join(os.getcwd(), "scoutsuite-report")
+        os.makedirs(directory, exist_ok=True)
+
+        # Write the uploaded file to the scoutsuite directory
+        file_path = os.path.join(directory, file.filename)
+        async with aiofiles.open(file_path, 'wb') as out_file:
+            contents = await file.read()
+            await out_file.write(contents)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    logger.info(f"File saved to: {file_path}")
+    request = GCPScoutSuiteReportRequest(report_name=report_name, file_path=file_path)
+    logger.info(f"Request: {request}")
+    background_tasks.add_task(generate_gcp_report_background, request)
+    return ScoutSuiteReportResponse(
+        success=True,
+        message="GCP ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
     )
 
 
