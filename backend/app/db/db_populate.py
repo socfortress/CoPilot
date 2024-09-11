@@ -303,7 +303,7 @@ def load_markdown_for_integration(integration_name: str) -> str:
         with open(file_path, "r") as file:
             return file.read()
     except FileNotFoundError:
-        return "No deployment intrusctions available."
+        return "No deployment instructions available."
 
 
 def get_available_integrations_list():
@@ -322,6 +322,7 @@ def get_available_integrations_list():
         ("Crowdstrike", "Integrate Crowdstrike with SOCFortress."),
         ("DUO", "Integrate DUO with SOCFortress."),
         ("Darktrace", "Integrate Darktrace with SOCFortress."),
+        ("BitDefender", "Integrate BitDefender with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -364,6 +365,15 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
                 logger.info(
                     f"Added new available integration: {available_integration_data['integration_name']}",
                 )
+            else:
+                # Check if the integration details need to be updated
+                if existing_available_integration.integration_details == "No deployment instructions available.":
+                    new_integration_details = load_markdown_for_integration(available_integration_data["integration_name"])
+                    if new_integration_details != "No deployment instructions available.":
+                        existing_available_integration.integration_details = new_integration_details
+                        logger.info(
+                            f"Updated integration details for {available_integration_data['integration_name']}",
+                        )
         except Exception as e:
             logger.error(f"Error adding available integration: {e}")
             await session.rollback()
@@ -441,6 +451,12 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("Darktrace", "PRIVATE_TOKEN"),
         ("Darktrace", "HOST"),
         ("Darktrace", "PORT"),
+        ("BitDefender", "BASIC_AUTH_USERNAME"),
+        ("BitDefender", "BASIC_AUTH_PASSWORD"),
+        ("BitDefender", "WEBSERVER_HOSTNAME"),
+        ("BitDefender", "WEBSERVER_PORT"),
+        ("BitDefender", "GRAYLOG_PORT"),
+        ("BitDefender", "API_KEY"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")
@@ -565,7 +581,7 @@ def load_markdown_for_network_connector(network_connector_name: str) -> str:
         with open(file_path, "r") as file:
             return file.read()
     except FileNotFoundError:
-        return "No deployment intrusctions available."
+        return "No deployment instructions available."
 
 
 def get_available_network_connectors_list():

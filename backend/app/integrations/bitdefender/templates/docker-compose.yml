@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+    bitdefender-connector-CUSTOMER_NAME:
+        image: ghcr.io/socfortress/bitdefender-connector
+        volumes:
+            - /opt/CoPilot/data/data/CUSTOMER_NAME/config.json:/opt/bitdefender/gz-evpsc/api/config/config.json
+        ports:
+            - "PORT:PORT"
+        restart: unless-stopped

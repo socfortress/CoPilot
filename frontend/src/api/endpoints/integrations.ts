@@ -54,33 +54,43 @@ export default {
 	office365Provision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
 			customer_code: customerCode,
-			integration_name: integrationName
+			integration_name: integrationName || "Office365"
 		})
 	},
 	mimecastProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/mimecast/provision`, {
 			customer_code: customerCode,
-			integration_name: integrationName
+			integration_name: integrationName || "Mimecast"
 		})
 	},
 	crowdstrikeProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/crowdstrike/provision`, {
 			customer_code: customerCode,
-			integration_name: integrationName
+			integration_name: integrationName || "Crowdstrike",
+			hot_data_retention: 30,
+			index_replicas: 0
 		})
 	},
 	duoProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/duo/provision`, {
 			customer_code: customerCode,
-			time_interval: 15,
-			integration_name: integrationName
+			integration_name: integrationName || "Duo",
+			time_interval: 15
 		})
 	},
 	darktraceProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/darktrace/provision`, {
 			customer_code: customerCode,
-			time_interval: 15,
-			integration_name: integrationName
+			integration_name: integrationName || "Darktrace",
+			time_interval: 15
+		})
+	},
+	bitdefenderProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/bitdefender/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName || "BitDefender",
+			hot_data_retention: 30,
+			index_replicas: 0
 		})
 	}
 	// #endregion

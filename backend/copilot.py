@@ -34,6 +34,7 @@ from app.routers import active_response
 from app.routers import agents
 from app.routers import alert_creation_settings
 from app.routers import auth
+from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import connectors
 from app.routers import cortex
@@ -148,6 +149,7 @@ api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
+api_router.include_router(bitdefender.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)

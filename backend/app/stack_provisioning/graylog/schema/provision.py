@@ -27,6 +27,8 @@ class AvailableContentPacks(str, Enum):
     SOCFORTRESS_CROWDSTRIKE_INPUT_TCP = "The Crowdstrike Input TCP content pack"
     SOCFORTRESS_CROWDSTRIKE_STREAM = "The Crowdstrike Stream content pack"
     SOCFORTRESS_CROWDSTRIKE_PROCESSING_PIPELINE = "The Crowdstrike Processing Pipeline content pack"
+    SOCFORTRESS_BITDEFENDER_INPUT_TCP = "The Bitdefender Input TCP content pack"
+    SOCFORTRESS_BITDEFENDER_STREAM = "The Bitdefender Stream content pack"
 
 
 class ContentPackKeywords(BaseModel):
