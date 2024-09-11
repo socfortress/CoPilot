@@ -1,14 +1,13 @@
+import base64
 import json
 import os
 from datetime import datetime
 
 import aiofiles
+import httpx
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import and_
-import base64
-import httpx
-import asyncio
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,13 +28,10 @@ from app.connectors.wazuh_indexer.services.monitoring import (
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
 from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
-from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
-from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customers.routes.customers import get_customer_meta
 from app.integrations.bitdefender.schema.provision import BitdefenderCustomerDetails
 from app.integrations.bitdefender.schema.provision import ProvisionBitdefenderAuthKeys
@@ -54,6 +50,7 @@ from app.stack_provisioning.graylog.services.provision import (
 from app.utils import get_connector_attribute
 from app.utils import get_customer_meta_attribute
 
+
 async def base64_encode(api_key: str):
     """
     Base64 encode the given API key.
@@ -71,9 +68,9 @@ async def base64_encode(api_key: str):
 async def send_configuration_to_bitdefender(keys: ProvisionBitdefenderAuthKeys):
     url = "https://cloud.gravityzone.bitdefender.com/api/v1.0/jsonrpc/push"
     headers = {
-        'authorization': f'Basic {await base64_encode(keys.API_KEY)}',
-        'cache-control': 'no-cache',
-        'content-type': 'application/json'
+        "authorization": f"Basic {await base64_encode(keys.API_KEY)}",
+        "cache-control": "no-cache",
+        "content-type": "application/json",
     }
     data = {
         "id": "1",
@@ -114,9 +111,9 @@ async def send_configuration_to_bitdefender(keys: ProvisionBitdefenderAuthKeys):
                 "task-status": True,
                 "troubleshooting-activity": True,
                 "uc": True,
-                "uninstall": True
-            }
-        }
+                "uninstall": True,
+            },
+        },
     }
 
     async with httpx.AsyncClient(verify=False) as client:
@@ -558,6 +555,7 @@ async def save_uploaded_file(file, filename, customer_name):
         await f.write(file.encode())
     return os.path.join(customer_upload_folder, filename)
 
+
 async def base64_auth_header_generator(username: str, password: str):
     """
     Generate the basic authentication header for the given username and password.
@@ -587,10 +585,6 @@ async def load_and_replace_config_json(
     Returns:
         str: The path to the modified config.json file.
     """
-    # Get the current directory:
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    # Go up one level
-    parent_directory = os.path.dirname(current_directory)
     connector_url = str(await get_connector_attribute(connector_id=3, column_name="connector_url", session=session))
     connector_url = connector_url.replace("https://", "").replace("http://", "").replace(":9000", "")
     encoded_string = await base64_auth_header_generator(keys.BASIC_AUTH_USERNAME, keys.BASIC_AUTH_PASSWORD)
@@ -606,7 +600,7 @@ async def load_and_replace_config_json(
             "enabled": True,
             "key": "api/config/server.key",
             "cert": "api/config/server.crt",
-        }
+        },
     }
 
     # If customer name contains a space, replace it with a _

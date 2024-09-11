@@ -13,7 +13,7 @@ The connector uses the POST method to receive authenticated and secured messages
 What we will be deploying is an HTTP endpoint that will receive the BitDefender logs and forward them to a syslog server. The HTTP endpoint is running on the server running CoPilot and will be listening on the port that you will define. This means that we must configure public DNS records to point to your edge firewall and open the port that you will define in the firewall.
 
 Traffic flow will be as follows:
-        BitDefender Cloud Platform -> Your Edge Firewall -> CoPilot Server -> Graylog Server
+BitDefender Cloud Platform -> Your Edge Firewall -> CoPilot Server -> Graylog Server
 
 ## Configuration
 
@@ -21,16 +21,16 @@ The configuration for our API creds and syslog forwarder settings are stored wit
 
 ```json
 {
-    "port": 3200,
-    "syslog_port": 10514,
-    "transport": "Tcp",
-    "target": "YOUR_GRAYLOG_SERVER",
-    "authentication_string": "Basic cmVsaWFibGVwYnhfYml0ZGVmZW5kZXI6cmVsaWFibGVwYnhfYml0ZGVmZW5kZXI=",
-    "secure": {
-        "enabled": true,
-        "key": "api/config/server.key",
-        "cert": "api/config/server.crt"
-    }
+	"port": 3200,
+	"syslog_port": 10514,
+	"transport": "Tcp",
+	"target": "YOUR_GRAYLOG_SERVER",
+	"authentication_string": "Basic cmVsaWFibGVwYnhfYml0ZGVmZW5kZXI6cmVsaWFibGVwYnhfYml0ZGVmZW5kZXI=",
+	"secure": {
+		"enabled": true,
+		"key": "api/config/server.key",
+		"cert": "api/config/server.crt"
+	}
 }
 ```
 
@@ -80,7 +80,6 @@ Product ModulesStatus|5|BitdefenderGZModule=modules
 dvchost=TEST_ENDPOINTasdadBitdefenderGZComputerFQDN=test.example.com dvc=192.168.1.2"]}'
 https://REPLACE_WITH_YOUR_WEBSERVER:3200/api
 ```
-
 
 Now that the HTTPS collector service is running and listening for messages, we can test the service by sending a test message to the BitDefender service. Use the following cURL command to send the test payload to the collector service you have just configured:
 

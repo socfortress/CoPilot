@@ -105,6 +105,7 @@ class DuoDashboard(Enum):
 class DarktraceDashboard(Enum):
     DARKTRACE_SUMMARY = ("Darktrace", "summary.json")
 
+
 class BitdefenderDashboard(Enum):
     BITDEFENDER_SUMMARY = ("Bitdefender", "summary.json")
 

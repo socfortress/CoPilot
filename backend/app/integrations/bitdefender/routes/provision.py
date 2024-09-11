@@ -17,7 +17,6 @@ from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
 from app.integrations.schema import CustomerIntegrations
 from app.integrations.schema import CustomerIntegrationsResponse
-from loguru import logger
 
 integration_bitdefender_router = APIRouter()
 
@@ -113,7 +112,6 @@ async def provision_bitdefender_route(
     bitdefender_auth_keys = extract_bitdefender_auth_keys(customer_integration)
 
     auth_keys = ProvisionBitdefenderAuthKeys(**bitdefender_auth_keys)
-
 
     return await provision_bitdefender(
         customer_details=BitdefenderCustomerDetails(
