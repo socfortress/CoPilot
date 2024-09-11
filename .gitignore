@@ -52,6 +52,8 @@ site/
 firewall.spec
 
 backend/data/api.config.yaml
+backend/data/SOCFORTRESS/config.json
+backend/data/SOCFORTRESS/SOCFORTRESS_bitdefender_docker-compose.yml
 backend/file-store/api.config.yaml
 backend/report.pdf
 backend/report.html
