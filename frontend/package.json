@@ -32,11 +32,11 @@
 	"dependencies": {
 		"@ajoelp/json-to-formdata": "^1.5.0",
 		"@f3ve/vue-markdown-it": "^0.2.2",
-		"@fontsource/jetbrains-mono": "^5.0.21",
-		"@fontsource/lexend": "^5.0.21",
+		"@fontsource/jetbrains-mono": "^5.0.22",
+		"@fontsource/lexend": "^5.0.22",
 		"@fontsource/public-sans": "^5.0.18",
 		"@popperjs/core": "^2.11.8",
-		"@shikijs/markdown-it": "^1.16.2",
+		"@shikijs/markdown-it": "^1.17.0",
 		"@vueuse/components": "^11.0.3",
 		"@vueuse/core": "^11.0.3",
 		"apexcharts": "^3.53.0",
@@ -56,15 +56,15 @@
 		"naive-ui": "^2.39.0",
 		"password-validator": "^5.3.0",
 		"pinia": "^2.2.2",
-		"pinia-plugin-persistedstate": "^4.0.0",
+		"pinia-plugin-persistedstate": "^4.0.1",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.16.2",
+		"shiki": "^1.17.0",
 		"validator": "^13.12.0",
-		"vue": "^3.5.3",
+		"vue": "^3.5.4",
 		"vue-advanced-cropper": "^2.8.9",
 		"vue-highlight-words": "^3.0.1",
-		"vue-i18n": "^9.14.0",
-		"vue-router": "^4.4.3",
+		"vue-i18n": "^10.0.0",
+		"vue-router": "^4.4.4",
 		"vue-sjv": "^0.0.6",
 		"vue3-apexcharts": "^1.6.0",
 		"vue3-marquee": "^4.2.2",
@@ -90,7 +90,7 @@
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.20",
 		"cypress": "^13.14.2",
-		"eslint": "^9.9.1",
+		"eslint": "^9.10.0",
 		"eslint-plugin-cypress": "^3.5.0",
 		"eslint-plugin-vue": "^9.28.0",
 		"flourite": "^1.3.0",
@@ -103,16 +103,16 @@
 		"postcss": "^8.4.45",
 		"prettier": "^3.3.3",
 		"sass": "^1.78.0",
-		"start-server-and-test": "^2.0.5",
+		"start-server-and-test": "^2.0.7",
 		"tailwind-config-viewer": "^2.0.4",
 		"tailwindcss": "^3.4.10",
 		"taze": "^0.16.7",
-		"type-fest": "^4.26.0",
+		"type-fest": "^4.26.1",
 		"unplugin-vue-components": "^0.27.4",
-		"vite": "^5.4.3",
+		"vite": "^5.4.4",
 		"vite-bundle-analyzer": "^0.10.6",
 		"vite-bundle-visualizer": "^1.2.1",
-		"vite-plugin-vue-devtools": "^7.4.4",
+		"vite-plugin-vue-devtools": "^7.4.5",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^2.0.5",
 		"vue-tsc": "^2.1.6"
@@ -122,18 +122,19 @@
 	},
 	"overrides": {
 		"@vue/eslint-config-typescript": {
-			"eslint": "^9.9.1"
+			"eslint": "^9.10.0"
 		},
 		"@typescript-eslint/type-utils": {
-			"eslint": "^9.9.1"
+			"eslint": "^9.10.0"
 		},
 		"@typescript-eslint/utils": {
-			"eslint": "^9.9.1"
+			"eslint": "^9.10.0"
 		},
 		"secure-ls": {
 			"crypto-js": "^4.2.0"
 		},
 		"micromatch": "^4.0.8",
+		"path-to-regexp": "^8.1.0",
 		"ws": "^8.18.0"
 	},
 	"engines": {
