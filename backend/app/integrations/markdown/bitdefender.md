@@ -13,7 +13,7 @@ The connector uses the POST method to receive authenticated and secured messages
 What we will be deploying is an HTTP endpoint that will receive the BitDefender logs and forward them to a syslog server. The HTTP endpoint is running on the server running CoPilot and will be listening on the port that you will define. This means that we must configure public DNS records to point to your edge firewall and open the port that you will define in the firewall.
 
 Traffic flow will be as follows:
-BitDefender Cloud Platform -> Your Edge Firewall -> CoPilot Server -> Graylog Server
+BitDefender Cloud Platform _ Your Edge Firewall _ CoPilot Server _ Graylog Server
 
 ## Configuration
 
