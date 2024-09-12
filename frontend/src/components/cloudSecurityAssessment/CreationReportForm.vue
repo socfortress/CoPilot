@@ -35,6 +35,13 @@
 					@mounted="typeFormRef = $event"
 				/>
 
+				<GcpTypeForm
+					v-if="baseForm.report_type === ScoutSuiteReportType.Gcp"
+					@model="typeForm = $event"
+					@valid="typeFormValid = $event"
+					@mounted="typeFormRef = $event"
+				/>
+
 				<div class="flex justify-between gap-4 mt-8">
 					<n-button @click="reset()" :disabled="loading">Reset</n-button>
 					<n-button
@@ -70,15 +77,17 @@ import {
 import {
 	type ScoutSuiteAwsReportPayload,
 	type ScoutSuiteAzureReportPayload,
+	type ScoutSuiteGcpReportPayload,
 	type ScoutSuiteReportPayload,
 	ScoutSuiteReportType
 } from "@/types/cloudSecurityAssessment.d"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
+import GcpTypeForm from "./FormTypes/GcpTypeForm.vue"
 import type { ApiError, ApiCommonResponse } from "@/types/common.d"
 
 type BaseFormPayload = Omit<ScoutSuiteReportPayload, "report_type"> & { report_type: ScoutSuiteReportType | null }
-type TypeFormPayload = ScoutSuiteAwsReportPayload | ScoutSuiteAzureReportPayload
+type TypeFormPayload = Partial<ScoutSuiteAwsReportPayload | ScoutSuiteAzureReportPayload | ScoutSuiteGcpReportPayload>
 
 const emit = defineEmits<{
 	(e: "submitted"): void
@@ -100,7 +109,7 @@ const typeFormValid = ref<boolean>(false)
 const baseFormRef = ref<FormInst | null>(null)
 const typeFormRef = ref<FormInst | null>(null)
 
-const availableTypes = ["aws", "azure"]
+const availableTypes = ["aws", "azure", "gcp"]
 
 const reportTypeOptions = ref<{ label: string; value: string; disabled: boolean }[]>([])
 
@@ -207,6 +216,13 @@ function submit() {
 				...(typeForm.value as ScoutSuiteAzureReportPayload)
 			})
 			break
+		case ScoutSuiteReportType.Gcp:
+			apiCall = Api.cloudSecurityAssessment.generateGcpScoutSuiteReport({
+				...baseForm.value,
+				report_type: ScoutSuiteReportType.Gcp,
+				...(typeForm.value as ScoutSuiteGcpReportPayload)
+			})
+			break
 	}
 
 	if (!apiCall) {
@@ -218,9 +234,13 @@ function submit() {
 	apiCall
 		.then(res => {
 			if (res.data.success) {
-				message.success(res.data?.message || `ScoutSuite report generation started successfully`, {
-					duration: 10 * 1000
-				})
+				message.success(
+					res.data?.message ||
+						`ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.`,
+					{
+						duration: 10 * 1000
+					}
+				)
 				emit("submitted")
 				resetForm()
 			} else {

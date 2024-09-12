@@ -3,6 +3,7 @@ import { HttpClient } from "../httpClient"
 import type {
 	ScoutSuiteAwsReportPayload,
 	ScoutSuiteAzureReportPayload,
+	ScoutSuiteGcpReportPayload,
 	ScoutSuiteReport,
 	ScoutSuiteReportPayload
 } from "@/types/cloudSecurityAssessment.d"
@@ -23,6 +24,16 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`/scoutsuite/generate-azure-report`, {
 			...payload,
 			report_type: "azure"
+		})
+	},
+	generateGcpScoutSuiteReport(payload: ScoutSuiteReportPayload & ScoutSuiteGcpReportPayload) {
+		const form = new FormData()
+		form.append("file", new Blob([payload.file], { type: payload.file.type }), payload.file.name)
+
+		return HttpClient.post<FlaskBaseResponse>(`/scoutsuite/generate-gcp-report`, form, {
+			params: {
+				report_name: payload.report_name
+			}
 		})
 	},
 	deleteScoutSuiteReport(reportName: string) {

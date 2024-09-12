@@ -2,7 +2,8 @@ export type ScoutSuiteReport = string
 
 export enum ScoutSuiteReportType {
 	AWS = "aws",
-	Azure = "azure"
+	Azure = "azure",
+	Gcp = "gcp"
 }
 export interface ScoutSuiteReportPayload {
 	report_type: ScoutSuiteReportType
@@ -16,4 +17,7 @@ export interface ScoutSuiteAzureReportPayload {
 	username: string
 	password: string
 	tenant_id: string
+}
+export interface ScoutSuiteGcpReportPayload {
+	file: File
 }
