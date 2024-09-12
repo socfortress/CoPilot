@@ -84,6 +84,7 @@ def construct_gcp_command(request: GCPScoutSuiteReportRequest):
         "gcp",
         "--service-account",
         request.file_path,
+        "--all-projects",
         "--report-name",
         request.report_name,
         "--force",
