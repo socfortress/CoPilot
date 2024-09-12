@@ -2,11 +2,16 @@ import asyncio
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import os
+import json
+import aiofiles
+from fastapi import HTTPException
+from fastapi import UploadFile
+
 
 from loguru import logger
 
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
-from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest, GCPScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest, GCPScoutSuiteReportRequest, GCPScoutSuiteJSON
 
 
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
@@ -103,3 +108,30 @@ async def run_command_in_background(command):
     with ThreadPoolExecutor() as executor:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(executor, lambda: run_command(command))
+
+
+
+async def read_json_file(contents: bytes) -> dict:
+    """Read and parse the JSON file."""
+    try:
+        return json.loads(contents)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON file - {str(e)}")
+
+def validate_json_data(data: dict):
+    """Validate the JSON data against the GCPScoutSuiteJSON model."""
+    try:
+        GCPScoutSuiteJSON(**data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"JSON file does not have the correct format and fields - {str(e)}")
+
+async def save_file_to_directory(contents: bytes, directory: str, filename: str) -> str:
+    """Save the uploaded file to the specified directory."""
+    try:
+        os.makedirs(directory, exist_ok=True)
+        file_path = os.path.join(directory, filename)
+        async with aiofiles.open(file_path, 'wb') as out_file:
+            await out_file.write(contents)
+        return file_path
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
