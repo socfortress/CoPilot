@@ -1,27 +1,35 @@
 import os
-import aiofiles
+
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
-import json
-from fastapi import HTTPException, UploadFile, File
+from fastapi import File
+from fastapi import HTTPException
+from fastapi import UploadFile
 from loguru import logger
 
 from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
-from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest, GCPScoutSuiteReportRequest, GCPScoutSuiteJSON
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import GCPScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
 from app.integrations.scoutsuite.schema.scoutsuite import (
     ScoutSuiteReportOptionsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportResponse
 from app.integrations.scoutsuite.services.scoutsuite import (
-    generate_aws_report_background, generate_gcp_report_background, read_json_file, save_file_to_directory, validate_json_data
+    generate_aws_report_background,
 )
 from app.integrations.scoutsuite.services.scoutsuite import (
     generate_azure_report_background,
 )
+from app.integrations.scoutsuite.services.scoutsuite import (
+    generate_gcp_report_background,
+)
+from app.integrations.scoutsuite.services.scoutsuite import read_json_file
+from app.integrations.scoutsuite.services.scoutsuite import save_file_to_directory
+from app.integrations.scoutsuite.services.scoutsuite import validate_json_data
 
 integration_scoutsuite_router = APIRouter()
 
@@ -158,8 +166,6 @@ async def generate_gcp_report(
         success=True,
         message="GCP ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
     )
-
-
 
 
 @integration_scoutsuite_router.delete(
