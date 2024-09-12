@@ -50,7 +50,7 @@
 			v-model:show="showForm"
 			display-directive="show"
 			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(270px, 90vh)', overflow: 'hidden' }"
 			title="Generate Report"
 			:bordered="false"
 			segmented

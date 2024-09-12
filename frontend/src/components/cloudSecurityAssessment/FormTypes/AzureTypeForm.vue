@@ -29,11 +29,11 @@ import type { ScoutSuiteAzureReportPayload } from "@/types/cloudSecurityAssessme
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void
-	(e: "model", value: ScoutSuiteAzureReportPayload): void
+	(e: "model", value: Partial<ScoutSuiteAzureReportPayload>): void
 	(e: "valid", value: boolean): void
 }>()
 
-const form = ref<ScoutSuiteAzureReportPayload>({
+const form = ref<Partial<ScoutSuiteAzureReportPayload>>({
 	username: "",
 	password: "",
 	tenant_id: ""

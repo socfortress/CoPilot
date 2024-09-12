@@ -24,11 +24,11 @@ import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void
-	(e: "model", value: ScoutSuiteAwsReportPayload): void
+	(e: "model", value: Partial<ScoutSuiteAwsReportPayload>): void
 	(e: "valid", value: boolean): void
 }>()
 
-const form = ref<ScoutSuiteAwsReportPayload>({
+const form = ref<Partial<ScoutSuiteAwsReportPayload>>({
 	access_key_id: "",
 	secret_access_key: ""
 })
