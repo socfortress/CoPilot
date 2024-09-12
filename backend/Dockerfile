@@ -3,6 +3,8 @@ FROM debian:11
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+# Set environment variable to use pure-Python implementation
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 # Update the package lists
 RUN apt-get update
