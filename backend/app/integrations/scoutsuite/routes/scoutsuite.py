@@ -2,7 +2,9 @@ import os
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
+from fastapi import File
 from fastapi import HTTPException
+from fastapi import UploadFile
 from loguru import logger
 
 from app.integrations.scoutsuite.schema.scoutsuite import (
@@ -10,6 +12,7 @@ from app.integrations.scoutsuite.schema.scoutsuite import (
 )
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import GCPScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
 from app.integrations.scoutsuite.schema.scoutsuite import (
     ScoutSuiteReportOptionsResponse,
@@ -21,6 +24,12 @@ from app.integrations.scoutsuite.services.scoutsuite import (
 from app.integrations.scoutsuite.services.scoutsuite import (
     generate_azure_report_background,
 )
+from app.integrations.scoutsuite.services.scoutsuite import (
+    generate_gcp_report_background,
+)
+from app.integrations.scoutsuite.services.scoutsuite import read_json_file
+from app.integrations.scoutsuite.services.scoutsuite import save_file_to_directory
+from app.integrations.scoutsuite.services.scoutsuite import validate_json_data
 
 integration_scoutsuite_router = APIRouter()
 
@@ -119,6 +128,43 @@ async def generate_azure_report(
     return ScoutSuiteReportResponse(
         success=True,
         message="Azure ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
+    )
+
+
+@integration_scoutsuite_router.post(
+    "/generate-gcp-report",
+    response_model=ScoutSuiteReportResponse,
+)
+async def generate_gcp_report(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    report_name: str = "gcp-report",
+):
+    """
+    Endpoint to generate a GCP ScoutSuite report.
+
+    Args:
+        background_tasks (BackgroundTasks): The background tasks object.
+        file (UploadFile): The uploaded JSON file.
+    """
+    # Read the file contents
+    contents = await file.read()
+
+    # Read and validate the JSON file
+    data = await read_json_file(contents)
+    validate_json_data(data)
+
+    # Save the file to the scoutsuite-report directory
+    directory = os.path.join(os.getcwd(), "scoutsuite-report")
+    file_path = await save_file_to_directory(contents, directory, file.filename)
+
+    logger.info(f"File saved to: {file_path}")
+    request = GCPScoutSuiteReportRequest(report_name=report_name, file_path=file_path)
+    logger.info(f"Request: {request}")
+    background_tasks.add_task(generate_gcp_report_background, request)
+    return ScoutSuiteReportResponse(
+        success=True,
+        message="GCP ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
     )
 
 
