@@ -48,7 +48,7 @@ const show = ref(false)
 const lastShow = ref(new Date().getTime())
 const message = useMessage()
 const fileList = ref<UploadFileInfo[]>([])
-const yamlFile = computed<File | null>(() => fileList.value?.[0].file || null)
+const yamlFile = computed<File | null>(() => fileList.value?.[0]?.file || null)
 const isValid = computed(() => fileList.value.length)
 
 function togglePopup() {
