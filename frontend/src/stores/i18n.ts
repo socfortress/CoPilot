@@ -12,7 +12,8 @@ export const useLocalesStore = defineStore("i18n", {
 		}
 	},
 	persist: {
-		paths: ["locale"]
+		// @ts-expect-error "Type instantiation is excessively deep and possibly infinite" ts(2589)
+		pick: ["locale"]
 	}
 })
 

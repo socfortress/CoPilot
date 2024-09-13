@@ -36,7 +36,7 @@
 		"@fontsource/lexend": "^5.1.0",
 		"@fontsource/public-sans": "^5.1.0",
 		"@popperjs/core": "^2.11.8",
-		"@shikijs/markdown-it": "^1.17.0",
+		"@shikijs/markdown-it": "^1.17.6",
 		"@vueuse/components": "^11.0.3",
 		"@vueuse/core": "^11.0.3",
 		"apexcharts": "^3.53.0",
@@ -49,7 +49,7 @@
 		"echarts": "^5.5.1",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.5.2",
-		"jose": "^5.8.0",
+		"jose": "^5.9.0",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
@@ -58,13 +58,13 @@
 		"pinia": "^2.2.2",
 		"pinia-plugin-persistedstate": "^4.0.1",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.17.0",
+		"shiki": "^1.17.6",
 		"validator": "^13.12.0",
-		"vue": "^3.5.4",
+		"vue": "^3.5.5",
 		"vue-advanced-cropper": "^2.8.9",
 		"vue-highlight-words": "^3.0.1",
 		"vue-i18n": "^10.0.1",
-		"vue-router": "^4.4.4",
+		"vue-router": "^4.4.5",
 		"vue-sjv": "^0.0.6",
 		"vue3-apexcharts": "^1.6.0",
 		"vue3-marquee": "^4.2.2",
@@ -108,13 +108,14 @@
 		"tailwindcss": "^3.4.11",
 		"taze": "^0.16.8",
 		"type-fest": "^4.26.1",
+		"typescript": "~5.5.4",
 		"unplugin-vue-components": "^0.27.4",
-		"vite": "^5.4.4",
+		"vite": "^5.4.5",
 		"vite-bundle-analyzer": "^0.10.6",
 		"vite-bundle-visualizer": "^1.2.1",
 		"vite-plugin-vue-devtools": "^7.4.5",
 		"vite-svg-loader": "^5.1.0",
-		"vitest": "^2.0.5",
+		"vitest": "^2.1.1",
 		"vue-tsc": "^2.1.6"
 	},
 	"optionalDependencies": {
@@ -130,12 +131,8 @@
 		"@typescript-eslint/utils": {
 			"eslint": "^9.10.0"
 		},
-		"secure-ls": {
-			"crypto-js": "^4.2.0"
-		},
 		"micromatch": "^4.0.8",
-		"path-to-regexp": "^8.1.0",
-		"ws": "^8.18.0"
+		"path-to-regexp": "^8.1.0"
 	},
 	"engines": {
 		"node": ">=18.0.0"
