@@ -128,6 +128,7 @@ class Case(SQLModel, table=True):
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
 
     alerts: List["CaseAlertLink"] = Relationship(back_populates="case")
+    data_store: List["CaseDataStore"] = Relationship(back_populates="case")
 
 
 class CaseAlertLink(SQLModel, table=True):
@@ -147,3 +148,18 @@ class Notification(SQLModel, table=True):
     customer_code: str = Field(max_length=50, nullable=False)
     shuffle_workflow_id: str = Field(max_length=1000, nullable=False)
     enabled: bool = Field(default=True)
+
+class CaseDataStore(SQLModel, table=True):
+    __tablename__ = "incident_management_case_datastore"
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    case_id: int = Field(foreign_key="incident_management_case.id", nullable=False)
+    bucket_name: str = Field(max_length=255, nullable=False)  # Name of the MinIO bucket
+    object_key: str = Field(max_length=1024, nullable=False)  # Path/key of the file in MinIO
+    file_name: str = Field(max_length=255, nullable=False)  # Original file name uploaded by the user
+    content_type: Optional[str] = Field(max_length=100, nullable=True)  # MIME type of the file
+    file_size: Optional[int] = Field(nullable=True)  # File size in bytes
+    upload_time: datetime = Field(default_factory=datetime.utcnow)  # Time of upload
+    file_hash: str = Field(max_length=128, nullable=False)  # Hash of the file (e.g., SHA-256)
+
+    case: "Case" = Relationship(back_populates="data_store")
