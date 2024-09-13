@@ -47,7 +47,7 @@ export const useSettingsStore = defineStore("settings", {
 		}
 	},
 	persist: {
-		paths: ["settings"]
+		pick: ["settings"]
 	}
 })
 

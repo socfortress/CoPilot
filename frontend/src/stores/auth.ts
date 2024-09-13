@@ -138,7 +138,7 @@ export const useAuthStore = defineStore("auth", {
 			getItem: key => ls.get(key),
 			setItem: (key, value) => ls.set(key, value)
 		},
-		paths: ["user"]
+		pick: ["user"]
 	}
 })
 

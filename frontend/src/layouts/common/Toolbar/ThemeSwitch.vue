@@ -29,40 +29,40 @@ const isThemeDark = computed<boolean>(() => themeStore.isThemeDark)
 function toggleTheme(event?: MouseEvent) {
 	const isAppearanceTransition =
 		typeof document !== "undefined" &&
-		// @ts-expect-error: Transition API
-		document.startViewTransition &&
-		!window.matchMedia("(prefers-reduced-motion: reduce)").matches
+		document?.startViewTransition &&
+		!window?.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 	if (!isAppearanceTransition || !event) {
 		themeStore.toggleTheme()
 		return
 	}
 
-	const x = event.clientX ?? innerWidth / 2
-	const y = event.clientY ?? innerHeight / 2
-	const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+	if (document?.startViewTransition) {
+		const x = event.clientX ?? innerWidth / 2
+		const y = event.clientY ?? innerHeight / 2
+		const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
 
-	// @ts-expect-error: Transition API
-	const transition = document.startViewTransition(async () => {
-		themeStore.toggleTheme()
-		await nextTick()
-	})
+		const transition = document.startViewTransition(async () => {
+			themeStore.toggleTheme()
+			await nextTick()
+		})
 
-	transition.ready.then(() => {
-		const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
-		//const clipPath = [`inset(50%)`, `inset(0)`]
+		transition.ready.then(() => {
+			const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
+			//const clipPath = [`inset(50%)`, `inset(0)`]
 
-		document.documentElement.animate(
-			{
-				clipPath
-			},
-			{
-				duration: 300,
-				easing: "ease-in",
-				pseudoElement: "::view-transition-new(root)"
-			}
-		)
-	})
+			document.documentElement.animate(
+				{
+					clipPath
+				},
+				{
+					duration: 300,
+					easing: "ease-in",
+					pseudoElement: "::view-transition-new(root)"
+				}
+			)
+		})
+	}
 }
 </script>
 
