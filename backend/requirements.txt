@@ -81,6 +81,7 @@ marshmallow==3.20.1
 marshmallow-sqlalchemy==0.29.0
 matplotlib==3.8.0
 mdurl==0.1.2
+miniopy-async=1.21.1
 mitreattack-python==2.0.14
 mixbox==1.0.5
 multidict==6.0.4

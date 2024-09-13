@@ -1,8 +1,8 @@
 """Add incident management cases data store table
 
-Revision ID: ed8f18ce964c
+Revision ID: 068f32ae5984
 Revises: e18dc3169b33
-Create Date: 2024-09-13 13:46:41.902359
+Create Date: 2024-09-13 15:15:02.050101
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision: str = 'ed8f18ce964c'
+revision: str = '068f32ae5984'
 down_revision: Union[str, None] = 'e18dc3169b33'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
