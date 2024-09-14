@@ -15,6 +15,7 @@ logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.pare
 minio_root_user = env.str("MINIO_ROOT_USER", default="admin")
 minio_root_password = env.str("MINIO_ROOT_PASSWORD")
 minio_url = env.str("MINIO_URL", default="copilot-minio")
+minio_secure = env.bool("MINIO_SECURE", default=False)
 
 logger.info(f"Minio Root User: {minio_root_user} and password: {minio_root_password}")
 
@@ -23,7 +24,7 @@ async def create_session() -> Minio:
         f'{minio_url}:9000',
         access_key=minio_root_user,
         secret_key=minio_root_password,
-        secure=False  # Set to True if using HTTPS
+        secure=minio_secure
     )
     return client
 
