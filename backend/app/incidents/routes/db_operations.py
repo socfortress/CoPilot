@@ -3,6 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from loguru import logger
+from fastapi import UploadFile, File
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +34,8 @@ from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
+from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_operations import upload_case_data_store
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
@@ -578,3 +581,21 @@ async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession 
 @incidents_db_operations_router.get("/case/asset/{asset_name}", response_model=CaseOutResponse)
 async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
+
+
+@incidents_db_operations_router.post("/case/data-store", response_model=CaseResponse)
+async def upload_case_data_store_endpoint(
+    case_id: int,
+    file: UploadFile = File(...),
+):
+    await upload_case_data_store(
+        data=CaseDataStoreCreation(
+        case_id=case_id,
+        bucket_name="copilot-cases",
+        object_key=file.filename,
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_hash=""),
+        file=file,
+    )
+    return CaseResponse(case=None, success=True, message="Case data stored successfully")
