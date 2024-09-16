@@ -3,7 +3,7 @@ import os
 from loguru import logger
 from miniopy_async import Minio
 from app.data_store.data_store_session import create_session
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from app.data_store.data_store_schema import CaseDataStoreCreation
 import aiofiles
 
@@ -48,3 +48,15 @@ async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
 async def create_buckets() -> None:
     await create_bucket_if_not_exists("copilot-cases")
 
+
+async def delete_file(bucket_name: str, object_name: str) -> None:
+    client = await create_session()
+    try:
+        # Check if the file exists
+        await client.stat_object(bucket_name, object_name)
+        # If no exception is raised, the file exists, proceed to delete
+        await client.remove_object(bucket_name, object_name)
+        logger.info(f"Deleted file {object_name} from bucket {bucket_name}")
+    except Exception as e:
+        # If an exception is raised, the file does not exist
+        raise HTTPException(status_code=404, detail=f"File {object_name} not found in bucket {bucket_name}")

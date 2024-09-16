@@ -61,7 +61,7 @@ from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total, upload_file_to_case
+from app.incidents.services.db_operations import alert_total, upload_file_to_case, delete_file_from_case
 from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
@@ -596,3 +596,9 @@ async def upload_case_data_store_endpoint(
 @incidents_db_operations_router.get("/case/data-store/{case_id}")
 async def list_case_data_store_files_endpoint(case_id: int):
     return await list_case_data_store_files("copilot-cases", case_id)
+
+
+@incidents_db_operations_router.delete("/case/data-store/{case_id}/{file_name}")
+async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db: AsyncSession = Depends(get_db)):
+    await delete_file_from_case(case_id, file_name, db)
+    return {"message": "File deleted successfully", "success": True}

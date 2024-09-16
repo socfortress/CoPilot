@@ -17,7 +17,7 @@ from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
 from app.data_store.data_store_schema import CaseDataStoreCreation
-from app.data_store.data_store_operations import upload_case_data_store, list_case_data_store_files
+from app.data_store.data_store_operations import upload_case_data_store, delete_file
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
@@ -1310,3 +1310,24 @@ async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) 
 
     # Add the file to the database
     return await add_file_to_db(case_id, file, file_size, file_hash, db)
+
+
+async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSession) -> CaseDataStore:
+    query = select(CaseDataStore).where(
+        CaseDataStore.case_id == case_id,
+        CaseDataStore.file_name == file_name
+    )
+    result = await db.execute(query)
+    return result.scalars().first()
+
+async def remove_file_from_db(file_id: int, db: AsyncSession) -> None:
+    await db.execute(delete(CaseDataStore).where(CaseDataStore.id == file_id))
+    await db.commit()
+
+async def delete_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> None:
+    file = await get_file_by_case_id_and_name(case_id, file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    await delete_file(file.bucket_name, file.object_key)
+    await remove_file_from_db(file.id, db)
