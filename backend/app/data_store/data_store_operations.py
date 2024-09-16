@@ -6,6 +6,9 @@ from app.data_store.data_store_session import create_session
 from fastapi import UploadFile, HTTPException
 from app.data_store.data_store_schema import CaseDataStoreCreation
 import aiofiles
+import json
+from app.data_store.data_store_session import create_session
+import aiohttp
 
 
 async def create_bucket_if_not_exists(bucket_name: str) -> None:
@@ -38,6 +41,33 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
 
     # Optionally, remove the temporary file after upload
     os.remove(temp_file_path)
+
+async def download_case_data_store(bucket_name: str, object_name: str) -> bytes:
+    client = await create_session()
+    logger.info(f"Downloading file {object_name} from bucket {bucket_name}")
+    try:
+        # Check if the file exists
+        await client.stat_object(bucket_name, object_name)
+
+        # If no exception is raised, the file exists, proceed to download
+        async with aiohttp.ClientSession() as session:
+            response = await client.get_object(bucket_name, object_name, session)
+            if response is None:
+                raise Exception("Received None response from get_object")
+            if not isinstance(response, aiohttp.ClientResponse):
+                raise Exception("Response is not an instance of aiohttp.ClientResponse")
+            data = await response.read()  # Ensure to read the data
+            response.close()  # Close the response to release resources
+            logger.info(f"Downloaded file {object_name} from bucket {bucket_name} and returning data")
+            return data
+    except Exception as e:
+        # If an exception is raised, the file does not exist
+        logger.info(f"Error: {e}")
+        # List all objects in the bucket
+        objects = client.list_objects(bucket_name, recursive=True)
+        objects_list = [obj.object_name async for obj in objects]
+        logger.info(f"Objects in bucket {bucket_name}: {objects_list}")
+        raise HTTPException(status_code=404, detail=f"File {object_name} not found in bucket {bucket_name}")
 
 async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
     client = await create_session()

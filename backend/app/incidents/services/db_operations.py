@@ -11,13 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import hashlib
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-
+from typing import Tuple
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
 from app.data_store.data_store_schema import CaseDataStoreCreation
-from app.data_store.data_store_operations import upload_case_data_store, delete_file
+from app.data_store.data_store_operations import upload_case_data_store, delete_file, download_case_data_store
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
@@ -1324,6 +1324,7 @@ async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) 
 
 
 async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSession) -> CaseDataStore:
+    logger.info(f"Getting file {file_name} from case {case_id}")
     query = select(CaseDataStore).where(
         CaseDataStore.case_id == case_id,
         CaseDataStore.file_name == file_name
@@ -1342,3 +1343,11 @@ async def delete_file_from_case(case_id: int, file_name: str, db: AsyncSession) 
 
     await delete_file(file.bucket_name, file.object_key)
     await remove_file_from_db(file.id, db)
+
+async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> Tuple[bytes, str]:
+    file = await get_file_by_case_id_and_name(case_id, file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_content = await download_case_data_store(file.bucket_name, file.object_key)
+    return file_content, file.content_type
