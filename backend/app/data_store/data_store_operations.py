@@ -39,6 +39,11 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
     # Optionally, remove the temporary file after upload
     os.remove(temp_file_path)
 
+async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
+    client = await create_session()
+    objects = await client.list_objects(bucket_name, prefix=f"{case_id}/")
+    return objects
+
 
 async def create_buckets() -> None:
     await create_bucket_if_not_exists("copilot-cases")

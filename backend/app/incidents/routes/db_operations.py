@@ -19,7 +19,7 @@ from app.db.universal_models import Customers
 from app.incidents.models import Alert
 from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
-from app.incidents.schema.db_operations import AlertContextResponse
+from app.incidents.schema.db_operations import AlertContextResponse, CaseDataStoreResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
@@ -35,7 +35,7 @@ from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.data_store.data_store_schema import CaseDataStoreCreation
-from app.data_store.data_store_operations import upload_case_data_store
+from app.data_store.data_store_operations import upload_case_data_store, list_case_data_store_files
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
@@ -61,8 +61,8 @@ from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total
-from app.incidents.services.db_operations import alert_total_by_alert_title
+from app.incidents.services.db_operations import alert_total, upload_file_to_case
+from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -583,19 +583,16 @@ async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = 
     return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
 
 
-@incidents_db_operations_router.post("/case/data-store", response_model=CaseResponse)
+@incidents_db_operations_router.post("/case/data-store", response_model=CaseDataStoreResponse)
 async def upload_case_data_store_endpoint(
     case_id: int,
     file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
 ):
-    await upload_case_data_store(
-        data=CaseDataStoreCreation(
-        case_id=case_id,
-        bucket_name="copilot-cases",
-        object_key=file.filename,
-        file_name=file.filename,
-        content_type=file.content_type,
-        file_hash=""),
-        file=file,
-    )
-    return CaseResponse(case=None, success=True, message="Case data stored successfully")
+    if await file_exists(case_id, file.filename, db):
+        raise HTTPException(status_code=400, detail="File already exists")
+    return CaseDataStoreResponse(case_data_store=await upload_file_to_case(case_id, file, db), success=True, message="File uploaded successfully")
+
+@incidents_db_operations_router.get("/case/data-store/{case_id}")
+async def list_case_data_store_files_endpoint(case_id: int):
+    return await list_case_data_store_files("copilot-cases", case_id)

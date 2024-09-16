@@ -11,7 +11,7 @@ from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import Asset
 from app.incidents.models import Case
-from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseAlertLink, CaseDataStore
 from app.incidents.models import Comment
 
 
@@ -333,3 +333,9 @@ class PutNotification(BaseModel):
     customer_code: str
     shuffle_workflow_id: str
     enabled: bool
+
+
+class CaseDataStoreResponse(BaseModel):
+    case_data_store: CaseDataStore
+    success: bool
+    message: str

@@ -6,7 +6,9 @@ from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
+import hashlib
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
@@ -14,6 +16,8 @@ from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
+from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_operations import upload_case_data_store, list_case_data_store_files
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
@@ -1253,3 +1257,56 @@ async def delete_case(case_id: int, db: AsyncSession):
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error deleting case")
+
+
+async def file_exists(case_id: int, file_name: str, db: AsyncSession) -> bool:
+    query = select(CaseDataStore).where(
+        CaseDataStore.case_id == case_id,
+        CaseDataStore.file_name == file_name
+    )
+    result = await db.execute(query)
+    return result.scalars().first() is not None
+
+async def sha256_hash_file(file: UploadFile) -> str:
+    await file.seek(0)
+    file_content = await file.read()
+    file_hash = hashlib.sha256(file_content).hexdigest()
+    return file_hash
+
+async def get_file_size(file: UploadFile) -> int:
+    await file.seek(0)
+    content = await file.read()
+    return len(content)
+
+async def add_file_to_db(case_id: int, file: UploadFile, file_size: int, file_hash: str, db: AsyncSession) -> None:
+    db_file = CaseDataStore(
+        case_id=case_id,
+        bucket_name="copilot-cases",
+        object_key=f"{case_id}/{file.filename}",
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_size=file_size,
+        file_hash=file_hash,
+    )
+    db.add(db_file)
+    await db.commit()
+    return db_file
+
+async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) -> CaseDataStore:
+    file_size = await get_file_size(file)
+    file_hash = await sha256_hash_file(file)
+    await file.seek(0)
+    # Upload the file to Minio
+    await upload_case_data_store(
+        data=CaseDataStoreCreation(
+        case_id=case_id,
+        bucket_name="copilot-cases",
+        object_key=file.filename,
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_hash=file_hash,),
+        file=file,
+    )
+
+    # Add the file to the database
+    return await add_file_to_db(case_id, file, file_size, file_hash, db)
