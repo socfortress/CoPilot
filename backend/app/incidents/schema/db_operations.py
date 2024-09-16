@@ -339,3 +339,8 @@ class CaseDataStoreResponse(BaseModel):
     case_data_store: CaseDataStore
     success: bool
     message: str
+
+class ListCaseDataStoreResponse(BaseModel):
+    case_data_store: List[CaseDataStore]
+    success: bool
+    message: str

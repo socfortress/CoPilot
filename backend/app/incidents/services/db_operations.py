@@ -1259,6 +1259,17 @@ async def delete_case(case_id: int, db: AsyncSession):
         raise HTTPException(status_code=400, detail="Error deleting case")
 
 
+async def list_all_files(db: AsyncSession) -> List[CaseDataStore]:
+    query = select(CaseDataStore)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+async def list_files_by_case_id(case_id: int, db: AsyncSession) -> List[CaseDataStore]:
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
 async def file_exists(case_id: int, file_name: str, db: AsyncSession) -> bool:
     query = select(CaseDataStore).where(
         CaseDataStore.case_id == case_id,
