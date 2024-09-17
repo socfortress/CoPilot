@@ -84,7 +84,7 @@ from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, alerts_total_by_customer_code, alerts_open_by_customer_code, alerts_in_progress_by_customer_code, alerts_closed_by_customer_code, list_alerts_by_customer_code
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
@@ -528,6 +528,24 @@ async def list_alerts_by_title_endpoint(
         open=await alerts_open_by_alert_title(db, title),
         in_progress=await alerts_in_progress_by_alert_title(db, title),
         closed=await alerts_closed_by_alert_title(db, title),
+        success=True,
+        message="Alerts retrieved successfully",
+    )
+
+@incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
+async def list_alerts_by_customer_code_endpoint(
+    customer_code: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    return AlertOutResponse(
+        alerts=await list_alerts_by_customer_code(customer_code, db, page=page, page_size=page_size, order=order),
+        total=await alerts_total_by_customer_code(db, customer_code),
+        open=await alerts_open_by_customer_code(db, customer_code),
+        in_progress=await alerts_in_progress_by_customer_code(db, customer_code),
+        closed=await alerts_closed_by_customer_code(db, customer_code),
         success=True,
         message="Alerts retrieved successfully",
     )
