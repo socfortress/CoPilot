@@ -5,13 +5,6 @@ export default antfu({
 		indent: "tab",
 		quotes: "double"
 	},
-
-	// `.eslintignore` is no longer supported in Flat config, use `ignores` instead
-	ignores: [
-		// "**/fixtures"
-		// ...globs
-	],
-
 	rules: {
 		"antfu/if-newline": "off",
 		"style/operator-linebreak": "off",
@@ -22,6 +15,7 @@ export default antfu({
 		"style/member-delimiter-style": "off",
 		"style/quotes": "off",
 		"style/quote-props": "off",
+		"style/eol-last": "off",
 		"style/comma-dangle": [
 			"error",
 			{
