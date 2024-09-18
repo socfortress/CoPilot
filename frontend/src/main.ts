@@ -5,14 +5,18 @@ document.head.appendChild(meta)
 import { createApp } from "vue"
 import { createPinia } from "pinia"
 import { createI18n } from "vue-i18n"
-import piniaPluginPersistedstate from "pinia-plugin-persistedstate"
+import { createPersistedState } from "pinia-plugin-persistedstate"
 
 import App from "@/App.vue"
 import router from "@/router"
 import { type Locales, type MessageSchema, getI18NConf } from "@/lang/config"
 
 const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+pinia.use(
+	createPersistedState({
+		key: id => `__persisted__${id}`
+	})
+)
 
 const i18n = createI18n<MessageSchema, Locales>(getI18NConf())
 
