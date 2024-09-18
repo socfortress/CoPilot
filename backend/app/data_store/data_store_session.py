@@ -13,7 +13,7 @@ logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.pare
 
 
 minio_root_user = env.str("MINIO_ROOT_USER", default="admin")
-minio_root_password = env.str("MINIO_ROOT_PASSWORD")
+minio_root_password = env.str("MINIO_ROOT_PASSWORD", default="password")
 minio_url = env.str("MINIO_URL", default="copilot-minio")
 minio_secure = env.bool("MINIO_SECURE", default=False)
 
