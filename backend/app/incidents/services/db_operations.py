@@ -960,6 +960,51 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
         cases_out.append(case_out)
     return cases_out
 
+async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case)
+        .where(Case.customer_code == customer_code)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+            customer_code=case.customer_code,
+        )
+        cases_out.append(case_out)
+    return cases_out
+
 
 async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> AlertContext:
     result = await db.execute(select(AlertContext).where(AlertContext.id == alert_context_id))

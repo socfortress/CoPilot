@@ -63,7 +63,7 @@ from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total, upload_file_to_case, delete_file_from_case, list_all_files, download_file_from_case
-from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists, update_case_customer_code
+from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists, update_case_customer_code, list_cases_by_customer_code
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -600,6 +600,10 @@ async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession 
 @incidents_db_operations_router.get("/case/asset/{asset_name}", response_model=CaseOutResponse)
 async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
+
+@incidents_db_operations_router.get("/case/customer/{customer_code}", response_model=CaseOutResponse)
+async def list_cases_by_customer_code_endpoint(customer_code: str, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=await list_cases_by_customer_code(customer_code, db), success=True, message="Cases retrieved successfully")
 
 
 @incidents_db_operations_router.get("/case/data-store", response_model=ListCaseDataStoreResponse)
