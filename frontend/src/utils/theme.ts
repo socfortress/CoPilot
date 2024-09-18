@@ -1,6 +1,6 @@
 import { colord } from "colord"
 import _get from "lodash/get"
-import { type ColorAction, type ColorKey, type ColorType, type ThemeColor } from "@/types/theme.d"
+import type { ColorAction, ColorKey, ColorType, ThemeColor } from "@/types/theme.d"
 
 export type PrimaryShade = "005" | "010" | "015" | "020" | "030" | "040" | "050" | "060"
 
@@ -11,13 +11,10 @@ export function toggleSidebarClass(
 	classClose: string
 ) {
 	const el = window?.document?.getElementById(elementId)
-	if (sidebarCollapsed) {
-		el && el.classList.remove(classOpen)
-		el && el.classList.add(classClose)
-	} else {
-		el && el.classList.add(classOpen)
-		el && el.classList.remove(classClose)
-	}
+	if (!el) return
+
+	el.classList.toggle(classOpen, !sidebarCollapsed)
+	el.classList.toggle(classClose, sidebarCollapsed)
 }
 
 export function hex2rgb(hex: string): number[] {

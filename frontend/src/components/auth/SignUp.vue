@@ -7,19 +7,19 @@
 						<n-form-item path="email" label="Email">
 							<n-input
 								v-model:value="model.email"
-								@keydown.enter="signUp"
 								size="large"
 								placeholder="Email..."
+								@keydown.enter="signUp"
 							/>
 						</n-form-item>
 						<n-form-item path="password" label="Password">
 							<n-input
 								v-model:value="model.password"
 								type="password"
-								@keydown.enter="signUp"
 								size="large"
 								show-password-on="click"
 								placeholder="At least 8 characters"
+								@keydown.enter="signUp"
 							/>
 						</n-form-item>
 						<n-form-item path="confirmPassword" label="Confirm Password" first>
@@ -27,19 +27,19 @@
 								v-model:value="model.confirmPassword"
 								type="password"
 								:disabled="!model.password"
-								@keydown.enter="signUp"
 								size="large"
 								show-password-on="click"
 								placeholder="At least 8 characters"
+								@keydown.enter="signUp"
 							/>
 						</n-form-item>
 						<div class="flex items-center justify-end mt-3">
 							<n-button
 								type="primary"
-								@click="wizardCurrent = 2"
 								size="large"
 								icon-placement="right"
 								:disabled="!accountStepValid"
+								@click="wizardCurrent = 2"
 							>
 								<template #icon>
 									<Icon :name="ArrowRightIcon"></Icon>
@@ -54,9 +54,9 @@
 						<n-form-item path="username" label="Username">
 							<n-input
 								v-model:value="model.username"
-								@keydown.enter="signUp"
 								size="large"
 								placeholder="Username..."
+								@keydown.enter="signUp"
 							/>
 						</n-form-item>
 
@@ -122,10 +122,10 @@
 							</n-button>
 							<n-button
 								type="primary"
-								@click="signUp"
 								size="large"
 								:loading="loading"
 								:disabled="!accountStepValid || !detailsStepValid"
+								@click="signUp"
 							>
 								<template #icon>
 									<Icon :name="UserAddIcon"></Icon>

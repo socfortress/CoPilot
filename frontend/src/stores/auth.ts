@@ -1,13 +1,13 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-import { UserRole, type User, type LoginPayload } from "@/types/auth.d"
-import _castArray from "lodash/castArray"
 import Api from "@/api"
-import * as jose from "jose"
 import { scopeToRole } from "@/utils/auth"
 import { getAvatar, getNameInitials } from "@/utils"
+import * as jose from "jose"
+import _castArray from "lodash/castArray"
 import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import SecureLS from "secure-ls"
+import { UserRole, type User, type LoginPayload } from "@/types/auth.d"
 const ls = new SecureLS({ encodingType: "aes", isCompression: false })
 
 export const useAuthStore = defineStore("auth", {

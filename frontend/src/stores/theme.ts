@@ -1,12 +1,12 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-import { type ColorType, type ThemeName, Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
-import { type GlobalThemeOverrides, type ThemeCommonVars, darkTheme, lightTheme, useOsTheme } from "naive-ui"
-import { exportPrimaryShades, getThemeColors, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
+import tokens from "@/design-tokens.json"
 import _get from "lodash/get"
 import _set from "lodash/set"
 import _pick from "lodash/pick"
-import { type BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
-import tokens from "@/design-tokens.json"
+import { type ColorType, type ThemeName, Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
+import { type GlobalThemeOverrides, type ThemeCommonVars, darkTheme, lightTheme, useOsTheme } from "naive-ui"
+import { exportPrimaryShades, getThemeColors, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
+import type { BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
 const osTheme = useOsTheme()
 
 export const useThemeStore = defineStore("theme", {
@@ -93,8 +93,8 @@ export const useThemeStore = defineStore("theme", {
 				for (const k in primaryShades) {
 					const name = k as PrimaryShade
 					const shade = primaryShades[name]
-					const colorsTheme = this.colors[theme]
-					const colorKey = (colorType + name) as keyof typeof colorsTheme
+
+					const colorKey = `${colorType}${name}` as keyof (typeof this.colors)[typeof theme]
 					this.colors[theme][colorKey] = shade
 				}
 			}

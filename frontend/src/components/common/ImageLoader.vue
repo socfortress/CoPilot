@@ -1,19 +1,19 @@
 <template>
 	<img
-		:src="fallback"
-		@load="imageFallback"
 		v-if="isImageError && fallback"
+		:src="fallback"
 		class="image-fallback"
 		draggable="false"
 		:class="imageClass"
+		@load="imageFallback"
 	/>
 	<img
+		v-if="!isImageError"
 		:src="mainSrc"
 		draggable="false"
-		@load="imageLoading"
-		v-if="!isImageError"
 		class="image-loading"
 		:class="imageClass"
+		@load="imageLoading"
 	/>
 </template>
 

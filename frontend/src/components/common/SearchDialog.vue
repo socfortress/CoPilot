@@ -3,35 +3,35 @@
 		<n-card content-class="!p-0" class="!w-150" :bordered="false" size="huge" role="dialog" aria-modal="true">
 			<div class="search-box" @keydown.up="prevItem()" @keydown.down="nextItem()">
 				<div class="search-input flex items-center">
-					<Icon :name="SearchIcon" :size="16"></Icon>
-					<input placeholder="Search" v-model="search" class="grow" />
+					<Icon :name="SearchIcon" :size="16" />
+					<input v-model="search" placeholder="Search" class="grow" />
 					<n-text code>ESC</n-text>
-					<Icon :name="CloseIcon" :size="20" @click="closeBox()" class="cursor-pointer"></Icon>
+					<Icon :name="CloseIcon" :size="20" class="cursor-pointer" @click="closeBox()" />
 				</div>
 				<n-divider />
-				<n-scrollbar class="!h-96" ref="scrollContent">
+				<n-scrollbar ref="scrollContent" class="!h-96">
 					<div class="conten-wrap">
-						<div class="group" v-for="group of filteredGroups" :key="group.name">
+						<div v-for="group of filteredGroups" :key="group.name" class="group">
 							<div class="group-title">{{ group.name }}</div>
 							<div class="group-list">
 								<button
 									v-for="item of group.items"
-									:key="item.key"
 									:id="item.key.toString()"
+									:key="item.key"
 									class="item flex items-center"
 									:class="{ active: item.key === activeItem }"
 									@click="callAction(item.action)"
 								>
 									<div class="icon">
 										<n-avatar v-if="item.iconImage" round :size="28" :src="item.iconImage" />
-										<Icon :name="item.iconName" v-if="item.iconName" :size="16"></Icon>
+										<Icon v-if="item.iconName" :name="item.iconName" :size="16" />
 									</div>
 									<div class="title grow">
 										<Highlighter
-											highlightClassName="highlight"
-											:searchWords="keywords"
-											:autoEscape="true"
-											:textToHighlight="item.title"
+											highlight-class-name="highlight"
+											:search-words="keywords"
+											:auto-escape="true"
+											:text-to-highlight="item.title"
 										/>
 									</div>
 									<div class="label">{{ item.label }}</div>
@@ -47,13 +47,13 @@
 				<div class="hint-bar flex items-center justify-center">
 					<div class="hint flex items-center justify-center gap-1">
 						<div class="icon">
-							<Icon :name="ArrowEnterIcon" :size="12"></Icon>
+							<Icon :name="ArrowEnterIcon" :size="12" />
 						</div>
 						<span class="label">to select</span>
 					</div>
 					<div class="hint flex items-center justify-center gap-1">
 						<div class="icon">
-							<Icon :name="ArrowSortIcon" :size="12"></Icon>
+							<Icon :name="ArrowSortIcon" :size="12" />
 						</div>
 						<span class="label">to navigate</span>
 					</div>

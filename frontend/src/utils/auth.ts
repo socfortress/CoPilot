@@ -1,87 +1,50 @@
 import { useAuthStore } from "@/stores/auth"
-import { type RouteMetaAuth, UserRole } from "@/types/auth.d"
-import { type RouteLocationNormalized } from "vue-router"
 import _castArray from "lodash/castArray"
 import _toNumber from "lodash/toNumber"
-import * as jose from "jose"
+import { decodeJwt } from "jose"
+import { type RouteMetaAuth, UserRole } from "@/types/auth.d"
+import { type RouteLocationNormalized } from "vue-router"
 
-export function isDebounceTimeOver(lastCheck: Date | null) {
-	const TOKEN_DEBOUNCE_TIME = useAuthStore().tokenDebounceTime
-
-	if (!lastCheck) return true
-
-	const timeOver = lastCheck.getTime() + _toNumber(TOKEN_DEBOUNCE_TIME) * 1000
-	const now = new Date().getTime()
-
-	return timeOver < now
+export const isDebounceTimeOver = (lastCheck: Date | null) => {
+	const debounceTime = useAuthStore().tokenDebounceTime
+	return !lastCheck || lastCheck.getTime() + _toNumber(debounceTime) * 1000 < Date.now()
 }
 
 /**
  * @param token jwt token
  * @param threshold in seconds
  */
-export function isJwtExpiring(token: string, threshold: number): boolean {
+export const isJwtExpiring = (token: string, threshold: number): boolean => {
 	try {
-		if (!token) {
-			return false
-		}
-
-		const { exp } = jose.decodeJwt(token)
-		const now = new Date().getTime() / 1000
-		const delta = (exp || 0) - threshold
-
-		if (!exp) {
-			return true
-		}
-
-		return now > delta && now < exp
-	} catch (err) {
+		const { exp } = decodeJwt(token) || {}
+		return exp ? Date.now() / 1000 > exp - threshold : true
+	} catch {
 		return false
 	}
 }
 
-export function authCheck(route: RouteLocationNormalized) {
-	const meta: RouteMetaAuth = route.meta
-	const { checkAuth, authRedirect, auth, roles } = meta
-
+export const authCheck = (route: RouteLocationNormalized) => {
+	const { checkAuth, authRedirect, auth, roles }: RouteMetaAuth = route.meta
 	const authStore = useAuthStore()
 
-	if (route?.redirectedFrom?.name === "Logout") {
-		authStore.setLogout()
+	if (route?.redirectedFrom?.name === "Logout") authStore.setLogout()
+
+	if (auth && !authStore.isLogged) {
+		window.location.href = "/login" + window.location.search
+		return false
 	}
 
-	if (auth === true) {
-		if (!authStore.isLogged) {
-			window.location.href = "/login" + window.location.search
-			return false
-		}
-
-		if (roles && !authStore.isRoleGranted(roles)) {
-			window.location.href = "/login" + window.location.search
-			return false
-		}
+	if (auth && roles && !authStore.isRoleGranted(roles)) {
+		window.location.href = "/login" + window.location.search
+		return false
 	}
 
-	if (checkAuth === true) {
-		if (authStore.isLogged) {
-			if (roles) {
-				if (authStore.isRoleGranted(roles)) {
-					return authRedirect || "/"
-				} else {
-					return route.path
-				}
-			}
-			return authRedirect || "/"
-		}
+	if (checkAuth && authStore.isLogged) {
+		return roles && !authStore.isRoleGranted(roles) ? route.path : authRedirect || "/"
 	}
 }
 
-export function scopeToRole(scope: string | string[]): UserRole {
-	const scopes: string[] = _castArray(scope)
-	if (!scopes.length) return UserRole.Unknown
-
-	if (scopes[0].toLowerCase() === "admin") return UserRole.Admin
-	if (scopes[0].toLowerCase() === "analyst") return UserRole.Analyst
-
-	return UserRole.Unknown
+export const scopeToRole = (scope: string | string[]): UserRole => {
+	const role = _castArray(scope)[0]?.toLowerCase()
+	return role === "admin" ? UserRole.Admin : role === "analyst" ? UserRole.Analyst : UserRole.Unknown
 }

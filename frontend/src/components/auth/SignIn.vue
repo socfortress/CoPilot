@@ -3,10 +3,10 @@
 		<n-form-item path="username" label="Username">
 			<n-input
 				v-model:value="model.username"
-				@keydown.enter="signIn"
 				placeholder="Username..."
 				size="large"
 				autocomplete="on"
+				@keydown.enter="signIn"
 			/>
 		</n-form-item>
 		<n-form-item path="password" label="Password">
@@ -15,9 +15,9 @@
 				type="password"
 				show-password-on="click"
 				placeholder="Password..."
-				@keydown.enter="signIn"
 				autocomplete="on"
 				size="large"
+				@keydown.enter="signIn"
 			/>
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
@@ -27,7 +27,7 @@
 				</div>
 			-->
 			<div class="w-full">
-				<n-button type="primary" @click="signIn" class="!w-full" size="large" :loading="loading">
+				<n-button type="primary" class="!w-full" size="large" :loading="loading" @click="signIn">
 					Sign in
 				</n-button>
 			</div>

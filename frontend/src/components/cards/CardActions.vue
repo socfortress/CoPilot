@@ -1,28 +1,28 @@
 <template>
 	<n-card hoverable size="large" :class="{ actionBoxTransparent }">
-		<template #cover v-if="showImage">
+		<template v-if="showImage" #cover>
 			<img :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
 		</template>
 		<template #header>
-			<div class="title" v-if="title">{{ title }}</div>
-			<div class="subtitle" v-if="!hideSubtitle && subtitle">{{ subtitle }}</div>
+			<div v-if="title" class="title">{{ title }}</div>
+			<div v-if="!hideSubtitle && subtitle" class="subtitle">{{ subtitle }}</div>
 		</template>
 		<template #header-extra>
-			<n-dropdown :options="menuOptions" placement="bottom-end" to="body" @select="menuSelect" v-if="!hideMenu">
+			<n-dropdown v-if="!hideMenu" :options="menuOptions" placement="bottom-end" to="body" @select="menuSelect">
 				<Icon :size="20" :name="MenuIcon" />
 			</n-dropdown>
 		</template>
 		<template #default>
 			<div class="overflow-hidden w-full">
 				<n-scrollbar x-scrollable class="!w-full" trigger="none">
-					<slot></slot>
+					<slot />
 				</n-scrollbar>
 			</div>
 		</template>
-		<template #footer v-if="$slots.footer">
+		<template v-if="$slots.footer" #footer>
 			<slot name="footer" />
 		</template>
-		<template #action v-if="$slots.action">
+		<template v-if="$slots.action" #action>
 			<slot name="action" />
 		</template>
 	</n-card>
@@ -71,7 +71,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 		: [
 				{
 					label: "Collapse",
@@ -83,25 +83,25 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 )
 
 function menuSelect(key: string) {
 	if (key === "expand") {
-		expand?.value && expand?.value(true)
+		expand?.value?.(true)
 	}
 	if (key === "collapse") {
-		expand?.value && expand?.value(false)
+		expand?.value?.(false)
 	}
 	if (key === "reload") {
-		reload?.value && reload?.value(true)
+		reload?.value?.(true)
 
 		if (reloadTimeout) {
 			clearTimeout(reloadTimeout)
 		}
 
 		reloadTimeout = setTimeout(() => {
-			reload?.value && reload?.value(false)
+			reload?.value?.(false)
 		}, 1000)
 	}
 }

@@ -30,7 +30,7 @@ import Blank from "@/layouts/Blank/index.vue"
 import Provider from "@/layouts/common/Provider.vue"
 import SplashScreen from "@/layouts/common/SplashScreen.vue"
 import SearchDialog from "@/components/common/SearchDialog.vue"
-import { Layout, RouterTransition, type ThemeName } from "@/types/theme.d"
+import type { Layout, RouterTransition, ThemeName } from "@/types/theme.d"
 import { type RouteLocationNormalized, useRoute, useRouter } from "vue-router"
 import "@/assets/scss/index.scss"
 

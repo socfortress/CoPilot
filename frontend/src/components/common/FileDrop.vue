@@ -1,8 +1,8 @@
 <template>
 	<form class="file-drop">
 		<label>
-			<slot></slot>
-			<input type="file" :multiple="multiple" @change="onChange" :accept="accept" />
+			<slot />
+			<input type="file" :multiple="multiple" :accept @change="onChange" />
 		</label>
 	</form>
 </template>

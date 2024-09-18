@@ -1,29 +1,29 @@
 <template>
 	<n-split
+		ref="splitPane"
 		direction="horizontal"
 		:default-size="splitDefault"
 		:min="0"
 		:max="1"
 		:resize-trigger-size="0"
 		:disabled="!enableResize || splitDisabled"
-		ref="splitPane"
 		class="wrapper flex grow"
 		:class="[{ 'sidebar-open': sidebarOpen }, `sidebar-position-${sidebarPosition}`]"
 	>
 		<template #1>
-			<div class="sidebar flex flex-col" ref="sidebar" v-if="sidebarAvailable">
-				<div class="sidebar-header flex items-center" v-if="$slots['sidebar-header']">
-					<slot name="sidebar-header"></slot>
+			<div v-if="sidebarAvailable" ref="sidebar" class="sidebar flex flex-col">
+				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center">
+					<slot name="sidebar-header" />
 				</div>
-				<div class="sidebar-main grow" v-if="$slots['sidebar-content']">
+				<div v-if="$slots['sidebar-content']" class="sidebar-main grow">
 					<n-scrollbar class="max-h-full">
 						<div class="sidebar-main-content" :style="sidebarContentStyle" :class="sidebarContentClass">
-							<slot name="sidebar-content"></slot>
+							<slot name="sidebar-content" />
 						</div>
 					</n-scrollbar>
 				</div>
-				<div class="sidebar-footer flex items-center" v-if="$slots['sidebar-footer']">
-					<slot name="sidebar-footer"></slot>
+				<div v-if="$slots['sidebar-footer']" class="sidebar-footer flex items-center">
+					<slot name="sidebar-footer" />
 				</div>
 			</div>
 		</template>
@@ -31,41 +31,41 @@
 		<template #resize-trigger>
 			<div class="split-trigger">
 				<div class="split-trigger-icon">
-					<Icon :name="SplitIcon" :size="12"></Icon>
+					<Icon :name="SplitIcon" :size="12" />
 				</div>
 			</div>
 		</template>
 
 		<template #2>
 			<div class="main flex-grow flex flex-col">
-				<div class="main-toolbar flex items-center" v-if="$slots['main-toolbar']">
-					<div class="menu-btn flex justify-center opacity-50" v-if="sidebarAvailable && !hideMenuBtn">
+				<div v-if="$slots['main-toolbar']" class="main-toolbar flex items-center">
+					<div v-if="sidebarAvailable && !hideMenuBtn" class="menu-btn flex justify-center opacity-50">
 						<n-button text @click="sidebarOpen = true">
-							<Icon :size="24" :name="MenuIcon"></Icon>
+							<Icon :size="24" :name="MenuIcon" />
 						</n-button>
 					</div>
 
 					<div class="grow">
-						<slot name="main-toolbar"></slot>
+						<slot name="main-toolbar" />
 					</div>
 				</div>
 				<div class="main-view grow" :class="{ 'no-container-query': disableContainerQuery }">
-					<n-scrollbar class="max-h-full" v-if="useMainScroll" ref="mainScrollbar">
+					<n-scrollbar v-if="useMainScroll" ref="mainScrollbar" class="max-h-full">
 						<div class="main-content" :style="mainContentStyle" :class="mainContentClass">
-							<slot name="main-content"></slot>
+							<slot name="main-content" />
 						</div>
 					</n-scrollbar>
-					<div class="main-content" :style="mainContentStyle" :class="mainContentClass" v-else>
-						<slot name="main-content"></slot>
+					<div v-else class="main-content" :style="mainContentStyle" :class="mainContentClass">
+						<slot name="main-content" />
 					</div>
 				</div>
-				<div class="main-footer flex items-center" v-if="$slots['main-footer']">
+				<div v-if="$slots['main-footer']" class="main-footer flex items-center">
 					<div class="wrap">
-						<slot name="main-footer"></slot>
+						<slot name="main-footer" />
 					</div>
 				</div>
 
-				<div class="main-overlay" v-if="sidebarOpen"></div>
+				<div v-if="sidebarOpen" class="main-overlay" />
 			</div>
 		</template>
 	</n-split>

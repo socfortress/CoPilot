@@ -7,7 +7,7 @@ export function useSearchDialog() {
 			listener.value = cb
 		},
 		open: (): void => {
-			listener.value && listener.value()
+			listener.value?.()
 		}
 	}
 }
