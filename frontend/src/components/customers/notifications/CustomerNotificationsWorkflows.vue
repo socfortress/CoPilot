@@ -7,8 +7,8 @@
 					@mounted="formCTX = $event"
 					@submitted="refreshList()"
 				>
-					<template #additionalActions="{ loading }">
-						<n-button :disabled="loading" @click="closeForm()">Close</n-button>
+					<template #additionalActions="{ loading: loadingForm }">
+						<n-button :disabled="loadingForm" @click="closeForm()">Close</n-button>
 					</template>
 				</CustomerNotificationsWorkflowsForm>
 			</div>

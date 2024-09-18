@@ -1,4 +1,5 @@
 import type { OsTypesFull } from "@/types/common.d"
+import process from "node:process"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
 import { isMobile as detectMobile } from "detect-touch-device"
@@ -30,7 +31,7 @@ export function isMobile() {
 }
 
 export function isUrlLike(text: string) {
-	const urlPattern = new RegExp("^(https?:\\/\\/)", "i")
+	const urlPattern = /^https?:\/\//i
 	return urlPattern.test(text)
 }
 

@@ -200,6 +200,26 @@ const message = useMessage()
 const form = ref<CustomProvisionForm>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
+const areAllCustomerFieldsFilled = computed(() => {
+	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name && !!o.value)
+
+	return fieldsFilled.length === form.value.custom_fields.length
+})
+
+const areAllCustomerFieldsUniques = computed(() => {
+	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name).map(o => o.name)
+
+	const uniques: string[] = fieldsFilled.filter((value, index, self) => self.indexOf(value) === index)
+
+	return uniques.length === form.value.custom_fields.length
+})
+
+const isCustomerCodePresent = computed(() => {
+	const field = form.value.custom_fields.filter(o => o.name === "CUSTOMER_CODE" && !!o.value)
+
+	return !!field.length
+})
+
 const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] = [
 	{ label: "Low", value: CustomProvisionPriority.LOW },
 	{ label: "Medium", value: CustomProvisionPriority.MEDIUM },
@@ -258,26 +278,6 @@ const rules: FormRules = {
 		trigger: ["input", "blur"]
 	}
 }
-
-const areAllCustomerFieldsFilled = computed(() => {
-	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name && !!o.value)
-
-	return fieldsFilled.length === form.value.custom_fields.length
-})
-
-const areAllCustomerFieldsUniques = computed(() => {
-	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name).map(o => o.name)
-
-	const uniques: string[] = fieldsFilled.filter((value, index, self) => self.indexOf(value) === index)
-
-	return uniques.length === form.value.custom_fields.length
-})
-
-const isCustomerCodePresent = computed(() => {
-	const field = form.value.custom_fields.filter(o => o.name === "CUSTOMER_CODE" && !!o.value)
-
-	return !!field.length
-})
 
 const isValid = computed(() => {
 	if (!areAllCustomerFieldsFilled.value) {

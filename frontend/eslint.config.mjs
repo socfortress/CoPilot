@@ -16,6 +16,7 @@ export default antfu({
 		"style/quotes": "off",
 		"style/quote-props": "off",
 		"style/eol-last": "off",
+		"style/no-mixed-spaces-and-tabs": "off",
 		"style/comma-dangle": [
 			"error",
 			{

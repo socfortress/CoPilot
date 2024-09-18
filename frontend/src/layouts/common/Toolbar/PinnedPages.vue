@@ -78,8 +78,9 @@ const PinnedIcon = "tabler:pinned"
 const CloseIcon = "carbon:close"
 const router = useRouter()
 const themeStore = useThemeStore()
-
 const style = computed(() => themeStore.style)
+const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
+const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 
 function removeLatestPage(pageName: RouteRecordName | string) {
 	latest.value = latest.value.filter(page => page.name !== pageName)
@@ -101,8 +102,6 @@ function pinPage(page: Page) {
 	}
 	return true
 }
-const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
-const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 
 const latestSanitized: ComputedRef<Page[]> = computed(() => {
 	return _takeRight(

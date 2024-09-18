@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" class="flex flex-col gap-5" :model="options" :rules="rules">
+	<n-form class="flex flex-col gap-5" :model="options" :rules="rules">
 		<n-form-item label="Protocol" label-placement="left" :show-feedback="false" size="small" path="protocol">
 			<n-select v-model:value="options.protocol" :options="protocolOptions" />
 		</n-form-item>

@@ -80,6 +80,15 @@ const shards = ref<IndexShard[]>([])
 const loadingShards = ref(false)
 const loading = computed(() => !indices?.value || indices.value === null || loadingShards.value)
 
+const currentIndex = computed<IndexModel>({
+	get() {
+		return modelValue.value
+	},
+	set(value) {
+		emit("update:modelValue", value)
+	}
+})
+
 const filteredShards = computed(() =>
 	shards.value.filter((shard: IndexShard) => {
 		if (!currentIndex.value || typeof currentIndex.value === "string") return false
@@ -98,15 +107,6 @@ watch(modelValue, val => {
 
 watch(selectValue, val => {
 	currentIndex.value = (indices.value || []).find(o => o.index === val) || null
-})
-
-const currentIndex = computed<IndexModel>({
-	get() {
-		return modelValue.value
-	},
-	set(value) {
-		emit("update:modelValue", value)
-	}
 })
 
 function clearCurrentIndex() {

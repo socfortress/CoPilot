@@ -48,6 +48,7 @@ const emit = defineEmits(["image-error", "image-loading", "image-loaded", "image
 
 const isImageLoaded = ref(false)
 const isImageError = ref(false)
+const mainSrc = ref(props.loading)
 
 function imageLoading(e: ImageLoadEvent) {
 	const elPath: HTMLElement | undefined = e.path && e.path[0]
@@ -75,8 +76,6 @@ function imageError() {
 	isImageError.value = true
 	emit("image-error")
 }
-
-const mainSrc = ref(props.loading)
 
 function createLoader() {
 	const img = new Image()

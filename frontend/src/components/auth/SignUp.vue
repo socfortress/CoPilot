@@ -162,7 +162,7 @@ import {
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
-import passwordValidator from "password-validator"
+import PasswordValidator from "password-validator"
 
 interface ModelType {
 	email: string
@@ -208,7 +208,7 @@ const accountStepValid = computed(() => !!model.value.email && !!model.value.pas
 const detailsStepValid = computed(() => !!model.value.username)
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
-const passwordSchema = new passwordValidator()
+const passwordSchema = new PasswordValidator()
 passwordSchema
 	.is()
 	.min(8) // Minimum length 8

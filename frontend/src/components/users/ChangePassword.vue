@@ -71,7 +71,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import passwordValidator from "password-validator"
+import PasswordValidator from "password-validator"
 import { computed, ref, watch } from "vue"
 
 const { type, size, username } = defineProps<{
@@ -95,7 +95,7 @@ const model = ref({
 })
 const formRef = ref<FormInst | null>(null)
 const storedUserName = useAuthStore().userName
-const passwordSchema = new passwordValidator()
+const passwordSchema = new PasswordValidator()
 
 passwordSchema
 	.is()

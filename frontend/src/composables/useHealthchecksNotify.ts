@@ -19,7 +19,7 @@ export function useHealthchecksNotify() {
 			usHealthcheckStore().start()
 
 			watch(uncommittedJournalEntries, (val, old) => {
-				if (val != old) {
+				if (val !== old) {
 					const obj: Notification = {
 						id: "uncommittedJournalEntries",
 						category: "alert",
@@ -45,7 +45,7 @@ export function useHealthchecksNotify() {
 			})
 
 			watch(clusterStatus, (val, old) => {
-				if (val != old) {
+				if (val !== old) {
 					const obj: Notification = {
 						id: "clusterHealth",
 						category: "alert",

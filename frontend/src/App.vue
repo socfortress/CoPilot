@@ -4,10 +4,10 @@
 			:is="layoutComponent"
 			:class="[`theme-${themeName}`, `layout-${layoutComponentName}`, themeName, { 'opacity-0': loading }]"
 		>
-			<RouterView v-slot="{ Component }">
+			<RouterView v-slot="{ Component: RouterComponent }">
 				<transition :name="`router-${routerTransition}`" mode="out-in" appear>
 					<component
-						:is="Component"
+						:is="RouterComponent"
 						:key="forceRefresh"
 						:class="[`theme-${themeName}`, `layout-${layoutComponentName}`, themeName]"
 					/>

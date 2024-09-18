@@ -81,11 +81,11 @@ const rules: FormRules = {
 		trigger: ["input", "blur"],
 		validator: (rule, value) => {
 			if (value !== value.toLowerCase()) {
-				return Promise.reject("Code must be all lowercase")
+				return new Error("Code must be all lowercase")
 			} else if (!/^[a-z]+$/.test(value)) {
-				return Promise.reject("Code must not contain spaces or special characters")
+				return new Error("Code must not contain spaces or special characters")
 			} else {
-				return Promise.resolve()
+				return true
 			}
 		}
 	},

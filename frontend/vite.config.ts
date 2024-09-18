@@ -1,4 +1,5 @@
 import fs from "node:fs"
+import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
@@ -54,6 +55,13 @@ export default defineConfig(({ mode }) => {
 		},
 		define: {
 			__APP_ENV__: JSON.stringify(process.env.APP_ENV)
+		},
+		css: {
+			preprocessorOptions: {
+				scss: {
+					silenceDeprecations: ["legacy-js-api"]
+				}
+			}
 		}
 	}
 })

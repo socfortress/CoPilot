@@ -317,8 +317,8 @@ const message = useMessage()
 const noteFormVisible = ref([])
 const updateNotes = ref(false)
 
-const baseInfo = computed<SocCase | SocCaseExt | null>(() => caseData || extendedInfo.value)
 const extendedInfo = ref<SocCaseExt | null>(null)
+const baseInfo = computed<SocCase | SocCaseExt | null>(() => caseData || extendedInfo.value)
 
 const dFormats = useSettingsStore().dateFormat
 

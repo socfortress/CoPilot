@@ -97,15 +97,15 @@ const total = computed<number>(() => {
 	return alerts.value.length || 0
 })
 
-const enabledTotal = computed<number>(() => {
-	return enabledList.value.length || 0
-})
-
 const enabledList = computed<AvailableMonitoringAlert[]>(() => {
 	return alerts.value.filter(alert => {
 		const eventIndex = events.value.findIndex(event => event.title === alert.name)
 		return eventIndex !== -1
 	})
+})
+
+const enabledTotal = computed<number>(() => {
+	return enabledList.value.length || 0
 })
 
 const itemsPaginated = computed(() => {

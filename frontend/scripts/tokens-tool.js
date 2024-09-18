@@ -46,10 +46,13 @@ function getValue(origin, val) {
 }
 
 /**
+ * Sanitizes a token or type name based on the provided mapping.
  *
- * @param {string} name
- * @param {"token" | "type"} from
- * @returns {string}
+ * This function converts a token name to a type name or vice versa based on the direction specified. It uses a predefined map to find the corresponding sanitized name.
+ *
+ * @param {string} name - The name of the token or type to be sanitized.
+ * @param {"token" | "type"} from - Indicates the current type of the name (`"token"` or `"type"`) to determine the direction of the conversion.
+ * @returns {string} The sanitized name, converted to the opposite type. If no mapping is found, returns the original name.
  */
 function tokenNameSanitize(name, from) {
 	const to = from === "token" ? "type" : "token"
@@ -62,9 +65,12 @@ function tokenNameSanitize(name, from) {
 }
 
 /**
+ * Imports tokens from a JSON file and processes them into a project file format.
  *
- * @param {string} tokensPath
- * @returns {string}
+ * This function reads a JSON file containing token definitions, normalizes paths, and organizes tokens into a project file structure. It handles global tokens, typography tokens, and set tokens, and writes the processed data to a specified design token path.
+ *
+ * @param {string} tokensPath - The path to the JSON file containing the tokens to be imported. The path can be relative or use `~` to refer to the home directory.
+ * @returns {string} The path to the design token file where the processed tokens have been written.
  */
 async function importTokens(tokensPath) {
 	const filePath = path.normalize(tokensPath.trim().replace("~/", `${os.homedir()}/`))
@@ -147,8 +153,9 @@ async function importTokens(tokensPath) {
 }
 
 /**
+ * Exports tokens from the design system and writes them to a JSON file.
  *
- * @returns {string}
+ * @returns {string} The path to the exported JSON file.
  */
 async function exportTokens() {
 	const tokens = await fs.readJSON(DESIGN_TOKEN_PATH)

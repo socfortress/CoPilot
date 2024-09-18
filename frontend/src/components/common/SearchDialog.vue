@@ -224,7 +224,6 @@ const filteredGroups = computed<Groups>(() => {
 	return newGroups
 })
 
-/* eslint  @typescript-eslint/no-unused-vars: "off" */
 const filteredFlattenItems = computed<GroupItem[]>(() => {
 	const items = []
 
