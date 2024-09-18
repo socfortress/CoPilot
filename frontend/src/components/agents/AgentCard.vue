@@ -1,7 +1,7 @@
 <template>
 	<n-card
 		class="agent-card py-3 px-4"
-		:class="{ 'critical': agent.critical_asset, 'bg-secondary': bgSecondary }"
+		:class="{ critical: agent.critical_asset, 'bg-secondary': bgSecondary }"
 		content-style="padding:0"
 		bordered
 	>

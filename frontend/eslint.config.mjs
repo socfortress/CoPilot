@@ -40,6 +40,7 @@ export default antfu({
 		"vue/custom-event-name-casing": "off",
 		"vue/html-self-closing": "off",
 		"vue/singleline-html-element-content-newline": "off",
-		"vue/comma-dangle": "off"
+		"vue/comma-dangle": "off",
+		"vue/quote-props": "off"
 	}
 })

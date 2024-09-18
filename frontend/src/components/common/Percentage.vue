@@ -3,7 +3,7 @@
 		class="percentage flex items-center gap-2"
 		:class="[
 			{
-				'color': useColor,
+				color: useColor,
 				'with-background': useBackground,
 				'opacity-50': useOpacity
 			},
