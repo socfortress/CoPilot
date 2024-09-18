@@ -20,6 +20,7 @@ export default antfu({
 		"style/indent-binary-ops": "off",
 		"style/indent": "off",
 		"style/member-delimiter-style": "off",
+		"style/quotes": "off",
 		"style/comma-dangle": [
 			"error",
 			{

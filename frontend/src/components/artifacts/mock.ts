@@ -235,7 +235,7 @@ const collectResult = [
 		PebBaseAddress: "0x61189f8000",
 		Pid: 832,
 		ImagePathName: "C:\\Windows\\system32\\fontdrvhost.exe",
-		CommandLine: "\"fontdrvhost.exe\"",
+		CommandLine: '"fontdrvhost.exe"',
 		CurrentDirectory: "C:\\Windows\\system32\\",
 		Env: {
 			"ALLUSERSPROFILE": "C:\\ProgramData",
@@ -276,7 +276,7 @@ const collectResult = [
 		PebBaseAddress: "0xb19d6b6000",
 		Pid: 840,
 		ImagePathName: "C:\\Windows\\system32\\fontdrvhost.exe",
-		CommandLine: "\"fontdrvhost.exe\"",
+		CommandLine: '"fontdrvhost.exe"',
 		CurrentDirectory: "C:\\Windows\\system32\\",
 		Env: {
 			"ALLUSERSPROFILE": "C:\\ProgramData",
@@ -875,7 +875,7 @@ const collectResult = [
 const commandResult = [
 	{
 		Stdout: "\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\Administrator\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-500\r\nFullName    : \r\nName        : Administrator\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\DefaultAccount\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-503\r\nFullName    : \r\nName        : DefaultAccount\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\Guest\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-501\r\nFullName    : \r\nName        : Guest\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\WDAGUtilityAccount\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-504\r\nFullName    : \r\nName        : WDAGUtilityAccount\r\n\r\n\r\n\r\n",
-		Stderr: "#< CLIXML\r\n<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>",
+		Stderr: '#< CLIXML\r\n<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>',
 		ReturnCode: 0,
 		Complete: true
 	}
