@@ -538,7 +538,7 @@ async def get_index_source(index_name: str):
             }
         }
     }
-    response = await es_client.search(index=index_name, body=query_syslog_type)
+    response = es_client.search(index=index_name, body=query_syslog_type)
     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
         if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
             if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
@@ -556,7 +556,7 @@ async def get_index_source(index_name: str):
             }
         }
     }
-    response = await es_client.search(index=index_name, body=query_integration)
+    response = es_client.search(index=index_name, body=query_integration)
     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
         if "integration" in hit["_source"]:  # Check if 'integration' exists in the source of the hit
             return hit["_source"]["integration"]  # Return the value of 'integration'
