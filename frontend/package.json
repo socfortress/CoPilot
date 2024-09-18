@@ -1,8 +1,11 @@
 {
 	"name": "copilot",
+	"type": "module",
 	"version": "1.0.0",
 	"private": true,
-	"type": "module",
+	"engines": {
+		"node": ">=18.0.0"
+	},
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
 		"dev:debug": "DEBUG=vite:* vite",
@@ -70,7 +73,11 @@
 		"vue3-marquee": "^4.2.2",
 		"vuedraggable": "^4.1.0"
 	},
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "^4.21.3"
+	},
 	"devDependencies": {
+		"@antfu/eslint-config": "^3.6.2",
 		"@clack/prompts": "^0.7.0",
 		"@iconify/vue": "^4.1.2",
 		"@tsconfig/node20": "^20.1.4",
@@ -118,23 +125,17 @@
 		"vitest": "^2.1.1",
 		"vue-tsc": "^2.1.6"
 	},
-	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.21.3"
-	},
 	"overrides": {
-		"@vue/eslint-config-typescript": {
-			"eslint": "^9.10.0"
-		},
 		"@typescript-eslint/type-utils": {
 			"eslint": "^9.10.0"
 		},
 		"@typescript-eslint/utils": {
 			"eslint": "^9.10.0"
 		},
+		"@vue/eslint-config-typescript": {
+			"eslint": "^9.10.0"
+		},
 		"micromatch": "^4.0.8",
 		"path-to-regexp": "^8.1.0"
-	},
-	"engines": {
-		"node": ">=18.0.0"
 	}
 }
