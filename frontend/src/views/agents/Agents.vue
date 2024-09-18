@@ -82,12 +82,11 @@ watch(textFilter, val => {
 })
 
 const agentsFiltered = computed(() => {
-	return agents.value.filter(
-		({ hostname, ip_address, agent_id, label }) =>
-			(hostname + ip_address + agent_id + label)
-				.toString()
-				.toLowerCase()
-				.includes(textFilterDebounced.value.toString().toLowerCase())
+	return agents.value.filter(({ hostname, ip_address, agent_id, label }) =>
+		(hostname + ip_address + agent_id + label)
+			.toString()
+			.toLowerCase()
+			.includes(textFilterDebounced.value.toString().toLowerCase())
 	)
 })
 

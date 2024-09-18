@@ -28,7 +28,7 @@ export interface ProvisioningDefaultSettingsPayload {
 export default {
 	// #region Customer
 	getCustomers(code?: string) {
-		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[], customer?: Customer }>(
+		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
 			`/customers${code ? `/${code}` : ""}`
 		)
 	},
@@ -61,7 +61,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
 	getCustomerFull(code: string) {
-		return HttpClient.get<FlaskBaseResponse & { customer: Customer, customer_meta?: CustomerMeta }>(
+		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta?: CustomerMeta }>(
 			`/customers/${code}/full`
 		)
 	},
@@ -100,7 +100,7 @@ export default {
 
 	// #region Customer Provisioning
 	newCustomerProvision(provision: CustomerProvision, code: string) {
-		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta, wazuh_worker_provisioned: boolean }>(
+		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta; wazuh_worker_provisioned: boolean }>(
 			`/customer_provisioning/provision`,
 			provision,
 			{

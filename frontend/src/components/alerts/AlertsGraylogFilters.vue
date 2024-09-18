@@ -36,7 +36,7 @@ const { filters } = toRefs(props)
 
 const SearchIcon = "carbon:search"
 
-const timerangeOptions: { label: string, value: AlertsQueryTimeRange }[] = [
+const timerangeOptions: { label: string; value: AlertsQueryTimeRange }[] = [
 	{ label: "1 Hour", value: "1h" },
 	{ label: "6 Hours", value: "6h" },
 	{ label: "12 Hours", value: "12h" },

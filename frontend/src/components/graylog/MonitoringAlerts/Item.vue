@@ -120,7 +120,7 @@ import {
 } from "naive-ui"
 import { ref } from "vue"
 
-const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert, isEnabled: boolean }>()
+const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert; isEnabled: boolean }>()
 
 const emit = defineEmits<{
 	(e: "provisioned"): void
@@ -135,7 +135,7 @@ const showFormDialog = ref(false)
 const message = useMessage()
 
 const formRef = ref()
-const formModel = ref<{ searchWithinLast: null | number, executeEvery: null | number }>(getClearFormModel())
+const formModel = ref<{ searchWithinLast: null | number; executeEvery: null | number }>(getClearFormModel())
 const formRules: FormRules = {
 	searchWithinLast: [
 		{

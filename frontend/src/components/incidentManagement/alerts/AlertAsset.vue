@@ -151,7 +151,7 @@ import _truncate from "lodash/truncate"
 import { NCard, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 
-const props = defineProps<{ asset: AlertAsset, embedded?: boolean }>()
+const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))

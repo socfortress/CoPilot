@@ -48,7 +48,7 @@ function getOptions() {
 	const yellow = (indices.value || []).filter(i => i.health === IndexHealth.YELLOW).length
 	const red = (indices.value || []).filter(i => i.health === IndexHealth.RED).length
 
-	const sizeData: { value: number, name: string }[] = data.map(i => ({
+	const sizeData: { value: number; name: string }[] = data.map(i => ({
 		value: i.store_size_value || 0,
 		name: i.index
 	}))
@@ -112,7 +112,7 @@ function getOptions() {
 					"#bae6fd"
 				],
 				tooltip: {
-					formatter: (params: { seriesName: string, name: string, value: number, percent: number }) => {
+					formatter: (params: { seriesName: string; name: string; value: number; percent: number }) => {
 						return `${params.seriesName}<hr/>${params.name}<br/><strong>${bytes(params.value)}</strong>  (${
 							params.percent
 						}%)`
@@ -149,10 +149,7 @@ function getOptions() {
 						}
 					}
 				},
-				labelLayout(params: {
-					labelLinePoints: Array<number[]>
-					labelRect: { x: number, width: number }
-				}) {
+				labelLayout(params: { labelLinePoints: Array<number[]>; labelRect: { x: number; width: number } }) {
 					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
 					const points = params.labelLinePoints
 					// Update the end point.

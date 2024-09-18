@@ -50,7 +50,7 @@ const ArrowIcon = "carbon:arrow-left"
 const EditIcon = "uil:edit-alt"
 const sourceConfiguration = ref<SourceConfiguration | null>(null)
 const editing = ref(false)
-const formCTX = ref<{ reset: () => void, toggleSubmittingFlag: () => boolean } | null>(null)
+const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
 
 function getSourceConfiguration() {
 	loading.value = true

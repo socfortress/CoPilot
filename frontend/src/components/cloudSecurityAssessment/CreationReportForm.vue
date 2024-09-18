@@ -113,7 +113,7 @@ const typeFormRef = ref<FormInst | null>(null)
 
 const availableTypes = ["aws", "azure", "gcp"]
 
-const reportTypeOptions = ref<{ label: string, value: string, disabled: boolean }[]>([])
+const reportTypeOptions = ref<{ label: string; value: string; disabled: boolean }[]>([])
 
 const rules: FormRules = {
 	report_type: {

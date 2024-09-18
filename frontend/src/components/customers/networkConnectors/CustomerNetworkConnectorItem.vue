@@ -99,7 +99,7 @@ const InfoIcon = "carbon:information"
 const showDetails = ref(false)
 const serviceName = computed(() => networkConnector.value.network_connector_service_name)
 const authKeys = computed(() => {
-	const keys: { key: string, value: string }[] = []
+	const keys: { key: string; value: string }[] = []
 
 	for (const subscriptions of networkConnector.value.network_connectors_subscriptions) {
 		for (const ak of subscriptions.network_connectors_keys) {

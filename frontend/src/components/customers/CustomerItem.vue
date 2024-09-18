@@ -196,7 +196,10 @@
 					>
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
-								<CustomerHealthcheckList source="velociraptor" :customer-code="customer.customer_code" />
+								<CustomerHealthcheckList
+									source="velociraptor"
+									:customer-code="customer.customer_code"
+								/>
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>

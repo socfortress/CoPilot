@@ -140,7 +140,7 @@ import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, N
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import ArtifactItem from "./ArtifactItem.vue"
 
-const props = defineProps<{ agentHostname?: string, agents?: Agent[], artifacts?: Artifact[] }>()
+const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void

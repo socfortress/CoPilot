@@ -12,7 +12,7 @@ import { HttpClient } from "../httpClient"
 export default {
 	// #region Messages
 	getMessages(page?: number) {
-		return HttpClient.get<FlaskBaseResponse & { graylog_messages: Message[], total_messages: number }>(
+		return HttpClient.get<FlaskBaseResponse & { graylog_messages: Message[]; total_messages: number }>(
 			`/graylog/messages`,
 			{
 				params: {
@@ -36,7 +36,7 @@ export default {
 
 	// #region Stream
 	getStreams() {
-		return HttpClient.get<FlaskBaseResponse & { streams: Stream[], total: number }>(`/graylog/streams`)
+		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`)
 	},
 	startStream(streamId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/graylog/stream/start`, {
@@ -53,7 +53,7 @@ export default {
 	// #region Inputs
 	getInputs() {
 		return HttpClient.get<
-			FlaskBaseResponse & { configured_inputs: ConfiguredInput[], running_inputs: RunningInput[] }
+			FlaskBaseResponse & { configured_inputs: ConfiguredInput[]; running_inputs: RunningInput[] }
 		>(`/graylog/inputs`)
 	},
 	getInputsRunning() {
@@ -77,7 +77,7 @@ export default {
 	// #region Metrics
 	getMetrics() {
 		return HttpClient.get<
-			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[], uncommitted_journal_entries: number }
+			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[]; uncommitted_journal_entries: number }
 		>(`/graylog/metrics`)
 	},
 	// #endregion

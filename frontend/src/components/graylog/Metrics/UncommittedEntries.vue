@@ -53,7 +53,7 @@ const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
 })
 
-const series = ref<{ name: string, data: [Date, number][] }[]>([
+const series = ref<{ name: string; data: [Date, number][] }[]>([
 	{
 		name: "Entries",
 		data: []

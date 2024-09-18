@@ -155,7 +155,7 @@ const descriptionFull = computed(() => {
 	return text.replace(/\n/g, "<br>") || "Empty"
 })
 
-const tags = computed<{ key: string, value?: string }[]>(() => {
+const tags = computed<{ key: string; value?: string }[]>(() => {
 	if (!asset?.asset_tags) {
 		return []
 	}

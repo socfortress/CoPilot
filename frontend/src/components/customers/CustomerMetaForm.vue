@@ -135,7 +135,7 @@ const rules: FormRules = {
 	}
 }
 
-const fieldsMeta: { [key: string]: { label: string, placeholder: string, readonly?: boolean } } = {
+const fieldsMeta: { [key: string]: { label: string; placeholder: string; readonly?: boolean } } = {
 	id: {
 		label: "Meta ID",
 		placeholder: "Meta ID...",

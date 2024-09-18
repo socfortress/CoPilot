@@ -193,7 +193,7 @@ export interface AlertsListFilter {
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight?: string | null, preset?: AlertsListFilter, hideFilters?: boolean }>()
+const props = defineProps<{ highlight?: string | null; preset?: AlertsListFilter; hideFilters?: boolean }>()
 const { highlight, preset, hideFilters } = toRefs(props)
 
 const FilterIcon = "carbon:filter-edit"
@@ -240,7 +240,7 @@ const typeOptions = [
 	{ label: "Title", value: "title" }
 ]
 
-const statusOptions: { label: string, value: AlertStatus }[] = [
+const statusOptions: { label: string; value: AlertStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }

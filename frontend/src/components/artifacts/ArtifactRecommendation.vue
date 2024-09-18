@@ -100,7 +100,7 @@ const recommendations = computed<Recommendation[]>(
 	() => recommendationsStore.value.find(item => item.os === selectedOs.value)?.recommendation || []
 )
 
-const osOptions: { label: string, value: OsTypesFull }[] = [
+const osOptions: { label: string; value: OsTypesFull }[] = [
 	{ label: "Windows", value: "Windows" },
 	{ label: "Linux", value: "Linux" },
 	{ label: "MacOS", value: "MacOS" }

@@ -102,10 +102,10 @@ const slideFormDirection = ref<"right" | "left">("right")
 const message = useMessage()
 const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
-const formCTX = ref<{ reset: () => void, toggleSubmittingFlag: () => boolean } | null>(null)
+const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
 const selectedIndex = ref<string | null>(null)
 const sourceConfigurationModel = ref<SourceConfigurationModel | null>(null)
-const indexNamesOptions = ref<{ label: string, value: string }[]>([])
+const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 watch(loading, val => {
 	emit("update:loading", val)

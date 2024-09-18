@@ -1,5 +1,5 @@
 <template>
-	<div class="page" ref="page">
+	<div ref="page" class="page">
 		<div class="section justify-end lg:justify-between flex gap-3">
 			<div class="left-box hidden lg:flex gap-3">
 				<StackProvisioningButton size="small" type="primary" />
@@ -12,7 +12,9 @@
 			</div>
 			<div class="mobile-box block lg:hidden">
 				<n-button size="small" type="primary" @click="showQuickActions = true">
-					<template #icon><Icon :name="QuickActionsIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="QuickActionsIcon"></Icon>
+					</template>
 					Quick Actions
 				</n-button>
 			</div>
@@ -51,7 +53,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<PipeList minHeight="28px" @open-rule="gotoGraylogPipelines($event)" />
+			<PipeList min-height="28px" @open-rule="gotoGraylogPipelines($event)" />
 		</div>
 
 		<n-drawer
@@ -75,23 +77,24 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from "vue"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import ClusterHealth from "@/components/indices/ClusterHealth.vue"
-import NodeAllocation from "@/components/indices/NodeAllocation.vue"
-import IndicesMarquee from "@/components/indices/Marquee.vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
-import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
-import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
-import AgentsCard from "@/components/overview/AgentsCard.vue"
-import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
+import ClusterHealth from "@/components/indices/ClusterHealth.vue"
+import IndicesMarquee from "@/components/indices/Marquee.vue"
+import NodeAllocation from "@/components/indices/NodeAllocation.vue"
+import AgentsCard from "@/components/overview/AgentsCard.vue"
+import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
+import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
+import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
+import { NButton, NDrawer, NDrawerContent } from "naive-ui"
+import { defineAsyncComponent, ref } from "vue"
 // import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
 import CustomersCard from "@/components/overview/CustomersCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useResizeObserver } from "@vueuse/core"
+
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
 const QuickActionsIcon = "ant-design:thunderbolt-outlined"

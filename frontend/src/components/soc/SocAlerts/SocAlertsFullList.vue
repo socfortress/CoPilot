@@ -99,7 +99,7 @@ const message = useMessage()
 const bookmarksList = ref<SocAlert[]>([])
 const usersList = ref<SocUser[]>([])
 const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
-const socAlertsCTX = ref<{ reload: () => void, itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
+const socAlertsCTX = ref<{ reload: () => void; itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
 
 const list = ref(null)
 const showBookmarkedDrawer = ref(false)

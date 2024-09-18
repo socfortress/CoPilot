@@ -74,7 +74,7 @@ import _toSafeInteger from "lodash/toSafeInteger"
 import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
-const props = defineProps<{ users?: AuthUser[], fetchingUsers?: boolean }>()
+const props = defineProps<{ users?: AuthUser[]; fetchingUsers?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -95,7 +95,7 @@ watch(fetchingUsers, val => {
 
 const filtered = computed(() => type.value !== null && value.value !== null)
 
-const filtersAvailable: { label: string, value: LogsQueryTypes | "" }[] = [
+const filtersAvailable: { label: string; value: LogsQueryTypes | "" }[] = [
 	{ label: "User", value: "userId" },
 	{ label: "Event", value: "eventType" },
 	{ label: "Time", value: "timeRange" }
@@ -109,7 +109,7 @@ const filterTimeRange = ref({
 	time: 1
 })
 
-const unitOptions: { label: string, value: "h" | "d" | "w" }[] = [
+const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 	{ label: "Hours", value: "h" },
 	{ label: "Days", value: "d" },
 	{ label: "Weeks", value: "w" }
@@ -117,14 +117,14 @@ const unitOptions: { label: string, value: "h" | "d" | "w" }[] = [
 
 const filterEventType = ref<LogsQueryEventType>(LogEventType.INFO)
 
-const eventTypeOptions: { label: string, value: LogsQueryEventType }[] = [
+const eventTypeOptions: { label: string; value: LogsQueryEventType }[] = [
 	{ label: "Info", value: LogEventType.INFO },
 	{ label: "Error", value: LogEventType.ERROR }
 ]
 
 const filterUserId = ref<string | null>(null)
 
-const userIdOptions = ref<{ label: string, value: string }[]>([])
+const userIdOptions = ref<{ label: string; value: string }[]>([])
 
 watch(
 	filtered,

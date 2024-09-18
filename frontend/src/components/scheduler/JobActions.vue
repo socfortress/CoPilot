@@ -58,7 +58,7 @@ import { ref, toRefs } from "vue"
 import JobForm from "./JobForm.vue"
 import NextTooltip from "./NextTooltip.vue"
 
-const props = defineProps<{ job: Job, size?: Size, inline?: boolean }>()
+const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
 const { job, size, inline } = toRefs(props)
 
 const StartIcon = "material-symbols:autoplay"

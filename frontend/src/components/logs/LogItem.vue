@@ -71,7 +71,7 @@ import { type Log, LogEventType } from "@/types/logs.d"
 import dayjs from "@/utils/dayjs"
 import { computed } from "vue"
 
-const { log, users } = defineProps<{ log: Log, users?: AuthUser[] }>()
+const { log, users } = defineProps<{ log: Log; users?: AuthUser[] }>()
 
 const InfoIcon = "carbon:information"
 const UserIcon = "carbon:user"

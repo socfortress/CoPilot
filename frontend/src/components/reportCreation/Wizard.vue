@@ -98,7 +98,7 @@ const timeValue = useStorage<number>("report-wizard-time-value", 1, localStorage
 const orgsOptions = computed(() => orgsList.value.map(o => ({ value: o.id, label: o.name })))
 const dashboardsOptions = computed(() => dashboardsList.value.map(o => ({ value: o.uid, label: o.title })))
 const panelsOptions = computed(() => panelsList.value.map(o => ({ value: o.id, label: o.title })))
-const timeUnitOptions: { label: string, value: RowPanelTimeUnit }[] = [
+const timeUnitOptions: { label: string; value: RowPanelTimeUnit }[] = [
 	{ label: "Minutes", value: "m" },
 	{ label: "Hours", value: "h" },
 	{ label: "Days", value: "d" }

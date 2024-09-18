@@ -148,7 +148,7 @@ import AlertsFilters from "./AlertsFilters.vue"
 import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
 
-const props = defineProps<{ agentHostname?: string, indexName?: string }>()
+const props = defineProps<{ agentHostname?: string; indexName?: string }>()
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 

@@ -50,7 +50,7 @@ import { NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import AlertCommentItem from "./AlertComment.vue"
 
-const props = defineProps<{ comments: AlertComment[], alertId: number }>()
+const props = defineProps<{ comments: AlertComment[]; alertId: number }>()
 const emit = defineEmits<{
 	(e: "updated", value: AlertComment[]): void
 }>()

@@ -303,8 +303,8 @@ const currentStatus = ref<StepsProps["status"]>("process")
 const form = ref<CustomerProvision>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
-const subscriptionOptions = ref<{ label: string, value: string }[]>([])
-const dashboardOptions = ref<{ label: string, value: string }[]>([])
+const subscriptionOptions = ref<{ label: string; value: string }[]>([])
+const dashboardOptions = ref<{ label: string; value: string }[]>([])
 
 const allDashboardsSelected = computed(
 	() => form.value.dashboards_to_include.dashboards.length === dashboardOptions.value.length

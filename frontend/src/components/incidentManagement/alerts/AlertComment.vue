@@ -24,7 +24,7 @@ import { formatDate, getAvatar, getNameInitials } from "@/utils"
 import { NAvatar } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 
-const props = defineProps<{ comment: AlertComment, embedded?: boolean }>()
+const props = defineProps<{ comment: AlertComment; embedded?: boolean }>()
 const { comment, embedded } = toRefs(props)
 
 const dFormats = useSettingsStore().dateFormat

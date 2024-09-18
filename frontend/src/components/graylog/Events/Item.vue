@@ -84,7 +84,7 @@ import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 
-const props = defineProps<{ event: EventDefinition, highlight: boolean | null | undefined }>()
+const props = defineProps<{ event: EventDefinition; highlight: boolean | null | undefined }>()
 const { event, highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"

@@ -46,7 +46,7 @@ interface Prop {
 	hideMobile: boolean
 }
 
-const { collect, embedded } = defineProps<{ collect: CollectResult, embedded?: boolean }>()
+const { collect, embedded } = defineProps<{ collect: CollectResult; embedded?: boolean }>()
 
 const jsonData = ref<CollectResult>({})
 const displayData = ref<Prop[]>([])

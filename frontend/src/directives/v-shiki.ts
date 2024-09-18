@@ -5,7 +5,7 @@ import { decode } from "html-entities"
 const vShiki = {
 	created: async (
 		el: HTMLElement,
-		binding: { value: { lang?: string, fallbackLang?: string, decode?: boolean } }
+		binding: { value: { lang?: string; fallbackLang?: string; decode?: boolean } }
 	) => {
 		const code = binding?.value?.decode ? decode(el.children[0].innerHTML) : el.children[0].innerHTML
 

@@ -56,7 +56,12 @@
 					/>
 				</n-tab-pane>
 				<n-tab-pane name="Network" tab="Network" display-directive="show:lazy">
-					<ListPercentage class="p-7 pt-4" :list="evaluation.network" label-key="port" percentage-key="usage" />
+					<ListPercentage
+						class="p-7 pt-4"
+						:list="evaluation.network"
+						label-key="port"
+						percentage-key="usage"
+					/>
 				</n-tab-pane>
 				<n-tab-pane name="Parents" tab="Parents" display-directive="show:lazy">
 					<ListPercentage

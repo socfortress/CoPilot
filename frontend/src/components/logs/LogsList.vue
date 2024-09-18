@@ -191,7 +191,7 @@ const filterValue = ref<LogsQueryValues | null>(null)
 const filtered = ref(false)
 
 const purgeSelected = ref<LogsQueryTimeRange | "">("")
-const purgeOptions: { label: string, value: LogsQueryTimeRange | string }[] = [
+const purgeOptions: { label: string; value: LogsQueryTimeRange | string }[] = [
 	{ label: "All Logs", value: "" },
 	{ label: "1 Hour", value: "1h" },
 	{ label: "6 Hours", value: "6h" },

@@ -254,7 +254,7 @@ import _pick from "lodash/pick"
 import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 
-const props = defineProps<{ alert: Alert, hideActions?: boolean }>()
+const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 

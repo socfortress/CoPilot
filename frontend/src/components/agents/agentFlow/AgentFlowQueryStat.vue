@@ -75,7 +75,7 @@
 								{{ key }}
 							</template>
 							<template #value>
-								{{ value === "" ? "-" : value ?? "-" }}
+								{{ value === "" ? "-" : (value ?? "-") }}
 							</template>
 						</KVCard>
 					</div>
@@ -112,7 +112,7 @@ import _pick from "lodash/pick"
 import { NButton, NInput, NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, ref } from "vue"
 
-const { stat, embedded } = defineProps<{ stat: FlowQueryStat, embedded?: boolean }>()
+const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
 
 const InfoIcon = "carbon:information"
 

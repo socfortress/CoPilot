@@ -98,7 +98,7 @@ import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } fr
 import { computed, onBeforeMount, ref, watch } from "vue"
 import ScaResultItem from "./ScaResultItem.vue"
 
-const { sca, agent } = defineProps<{ sca: AgentSca, agent: Agent }>()
+const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"

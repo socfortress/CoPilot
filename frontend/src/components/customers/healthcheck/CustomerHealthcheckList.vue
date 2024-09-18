@@ -82,7 +82,7 @@ const unitOptions = [
 	{ label: "Days", value: "days" }
 ]
 
-const filters = ref<Partial<{ time: number, unit: "minutes" | "hours" | "days" }>>({})
+const filters = ref<Partial<{ time: number; unit: "minutes" | "hours" | "days" }>>({})
 
 function getList() {
 	loading.value = true

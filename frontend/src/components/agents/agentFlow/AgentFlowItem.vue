@@ -95,7 +95,7 @@
 								{{ key }}
 							</template>
 							<template #value>
-								{{ value === "" ? "-" : value ?? "-" }}
+								{{ value === "" ? "-" : (value ?? "-") }}
 							</template>
 						</KVCard>
 					</div>
@@ -190,7 +190,7 @@ import { computed, defineAsyncComponent, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 
-const { flow, embedded } = defineProps<{ flow: FlowResult, embedded?: boolean }>()
+const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
 const AgentFlowTimeline = defineAsyncComponent(() => import("./AgentFlowTimeline.vue"))
 const AgentFlowQueryStat = defineAsyncComponent(() => import("./AgentFlowQueryStat.vue"))
 const AgentFlowCollectList = defineAsyncComponent(() => import("./AgentFlowCollectList.vue"))

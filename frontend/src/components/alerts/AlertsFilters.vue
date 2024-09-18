@@ -73,7 +73,7 @@ const { filters } = toRefs(props)
 const ClearIcon = "mdi:broom"
 const SearchIcon = "carbon:search"
 
-const timerangeOptions: { label: string, value: AlertsQueryTimeRange }[] = [
+const timerangeOptions: { label: string; value: AlertsQueryTimeRange }[] = [
 	{ label: "1 Hour", value: "1h" },
 	{ label: "6 Hours", value: "6h" },
 	{ label: "12 Hours", value: "12h" },
@@ -93,7 +93,7 @@ const maxAlertsOptions = [
 	{ label: "20 Alert", value: 20 }
 ]
 
-const alertFieldOptions = useStorage<{ label: string, value: string }[]>("alert-fields-history", [], localStorage)
+const alertFieldOptions = useStorage<{ label: string; value: string }[]>("alert-fields-history", [], localStorage)
 
 function clearFieldsHistory(field?: string) {
 	if (!field) {
@@ -103,7 +103,7 @@ function clearFieldsHistory(field?: string) {
 	}
 }
 
-function renderFieldTag({ option }: { option: SelectOption, handleClose: () => void }): VNodeChild {
+function renderFieldTag({ option }: { option: SelectOption; handleClose: () => void }): VNodeChild {
 	return h("div", {}, [option.label as string])
 }
 

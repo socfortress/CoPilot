@@ -88,7 +88,7 @@ import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"
 
-const { sca, agent } = defineProps<{ sca: AgentSca, agent: Agent }>()
+const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
 const ScaResults = defineAsyncComponent(() => import("./ScaResults.vue"))
 

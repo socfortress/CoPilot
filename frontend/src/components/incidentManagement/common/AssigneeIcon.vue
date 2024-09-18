@@ -6,7 +6,7 @@
 import Icon from "@/components/common/Icon.vue"
 import { toRefs } from "vue"
 
-const props = defineProps<{ assignee: string | null, size?: number }>()
+const props = defineProps<{ assignee: string | null; size?: number }>()
 const { assignee, size } = toRefs(props)
 
 const AssigneeIcon = "carbon:user-military"

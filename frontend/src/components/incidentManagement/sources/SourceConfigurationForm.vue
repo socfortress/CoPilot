@@ -187,8 +187,8 @@ const loading = computed(() => loadingAvailableMappings.value || loadingIndexNam
 const message = useMessage()
 const form = ref<SourceConfigurationModel>(getSourceConfigurationForm())
 const formRef = ref<FormInst | null>(null)
-const availableMappingsOptions = ref<{ label: string, value: string }[]>([])
-const indexNamesOptions = ref<{ label: string, value: string }[]>([])
+const availableMappingsOptions = ref<{ label: string; value: string }[]>([])
+const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 const rules: FormRules = {
 	source: {

@@ -94,7 +94,7 @@ export function formatDate(date: Date | string | number, format: string) {
 
 export function price(
 	amount: number,
-	options: { currency?: "USD" | "EUR", splitDecimal?: boolean } = { currency: "USD", splitDecimal: true }
+	options: { currency?: "USD" | "EUR"; splitDecimal?: boolean } = { currency: "USD", splitDecimal: true }
 ) {
 	let symbol = ""
 	switch (options.currency) {
@@ -128,7 +128,7 @@ export function getNameInitials(name: string, cap?: number) {
 	return (cap ? initials.slice(0, cap) : initials).toUpperCase()
 }
 
-export function getAvatar(params: { seed: string, text?: string, size?: number, format?: "png" | "svg" }) {
+export function getAvatar(params: { seed: string; text?: string; size?: number; format?: "png" | "svg" }) {
 	const format: "png" | "svg" = params.text ? "svg" : params.format || "svg"
 
 	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`

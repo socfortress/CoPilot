@@ -19,7 +19,7 @@ export default {
 		const body = {
 			cve
 		}
-		return HttpClient.post<FlaskBaseResponse & { data: EpssScore[], the_epss_model: string }>(
+		return HttpClient.post<FlaskBaseResponse & { data: EpssScore[]; the_epss_model: string }>(
 			`/threat_intel/epss`,
 			body
 		)

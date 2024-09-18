@@ -64,7 +64,7 @@ const loading = defineModel<boolean | undefined>("loading", { default: false })
 const show = ref(false)
 const lastShow = ref(new Date().getTime())
 const message = useMessage()
-const model = ref<{ time: number, unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
+const model = ref<{ time: number; unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
 const unitOptions = [
 	{ label: "Minutes", value: "m" },
 	{ label: "Hours", value: "h" },

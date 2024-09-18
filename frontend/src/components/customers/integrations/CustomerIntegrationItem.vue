@@ -96,7 +96,7 @@ const InfoIcon = "carbon:information"
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)
 const authKeys = computed(() => {
-	const keys: { key: string, value: string }[] = []
+	const keys: { key: string; value: string }[] = []
 
 	for (const subscriptions of integration.value.integration_subscriptions) {
 		for (const ak of subscriptions.integration_auth_keys) {

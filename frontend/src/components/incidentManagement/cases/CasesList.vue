@@ -178,7 +178,7 @@ export interface CasesListFilter {
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight?: string | null, preset?: CasesListFilter, hideFilters?: boolean }>()
+const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter; hideFilters?: boolean }>()
 const { highlight, preset, hideFilters } = toRefs(props)
 
 const message = useMessage()
@@ -237,7 +237,7 @@ const typeOptions = [
 	{ label: "Hostname", value: "hostname" }
 ]
 
-const statusOptions: { label: string, value: AlertStatus }[] = [
+const statusOptions: { label: string; value: AlertStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }

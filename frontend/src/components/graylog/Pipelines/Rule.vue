@@ -95,7 +95,7 @@ import { formatDate } from "@/utils"
 import { NInput, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { ref, toRefs } from "vue"
 
-const props = defineProps<{ rule: PipelineRule, highlight: boolean | null | undefined }>()
+const props = defineProps<{ rule: PipelineRule; highlight: boolean | null | undefined }>()
 const { rule, highlight } = toRefs(props)
 
 const TimeIcon = "carbon:time"

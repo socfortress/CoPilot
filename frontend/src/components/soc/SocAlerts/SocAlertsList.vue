@@ -134,7 +134,7 @@ const dialog = useDialog()
 const message = useMessage()
 const loadingPurge = ref(false)
 const loadingAlerts = ref(false)
-const alertsList = ref<{ checked: boolean, id: string, data: SocAlert }[]>([])
+const alertsList = ref<{ checked: boolean; id: string; data: SocAlert }[]>([])
 const checkedList = ref<string[]>([])
 
 const pageSize = ref(50)

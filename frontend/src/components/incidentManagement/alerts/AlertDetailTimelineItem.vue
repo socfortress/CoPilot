@@ -37,7 +37,7 @@
 									</code>
 								</div>
 								<div v-else>
-									{{ value === "" ? "-" : value ?? "-" }}
+									{{ value === "" ? "-" : (value ?? "-") }}
 								</div>
 							</template>
 						</KVCard>
@@ -62,7 +62,7 @@ import _omit from "lodash/omit"
 import { NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 
-const props = defineProps<{ timelineData: AlertTimeline, embedded?: boolean }>()
+const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 

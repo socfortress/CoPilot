@@ -77,7 +77,7 @@ export default {
 
 	// #region Assets
 	getAssetsByCase(caseId: string) {
-		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[], state: SocCaseAssetsState }>(
+		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
 			`/soc/assets/${caseId}`
 		)
 	},
@@ -92,7 +92,7 @@ export default {
 			signal
 		})
 	},
-	createCaseNote(caseId: string | number, payload?: { title?: string, content?: string }) {
+	createCaseNote(caseId: string | number, payload?: { title?: string; content?: string }) {
 		return HttpClient.post<FlaskBaseResponse & { note: SocNewNote }>(`/soc/notes/${caseId}`, {
 			note_title: payload?.title || "",
 			note_content: payload?.content || ""
@@ -127,7 +127,7 @@ export default {
 		}
 
 		return HttpClient[apiMethod]<
-			FlaskBaseResponse & { cases?: SocCase[], case?: SocCaseExt, cases_breached?: SocCase[] }
+			FlaskBaseResponse & { cases?: SocCase[]; case?: SocCaseExt; cases_breached?: SocCase[] }
 		>(
 			url,
 			{},
@@ -138,7 +138,7 @@ export default {
 							time_unit: payload?.unit || "days"
 						}
 						/* eslint no-mixed-spaces-and-tabs: "off" */
-				  }
+					}
 				: undefined
 		)
 	},

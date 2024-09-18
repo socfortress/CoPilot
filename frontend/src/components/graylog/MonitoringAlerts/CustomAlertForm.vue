@@ -202,7 +202,7 @@ const message = useMessage()
 const form = ref<CustomProvisionForm>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
-const alertPriorityOptions: { label: string, value: CustomProvisionPriority }[] = [
+const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] = [
 	{ label: "Low", value: CustomProvisionPriority.LOW },
 	{ label: "Medium", value: CustomProvisionPriority.MEDIUM },
 	{ label: "High", value: CustomProvisionPriority.HIGH }

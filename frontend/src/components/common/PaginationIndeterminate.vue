@@ -41,7 +41,7 @@ import Icon from "@/components/common/Icon.vue"
 import { NInputNumber, NSelect } from "naive-ui"
 import { computed, toRefs, watch } from "vue"
 
-const props = defineProps<{ showPageSizes?: boolean, showSort?: boolean, pageSizes?: number[], disabled?: boolean }>()
+const props = defineProps<{ showPageSizes?: boolean; showSort?: boolean; pageSizes?: number[]; disabled?: boolean }>()
 const page = defineModel<number>("page", { default: 1 })
 const pageSize = defineModel<number>("pageSize", { default: 10 })
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })

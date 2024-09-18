@@ -37,7 +37,7 @@ import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import CustomerItem from "./CustomerItem.vue"
 
-const props = defineProps<{ highlight: string | null | undefined, reload?: boolean }>()
+const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
 const emit = defineEmits<{
 	(e: "reloaded"): void
 }>()
