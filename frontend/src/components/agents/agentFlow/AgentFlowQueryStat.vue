@@ -30,17 +30,13 @@
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-1">
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Status
-					</template>
+					<template #label>Status</template>
 					<template #value>
 						{{ stat.status || "-" }}
 					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Duration
-					</template>
+					<template #label>Duration</template>
 					<template #value>
 						{{ duration }}
 					</template>

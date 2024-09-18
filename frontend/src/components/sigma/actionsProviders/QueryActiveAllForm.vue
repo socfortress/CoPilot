@@ -6,22 +6,14 @@
 
 		<div class="py-1 flex flex-col gap-2 justify-center min-w-52">
 			<div class="flex gap-2 items-center">
-				<n-button :loading type="success" @click="updateActive(true)">
-					Activates all Sigma queries
-				</n-button>
-				<n-button :loading @click="updateActive(false)">
-					Deactivates all Sigma queries
-				</n-button>
+				<n-button :loading type="success" @click="updateActive(true)">Activates all Sigma queries</n-button>
+				<n-button :loading @click="updateActive(false)">Deactivates all Sigma queries</n-button>
 			</div>
 
-			<p class="text-right">
-				* It may take several minutes
-			</p>
+			<p class="text-right">* It may take several minutes</p>
 
 			<div class="flex gap-2 justify-between">
-				<n-button quaternary size="small" @click="closePopup()">
-					Close
-				</n-button>
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 			</div>
 		</div>
 	</n-popover>

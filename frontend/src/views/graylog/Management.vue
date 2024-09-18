@@ -17,9 +17,7 @@
 				<MonitoringAlerts :events-list="events" />
 			</n-tab-pane>
 			<template #suffix>
-				<n-button ghost type="primary" size="small" @click="showInputDrawer = true">
-					Inputs
-				</n-button>
+				<n-button ghost type="primary" size="small" @click="showInputDrawer = true">Inputs</n-button>
 			</template>
 		</n-tabs>
 

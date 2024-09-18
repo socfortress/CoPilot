@@ -41,9 +41,7 @@
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
-							<template #label>
-								Added
-							</template>
+							<template #label>Added</template>
 							<template #value>
 								{{ formatDate(asset.date_added) }}
 							</template>
@@ -52,9 +50,7 @@
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
-							<template #label>
-								Updated
-							</template>
+							<template #label>Updated</template>
 							<template #value>
 								{{ formatDate(asset.date_update) }}
 							</template>
@@ -63,9 +59,7 @@
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
-							<template #label>
-								Agent: {{ asset.asset_tags }}
-							</template>
+							<template #label>Agent: {{ asset.asset_tags }}</template>
 						</Badge>
 					</div>
 				</div>

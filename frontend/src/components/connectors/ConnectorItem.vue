@@ -39,9 +39,7 @@
 									:size="14"
 								></Icon>
 							</template>
-							<template #label>
-								Configured
-							</template>
+							<template #label>Configured</template>
 						</Badge>
 
 						<Badge :type="connector.connector_verified ? 'active' : 'muted'">
@@ -51,9 +49,7 @@
 									:size="14"
 								></Icon>
 							</template>
-							<template #label>
-								Verified
-							</template>
+							<template #label>Verified</template>
 						</Badge>
 					</div>
 				</div>

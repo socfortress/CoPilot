@@ -91,9 +91,7 @@
 			</template>
 			<n-collapse-item>
 				<template #header>
-					<div class="py-3 -ml-2">
-						Alert details
-					</div>
+					<div class="py-3 -ml-2">Alert details</div>
 				</template>
 				<AlertItem :alert="alertObject" hide-actions class="-mt-4" />
 			</n-collapse-item>
@@ -109,9 +107,7 @@
 			segmented
 		>
 			<template #header>
-				<div class="whitespace-nowrap">
-					SOC Alert: {{ alert?.alert_id }}
-				</div>
+				<div class="whitespace-nowrap">SOC Alert: {{ alert?.alert_id }}</div>
 			</template>
 			<template #header-extra>
 				<ArtifactRecommendation v-if="alert" :context="alert.alert_context" />

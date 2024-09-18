@@ -22,12 +22,8 @@
 		<div class="theme">
 			<n-form-item label="Theme" feedback="⊙ choose panels palette">
 				<n-radio-group v-model:value="theme">
-					<n-radio-button value="light">
-						Light
-					</n-radio-button>
-					<n-radio-button value="dark">
-						Dark
-					</n-radio-button>
+					<n-radio-button value="light">Light</n-radio-button>
+					<n-radio-button value="dark">Dark</n-radio-button>
 				</n-radio-group>
 			</n-form-item>
 		</div>

@@ -14,9 +14,7 @@
 						<Icon :name="UploadIcon" :size="48" :depth="3"></Icon>
 					</div>
 					<h4>Click or drag a file to this area to upload</h4>
-					<p class="mt-2">
-						Limit 1 file .YAML, new file will cover the old file
-					</p>
+					<p class="mt-2">Limit 1 file .YAML, new file will cover the old file</p>
 				</n-upload-dragger>
 			</n-upload>
 		</n-form-item>

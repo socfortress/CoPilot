@@ -2,9 +2,7 @@
 	<n-spin :show="loading" content-class="min-h-32">
 		<div class="mb-4">
 			<KVCard>
-				<template #key>
-					cve
-				</template>
+				<template #key>cve</template>
 				<template #value>
 					{{ cve }}
 				</template>

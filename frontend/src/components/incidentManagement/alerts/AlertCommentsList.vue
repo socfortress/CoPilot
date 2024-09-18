@@ -20,9 +20,7 @@
 					/>
 				</div>
 				<div class="tool-box flex gap-2 justify-end">
-					<n-button secondary :disabled="submitting" @click="reset()">
-						Reset
-					</n-button>
+					<n-button secondary :disabled="submitting" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"
 						:disabled="!trimmedValue || submitting"

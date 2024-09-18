@@ -105,9 +105,7 @@
 			</div>
 			<template #action>
 				<div class="flex gap-3">
-					<n-button size="small" ghost @click="showPurgeConfirm = false">
-						Cancel
-					</n-button>
+					<n-button size="small" ghost @click="showPurgeConfirm = false">Cancel</n-button>
 					<n-button size="small" type="warning" :loading="loadingPurge" @click="purge()">
 						Yes I'm sure
 					</n-button>

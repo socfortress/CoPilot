@@ -2,9 +2,7 @@
 	<div class="sca-result-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex items-center">
-				<div class="id">
-					#{{ data.id }}
-				</div>
+				<div class="id">#{{ data.id }}</div>
 				<div class="grow"></div>
 				<div class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
@@ -20,9 +18,7 @@
 					<div class="title">
 						{{ data.title }}
 					</div>
-					<div class="description">
-						$ {{ data.command }}
-					</div>
+					<div class="description">$ {{ data.command }}</div>
 				</div>
 			</div>
 
@@ -40,27 +36,21 @@
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Compliance
-					</template>
+					<template #label>Compliance</template>
 					<template #value>
 						{{ data.compliance?.length || "-" }}
 					</template>
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Condition
-					</template>
+					<template #label>Condition</template>
 					<template #value>
 						{{ data.condition || "-" }}
 					</template>
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Rules
-					</template>
+					<template #label>Rules</template>
 					<template #value>
 						{{ data.rules?.length || "-" }}
 					</template>

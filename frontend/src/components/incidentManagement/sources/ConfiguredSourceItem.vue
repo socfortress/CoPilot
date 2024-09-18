@@ -12,9 +12,7 @@
 					@clickoutside="showConfirm = false"
 				>
 					<template #trigger>
-						<div class="delete-btn" @click.stop="showConfirm = true">
-							delete
-						</div>
+						<div class="delete-btn" @click.stop="showConfirm = true">delete</div>
 					</template>
 					Are you sure you want to delete the source configuration?
 				</n-popconfirm>

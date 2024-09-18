@@ -13,9 +13,7 @@
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
 					</template>
-					<div class="px-3 py-2">
-						Set as read
-					</div>
+					<div class="px-3 py-2">Set as read</div>
 				</n-tooltip>
 			</div>
 			<div class="content grow">

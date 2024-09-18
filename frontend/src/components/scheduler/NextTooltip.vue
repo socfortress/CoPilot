@@ -3,9 +3,7 @@
 		<template #trigger>
 			<Icon :name="NextIcon"></Icon>
 		</template>
-		<template #header>
-			Next run time:
-		</template>
+		<template #header>Next run time:</template>
 		<div>
 			<n-spin v-if="loadingNext" :size="12" />
 			<span v-if="!loadingNext">

@@ -54,9 +54,7 @@
 								<template #iconLeft>
 									<Icon :name="StatusIcon" :size="14"></Icon>
 								</template>
-								<template #label>
-									State
-								</template>
+								<template #label>State</template>
 								<template #value>
 									{{ baseInfo.state_name }}
 								</template>
@@ -65,9 +63,7 @@
 								<template #iconLeft>
 									<Icon :name="OwnerIcon" :size="16"></Icon>
 								</template>
-								<template #label>
-									Owner
-								</template>
+								<template #label>Owner</template>
 								<template #value>
 									{{ baseInfo.owner }}
 								</template>
@@ -76,9 +72,7 @@
 								<template #iconLeft>
 									<Icon :name="CustomerIcon" :size="13"></Icon>
 								</template>
-								<template #label>
-									Client
-								</template>
+								<template #label>Client</template>
 								<template #value>
 									{{ clientName || "-" }}
 								</template>
@@ -92,9 +86,7 @@
 								<template #iconRight>
 									<Icon :name="LinkIcon" :size="14"></Icon>
 								</template>
-								<template #label>
-									Alert #{{ baseInfo.case_soc_id }}
-								</template>
+								<template #label>Alert #{{ baseInfo.case_soc_id }}</template>
 							</Badge>
 						</div>
 					</div>
@@ -242,9 +234,7 @@
 								</template>
 								<n-collapse-item name="1">
 									<template #header>
-										<div class="py-3 -ml-2">
-											New note
-										</div>
+										<div class="py-3 -ml-2">New note</div>
 									</template>
 									<div class="p-3 pt-0 -mt-2">
 										<SocCaseNoteForm

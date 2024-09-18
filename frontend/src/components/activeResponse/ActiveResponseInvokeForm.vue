@@ -22,9 +22,7 @@
 			<div class="flex gap-3">
 				<slot name="additionalActions"></slot>
 			</div>
-			<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
-				Submit
-			</n-button>
+			<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">Submit</n-button>
 		</div>
 	</div>
 </template>

@@ -61,9 +61,7 @@
 							<template #iconLeft>
 								<StatusIcon :status="alert.status" />
 							</template>
-							<template #label>
-								Status
-							</template>
+							<template #label>Status</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ alert.status || "n/d" }}
@@ -80,9 +78,7 @@
 							<template #iconLeft>
 								<AssigneeIcon :assignee="alert.assigned_to" />
 							</template>
-							<template #label>
-								Assignee
-							</template>
+							<template #label>Assignee</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ alert.assigned_to || "n/d" }}
@@ -113,9 +109,7 @@
 										<StatusIcon :status="alert.status" />
 									</n-spin>
 								</template>
-								<template #label>
-									Status
-								</template>
+								<template #label>Status</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ alert.status || "n/d" }}
@@ -141,9 +135,7 @@
 										<AssigneeIcon :assignee="alert.assigned_to" />
 									</n-spin>
 								</template>
-								<template #label>
-									Assignee
-								</template>
+								<template #label>Assignee</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ alert.assigned_to || "n/d" }}
@@ -154,9 +146,7 @@
 						</AlertAssignUser>
 
 						<Badge type="splitted" class="!hidden sm:!flex">
-							<template #label>
-								Customer
-							</template>
+							<template #label>Customer</template>
 							<template #value>
 								<div class="flex items-center h-full">
 									<code
@@ -216,9 +206,7 @@
 						</span>
 					</div>
 					<div class="actions-box">
-						<n-button quaternary size="tiny" @click="handleDelete()">
-							Delete
-						</n-button>
+						<n-button quaternary size="tiny" @click="handleDelete()">Delete</n-button>
 					</div>
 				</div>
 			</div>

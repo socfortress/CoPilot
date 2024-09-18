@@ -31,25 +31,19 @@
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 				<Badge type="splitted" color="primary">
-					<template #label>
-						State
-					</template>
+					<template #label>State</template>
 					<template #value>
 						{{ flow.state || "-" }}
 					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Status
-					</template>
+					<template #label>Status</template>
 					<template #value>
 						{{ flow.status || "-" }}
 					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
-					<template #label>
-						Exec. time
-					</template>
+					<template #label>Exec. time</template>
 					<template #value>
 						{{ executionDuration }}
 					</template>
@@ -58,17 +52,13 @@
 					<template #iconRight>
 						<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 					</template>
-					<template #label>
-						Dirty
-					</template>
+					<template #label>Dirty</template>
 				</Badge>
 				<Badge :type="flow.user_notified ? 'active' : 'muted'">
 					<template #iconRight>
 						<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 					</template>
-					<template #label>
-						User notified
-					</template>
+					<template #label>User notified</template>
 				</Badge>
 			</div>
 		</div>

@@ -78,9 +78,7 @@
 
 				<div class="px-7">
 					<KVCard>
-						<template #key>
-							name
-						</template>
+						<template #key>name</template>
 						<template #value>
 							{{ query.rule_name ?? "-" }}
 						</template>
@@ -89,9 +87,7 @@
 
 				<div class="px-7 grid gap-2 grid-auto-fit-250">
 					<KVCard>
-						<template #key>
-							last execution time
-						</template>
+						<template #key>last execution time</template>
 						<template #value>
 							{{
 								query.last_execution_time
@@ -102,9 +98,7 @@
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							last updated
-						</template>
+						<template #key>last updated</template>
 						<template #value>
 							{{ query.last_updated ? formatDate(query.last_updated, dFormats.datetimesec) : "n/d" }}
 						</template>

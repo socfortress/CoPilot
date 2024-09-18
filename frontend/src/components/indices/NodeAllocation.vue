@@ -21,9 +21,7 @@
 									<div class="value">
 										{{ node.node }}
 									</div>
-									<div class="label">
-										node
-									</div>
+									<div class="label">node</div>
 								</div>
 							</div>
 							<div class="group">
@@ -31,25 +29,19 @@
 									<div class="value">
 										{{ node.disk_total || "-" }}
 									</div>
-									<div class="label">
-										disk_total
-									</div>
+									<div class="label">disk_total</div>
 								</div>
 								<div class="box">
 									<div class="value">
 										{{ node.disk_used || "-" }}
 									</div>
-									<div class="label">
-										disk_used
-									</div>
+									<div class="label">disk_used</div>
 								</div>
 								<div class="box">
 									<div class="value">
 										{{ node.disk_available || "-" }}
 									</div>
-									<div class="label">
-										disk_available
-									</div>
+									<div class="label">disk_available</div>
 								</div>
 							</div>
 							<div v-if="node.disk_percent" class="group disk-percent">

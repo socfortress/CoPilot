@@ -7,17 +7,11 @@
 		<div class="py-1 flex flex-col gap-2 max-w-80">
 			<div>This will remove ALL Sigma queries, are you sure you want to proceed?</div>
 
-			<p class="text-right">
-				* It may take several minutes
-			</p>
+			<p class="text-right">* It may take several minutes</p>
 
 			<div class="flex gap-2 justify-between">
-				<n-button quaternary size="small" @click="closePopup()">
-					Close
-				</n-button>
-				<n-button :loading type="primary" size="small" @click="deleteQueries()">
-					Yes I'm sure
-				</n-button>
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
+				<n-button :loading type="primary" size="small" @click="deleteQueries()">Yes I'm sure</n-button>
 			</div>
 		</div>
 	</n-popover>

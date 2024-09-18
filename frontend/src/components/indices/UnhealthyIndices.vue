@@ -25,9 +25,7 @@
 						<template #icon>
 							<Icon :name="ShieldIcon"></Icon>
 						</template>
-						<template #extra>
-							Great, all indices are healthy!
-						</template>
+						<template #extra>Great, all indices are healthy!</template>
 					</n-empty>
 				</n-scrollbar>
 			</div>

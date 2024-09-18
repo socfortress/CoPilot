@@ -8,9 +8,7 @@
 							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
-					<n-button :loading="syncing" @click="emit('sync')">
-						Sync
-					</n-button>
+					<n-button :loading="syncing" @click="emit('sync')">Sync</n-button>
 				</div>
 				<div class="search-info">
 					<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>

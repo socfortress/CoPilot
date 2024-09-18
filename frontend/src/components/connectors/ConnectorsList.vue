@@ -5,9 +5,7 @@
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
-			<div class="text-secondary-color text-right">
-				Configure connections to your toolset
-			</div>
+			<div class="text-secondary-color text-right">Configure connections to your toolset</div>
 		</div>
 		<n-spin :show="loadingConnectors">
 			<div class="list">

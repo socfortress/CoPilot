@@ -41,9 +41,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<template #description>
-				Alerts are being fetched, this may take up to 1 minute.
-			</template>
+			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsSummaryList.length">

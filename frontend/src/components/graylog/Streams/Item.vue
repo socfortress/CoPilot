@@ -29,25 +29,19 @@
 						<template #iconRight>
 							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							Enabled
-						</template>
+						<template #label>Enabled</template>
 					</Badge>
 					<Badge :type="stream.is_default ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							Default
-						</template>
+						<template #label>Default</template>
 					</Badge>
 					<Badge :type="stream.is_editable ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							Editable
-						</template>
+						<template #label>Editable</template>
 					</Badge>
 				</div>
 			</div>
@@ -102,9 +96,7 @@
 				Remove matches from default stream :
 				<code>{{ stream.remove_matches_from_default_stream }}</code>
 			</div>
-			<div class="mb-1">
-				Rules :
-			</div>
+			<div class="mb-1">Rules :</div>
 			<SimpleJsonViewer class="vuesjv-override" :model-value="stream.rules" :initial-expanded-depth="2" />
 		</n-modal>
 	</div>

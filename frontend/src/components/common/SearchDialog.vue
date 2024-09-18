@@ -5,9 +5,7 @@
 				<div class="search-input flex items-center">
 					<Icon :name="SearchIcon" :size="16" />
 					<input v-model="search" placeholder="Search" class="grow" />
-					<n-text code>
-						ESC
-					</n-text>
+					<n-text code>ESC</n-text>
 					<Icon :name="CloseIcon" :size="20" class="cursor-pointer" @click="closeBox()" />
 				</div>
 				<n-divider />

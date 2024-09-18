@@ -7,18 +7,14 @@
 						<div class="value">
 							{{ index.index }}
 						</div>
-						<div class="label">
-							name
-						</div>
+						<div class="label">name</div>
 					</div>
 					<div class="box">
 						<div class="value uppercase flex align-center gap-2">
 							<IndexIcon :health="index.health" color />
 							{{ index.health }}
 						</div>
-						<div class="label">
-							health
-						</div>
+						<div class="label">health</div>
 					</div>
 				</div>
 				<div class="group">
@@ -26,25 +22,19 @@
 						<div class="value">
 							{{ index.store_size }}
 						</div>
-						<div class="label">
-							store_size
-						</div>
+						<div class="label">store_size</div>
 					</div>
 					<div class="box">
 						<div class="value">
 							{{ index.docs_count }}
 						</div>
-						<div class="label">
-							docs_count
-						</div>
+						<div class="label">docs_count</div>
 					</div>
 					<div class="box">
 						<div class="value">
 							{{ index.replica_count }}
 						</div>
-						<div class="label">
-							replica_count
-						</div>
+						<div class="label">replica_count</div>
 					</div>
 				</div>
 				<div v-if="showActions" class="group actions">

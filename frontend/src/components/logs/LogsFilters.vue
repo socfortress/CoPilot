@@ -49,12 +49,8 @@
 			</n-input-group>
 		</div>
 		<div class="px-3 flex justify-end gap-2">
-			<n-button size="small" secondary @click="close()">
-				Close
-			</n-button>
-			<n-button size="small" type="primary" secondary @click="submit()">
-				Submit
-			</n-button>
+			<n-button size="small" secondary @click="close()">Close</n-button>
+			<n-button size="small" type="primary" secondary @click="submit()">Submit</n-button>
 		</div>
 	</div>
 </template>

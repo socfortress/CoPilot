@@ -26,12 +26,8 @@
 					</div>
 				</div>
 				<div class="flex justify-end gap-4 mt-4">
-					<n-button secondary @click="closeCropper()">
-						Close
-					</n-button>
-					<n-button v-if="img" type="primary" @click="emitCrop()">
-						Save
-					</n-button>
+					<n-button secondary @click="closeCropper()">Close</n-button>
+					<n-button v-if="img" type="primary" @click="emitCrop()">Save</n-button>
 				</div>
 			</n-card>
 		</n-modal>

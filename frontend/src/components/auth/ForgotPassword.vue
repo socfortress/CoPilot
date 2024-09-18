@@ -10,9 +10,7 @@
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
 			<div class="w-full">
-				<n-button type="primary" class="!w-full" size="large" @click="forgotPassword">
-					Send Reset Link
-				</n-button>
+				<n-button type="primary" class="!w-full" size="large" @click="forgotPassword">Send Reset Link</n-button>
 			</div>
 		</div>
 	</n-form>

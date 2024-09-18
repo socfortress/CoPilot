@@ -9,9 +9,7 @@
 							<th>Login</th>
 							<th>Name</th>
 							<th>Active</th>
-							<th style="max-width: 300px">
-								Alerts
-							</th>
+							<th style="max-width: 300px">Alerts</th>
 						</tr>
 					</thead>
 					<tbody>

@@ -6,9 +6,7 @@
 				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
 			</p>
 			<div v-if="!loadingLicense && !licenseKey">
-				<p v-if="!creationEnabled" class="flex gap-4 items-center">
-					no license found
-				</p>
+				<p v-if="!creationEnabled" class="flex gap-4 items-center">no license found</p>
 				<div class="flex items-center gap-4 mt-2">
 					<div class="actions-box flex gap-2">
 						<n-button
@@ -53,9 +51,7 @@
 
 		<div v-if="replaceEnabled" class="replace-box mt-2 flex gap-2">
 			<n-input v-model:value="licenseKeyModel" class="grow !max-w-72" clearable />
-			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">
-				Reset
-			</n-button>
+			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">Reset</n-button>
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKeyModel" @click="replaceLicense()">
 				<template #icon>
 					<Icon :name="EditIcon"></Icon>
@@ -67,14 +63,10 @@
 		<div v-if="extendEnabled" class="extend-box mt-5 flex gap-2">
 			<n-input-number v-model:value="period" class="grow !max-w-44" :min="1">
 				<template #prefix>
-					<div class="min-w-12">
-						Day{{ period === 1 ? "" : "s" }}
-					</div>
+					<div class="min-w-12">Day{{ period === 1 ? "" : "s" }}</div>
 				</template>
 			</n-input-number>
-			<n-button secondary :disabled="loadingExtend" @click="resetPeriod()">
-				Reset
-			</n-button>
+			<n-button secondary :disabled="loadingExtend" @click="resetPeriod()">Reset</n-button>
 			<n-button type="success" :loading="loadingExtend" :disabled="!period" @click="extendLicense()">
 				<template #icon>
 					<Icon :name="ExtendIcon"></Icon>
@@ -102,9 +94,7 @@
 				</div>
 			</n-form>
 			<div class="flex gap-2 justify-end">
-				<n-button secondary :disabled="loadingCreation" @click="resetCreation()">
-					Reset
-				</n-button>
+				<n-button secondary :disabled="loadingCreation" @click="resetCreation()">Reset</n-button>
 				<n-button
 					type="success"
 					:loading="loadingCreation"

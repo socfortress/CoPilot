@@ -6,17 +6,13 @@
 			</n-badge>
 		</template>
 		<template #header>
-			<n-text strong depth="1">
-				Notifications
-			</n-text>
+			<n-text strong depth="1">Notifications</n-text>
 		</template>
 		<template #default>
 			<NotificationsList :max-items="MAX_ITEMS" class="max-h-50vh">
 				<template #last>
 					<div v-if="list.length > MAX_ITEMS" class="flex justify-center p-4">
-						<n-button text @click="showDrawer = true">
-							View all
-						</n-button>
+						<n-button text @click="showDrawer = true">View all</n-button>
 					</div>
 				</template>
 			</NotificationsList>

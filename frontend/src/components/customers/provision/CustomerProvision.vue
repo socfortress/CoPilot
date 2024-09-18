@@ -8,9 +8,7 @@
 					@submitted="submitted"
 				>
 					<template #additionalActions>
-						<n-button @click="editing = false">
-							Close
-						</n-button>
+						<n-button @click="editing = false">Close</n-button>
 					</template>
 				</CustomerProvisionWizard>
 			</div>

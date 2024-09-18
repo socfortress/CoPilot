@@ -3,9 +3,7 @@
 		<n-tabs default-value="countByHost" animated type="line" :tabs-padding="24">
 			<n-tab-pane name="countByHost" tab="By Host">
 				<n-spin :show="loadingCountByHost">
-					<template #description>
-						Alerts are being fetched, this may take up to 1 minute.
-					</template>
+					<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
 					<div class="list">
 						<template v-if="countByHost.length">
@@ -28,9 +26,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="countByRule" tab="By Rule">
 				<n-spin :show="loadingCountByRule">
-					<template #description>
-						Alerts are being fetched, this may take up to 1 minute.
-					</template>
+					<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
 					<div class="list">
 						<template v-if="countByRule.length">
@@ -53,9 +49,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="countByRuleHost" tab="By Rule & Host">
 				<n-spin :show="loadingCountByRuleHost">
-					<template #description>
-						Alerts are being fetched, this may take up to 1 minute.
-					</template>
+					<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
 					<div class="list">
 						<template v-if="countByRuleHost.length">

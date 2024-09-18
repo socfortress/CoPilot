@@ -1,17 +1,13 @@
 <template>
 	<div v-if="sourceConfiguration" class="flex flex-col gap-3">
 		<KVCard v-if="showSource">
-			<template #key>
-				Source
-			</template>
+			<template #key>Source</template>
 			<template #value>
 				{{ sourceConfiguration.source }}
 			</template>
 		</KVCard>
 		<KVCard>
-			<template #key>
-				Field names
-			</template>
+			<template #key>Field names</template>
 			<template #value>
 				<div class="flex flex-wrap gap-2">
 					<Badge v-for="field of sourceConfiguration.field_names" :key="field" type="splitted" fluid>
@@ -23,25 +19,19 @@
 			</template>
 		</KVCard>
 		<KVCard>
-			<template #key>
-				Asset name
-			</template>
+			<template #key>Asset name</template>
 			<template #value>
 				{{ sourceConfiguration.asset_name }}
 			</template>
 		</KVCard>
 		<KVCard>
-			<template #key>
-				Timefield name
-			</template>
+			<template #key>Timefield name</template>
 			<template #value>
 				{{ sourceConfiguration.timefield_name }}
 			</template>
 		</KVCard>
 		<KVCard>
-			<template #key>
-				Alert title name
-			</template>
+			<template #key>Alert title name</template>
 			<template #value>
 				{{ sourceConfiguration.alert_title_name }}
 			</template>

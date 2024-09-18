@@ -109,9 +109,7 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-3 items-center">
-						<n-button :disabled="loading" @click="reset()">
-							Reset
-						</n-button>
+						<n-button :disabled="loading" @click="reset()">Reset</n-button>
 						<n-button
 							type="primary"
 							:disabled="!isValid"

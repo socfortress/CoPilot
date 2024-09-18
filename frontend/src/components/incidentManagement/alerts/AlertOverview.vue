@@ -82,9 +82,7 @@
 
 				<div class="px-7">
 					<KVCard>
-						<template #key>
-							description
-						</template>
+						<template #key>description</template>
 						<template #value>
 							{{ alert.alert_description ?? "-" }}
 						</template>
@@ -93,27 +91,19 @@
 
 				<div class="px-7 grid gap-2 grid-auto-fit-250">
 					<KVCard>
-						<template #key>
-							id
-						</template>
-						<template #value>
-							#{{ alert.id }}
-						</template>
+						<template #key>id</template>
+						<template #value>#{{ alert.id }}</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							source
-						</template>
+						<template #key>source</template>
 						<template #value>
 							{{ alert.source ?? "-" }}
 						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							customer code
-						</template>
+						<template #key>customer code</template>
 						<template #value>
 							<code
 								class="cursor-pointer text-primary-color"
@@ -126,27 +116,21 @@
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							assets
-						</template>
+						<template #key>assets</template>
 						<template #value>
 							{{ alert.assets.length }}
 						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							comments
-						</template>
+						<template #key>comments</template>
 						<template #value>
 							{{ alert.comments.length }}
 						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							tags
-						</template>
+						<template #key>tags</template>
 						<template #value>
 							<AlertTags :alert @updated="updateAlert" />
 						</template>

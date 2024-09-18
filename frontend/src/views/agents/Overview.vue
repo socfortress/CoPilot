@@ -5,9 +5,7 @@
 				<Icon :name="ArrowIcon" :size="16"></Icon>
 				<span>Agents list</span>
 			</div>
-			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">
-				Delete Agent
-			</div>
+			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
 		</div>
 		<n-spin
 			class="agent-header py-5 px-7 my-4"
@@ -46,9 +44,7 @@
 						<span>QUARANTINED</span>
 					</span>
 				</div>
-				<div class="label text-secondary-color mt-2">
-					Agent #{{ agent?.agent_id }}
-				</div>
+				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 			</div>
 			<div class="actions flex items-center justify-end grow">
 				<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">

@@ -17,9 +17,7 @@
 				<n-input v-model:value.trim="form.tenant_id" placeholder="Please insert Tenant ID" clearable />
 			</n-form-item>
 
-			<p class="text-center">
-				ScoutSuite for Azure must be ran with a user where MFA is disabled
-			</p>
+			<p class="text-center">ScoutSuite for Azure must be ran with a user where MFA is disabled</p>
 		</div>
 	</n-form>
 </template>

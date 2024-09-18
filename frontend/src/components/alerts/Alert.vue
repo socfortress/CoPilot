@@ -23,9 +23,7 @@
 						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
 						</template>
-						<template #label>
-							Fired times
-						</template>
+						<template #label>Fired times</template>
 						<template #value>
 							{{ alert._source.rule_firedtimes }}
 						</template>
@@ -35,9 +33,7 @@
 						<template #iconRight>
 							<Icon :name="alert._source.rule_mail ? MailIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							Rule mail
-						</template>
+						<template #label>Rule mail</template>
 					</Badge>
 
 					<n-popover overlap placement="bottom-start">
@@ -46,9 +42,7 @@
 								<template #iconLeft>
 									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 								</template>
-								<template #label>
-									Agent
-								</template>
+								<template #label>Agent</template>
 								<template #value>
 									{{ alert._source.agent_name }} / {{ alert._source.agent_labels_customer }}
 								</template>
@@ -86,33 +80,23 @@
 						</div>
 					</n-popover>
 					<Badge type="splitted" color="primary">
-						<template #label>
-							syslog
-						</template>
-						<template #value>
-							{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}
-						</template>
+						<template #label>syslog</template>
+						<template #value>{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}</template>
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
-						<template #label>
-							manager
-						</template>
+						<template #label>manager</template>
 						<template #value>
 							{{ alert._source.manager_name }}
 						</template>
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
-						<template #label>
-							decoder
-						</template>
+						<template #label>decoder</template>
 						<template #value>
 							{{ alert._source.decoder_name }}
 						</template>
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
-						<template #label>
-							source
-						</template>
+						<template #label>source</template>
 						<template #value>
 							{{ alert._source.source }}
 						</template>

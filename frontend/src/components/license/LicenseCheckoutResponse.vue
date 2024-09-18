@@ -7,12 +7,8 @@
 	>
 		<template v-if="type === 'success'">
 			<Icon :name="CheckIcon" class="text-success-color" :size="100" />
-			<h1 class="text-center">
-				Congratulations!
-			</h1>
-			<p class="text-center">
-				Your checkout was successful, and your license will be updated soon.
-			</p>
+			<h1 class="text-center">Congratulations!</h1>
+			<p class="text-center">Your checkout was successful, and your license will be updated soon.</p>
 			<n-spin v-if="loadingLicense" :size="24" />
 			<h4 v-if="license">
 				{{ license }}
@@ -20,9 +16,7 @@
 		</template>
 		<template v-if="type === 'error'">
 			<Icon :name="ErrorIcon" class="text-error-color" :size="100"></Icon>
-			<h1 class="text-center">
-				Checkout canceled
-			</h1>
+			<h1 class="text-center">Checkout canceled</h1>
 		</template>
 		<div>
 			<n-button @click="gotoLicense()">

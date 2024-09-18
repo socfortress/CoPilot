@@ -3,9 +3,7 @@
 		<div v-if="editing" class="p-7 pt-4">
 			<CustomerForm :customer="customer" :lock-code="true" @submitted="submitted">
 				<template #additionalActions>
-					<n-button @click="editing = false">
-						Close
-					</n-button>
+					<n-button @click="editing = false">Close</n-button>
 				</template>
 			</CustomerForm>
 		</div>

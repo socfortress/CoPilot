@@ -5,9 +5,7 @@
 				{{ key }}
 			</template>
 			<template #value>
-				<div v-if="key === 'id'">
-					#{{ value }}
-				</div>
+				<div v-if="key === 'id'">#{{ value }}</div>
 				<div v-else-if="key === 'customer_code'">
 					<code
 						class="cursor-pointer text-primary-color"

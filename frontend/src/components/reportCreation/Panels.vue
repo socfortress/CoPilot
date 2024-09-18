@@ -16,9 +16,7 @@
 							>
 								<template #item="{ element: row }">
 									<div class="row p-3" :class="{ 'height-large': row.height === 2 }">
-										<div v-if="!row.panels.length" class="empty-message">
-											Drop panels here
-										</div>
+										<div v-if="!row.panels.length" class="empty-message">Drop panels here</div>
 										<draggable
 											v-model="row.panels"
 											item-key="id"
@@ -170,9 +168,7 @@
 							<code>Dashboard</code>
 							to get the panels
 						</div>
-						<div v-else>
-							No Panels found
-						</div>
+						<div v-else>No Panels found</div>
 					</div>
 				</div>
 			</div>

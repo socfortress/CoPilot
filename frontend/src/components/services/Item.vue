@@ -6,9 +6,7 @@
 					<div v-if="selectable" class="check-box mr-2">
 						<n-radio v-model:checked="checked" size="large" />
 					</div>
-					<div class="id">
-						#{{ data.id }}
-					</div>
+					<div class="id">#{{ data.id }}</div>
 				</div>
 				<div class="actions">
 					<n-button size="small" @click.stop="showDetails = true">

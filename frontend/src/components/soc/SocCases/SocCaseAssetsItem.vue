@@ -36,17 +36,13 @@
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Status
-							</template>
+							<template #label>Status</template>
 							<template #value>
 								{{ asset.analysis_status }}
 							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Type
-							</template>
+							<template #label>Type</template>
 							<template #value>
 								{{ asset.asset_type }}
 							</template>

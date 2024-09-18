@@ -30,9 +30,7 @@
 							</template>
 						</KVCard>
 					</div>
-					<template v-else>
-						No feature enabled
-					</template>
+					<template v-else>No feature enabled</template>
 				</template>
 			</KVCard>
 			<KVCard>

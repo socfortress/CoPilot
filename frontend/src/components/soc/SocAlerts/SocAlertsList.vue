@@ -27,14 +27,10 @@
 							</div>
 						</n-button>
 					</template>
-					<template #header>
-						Selected Alerts
-					</template>
+					<template #header>Selected Alerts</template>
 					<template #footer>
 						<div class="flex justify-end">
-							<n-button size="tiny" @click="clearChecked()">
-								Clear selection
-							</n-button>
+							<n-button size="tiny" @click="clearChecked()">Clear selection</n-button>
 						</div>
 					</template>
 					<div class="checked-list flex flex-col gap-2">

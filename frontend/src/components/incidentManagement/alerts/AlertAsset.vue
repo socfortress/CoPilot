@@ -10,9 +10,7 @@
 
 				<div class="badges-box flex flex-wrap items-center gap-3">
 					<Badge type="splitted">
-						<template #label>
-							Index
-						</template>
+						<template #label>Index</template>
 						<template #value>
 							<div class="flex items-center h-full">
 								<code
@@ -27,9 +25,7 @@
 					</Badge>
 
 					<Badge type="splitted">
-						<template #label>
-							Agent
-						</template>
+						<template #label>Agent</template>
 						<template #value>
 							<div class="flex items-center h-full">
 								<code
@@ -73,17 +69,11 @@
 						<div v-if="alertContext" class="p-7 pt-4">
 							<div class="flex flex-wrap gap-3 mb-4">
 								<Badge type="splitted">
-									<template #label>
-										id
-									</template>
-									<template #value>
-										#{{ alertContext.id }}
-									</template>
+									<template #label>id</template>
+									<template #value>#{{ alertContext.id }}</template>
 								</Badge>
 								<Badge type="splitted">
-									<template #label>
-										source
-									</template>
+									<template #label>source</template>
 									<template #value>
 										{{ alertContext.source }}
 									</template>

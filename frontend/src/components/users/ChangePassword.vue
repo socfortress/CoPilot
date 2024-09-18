@@ -43,9 +43,7 @@
 						</n-form-item>
 
 						<div class="flex justify-end">
-							<n-button type="primary" :disabled="!isValid" @click="submit">
-								Send new password
-							</n-button>
+							<n-button type="primary" :disabled="!isValid" @click="submit">Send new password</n-button>
 						</div>
 					</div>
 				</n-form>

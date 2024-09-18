@@ -25,18 +25,14 @@
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
 				<Badge v-if="agentVersion" type="splitted" color="primary">
-					<template #label>
-						Agent version
-					</template>
+					<template #label>Agent version</template>
 					<template #value>
 						{{ agentVersion }}
 					</template>
 				</Badge>
 
 				<Badge v-if="source === 'velociraptor'" type="splitted" color="primary">
-					<template #label>
-						Velociraptor Id
-					</template>
+					<template #label>Velociraptor Id</template>
 					<template #value>
 						{{ healthData.velociraptor_id }}
 					</template>
@@ -48,9 +44,7 @@
 							<template #iconLeft>
 								<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 							</template>
-							<template #label>
-								Agent
-							</template>
+							<template #label>Agent</template>
 							<template #value>
 								{{ healthData.hostname }}
 							</template>

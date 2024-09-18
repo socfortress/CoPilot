@@ -88,9 +88,7 @@
 
 				<div class="px-7">
 					<KVCard>
-						<template #key>
-							description
-						</template>
+						<template #key>description</template>
 						<template #value>
 							<span class="whitespace-pre-wrap">
 								{{ caseData.case_description ?? "-" }}
@@ -101,18 +99,12 @@
 
 				<div class="px-7 grid gap-2 grid-auto-fit-250">
 					<KVCard>
-						<template #key>
-							id
-						</template>
-						<template #value>
-							#{{ caseData.id }}
-						</template>
+						<template #key>id</template>
+						<template #value>#{{ caseData.id }}</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>
-							creation time
-						</template>
+						<template #key>creation time</template>
 						<template #value>
 							{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
 						</template>

@@ -7,18 +7,14 @@
 
 			<div v-else key="form" class="ls-form flex flex-col">
 				<div class="ls-header flex items-center justify-between">
-					<div class="ls-title">
-						Layout settings
-					</div>
+					<div class="ls-title">Layout settings</div>
 					<div class="ls-icon flex items-center">
 						<Icon :size="20" :name="CloseIcon" @click="open = false" />
 					</div>
 				</div>
 				<n-scrollbar class="ls-main">
 					<div class="ls-section ls-color-selection">
-						<div class="ls-label">
-							Primary color
-						</div>
+						<div class="ls-label">Primary color</div>
 						<div class="color-picker-box">
 							<n-color-picker
 								v-if="theme === ThemeEnum.Dark"
@@ -42,9 +38,7 @@
 					</div>
 
 					<div class="ls-section ls-theme-selection">
-						<div class="ls-label">
-							Theme
-						</div>
+						<div class="ls-label">Theme</div>
 						<div class="flex items-center gap-2">
 							<div class="basis-1/2">
 								<n-button
@@ -126,9 +120,7 @@
 								/>
 							</div>
 							<div class="flex justify-between items-center">
-								<div class="switch-label">
-									Footer visible
-								</div>
+								<div class="switch-label">Footer visible</div>
 								<n-switch v-model:value="footerShown" size="small" />
 							</div>
 							<div class="flex justify-between items-center">
@@ -142,9 +134,7 @@
 					</div>
 
 					<div class="ls-section ls-transition-selection">
-						<div class="ls-label">
-							Router transition
-						</div>
+						<div class="ls-label">Router transition</div>
 						<div class="ls-input flex justify-between">
 							<n-select v-model:value="routerTransition" :options="transitionOptions" />
 						</div>

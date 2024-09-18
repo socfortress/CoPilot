@@ -2,9 +2,7 @@
 	<n-spin :show="loading" :description="loadingDelete ? 'Deleting' : 'Invoking'">
 		<div class="monitoring-alerts-item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
 			<div class="header-box flex justify-between">
-				<div class="id flex items-center">
-					#{{ alert.id }}
-				</div>
+				<div class="id flex items-center">#{{ alert.id }}</div>
 			</div>
 			<div class="main-box flex items-center justify-between gap-4">
 				<div class="content">
@@ -17,9 +15,7 @@
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
-							<template #label>
-								Index / {{ alert.alert_index }}
-							</template>
+							<template #label>Index / {{ alert.alert_index }}</template>
 						</Badge>
 
 						<Badge
@@ -30,15 +26,11 @@
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
-							<template #label>
-								Customer #{{ alert.customer_code }}
-							</template>
+							<template #label>Customer #{{ alert.customer_code }}</template>
 						</Badge>
 
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Source
-							</template>
+							<template #label>Source</template>
 							<template #value>
 								{{ alert.alert_source }}
 							</template>

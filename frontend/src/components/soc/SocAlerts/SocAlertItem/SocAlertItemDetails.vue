@@ -37,16 +37,12 @@
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14"></Icon>
 					</template>
-					<template #label>
-						Go to users page
-					</template>
+					<template #label>Go to users page</template>
 				</Badge>
 			</div>
 			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard>
-					<template #key>
-						user_login
-					</template>
+					<template #key>user_login</template>
 					<template #value>
 						<SocAssignUser
 							v-slot="{ loading }"
@@ -64,18 +60,14 @@
 					</template>
 				</KVCard>
 				<KVCard v-if="alert.owner">
-					<template #key>
-						user_name
-					</template>
+					<template #key>user_name</template>
 					<template #value>
 						<span>#{{ alert.owner.id }}</span>
 						{{ alert.owner.user_name }}
 					</template>
 				</KVCard>
 				<KVCard v-if="alert.owner">
-					<template #key>
-						user_email
-					</template>
+					<template #key>user_email</template>
 					<template #value>
 						{{ alert.owner.user_email }}
 					</template>

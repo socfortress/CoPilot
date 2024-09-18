@@ -73,14 +73,10 @@
 					</div>
 					<div class="px-3 flex justify-between gap-2">
 						<div class="flex justify-start gap-2">
-							<n-button size="small" quaternary @click="showFilters = false">
-								Close
-							</n-button>
+							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
 						</div>
 						<div class="flex justify-end gap-2">
-							<n-button size="small" secondary @click="resetFilters()">
-								Reset
-							</n-button>
+							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
 							<n-button size="small" type="primary" secondary :loading @click="getData()">
 								Submit
 							</n-button>

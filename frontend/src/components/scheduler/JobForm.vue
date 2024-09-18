@@ -13,9 +13,7 @@
 				</n-form-item>
 
 				<div class="flex gap-3 justify-end items-center">
-					<n-button :disabled="loading" @click="reset()">
-						Reset
-					</n-button>
+					<n-button :disabled="loading" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"
 						:disabled="!isValid"

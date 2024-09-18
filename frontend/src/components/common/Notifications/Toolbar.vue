@@ -3,9 +3,7 @@
 		class="notifications-toolbar flex"
 		:class="{ 'justify-between': hasNotifications, 'justify-end': !hasNotifications }"
 	>
-		<n-button v-if="hasNotifications" quaternary @click="deleteAll()">
-			Clear
-		</n-button>
+		<n-button v-if="hasNotifications" quaternary @click="deleteAll()">Clear</n-button>
 		<n-button strong secondary type="primary" :disabled="!hasUnread" @click="setAllRead()">
 			Mark all as read
 		</n-button>

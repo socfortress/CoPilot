@@ -4,9 +4,7 @@
 		<div class="title mb-4">
 			{{ title }}
 		</div>
-		<div class="text mb-12">
-			Access the world of OpenSource security: Simplified, Streamlined, Accessible.
-		</div>
+		<div class="text mb-12">Access the world of OpenSource security: Simplified, Streamlined, Accessible.</div>
 
 		<div class="form">
 			<transition name="form-fade" mode="out-in" appear>
@@ -19,20 +17,14 @@
 		<div class="sign-text text-center mt-10">
 			<div v-if="typeRef === 'signin'" class="sign-text">
 				Don't you have an account?
-				<n-button text type="primary" size="large" @click="gotoSignUp()">
-					Sign up
-				</n-button>
+				<n-button text type="primary" size="large" @click="gotoSignUp()">Sign up</n-button>
 			</div>
 			<div v-if="typeRef === 'forgotpassword'" class="sign-text">
-				<n-button text type="primary" size="large" @click="gotoSignIn()">
-					Back to Sign in
-				</n-button>
+				<n-button text type="primary" size="large" @click="gotoSignIn()">Back to Sign in</n-button>
 			</div>
 			<div v-if="typeRef === 'signup'" class="sign-text">
 				Do you have an account?
-				<n-button text type="primary" size="large" @click="gotoSignIn()">
-					Sign in
-				</n-button>
+				<n-button text type="primary" size="large" @click="gotoSignIn()">Sign in</n-button>
 			</div>
 		</div>
 	</div>

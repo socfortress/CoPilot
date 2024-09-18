@@ -56,12 +56,8 @@
 			<div class="connector-footer mt-4">
 				<n-form-item>
 					<div class="flex gap-2 justify-end w-full">
-						<n-button type="primary" @click="saveConnector()">
-							Save
-						</n-button>
-						<n-button @click="closeForm(false)">
-							Cancel
-						</n-button>
+						<n-button type="primary" @click="saveConnector()">Save</n-button>
+						<n-button @click="closeForm(false)">Cancel</n-button>
 					</div>
 				</n-form-item>
 			</div>

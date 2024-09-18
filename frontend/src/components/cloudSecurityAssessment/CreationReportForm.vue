@@ -43,9 +43,7 @@
 				/>
 
 				<div class="flex justify-between gap-4 mt-8">
-					<n-button :disabled="loading" @click="reset()">
-						Reset
-					</n-button>
+					<n-button :disabled="loading" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"
 						:disabled="!isValid"

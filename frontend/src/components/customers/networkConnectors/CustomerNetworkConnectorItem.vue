@@ -2,17 +2,13 @@
 	<div class="network-connector-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-3">
 			<div class="header-box flex justify-between items-center">
-				<div class="id">
-					#{{ networkConnector.id }}
-				</div>
+				<div class="id">#{{ networkConnector.id }}</div>
 				<div class="actions flex gap-3">
 					<Badge v-if="networkConnector.deployed" type="active">
 						<template #iconLeft>
 							<Icon :name="DeployIcon" :size="13"></Icon>
 						</template>
-						<template #value>
-							Deployed
-						</template>
+						<template #value>Deployed</template>
 					</Badge>
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>

@@ -26,9 +26,7 @@
 				@stop-loading="loadingInvoke = false"
 			>
 				<template #additionalActions>
-					<n-button secondary @click="close()">
-						Close
-					</n-button>
+					<n-button secondary @click="close()">Close</n-button>
 				</template>
 			</ActiveResponseInvokeForm>
 		</n-modal>

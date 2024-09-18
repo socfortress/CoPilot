@@ -12,14 +12,10 @@
 				<n-checkbox value="critical" label="Critical" />
 			</n-checkbox-group>
 
-			<p class="text-right">
-				* It may take several minutes
-			</p>
+			<p class="text-right">* It may take several minutes</p>
 
 			<div class="flex gap-2 justify-between">
-				<n-button quaternary size="small" @click="closePopup()">
-					Close
-				</n-button>
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload
 				</n-button>

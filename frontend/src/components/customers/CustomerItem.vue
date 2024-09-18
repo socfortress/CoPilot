@@ -2,9 +2,7 @@
 	<n-spin :id="`customer-${customer.customer_code}`" :show="loading" :class="{ highlight }" class="customer-item">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
-				<div class="id">
-					#{{ customer.customer_code }}
-				</div>
+				<div class="id">#{{ customer.customer_code }}</div>
 				<div v-if="!hideCardActions" class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
@@ -37,9 +35,7 @@
 					<template #iconLeft>
 						<Icon :name="UserTypeIcon" :size="14"></Icon>
 					</template>
-					<template #label>
-						Type
-					</template>
+					<template #label>Type</template>
 					<template #value>
 						{{ customerInfo?.customer_type || "-" }}
 					</template>
@@ -98,9 +94,7 @@
 					<template #iconLeft>
 						<Icon :name="ParentIcon" :size="13"></Icon>
 					</template>
-					<template #label>
-						Parent
-					</template>
+					<template #label>Parent</template>
 					<template #value>
 						{{ customerInfo?.parent_customer_code }}
 					</template>

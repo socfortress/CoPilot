@@ -26,9 +26,7 @@
 			</div>
 
 			<div class="flex gap-2 justify-between">
-				<n-button quaternary size="small" @click="closePopup()">
-					Close
-				</n-button>
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button
 					:disabled="!dirty || !isValid"
 					:loading

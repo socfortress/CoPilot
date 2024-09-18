@@ -6,9 +6,7 @@
 				<n-input v-model:value.trim="iocValue" placeholder="IPv4, domain, or SHA256 hash" clearable />
 			</div>
 			<div class="flex justify-end">
-				<n-button type="primary" :disabled="!isValid" @click="create()">
-					Submit
-				</n-button>
+				<n-button type="primary" :disabled="!isValid" @click="create()">Submit</n-button>
 			</div>
 			<div v-if="error || !!response" class="response" :class="{ error }">
 				<div v-if="error" class="message">
@@ -16,57 +14,43 @@
 				</div>
 				<div v-else class="list">
 					<div class="item">
-						<div class="key">
-							type
-						</div>
+						<div class="key">type</div>
 						<div class="value">
 							{{ response?.type || "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							value
-						</div>
+						<div class="key">value</div>
 						<div class="value">
 							{{ response?.value || "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							ioc_source
-						</div>
+						<div class="key">ioc_source</div>
 						<div class="value">
 							{{ response?.ioc_source || "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							comment
-						</div>
+						<div class="key">comment</div>
 						<div class="value">
 							{{ response?.comment || "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							score
-						</div>
+						<div class="key">score</div>
 						<div class="value">
 							{{ response?.score || "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							timestamp
-						</div>
+						<div class="key">timestamp</div>
 						<div class="value">
 							{{ response?.timestamp ? formatDate(response.timestamp, dFormats.datetime) : "-" }}
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							report_url
-						</div>
+						<div class="key">report_url</div>
 						<div class="value">
 							<a v-if="response?.report_url" :href="response.report_url" target="_blank">
 								{{ response.report_url }}
@@ -75,9 +59,7 @@
 						</div>
 					</div>
 					<div class="item">
-						<div class="key">
-							virustotal_url
-						</div>
+						<div class="key">virustotal_url</div>
 						<div class="value">
 							<a v-if="response?.virustotal_url" :href="response.virustotal_url" target="_blank">
 								{{ response.virustotal_url }}

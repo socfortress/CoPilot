@@ -6,9 +6,7 @@
 					<template #iconLeft>
 						<Icon :name="StatusIcon" :size="14"></Icon>
 					</template>
-					<template #label>
-						Status
-					</template>
+					<template #label>Status</template>
 					<template #value>
 						{{ alert.status?.status_name || "-" }}
 					</template>
@@ -20,9 +18,7 @@
 			<template #iconLeft>
 				<Icon :name="SeverityIcon" :size="13"></Icon>
 			</template>
-			<template #label>
-				Severity
-			</template>
+			<template #label>Severity</template>
 			<template #value>
 				{{ alert.severity?.severity_name || "-" }}
 			</template>
@@ -31,9 +27,7 @@
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
-			<template #label>
-				Source
-			</template>
+			<template #label>Source</template>
 			<template #value>
 				{{ alert.alert_source || "-" }}
 			</template>
@@ -42,9 +36,7 @@
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13"></Icon>
 			</template>
-			<template #label>
-				Customer
-			</template>
+			<template #label>Customer</template>
 			<template #value>
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
@@ -68,9 +60,7 @@
 						<Icon :name="OwnerIcon" :size="16"></Icon>
 					</n-spin>
 				</template>
-				<template #label>
-					Owner
-				</template>
+				<template #label>Owner</template>
 				<template #value>
 					{{ ownerName || "n/d" }}
 				</template>
@@ -88,9 +78,7 @@
 			<template #iconRight>
 				<Icon :name="LinkIcon" :size="14"></Icon>
 			</template>
-			<template #label>
-				Source link
-			</template>
+			<template #label>Source link</template>
 		</Badge>
 	</div>
 </template>

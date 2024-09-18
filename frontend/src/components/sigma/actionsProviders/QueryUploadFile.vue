@@ -15,19 +15,13 @@
 					<div>
 						<Icon :name="UploadIcon" :size="28" :depth="3"></Icon>
 					</div>
-					<div class="font-semibold">
-						Click or drag a file to this area to upload
-					</div>
-					<p class="mt-2">
-						Only .yaml files are accepted
-					</p>
+					<div class="font-semibold">Click or drag a file to this area to upload</div>
+					<p class="mt-2">Only .yaml files are accepted</p>
 				</n-upload-dragger>
 			</n-upload>
 
 			<div class="flex gap-2 justify-between">
-				<n-button quaternary size="small" @click="closePopup()">
-					Close
-				</n-button>
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload
 				</n-button>

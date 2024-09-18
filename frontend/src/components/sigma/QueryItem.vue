@@ -38,9 +38,7 @@
 										<Icon :name="TimeIntervalIcon" />
 									</n-spin>
 								</template>
-								<template #label>
-									Time Interval
-								</template>
+								<template #label>Time Interval</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ query.time_interval || "n/d" }}
@@ -54,9 +52,7 @@
 							<template #iconLeft>
 								<Icon :name="TimeIcon" />
 							</template>
-							<template #label>
-								Last execution time
-							</template>
+							<template #label>Last execution time</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{

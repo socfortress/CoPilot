@@ -16,25 +16,19 @@
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Case open date
-							</template>
+							<template #label>Case open date</template>
 							<template #value>
 								{{ formatDate(link.case_open_date) }}
 							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Asset id
-							</template>
+							<template #label>Asset id</template>
 							<template #value>
 								{{ link.asset_id }}
 							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
-							<template #label>
-								Compromise status
-							</template>
+							<template #label>Compromise status</template>
 							<template #value>
 								{{ link.asset_compromise_status_id || "-" }}
 							</template>
@@ -51,9 +45,7 @@
 			</template>
 			<n-collapse-item>
 				<template #header>
-					<div class="py-3 -ml-2">
-						SOC Case details
-					</div>
+					<div class="py-3 -ml-2">SOC Case details</div>
 				</template>
 				<div style="min-height: 50px">
 					<n-spin :show="loadingCase">

@@ -2,9 +2,7 @@
 	<n-spin class="settings" :show="loading">
 		<n-card>
 			<n-form ref="formRef" :label-width="80" :model="formValue" :rules="formRules">
-				<div class="title">
-					General
-				</div>
+				<div class="title">General</div>
 				<div class="flex flex-col md:flex-row md:gap-6">
 					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
 						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailable" />
@@ -20,9 +18,7 @@
 				</div>
 
 				<n-form-item>
-					<n-button type="primary" @click="save()">
-						Save
-					</n-button>
+					<n-button type="primary" @click="save()">Save</n-button>
 				</n-form-item>
 			</n-form>
 		</n-card>

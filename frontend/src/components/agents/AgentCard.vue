@@ -43,9 +43,7 @@
 							</n-tooltip>
 						</div>
 					</div>
-					<div class="info">
-						#{{ agent.agent_id }} / {{ agent.label }}
-					</div>
+					<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
 				</div>
 				<div class="agent-info">
 					<div class="os" :title="agent.os">

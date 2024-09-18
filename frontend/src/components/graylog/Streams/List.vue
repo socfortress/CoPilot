@@ -45,9 +45,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">
-							Enabled:
-						</div>
+						<div class="text-secondary-color text-sm mb-1">Enabled:</div>
 						<n-select
 							v-model:value="enabledFilter"
 							size="small"
@@ -59,9 +57,7 @@
 					</div>
 					<n-divider class="!my-3" />
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">
-							Editable:
-						</div>
+						<div class="text-secondary-color text-sm mb-1">Editable:</div>
 						<n-select
 							v-model:value="editableFilter"
 							size="small"

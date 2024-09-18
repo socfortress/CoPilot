@@ -53,9 +53,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">
-							Result:
-						</div>
+						<div class="text-secondary-color text-sm mb-1">Result:</div>
 						<n-select
 							v-model:value="resultFilter"
 							size="small"

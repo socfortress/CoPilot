@@ -33,9 +33,7 @@
 								:size="14"
 							></Icon>
 						</template>
-						<template #label>
-							Type
-						</template>
+						<template #label>Type</template>
 						<template #value>
 							{{ log.event_type }}
 						</template>

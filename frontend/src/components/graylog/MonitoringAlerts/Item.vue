@@ -89,12 +89,8 @@
 			</n-spin>
 			<template #footer>
 				<div class="flex justify-end gap-3">
-					<n-button @click="closeFormDialog()">
-						Close
-					</n-button>
-					<n-button :loading="loadingProvision" type="success" @click="validateForm">
-						Enable
-					</n-button>
+					<n-button @click="closeFormDialog()">Close</n-button>
+					<n-button :loading="loadingProvision" type="success" @click="validateForm">Enable</n-button>
 				</div>
 			</template>
 		</n-modal>

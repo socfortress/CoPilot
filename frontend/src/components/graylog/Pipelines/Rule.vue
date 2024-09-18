@@ -68,9 +68,7 @@
 					Errors :
 					<code>{{ rule.errors || "-" }}</code>
 				</div>
-				<div class="mb-1">
-					Source :
-				</div>
+				<div class="mb-1">Source :</div>
 				<n-input
 					:value="rule.source"
 					type="textarea"

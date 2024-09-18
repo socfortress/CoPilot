@@ -40,9 +40,7 @@
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />
 							</template>
-							<template #label>
-								Status
-							</template>
+							<template #label>Status</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ caseEntity.case_status || "n/d" }}
@@ -59,9 +57,7 @@
 							<template #iconLeft>
 								<AssigneeIcon :assignee="caseEntity.assigned_to" />
 							</template>
-							<template #label>
-								Assignee
-							</template>
+							<template #label>Assignee</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ caseEntity.assigned_to || "n/d" }}
@@ -99,9 +95,7 @@
 										<StatusIcon :status="caseEntity.case_status" />
 									</n-spin>
 								</template>
-								<template #label>
-									Status
-								</template>
+								<template #label>Status</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ caseEntity.case_status || "n/d" }}
@@ -131,9 +125,7 @@
 										<AssigneeIcon :assignee="caseEntity.assigned_to" />
 									</n-spin>
 								</template>
-								<template #label>
-									Assignee
-								</template>
+								<template #label>Assignee</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ caseEntity.assigned_to || "n/d" }}
@@ -154,9 +146,7 @@
 							</template>
 							<template #header-extra>
 								<div class="actions-box">
-									<n-button quaternary size="tiny" @click="handleDelete()">
-										Delete Case
-									</n-button>
+									<n-button quaternary size="tiny" @click="handleDelete()">Delete Case</n-button>
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">

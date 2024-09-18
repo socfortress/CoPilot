@@ -91,12 +91,8 @@
 						</n-input-group>
 					</div>
 					<div class="px-3 flex justify-end gap-2">
-						<n-button size="small" secondary @click="showFilters = false">
-							Close
-						</n-button>
-						<n-button size="small" type="primary" secondary @click="getData()">
-							Submit
-						</n-button>
+						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
+						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
 				</div>
 			</n-popover>

@@ -29,9 +29,7 @@
 						<template #iconRight>
 							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							Global
-						</template>
+						<template #label>Global</template>
 					</Badge>
 					<n-tooltip trigger="hover" :disabled="!isRunning">
 						<template #trigger>
@@ -39,9 +37,7 @@
 								<template #iconRight>
 									<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14"></Icon>
 								</template>
-								<template #label>
-									Running
-								</template>
+								<template #label>Running</template>
 							</Badge>
 						</template>
 						{{ formatDateTime(input.started_at) }}
@@ -113,9 +109,7 @@
 							Content pack :
 							<code>{{ input.content_pack || "-" }}</code>
 						</div>
-						<div class="mb-2">
-							Static fields :
-						</div>
+						<div class="mb-2">Static fields :</div>
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="input.static_fields"

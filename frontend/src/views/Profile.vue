@@ -48,17 +48,13 @@
 						placeholder="Select your profile picture"
 						@crop="setCroppedImage"
 					>
-						<n-button size="large" type="primary" @click="openCropper()">
-							Edit profile image
-						</n-button>
+						<n-button size="large" type="primary" @click="openCropper()">Edit profile image</n-button>
 					</ImageCropper>
 				</div>
 			</div>
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
-					<n-tab name="settings">
-						Settings
-					</n-tab>
+					<n-tab name="settings">Settings</n-tab>
 				</n-tabs>
 			</div>
 		</n-card>

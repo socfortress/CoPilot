@@ -22,9 +22,7 @@
 								/>
 							</div>
 						</template>
-						<template v-else>
-							-
-						</template>
+						<template v-else>-</template>
 					</template>
 					<template v-else>
 						<ExpandableText :text="value.toString() ?? '-'" :max-length="100" />

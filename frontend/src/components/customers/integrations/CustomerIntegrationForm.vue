@@ -50,9 +50,7 @@
 
 		<div class="flex justify-between gap-4 px-7 pb-4">
 			<div class="flex gap-4">
-				<n-button @click="close()">
-					Close
-				</n-button>
+				<n-button @click="close()">Close</n-button>
 			</div>
 			<div class="flex gap-4">
 				<n-button v-if="isPrevStepEnabled" @click="prev()">

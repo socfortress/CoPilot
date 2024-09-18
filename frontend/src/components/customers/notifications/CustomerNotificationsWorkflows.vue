@@ -8,9 +8,7 @@
 					@submitted="refreshList()"
 				>
 					<template #additionalActions="{ loading }">
-						<n-button :disabled="loading" @click="closeForm()">
-							Close
-						</n-button>
+						<n-button :disabled="loading" @click="closeForm()">Close</n-button>
 					</template>
 				</CustomerNotificationsWorkflowsForm>
 			</div>
