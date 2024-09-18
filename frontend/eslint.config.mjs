@@ -21,6 +21,7 @@ export default antfu({
 		"style/indent": "off",
 		"style/member-delimiter-style": "off",
 		"style/quotes": "off",
+		"style/quote-props": "off",
 		"style/comma-dangle": [
 			"error",
 			{
