@@ -31,6 +31,9 @@ from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
@@ -45,6 +48,11 @@ from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 
+async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
+    result = await db.execute(select(AlertCreationSettings).where(AlertCreationSettings.customer_code == customer_code))
+    if result.scalars().first():
+        return True
+    raise HTTPException(status_code=404, detail="Customer code not found")
 
 async def alert_total(db: AsyncSession) -> int:
     result = await db.execute(select(Alert))
@@ -458,6 +466,16 @@ async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSessi
     await db.commit()
     return case
 
+async def update_case_customer_code(case_id: int, customer_code: str, db: AsyncSession) -> Case:
+    await customer_code_valid(customer_code, db)
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    case.customer_code = customer_code
+    await db.commit()
+    return case
+
 
 async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
@@ -669,6 +687,7 @@ async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
         case_description=alert.alert_description,
         case_status=alert.status,
         assigned_to=alert.assigned_to,
+        customer_code=alert.customer_code,
     )
     db.add(case)
     try:
@@ -747,6 +766,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         assigned_to=case.assigned_to,
         alerts=alerts_out,
         case_creation_time=case.case_creation_time,
+        customer_code=case.customer_code,
     )
     return case_out
 
@@ -794,6 +814,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             alerts=alerts_out,
             case_creation_time=case.case_creation_time,
             case_status=case.case_status,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -839,6 +860,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -884,6 +906,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -932,6 +955,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out

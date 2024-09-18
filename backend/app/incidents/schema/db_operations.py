@@ -208,6 +208,7 @@ class CaseCreate(BaseModel):
     case_creation_time: datetime
     case_status: str
     assigned_to: Optional[str] = None
+    customer_code: Optional[str] = None
 
 
 class LinkedCaseCreate(BaseModel):
@@ -308,6 +309,7 @@ class CaseOut(BaseModel):
     alerts: Optional[List[AlertOut]] = []
     case_status: Optional[str] = None
     case_creation_time: Optional[datetime] = None
+    customer_code: Optional[str] = None
 
 
 class CaseOutResponse(BaseModel):

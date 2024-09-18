@@ -63,7 +63,7 @@ from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total, upload_file_to_case, delete_file_from_case, list_all_files, download_file_from_case
-from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists
+from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists, update_case_customer_code
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -573,6 +573,10 @@ async def update_case_assigned_to_endpoint(assigned_to: AssignedToCase, db: Asyn
         success=True,
         message="Case assigned to user successfully",
     )
+
+@incidents_db_operations_router.put("/case/customer-code", response_model=CaseOutResponse)
+async def update_case_customer_code_endpoint(case_id: int, customer_code: str, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=[await update_case_customer_code(case_id, customer_code, db)], success=True, message="Case customer code updated successfully")
 
 
 @incidents_db_operations_router.delete("/case/{case_id}")
