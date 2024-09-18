@@ -40,7 +40,7 @@ export function resetIndent(el: HTMLElement) {
 				lines.shift()
 			}
 
-			const matches = /^[\s\t]+/.exec(lines[0])
+			const matches = /^\s+/.exec(lines[0])
 			const indentation = matches !== null ? matches[0] : null
 			if (indentation) {
 				lines = lines.map(line => {

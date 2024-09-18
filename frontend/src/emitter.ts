@@ -1,6 +1,6 @@
-import mitt, { type Emitter as Mitt, type EventType } from "mitt"
+import mitt, { type EventType, type Emitter as Mitt } from "mitt"
 
-type Events = {
+interface Events {
 	"action:add-customer": void
 }
 

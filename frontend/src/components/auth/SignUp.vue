@@ -3,7 +3,7 @@
 		<n-form ref="formRef" :model="model" :rules="rules">
 			<n-steps :current="wizardCurrent" vertical>
 				<n-step title="Account">
-					<div class="pt-3" v-show="wizardCurrent === 1">
+					<div v-show="wizardCurrent === 1" class="pt-3">
 						<n-form-item path="email" label="Email">
 							<n-input
 								v-model:value="model.email"
@@ -50,7 +50,7 @@
 					</div>
 				</n-step>
 				<n-step title="Details">
-					<div class="pt-3" v-show="wizardCurrent === 2">
+					<div v-show="wizardCurrent === 2" class="pt-3">
 						<n-form-item path="username" label="Username">
 							<n-input
 								v-model:value="model.username"
@@ -114,7 +114,7 @@
 						-->
 
 						<div class="flex items-center justify-between mt-3 gap-3">
-							<n-button @click="wizardCurrent = 1" size="large">
+							<n-button size="large" @click="wizardCurrent = 1">
 								<template #icon>
 									<Icon :name="ArrowLeftIcon"></Icon>
 								</template>
@@ -141,28 +141,28 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue"
+import type { RegisterPayload } from "@/types/auth.d"
 
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import {
 	type FormInst,
-	type FormValidationError,
+	type FormItemRule,
 	type FormRules,
-	useMessage,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
-	NSteps,
-	NStep,
 	NSpin,
-	type FormItemRule
+	NStep,
+	NSteps,
+	useMessage
 } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
+import { computed, ref } from "vue"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import passwordValidator from "password-validator"
-import Api from "@/api"
-import type { RegisterPayload } from "@/types/auth.d"
-import Icon from "@/components/common/Icon.vue"
 
 interface ModelType {
 	email: string
@@ -206,7 +206,7 @@ const model = ref<ModelType>({
 
 const accountStepValid = computed(() => !!model.value.email && !!model.value.password && !!model.value.confirmPassword)
 const detailsStepValid = computed(() => !!model.value.username)
-//const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
+// const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new passwordValidator()
 passwordSchema

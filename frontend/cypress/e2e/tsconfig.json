@@ -1,11 +1,11 @@
 {
 	"extends": "@vue/tsconfig/tsconfig.dom.json",
-	"include": ["./**/*", "../support/**/*"],
 	"compilerOptions": {
-		"isolatedModules": false,
 		"target": "es5",
 		"lib": ["es5", "dom"],
 		"types": ["cypress"],
-		"sourceMap": false
-	}
+		"sourceMap": false,
+		"isolatedModules": false
+	},
+	"include": ["./**/*", "../support/**/*"]
 }

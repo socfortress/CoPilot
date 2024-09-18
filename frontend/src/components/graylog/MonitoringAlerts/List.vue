@@ -1,6 +1,6 @@
 <template>
 	<div class="monitoring-alert-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -47,31 +47,31 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive-ui"
-import Api from "@/api"
-import MonitoringAlert from "./Item.vue"
-import CustomAlertButton from "./CustomAlertButton.vue"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
-import Icon from "@/components/common/Icon.vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import CustomAlertButton from "./CustomAlertButton.vue"
+import MonitoringAlert from "./Item.vue"
 
 const { eventsList } = defineProps<{ eventsList: EventDefinition[] }>()
 

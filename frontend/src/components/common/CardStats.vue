@@ -8,9 +8,11 @@
 				<div class="info flex flex-col grow overflow-hidden">
 					<div class="title flex items-center gap-2">
 						{{ title }}
-						<Icon :name="ArrowRightIcon" v-if="hovered" :size="12"></Icon>
+						<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
 					</div>
-					<div class="value mt-1" v-if="value">{{ value }}</div>
+					<div v-if="value" class="value mt-1">
+						{{ value }}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -18,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
+import Icon from "@/components/common/Icon.vue"
 import { NCard } from "naive-ui"
 import { toRefs } from "vue"
-import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	title: string

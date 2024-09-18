@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { NIconWrapper, NIcon } from "naive-ui"
-import { Icon, loadIcon, type IconifyIcon } from "@iconify/vue"
+import { Icon, type IconifyIcon, loadIcon } from "@iconify/vue"
+import { NIcon, NIconWrapper } from "naive-ui"
 import { computed, ref, watchEffect } from "vue"
 
 const props = defineProps<{
@@ -28,7 +28,7 @@ const useWrapper = computed(() => !!(props.bgColor || props.bgSize || props.bord
 const componentName = computed(() => (useWrapper.value ? NIconWrapper : NIcon))
 
 const options = computed(() => {
-	const opt: Partial<{ size: number; color: string; borderRadius: number; iconColor: string; depth: number }> = {}
+	const opt: Partial<{ size: number, color: string, borderRadius: number, iconColor: string, depth: number }> = {}
 	if (useWrapper.value) {
 		if (props.bgSize !== undefined) opt.size = props.bgSize
 		if (props.bgColor !== undefined) opt.color = props.bgColor

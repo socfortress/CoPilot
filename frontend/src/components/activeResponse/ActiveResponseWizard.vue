@@ -36,7 +36,7 @@
 										<ActiveResponseItem
 											v-for="activeResponse of activeResponseFiltered"
 											:key="activeResponse.name"
-											:activeResponse="activeResponse"
+											:active-response="activeResponse"
 											embedded
 											hide-actions
 											class="mb-2 cursor-pointer"
@@ -45,9 +45,9 @@
 									</template>
 									<template v-else>
 										<n-empty
+											v-if="!loadingActiveResponse"
 											description="No items found"
 											class="justify-center h-48"
-											v-if="!loadingActiveResponse"
 										/>
 									</template>
 								</div>
@@ -56,14 +56,14 @@
 						<div v-else-if="current === 3" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
-								:activeResponse="selectedActiveResponse"
+								:active-response="selectedActiveResponse"
 								@mounted="activeResponseInvokeFormCTX = $event"
 								@submitted="reset()"
-								@startLoading="loadingActiveResponseInvoke = true"
-								@stopLoading="loadingActiveResponseInvoke = false"
+								@start-loading="loadingActiveResponseInvoke = true"
+								@stop-loading="loadingActiveResponseInvoke = false"
 							>
 								<template #additionalActions>
-									<n-button @click="prev()" :disabled="loadingActiveResponseInvoke">
+									<n-button :disabled="loadingActiveResponseInvoke" @click="prev()">
 										<template #icon>
 											<Icon :name="ArrowLeftIcon"></Icon>
 										</template>
@@ -76,12 +76,12 @@
 				</div>
 			</div>
 
-			<div class="flex justify-between gap-4 p-7 pt-4" v-if="current !== 3">
+			<div v-if="current !== 3" class="flex justify-between gap-4 p-7 pt-4">
 				<div class="flex gap-4">
 					<slot name="additionalActions"></slot>
 				</div>
 				<div class="flex gap-4">
-					<n-button @click="prev()" v-if="isPrevStepEnabled">
+					<n-button v-if="isPrevStepEnabled" @click="prev()">
 						<template #icon>
 							<Icon :name="ArrowLeftIcon"></Icon>
 						</template>
@@ -94,16 +94,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { NSteps, NStep, useMessage, NScrollbar, NButton, NEmpty, NSpin, type StepsProps } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { onBeforeMount } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import ActiveResponseItem from "./ActiveResponseItem.vue"
-import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
-import { iconFromOs } from "@/utils"
 import type { OsTypesLower } from "@/types/common.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { iconFromOs } from "@/utils"
+import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
+import ActiveResponseItem from "./ActiveResponseItem.vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

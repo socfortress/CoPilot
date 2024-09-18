@@ -9,7 +9,7 @@
 			</n-button>
 		</div>
 
-		<PipeList @open-rule="openRule($event)" minHeight="100px" />
+		<PipeList min-height="100px" @open-rule="openRule($event)" />
 
 		<n-modal
 			v-model:show="showDetails"
@@ -33,22 +33,22 @@
 			<n-drawer-content closable body-content-style="padding:0">
 				<template #header>
 					<span>Rules list</span>
-					<span class="font-mono ml-2 text-secondary-color" v-if="rulesTotal !== null">{{ rulesTotal }}</span>
+					<span v-if="rulesTotal !== null" class="font-mono ml-2 text-secondary-color">{{ rulesTotal }}</span>
 				</template>
-				<RulesList @loaded="rulesTotal = $event.total" :highlight="highlightRule" />
+				<RulesList :highlight="highlightRule" @loaded="rulesTotal = $event.total" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, NModal, NDrawer, NDrawerContent } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
 import Icon from "@/components/common/Icon.vue"
-import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
+import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import RulesList from "@/components/graylog/Pipelines/RulesList.vue"
+import { NButton, NDrawer, NDrawerContent, NModal } from "naive-ui"
+import { onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 
 const RulesIcon = "ic:outline-swipe-right-alt"

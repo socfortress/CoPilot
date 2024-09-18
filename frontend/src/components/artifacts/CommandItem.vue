@@ -3,7 +3,7 @@
 		<div class="header-box flex justify-between">
 			<div class="status">
 				Complete:
-				<strong class="font-mono" :class="{ success: command.Complete + '' === 'true' }">
+				<strong class="font-mono" :class="{ success: `${command.Complete}` === 'true' }">
 					{{ command.Complete }}
 				</strong>
 			</div>
@@ -13,7 +13,7 @@
 			</div>
 		</div>
 		<div class="main-box">
-			<div class="output stdout" v-if="command.Stdout">
+			<div v-if="command.Stdout" class="output stdout">
 				<label>Stdout</label>
 				<n-input
 					:value="command.Stdout"
@@ -22,11 +22,11 @@
 					placeholder="Empty"
 					size="large"
 					:autosize="{
-						minRows: 3
+						minRows: 3,
 					}"
 				/>
 			</div>
-			<div class="output stderr" v-if="command.Stderr">
+			<div v-if="command.Stderr" class="output stderr">
 				<label class="flex items-center">
 					<Icon :name="DangerIcon" class="mr-1"></Icon>
 					Stderr
@@ -38,7 +38,7 @@
 					placeholder="Empty"
 					size="large"
 					:autosize="{
-						minRows: 3
+						minRows: 3,
 					}"
 				/>
 			</div>
@@ -47,9 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import { NInput } from "naive-ui"
 import type { CommandResult } from "@/types/artifacts.d"
 import Icon from "@/components/common/Icon.vue"
+import { NInput } from "naive-ui"
 
 const { command } = defineProps<{ command: CommandResult }>()
 

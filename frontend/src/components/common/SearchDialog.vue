@@ -5,14 +5,18 @@
 				<div class="search-input flex items-center">
 					<Icon :name="SearchIcon" :size="16" />
 					<input v-model="search" placeholder="Search" class="grow" />
-					<n-text code>ESC</n-text>
+					<n-text code>
+						ESC
+					</n-text>
 					<Icon :name="CloseIcon" :size="20" class="cursor-pointer" @click="closeBox()" />
 				</div>
 				<n-divider />
 				<n-scrollbar ref="scrollContent" class="!h-96">
 					<div class="conten-wrap">
 						<div v-for="group of filteredGroups" :key="group.name" class="group">
-							<div class="group-title">{{ group.name }}</div>
+							<div class="group-title">
+								{{ group.name }}
+							</div>
 							<div class="group-list">
 								<button
 									v-for="item of group.items"
@@ -34,7 +38,9 @@
 											:text-to-highlight="item.title"
 										/>
 									</div>
-									<div class="label">{{ item.label }}</div>
+									<div class="label">
+										{{ item.label }}
+									</div>
 								</button>
 							</div>
 						</div>
@@ -64,17 +70,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from "vue"
-import { NText, NModal, NCard, NDivider, NAvatar, NScrollbar, type ScrollbarInst } from "naive-ui"
-import { useMagicKeys, whenever } from "@vueuse/core"
-import Highlighter from "vue-highlight-words"
-import { useThemeSwitch } from "@/composables/useThemeSwitch"
-import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
-import { useSearchDialog } from "@/composables/useSearchDialog"
-import { getOS } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
-import { emitter } from "@/emitter"
+import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useGoto } from "@/composables/useGoto"
+import { useSearchDialog } from "@/composables/useSearchDialog"
+import { useThemeSwitch } from "@/composables/useThemeSwitch"
+import { emitter } from "@/emitter"
+import { getOS } from "@/utils"
+import { useMagicKeys, whenever } from "@vueuse/core"
+import { NAvatar, NCard, NDivider, NModal, NScrollbar, NText, type ScrollbarInst } from "naive-ui"
+import { computed, onMounted, ref } from "vue"
+import Highlighter from "vue-highlight-words"
 
 interface GroupItem {
 	iconName: string | null
@@ -199,7 +205,7 @@ const filteredGroups = computed<Groups>(() => {
 	const newGroups: Groups = []
 	for (const group of groups.value) {
 		const items = group.items.filter(item => {
-			if (keywords.value.filter(k => item.title.toLowerCase().indexOf(k.toLowerCase()) !== -1).length !== 0) {
+			if (keywords.value.filter(k => item.title.toLowerCase().includes(k.toLowerCase())).length !== 0) {
 				return true
 			}
 			if (
@@ -220,7 +226,7 @@ const filteredGroups = computed<Groups>(() => {
 	return newGroups
 })
 
-/*eslint  @typescript-eslint/no-unused-vars: "off"*/
+/* eslint  @typescript-eslint/no-unused-vars: "off" */
 const filteredFlattenItems = computed<GroupItem[]>(() => {
 	const items = []
 
@@ -287,7 +293,7 @@ onMounted(() => {
 
 	const keys = useMagicKeys()
 	const ActiveCMD = isWindows ? keys["ctrl+k"] : keys["cmd+k"]
-	const Enter = keys["enter"]
+	const Enter = keys.enter
 
 	useSearchDialog().trigger(openBox)
 

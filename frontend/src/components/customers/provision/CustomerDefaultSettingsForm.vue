@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-provisioning-default-settings-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(_, key) of form" :key="key" class="grow">
@@ -18,12 +18,14 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
+						<n-button :disabled="loading" @click="reset()">
+							Reset
+						</n-button>
 						<n-button
 							type="primary"
 							:disabled="!isValid"
-							@click="validate()"
 							:loading="submittingDefaultSettings"
+							@click="validate()"
 						>
 							Submit
 						</n-button>
@@ -35,25 +37,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import Api from "@/api"
+import _get from "lodash/get"
+import _trim from "lodash/trim"
 import {
-	useMessage,
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
 	NSpin,
-	type FormValidationError,
-	type FormInst,
-	type FormRules,
-	type FormItemRule
+	useMessage
 } from "naive-ui"
-import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
-import isURL from "validator/es/lib/isURL"
 import isIP from "validator/es/lib/isIP"
+import isURL from "validator/es/lib/isURL"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

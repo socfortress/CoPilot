@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-provisioning-default-settings-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-3">
 				<div>
 					<n-form-item label="Name" path="case_name">
@@ -16,7 +16,7 @@
 							type="textarea"
 							:autosize="{
 								minRows: 5,
-								maxRows: 15
+								maxRows: 15,
 							}"
 						/>
 					</n-form-item>
@@ -47,8 +47,10 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="submitting">
+						<n-button :disabled="loading" @click="reset()">
+							Reset
+						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading="submitting" @click="validate()">
 							Submit
 						</n-button>
 					</div>
@@ -59,24 +61,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeMount, onMounted, ref, watch, type Ref } from "vue"
+import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
+import Api from "@/api"
+import _get from "lodash/get"
+import _trim from "lodash/trim"
 import {
+	type FormInst,
+	type FormRules,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
-	NSpin,
 	NSelect,
-	useMessage,
-	type FormValidationError,
-	type FormInst,
-	type FormRules
+	NSpin,
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
+import { computed, inject, onBeforeMount, onMounted, ref, type Ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -120,7 +122,7 @@ const rules: FormRules = {
 	}
 }
 
-const statusOptions: { label: string; value: AlertStatus }[] = [
+const statusOptions: { label: string, value: AlertStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }

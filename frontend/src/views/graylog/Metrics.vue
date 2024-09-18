@@ -2,23 +2,29 @@
 	<div class="page">
 		<div class="header flex flex-wrap justify-between items-center gap-4">
 			<div class="info flex items-center gap-3">
-				<n-button size="small" @click="getData()" type="primary" secondary :loading="loading">
-					<template #icon><Icon :name="UpdatedIcon" :size="15"></Icon></template>
+				<n-button size="small" type="primary" secondary :loading="loading" @click="getData()">
+					<template #icon>
+						<Icon :name="UpdatedIcon" :size="15"></Icon>
+					</template>
 				</n-button>
 				<span>Last check:</span>
 				<strong>{{ lastCheck ? formatDate(lastCheck, dFormats.datetimesec) : "..." }}</strong>
 			</div>
 
 			<div class="toolbar flex items-center gap-3">
-				<n-button size="small" @click="start()" v-if="!isRunning" type="primary" class="!w-24">
-					<template #icon><Icon :name="StartIcon"></Icon></template>
+				<n-button v-if="!isRunning" size="small" type="primary" class="!w-24" @click="start()">
+					<template #icon>
+						<Icon :name="StartIcon"></Icon>
+					</template>
 					Start
 				</n-button>
-				<n-button size="small" @click="stop()" v-if="isRunning" type="error" ghost class="!w-24">
-					<template #icon><Icon :name="StopIcon"></Icon></template>
+				<n-button v-if="isRunning" size="small" type="error" ghost class="!w-24" @click="stop()">
+					<template #icon>
+						<Icon :name="StopIcon"></Icon>
+					</template>
 					Stop
 				</n-button>
-				<n-select size="small" v-model:value="intervalSelected" :options="intervalOptions" class="!w-36" />
+				<n-select v-model:value="intervalSelected" size="small" :options="intervalOptions" class="!w-36" />
 			</div>
 		</div>
 
@@ -33,16 +39,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, nextTick, onBeforeUnmount } from "vue"
-import { useMessage, NButton, NSelect } from "naive-ui"
-import Api from "@/api"
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
-import { formatDate } from "@/utils"
+import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import { useStorage } from "@vueuse/core"
+import { NButton, NSelect, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 
 const UpdatedIcon = "carbon:update-now"
 const StopIcon = "carbon:stop"

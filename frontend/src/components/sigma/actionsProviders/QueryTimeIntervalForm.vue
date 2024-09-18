@@ -1,7 +1,7 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-4">
@@ -26,13 +26,15 @@
 			</div>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
+				<n-button quaternary size="small" @click="closePopup()">
+					Close
+				</n-button>
 				<n-button
 					:disabled="!dirty || !isValid"
 					:loading
-					@click="updateTimeInterval()"
 					type="primary"
 					size="small"
+					@click="updateTimeInterval()"
 				>
 					Save
 				</n-button>
@@ -42,18 +44,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NSelect, NInputGroup, NButton, NInputNumber, NPopover, useMessage } from "naive-ui"
-import Api from "@/api"
 import type { SigmaQuery, SigmaTimeInterval, SigmaTimeIntervalUnit } from "@/types/sigma.d"
+import Api from "@/api"
+import { NButton, NInputGroup, NInputNumber, NPopover, NSelect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{
+	query: SigmaQuery
+}>()
 
 const emit = defineEmits<{
 	(e: "updated", value: SigmaQuery): void
 }>()
 
-const props = defineProps<{
-	query: SigmaQuery
-}>()
 const { query } = toRefs(props)
 
 const loading = defineModel<boolean | undefined>("loading", { default: false })
@@ -61,7 +64,7 @@ const loading = defineModel<boolean | undefined>("loading", { default: false })
 const show = ref(false)
 const lastShow = ref(new Date().getTime())
 const message = useMessage()
-const model = ref<{ time: number; unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
+const model = ref<{ time: number, unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
 const unitOptions = [
 	{ label: "Minutes", value: "m" },
 	{ label: "Hours", value: "h" },
@@ -98,7 +101,7 @@ function setModel() {
 		timeUnit.value = (
 			query.value.time_interval.match(/[a-z]/i)?.[0] || "m"
 		).toLocaleLowerCase() as SigmaTimeIntervalUnit
-		timeValue.value = parseInt(query.value.time_interval.match(/\d+/)?.[0] || "1")
+		timeValue.value = Number.parseInt(query.value.time_interval.match(/\d+/)?.[0] || "1")
 
 		model.value.unit = timeUnit.value
 		model.value.time = timeValue.value

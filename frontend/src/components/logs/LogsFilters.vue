@@ -12,7 +12,7 @@
 			/>
 		</div>
 		<div class="px-3 !w-72">
-			<div class="flex grow" v-if="filterType === 'userId'">
+			<div v-if="filterType === 'userId'" class="flex grow">
 				<n-select
 					v-if="userIdOptions.length"
 					v-model:value="filterUserId"
@@ -23,12 +23,12 @@
 					class="grow"
 				/>
 				<n-input
+					v-else
 					v-model:value="filterUserId"
 					:loading="loadingUsers"
 					:disabled="loadingUsers"
 					:placeholder="loadingUsers ? 'Loading users...' : 'Insert User ID'"
 					class="grow"
-					v-else
 				/>
 			</div>
 			<n-select
@@ -49,26 +49,32 @@
 			</n-input-group>
 		</div>
 		<div class="px-3 flex justify-end gap-2">
-			<n-button size="small" @click="close()" secondary>Close</n-button>
-			<n-button size="small" @click="submit()" type="primary" secondary>Submit</n-button>
+			<n-button size="small" secondary @click="close()">
+				Close
+			</n-button>
+			<n-button size="small" type="primary" secondary @click="submit()">
+				Submit
+			</n-button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, toRefs } from "vue"
-import { NButton, NSelect, NInputGroup, NInputNumber, NInput } from "naive-ui"
-import _cloneDeep from "lodash/cloneDeep"
-import _toSafeInteger from "lodash/toSafeInteger"
+import type { AuthUser } from "@/types/auth.d"
 import Api from "@/api"
 import {
+	LogEventType,
 	type LogsQueryEventType,
 	type LogsQueryTimeRange,
 	type LogsQueryTypes,
-	type LogsQueryValues,
-	LogEventType
+	type LogsQueryValues
 } from "@/types/logs.d"
-import type { AuthUser } from "@/types/auth.d"
+import _cloneDeep from "lodash/cloneDeep"
+import _toSafeInteger from "lodash/toSafeInteger"
+import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{ users?: AuthUser[], fetchingUsers?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -79,7 +85,6 @@ const emit = defineEmits<{
 const type = defineModel<LogsQueryTypes | null>("type", { default: null })
 const value = defineModel<LogsQueryValues | null>("value", { default: null })
 
-const props = defineProps<{ users?: AuthUser[]; fetchingUsers?: boolean }>()
 const { users, fetchingUsers } = toRefs(props)
 
 const loadingUsers = ref(false)
@@ -90,7 +95,7 @@ watch(fetchingUsers, val => {
 
 const filtered = computed(() => type.value !== null && value.value !== null)
 
-const filtersAvailable: { label: string; value: LogsQueryTypes | "" }[] = [
+const filtersAvailable: { label: string, value: LogsQueryTypes | "" }[] = [
 	{ label: "User", value: "userId" },
 	{ label: "Event", value: "eventType" },
 	{ label: "Time", value: "timeRange" }
@@ -104,7 +109,7 @@ const filterTimeRange = ref({
 	time: 1
 })
 
-const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
+const unitOptions: { label: string, value: "h" | "d" | "w" }[] = [
 	{ label: "Hours", value: "h" },
 	{ label: "Days", value: "d" },
 	{ label: "Weeks", value: "w" }
@@ -112,14 +117,14 @@ const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 
 const filterEventType = ref<LogsQueryEventType>(LogEventType.INFO)
 
-const eventTypeOptions: { label: string; value: LogsQueryEventType }[] = [
+const eventTypeOptions: { label: string, value: LogsQueryEventType }[] = [
 	{ label: "Info", value: LogEventType.INFO },
 	{ label: "Error", value: LogEventType.ERROR }
 ]
 
 const filterUserId = ref<string | null>(null)
 
-const userIdOptions = ref<{ label: string; value: string }[]>([])
+const userIdOptions = ref<{ label: string, value: string }[]>([])
 
 watch(
 	filtered,
@@ -171,7 +176,7 @@ function getUsers() {
 function setUsers(users: AuthUser[]) {
 	userIdOptions.value = (users || []).map(o => ({
 		label: `#${o.id} - ${o.username}`,
-		value: o.id + ""
+		value: `${o.id}`
 	}))
 }
 

@@ -11,8 +11,8 @@
 									data.result === 'failed'
 										? 'text-error-color'
 										: data.result === 'not applicable'
-										? 'text-warning-color'
-										: 'text-success-color'
+											? 'text-warning-color'
+											: 'text-success-color'
 								"
 							>
 								{{ data.result }}
@@ -30,18 +30,22 @@
 			<div class="px-7">
 				<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
 					<div
-						class="scrollbar-styled overflow-hidden code-bg-transparent"
 						v-shiki="{ lang: 'shell', decode: true }"
+						class="scrollbar-styled overflow-hidden code-bg-transparent"
 					>
 						<pre v-html="data.command"></pre>
 					</div>
 				</n-card>
 			</div>
 
-			<div class="grid gap-2 grid-auto-fit-200 px-7" v-if="properties">
+			<div v-if="properties" class="grid gap-2 grid-auto-fit-200 px-7">
 				<KVCard v-for="(value, key) of properties" :key="key">
-					<template #key>{{ key }}</template>
-					<template #value>{{ value ?? "-" }}</template>
+					<template #key>
+						{{ key }}
+					</template>
+					<template #value>
+						{{ value ?? "-" }}
+					</template>
 				</KVCard>
 			</div>
 		</n-tab-pane>
@@ -55,7 +59,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 18
+						maxRows: 18,
 					}"
 				/>
 			</div>
@@ -70,7 +74,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 18
+						maxRows: 18,
 					}"
 				/>
 			</div>
@@ -85,7 +89,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 18
+						maxRows: 18,
 					}"
 				/>
 			</div>
@@ -100,7 +104,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 18
+						maxRows: 18,
 					}"
 				/>
 			</div>
@@ -108,11 +112,11 @@
 		<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
 			<div class="p-7 pt-4 flex flex-col gap-1">
 				<n-card
+					v-for="item of data.compliance"
+					:key="item.key"
 					content-class="bg-secondary-color flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
-					v-for="item of data.compliance"
-					:key="item.key"
 				>
 					<div>{{ item.key }}</div>
 					<p>{{ item.value }}</p>
@@ -122,11 +126,11 @@
 		<n-tab-pane name="Rules" tab="Rules" display-directive="show:lazy">
 			<div class="p-7 pt-4 flex flex-col gap-1">
 				<n-card
+					v-for="item of data.rules"
+					:key="item.type + item.rule"
 					content-class="bg-secondary-color flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
-					v-for="item of data.rules"
-					:key="item.type + item.rule"
 				>
 					<div>{{ item.type }}</div>
 					<p>{{ item.rule }}</p>
@@ -137,12 +141,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ScaPolicyResult } from "@/types/agents.d"
+import KVCard from "@/components/common/KVCard.vue"
 import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
-import KVCard from "@/components/common/KVCard.vue"
+import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed } from "vue"
-import { NTabs, NTabPane, NStatistic, NInput, NCard } from "naive-ui"
-import type { ScaPolicyResult } from "@/types/agents.d"
 
 const { data } = defineProps<{
 	data: ScaPolicyResult

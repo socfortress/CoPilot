@@ -5,11 +5,11 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NDropdown } from "naive-ui"
-import { renderIcon } from "@/utils"
-import { useRouter } from "vue-router"
-import { ref, h } from "vue"
 import { useAuthStore } from "@/stores/auth"
+import { renderIcon } from "@/utils"
+import { NAvatar, NDropdown } from "naive-ui"
+import { h, ref } from "vue"
+import { useRouter } from "vue-router"
 
 const UserIcon = "ion:person-outline"
 const LicenseIcon = "carbon:license"

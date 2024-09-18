@@ -11,8 +11,10 @@
 			</div>
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
-					<div class="title">{{ asset.asset_name }}</div>
-					<div class="description mt-2" v-if="asset.asset_description">
+					<div class="title">
+						{{ asset.asset_name }}
+					</div>
+					<div v-if="asset.asset_description" class="description mt-2">
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
@@ -29,29 +31,41 @@
 								</code>
 							</a>
 						</template>
-						<template v-else>{{ excerpt }}</template>
+						<template v-else>
+							{{ excerpt }}
+						</template>
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted" color="primary" v-if="asset.date_added">
+						<Badge v-if="asset.date_added" type="splitted" color="primary">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
-							<template #label>Added</template>
-							<template #value>{{ formatDate(asset.date_added) }}</template>
+							<template #label>
+								Added
+							</template>
+							<template #value>
+								{{ formatDate(asset.date_added) }}
+							</template>
 						</Badge>
-						<Badge type="splitted" color="primary" v-if="asset.date_update">
+						<Badge v-if="asset.date_update" type="splitted" color="primary">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
-							<template #label>Updated</template>
-							<template #value>{{ formatDate(asset.date_update) }}</template>
+							<template #label>
+								Updated
+							</template>
+							<template #value>
+								{{ formatDate(asset.date_update) }}
+							</template>
 						</Badge>
 						<Badge type="active" class="cursor-pointer" @click="gotoAgent(asset.asset_tags)">
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
-							<template #label>Agent: {{ asset.asset_tags }}</template>
+							<template #label>
+								Agent: {{ asset.asset_tags }}
+							</template>
 						</Badge>
 					</div>
 				</div>
@@ -69,15 +83,17 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
-							<template #key>{{ key }}</template>
+							<template #key>
+								{{ key }}
+							</template>
 							<template #value>
 								<template v-if="key === 'asset_tags'">
 									<code
+										v-if="value && value !== '-'"
 										class="cursor-pointer text-primary-color"
 										@click="gotoAgent(value)"
-										v-if="value && value !== '-'"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -92,10 +108,14 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Type" tab="Type" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-250 p-7 pt-4" v-if="assetType">
+					<div v-if="assetType" class="grid gap-2 grid-auto-fit-250 p-7 pt-4">
 						<KVCard v-for="(value, key) of assetType" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value || "-" }}</template>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -134,21 +154,21 @@
 </template>
 
 <script setup lang="ts">
+import type { SocAlertAsset } from "@/types/soc/asset.d"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, defineAsyncComponent, ref } from "vue"
-import { NModal, NTabs, NTabPane } from "naive-ui"
-import _omit from "lodash/omit"
-import dayjs from "@/utils/dayjs"
-import { isUrlLike } from "@/utils"
-import type { SocAlertAsset } from "@/types/soc/asset.d"
-import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
-
-const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
+import { useSettingsStore } from "@/stores/settings"
+import { isUrlLike } from "@/utils"
+import dayjs from "@/utils/dayjs"
+import _omit from "lodash/omit"
+import { NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()
+
+const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 
 const InfoIcon = "carbon:information"
 const ClockIcon = "carbon:time"
@@ -168,7 +188,7 @@ const excerpt = computed(() => {
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/gim, "<br>") || "Empty"
+	return text.replace(/\n/g, "<br>") || "Empty"
 })
 
 const properties = computed(() => {
@@ -186,7 +206,7 @@ const assetType = computed(() => {
 	return asset.asset_type || {}
 })
 
-const formatDate = (date: string, useSec = false) => {
+function formatDate(date: string, useSec = false) {
 	const datejs = dayjs(date)
 	if (!datejs.isValid()) return date
 

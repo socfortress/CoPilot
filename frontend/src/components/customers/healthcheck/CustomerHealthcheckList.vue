@@ -15,7 +15,7 @@
 	</div>
 	<n-spin :show="loading">
 		<div class="customer-healthcheck-list flex flex-col gap-6">
-			<div class="list flex flex-col gap-2" v-if="healthyList.length">
+			<div v-if="healthyList.length" class="list flex flex-col gap-2">
 				<div class="title healthy flex items-center gap-2">
 					<Icon :name="CheckIcon" :size="16"></Icon>
 					Healthy
@@ -31,7 +31,7 @@
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
-			<div class="list flex flex-col gap-2" v-if="unhealthyList.length">
+			<div v-if="unhealthyList.length" class="list flex flex-col gap-2">
 				<div class="title unhealthy flex items-center gap-2">
 					<Icon :name="AlertIcon" :size="16"></Icon>
 					Unhealthy
@@ -53,15 +53,15 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, watch } from "vue"
-import { useMessage, NSpin, NEmpty, NSelect, NInputGroup, NInputNumber } from "naive-ui"
-import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
-import Icon from "@/components/common/Icon.vue"
-import _get from "lodash/get"
-import Api from "@/api"
-import { watchDebounced } from "@vueuse/core"
-import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
+import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { watchDebounced } from "@vueuse/core"
+import _get from "lodash/get"
+import { NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, watch } from "vue"
+import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 
 const { source, customerCode } = defineProps<{
 	source: CustomerHealthcheckSource
@@ -82,7 +82,7 @@ const unitOptions = [
 	{ label: "Days", value: "days" }
 ]
 
-const filters = ref<Partial<{ time: number; unit: "minutes" | "hours" | "days" }>>({})
+const filters = ref<Partial<{ time: number, unit: "minutes" | "hours" | "days" }>>({})
 
 function getList() {
 	loading.value = true
@@ -110,7 +110,7 @@ function getList() {
 		return
 	}
 
-	let query: CustomerAgentsHealthcheckQuery | undefined = undefined
+	let query: CustomerAgentsHealthcheckQuery | undefined
 	if (filters.value.time && filters.value.unit) {
 		query = {}
 		query[filters.value.unit] = filters.value.time

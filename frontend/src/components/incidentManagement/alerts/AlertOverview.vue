@@ -19,15 +19,15 @@
 						<template #value>
 							<div class="flex">
 								<AlertStatusSwitch
-									:alert
 									v-slot="{ loading: loadingStatus }"
+									:alert
 									@updated="updateAlert($event)"
 								>
 									<div
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
-											'cursor-pointer': !loadingStatus
+											'cursor-pointer': !loadingStatus,
 										}"
 									>
 										<span>{{ alert.status || "n/d" }}</span>
@@ -54,15 +54,15 @@
 						<template #value>
 							<div class="flex">
 								<AlertAssignUser
-									:alert
 									v-slot="{ loading: loadingAssignee }"
+									:alert
 									@updated="updateAlert($event)"
 								>
 									<div
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
-											'cursor-pointer': !loadingAssignee
+											'cursor-pointer': !loadingAssignee,
 										}"
 									>
 										<span>{{ alert.assigned_to || "n/d" }}</span>
@@ -82,24 +82,38 @@
 
 				<div class="px-7">
 					<KVCard>
-						<template #key>description</template>
-						<template #value>{{ alert.alert_description ?? "-" }}</template>
+						<template #key>
+							description
+						</template>
+						<template #value>
+							{{ alert.alert_description ?? "-" }}
+						</template>
 					</KVCard>
 				</div>
 
 				<div class="px-7 grid gap-2 grid-auto-fit-250">
 					<KVCard>
-						<template #key>id</template>
-						<template #value>#{{ alert.id }}</template>
+						<template #key>
+							id
+						</template>
+						<template #value>
+							#{{ alert.id }}
+						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>source</template>
-						<template #value>{{ alert.source ?? "-" }}</template>
+						<template #key>
+							source
+						</template>
+						<template #value>
+							{{ alert.source ?? "-" }}
+						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>customer code</template>
+						<template #key>
+							customer code
+						</template>
 						<template #value>
 							<code
 								class="cursor-pointer text-primary-color"
@@ -112,17 +126,27 @@
 					</KVCard>
 
 					<KVCard>
-						<template #key>assets</template>
-						<template #value>{{ alert.assets.length }}</template>
+						<template #key>
+							assets
+						</template>
+						<template #value>
+							{{ alert.assets.length }}
+						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>comments</template>
-						<template #value>{{ alert.comments.length }}</template>
+						<template #key>
+							comments
+						</template>
+						<template #value>
+							{{ alert.comments.length }}
+						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>tags</template>
+						<template #key>
+							tags
+						</template>
 						<template #value>
 							<AlertTags :alert @updated="updateAlert" />
 						</template>
@@ -131,9 +155,9 @@
 			</div>
 
 			<div class="footer-box px-7 py-4 flex items-center gap-2">
-				<AlertCreateCaseButton :alert @updated="updateAlert" v-if="!linkedCases.length" />
+				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<AlertMergeCaseButton :alert @updated="updateAlert" v-if="!linkedCases.length" />
+				<AlertMergeCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<div v-if="linkedCases.length" class="flex flex-wrap gap-3 items-center">
 					<span>Linked Cases:</span>
@@ -143,7 +167,9 @@
 				<div class="grow"></div>
 
 				<n-button type="error" secondary @click="handleDelete()">
-					<template #icon><Icon :name="TrashIcon" /></template>
+					<template #icon>
+						<Icon :name="TrashIcon" />
+					</template>
 					Delete
 				</n-button>
 			</div>
@@ -152,29 +178,29 @@
 </template>
 
 <script setup lang="ts">
+import type { Alert } from "@/types/incidentManagement/alerts.d"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
+import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
-import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertTags from "./AlertTags.vue"
-import StatusIcon from "../common/StatusIcon.vue"
-import AssigneeIcon from "../common/AssigneeIcon.vue"
-import KVCard from "@/components/common/KVCard.vue"
-import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
 import { handleDeleteAlert } from "./utils"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
-const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
-const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
-const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const props = defineProps<{ alert: Alert }>()
-const { alert } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
 }>()
+const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
+const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
+const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
+
+const { alert } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"

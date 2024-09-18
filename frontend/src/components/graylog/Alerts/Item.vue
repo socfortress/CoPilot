@@ -78,21 +78,25 @@
 			</div>
 		</div>
 		<div class="main-box">
-			<div class="content">{{ alertsEvent.event.message }}</div>
+			<div class="content">
+				{{ alertsEvent.event.message }}
+			</div>
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
-			<div class="time">{{ formatDateTime(alertsEvent.event.timestamp) }}</div>
+			<div class="time">
+				{{ formatDateTime(alertsEvent.event.timestamp) }}
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { type AlertsEventElement } from "@/types/graylog/alerts.d"
-import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import type { AlertsEventElement } from "@/types/graylog/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 
 const { alertsEvent } = defineProps<{ alertsEvent: AlertsEventElement }>()
 

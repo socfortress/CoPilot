@@ -1,16 +1,16 @@
 <template>
 	<n-spin
+		:id="`alert-${alert?.alert_id}`"
 		:show="loading"
 		:description="loadingDelete ? 'Deleting Soc Alert' : 'Loading Soc Alert'"
 		class="soc-alert-item flex flex-col gap-0 min-h-36 pb-2"
 		:class="{ bookmarked: isBookmark, highlight, embedded }"
-		:id="'alert-' + alert?.alert_id"
 	>
-		<div class="soc-alert-info px-5 py-3 flex flex-col gap-3" v-if="alert">
+		<div v-if="alert" class="soc-alert-info px-5 py-3 flex flex-col gap-3">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<div v-if="showCheckbox" class="check-box mr-2">
-						<n-checkbox size="large" v-model:checked="checked" />
+						<n-checkbox v-model:checked="checked" size="large" />
 					</div>
 					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
 						<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
@@ -19,7 +19,7 @@
 					<SocAlertItemBookmarkToggler
 						v-if="!hideBookmarkAction && alert"
 						:alert
-						:isBookmark
+						:is-bookmark
 						@bookmark="emit('bookmark', $event)"
 					/>
 				</div>
@@ -29,10 +29,12 @@
 			</div>
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
-					<div class="title">{{ alert.alert_title }}</div>
+					<div class="title">
+						{{ alert.alert_title }}
+					</div>
 					<div
-						class="description mb-2"
 						v-if="alert.alert_description && alert.alert_title !== alert.alert_description"
+						class="description mb-2"
 					>
 						{{ alert.alert_description }}
 					</div>
@@ -40,18 +42,18 @@
 				<SocAlertItemActions
 					v-if="!hideSocCaseAction"
 					class="actions-box"
-					:caseId
-					:alertId="alert.alert_id"
-					@caseCreated="caseCreated($event)"
+					:case-id
+					:alert-id="alert.alert_id"
+					@case-created="caseCreated($event)"
 					@deleted="deleted()"
-					@startDeleting="loadingDelete = true"
+					@start-deleting="loadingDelete = true"
 				/>
 			</div>
 
 			<div>
 				<div
-					class="show-badges-toggle flex items-center gap-2"
 					v-if="showBadgesToggle"
+					class="show-badges-toggle flex items-center gap-2"
 					@click="showBadges = !showBadges"
 				>
 					{{ showBadges ? "Less info" : "More info" }}
@@ -60,7 +62,7 @@
 					</span>
 				</div>
 				<n-collapse-transition :show="!showBadgesToggle || showBadges">
-					<SocAlertItemBadges class="badges-box" v-if="alert" :alert :users @updated="updateAlert" />
+					<SocAlertItemBadges v-if="alert" class="badges-box" :alert :users @updated="updateAlert" />
 				</n-collapse-transition>
 			</div>
 
@@ -70,11 +72,11 @@
 					class="actions-box grow !flex-wrap !justify-start"
 					style="flex-direction: initial"
 					size="small"
-					:caseId
-					:alertId="alert.alert_id"
-					@caseCreated="caseCreated($event)"
+					:case-id
+					:alert-id="alert.alert_id"
+					@case-created="caseCreated($event)"
 					@deleted="deleted()"
-					@startDeleting="loadingDelete = true"
+					@start-deleting="loadingDelete = true"
 				/>
 				<div class="time">
 					<SocAlertItemTime :alert hide-timeline />
@@ -89,7 +91,9 @@
 			</template>
 			<n-collapse-item>
 				<template #header>
-					<div class="py-3 -ml-2">Alert details</div>
+					<div class="py-3 -ml-2">
+						Alert details
+					</div>
 				</template>
 				<AlertItem :alert="alertObject" hide-actions class="-mt-4" />
 			</n-collapse-item>
@@ -105,7 +109,9 @@
 			segmented
 		>
 			<template #header>
-				<div class="whitespace-nowrap">SOC Alert: {{ alert?.alert_id }}</div>
+				<div class="whitespace-nowrap">
+					SOC Alert: {{ alert?.alert_id }}
+				</div>
 			</template>
 			<template #header-extra>
 				<ArtifactRecommendation v-if="alert" :context="alert.alert_context" />
@@ -116,30 +122,16 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
+import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocUser } from "@/types/soc/user.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NCheckbox, NCollapse, NCollapseItem, NCollapseTransition, NModal, NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import SocAlertItemActions from "./SocAlertItemActions.vue"
-import SocAlertItemTime from "./SocAlertItemTime.vue"
 import SocAlertItemBookmarkToggler from "./SocAlertItemBookmarkToggler.vue"
-import Api from "@/api"
-import { NCollapse, useMessage, NCollapseItem, NModal, NSpin, NCheckbox, NCollapseTransition } from "naive-ui"
-import type { SocUser } from "@/types/soc/user.d"
-const SocAlertItemDetails = defineAsyncComponent(() => import("./SocAlertItemDetails.vue"))
-const SocAlertItemBadges = defineAsyncComponent(() => import("./SocAlertItemBadges.vue"))
-const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
-const AlertItem = defineAsyncComponent(() => import("@/components/alerts/Alert.vue"))
-
-const checked = defineModel<boolean>("checked", { default: false })
-
-const emit = defineEmits<{
-	(e: "bookmark", value: boolean): void
-	(e: "deleted"): void
-	(e: "checked"): void
-	(e: "unchecked"): void
-	(e: "check", value: boolean): void
-}>()
+import SocAlertItemTime from "./SocAlertItemTime.vue"
 
 const props = defineProps<{
 	alertData?: SocAlert
@@ -153,6 +145,20 @@ const props = defineProps<{
 	showBadgesToggle?: boolean
 	showCheckbox?: boolean
 }>()
+const emit = defineEmits<{
+	(e: "bookmark", value: boolean): void
+	(e: "deleted"): void
+	(e: "checked"): void
+	(e: "unchecked"): void
+	(e: "check", value: boolean): void
+}>()
+const SocAlertItemDetails = defineAsyncComponent(() => import("./SocAlertItemDetails.vue"))
+const SocAlertItemBadges = defineAsyncComponent(() => import("./SocAlertItemBadges.vue"))
+const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
+const AlertItem = defineAsyncComponent(() => import("@/components/alerts/Alert.vue"))
+
+const checked = defineModel<boolean>("checked", { default: false })
+
 const {
 	alertData,
 	alertId,

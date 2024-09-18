@@ -2,21 +2,25 @@
 	<div class="customer-notifications-workflows-item" :class="{ embedded }" @click="openForm()">
 		<div class="px-4 py-3 flex flex-col gap-1">
 			<div class="header-box flex justify-between items-center">
-				<div class="label">shuffle_workflow_id</div>
+				<div class="label">
+					shuffle_workflow_id
+				</div>
 				<div class="status flex gap-2 items-center">
 					<span>{{ incidentNotification.enabled ? "Enabled" : "Disabled" }}</span>
 					<Icon
+						v-if="incidentNotification.enabled"
 						:name="EnabledIcon"
 						:size="14"
 						class="text-success-color"
-						v-if="incidentNotification.enabled"
 					></Icon>
-					<Icon :name="DisabledIcon" :size="14" class="text-secondary-color" v-else></Icon>
+					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary-color"></Icon>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col grow">
-					<div class="title">{{ incidentNotification.shuffle_workflow_id }}</div>
+					<div class="title">
+						{{ incidentNotification.shuffle_workflow_id }}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -31,8 +35,8 @@
 			segmented
 		>
 			<CustomerNotificationsWorkflowsForm
-				:incidentNotification
-				:customerCode="incidentNotification.customer_code"
+				:incident-notification
+				:customer-code="incidentNotification.customer_code"
 				@mounted="formCTX = $event"
 				@submitted="emitUpdate"
 			/>
@@ -41,24 +45,25 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, toRefs, watch } from "vue"
-import { NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
-
-const CustomerNotificationsWorkflowsForm = defineAsyncComponent(
-	() => import("./CustomerNotificationsWorkflowsForm.vue")
-)
+import Icon from "@/components/common/Icon.vue"
+import { NModal } from "naive-ui"
+import { defineAsyncComponent, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	incidentNotification: IncidentNotification
 	embedded?: boolean
 }>()
-const { incidentNotification, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "updated", value: IncidentNotification): void
 }>()
+
+const CustomerNotificationsWorkflowsForm = defineAsyncComponent(
+	() => import("./CustomerNotificationsWorkflowsForm.vue")
+)
+
+const { incidentNotification, embedded } = toRefs(props)
 
 const EnabledIcon = "carbon:circle-solid"
 const DisabledIcon = "carbon:subtract-alt"

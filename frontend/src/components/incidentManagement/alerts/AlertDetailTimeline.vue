@@ -9,20 +9,20 @@
 				:time="formatDateTime(item._source.timestamp)"
 				class="pb-4"
 			>
-				<AlertDetailTimelineItem :timelineData="item" embedded class="-mt-3" />
+				<AlertDetailTimelineItem :timeline-data="item" embedded class="-mt-3" />
 			</n-timeline-item>
 		</n-timeline>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue"
-import { NTimeline, NTimelineItem, NSpin, useMessage } from "naive-ui"
-import AlertDetailTimelineItem from "./AlertDetailTimelineItem.vue"
+import type { AlertAsset, AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import Api from "@/api"
-import type { AlertAsset, AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import { NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
+import AlertDetailTimelineItem from "./AlertDetailTimelineItem.vue"
 
 const { asset } = defineProps<{ asset: AlertAsset }>()
 

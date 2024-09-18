@@ -1,16 +1,16 @@
 <template>
 	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
 		<n-tabs
+			v-if="caseEntity"
 			type="line"
 			animated
 			:tabs-padding="24"
-			v-if="caseEntity"
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
 				<div class="pt-1">
-					<CaseOverview :caseData="caseEntity" @updated="updateCase($event)" @deleted="emit('deleted')" />
+					<CaseOverview :case-data="caseEntity" @updated="updateCase($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
@@ -19,14 +19,14 @@
 						<AlertItem
 							v-for="alert of caseEntity.alerts"
 							:key="alert.id"
-							:alertData="alert"
+							:alert-data="alert"
 							embedded
 							@deleted="getCase(caseEntity.id)"
 							@updated="getCase(caseEntity.id)"
 						/>
 					</template>
 					<template v-else>
-						<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+						<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 					</template>
 				</div>
 			</n-tab-pane>
@@ -35,25 +35,24 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
-import { NTabs, NTabPane, NSpin, NEmpty, useMessage } from "naive-ui"
-import _clone from "lodash/cloneDeep"
-import Api from "@/api"
 import type { Case } from "@/types/incidentManagement/cases.d"
-
-const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
-const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
+import Api from "@/api"
+import _clone from "lodash/cloneDeep"
+import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	caseData?: Case
 	caseId?: number
 }>()
-const { caseData, caseId } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
+const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
+const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
+
+const { caseData, caseId } = toRefs(props)
 
 const message = useMessage()
 const loading = ref(false)

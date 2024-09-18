@@ -1,6 +1,6 @@
 <template>
 	<div class="logs-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -28,7 +28,7 @@
 					</div>
 				</n-popover>
 
-				<n-button size="small" type="error" ghost @click="showPurgeConfirm = true" :loading="loadingPurge">
+				<n-button size="small" type="error" ghost :loading="loadingPurge" @click="showPurgeConfirm = true">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
 						<span class="hidden xs:block">Purge</span>
@@ -61,7 +61,7 @@
 					v-model:value="filterValue"
 					v-model:filtered="filtered"
 					:users="usersList"
-					:loadingUsers="loadingUsers"
+					:loading-users="loadingUsers"
 					@submit="getData()"
 					@close="showFilters = false"
 				/>
@@ -79,17 +79,17 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No Logs found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No Logs found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 
@@ -105,8 +105,10 @@
 			</div>
 			<template #action>
 				<div class="flex gap-3">
-					<n-button size="small" ghost @click="showPurgeConfirm = false">Cancel</n-button>
-					<n-button size="small" type="warning" @click="purge()" :loading="loadingPurge">
+					<n-button size="small" ghost @click="showPurgeConfirm = false">
+						Cancel
+					</n-button>
+					<n-button size="small" type="warning" :loading="loadingPurge" @click="purge()">
 						Yes I'm sure
 					</n-button>
 				</div>
@@ -116,24 +118,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, toRefs } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination, NBadge, NModal, NSelect } from "naive-ui"
+import type { AuthUser } from "@/types/auth.d"
 import Api from "@/api"
-import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
-import { nanoid } from "nanoid"
-import { useResizeObserver } from "@vueuse/core"
-import LogsFilters from "./LogsFilters.vue"
-import LogItem from "./LogItem.vue"
 import {
 	type Log,
+	LogEventType,
 	type LogsQuery,
 	type LogsQueryTimeRange,
 	type LogsQueryTypes,
-	type LogsQueryValues,
-	LogEventType
+	type LogsQueryValues
 } from "@/types/logs.d"
-import type { AuthUser } from "@/types/auth.d"
+import { useResizeObserver } from "@vueuse/core"
+import _orderBy from "lodash/orderBy"
+import { NBadge, NButton, NEmpty, NModal, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { nanoid } from "nanoid"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
+import LogItem from "./LogItem.vue"
+import LogsFilters from "./LogsFilters.vue"
 
 interface LogExt extends Log {
 	id?: string
@@ -189,7 +191,7 @@ const filterValue = ref<LogsQueryValues | null>(null)
 const filtered = ref(false)
 
 const purgeSelected = ref<LogsQueryTimeRange | "">("")
-const purgeOptions: { label: string; value: LogsQueryTimeRange | string }[] = [
+const purgeOptions: { label: string, value: LogsQueryTimeRange | string }[] = [
 	{ label: "All Logs", value: "" },
 	{ label: "1 Hour", value: "1h" },
 	{ label: "6 Hours", value: "6h" },

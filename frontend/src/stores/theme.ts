@@ -1,12 +1,13 @@
-import { defineStore, acceptHMRUpdate } from "pinia"
-import tokens from "@/design-tokens.json"
-import _get from "lodash/get"
-import _set from "lodash/set"
-import _pick from "lodash/pick"
-import { type ColorType, type ThemeName, Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
-import { type GlobalThemeOverrides, type ThemeCommonVars, darkTheme, lightTheme, useOsTheme } from "naive-ui"
-import { exportPrimaryShades, getThemeColors, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
 import type { BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
+import tokens from "@/design-tokens.json"
+import { type ColorType, Layout, RouterTransition, ThemeEnum, type ThemeName } from "@/types/theme.d"
+import { exportPrimaryShades, getThemeColors, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
+import _get from "lodash/get"
+import _pick from "lodash/pick"
+import _set from "lodash/set"
+import { darkTheme, type GlobalThemeOverrides, lightTheme, type ThemeCommonVars, useOsTheme } from "naive-ui"
+import { acceptHMRUpdate, defineStore } from "pinia"
+
 const osTheme = useOsTheme()
 
 export const useThemeStore = defineStore("theme", {
@@ -49,12 +50,12 @@ export const useThemeStore = defineStore("theme", {
 		toolbarHeight: 80,
 		viewPadding: 40,
 		headerBarHeight: 60,
-		colors: tokens["colors"],
-		borderRadius: tokens["borderRadius"],
-		lineHeight: tokens["lineHeight"],
-		fontSize: tokens["fontSize"],
-		fontFamily: tokens["fontFamily"],
-		typography: tokens["typography"]
+		colors: tokens.colors,
+		borderRadius: tokens.borderRadius,
+		lineHeight: tokens.lineHeight,
+		fontSize: tokens.fontSize,
+		fontFamily: tokens.fontFamily,
+		typography: tokens.typography
 	}),
 	actions: {
 		setLayout(layout: Layout): void {

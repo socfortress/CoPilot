@@ -18,25 +18,41 @@
 						>
 							<div class="group">
 								<div class="box">
-									<div class="value">{{ node.node }}</div>
-									<div class="label">node</div>
+									<div class="value">
+										{{ node.node }}
+									</div>
+									<div class="label">
+										node
+									</div>
 								</div>
 							</div>
 							<div class="group">
 								<div class="box">
-									<div class="value">{{ node.disk_total || "-" }}</div>
-									<div class="label">disk_total</div>
+									<div class="value">
+										{{ node.disk_total || "-" }}
+									</div>
+									<div class="label">
+										disk_total
+									</div>
 								</div>
 								<div class="box">
-									<div class="value">{{ node.disk_used || "-" }}</div>
-									<div class="label">disk_used</div>
+									<div class="value">
+										{{ node.disk_used || "-" }}
+									</div>
+									<div class="label">
+										disk_used
+									</div>
 								</div>
 								<div class="box">
-									<div class="value">{{ node.disk_available || "-" }}</div>
-									<div class="label">disk_available</div>
+									<div class="value">
+										{{ node.disk_available || "-" }}
+									</div>
+									<div class="label">
+										disk_available
+									</div>
 								</div>
 							</div>
-							<div class="group disk-percent" v-if="node.disk_percent">
+							<div v-if="node.disk_percent" class="group disk-percent">
 								<div class="box w-full">
 									<n-progress
 										type="line"
@@ -57,19 +73,19 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue"
-import { type IndexAllocation } from "@/types/indices.d"
+import type { IndexAllocation } from "@/types/indices.d"
 import Api from "@/api"
+import { NCard, NProgress, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { useMessage, NSpin, NScrollbar, NProgress, NCard } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])
 const loading = ref(true)
 
 function getStatusPercent(percent: string | number | undefined | null) {
-	if (parseFloat(percent?.toString() || "") > 90) return "error"
-	if (parseFloat(percent?.toString() || "") > 80) return "warning"
+	if (Number.parseFloat(percent?.toString() || "") > 90) return "error"
+	if (Number.parseFloat(percent?.toString() || "") > 80) return "warning"
 	return "success"
 }
 
@@ -81,7 +97,7 @@ function getIndicesAllocation() {
 			if (res.data.success) {
 				indicesAllocation.value = (res.data?.node_allocation || []).map(obj => {
 					obj.id = nanoid()
-					obj.disk_percent_value = parseFloat(obj.disk_percent || "")
+					obj.disk_percent_value = Number.parseFloat(obj.disk_percent || "")
 					return obj
 				})
 			} else {

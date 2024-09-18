@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" secondary @click="showForm = true" :loading="loading">
+	<n-button size="small" secondary :loading="loading" @click="showForm = true">
 		<template #icon>
 			<Icon :name="SettingsIcon" :size="14"></Icon>
 		</template>
@@ -15,14 +15,14 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomerDefaultSettingsForm @mounted="settingsFormCTX = $event" v-model:loading="loading" />
+		<CustomerDefaultSettingsForm v-model:loading="loading" @mounted="settingsFormCTX = $event" />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
-import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref, watch } from "vue"
 import CustomerDefaultSettingsForm from "./CustomerDefaultSettingsForm.vue"
 
 const SettingsIcon = "carbon:settings-edit"

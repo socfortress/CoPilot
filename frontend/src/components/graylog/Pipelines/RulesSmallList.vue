@@ -15,20 +15,21 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NButton } from "naive-ui"
+import { toRefs } from "vue"
 
 export interface RuleExtended {
 	title: string
 	id: string
 }
 
+const props = defineProps<{ rules: RuleExtended[] }>()
+
 const emit = defineEmits<{
 	(e: "click", value: string): void
 }>()
 
-const props = defineProps<{ rules: RuleExtended[] }>()
 const { rules } = toRefs(props)
 
 const ViewIcon = "iconoir:eye-alt"

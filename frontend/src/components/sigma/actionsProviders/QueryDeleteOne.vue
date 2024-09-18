@@ -1,7 +1,7 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-4">
@@ -12,9 +12,13 @@
 			</div>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
-				<n-button :loading @click="deleteQuery()" type="error" size="small">
-					<template #icon><Icon :name="TrashIcon" /></template>
+				<n-button quaternary size="small" @click="closePopup()">
+					Close
+				</n-button>
+				<n-button :loading type="error" size="small" @click="deleteQuery()">
+					<template #icon>
+						<Icon :name="TrashIcon" />
+					</template>
 					Delete Query
 				</n-button>
 			</div>
@@ -23,19 +27,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NButton, NPopover, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
 import type { SigmaQuery } from "@/types/sigma.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NPopover, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
+
+const props = defineProps<{
+	query: SigmaQuery
+}>()
 
 const emit = defineEmits<{
 	(e: "deleted", value: SigmaQuery): void
 }>()
 
-const props = defineProps<{
-	query: SigmaQuery
-}>()
 const { query } = toRefs(props)
 
 const loading = defineModel<boolean | undefined>("loading", { default: false })

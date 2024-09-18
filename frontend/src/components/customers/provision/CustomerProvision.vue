@@ -3,26 +3,28 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="editing">
 				<CustomerProvisionWizard
+					:customer-name="customerNameSanitized"
+					:customer-code="customerCode"
 					@submitted="submitted"
-					:customerName="customerNameSanitized"
-					:customerCode="customerCode"
 				>
 					<template #additionalActions>
-						<n-button @click="editing = false">Close</n-button>
+						<n-button @click="editing = false">
+							Close
+						</n-button>
 					</template>
 				</CustomerProvisionWizard>
 			</div>
 			<div v-else>
-				<div class="flex items-center justify-end gap-4 px-7 pt-2" v-if="customerMeta">
-					<n-button size="small" type="error" ghost @click="handleDelete" :loading="loadingDelete">
+				<div v-if="customerMeta" class="flex items-center justify-end gap-4 px-7 pt-2">
+					<n-button size="small" type="error" ghost :loading="loadingDelete" @click="handleDelete">
 						<template #icon>
 							<Icon :name="DeleteIcon" :size="15"></Icon>
 						</template>
 						Decommission
 					</n-button>
 				</div>
-				<div class="flex items-center justify-between gap-4 px-7 pt-2" v-else>
-					<n-button size="small" @click="editing = true" type="primary">
+				<div v-else class="flex items-center justify-between gap-4 px-7 pt-2">
+					<n-button size="small" type="primary" @click="editing = true">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14"></Icon>
 						</template>
@@ -32,8 +34,12 @@
 
 				<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 					<KVCard v-for="(value, key) of customerMeta" :key="key">
-						<template #key>{{ key }}</template>
-						<template #value>{{ value || "-" }}</template>
+						<template #key>
+							{{ key }}
+						</template>
+						<template #value>
+							{{ value || "-" }}
+						</template>
 					</KVCard>
 				</div>
 			</div>
@@ -42,24 +48,25 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { computed, h, ref, toRefs } from "vue"
-import KVCard from "@/components/common/KVCard.vue"
-import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"
-import Api from "@/api"
-import { useMessage, NButton, useDialog } from "naive-ui"
 import type { CustomerMeta } from "@/types/customers.d"
-
-const emit = defineEmits<{
-	(e: "delete"): void
-	(e: "submitted", value: CustomerMeta): void
-}>()
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref, toRefs } from "vue"
+import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"
 
 const props = defineProps<{
 	customerMeta?: CustomerMeta | null
 	customerName?: string | null
 	customerCode: string
 }>()
+
+const emit = defineEmits<{
+	(e: "delete"): void
+	(e: "submitted", value: CustomerMeta): void
+}>()
+
 const { customerMeta, customerCode, customerName } = toRefs(props)
 
 const DeleteIcon = "ph:trash"

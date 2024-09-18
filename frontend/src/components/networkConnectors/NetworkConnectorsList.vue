@@ -1,22 +1,22 @@
 <template>
 	<ServicesList
+		v-model:selected="selected"
 		type="network-connector"
 		:embedded="embedded"
-		:hideTotals="hideTotals"
+		:hide-totals="hideTotals"
 		:selectable="selectable"
-		:disabledIdsList="disabledIdsList"
+		:disabled-ids-list="disabledIdsList"
 		:loading="loading"
 		:list="list"
-		v-model:selected="selected"
 	/>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
-import { useMessage } from "naive-ui"
+import type { ServiceItemData } from "../services/types"
 import Api from "@/api"
 import ServicesList from "@/components/services/List.vue"
-import type { ServiceItemData } from "../services/types"
+import { useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const { embedded, hideTotals, selectable, disabledIdsList } = defineProps<{
 	embedded?: boolean

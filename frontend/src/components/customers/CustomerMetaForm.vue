@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-meta-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(_, key) of form" :key="key" class="grow">
@@ -19,8 +19,10 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">
+						<n-button :disabled="loading" @click="reset()">
+							Reset
+						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
 							Submit
 						</n-button>
 					</div>
@@ -31,28 +33,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import type { CustomerMeta } from "@/types/customers.d"
 import Api from "@/api"
+import _get from "lodash/get"
+import _toSafeInteger from "lodash/toSafeInteger"
+import _trim from "lodash/trim"
 import {
-	useMessage,
+	type FormInst,
+	type FormRules,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
 	NSpin,
-	type FormValidationError,
-	type FormInst,
-	type FormRules
+	useMessage
 } from "naive-ui"
-import type { CustomerMeta } from "@/types/customers.d"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
-import _toSafeInteger from "lodash/toSafeInteger"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 
 interface CustomerMetaExt extends Omit<CustomerMeta, "id" | "customer_meta_iris_customer_id"> {
 	id: string
 	customer_meta_iris_customer_id: string
 }
+
+const props = defineProps<{
+	customerMeta?: CustomerMeta
+	customerCode: string
+	customerName: string
+	metaId: number
+	resetOnSubmit?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -65,13 +75,6 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{
-	customerMeta?: CustomerMeta
-	customerCode: string
-	customerName: string
-	metaId: number
-	resetOnSubmit?: boolean
-}>()
 const { customerMeta, customerCode, customerName, metaId, resetOnSubmit } = toRefs(props)
 
 const loading = ref(false)
@@ -132,7 +135,7 @@ const rules: FormRules = {
 	}
 }
 
-const fieldsMeta: { [key: string]: { label: string; placeholder: string; readonly?: boolean } } = {
+const fieldsMeta: { [key: string]: { label: string, placeholder: string, readonly?: boolean } } = {
 	id: {
 		label: "Meta ID",
 		placeholder: "Meta ID...",

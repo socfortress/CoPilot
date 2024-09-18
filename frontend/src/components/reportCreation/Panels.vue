@@ -1,6 +1,6 @@
 <template>
 	<n-spin v-model:show="loading" class="overflow-hidden h-full w-full" content-class="overflow-hidden h-full w-full">
-		<div class="report-panels h-full w-full flex gap-2" v-if="org">
+		<div v-if="org" class="report-panels h-full w-full flex gap-2">
 			<div class="panels-container grow h-full flex flex-col gap-4">
 				<div class="rows-container">
 					<n-scrollbar style="max-height: 100%" trigger="none">
@@ -16,7 +16,9 @@
 							>
 								<template #item="{ element: row }">
 									<div class="row p-3" :class="{ 'height-large': row.height === 2 }">
-										<div class="empty-message" v-if="!row.panels.length">Drop panels here</div>
+										<div v-if="!row.panels.length" class="empty-message">
+											Drop panels here
+										</div>
 										<draggable
 											v-model="row.panels"
 											item-key="id"
@@ -27,7 +29,7 @@
 												put(to: any) {
 													return to.el.children.length < 4
 												},
-												pull: ['panels']
+												pull: ['panels'],
 											}"
 											class="drop-panels-area flex gap-3 w-full h-full"
 										>
@@ -39,7 +41,7 @@
 													<div class="delete-box">
 														<n-tooltip trigger="hover">
 															<template #trigger>
-																<n-button text @click="removeRow(row)" type="error">
+																<n-button text type="error" @click="removeRow(row)">
 																	<template #icon>
 																		<Icon :name="CloseIcon"></Icon>
 																	</template>
@@ -63,8 +65,8 @@
 																	Row height:
 																</div>
 																<n-switch
-																	size="small"
 																	v-model:value="row.height"
+																	size="small"
 																	:unchecked-value="1"
 																	:checked-value="2"
 																>
@@ -87,8 +89,8 @@
 															<template #trigger>
 																<n-button
 																	text
-																	@click="removePanel(row, panel)"
 																	type="error"
+																	@click="removePanel(row, panel)"
 																>
 																	<template #icon>
 																		<Icon :name="CloseIcon"></Icon>
@@ -115,9 +117,9 @@
 				</div>
 				<div class="toolbar pr-4 flex items-center justify-between gap-2">
 					<n-button
+						v-if="dashboard || panelsReady"
 						class="add-task-btn flex items-center justify-center !mt-0"
 						@click="addRow()"
-						v-if="dashboard || panelsReady"
 					>
 						<template #icon>
 							<Icon :name="AddIcon"></Icon>
@@ -125,14 +127,14 @@
 						<span>Add row</span>
 					</n-button>
 
-					<div class="flex items-center gap-2" v-if="panelsReady">
-						<n-button type="success" @click="print()" :loading="loading">
+					<div v-if="panelsReady" class="flex items-center gap-2">
+						<n-button type="success" :loading="loading" @click="print()">
 							<template #icon>
 								<Icon :name="PrintIcon"></Icon>
 							</template>
 							Print Report
 						</n-button>
-						<n-button type="success" @click="openSettings()" :loading="loading">
+						<n-button type="success" :loading="loading" @click="openSettings()">
 							<template #icon>
 								<Icon :name="SettingsIcon"></Icon>
 							</template>
@@ -142,7 +144,7 @@
 			</div>
 
 			<div class="panels-sidebar h-full">
-				<n-scrollbar style="max-height: 100%" trigger="none" v-if="dashboard && panelsList.length">
+				<n-scrollbar v-if="dashboard && panelsList.length" style="max-height: 100%" trigger="none">
 					<div class="p-3">
 						<draggable
 							class="flex flex-col gap-3"
@@ -168,7 +170,9 @@
 							<code>Dashboard</code>
 							to get the panels
 						</div>
-						<div v-else>No Panels found</div>
+						<div v-else>
+							No Panels found
+						</div>
 					</div>
 				</div>
 			</div>
@@ -198,19 +202,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRefs, watch, onMounted } from "vue"
-import { NButton, NSpin, NScrollbar, NTooltip, NDrawer, NDrawerContent, NPopover, NSwitch, useMessage } from "naive-ui"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
-import Icon from "@/components/common/Icon.vue"
-import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
-import draggable from "vuedraggable"
-import Api from "@/api"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
-import { saveAs } from "file-saver"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
+import { saveAs } from "file-saver"
 import _kebabCase from "lodash/kebabCase"
+import { NButton, NDrawer, NDrawerContent, NPopover, NScrollbar, NSpin, NSwitch, NTooltip, useMessage } from "naive-ui"
+import { computed, onMounted, ref, toRefs, watch } from "vue"
+import draggable from "vuedraggable"
 import * as defaultSettings from "./defaultSettings"
+import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
 
+const props = defineProps<{
+	timerange: ReportTimeRange | null
+	org: Org | null
+	dashboard: Dashboard | null
+	panels: Panel[]
+}>()
 const ROW_GAP = 20
 const ROW_WIDTH = 800
 const ROW_HEIGHT = 320
@@ -235,12 +245,6 @@ interface PanelData {
 	dashboardTitle: string
 }
 
-const props = defineProps<{
-	timerange: ReportTimeRange | null
-	org: Org | null
-	dashboard: Dashboard | null
-	panels: Panel[]
-}>()
 const { timerange, org, dashboard, panels } = toRefs(props)
 
 const PanIcon = "carbon:draggable"
@@ -353,7 +357,7 @@ function print() {
 
 	loadingPrint.value = true
 
-	const timeValue = parseInt(timerange.value.match(/\d+/)?.[0] || "1")
+	const timeValue = Number.parseInt(timerange.value.match(/\d+/)?.[0] || "1")
 	const timeUnit = (timerange.value.match(/[a-z]/i)?.[0] || "h").toLocaleLowerCase()
 	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${
 		timeValue > 1 ? "s" : ""
@@ -389,13 +393,13 @@ function print() {
 		}
 	}
 
-	const reportFileName = `report${org.value?.name ? "-" + _kebabCase(org.value.name) : ""}.pdf`
+	const reportFileName = `report${org.value?.name ? `-${_kebabCase(org.value.name)}` : ""}.pdf`
 
 	Api.reporting
 		.generateReport(payload)
 		.then(res => {
 			if (res.data.success) {
-				const dataUri = "data:application/pdf;base64," + res.data.base64_result
+				const dataUri = `data:application/pdf;base64,${res.data.base64_result}`
 				saveAs(dataUri, reportFileName)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

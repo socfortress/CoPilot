@@ -8,7 +8,9 @@
 						<span>Key</span>
 					</span>
 				</template>
-				<template #value>{{ license.key }}</template>
+				<template #value>
+					{{ license.key }}
+				</template>
 			</KVCard>
 			<KVCard v-if="!hideFeatures">
 				<template #key>
@@ -28,7 +30,9 @@
 							</template>
 						</KVCard>
 					</div>
-					<template v-else>No feature enabled</template>
+					<template v-else>
+						No feature enabled
+					</template>
 				</template>
 			</KVCard>
 			<KVCard>
@@ -53,18 +57,22 @@
 				<template #value>
 					<div class="flex flex-wrap gap-2">
 						<Badge
-							type="splitted"
-							color="primary"
 							v-for="(value, key) of license.customer"
 							:key="key"
+							type="splitted"
+							color="primary"
 							fluid
 						>
-							<template #label>{{ sanitizeKey(key) }}</template>
+							<template #label>
+								{{ sanitizeKey(key) }}
+							</template>
 							<template #value>
 								<template v-if="key === 'created'">
 									{{ formatDate(value, dFormats.datetime) }}
 								</template>
-								<template v-else>{{ value ?? "-" }}</template>
+								<template v-else>
+									{{ value ?? "-" }}
+								</template>
 							</template>
 						</Badge>
 					</div>
@@ -79,7 +87,7 @@
 				</template>
 				<template #value>
 					<Suspense>
-						<Markdown :source="dockerCompose" codeBgTransparent />
+						<Markdown :source="dockerCompose" code-bg-transparent />
 					</Suspense>
 				</template>
 			</KVCard>
@@ -88,17 +96,23 @@
 </template>
 
 <script setup lang="ts">
-import { NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import type { License, LicenseFeatures } from "@/types/license.d"
 import Api from "@/api"
-import { onBeforeMount, onMounted, ref, toRefs, computed, defineAsyncComponent } from "vue"
-import { type LicenseFeatures, type License } from "@/types/license.d"
-import { formatDate } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
-import _startCase from "lodash/startCase"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import _startCase from "lodash/startCase"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
+
+const props = defineProps<{
+	licenseData?: License
+	featuresData?: LicenseFeatures[]
+	hideKey?: boolean
+	hideFeatures?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "licenseLoaded", value: License): void
@@ -110,12 +124,8 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{
-	licenseData?: License
-	featuresData?: LicenseFeatures[]
-	hideKey?: boolean
-	hideFeatures?: boolean
-}>()
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
+
 const { licenseData, featuresData, hideKey, hideFeatures } = toRefs(props)
 
 const KeyIcon = "ph:key"

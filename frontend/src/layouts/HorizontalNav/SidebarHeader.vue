@@ -2,21 +2,21 @@
 	<div class="sidebar-header flex items-center justify-between">
 		<div class="logo-box grow" :class="{ mini: logoMini }">
 			<Transition name="fade" mode="out-in">
-				<Logo :mini="false" :dark="true" class="anim-wrap" v-if="isDark && !logoMini" />
-				<Logo :mini="false" :dark="false" class="anim-wrap" v-else-if="isLight && !logoMini" />
-				<Logo :mini="true" :dark="true" class="anim-wrap" v-else-if="isDark && logoMini" />
-				<Logo :mini="true" :dark="false" class="anim-wrap" v-else-if="isLight && logoMini" />
+				<Logo v-if="isDark && !logoMini" :mini="false" :dark="true" class="anim-wrap" />
+				<Logo v-else-if="isLight && !logoMini" :mini="false" :dark="false" class="anim-wrap" />
+				<Logo v-else-if="isDark && logoMini" :mini="true" :dark="true" class="anim-wrap" />
+				<Logo v-else-if="isLight && logoMini" :mini="true" :dark="false" class="anim-wrap" />
 			</Transition>
 		</div>
 		<Transition name="fade" mode="out-in">
-			<div class="sidebar-pin flex items-center" v-if="showPin">
+			<div v-if="showPin" class="sidebar-pin flex items-center">
 				<Icon :size="20" @click="sidebarCollapsed = !sidebarCollapsed">
 					<span class="i-large">
-						<Iconify :icon="CircleRegular" v-if="sidebarCollapsed" />
-						<Iconify :icon="DotCircleRegular" v-if="!sidebarCollapsed" />
+						<Iconify v-if="sidebarCollapsed" :icon="CircleRegular" />
+						<Iconify v-if="!sidebarCollapsed" :icon="DotCircleRegular" />
 					</span>
 					<span class="i-small">
-						<Iconify :icon="CloseOutline" v-if="!sidebarCollapsed" />
+						<Iconify v-if="!sidebarCollapsed" :icon="CloseOutline" />
 					</span>
 				</Icon>
 			</div>
@@ -25,11 +25,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, toRefs } from "vue"
-import { useThemeStore } from "@/stores/theme"
 import Icon from "@/components/common/Icon.vue"
-import { Icon as Iconify } from "@iconify/vue"
 import Logo from "@/layouts/common/Logo.vue"
+import { useThemeStore } from "@/stores/theme"
+import { Icon as Iconify } from "@iconify/vue"
+import { computed, toRefs } from "vue"
 
 const props = defineProps<{
 	logoMini?: boolean

@@ -1,28 +1,36 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-2 justify-center min-w-52">
 			<div class="flex gap-2 items-center">
-				<n-button :loading @click="updateActive(true)" type="success">Activates all Sigma queries</n-button>
-				<n-button :loading @click="updateActive(false)">Deactivates all Sigma queries</n-button>
+				<n-button :loading type="success" @click="updateActive(true)">
+					Activates all Sigma queries
+				</n-button>
+				<n-button :loading @click="updateActive(false)">
+					Deactivates all Sigma queries
+				</n-button>
 			</div>
 
-			<p class="text-right">* It may take several minutes</p>
+			<p class="text-right">
+				* It may take several minutes
+			</p>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
+				<n-button quaternary size="small" @click="closePopup()">
+					Close
+				</n-button>
 			</div>
 		</div>
 	</n-popover>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NButton, NPopover, useMessage } from "naive-ui"
 import Api from "@/api"
+import { NButton, NPopover, useMessage } from "naive-ui"
+import { ref } from "vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

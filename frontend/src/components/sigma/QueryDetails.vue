@@ -14,21 +14,20 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, toRefs } from "vue"
-import { NTabs, NTabPane } from "naive-ui"
 import type { SigmaQuery } from "@/types/sigma.d"
-
-const QueryOverview = defineAsyncComponent(() => import("./QueryOverview.vue"))
-const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
-
-const emit = defineEmits<{
-	(e: "deleted", value: SigmaQuery): void
-	(e: "updated", value: SigmaQuery): void
-}>()
+import { NTabPane, NTabs } from "naive-ui"
+import { defineAsyncComponent, toRefs } from "vue"
 
 const props = defineProps<{
 	query: SigmaQuery
 }>()
+const emit = defineEmits<{
+	(e: "deleted", value: SigmaQuery): void
+	(e: "updated", value: SigmaQuery): void
+}>()
+const QueryOverview = defineAsyncComponent(() => import("./QueryOverview.vue"))
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
+
 const { query } = toRefs(props)
 
 function updateQuery(updatedQuery: SigmaQuery) {

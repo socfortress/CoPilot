@@ -15,7 +15,7 @@
 						class="basis-1/2"
 					>
 						<template #action>
-							<n-button @click="clearFieldsHistory()" size="tiny" quaternary class="!w-full">
+							<n-button size="tiny" quaternary class="!w-full" @click="clearFieldsHistory()">
 								<template #icon>
 									<Icon :name="ClearIcon"></Icon>
 								</template>
@@ -56,24 +56,24 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, toRefs, watch, type VNodeChild, h } from "vue"
-import { NSelect, NButton, NInput, NInputGroup, NEmpty, NFormItem, type SelectOption } from "naive-ui"
+import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
-import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
+import { NButton, NEmpty, NFormItem, NInput, NInputGroup, NSelect, type SelectOption } from "naive-ui"
+import { h, onBeforeMount, toRefs, type VNodeChild, watch } from "vue"
 
 const props = defineProps<{ filters: AlertsSummaryQuery }>()
-const { filters } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "search"): void
 }>()
 
+const { filters } = toRefs(props)
+
 const ClearIcon = "mdi:broom"
 const SearchIcon = "carbon:search"
 
-const timerangeOptions: { label: string; value: AlertsQueryTimeRange }[] = [
+const timerangeOptions: { label: string, value: AlertsQueryTimeRange }[] = [
 	{ label: "1 Hour", value: "1h" },
 	{ label: "6 Hours", value: "6h" },
 	{ label: "12 Hours", value: "12h" },
@@ -93,7 +93,7 @@ const maxAlertsOptions = [
 	{ label: "20 Alert", value: 20 }
 ]
 
-const alertFieldOptions = useStorage<{ label: string; value: string }[]>("alert-fields-history", [], localStorage)
+const alertFieldOptions = useStorage<{ label: string, value: string }[]>("alert-fields-history", [], localStorage)
 
 function clearFieldsHistory(field?: string) {
 	if (!field) {
@@ -103,12 +103,12 @@ function clearFieldsHistory(field?: string) {
 	}
 }
 
-function renderFieldTag({ option }: { option: SelectOption; handleClose: () => void }): VNodeChild {
+function renderFieldTag({ option }: { option: SelectOption, handleClose: () => void }): VNodeChild {
 	return h("div", {}, [option.label as string])
 }
 
 function renderFieldLabel(option: SelectOption): VNodeChild {
-	if (option.type === "group") return option.label + "(Cool!)"
+	if (option.type === "group") return `${option.label}(Cool!)`
 	return [
 		h(Icon, {
 			style: {

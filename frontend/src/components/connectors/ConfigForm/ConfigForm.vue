@@ -8,7 +8,7 @@
 					round
 					:size="60"
 					:src="`/images/connectors/${
-						connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'
+						connector ? `${connector.connector_name.toLowerCase()}.svg` : 'default-logo.svg'
 					}`"
 					:alt="`${connector.connector_name} Logo`"
 					fallback-src="/images/img-not-found.svg"
@@ -19,35 +19,35 @@
 
 			<div class="connector-form-type">
 				<CredentialsType
-					:form="connectorForm"
 					v-if="connectorFormType === ConnectorFormType.CREDENTIALS"
+					:form="connectorForm"
 					@mounted="formRef = $event"
 				/>
 				<FileType
-					:form="connectorForm"
 					v-if="connectorFormType === ConnectorFormType.FILE"
+					:form="connectorForm"
 					@mounted="formRef = $event"
 				/>
 				<TokenType
-					:form="connectorForm"
 					v-if="connectorFormType === ConnectorFormType.TOKEN"
+					:form="connectorForm"
 					@mounted="formRef = $event"
 				/>
 				<HostType
-					:form="connectorForm"
 					v-if="connectorFormType === ConnectorFormType.HOST"
+					:form="connectorForm"
 					@mounted="formRef = $event"
 				/>
 			</div>
 			<div class="connector-form-options">
 				<n-form
+					ref="formOptionsRef"
 					:model="connectorForm"
 					:rules="optionsRules"
 					label-width="120px"
-					ref="formOptionsRef"
 					label-placement="top"
 				>
-					<n-form-item label="Extra data" path="connector_extra_data" v-if="connectorFormOptions.extraData">
+					<n-form-item v-if="connectorFormOptions.extraData" label="Extra data" path="connector_extra_data">
 						<n-input v-model:value="connectorForm.connector_extra_data" type="text" />
 					</n-form-item>
 				</n-form>
@@ -56,8 +56,12 @@
 			<div class="connector-footer mt-4">
 				<n-form-item>
 					<div class="flex gap-2 justify-end w-full">
-						<n-button type="primary" @click="saveConnector()">Save</n-button>
-						<n-button @click="closeForm(false)">Cancel</n-button>
+						<n-button type="primary" @click="saveConnector()">
+							Save
+						</n-button>
+						<n-button @click="closeForm(false)">
+							Cancel
+						</n-button>
 					</div>
 				</n-form-item>
 			</div>
@@ -66,43 +70,43 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 import {
-	ConnectorFormType,
 	type Connector,
 	type ConnectorForm,
-	type ConnectorRequestPayload,
+	type ConnectorFormOptionKeys,
 	type ConnectorFormOptions,
-	type ConnectorFormOptionKeys
+	ConnectorFormType,
+	type ConnectorRequestPayload
 } from "@/types/connectors.d"
-import CredentialsType from "./FormTypes/CredentialsType.vue"
-import FileType from "./FormTypes/FileType.vue"
-import TokenType from "./FormTypes/TokenType.vue"
-import HostType from "./FormTypes/HostType.vue"
 import _pick from "lodash/pick"
 import {
-	useMessage,
-	NFormItem,
-	NAvatar,
-	NSpin,
-	NForm,
-	NInput,
-	NButton,
 	type FormInst,
+	type FormRules,
 	type FormValidationError,
-	type FormRules
+	NAvatar,
+	NButton,
+	NForm,
+	NFormItem,
+	NInput,
+	NSpin,
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
+import { computed, onMounted, ref, toRefs, watch } from "vue"
+import CredentialsType from "./FormTypes/CredentialsType.vue"
+import FileType from "./FormTypes/FileType.vue"
+import HostType from "./FormTypes/HostType.vue"
+import TokenType from "./FormTypes/TokenType.vue"
 
 const props = defineProps<{
 	connector: Connector
 }>()
-const { connector } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "close", value: boolean): void
 	(e: "loading", value: boolean): void
 }>()
+
+const { connector } = toRefs(props)
 
 const connectorForm = ref<ConnectorForm>({
 	connector_url: "",

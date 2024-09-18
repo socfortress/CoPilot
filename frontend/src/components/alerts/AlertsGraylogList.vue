@@ -35,19 +35,21 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
+			<template #description>
+				Alerts are being fetched, this may take up to 1 minute.
+			</template>
 
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
-						:alertsSummary="alertsSummary"
+						:alerts-summary="alertsSummary"
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -72,17 +74,18 @@
 // import { alerts_summary } from "./mock"
 // import type { AlertsSummary } from "@/types/alerts.d"
 
-import { ref, onBeforeMount, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent, provide } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent } from "naive-ui"
-import Api from "@/api"
-const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
-import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
-import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import Icon from "@/components/common/Icon.vue"
 import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
 import type { IndexStats } from "@/types/indices.d"
-import axios from "axios"
 import type { SocAlertField } from "./type.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import axios from "axios"
+import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSpin, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, provide, ref } from "vue"
+import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
+import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
+
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
 const message = useMessage()
 const loading = ref(false)

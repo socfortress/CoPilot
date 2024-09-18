@@ -1,16 +1,16 @@
 <template>
 	<div
 		class="case-item"
-		:class="['status-' + caseEntity?.case_status, { compact, embedded, 'cursor-pointer': compact, highlight }]"
+		:class="[`status-${caseEntity?.case_status}`, { compact, embedded, 'cursor-pointer': compact, highlight }]"
 	>
 		<n-spin :show="loading">
-			<div class="flex flex-col" v-if="caseEntity">
+			<div v-if="caseEntity" class="flex flex-col">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="compact ? undefined : openDetails()">
 						<span>#{{ caseEntity.id }}</span>
-						<Icon :name="InfoIcon" :size="16" v-if="!compact"></Icon>
+						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 					</div>
-					<div class="time" v-if="caseEntity.case_creation_time">
+					<div v-if="caseEntity.case_creation_time" class="time">
 						{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
 					</div>
 				</div>
@@ -22,7 +22,7 @@
 						</div>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3" v-if="compact">
+					<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
 						<Badge
 							type="splitted"
 							class="cursor-pointer"
@@ -31,16 +31,18 @@
 								caseEntity.case_status === 'OPEN'
 									? 'danger'
 									: caseEntity.case_status === 'IN_PROGRESS'
-									? 'warning'
-									: caseEntity.case_status === 'CLOSED'
-									? 'success'
-									: undefined
+										? 'warning'
+										: caseEntity.case_status === 'CLOSED'
+											? 'success'
+											: undefined
 							"
 						>
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />
 							</template>
-							<template #label>Status</template>
+							<template #label>
+								Status
+							</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ caseEntity.case_status || "n/d" }}
@@ -57,7 +59,9 @@
 							<template #iconLeft>
 								<AssigneeIcon :assignee="caseEntity.assigned_to" />
 							</template>
-							<template #label>Assignee</template>
+							<template #label>
+								Assignee
+							</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{ caseEntity.assigned_to || "n/d" }}
@@ -66,10 +70,10 @@
 						</Badge>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3" v-else>
+					<div v-else class="badges-box flex flex-wrap items-center gap-3">
 						<CaseStatusSwitch
-							:caseData="caseEntity"
 							v-slot="{ loading: loadingStatus }"
+							:case-data="caseEntity"
 							@updated="updateCase($event)"
 						>
 							<Badge
@@ -80,10 +84,10 @@
 									caseEntity.case_status === 'OPEN'
 										? 'danger'
 										: caseEntity.case_status === 'IN_PROGRESS'
-										? 'warning'
-										: caseEntity.case_status === 'CLOSED'
-										? 'success'
-										: undefined
+											? 'warning'
+											: caseEntity.case_status === 'CLOSED'
+												? 'success'
+												: undefined
 								"
 							>
 								<template #iconLeft>
@@ -95,7 +99,9 @@
 										<StatusIcon :status="caseEntity.case_status" />
 									</n-spin>
 								</template>
-								<template #label>Status</template>
+								<template #label>
+									Status
+								</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ caseEntity.case_status || "n/d" }}
@@ -106,8 +112,8 @@
 						</CaseStatusSwitch>
 
 						<CaseAssignUser
-							:caseData="caseEntity"
 							v-slot="{ loading: loadingAssignee }"
+							:case-data="caseEntity"
 							@updated="updateCase($event)"
 						>
 							<Badge
@@ -125,7 +131,9 @@
 										<AssigneeIcon :assignee="caseEntity.assigned_to" />
 									</n-spin>
 								</template>
-								<template #label>Assignee</template>
+								<template #label>
+									Assignee
+								</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ caseEntity.assigned_to || "n/d" }}
@@ -137,7 +145,7 @@
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center" v-if="!compact">
+				<div v-if="!compact" class="footer-box px-5 py-3 flex justify-between items-center">
 					<n-collapse :trigger-areas="['main', 'arrow']">
 						<n-collapse-item name="alerts-list">
 							<template #header>
@@ -146,7 +154,9 @@
 							</template>
 							<template #header-extra>
 								<div class="actions-box">
-									<n-button quaternary size="tiny" @click="handleDelete()">Delete Case</n-button>
+									<n-button quaternary size="tiny" @click="handleDelete()">
+										Delete Case
+									</n-button>
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">
@@ -154,7 +164,7 @@
 									<AlertItem
 										v-for="alert of caseEntity.alerts"
 										:key="alert.id"
-										:alertData="alert"
+										:alert-data="alert"
 										compact
 										@deleted="getCase(caseEntity.id)"
 										@updated="getCase(caseEntity.id)"
@@ -162,9 +172,9 @@
 								</template>
 								<template v-else>
 									<n-empty
+										v-if="!loading"
 										description="No alerts attached"
 										class="justify-center h-24"
-										v-if="!loading"
 									/>
 								</template>
 							</div>
@@ -182,14 +192,14 @@
 				content-class="flex flex-col !p-0"
 				:title="caseNameTruncated"
 				closable
-				@close="closeDetails()"
 				:bordered="false"
 				segmented
 				role="modal"
+				@close="closeDetails()"
 			>
 				<CaseDetails
 					v-if="caseEntity"
-					:caseData="caseEntity"
+					:case-data="caseEntity"
 					@deleted="emitDelete()"
 					@updated="updateCase($event)"
 				/>
@@ -199,23 +209,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
-import { NModal, NButton, NCollapse, NCollapseItem, NSpin, NCard, NEmpty, useMessage, useDialog } from "naive-ui"
-import _clone from "lodash/cloneDeep"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import CaseAssignUser from "./CaseAssignUser.vue"
-import CaseStatusSwitch from "./CaseStatusSwitch.vue"
-import CaseDetails from "./CaseDetails.vue"
-import StatusIcon from "../common/StatusIcon.vue"
-import AssigneeIcon from "../common/AssigneeIcon.vue"
-import AlertItem from "../alerts/AlertItem.vue"
-import { formatDate } from "@/utils"
-import { handleDeleteCase } from "./utils"
-import _truncate from "lodash/truncate"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import _clone from "lodash/cloneDeep"
+import _truncate from "lodash/truncate"
+import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import AlertItem from "../alerts/AlertItem.vue"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
+import CaseAssignUser from "./CaseAssignUser.vue"
+import CaseDetails from "./CaseDetails.vue"
+import CaseStatusSwitch from "./CaseStatusSwitch.vue"
+import { handleDeleteCase } from "./utils"
 
 const props = defineProps<{
 	caseData?: Case
@@ -225,13 +235,13 @@ const props = defineProps<{
 	detailsOnMounted?: boolean
 	highlight?: boolean
 }>()
-const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
+
+const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"

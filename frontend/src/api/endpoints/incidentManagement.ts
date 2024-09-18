@@ -1,6 +1,4 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
 	Alert,
 	AlertComment,
@@ -12,6 +10,8 @@ import type {
 } from "@/types/incidentManagement/alerts.d"
 import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import { HttpClient } from "../httpClient"
 
 export type AlertsFilter =
 	| { status: AlertStatus }
@@ -101,7 +101,7 @@ export default {
 		}
 
 		return HttpClient.get<
-			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
+			FlaskBaseResponse & { alerts: Alert[], closed: number, in_progress: number, open: number, total: number }
 		>(url, {
 			params: {
 				page: args.page || 1,
@@ -196,7 +196,7 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload)
 	},
 	createCaseFromAlert(alertId: number) {
-		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
+		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number, alert_id: number } }>(
 			`/incidents/db_operations/case/from-alert`,
 			{
 				alert_id: alertId
@@ -204,7 +204,7 @@ export default {
 		)
 	},
 	linkCase(alertId: number, caseId: number) {
-		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
+		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number, alert_id: number } }>(
 			`/incidents/db_operations/case/alert-link`,
 			{
 				alert_id: alertId,

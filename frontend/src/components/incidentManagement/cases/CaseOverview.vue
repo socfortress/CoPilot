@@ -8,10 +8,10 @@
 							caseData.case_status === 'OPEN'
 								? 'danger'
 								: caseData.case_status === 'IN_PROGRESS'
-								? 'warning'
-								: caseData.case_status === 'CLOSED'
-								? 'success'
-								: undefined
+									? 'warning'
+									: caseData.case_status === 'CLOSED'
+										? 'success'
+										: undefined
 						"
 						size="lg"
 						class="grow w-full"
@@ -25,15 +25,15 @@
 						<template #value>
 							<div class="flex">
 								<CaseStatusSwitch
-									:caseData
 									v-slot="{ loading: loadingStatus }"
+									:case-data
 									@updated="updateCase($event)"
 								>
 									<div
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
-											'cursor-pointer': !loadingStatus
+											'cursor-pointer': !loadingStatus,
 										}"
 									>
 										<span>{{ caseData.case_status || "n/d" }}</span>
@@ -60,15 +60,15 @@
 						<template #value>
 							<div class="flex">
 								<CaseAssignUser
-									:caseData
 									v-slot="{ loading: loadingAssignee }"
+									:case-data
 									@updated="updateCase($event)"
 								>
 									<div
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
-											'cursor-pointer': !loadingAssignee
+											'cursor-pointer': !loadingAssignee,
 										}"
 									>
 										<span>{{ caseData.assigned_to || "n/d" }}</span>
@@ -88,7 +88,9 @@
 
 				<div class="px-7">
 					<KVCard>
-						<template #key>description</template>
+						<template #key>
+							description
+						</template>
 						<template #value>
 							<span class="whitespace-pre-wrap">
 								{{ caseData.case_description ?? "-" }}
@@ -99,20 +101,30 @@
 
 				<div class="px-7 grid gap-2 grid-auto-fit-250">
 					<KVCard>
-						<template #key>id</template>
-						<template #value>#{{ caseData.id }}</template>
+						<template #key>
+							id
+						</template>
+						<template #value>
+							#{{ caseData.id }}
+						</template>
 					</KVCard>
 
 					<KVCard>
-						<template #key>creation time</template>
-						<template #value>{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}</template>
+						<template #key>
+							creation time
+						</template>
+						<template #value>
+							{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
+						</template>
 					</KVCard>
 				</div>
 			</div>
 
 			<div class="footer-box px-7 py-4 flex justify-end">
 				<n-button type="error" secondary @click="handleDelete()">
-					<template #icon><Icon :name="TrashIcon" /></template>
+					<template #icon>
+						<Icon :name="TrashIcon" />
+					</template>
 					Delete
 				</n-button>
 			</div>
@@ -121,26 +133,26 @@
 </template>
 
 <script setup lang="ts">
+import type { Case } from "@/types/incidentManagement/cases.d"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
-import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
-import StatusIcon from "../common/StatusIcon.vue"
-import AssigneeIcon from "../common/AssigneeIcon.vue"
-import KVCard from "@/components/common/KVCard.vue"
-import Icon from "@/components/common/Icon.vue"
 import { handleDeleteCase } from "./utils"
-import { formatDate } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
-import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{ caseData: Case }>()
-const { caseData } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
+
+const { caseData } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
 const EditIcon = "uil:edit-alt"

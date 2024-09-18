@@ -2,14 +2,14 @@
 	<div class="flex pinned-pages items-center gap-5">
 		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
+				v-for="page of latestSanitized"
+				:key="page.name"
 				round
 				:bordered="false"
 				:closable="false"
-				v-for="page of latestSanitized"
-				:key="page.name"
 				@close="removeLatestPage(page.name)"
 			>
-				<span class="page-name" @click="gotoPage(page.name)" :title="page.title">
+				<span class="page-name" :title="page.title" @click="gotoPage(page.name)">
 					{{ page.title }}
 				</span>
 				<template #icon>
@@ -33,12 +33,12 @@
 					</template>
 					<div class="flex flex-col">
 						<n-button
-							size="small"
-							quaternary
-							@click="gotoPage(page.name)"
 							v-for="page of pinned"
 							:key="page.name"
+							size="small"
+							quaternary
 							class="!justify-start"
+							@click="gotoPage(page.name)"
 						>
 							<template #icon>
 								<Icon
@@ -58,15 +58,15 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, type RouteLocationNormalized, type RouteRecordName } from "vue-router"
-import { type RemovableRef, useStorage } from "@vueuse/core"
-import { computed, type ComputedRef } from "vue"
-import { NTag, NPopover, NButton, NBadge } from "naive-ui"
-import _takeRight from "lodash/takeRight"
-import _split from "lodash/split"
-import _uniqBy from "lodash/uniqBy"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
+import { type RemovableRef, useStorage } from "@vueuse/core"
+import _split from "lodash/split"
+import _takeRight from "lodash/takeRight"
+import _uniqBy from "lodash/uniqBy"
+import { NBadge, NButton, NPopover, NTag } from "naive-ui"
+import { computed, type ComputedRef } from "vue"
+import { type RouteLocationNormalized, type RouteRecordName, useRouter } from "vue-router"
 
 interface Page {
 	name: RouteRecordName | string
@@ -81,20 +81,20 @@ const themeStore = useThemeStore()
 
 const style = computed(() => themeStore.style)
 
-const removeLatestPage = (pageName: RouteRecordName | string) => {
+function removeLatestPage(pageName: RouteRecordName | string) {
 	latest.value = latest.value.filter(page => page.name !== pageName)
 	return true
 }
-const removePinnedPage = (pageName: RouteRecordName | string) => {
+function removePinnedPage(pageName: RouteRecordName | string) {
 	pinned.value = pinned.value.filter(page => page.name !== pageName)
 	return true
 }
-const gotoPage = (pageName: RouteRecordName | string) => {
+function gotoPage(pageName: RouteRecordName | string) {
 	router.push({ name: pageName })
 	return true
 }
 
-const pinPage = (page: Page) => {
+function pinPage(page: Page) {
 	const isPresent = pinned.value.findIndex(p => p.name === page.name) !== -1
 	if (!isPresent) {
 		pinned.value = [page, ...pinned.value]
@@ -111,7 +111,7 @@ const latestSanitized: ComputedRef<Page[]> = computed(() => {
 	) as Page[]
 })
 
-const checkRoute = (route: RouteLocationNormalized) => {
+function checkRoute(route: RouteLocationNormalized) {
 	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
 
 	if (route.name && title && !route.meta?.skipPin) {

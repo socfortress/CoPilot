@@ -1,7 +1,7 @@
 <template>
 	<div class="artifacts-collect">
 		<div class="header flex justify-end items-start gap-2">
-			<div class="info flex gap-5" v-if="isDirty">
+			<div v-if="isDirty" class="info flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -21,7 +21,7 @@
 				</n-popover>
 			</div>
 			<div class="grow flex items-center justify-end gap-2 flex-wrap">
-				<div class="grow basis-56" v-if="!hideHostnameField">
+				<div v-if="!hideHostnameField" class="grow basis-56">
 					<n-select
 						v-model:value="filters.hostname"
 						:options="agentHostnameOptions"
@@ -45,7 +45,7 @@
 						:loading="loadingArtifacts"
 					/>
 				</div>
-				<div class="grow basis-56" v-if="!hideVelociraptorIdField">
+				<div v-if="!hideVelociraptorIdField" class="grow basis-56">
 					<n-input
 						v-model:value="filters.velociraptor_id"
 						placeholder="Velociraptor ID"
@@ -57,11 +57,11 @@
 				<div>
 					<n-button
 						size="small"
-						@click="getData()"
 						type="primary"
 						secondary
 						:loading="loading"
 						:disabled="!areFiltersValid"
+						@click="getData()"
 					>
 						Submit
 					</n-button>
@@ -79,7 +79,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -87,21 +87,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NInput } from "naive-ui"
+import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
+import type { Agent } from "@/types/agents.d"
+import type { Artifact, CollectResult } from "@/types/artifacts.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import CollectItem from "./CollectItem.vue"
-import type { Agent } from "@/types/agents.d"
-import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
-import type { Artifact, CollectResult } from "@/types/artifacts.d"
+import { NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-// import { collectResult } from "./mock"
-
-const emit = defineEmits<{
-	(e: "loaded-agents", value: Agent[]): void
-	(e: "loaded-artifacts", value: Artifact[]): void
-}>()
+import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
+import CollectItem from "./CollectItem.vue"
 
 const props = defineProps<{
 	hostname?: string
@@ -112,6 +106,14 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
+
+// import { collectResult } from "./mock"
+
+const emit = defineEmits<{
+	(e: "loaded-agents", value: Agent[]): void
+	(e: "loaded-artifacts", value: Artifact[]): void
+}>()
+
 const { hostname, velociraptorId, agents, artifacts, artifactsFilter, hideHostnameField, hideVelociraptorIdField } =
 	toRefs(props)
 

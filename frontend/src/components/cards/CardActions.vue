@@ -4,8 +4,12 @@
 			<img :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
 		</template>
 		<template #header>
-			<div v-if="title" class="title">{{ title }}</div>
-			<div v-if="!hideSubtitle && subtitle" class="subtitle">{{ subtitle }}</div>
+			<div v-if="title" class="title">
+				{{ title }}
+			</div>
+			<div v-if="!hideSubtitle && subtitle" class="subtitle">
+				{{ subtitle }}
+			</div>
 		</template>
 		<template #header-extra>
 			<n-dropdown v-if="!hideMenu" :options="menuOptions" placement="bottom-end" to="body" @select="menuSelect">
@@ -29,15 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import { NCard, NDropdown, NScrollbar } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import { computed, toRefs, onMounted, ref } from "vue"
 import { renderIcon } from "@/utils"
-
-const MenuIcon = "carbon:overflow-menu-vertical"
-const ContractIcon = "fluent:contract-down-left-24-regular"
-const ExpandIcon = "fluent:expand-up-right-24-regular"
-const ReloadIcon = "tabler:refresh"
+import { NCard, NDropdown, NScrollbar } from "naive-ui"
+import { computed, onMounted, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	showImage?: boolean
@@ -51,13 +50,18 @@ const props = defineProps<{
 	subtitle?: string
 	image?: string
 }>()
+const MenuIcon = "carbon:overflow-menu-vertical"
+const ContractIcon = "fluent:contract-down-left-24-regular"
+const ExpandIcon = "fluent:expand-up-right-24-regular"
+const ReloadIcon = "tabler:refresh"
+
 const { showImage, hideSubtitle, title, subtitle, image, actionBoxTransparent, hideMenu, reload, expand, isExpand } =
 	toRefs(props)
 
 let reloadTimeout: NodeJS.Timeout | null = null
 const showExpandButton = ref(true)
 
-/*eslint no-mixed-spaces-and-tabs: "off"*/
+/* eslint no-mixed-spaces-and-tabs: "off" */
 const menuOptions = computed(() =>
 	showExpandButton.value
 		? [

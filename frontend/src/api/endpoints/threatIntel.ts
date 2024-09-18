@@ -1,6 +1,6 @@
-import { HttpClient } from "../httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { EpssScore, EvaluationData, ThreatIntelResponse } from "@/types/threatIntel.d"
+import { HttpClient } from "../httpClient"
 
 export default {
 	create(iocValue: string) {
@@ -19,7 +19,7 @@ export default {
 		const body = {
 			cve
 		}
-		return HttpClient.post<FlaskBaseResponse & { data: EpssScore[]; the_epss_model: string }>(
+		return HttpClient.post<FlaskBaseResponse & { data: EpssScore[], the_epss_model: string }>(
 			`/threat_intel/epss`,
 			body
 		)

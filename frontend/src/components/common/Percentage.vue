@@ -3,11 +3,11 @@
 		class="percentage flex items-center gap-2"
 		:class="[
 			{
-				color: useColor,
+				'color': useColor,
 				'with-background': useBackground,
-				'opacity-50': useOpacity
+				'opacity-50': useOpacity,
 			},
-			direction
+			direction,
 		]"
 	>
 		<span v-if="progress && progress === 'line'" class="progress">
@@ -42,9 +42,9 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { NProgress } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NProgress } from "naive-ui"
+import { toRefs } from "vue"
 
 export interface PercentageProps {
 	value: number

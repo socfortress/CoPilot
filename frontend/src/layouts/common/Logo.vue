@@ -1,14 +1,14 @@
 <template>
-	<div class="logo" v-if="isDark && !mini">
+	<div v-if="isDark && !mini" class="logo">
 		<img src="@/assets/images/socfortress_logo.svg?url" />
 	</div>
-	<div class="logo" v-else-if="isLight && !mini">
+	<div v-else-if="isLight && !mini" class="logo">
 		<img src="@/assets/images/socfortress_logo.svg?url" />
 	</div>
-	<div class="logo" v-else-if="isDark && mini">
+	<div v-else-if="isDark && mini" class="logo">
 		<img src="@/assets/images/socfortress_logo.svg?url" />
 	</div>
-	<div class="logo" v-else-if="isLight && mini">
+	<div v-else-if="isLight && mini" class="logo">
 		<img src="@/assets/images/socfortress_logo.svg?url" />
 	</div>
 </template>

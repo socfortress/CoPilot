@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" type="primary" @click="showForm = true" :loading="loading">
+	<n-button size="small" type="primary" :loading="loading" @click="showForm = true">
 		<template #icon>
 			<Icon :name="NewCaseIcon" :size="14"></Icon>
 		</template>
@@ -16,25 +16,26 @@
 		segmented
 	>
 		<CaseCreationForm
-			@mounted="formCTX = $event"
 			v-model:loading="loading"
+			@mounted="formCTX = $event"
 			@submitted="emit('submitted', $event)"
 		/>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs, watch } from "vue"
-import { NButton, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import CaseCreationForm from "./CaseCreationForm.vue"
 import type { Case } from "@/types/incidentManagement/cases"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref, toRefs, watch } from "vue"
+import CaseCreationForm from "./CaseCreationForm.vue"
+
+const props = defineProps<{ onlyIcon?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "submitted", value: Case): void
 }>()
 
-const props = defineProps<{ onlyIcon?: boolean }>()
 const { onlyIcon } = toRefs(props)
 
 const NewCaseIcon = "carbon:fetch-upload-cloud"

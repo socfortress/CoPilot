@@ -1,8 +1,8 @@
 <template>
 	<div class="pagination-indeterminate flex items-center gap-2">
 		<n-input-number
-			size="small"
 			v-model:value="page"
+			size="small"
 			:min="1"
 			button-placement="both"
 			class="page"
@@ -16,18 +16,18 @@
 			</template>
 		</n-input-number>
 		<n-select
-			size="small"
 			v-if="showPageSizes"
 			v-model:value="pageSize"
+			size="small"
 			:options="pageSizesOptions"
 			:show-checkmark="false"
 			class="page-sizes"
 			:disabled="disabled"
 		/>
 		<n-select
-			size="small"
 			v-if="showSort"
 			v-model:value="sort"
+			size="small"
 			:options="sortOptions"
 			:show-checkmark="false"
 			class="sort"
@@ -37,19 +37,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs, watch } from "vue"
-import { NSelect, NInputNumber } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NInputNumber, NSelect } from "naive-ui"
+import { computed, toRefs, watch } from "vue"
 
+const props = defineProps<{ showPageSizes?: boolean, showSort?: boolean, pageSizes?: number[], disabled?: boolean }>()
 const page = defineModel<number>("page", { default: 1 })
 const pageSize = defineModel<number>("pageSize", { default: 10 })
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
 
-const props = defineProps<{ showPageSizes?: boolean; showSort?: boolean; pageSizes?: number[]; disabled?: boolean }>()
 const { pageSizes, disabled, showPageSizes, showSort } = toRefs(props)
 
 const pageSizesOptions = computed(() =>
-	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: o + " / page", value: o }))
+	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: `${o} / page`, value: o }))
 )
 
 const sortOptions = [

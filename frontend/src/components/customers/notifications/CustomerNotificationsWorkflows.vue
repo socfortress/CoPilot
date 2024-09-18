@@ -3,12 +3,14 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm" class="p-7 pt-4">
 				<CustomerNotificationsWorkflowsForm
-					:customerCode
+					:customer-code
 					@mounted="formCTX = $event"
 					@submitted="refreshList()"
 				>
 					<template #additionalActions="{ loading }">
-						<n-button @click="closeForm()" :disabled="loading">Close</n-button>
+						<n-button :disabled="loading" @click="closeForm()">
+							Close
+						</n-button>
 					</template>
 				</CustomerNotificationsWorkflowsForm>
 			</div>
@@ -19,19 +21,19 @@
 							<CustomerNotificationsWorkflowsItem
 								v-for="item of list"
 								:key="item.id"
-								:incidentNotification="item"
+								:incident-notification="item"
 								embedded
-								@updated="getCustomerNetworkConnectors()"
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
+								@updated="getCustomerNetworkConnectors()"
 							/>
 						</div>
 					</template>
 					<template v-else>
-						<n-empty class="justify-center h-48" v-if="!loading">
+						<n-empty v-if="!loading" class="justify-center h-48">
 							<div class="flex flex-col items-center gap-4">
 								<p>No Notification found</p>
 
-								<n-button size="small" @click="openForm()" type="primary">
+								<n-button size="small" type="primary" @click="openForm()">
 									<template #icon>
 										<Icon :name="AddIcon" :size="14"></Icon>
 									</template>
@@ -47,22 +49,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, defineAsyncComponent } from "vue"
-import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 
+const { customerCode } = defineProps<{
+	customerCode: string
+}>()
 const CustomerNotificationsWorkflowsItem = defineAsyncComponent(
 	() => import("./CustomerNotificationsWorkflowsItem.vue")
 )
 const CustomerNotificationsWorkflowsForm = defineAsyncComponent(
 	() => import("./CustomerNotificationsWorkflowsForm.vue")
 )
-
-const { customerCode } = defineProps<{
-	customerCode: string
-}>()
 
 const AddIcon = "carbon:add-alt"
 

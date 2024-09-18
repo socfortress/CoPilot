@@ -1,6 +1,6 @@
 <template>
 	<div class="services-list">
-		<div class="header mb-4 flex gap-2 justify-between items-center" v-if="!hideTotals">
+		<div v-if="!hideTotals" class="header mb-4 flex gap-2 justify-between items-center">
 			<div>
 				Total:
 				<strong class="font-mono">{{ total }}</strong>
@@ -18,12 +18,12 @@
 						:selectable="isSelectable(item)"
 						:disabled="isDisabled(item)"
 						:checked="selected?.id === item.id"
-						@click="setItem(item)"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						@click="setItem(item)"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -31,10 +31,10 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs, computed } from "vue"
-import { NSpin, NEmpty } from "naive-ui"
-import ServiceItem from "./Item.vue"
 import type { ServiceItemData, ServiceItemType } from "./types"
+import { NEmpty, NSpin } from "naive-ui"
+import { computed, toRefs } from "vue"
+import ServiceItem from "./Item.vue"
 
 const props = defineProps<{
 	type: ServiceItemType

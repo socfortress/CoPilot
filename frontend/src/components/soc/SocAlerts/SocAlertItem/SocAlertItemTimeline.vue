@@ -2,8 +2,8 @@
 	<n-timeline>
 		<n-timeline-item
 			v-for="(item, $index) of history"
-			:type="$index === 0 ? 'success' : undefined"
 			:key="item.label"
+			:type="$index === 0 ? 'success' : undefined"
 			:title="item.label"
 			:time="item.timeString"
 			:line-type="$index === history.length - 2 ? 'dashed' : undefined"
@@ -12,12 +12,12 @@
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from "@/stores/settings"
 import type { SocAlert } from "@/types/soc/alert.d"
+import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { onBeforeMount, ref } from "vue"
 import _toNumber from "lodash/toSafeInteger"
 import { NTimeline, NTimelineItem } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const { alert } = defineProps<{ alert: SocAlert }>()
 
@@ -45,7 +45,7 @@ onBeforeMount(() => {
 			const item = alert.modification_history[key]
 			history.value.push({
 				timeString: formatDate(_toNumber(key) * 1000, false),
-				label: item.action + ` [${item.user}]`
+				label: `${item.action} [${item.user}]`
 			})
 		}
 	}

@@ -1,17 +1,19 @@
 <template>
 	<div class="alert-actions flex gap-4 justify-end">
-		<n-button v-if="isDeployEnabled" :loading="loading" @click="provision()" type="success" :size="size" secondary>
-			<template #icon><Icon :name="DeployIcon"></Icon></template>
+		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size="size" secondary @click="provision()">
+			<template #icon>
+				<Icon :name="DeployIcon"></Icon>
+			</template>
 			Deploy
 		</n-button>
 
 		<n-button
+			v-if="!hideDeleteButton"
 			:size="size"
 			type="error"
 			ghost
-			@click="handleDelete"
 			:loading="loadingDelete"
-			v-if="!hideDeleteButton"
+			@click="handleDelete"
 		>
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -22,25 +24,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, watch } from "vue"
-import { NButton, useDialog, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
+import type { ApiCommonResponse } from "@/types/common.d"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import type { Size } from "naive-ui/es/button/src/interface"
-import type { ApiCommonResponse } from "@/types/common.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref, watch } from "vue"
+
+const { integration, hideDeleteButton, size } = defineProps<{
+	integration: CustomerIntegration
+	hideDeleteButton?: boolean
+	size?: Size
+}>()
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
 	(e: "deployed"): void
 	(e: "deleted"): void
-}>()
-
-const { integration, hideDeleteButton, size } = defineProps<{
-	integration: CustomerIntegration
-	hideDeleteButton?: boolean
-	size?: Size
 }>()
 
 const DeployIcon = "carbon:deploy"

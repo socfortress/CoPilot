@@ -1,43 +1,53 @@
 <template>
 	<div class="alert-actions flex flex-col gap-2 justify-end">
-		<n-button type="success" secondary :size="size" v-if="socAlertFieldValue" @click="gotoSocAlertUrl()">
-			<template #icon><Icon :name="ViewIcon"></Icon></template>
+		<n-button v-if="socAlertFieldValue" type="success" secondary :size="size" @click="gotoSocAlertUrl()">
+			<template #icon>
+				<Icon :name="ViewIcon"></Icon>
+			</template>
 			View SOC Alert
 		</n-button>
 		<n-button
+			v-if="!socAlertFieldValue"
 			:loading="loadingSocAlert"
 			type="warning"
 			secondary
 			:size="size"
 			@click="createAlert()"
-			v-if="!socAlertFieldValue"
 		>
-			<template #icon><Icon :name="DangerIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DangerIcon"></Icon>
+			</template>
 			Create SOC Alert
 		</n-button>
-		<n-button type="success" secondary :size="size" v-if="alertAskMessage" @click="showSocResponse = true">
-			<template #icon><Icon :name="ViewIcon"></Icon></template>
+		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click="showSocResponse = true">
+			<template #icon>
+				<Icon :name="ViewIcon"></Icon>
+			</template>
 			View SOCFortress Response
 		</n-button>
 		<n-button
+			v-if="isAskVisible"
 			:loading="loadingAskSoc"
 			type="warning"
 			secondary
 			:size="size"
 			@click="askSOCFortress()"
-			v-if="isAskVisible"
 		>
-			<template #icon><Icon :name="AskIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="AskIcon"></Icon>
+			</template>
 			Ask SOCFortress
 		</n-button>
 		<n-button
+			v-if="isWazuhRulesVisible"
 			:loading="loadingWazuhRuleExclude"
 			secondary
 			:size="size"
 			@click="wazuhManagerRuleExclude()"
-			v-if="isWazuhRulesVisible"
 		>
-			<template #icon><Icon :name="RulesIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="RulesIcon"></Icon>
+			</template>
 			Exclude Rule in Wazuh
 		</n-button>
 
@@ -56,7 +66,7 @@
 				placeholder="SOCFortress Response"
 				size="large"
 				:autosize="{
-					minRows: 3
+					minRows: 3,
 				}"
 			/>
 		</n-modal>
@@ -70,20 +80,26 @@
 			content-class="!p-0"
 			segmented
 		>
-			<AlertWazuhRules :data="wazuhRuleData" v-if="wazuhRuleData" />
+			<AlertWazuhRules v-if="wazuhRuleData" :data="wazuhRuleData" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from "vue"
-import { NButton, NInput, NModal, useMessage } from "naive-ui"
-import AlertWazuhRules from "./AlertWazuhRules.vue"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
 import type { SocAlertField } from "./type.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NInput, NModal, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import AlertWazuhRules from "./AlertWazuhRules.vue"
+
+const { alert, size, socAlertField } = defineProps<{
+	alert: Alert
+	size?: "tiny" | "small" | "medium" | "large"
+	socAlertField: SocAlertField
+}>()
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -91,12 +107,6 @@ const emit = defineEmits<{
 	(e: "updatedUrl", value: string): void
 	(e: "updatedId", value: number): void
 	(e: "updatedAskMessage", value: string): void
-}>()
-
-const { alert, size, socAlertField } = defineProps<{
-	alert: Alert
-	size?: "tiny" | "small" | "medium" | "large"
-	socAlertField: SocAlertField
 }>()
 
 const DangerIcon = "majesticons:exclamation-line"

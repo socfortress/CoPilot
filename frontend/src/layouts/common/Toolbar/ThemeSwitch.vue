@@ -1,5 +1,5 @@
 <template>
-	<button class="theme-switch" @click="toggleTheme" alt="theme-switch" aria-label="theme-switch">
+	<button class="theme-switch" alt="theme-switch" aria-label="theme-switch" @click="toggleTheme">
 		<Transition name="rotate">
 			<Icon v-if="isThemeDark" :size="20">
 				<Iconify :icon="Sunny" class="hover"></Iconify>
@@ -14,10 +14,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useThemeStore } from "@/stores/theme"
-import { computed, nextTick } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
 import { Icon as Iconify } from "@iconify/vue"
+import { computed, nextTick } from "vue"
 
 const Sunny = "ion:sunny"
 const Moon = "ion:moon"
@@ -49,7 +49,7 @@ function toggleTheme(event?: MouseEvent) {
 
 		transition.ready.then(() => {
 			const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
-			//const clipPath = [`inset(50%)`, `inset(0)`]
+			// const clipPath = [`inset(50%)`, `inset(0)`]
 
 			document.documentElement.animate(
 				{

@@ -1,13 +1,13 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
 import type {
 	Agent,
-	AgentVulnerabilities,
-	OutdatedWazuhAgents,
-	OutdatedVelociraptorAgents,
 	AgentSca,
+	AgentVulnerabilities,
+	OutdatedVelociraptorAgents,
+	OutdatedWazuhAgents,
 	ScaPolicyResult
 } from "@/types/agents.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export interface AgentPayload {
 	velociraptor_id: string
@@ -17,7 +17,7 @@ export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" |
 
 export default {
 	getAgents(agentId?: string) {
-		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? "/" + agentId : ""}`)
+		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)
 	},
 	markCritical(agentId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/critical`)

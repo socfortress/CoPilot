@@ -21,16 +21,16 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeMount, ref, watch, type Component } from "vue"
-import { useMainStore } from "@/stores/main"
-import { useAuthStore } from "@/stores/auth"
-import { useThemeStore } from "@/stores/theme"
-import HorizontalNav from "@/layouts/HorizontalNav/index.vue"
+import type { Layout, RouterTransition, ThemeName } from "@/types/theme.d"
+import SearchDialog from "@/components/common/SearchDialog.vue"
 import Blank from "@/layouts/Blank/index.vue"
 import Provider from "@/layouts/common/Provider.vue"
 import SplashScreen from "@/layouts/common/SplashScreen.vue"
-import SearchDialog from "@/components/common/SearchDialog.vue"
-import type { Layout, RouterTransition, ThemeName } from "@/types/theme.d"
+import HorizontalNav from "@/layouts/HorizontalNav/index.vue"
+import { useAuthStore } from "@/stores/auth"
+import { useMainStore } from "@/stores/main"
+import { useThemeStore } from "@/stores/theme"
+import { type Component, computed, onBeforeMount, ref, watch } from "vue"
 import { type RouteLocationNormalized, useRoute, useRouter } from "vue-router"
 import "@/assets/scss/index.scss"
 

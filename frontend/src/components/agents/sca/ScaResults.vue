@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -53,10 +53,12 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Result:</div>
+						<div class="text-secondary-color text-sm mb-1">
+							Result:
+						</div>
 						<n-select
-							size="small"
 							v-model:value="resultFilter"
+							size="small"
 							:options="resultOptions"
 							clearable
 							placeholder="All"
@@ -71,33 +73,32 @@
 				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded />
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="itemsFiltered.length"
 				:page-slot="6"
 				:simple="simpleMode"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
+import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
+import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import ScaResultItem from "./ScaResultItem.vue"
-import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
-import { watch } from "vue"
 
-const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
+const { sca, agent } = defineProps<{ sca: AgentSca, agent: Agent }>()
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"

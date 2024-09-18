@@ -1,5 +1,5 @@
 <template>
-	<n-form :model="form" :rules="rules" ref="formRef">
+	<n-form ref="formRef" :model="form" :rules="rules">
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Username" path="username">
 				<n-input v-model:value.trim="form.username" placeholder="Please insert Username" clearable />
@@ -17,15 +17,17 @@
 				<n-input v-model:value.trim="form.tenant_id" placeholder="Please insert Tenant ID" clearable />
 			</n-form-item>
 
-			<p class="text-center">ScoutSuite for Azure must be ran with a user where MFA is disabled</p>
+			<p class="text-center">
+				ScoutSuite for Azure must be ran with a user where MFA is disabled
+			</p>
 		</div>
 	</n-form>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { NForm, NFormItem, NInput, type FormRules, type FormInst } from "naive-ui"
 import type { ScoutSuiteAzureReportPayload } from "@/types/cloudSecurityAssessment.d"
+import { type FormInst, type FormRules, NForm, NFormItem, NInput } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void

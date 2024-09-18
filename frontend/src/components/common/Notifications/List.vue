@@ -8,20 +8,30 @@
 			@click="item.action ? preformAction(item.id, item.action) : () => {}"
 		>
 			<div class="icon-box">
-				<Icon :name="AlertIcon" :size="21" v-if="item.category === 'alert'"></Icon>
+				<Icon v-if="item.category === 'alert'" :name="AlertIcon" :size="21"></Icon>
 				<n-tooltip v-if="!item.read" trigger="hover" class="!p-0" content-class="!p-0" placement="right">
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
 					</template>
-					<div class="px-3 py-2">Set as read</div>
+					<div class="px-3 py-2">
+						Set as read
+					</div>
 				</n-tooltip>
 			</div>
 			<div class="content grow">
-				<div class="title">{{ item.title }}</div>
-				<div class="description">{{ item.description }}</div>
+				<div class="title">
+					{{ item.title }}
+				</div>
+				<div class="description">
+					{{ item.description }}
+				</div>
 				<div class="footer flex justify-between items-center">
-					<div class="date">{{ formatDatetime(item.date) }}</div>
-					<div v-if="!!item.action" class="action-text">{{ item.actionTitle || "Details" }}</div>
+					<div class="date">
+						{{ formatDatetime(item.date) }}
+					</div>
+					<div v-if="!!item.action" class="action-text">
+						{{ item.actionTitle || "Details" }}
+					</div>
 				</div>
 			</div>
 			<div class="delete-btn" @click.stop="deleteOne(item.id)">
@@ -34,18 +44,17 @@
 </template>
 
 <script lang="ts" setup>
-import { NScrollbar, NTooltip, NEmpty } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useNotifications } from "@/composables/useNotifications"
-import { computed } from "vue"
 import _take from "lodash/take"
-
-const DeleteIcon = "carbon:close"
-const AlertIcon = "mdi:alert-outline"
+import { NEmpty, NScrollbar, NTooltip } from "naive-ui"
+import { computed } from "vue"
 
 const props = defineProps<{
 	maxItems?: number
 }>()
+const DeleteIcon = "carbon:close"
+const AlertIcon = "mdi:alert-outline"
 
 const list = useNotifications().list
 

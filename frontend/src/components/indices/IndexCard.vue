@@ -4,32 +4,50 @@
 			<div class="wrapper">
 				<div class="group">
 					<div class="box">
-						<div class="value">{{ index.index }}</div>
-						<div class="label">name</div>
+						<div class="value">
+							{{ index.index }}
+						</div>
+						<div class="label">
+							name
+						</div>
 					</div>
 					<div class="box">
 						<div class="value uppercase flex align-center gap-2">
 							<IndexIcon :health="index.health" color />
 							{{ index.health }}
 						</div>
-						<div class="label">health</div>
+						<div class="label">
+							health
+						</div>
 					</div>
 				</div>
 				<div class="group">
 					<div class="box">
-						<div class="value">{{ index.store_size }}</div>
-						<div class="label">store_size</div>
+						<div class="value">
+							{{ index.store_size }}
+						</div>
+						<div class="label">
+							store_size
+						</div>
 					</div>
 					<div class="box">
-						<div class="value">{{ index.docs_count }}</div>
-						<div class="label">docs_count</div>
+						<div class="value">
+							{{ index.docs_count }}
+						</div>
+						<div class="label">
+							docs_count
+						</div>
 					</div>
 					<div class="box">
-						<div class="value">{{ index.replica_count }}</div>
-						<div class="label">replica_count</div>
+						<div class="value">
+							{{ index.replica_count }}
+						</div>
+						<div class="label">
+							replica_count
+						</div>
 					</div>
 				</div>
-				<div class="group actions" v-if="showActions">
+				<div v-if="showActions" class="group actions">
 					<div class="box">
 						<!--
 						<el-tooltip content="Rotate" placement="top" :show-arrow="false">
@@ -54,30 +72,31 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, toRefs } from "vue"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
 import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
-import { useMessage, useDialog, NTooltip, NButton, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-
-const DeleteIcon = "ph:trash"
-
-const emit = defineEmits<{
-	(e: "delete"): void
-}>()
+import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { NButton, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { h, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	index: IndexStats
 	showActions?: boolean
 }>()
+
+const emit = defineEmits<{
+	(e: "delete"): void
+}>()
+
+const DeleteIcon = "ph:trash"
+
 const { index, showActions } = toRefs(props)
 
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
 
-const handleDelete = () => {
+function handleDelete() {
 	dialog.warning({
 		title: "Confirm",
 		content: () =>

@@ -11,8 +11,8 @@
 		<div class="main-box flex justify-between gap-4">
 			<div class="content flex gap-3 items-center">
 				<div class="level mt-1">
-					<Icon :name="WarningIcon" :size="20" v-if="alert.level === InfluxDBAlertLevel.Crit" />
-					<Icon :name="OKIcon" :size="20" v-else />
+					<Icon v-if="alert.level === InfluxDBAlertLevel.Crit" :name="WarningIcon" :size="20" />
+					<Icon v-else :name="OKIcon" :size="20" />
 				</div>
 				<div class="info grow">
 					<div class="message" v-html="message"></div>
@@ -20,7 +20,9 @@
 			</div>
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
-			<div class="time">{{ formatDate(alert.time) }}</div>
+			<div class="time">
+				{{ formatDate(alert.time) }}
+			</div>
 		</div>
 	</div>
 </template>
@@ -28,8 +30,8 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import dayjs from "@/utils/dayjs"
-import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
 import { computed } from "vue"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()
@@ -38,7 +40,7 @@ const WarningIcon = "carbon:warning-alt-filled"
 const OKIcon = "carbon:checkmark-filled"
 
 const message = computed(() => {
-	return alert.message.replace(/\n/gim, " <span class='mx-1'>•</span> ")
+	return alert.message.replace(/\n/g, " <span class='mx-1'>•</span> ")
 })
 
 const dFormats = useSettingsStore().dateFormat

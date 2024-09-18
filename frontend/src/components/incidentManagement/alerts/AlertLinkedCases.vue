@@ -1,8 +1,8 @@
 <template>
 	<code
-		class="cursor-pointer text-primary-color"
 		v-for="linkedCase of linkedCases"
 		:key="linkedCase.id"
+		class="cursor-pointer text-primary-color"
 		@click="gotoIncidentManagementCases(linkedCase.id)"
 	>
 		#{{ linkedCase.id }}
@@ -11,10 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { computed, toRefs } from "vue"
 
 const props = defineProps<{ alert: Alert }>()
 const { alert } = toRefs(props)

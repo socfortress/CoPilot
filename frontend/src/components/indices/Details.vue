@@ -7,7 +7,7 @@
 						<span v-if="currentIndex">Below the details for index</span>
 						<span v-else>Select an index to see the details</span>
 					</div>
-					<div class="select-box" v-if="indices && indices.length">
+					<div v-if="indices && indices.length" class="select-box">
 						<n-select
 							v-model:value="selectValue"
 							placeholder="Indices list"
@@ -19,9 +19,9 @@
 				</div>
 			</template>
 
-			<div class="details-box" v-if="currentIndex">
+			<div v-if="currentIndex" class="details-box">
 				<div class="info">
-					<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
+					<IndexCard :index="currentIndex" show-actions @delete="clearCurrentIndex()" />
 				</div>
 				<n-card class="shards overflow-hidden" content-style="padding:0">
 					<n-scrollbar x-scrollable style="width: 100%">
@@ -55,23 +55,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import type { IndexStats, IndexShard } from "@/types/indices.d"
-import IndexCard from "@/components/indices/IndexCard.vue"
+import type { IndexShard, IndexStats } from "@/types/indices.d"
 import Api from "@/api"
+import IndexCard from "@/components/indices/IndexCard.vue"
+import { NCard, NScrollbar, NSelect, NSpin, NTable, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { useMessage, NScrollbar, NSpin, NTable, NSelect, NCard } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
 type IndexModel = IndexStats | null | ""
-
-const emit = defineEmits<{
-	(e: "update:modelValue", value: IndexModel): void
-}>()
 
 const props = defineProps<{
 	indices: IndexStats[] | null
 	modelValue: IndexModel
 }>()
+
+const emit = defineEmits<{
+	(e: "update:modelValue", value: IndexModel): void
+}>()
+
 const { indices, modelValue } = toRefs(props)
 
 const message = useMessage()

@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" type="primary" secondary @click="showForm = true" :loading="loading">
+	<n-button size="small" type="primary" secondary :loading="loading" @click="showForm = true">
 		<div class="flex items-center gap-2">
 			<Icon :name="DangerIcon" :size="18"></Icon>
 			<span class="hidden xs:block">Custom Alert</span>
@@ -15,14 +15,14 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomAlertForm @mounted="formCTX = $event" v-model:loading="loading" />
+		<CustomAlertForm v-model:loading="loading" @mounted="formCTX = $event" />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
-import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref, watch } from "vue"
 import CustomAlertForm from "./CustomAlertForm.vue"
 
 const DangerIcon = "majesticons:exclamation-line"

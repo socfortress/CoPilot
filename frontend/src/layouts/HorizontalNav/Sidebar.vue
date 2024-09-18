@@ -4,7 +4,7 @@
 		class="sidebar flex flex-col"
 		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
 	>
-		<div class="sidebar-wrap grow flex flex-col" ref="sidebar">
+		<div ref="sidebar" class="sidebar-wrap grow flex flex-col">
 			<SidebarHeader :logo-mini="sidebarClosed" />
 			<n-scrollbar>
 				<Navbar :collapsed="sidebarClosed"></Navbar>
@@ -15,14 +15,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from "vue"
-import { NScrollbar } from "naive-ui"
+import Navbar from "@/layouts/common/Navbar/index.vue"
+import { useThemeStore } from "@/stores/theme"
 import { isMobile } from "@/utils"
 import { onClickOutside, useElementHover } from "@vueuse/core"
-import Navbar from "@/layouts/common/Navbar/index.vue"
-import SidebarHeader from "./SidebarHeader.vue"
+import { NScrollbar } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 import SidebarFooter from "./SidebarFooter.vue"
-import { useThemeStore } from "@/stores/theme"
+import SidebarHeader from "./SidebarHeader.vue"
 
 const themeStore = useThemeStore()
 const sidebar = ref(null)

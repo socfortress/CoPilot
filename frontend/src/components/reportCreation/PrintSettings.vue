@@ -4,7 +4,7 @@
 			<n-avatar :size="110" :src="logo" />
 
 			<div class="flex flex-col justify-between grow">
-				<ImageCropper v-slot="{ openCropper }" @crop="setCroppedImage" :placeholder="'Select a Logo'">
+				<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
 					<n-button @click="openCropper()">
 						<template #icon>
 							<Icon :name="EditIcon"></Icon>
@@ -22,8 +22,12 @@
 		<div class="theme">
 			<n-form-item label="Theme" feedback="⊙ choose panels palette">
 				<n-radio-group v-model:value="theme">
-					<n-radio-button value="light">Light</n-radio-button>
-					<n-radio-button value="dark">Dark</n-radio-button>
+					<n-radio-button value="light">
+						Light
+					</n-radio-button>
+					<n-radio-button value="dark">
+						Dark
+					</n-radio-button>
 				</n-radio-group>
 			</n-form-item>
 		</div>
@@ -37,11 +41,11 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted } from "vue"
-import { NAvatar, NButton, NInput, NFormItem, NRadioGroup, NRadioButton, NSwitch } from "naive-ui"
-import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import Icon from "@/components/common/Icon.vue"
+import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import { useStorage } from "@vueuse/core"
+import { NAvatar, NButton, NFormItem, NInput, NRadioButton, NRadioGroup, NSwitch } from "naive-ui"
+import { onMounted, watch } from "vue"
 import * as defaultSettings from "./defaultSettings"
 
 export interface PrintSettingsData {

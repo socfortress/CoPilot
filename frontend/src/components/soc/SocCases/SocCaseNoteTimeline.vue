@@ -2,8 +2,8 @@
 	<n-timeline>
 		<n-timeline-item
 			v-for="(item, $index) of history"
-			:type="$index === 0 ? 'success' : undefined"
 			:key="item.label"
+			:type="$index === 0 ? 'success' : undefined"
 			:title="item.label"
 			:time="item.timeString"
 			:line-type="$index === history.length - 2 ? 'dashed' : undefined"
@@ -12,11 +12,11 @@
 </template>
 
 <script setup lang="ts">
+import type { SocNote } from "@/types/soc/note.d"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { onBeforeMount, ref } from "vue"
-import type { SocNote } from "@/types/soc/note.d"
 import { NTimeline, NTimelineItem } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const { note } = defineProps<{ note: SocNote }>()
 

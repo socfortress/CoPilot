@@ -8,8 +8,8 @@
 					</div>
 					<div class="status flex gap-2 items-center">
 						<span>{{ query.active ? "Active" : "Inactive" }}</span>
-						<Icon :name="EnabledIcon" :size="14" class="text-success-color" v-if="query.active"></Icon>
-						<Icon :name="DisabledIcon" :size="14" class="text-secondary-color" v-else></Icon>
+						<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success-color"></Icon>
+						<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary-color"></Icon>
 					</div>
 				</div>
 
@@ -24,11 +24,11 @@
 				<div class="footer-box px-5 py-3 flex justify-between items-center gap-4">
 					<div class="badges-box flex flex-wrap items-center gap-3">
 						<QueryTimeIntervalForm
-							:query
 							v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
+							:query
 							@updated="updateQuery($event)"
 						>
-							<Badge type="splitted" bright pointCursor @click.stop="toggleTimeIntervalPopup()">
+							<Badge type="splitted" bright point-cursor @click.stop="toggleTimeIntervalPopup()">
 								<template #iconLeft>
 									<n-spin
 										:size="12"
@@ -38,7 +38,9 @@
 										<Icon :name="TimeIntervalIcon" />
 									</n-spin>
 								</template>
-								<template #label>Time Interval</template>
+								<template #label>
+									Time Interval
+								</template>
 								<template #value>
 									<div class="flex gap-2 items-center">
 										{{ query.time_interval || "n/d" }}
@@ -52,7 +54,9 @@
 							<template #iconLeft>
 								<Icon :name="TimeIcon" />
 							</template>
-							<template #label>Last execution time</template>
+							<template #label>
+								Last execution time
+							</template>
 							<template #value>
 								<div class="flex gap-2 items-center">
 									{{
@@ -66,8 +70,8 @@
 					</div>
 					<div class="actions-box">
 						<QueryDeleteOne
-							:query
 							v-slot="{ loading: loadingDelete, togglePopup: toggleDeletePopup }"
+							:query
 							@deleted="emit('deleted', query)"
 						>
 							<n-button quaternary size="tiny" :loading="loadingDelete" @click.stop="toggleDeletePopup()">
@@ -88,10 +92,10 @@
 				content-class="flex flex-col !p-0"
 				:title="`#${query.id}`"
 				closable
-				@close="closeDetails()"
 				:bordered="false"
 				segmented
 				role="modal"
+				@close="closeDetails()"
 			>
 				<QueryDetails :query @deleted="emitDelete(query)" @updated="updateQuery($event)" />
 			</n-card>
@@ -100,26 +104,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NModal, NButton, NSpin, NCard } from "naive-ui"
+import type { SigmaQuery } from "@/types/sigma.d"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"
+import { NButton, NCard, NModal, NSpin } from "naive-ui"
+import { ref, toRefs } from "vue"
 import QueryDeleteOne from "./actionsProviders/QueryDeleteOne.vue"
+import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"
 import QueryDetails from "./QueryDetails.vue"
-import type { SigmaQuery } from "@/types/sigma.d"
+
+const props = defineProps<{
+	query: SigmaQuery
+	embedded?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "deleted", value: SigmaQuery): void
 	(e: "updated", value: SigmaQuery): void
 }>()
 
-const props = defineProps<{
-	query: SigmaQuery
-	embedded?: boolean
-}>()
 const { query, embedded } = toRefs(props)
 
 const TimeIcon = "carbon:time"

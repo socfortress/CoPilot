@@ -1,7 +1,7 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-4 justify-center min-w-52">
@@ -11,8 +11,10 @@
 			</div>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
-				<n-button :disabled="!dirty" :loading @click="updateActive()" type="primary" size="small">
+				<n-button quaternary size="small" @click="closePopup()">
+					Close
+				</n-button>
+				<n-button :disabled="!dirty" :loading type="primary" size="small" @click="updateActive()">
 					Save
 				</n-button>
 			</div>
@@ -21,18 +23,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
-import Api from "@/api"
 import type { SigmaQuery } from "@/types/sigma.d"
+import Api from "@/api"
+import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{
+	query: SigmaQuery
+}>()
 
 const emit = defineEmits<{
 	(e: "updated", value: SigmaQuery): void
 }>()
 
-const props = defineProps<{
-	query: SigmaQuery
-}>()
 const { query } = toRefs(props)
 
 const loading = defineModel<boolean | undefined>("loading", { default: false })

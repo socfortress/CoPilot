@@ -36,20 +36,20 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue"
+import type { LoginPayload } from "@/types/auth.d"
+import { useAuthStore } from "@/stores/auth"
 import {
 	type FormInst,
-	type FormValidationError,
 	type FormRules,
-	useMessage,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton
+	useMessage
 } from "naive-ui"
-import { useAuthStore } from "@/stores/auth"
+import { ref } from "vue"
 import { useRouter } from "vue-router"
-import type { LoginPayload } from "@/types/auth.d"
 
 interface ModelType {
 	username: string

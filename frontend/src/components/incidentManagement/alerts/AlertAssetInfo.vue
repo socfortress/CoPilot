@@ -1,9 +1,13 @@
 <template>
 	<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 		<KVCard v-for="(value, key) of asset" :key="key">
-			<template #key>{{ key }}</template>
+			<template #key>
+				{{ key }}
+			</template>
 			<template #value>
-				<div v-if="key === 'id'">#{{ value }}</div>
+				<div v-if="key === 'id'">
+					#{{ value }}
+				</div>
 				<div v-else-if="key === 'customer_code'">
 					<code
 						class="cursor-pointer text-primary-color"
@@ -31,7 +35,9 @@
 						<Icon :name="ViewIcon" :size="14" class="top-0.5 relative" />
 					</code>
 				</div>
-				<div v-else>{{ value === "" ? "-" : value ?? "-" }}</div>
+				<div v-else>
+					{{ value === "" ? "-" : value ?? "-" }}
+				</div>
 			</template>
 		</KVCard>
 	</div>
@@ -50,7 +56,9 @@
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of alertDetailsInfo" :key="key">
-							<template #key>{{ key }}</template>
+							<template #key>
+								{{ key }}
+							</template>
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
@@ -61,13 +69,15 @@
 										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
 									</code>
 								</div>
-								<div v-else>{{ value === "" ? "-" : value ?? "-" }}</div>
+								<div v-else>
+									{{ value === "" ? "-" : value ?? "-" }}
+								</div>
 							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
-					<div class="p-7 pt-4" v-if="alertDetailsSource">
+					<div v-if="alertDetailsSource" class="p-7 pt-4">
 						<CodeSource :code="alertDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>
@@ -77,18 +87,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
-import { NModal, NSpin, NTabs, NTabPane, useMessage } from "naive-ui"
+import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
-import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
-import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
+import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{ asset: AlertAsset }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{ asset: AlertAsset }>()
 const { asset } = toRefs(props)
 
 const LinkIcon = "carbon:launch"

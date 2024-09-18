@@ -2,7 +2,9 @@
 	<div class="overview-section">
 		<div class="property-group gap-2 grid grid-auto-fit-250">
 			<KVCard v-for="item of propsSanitized" :key="item.key">
-				<template #key>{{ item.key }}</template>
+				<template #key>
+					{{ item.key }}
+				</template>
 				<template #value>
 					<template v-if="item.key === 'customer_code' && item.val !== '-'">
 						<code class="cursor-pointer text-primary-color" @click="gotoCustomer({ code: item.val })">
@@ -11,7 +13,7 @@
 						</code>
 					</template>
 					<template v-else-if="item.key === 'velociraptor_id'">
-						<AgentVelociraptorIdForm v-model:velociraptorId="item.val" :agent @updated="emit('updated')" />
+						<AgentVelociraptorIdForm v-model:velociraptor-id="item.val" :agent @updated="emit('updated')" />
 					</template>
 					<template v-else>
 						{{ item.val ?? "-" }}
@@ -23,22 +25,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
-import { formatDate } from "@/utils"
-import { type Agent } from "@/types/agents.d"
-import { useSettingsStore } from "@/stores/settings"
-import KVCard from "@/components/common/KVCard.vue"
+import type { Agent } from "@/types/agents.d"
 import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { computed, toRefs } from "vue"
 import AgentVelociraptorIdForm from "./AgentVelociraptorIdForm.vue"
+
+const props = defineProps<{
+	agent: Agent
+}>()
 
 const emit = defineEmits<{
 	(e: "updated"): void
 }>()
 
-const props = defineProps<{
-	agent: Agent
-}>()
 const { agent } = toRefs(props)
 
 const LinkIcon = "carbon:launch"

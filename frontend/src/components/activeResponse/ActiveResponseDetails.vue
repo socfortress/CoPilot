@@ -7,22 +7,23 @@
 				</Suspense>
 			</template>
 			<template v-else>
-				<n-empty description="No description found" class="justify-center h-48" v-if="!loadingActiveResponse" />
+				<n-empty v-if="!loadingActiveResponse" description="No description found" class="justify-center h-48" />
 			</template>
 		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, defineAsyncComponent } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
 import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 
 const { activeResponse } = defineProps<{
 	activeResponse: SupportedActiveResponse
 }>()
+
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const message = useMessage()
 const loadingActiveResponse = ref(false)

@@ -5,9 +5,9 @@
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
-						themes: codeThemes
-					})
-				]
+						themes: codeThemes,
+					}),
+				],
 			]"
 			class="markdown-style scrollbar-styled"
 			:class="{ codeBgTransparent }"
@@ -17,26 +17,27 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
-import { getHighlighter, codeThemes } from "@/utils/highlighter"
-import { fromHighlighter } from "@shikijs/markdown-it/core"
 import type { HighlighterGeneric } from "shiki/core"
+import { codeThemes, getHighlighter } from "@/utils/highlighter"
+import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
+import { fromHighlighter } from "@shikijs/markdown-it/core"
+import { toRefs } from "vue"
 import "@/assets/scss/vue-md-it-override.scss"
+
+const props = defineProps<{
+	source: string
+	codeBgTransparent?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "click", value: PointerEvent): void
+}>()
 
 const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
 	string,
 	string
 >
 
-const emit = defineEmits<{
-	(e: "click", value: PointerEvent): void
-}>()
-
-const props = defineProps<{
-	source: string
-	codeBgTransparent?: boolean
-}>()
 const { source, codeBgTransparent } = toRefs(props)
 </script>
 

@@ -1,6 +1,8 @@
 <template>
-	<n-button :size="size" :type="type" @click="showInvokeWizard = true" :loading="loading">
-		<template #icon><Icon :name="InvokeIcon"></Icon></template>
+	<n-button :size="size" :type="type" :loading="loading" @click="showInvokeWizard = true">
+		<template #icon>
+			<Icon :name="InvokeIcon"></Icon>
+		</template>
 		Active Response
 	</n-button>
 
@@ -14,16 +16,16 @@
 		content-class="flex flex-col !p-0"
 		segmented
 	>
-		<ActiveResponseWizard @mounted="activeResponseWizardCTX = $event" v-model:loading="loading" />
+		<ActiveResponseWizard v-model:loading="loading" @mounted="activeResponseWizardCTX = $event" />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
-import { NButton, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import ActiveResponseWizard from "./ActiveResponseWizard.vue"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref, watch } from "vue"
+import ActiveResponseWizard from "./ActiveResponseWizard.vue"
 
 const { type, size } = defineProps<{
 	size?: Size

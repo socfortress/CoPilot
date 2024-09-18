@@ -1,6 +1,6 @@
+import type { ColorAction, ColorKey, ColorType, ThemeColor } from "@/types/theme.d"
 import { colord } from "colord"
 import _get from "lodash/get"
-import type { ColorAction, ColorKey, ColorType, ThemeColor } from "@/types/theme.d"
 
 export type PrimaryShade = "005" | "010" | "015" | "020" | "030" | "040" | "050" | "060"
 

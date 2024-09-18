@@ -37,7 +37,7 @@ HttpClient.interceptors.response.use(
 	response => response,
 	error => {
 		if (error.response && error.response.status === 401) {
-			if (window.location.pathname.indexOf("login") === -1) {
+			if (!window.location.pathname.includes("login")) {
 				window.location.href = "/logout"
 			}
 			/*

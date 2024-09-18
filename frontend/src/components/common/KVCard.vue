@@ -1,7 +1,11 @@
 <template>
 	<div class="kv-card" :class="[`kv-color-${color}`, `kv-size-${size}`]">
-		<div class="key" v-if="$slots.key"><slot name="key"></slot></div>
-		<div class="value" v-if="$slots.value"><slot name="value"></slot></div>
+		<div v-if="$slots.key" class="key">
+			<slot name="key"></slot>
+		</div>
+		<div v-if="$slots.value" class="value">
+			<slot name="value"></slot>
+		</div>
 	</div>
 </template>
 

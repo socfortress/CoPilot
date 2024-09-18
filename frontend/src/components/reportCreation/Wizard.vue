@@ -24,7 +24,7 @@
 						/>
 					</n-form-item>
 
-					<n-form-item label="Dashboard" v-if="canSelectDashboard" class="flex flex-grow">
+					<n-form-item v-if="canSelectDashboard" label="Dashboard" class="flex flex-grow">
 						<n-select
 							v-model:value="selectedDashboardUID"
 							:options="dashboardsOptions"
@@ -33,8 +33,8 @@
 						/>
 					</n-form-item>
 				</div>
-				<div class="flex" v-if="!hidePanelsSelect">
-					<n-form-item label="Panels" v-if="canSelectPanels" class="grow">
+				<div v-if="!hidePanelsSelect" class="flex">
+					<n-form-item v-if="canSelectPanels" label="Panels" class="grow">
 						<n-select
 							v-model:value="selectedPanelsIds"
 							:options="panelsOptions"
@@ -50,12 +50,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NSelect, useMessage } from "naive-ui"
-import Api from "@/api"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/endpoints/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import Api from "@/api"
 import { useStorage } from "@vueuse/core"
+import { NForm, NFormItem, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{
+	hidePanelsSelect?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "selected", value: Panel[]): void
@@ -65,9 +69,6 @@ const emit = defineEmits<{
 	(e: "timerange", value: ReportTimeRange): void
 }>()
 
-const props = defineProps<{
-	hidePanelsSelect?: boolean
-}>()
 const { hidePanelsSelect } = toRefs(props)
 
 const message = useMessage()
@@ -97,7 +98,7 @@ const timeValue = useStorage<number>("report-wizard-time-value", 1, localStorage
 const orgsOptions = computed(() => orgsList.value.map(o => ({ value: o.id, label: o.name })))
 const dashboardsOptions = computed(() => dashboardsList.value.map(o => ({ value: o.uid, label: o.title })))
 const panelsOptions = computed(() => panelsList.value.map(o => ({ value: o.id, label: o.title })))
-const timeUnitOptions: { label: string; value: RowPanelTimeUnit }[] = [
+const timeUnitOptions: { label: string, value: RowPanelTimeUnit }[] = [
 	{ label: "Minutes", value: "m" },
 	{ label: "Hours", value: "h" },
 	{ label: "Days", value: "d" }

@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ highlight }" :id="'rule-' + rule.id">
+	<div :id="`rule-${rule.id}`" class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ highlight }">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-3">
 				<div class="id">
@@ -33,8 +33,12 @@
 			</div>
 		</div>
 		<div class="main-box">
-			<div class="title">{{ rule.title }}</div>
-			<div class="description">{{ rule.description }}</div>
+			<div class="title">
+				{{ rule.title }}
+			</div>
+			<div class="description">
+				{{ rule.description }}
+			</div>
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
 			<div class="time">
@@ -64,7 +68,9 @@
 					Errors :
 					<code>{{ rule.errors || "-" }}</code>
 				</div>
-				<div class="mb-1">Source :</div>
+				<div class="mb-1">
+					Source :
+				</div>
 				<n-input
 					:value="rule.source"
 					type="textarea"
@@ -73,7 +79,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 10
+						maxRows: 10,
 					}"
 				/>
 			</div>
@@ -82,14 +88,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NModal, NInput, NPopover, NTimeline, NTimelineItem } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import { NInput, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
+import { ref, toRefs } from "vue"
 
-const props = defineProps<{ rule: PipelineRule; highlight: boolean | null | undefined }>()
+const props = defineProps<{ rule: PipelineRule, highlight: boolean | null | undefined }>()
 const { rule, highlight } = toRefs(props)
 
 const TimeIcon = "carbon:time"

@@ -8,7 +8,7 @@
 						<n-statistic label="Pass" :value="sca.pass" tabular-nums />
 						<n-statistic label="Fail" :value="sca.fail" tabular-nums />
 						<n-statistic label="Invalid" :value="sca.invalid" tabular-nums />
-						<n-statistic label="Score" :value="sca.score + '%'" tabular-nums />
+						<n-statistic label="Score" :value="`${sca.score}%`" tabular-nums />
 					</div>
 				</n-card>
 			</div>
@@ -28,9 +28,11 @@
 					</div>
 				</n-card>
 			</div>
-			<div class="grid gap-2 grid-auto-fit-200 px-7" v-if="properties">
+			<div v-if="properties" class="grid gap-2 grid-auto-fit-200 px-7">
 				<KVCard v-for="(value, key) of properties" :key="key">
-					<template #key>{{ key }}</template>
+					<template #key>
+						{{ key }}
+					</template>
 					<template #value>
 						<template v-if="value && key === 'references'">
 							<a
@@ -63,7 +65,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 18
+						maxRows: 18,
 					}"
 				/>
 			</div>
@@ -77,18 +79,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from "vue"
-import { NTabs, NTabPane, NInput, NStatistic, NCard } from "naive-ui"
+import type { Agent, AgentSca } from "@/types/agents.d"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { type Agent, type AgentSca } from "@/types/agents.d"
-import KVCard from "@/components/common/KVCard.vue"
-import Icon from "@/components/common/Icon.vue"
 import _pick from "lodash/pick"
+import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent } from "vue"
+
+const { sca, agent } = defineProps<{ sca: AgentSca, agent: Agent }>()
 
 const ScaResults = defineAsyncComponent(() => import("./ScaResults.vue"))
-
-const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
 const dFormats = useSettingsStore().dateFormat
 const LinkIcon = "carbon:launch"

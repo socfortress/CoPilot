@@ -1,22 +1,28 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<n-empty description="No items found" class="justify-center h-48" v-if="!list.length" />
+		<n-empty v-if="!list.length" description="No items found" class="justify-center h-48" />
 
 		<div class="flex gap-4 justify-between items-center list-header font-mono text-secondary-color text-sm">
-			<div class="basis-2/3 truncate borde">{{ labelKey }}</div>
-			<div class="grow">{{ percentageKey }}</div>
+			<div class="basis-2/3 truncate borde">
+				{{ labelKey }}
+			</div>
+			<div class="grow">
+				{{ percentageKey }}
+			</div>
 		</div>
 		<div
-			class="flex gap-4 justify-between items-center"
 			v-for="item of list"
 			:key="item[labelKey as keyof typeof item]"
+			class="flex gap-4 justify-between items-center"
 		>
-			<div class="basis-2/3 truncate font-mono">{{ item[labelKey as keyof typeof item] }}</div>
+			<div class="basis-2/3 truncate font-mono">
+				{{ item[labelKey as keyof typeof item] }}
+			</div>
 			<div class="grow">
 				<n-progress
 					type="line"
 					:percentage="parseInt(item[percentageKey as keyof typeof item], 10)"
-					:indicator-placement="'inside'"
+					indicator-placement="inside"
 					:indicator-text-color="style['bg-color']"
 					:color="style['fg-color']"
 					:rail-color="style['divider-020-color']"
@@ -28,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import { useThemeStore } from "@/stores/theme"
 import type { SafeAny } from "@/types/common.d"
+import { useThemeStore } from "@/stores/theme"
 import { NEmpty, NProgress } from "naive-ui"
 import { computed } from "vue"
 

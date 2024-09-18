@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="creation-report-form">
-		<n-form :model="baseForm" :rules="rules" ref="baseFormRef">
+		<n-form ref="baseFormRef" :model="baseForm" :rules="rules">
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4 items-start">
 					<n-form-item label="Type" path="report_type" class="w-32">
@@ -43,12 +43,14 @@
 				/>
 
 				<div class="flex justify-between gap-4 mt-8">
-					<n-button @click="reset()" :disabled="loading">Reset</n-button>
+					<n-button :disabled="loading" @click="reset()">
+						Reset
+					</n-button>
 					<n-button
 						type="primary"
 						:disabled="!isValid"
-						@click="validate(() => submit())"
 						:loading="submitting"
+						@click="validate(() => submit())"
 					>
 						Submit
 					</n-button>
@@ -59,21 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import type { ApiCommonResponse, ApiError } from "@/types/common.d"
 import Api from "@/api"
-import {
-	useMessage,
-	NForm,
-	NFormItem,
-	NInput,
-	NButton,
-	NSpin,
-	NSelect,
-	type FormValidationError,
-	type FormInst,
-	type FormRules,
-	type MessageReactive
-} from "naive-ui"
 import {
 	type ScoutSuiteAwsReportPayload,
 	type ScoutSuiteAzureReportPayload,
@@ -81,10 +70,23 @@ import {
 	type ScoutSuiteReportPayload,
 	ScoutSuiteReportType
 } from "@/types/cloudSecurityAssessment.d"
+import {
+	type FormInst,
+	type FormRules,
+	type FormValidationError,
+	type MessageReactive,
+	NButton,
+	NForm,
+	NFormItem,
+	NInput,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
 import GcpTypeForm from "./FormTypes/GcpTypeForm.vue"
-import type { ApiError, ApiCommonResponse } from "@/types/common.d"
 
 type BaseFormPayload = Omit<ScoutSuiteReportPayload, "report_type"> & { report_type: ScoutSuiteReportType | null }
 type TypeFormPayload = Partial<ScoutSuiteAwsReportPayload | ScoutSuiteAzureReportPayload | ScoutSuiteGcpReportPayload>
@@ -111,7 +113,7 @@ const typeFormRef = ref<FormInst | null>(null)
 
 const availableTypes = ["aws", "azure", "gcp"]
 
-const reportTypeOptions = ref<{ label: string; value: string; disabled: boolean }[]>([])
+const reportTypeOptions = ref<{ label: string, value: string, disabled: boolean }[]>([])
 
 const rules: FormRules = {
 	report_type: {

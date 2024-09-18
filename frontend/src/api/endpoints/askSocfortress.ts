@@ -1,5 +1,5 @@
-import { HttpClient } from "../httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export default {
 	create(indexName: string, alertId: string) {

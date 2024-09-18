@@ -1,9 +1,9 @@
+import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
+import IncidentManagementIcon from "@/assets/icons/alert-settings-icon.svg"
 import { renderIcon } from "@/utils"
 import { h } from "vue"
-import { RouterLink } from "vue-router"
-import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
-import IncidentManagementIcon from "@/assets/icons/alert-settings-icon.svg"
+import { RouterLink } from "vue-router"
 
 const OverviewIcon = "carbon:dashboard"
 const IndiciesIcon = "ph:list-magnifying-glass"

@@ -72,10 +72,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, toRefs, useSlots, watch } from "vue"
-import { NScrollbar, NButton, NSplit } from "naive-ui"
-import { onClickOutside, useWindowSize } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
+import { onClickOutside, useWindowSize } from "@vueuse/core"
+import { NButton, NScrollbar, NSplit } from "naive-ui"
+import { computed, onMounted, ref, toRefs, useSlots, watch } from "vue"
 
 type SidebarPosition = "left" | "right"
 
@@ -84,11 +84,6 @@ export interface CtxSegmentedPage {
 	closeSidebar: () => void
 	openSidebar: () => void
 }
-
-const emit = defineEmits<{
-	(e: "mounted", value: CtxSegmentedPage): void
-	(e: "sidebar", value: boolean): void
-}>()
 
 const props = withDefaults(
 	defineProps<{
@@ -104,6 +99,12 @@ const props = withDefaults(
 	}>(),
 	{ sidebarPosition: "left", useMainScroll: true }
 )
+
+const emit = defineEmits<{
+	(e: "mounted", value: CtxSegmentedPage): void
+	(e: "sidebar", value: boolean): void
+}>()
+
 const {
 	sidebarPosition,
 	hideMenuBtn,

@@ -1,13 +1,15 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden" v-if="!showSource">
-			<div class="scrollbar-styled overflow-hidden code-bg-transparent" v-shiki="{ lang, decode }">
+		<n-card v-if="!showSource" content-class="bg-secondary-color !p-0" class="overflow-hidden">
+			<div v-shiki="{ lang, decode }" class="scrollbar-styled overflow-hidden code-bg-transparent">
 				<pre v-html="source"></pre>
 			</div>
 		</n-card>
 
 		<div class="flex justify-end">
-			<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
+			<n-button quaternary size="tiny" @click="showSource = !showSource">
+				toggle source view
+			</n-button>
 		</div>
 
 		<n-input
@@ -19,16 +21,16 @@
 			size="large"
 			:autosize="{
 				minRows: 3,
-				maxRows: 18
+				maxRows: 18,
 			}"
 		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
-import { NCard, NInput, NButton } from "naive-ui"
 import vShiki from "@/directives/v-shiki"
+import { NButton, NCard, NInput } from "naive-ui"
+import { computed, ref } from "vue"
 
 const { code, lang } = defineProps<{
 	code: string | object | number

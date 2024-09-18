@@ -1,9 +1,9 @@
-import process from "node:process"
-import _ from "lodash"
-import fs from "fs-extra"
-import path from "node:path"
 import os from "node:os"
-import { intro, outro, select, spinner, isCancel, cancel, text } from "@clack/prompts"
+import path from "node:path"
+import process from "node:process"
+import { cancel, intro, isCancel, outro, select, spinner, text } from "@clack/prompts"
+import fs from "fs-extra"
+import _ from "lodash"
 
 const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-families"]
 const TYPO_KEYS = ["typo"]
@@ -67,7 +67,7 @@ function tokenNameSanitize(name, from) {
  * @returns {string}
  */
 async function importTokens(tokensPath) {
-	const filePath = path.normalize(tokensPath.trim().replace("~/", os.homedir() + "/"))
+	const filePath = path.normalize(tokensPath.trim().replace("~/", `${os.homedir()}/`))
 	const tokens = await fs.readJSON(filePath)
 
 	const projectFile = {}
@@ -83,7 +83,7 @@ async function importTokens(tokensPath) {
 			const kIndex = k.indexOf(gk)
 			if (kIndex !== -1) {
 				const gkParsed = tokenNameSanitize(_.camelCase(gk), "type")
-				const name = _.camelCase(k.replace(gk + "-", ""))
+				const name = _.camelCase(k.replace(`${gk}-`, ""))
 
 				_.set(projectFile, `${gkParsed}.${name}`, globalTokens[k].value)
 			}
@@ -103,7 +103,7 @@ async function importTokens(tokensPath) {
 					if (prop.indexOf("{") === 0) {
 						const prefix = tokenNameSanitize(k, "token")
 						const ref = prop
-							.replace(_.kebabCase(prefix) + "-", "")
+							.replace(`${_.kebabCase(prefix)}-`, "")
 							.replace("{", "")
 							.replace("}", "")
 						value[k] = `{${k}.${_.camelCase(ref)}}`
@@ -124,7 +124,7 @@ async function importTokens(tokensPath) {
 				const kIndex = k.indexOf(sk)
 				if (kIndex !== -1) {
 					const skParsed = tokenNameSanitize(_.camelCase(sk), "type")
-					const name = _.camelCase(k.replace(sk + "-", ""))
+					const name = _.camelCase(k.replace(`${sk}-`, ""))
 					let value = group[k].value
 
 					if (value.indexOf("{") === 0) {
@@ -172,11 +172,11 @@ async function exportTokens() {
 		const type = tokenNameSanitize(group.key, "token")
 
 		for (const name in group.value) {
-			const tokenName = _.kebabCase(type + "-" + name)
+			const tokenName = _.kebabCase(`${type}-${name}`)
 
 			exportFile.global[tokenName] = {
 				value: group.value[name],
-				type: type
+				type
 			}
 		}
 	}
@@ -192,12 +192,12 @@ async function exportTokens() {
 
 				exportFile.global[globalName] = {
 					value: set[setName][name],
-					type: type
+					type
 				}
 
 				exportFile[setName][tokenName] = {
 					value: `{${globalName}}`,
-					type: type
+					type
 				}
 			}
 		}
@@ -218,7 +218,7 @@ async function exportTokens() {
 					const ref = prop.replace("{", "").replace("}", "")
 					const path = _.split(ref, ".")[1]
 					const prefix = tokenNameSanitize(k, "token")
-					newValue[k] = "{" + _.kebabCase(`${prefix}-${_.kebabCase(path)}`) + "}"
+					newValue[k] = `{${_.kebabCase(`${prefix}-${_.kebabCase(path)}`)}}`
 				} else {
 					newValue[k] = prop
 				}
@@ -227,7 +227,7 @@ async function exportTokens() {
 			// sanitize lineHeight for figma
 			if (value.fontSize && tokens?.lineHeight?.base) {
 				newValue.lineHeight = Math.round(
-					parseInt(getValue(tokens, value.fontSize)) * parseFloat(tokens.lineHeight.base)
+					Number.parseInt(getValue(tokens, value.fontSize)) * Number.parseFloat(tokens.lineHeight.base)
 				).toString()
 			}
 

@@ -5,7 +5,7 @@
 				<span>
 					{{ formatDate(alert.alert_source_event_time) }}
 				</span>
-				<Icon :name="TimeIcon" :size="16" v-if="!hideTimeline"></Icon>
+				<Icon v-if="!hideTimeline" :name="TimeIcon" :size="16"></Icon>
 			</div>
 		</template>
 		<div class="flex flex-col py-2 px-1">
@@ -17,11 +17,11 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import Icon from "@/components/common/Icon.vue"
-import { toRefs } from "vue"
-import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
-import { NPopover } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import { NPopover } from "naive-ui"
+import { toRefs } from "vue"
+import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
 
 const props = defineProps<{
 	alert: SocAlert

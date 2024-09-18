@@ -1,7 +1,9 @@
 <template>
 	<div class="item flex flex-col gap-4 px-5 py-3">
 		<div class="header-box flex justify-between gap-4">
-			<div class="name">{{ job.id }}</div>
+			<div class="name">
+				{{ job.id }}
+			</div>
 			<div class="time flex items-center gap-2">
 				{{ formatDate(job.last_success, dFormats.datetimesec) }}
 
@@ -15,11 +17,17 @@
 		</div>
 		<div class="main-box flex justify-between gap-4 items-center">
 			<div class="content">
-				<div class="title">{{ job.name }}</div>
-				<div class="description mt-1">{{ job.description }}</div>
+				<div class="title">
+					{{ job.name }}
+				</div>
+				<div class="description mt-1">
+					{{ job.description }}
+				</div>
 				<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 					<Badge type="splitted" color="primary">
-						<template #label>Interval</template>
+						<template #label>
+							Interval
+						</template>
 						<template #value>
 							{{ job.time_interval }} {{ job.time_interval === 1 ? "minute" : "minutes" }}
 						</template>
@@ -33,18 +41,20 @@
 		</div>
 		<div class="footer-box flex flex-col gap-4">
 			<JobActions :job="job" size="small" inline />
-			<div class="time w-full text-right">{{ formatDate(job.last_success, dFormats.datetimesec) }}</div>
+			<div class="time w-full text-right">
+				{{ formatDate(job.last_success, dFormats.datetimesec) }}
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { NTooltip } from "naive-ui"
 import type { Job } from "@/types/scheduler.d"
-import { formatDate } from "@/utils"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NTooltip } from "naive-ui"
 import JobActions from "./JobActions.vue"
 
 const { job } = defineProps<{ job: Job }>()

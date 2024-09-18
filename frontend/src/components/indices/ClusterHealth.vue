@@ -7,10 +7,10 @@
 			</div>
 		</template>
 		<n-spin :show="loading">
-			<div class="info" v-if="cluster">
+			<div v-if="cluster" class="info">
 				<n-scrollbar style="max-height: 500px" trigger="none">
 					<div class="card-wrap">
-						<div class="box" v-for="prop of propsOrder" :key="prop">
+						<div v-for="prop of propsOrder" :key="prop" class="box">
 							<template v-if="prop === 'status'">
 								<div class="value uppercase flex align-center gap-2">
 									<IndexIcon :health="cluster.status" color />
@@ -18,9 +18,13 @@
 								</div>
 							</template>
 							<template v-else>
-								<div class="value">{{ cluster[prop] }}</div>
+								<div class="value">
+									{{ cluster[prop] }}
+								</div>
 							</template>
-							<div class="label">{{ sanitizeLabel(prop) }}</div>
+							<div class="label">
+								{{ sanitizeLabel(prop) }}
+							</div>
 						</div>
 					</div>
 				</n-scrollbar>
@@ -30,11 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
 import type { ClusterHealth } from "@/types/indices.d"
 import Api from "@/api"
-import { useMessage, NSpin, NScrollbar, NCard } from "naive-ui"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { NCard, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)
@@ -61,7 +65,7 @@ const propsOrder = ref<Array<keyof ClusterHealth>>([
 ])
 
 function sanitizeLabel(label: string) {
-	return label.replace(/_/gim, " ")
+	return label.replace(/_/g, " ")
 }
 
 function getClusterHealth() {

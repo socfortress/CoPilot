@@ -27,8 +27,6 @@ export interface ImageLoadEvent extends Event {
 	path?: HTMLElement[]
 }
 
-const emit = defineEmits(["image-error", "image-loading", "image-loaded", "image-fallback"])
-
 const props = defineProps({
 	src: {
 		type: String,
@@ -45,6 +43,8 @@ const props = defineProps({
 		default: ""
 	}
 })
+
+const emit = defineEmits(["image-error", "image-loading", "image-loaded", "image-fallback"])
 
 const isImageLoaded = ref(false)
 const isImageError = ref(false)

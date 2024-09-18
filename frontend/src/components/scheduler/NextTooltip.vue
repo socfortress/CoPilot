@@ -1,11 +1,13 @@
 <template>
-	<n-tooltip @update:show="getNextRun()" placement="top-end">
+	<n-tooltip placement="top-end" @update:show="getNextRun()">
 		<template #trigger>
 			<Icon :name="NextIcon"></Icon>
 		</template>
-		<template #header>Next run time:</template>
+		<template #header>
+			Next run time:
+		</template>
 		<div>
-			<n-spin :size="12" v-if="loadingNext" />
+			<n-spin v-if="loadingNext" :size="12" />
 			<span v-if="!loadingNext">
 				{{ nextRunTime ? formatDate(nextRunTime, dFormats.datetimesec) : "-" }}
 			</span>
@@ -14,12 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NTooltip, NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import { formatDate } from "@/utils"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NSpin, NTooltip, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 
 const props = defineProps<{ jobId: string }>()
 const { jobId } = toRefs(props)

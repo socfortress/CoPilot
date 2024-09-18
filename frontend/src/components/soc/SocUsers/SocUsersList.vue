@@ -9,7 +9,9 @@
 							<th>Login</th>
 							<th>Name</th>
 							<th>Active</th>
-							<th style="max-width: 300px">Alerts</th>
+							<th style="max-width: 300px">
+								Alerts
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -55,13 +57,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NTable, NTooltip, NScrollbar, NSpin } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import SocUserAlerts from "./SocUserAlerts.vue"
-import Api from "@/api"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
+import SocUserAlerts from "./SocUserAlerts.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)

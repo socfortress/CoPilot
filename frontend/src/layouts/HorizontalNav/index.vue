@@ -10,8 +10,8 @@
 
 <script lang="ts" setup>
 import HeaderBar from "./HeaderBar.vue"
-import Sidebar from "./Sidebar.vue"
 import MainContainer from "./MainContainer.vue"
+import Sidebar from "./Sidebar.vue"
 import "./main.scss"
 </script>
 

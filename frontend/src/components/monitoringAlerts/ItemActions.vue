@@ -1,23 +1,33 @@
 <template>
 	<div class="alert-actions flex flex-col gap-3 justify-center" :class="{ '!flex-row': inline }">
 		<n-button :loading="loadingInvoke" type="success" secondary :size="size" @click="invoke()">
-			<template #icon><Icon :name="InvokeIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="InvokeIcon"></Icon>
+			</template>
 			Invoke
 		</n-button>
 		<n-button :loading="loadingDelete" :size="size" type="error" secondary @click="handleDelete()">
-			<template #icon><Icon :name="DeleteIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DeleteIcon"></Icon>
+			</template>
 			Delete
 		</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, useDialog, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { computed, watch, ref } from "vue"
-import type { Size } from "naive-ui/es/button/src/interface"
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
+
+const { alert, size, inline } = defineProps<{
+	alert: MonitoringAlert
+	size?: Size
+	inline?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "startInvoking"): void
@@ -28,12 +38,6 @@ const emit = defineEmits<{
 	(e: "stopLoading"): void
 	(e: "invoked"): void
 	(e: "deleted"): void
-}>()
-
-const { alert, size, inline } = defineProps<{
-	alert: MonitoringAlert
-	size?: Size
-	inline?: boolean
 }>()
 
 const DeleteIcon = "ph:trash"

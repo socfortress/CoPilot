@@ -1,9 +1,9 @@
-import { computed, watch } from "vue"
 import { usHealthcheckStore } from "@/stores/healthcheck"
-import { useNotifications, type Notification } from "./useNotifications"
 import { IndexHealth } from "@/types/indices.d"
 import _capitalize from "lodash/capitalize"
+import { computed, watch } from "vue"
 import { useGoto } from "./useGoto"
+import { type Notification, useNotifications } from "./useNotifications"
 
 export function useHealthchecksNotify() {
 	return {

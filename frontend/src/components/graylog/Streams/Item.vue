@@ -7,7 +7,9 @@
 					{{ stream.creator_user_id }}
 				</div>
 			</div>
-			<div class="time">{{ formatDate(stream.created_at, dFormats.datetimesec) }}</div>
+			<div class="time">
+				{{ formatDate(stream.created_at, dFormats.datetimesec) }}
+			</div>
 			<n-button size="small" @click.stop="showDetails = true">
 				<template #icon>
 					<Icon :name="InfoIcon"></Icon>
@@ -16,52 +18,72 @@
 		</div>
 		<div class="main-box flex justify-between">
 			<div class="content">
-				<div class="title">{{ stream.title }}</div>
-				<div class="description mb-2">{{ stream.description }}</div>
+				<div class="title">
+					{{ stream.title }}
+				</div>
+				<div class="description mb-2">
+					{{ stream.description }}
+				</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
 					<Badge :type="stream.disabled ? 'muted' : 'active'">
 						<template #iconRight>
 							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>Enabled</template>
+						<template #label>
+							Enabled
+						</template>
 					</Badge>
 					<Badge :type="stream.is_default ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>Default</template>
+						<template #label>
+							Default
+						</template>
 					</Badge>
 					<Badge :type="stream.is_editable ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 						</template>
-						<template #label>Editable</template>
+						<template #label>
+							Editable
+						</template>
 					</Badge>
 				</div>
 			</div>
-			<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
-				<n-button @click="stop()" :loading="loading" v-if="!stream.disabled">
-					<template #icon><Icon :name="StopIcon"></Icon></template>
+			<div v-if="stream.is_editable" class="actions-box flex flex-col justify-end">
+				<n-button v-if="!stream.disabled" :loading="loading" @click="stop()">
+					<template #icon>
+						<Icon :name="StopIcon"></Icon>
+					</template>
 					Stop stream
 				</n-button>
-				<n-button @click="start()" :loading="loading" v-else type="primary">
-					<template #icon><Icon :name="StartIcon"></Icon></template>
+				<n-button v-else :loading="loading" type="primary" @click="start()">
+					<template #icon>
+						<Icon :name="StartIcon"></Icon>
+					</template>
 					Start stream
 				</n-button>
 			</div>
 		</div>
 		<div class="footer-box flex justify-between items-center">
-			<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
-				<n-button @click="stop()" :loading="loading" v-if="!stream.disabled" size="small">
-					<template #icon><Icon :name="StopIcon"></Icon></template>
+			<div v-if="stream.is_editable" class="actions-box flex flex-col justify-end">
+				<n-button v-if="!stream.disabled" :loading="loading" size="small" @click="stop()">
+					<template #icon>
+						<Icon :name="StopIcon"></Icon>
+					</template>
 					Stop
 				</n-button>
-				<n-button @click="start()" :loading="loading" v-else type="primary" size="small">
-					<template #icon><Icon :name="StartIcon"></Icon></template>
+				<n-button v-else :loading="loading" type="primary" size="small" @click="start()">
+					<template #icon>
+						<Icon :name="StartIcon"></Icon>
+					</template>
 					Start
 				</n-button>
 			</div>
-			<div class="time">{{ formatDate(stream.created_at, dFormats.datetimesec) }}</div>
+			<div class="time">
+				{{ formatDate(stream.created_at, dFormats.datetimesec) }}
+			</div>
 		</div>
 
 		<n-modal
@@ -80,23 +102,25 @@
 				Remove matches from default stream :
 				<code>{{ stream.remove_matches_from_default_stream }}</code>
 			</div>
-			<div class="mb-1">Rules :</div>
-			<SimpleJsonViewer class="vuesjv-override" :model-value="stream.rules" :initialExpandedDepth="2" />
+			<div class="mb-1">
+				Rules :
+			</div>
+			<SimpleJsonViewer class="vuesjv-override" :model-value="stream.rules" :initial-expanded-depth="2" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { type Stream } from "@/types/graylog/stream.d"
-import { useSettingsStore } from "@/stores/settings"
-import Icon from "@/components/common/Icon.vue"
+import type { Stream } from "@/types/graylog/stream.d"
+import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NModal, NButton, useMessage } from "naive-ui"
+import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import Api from "@/api"
 
 const props = defineProps<{ stream: Stream }>()
 const { stream } = toRefs(props)

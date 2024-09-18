@@ -1,12 +1,12 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
 import type { AuthUser, LoginPayload, RegisterPayload } from "@/types/auth.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import jsonToFormData from "@ajoelp/json-to-formdata"
+import { HttpClient } from "../httpClient"
 
 export default {
 	login(payload: LoginPayload) {
 		const formData = jsonToFormData(payload)
-		return HttpClient.post<FlaskBaseResponse & { access_token: string; token_type: string }>(
+		return HttpClient.post<FlaskBaseResponse & { access_token: string, token_type: string }>(
 			"/auth/token",
 			formData
 		)
@@ -15,7 +15,7 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>("/auth/register", payload)
 	},
 	refresh() {
-		return HttpClient.get<FlaskBaseResponse & { access_token: string; token_type: string }>("/auth/refresh")
+		return HttpClient.get<FlaskBaseResponse & { access_token: string, token_type: string }>("/auth/refresh")
 	},
 	getUsers() {
 		return HttpClient.get<FlaskBaseResponse & { users: AuthUser[] }>("/auth/users")

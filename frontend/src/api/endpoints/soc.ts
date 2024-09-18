@@ -1,10 +1,10 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert.d"
-import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
+import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import type { SocNewNote, SocNote } from "@/types/soc/note.d"
 import type { SocUser } from "@/types/soc/user.d"
+import { HttpClient } from "../httpClient"
 
 export interface CasesFilter {
 	olderThan: number
@@ -77,7 +77,7 @@ export default {
 
 	// #region Assets
 	getAssetsByCase(caseId: string) {
-		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
+		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[], state: SocCaseAssetsState }>(
 			`/soc/assets/${caseId}`
 		)
 	},
@@ -92,7 +92,7 @@ export default {
 			signal
 		})
 	},
-	createCaseNote(caseId: string | number, payload?: { title?: string; content?: string }) {
+	createCaseNote(caseId: string | number, payload?: { title?: string, content?: string }) {
 		return HttpClient.post<FlaskBaseResponse & { note: SocNewNote }>(`/soc/notes/${caseId}`, {
 			note_title: payload?.title || "",
 			note_content: payload?.content || ""
@@ -127,7 +127,7 @@ export default {
 		}
 
 		return HttpClient[apiMethod]<
-			FlaskBaseResponse & { cases?: SocCase[]; case?: SocCaseExt; cases_breached?: SocCase[] }
+			FlaskBaseResponse & { cases?: SocCase[], case?: SocCaseExt, cases_breached?: SocCase[] }
 		>(
 			url,
 			{},
@@ -137,7 +137,7 @@ export default {
 							older_than: payload?.olderThan || 1,
 							time_unit: payload?.unit || "days"
 						}
-						/*eslint no-mixed-spaces-and-tabs: "off"*/
+						/* eslint no-mixed-spaces-and-tabs: "off" */
 				  }
 				: undefined
 		)

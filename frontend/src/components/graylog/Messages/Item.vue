@@ -1,20 +1,28 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between">
-			<div class="caller">{{ message.caller }}</div>
-			<div class="time">{{ formatDate(message.timestamp, dFormats.datetimesec) }}</div>
+			<div class="caller">
+				{{ message.caller }}
+			</div>
+			<div class="time">
+				{{ formatDate(message.timestamp, dFormats.datetimesec) }}
+			</div>
 		</div>
 		<div class="main-box">
-			<div class="content">{{ message.content }}</div>
+			<div class="content">
+				{{ message.content }}
+			</div>
 		</div>
 		<div class="footer-box">
-			<div class="time">{{ formatDate(message.timestamp, dFormats.datetimesec) }}</div>
+			<div class="time">
+				{{ formatDate(message.timestamp, dFormats.datetimesec) }}
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { type Message } from "@/types/graylog/messages.d"
+import type { Message } from "@/types/graylog/messages.d"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 

@@ -9,12 +9,14 @@
 				placeholder="Content..."
 				:autosize="{
 					minRows: 3,
-					maxRows: 10
+					maxRows: 10,
 				}"
 			/>
 			<div class="flex gap-2 justify-end">
-				<n-button :disabled="loading" @click="clear(true)" secondary class="!w-32">Close</n-button>
-				<n-button :disabled="loading || !title" @click="addNote()" secondary type="primary" class="!w-32">
+				<n-button :disabled="loading" secondary class="!w-32" @click="clear(true)">
+					Close
+				</n-button>
+				<n-button :disabled="loading || !title" secondary type="primary" class="!w-32" @click="addNote()">
 					Submit
 				</n-button>
 			</div>
@@ -23,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import Api from "@/api"
-import { useMessage, NSpin, NInput, NButton } from "naive-ui"
 import type { SocNewNote } from "@/types/soc/note.d"
+import Api from "@/api"
+import { NButton, NInput, NSpin, useMessage } from "naive-ui"
+import { ref } from "vue"
 
 const { caseId } = defineProps<{ caseId: string | number }>()
 

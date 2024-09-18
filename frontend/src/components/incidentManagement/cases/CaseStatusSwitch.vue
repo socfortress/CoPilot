@@ -13,20 +13,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { useMessage, NPopselect } from "naive-ui"
-import Api from "@/api"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import Api from "@/api"
+import { NPopselect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	caseData: Case
 }>()
-const { caseData } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Case): void
 }>()
+
+const { caseData } = toRefs(props)
 
 const loading = ref(false)
 const message = useMessage()

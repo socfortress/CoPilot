@@ -13,12 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import { NInput, NButton, NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { ref } from "vue"
-import { computed } from "vue"
 import type { LicenseKey } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NInput, NSpin, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 
 const emit = defineEmits<{
 	(e: "uploaded"): void

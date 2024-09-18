@@ -13,21 +13,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { useMessage, NPopselect } from "naive-ui"
-import Api from "@/api"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import Api from "@/api"
+import { NPopselect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	alert: SocAlert
 	users?: SocUser[]
 }>()
-const { alert, users } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: SocAlert): void
 }>()
+
+const { alert, users } = toRefs(props)
 
 const loadingUsers = ref(false)
 const message = useMessage()
@@ -88,7 +88,7 @@ function assignUser() {
 }
 
 function parseUsers(users: SocUser[]) {
-	usersOptions.value = users.map(o => ({ label: "#" + o.user_id + " • " + o.user_login, value: o.user_id }))
+	usersOptions.value = users.map(o => ({ label: `#${o.user_id} • ${o.user_login}`, value: o.user_id }))
 
 	usersOptions.value.push({
 		label: "- Set default owner -",

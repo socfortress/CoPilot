@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -45,10 +45,12 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Enabled:</div>
+						<div class="text-secondary-color text-sm mb-1">
+							Enabled:
+						</div>
 						<n-select
-							size="small"
 							v-model:value="enabledFilter"
+							size="small"
 							:options="enabledOptions"
 							clearable
 							placeholder="All"
@@ -57,10 +59,12 @@
 					</div>
 					<n-divider class="!my-3" />
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Editable:</div>
+						<div class="text-secondary-color text-sm mb-1">
+							Editable:
+						</div>
 						<n-select
-							size="small"
 							v-model:value="editableFilter"
+							size="small"
 							:options="editableOptions"
 							clearable
 							placeholder="All"
@@ -75,29 +79,29 @@
 				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NDivider, NEmpty } from "naive-ui"
-import Api from "@/api"
-import StreamItem from "./Item.vue"
-import Icon from "@/components/common/Icon.vue"
 import type { Stream } from "@/types/graylog/stream.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
+import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import StreamItem from "./Item.vue"
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"

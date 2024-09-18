@@ -3,7 +3,9 @@
 		<div class="name text-secondary-color">
 			{{ artifact.name }}
 		</div>
-		<div class="description">{{ artifact.description }}</div>
+		<div class="description">
+			{{ artifact.description }}
+		</div>
 	</div>
 </template>
 

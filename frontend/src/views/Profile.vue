@@ -8,7 +8,7 @@
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						shape="circle"
-						:placeholder="'Select your profile picture'"
+						placeholder="Select your profile picture"
 						@crop="setCroppedImage"
 					>
 						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()" />
@@ -45,21 +45,25 @@
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						shape="circle"
-						:placeholder="'Select your profile picture'"
+						placeholder="Select your profile picture"
 						@crop="setCroppedImage"
 					>
-						<n-button size="large" type="primary" @click="openCropper()">Edit profile image</n-button>
+						<n-button size="large" type="primary" @click="openCropper()">
+							Edit profile image
+						</n-button>
 					</ImageCropper>
 				</div>
 			</div>
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
-					<n-tab name="settings">Settings</n-tab>
+					<n-tab name="settings">
+						Settings
+					</n-tab>
 				</n-tabs>
 			</div>
 		</n-card>
 		<div class="main">
-			<n-tabs tab-class="!hidden" v-model:value="tabActive" animated>
+			<n-tabs v-model:value="tabActive" tab-class="!hidden" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
 				</n-tab-pane>
@@ -69,13 +73,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NButton, NTooltip, NTab, NTabs, NTabPane, NCard } from "naive-ui"
-import { ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
-import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
 import ChangePassword from "@/components/users/ChangePassword.vue"
+import { useAuthStore } from "@/stores/auth"
+import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { ref } from "vue"
 
 const propicEnabled = false
 

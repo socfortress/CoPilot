@@ -31,33 +31,51 @@
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 				<Badge type="splitted" color="primary">
-					<template #label>State</template>
-					<template #value>{{ flow.state || "-" }}</template>
+					<template #label>
+						State
+					</template>
+					<template #value>
+						{{ flow.state || "-" }}
+					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
-					<template #label>Status</template>
-					<template #value>{{ flow.status || "-" }}</template>
+					<template #label>
+						Status
+					</template>
+					<template #value>
+						{{ flow.status || "-" }}
+					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
-					<template #label>Exec. time</template>
-					<template #value>{{ executionDuration }}</template>
+					<template #label>
+						Exec. time
+					</template>
+					<template #value>
+						{{ executionDuration }}
+					</template>
 				</Badge>
 				<Badge :type="flow.dirty ? 'active' : 'muted'">
 					<template #iconRight>
 						<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 					</template>
-					<template #label>Dirty</template>
+					<template #label>
+						Dirty
+					</template>
 				</Badge>
 				<Badge :type="flow.user_notified ? 'active' : 'muted'">
 					<template #iconRight>
 						<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14"></Icon>
 					</template>
-					<template #label>User notified</template>
+					<template #label>
+						User notified
+					</template>
 				</Badge>
 			</div>
 		</div>
 		<div class="footer-box">
-			<div class="time">{{ formatDate(flow.start_time, dFormats.datetimesec) }}</div>
+			<div class="time">
+				{{ formatDate(flow.start_time, dFormats.datetimesec) }}
+			</div>
 		</div>
 
 		<n-modal
@@ -65,16 +83,20 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="'Agent Flow: ' + flow.session_id"
+			:title="`Agent Flow: ${flow.session_id}`"
 			:bordered="false"
 			segmented
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value === "" ? "-" : value ?? "-" }}</template>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value === "" ? "-" : value ?? "-" }}
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -88,7 +110,7 @@
 							size="large"
 							:autosize="{
 								minRows: 3,
-								maxRows: 18
+								maxRows: 18,
 							}"
 						/>
 					</div>
@@ -99,17 +121,21 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Logs" tab="Logs" display-directive="show:lazy">
-					<div class="p-7 pt-4" v-if="flow.logs.length">
+					<div v-if="flow.logs.length" class="p-7 pt-4">
 						<ul>
-							<li v-for="log of flow.logs" :key="log">{{ log }}</li>
+							<li v-for="log of flow.logs" :key="log">
+								{{ log }}
+							</li>
 						</ul>
 					</div>
 					<n-empty v-else description="No items found" class="justify-center h-48" />
 				</n-tab-pane>
 				<n-tab-pane name="Uploaded files" tab="Uploaded files" display-directive="show:lazy">
-					<div class="p-7 pt-4" v-if="flow.uploaded_files.length">
+					<div v-if="flow.uploaded_files.length" class="p-7 pt-4">
 						<ul>
-							<li v-for="file of flow.uploaded_files" :key="file">{{ file }}</li>
+							<li v-for="file of flow.uploaded_files" :key="file">
+								{{ file }}
+							</li>
 						</ul>
 					</div>
 					<n-empty v-else description="No items found" class="justify-center h-48" />
@@ -125,7 +151,7 @@
 								class="mb-2 item-appear item-appear-bottom item-appear-005"
 							/>
 						</template>
-						<n-empty description="No items found" class="justify-center h-48" v-else />
+						<n-empty v-else description="No items found" class="justify-center h-48" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Request" tab="Request" display-directive="show:lazy">
@@ -133,7 +159,7 @@
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="flow.request"
-							:initialExpandedDepth="2"
+							:initial-expanded-depth="2"
 						/>
 					</div>
 				</n-tab-pane>
@@ -151,24 +177,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue"
-import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar, NInput } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
-import { formatDate } from "@/utils"
 import type { FlowResult } from "@/types/flow.d"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import dayjs from "@/utils/dayjs"
 import _pick from "lodash/pick"
-import Badge from "@/components/common/Badge.vue"
+import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 
+const { flow, embedded } = defineProps<{ flow: FlowResult, embedded?: boolean }>()
 const AgentFlowTimeline = defineAsyncComponent(() => import("./AgentFlowTimeline.vue"))
 const AgentFlowQueryStat = defineAsyncComponent(() => import("./AgentFlowQueryStat.vue"))
 const AgentFlowCollectList = defineAsyncComponent(() => import("./AgentFlowCollectList.vue"))
-
-const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
 
 const TimeIcon = "carbon:time"
 const InfoIcon = "carbon:information"

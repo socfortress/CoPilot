@@ -32,16 +32,16 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs, computed } from "vue"
-import { NCard, NProgress } from "naive-ui"
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"
 import _trim from "lodash/trim"
+import { NCard, NProgress } from "naive-ui"
+import { computed, toRefs } from "vue"
 
 interface Metrics {
 	groupName: string
-	throughputMetrics: (ThroughputMetric & { name: string; percentage: number })[]
+	throughputMetrics: (ThroughputMetric & { name: string, percentage: number })[]
 }
 
 const props = defineProps<{
@@ -57,7 +57,7 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 	const keywords = ["input", "output", "process"]
 
 	const tempData = metrics.map(o => {
-		const obj = { ...o } as ThroughputMetric & { name: string; percentage: number }
+		const obj = { ...o } as ThroughputMetric & { name: string, percentage: number }
 		obj.name = obj.metric
 		for (const key of keywords) {
 			obj.name = _trim(obj.name.replace(key, "").replace("..", "."), ".")

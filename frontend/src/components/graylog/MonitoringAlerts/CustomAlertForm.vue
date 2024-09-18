@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="custom-alert-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4">
 					<n-form-item label="Priority" path="alert_priority" class="w-28">
@@ -28,7 +28,7 @@
 							type="textarea"
 							:autosize="{
 								minRows: 3,
-								maxRows: 10
+								maxRows: 10,
 							}"
 						/>
 					</n-form-item>
@@ -43,7 +43,7 @@
 				<div class="custom-fields-editor">
 					<n-form-item label="Custom fields" path="custom_fields">
 						<div class="custom-fields-list flex flex-col gap-1">
-							<n-card size="small" v-for="(cf, index) of form.custom_fields" :key="cf.key">
+							<n-card v-for="(cf, index) of form.custom_fields" :key="cf.key" size="small">
 								<div class="custom-field-box flex gap-2">
 									<n-form-item
 										label="Name"
@@ -53,14 +53,14 @@
 										:rule="{
 											required: true,
 											message: `Field Name required`,
-											trigger: ['input', 'blur']
+											trigger: ['input', 'blur'],
 										}"
 									>
 										<n-input
 											v-model:value.trim="cf.name"
-											@update:value="validate()"
 											placeholder="Custom field Name"
 											clearable
+											@update:value="validate()"
 										/>
 									</n-form-item>
 									<n-form-item
@@ -71,14 +71,14 @@
 										:rule="{
 											required: true,
 											message: `Field Value required`,
-											trigger: ['input', 'blur']
+											trigger: ['input', 'blur'],
 										}"
 									>
 										<n-input
 											v-model:value.trim="cf.value"
-											@update:value="validate()"
 											placeholder="Custom field Value"
 											clearable
+											@update:value="validate()"
 										/>
 									</n-form-item>
 									<n-form-item size="small">
@@ -104,8 +104,8 @@
 				<div class="flex gap-4">
 					<n-form-item label="Search within (seconds)" path="search_within_seconds" class="grow">
 						<n-input-number
-							:min="1"
 							v-model:value="form.search_within_seconds"
+							:min="1"
 							placeholder="Input time in seconds"
 							clearable
 							class="w-full"
@@ -113,8 +113,8 @@
 					</n-form-item>
 					<n-form-item label="Execute every (seconds)" path="execute_every_seconds" class="grow">
 						<n-input-number
-							:min="1"
 							v-model:value="form.execute_every_seconds"
+							:min="1"
 							placeholder="Input time in seconds"
 							clearable
 							class="w-full"
@@ -126,12 +126,14 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
+						<n-button :disabled="loading" @click="reset()">
+							Reset
+						</n-button>
 						<n-button
 							type="primary"
 							:disabled="!isValid"
-							@click="validate(() => submit())"
 							:loading="submittingCustomAlert"
+							@click="validate(() => submit())"
 						>
 							Submit
 						</n-button>
@@ -143,30 +145,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
+import _get from "lodash/get"
+import _toSafeInteger from "lodash/toSafeInteger"
+import _trim from "lodash/trim"
 import {
-	useMessage,
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	type MessageReactive,
+	NButton,
+	NCard,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
-	NSpin,
-	NSelect,
 	NInputNumber,
-	NCard,
-	type FormValidationError,
-	type FormInst,
-	type FormRules,
-	type FormItemRule,
-	type MessageReactive
+	NSelect,
+	NSpin,
+	useMessage
 } from "naive-ui"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
-import _toSafeInteger from "lodash/toSafeInteger"
-import { type CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
-import Icon from "@/components/common/Icon.vue"
-import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
+import { computed, onMounted, ref, watch } from "vue"
 
 interface CustomProvisionForm {
 	alert_name: string
@@ -200,7 +202,7 @@ const message = useMessage()
 const form = ref<CustomProvisionForm>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
-const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] = [
+const alertPriorityOptions: { label: string, value: CustomProvisionPriority }[] = [
 	{ label: "Low", value: CustomProvisionPriority.LOW },
 	{ label: "Medium", value: CustomProvisionPriority.MEDIUM },
 	{ label: "High", value: CustomProvisionPriority.HIGH }

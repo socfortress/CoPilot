@@ -1,13 +1,13 @@
-import { HttpClient } from "../httpClient"
-import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
-	AlertSourceContent,
 	AlertsByHost,
 	AlertsByRule,
 	AlertsByRulePerHost,
+	AlertSourceContent,
 	AlertsSummary,
 	WazuhRuleExclude
 } from "@/types/alerts.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 
@@ -121,7 +121,7 @@ export default {
 			index_name: indexName,
 			alert_id: alertId
 		}
-		return HttpClient.post<FlaskBaseResponse & { alert_id: number; alert_url: string }>(
+		return HttpClient.post<FlaskBaseResponse & { alert_id: number, alert_url: string }>(
 			`/soc/general_alert/create`,
 			body
 		)

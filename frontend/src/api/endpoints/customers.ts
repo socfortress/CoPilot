@@ -1,5 +1,4 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { Agent } from "@/types/agents.d"
 import type {
 	Customer,
 	CustomerAgentHealth,
@@ -8,7 +7,8 @@ import type {
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings
 } from "@/types/customers.d"
-import type { Agent } from "@/types/agents.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export interface CustomerAgentsHealthcheckQuery {
 	minutes?: number
@@ -28,8 +28,8 @@ export interface ProvisioningDefaultSettingsPayload {
 export default {
 	// #region Customer
 	getCustomers(code?: string) {
-		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
-			`/customers${code ? "/" + code : ""}`
+		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[], customer?: Customer }>(
+			`/customers${code ? `/${code}` : ""}`
 		)
 	},
 	createCustomer(customer: Customer) {
@@ -61,7 +61,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
 	getCustomerFull(code: string) {
-		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta?: CustomerMeta }>(
+		return HttpClient.get<FlaskBaseResponse & { customer: Customer, customer_meta?: CustomerMeta }>(
 			`/customers/${code}/full`
 		)
 	},
@@ -100,7 +100,7 @@ export default {
 
 	// #region Customer Provisioning
 	newCustomerProvision(provision: CustomerProvision, code: string) {
-		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta; wazuh_worker_provisioned: boolean }>(
+		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta, wazuh_worker_provisioned: boolean }>(
 			`/customer_provisioning/provision`,
 			provision,
 			{

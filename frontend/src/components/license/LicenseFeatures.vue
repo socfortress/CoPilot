@@ -2,12 +2,12 @@
 	<div class="license-features" :class="{ loading }">
 		<div class="license-features-box flex items-center justify-center">
 			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
-				<div class="wrapper h-full flex flex-col gap-4" v-if="!loading">
+				<div v-if="!loading" class="wrapper h-full flex flex-col gap-4">
 					<div class="flex justify-between items-center gap-4">
 						<h3>
 							{{ features.length ? "Your features" : "Unlock features" }}
 						</h3>
-						<n-popover class="max-w-80" trigger="hover" v-if="features.length">
+						<n-popover v-if="features.length" class="max-w-80" trigger="hover">
 							<template #trigger>
 								<Icon :name="InfoIcon" :size="20" class="cursor-help"></Icon>
 							</template>
@@ -17,19 +17,19 @@
 					</div>
 					<div class="grow overflow-hidden">
 						<n-scrollbar v-if="!loading">
-							<div class="features-list flex flex-col gap-2" v-if="license">
+							<div v-if="license" class="features-list flex flex-col gap-2">
 								<template v-if="activeSubscriptions.length">
 									<SubscriptionCard
 										v-for="subscription of activeSubscriptions"
 										:key="subscription.id"
 										:subscription="subscription"
-										:licenseData="licenseData"
+										:license-data="licenseData"
 										embedded
-										showDeleteOnDialog
+										show-delete-on-dialog
 										@deleted="load()"
 									/>
 								</template>
-								<n-empty description="No features unlocked" class="justify-center h-48" v-else>
+								<n-empty v-else description="No features unlocked" class="justify-center h-48">
 									<template #icon>
 										<Icon :name="NoFeaturesIcon"></Icon>
 									</template>
@@ -38,8 +38,8 @@
 							<LicenseCheckoutWizard v-else :features-data="features" />
 						</n-scrollbar>
 					</div>
-					<div class="cta-section" v-if="license">
-						<n-button type="primary" @click="openCheckout()" class="!w-full" size="large">
+					<div v-if="license" class="cta-section">
+						<n-button type="primary" class="!w-full" size="large" @click="openCheckout()">
 							<template #icon>
 								<Icon :name="ExtendIcon"></Icon>
 							</template>
@@ -50,7 +50,7 @@
 			</n-spin>
 		</div>
 
-		<div class="footer mt-3" v-if="!hideKey && !loading">
+		<div v-if="!hideKey && !loading" class="footer mt-3">
 			<template v-if="license">
 				<span class="cursor-pointer" @click="showLicenseDetails = true">
 					Your license:
@@ -86,7 +86,7 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<LicenseDetails :features-data="features" hide-features v-if="license" />
+			<LicenseDetails v-if="license" :features-data="features" hide-features />
 		</n-modal>
 
 		<n-modal
@@ -104,15 +104,20 @@
 </template>
 
 <script setup lang="ts">
-import { NScrollbar, NSpin, NModal, NButton, NEmpty, NPopover, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
 import Api from "@/api"
-import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
-import { type License, type LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
-import SubscriptionCard from "./SubscriptionCard.vue"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
-import LicenseLoadForm from "./LicenseLoadForm.vue"
 import LicenseDetails from "./LicenseDetails.vue"
+import LicenseLoadForm from "./LicenseLoadForm.vue"
+import SubscriptionCard from "./SubscriptionCard.vue"
+
+const props = defineProps<{
+	hideKey?: boolean
+	licenseData?: License
+}>()
 
 const emit = defineEmits<{
 	(e: "licenseKeyLoaded", value: LicenseKey): void
@@ -124,10 +129,6 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{
-	hideKey?: boolean
-	licenseData?: License
-}>()
 const { hideKey, licenseData } = toRefs(props)
 
 const InfoIcon = "carbon:information"

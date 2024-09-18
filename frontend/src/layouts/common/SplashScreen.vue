@@ -1,6 +1,6 @@
 <template>
 	<transition name="loading-fade">
-		<div class="splash-screen-loading-box" v-if="show">
+		<div v-if="show" class="splash-screen-loading-box">
 			<n-spin :size="80" />
 		</div>
 	</transition>

@@ -1,6 +1,6 @@
 <template>
 	<div class="monitoring-alerts-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -21,12 +21,12 @@
 				</n-popover>
 
 				<n-button
+					v-if="monitoringAlerts.length"
 					size="small"
 					type="error"
 					ghost
-					@click="handlePurge()"
 					:loading="loadingPurge"
-					v-if="monitoringAlerts.length"
+					@click="handlePurge()"
 				>
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
@@ -51,36 +51,36 @@
 						v-for="alert of itemsPaginated"
 						:key="alert.id"
 						:alert="alert"
+						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
 						@invoked="getData()"
-						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination, useDialog } from "naive-ui"
+import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
+import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Alert from "./Item.vue"
-import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 const dialog = useDialog()
 const message = useMessage()

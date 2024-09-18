@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -33,8 +33,8 @@
 				:page-sizes="pageSizes"
 				:simple="simpleMode"
 			/>
-			<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" v-if="!compactMode" />
-			<n-popover overlap v-if="compactMode" placement="right">
+			<n-select v-if="!compactMode" v-model:value="timerange" size="small" :options="timeOptions" class="!w-32" />
+			<n-popover v-if="compactMode" overlap placement="right">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-button size="small">
@@ -45,8 +45,10 @@
 					</div>
 				</template>
 				<div class="mb-2">
-					<div class="text-secondary-color text-sm my-1">Time range:</div>
-					<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32 mb-1" />
+					<div class="text-secondary-color text-sm my-1">
+						Time range:
+					</div>
+					<n-select v-model:value="timerange" size="small" :options="timeOptions" class="!w-32 mb-1" />
 				</div>
 			</n-popover>
 		</div>
@@ -55,35 +57,35 @@
 				<AlertsEventItem
 					v-for="alertsEvent of alertsEvents"
 					:key="alertsEvent.event.id"
-					:alertsEvent="alertsEvent"
+					:alerts-event="alertsEvent"
 					@click-event="gotoEventsPage($event)"
 				/>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="alertsEvents.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="alertsEvents.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch, computed } from "vue"
-import { useMessage, NSpin, NPagination, NSelect, NPopover, NButton, NEmpty } from "naive-ui"
+import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
 import Api from "@/api"
-import AlertsEventItem from "./Item.vue"
-import { useResizeObserver } from "@vueuse/core"
-import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
-import type { AlertsQuery, AlertsEventElement } from "@/types/graylog/alerts.d"
+import dayjs from "@/utils/dayjs"
+import { useResizeObserver } from "@vueuse/core"
+import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
+import AlertsEventItem from "./Item.vue"
 
 const emit = defineEmits<{
 	(e: "clickEvent", value: string): void

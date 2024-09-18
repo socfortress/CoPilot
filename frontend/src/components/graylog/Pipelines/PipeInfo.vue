@@ -34,7 +34,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 10
+						maxRows: 10,
 					}"
 				/>
 			</div>
@@ -43,11 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import { NTabs, NTabPane, NInput } from "naive-ui"
-import { toRefs } from "vue"
 import type { Pipeline } from "@/types/graylog/pipelines.d"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import { NInput, NTabPane, NTabs } from "naive-ui"
+import { toRefs } from "vue"
 
 const props = defineProps<{ pipeline?: Pipeline }>()
 const { pipeline } = toRefs(props)

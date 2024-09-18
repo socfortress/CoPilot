@@ -1,11 +1,11 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col gap-5">
 		<ReportWizard
+			hide-panels-select
 			@timerange="timerange = $event"
 			@organization="org = $event"
 			@dashboard="dashboard = $event"
 			@panels="panels = $event"
-			hide-panels-select
 		/>
 		<ReportPanels :timerange="timerange" :org="org" :dashboard="dashboard" :panels="panels" />
 		<div class="over-layer mobile-layer">
@@ -16,19 +16,19 @@
 				This function is available only for desktop devices
 			</n-alert>
 		</div>
-		<LicenseFeatureOverlay :feature="'REPORTING'" />
+		<LicenseFeatureOverlay feature="REPORTING" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NAlert } from "naive-ui"
-import ReportWizard from "@/components/reportCreation/Wizard.vue"
-import ReportPanels from "@/components/reportCreation/Panels.vue"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import type { ReportTimeRange } from "@/api/endpoints/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureOverlay from "@/components/license/LicenseFeatureOverlay.vue"
+import ReportPanels from "@/components/reportCreation/Panels.vue"
+import ReportWizard from "@/components/reportCreation/Wizard.vue"
+import { NAlert } from "naive-ui"
+import { ref } from "vue"
 
 const AlertIcon = "mdi:alert-outline"
 

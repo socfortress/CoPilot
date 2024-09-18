@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
@@ -55,14 +55,14 @@
 				:simple="simpleMode"
 			/>
 			<n-select
-				size="small"
 				v-model:value="sort"
+				size="small"
 				:options="sortOptions"
 				:show-checkmark="false"
 				class="max-w-20"
 				:disabled="loading"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0" v-if="!hideFilters">
+			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -115,11 +115,15 @@
 					</div>
 					<div class="px-3 flex justify-between gap-2">
 						<div class="flex justify-start gap-2">
-							<n-button size="small" @click="showFilters = false" quaternary>Close</n-button>
+							<n-button size="small" quaternary @click="showFilters = false">
+								Close
+							</n-button>
 						</div>
 						<div class="flex justify-end gap-2">
-							<n-button size="small" @click="resetFilters()" secondary>Reset</n-button>
-							<n-button size="small" @click="getData()" type="primary" secondary :loading>
+							<n-button size="small" secondary @click="resetFilters()">
+								Reset
+							</n-button>
+							<n-button size="small" type="primary" secondary :loading @click="getData()">
 								Submit
 							</n-button>
 						</div>
@@ -133,9 +137,9 @@
 					<AlertItem
 						v-for="alert of alertsList"
 						:key="alert.id"
-						:alertData="alert"
+						:alert-data="alert"
 						:highlight="highlight === alert.id.toString()"
-						:detailsOnMounted="highlight === alert.id.toString() && !highlightedItemOpened"
+						:details-on-mounted="highlight === alert.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
 						@opened="highlightedItemOpened = true"
 						@deleted="getData()"
@@ -143,53 +147,53 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="alertsList.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="alertsList.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, provide, toRefs, nextTick } from "vue"
-import {
-	useMessage,
-	NSpin,
-	NPopover,
-	NButton,
-	NEmpty,
-	NSelect,
-	NPagination,
-	NInputGroup,
-	NBadge,
-	NInput
-} from "naive-ui"
+import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
+import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { Case } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
-import AlertItem from "./AlertItem.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useResizeObserver } from "@vueuse/core"
+import axios from "axios"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
-import axios from "axios"
-import { useResizeObserver } from "@vueuse/core"
-import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import {
+	NBadge,
+	NButton,
+	NEmpty,
+	NInput,
+	NInputGroup,
+	NPagination,
+	NPopover,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
+import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
+import AlertItem from "./AlertItem.vue"
 
 export interface AlertsListFilter {
 	type: "status" | "assetName" | "assignedTo" | "tag" | "title"
 	value: string | AlertStatus
 }
 
-const props = defineProps<{ highlight?: string | null; preset?: AlertsListFilter; hideFilters?: boolean }>()
+const props = defineProps<{ highlight?: string | null, preset?: AlertsListFilter, hideFilters?: boolean }>()
 const { highlight, preset, hideFilters } = toRefs(props)
 
 const FilterIcon = "carbon:filter-edit"
@@ -236,7 +240,7 @@ const typeOptions = [
 	{ label: "Title", value: "title" }
 ]
 
-const statusOptions: { label: string; value: AlertStatus }[] = [
+const statusOptions: { label: string, value: AlertStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }

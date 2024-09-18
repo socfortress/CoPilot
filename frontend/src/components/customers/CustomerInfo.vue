@@ -1,21 +1,23 @@
 <template>
 	<div class="customer-info">
-		<div class="p-7 pt-4" v-if="editing">
-			<CustomerForm @submitted="submitted" :customer="customer" :lockCode="true">
+		<div v-if="editing" class="p-7 pt-4">
+			<CustomerForm :customer="customer" :lock-code="true" @submitted="submitted">
 				<template #additionalActions>
-					<n-button @click="editing = false">Close</n-button>
+					<n-button @click="editing = false">
+						Close
+					</n-button>
 				</template>
 			</CustomerForm>
 		</div>
 		<template v-else>
 			<div class="flex items-center justify-between gap-4 px-7 pt-2">
-				<n-button size="small" @click="editing = true" :disabled="loadingDelete">
+				<n-button size="small" :disabled="loadingDelete" @click="editing = true">
 					<template #icon>
 						<Icon :name="EditIcon" :size="14"></Icon>
 					</template>
 					Edit
 				</n-button>
-				<n-button size="small" type="error" ghost @click="handleDelete" :loading="loadingDelete">
+				<n-button size="small" type="error" ghost :loading="loadingDelete" @click="handleDelete">
 					<template #icon>
 						<Icon :name="DeleteIcon" :size="15"></Icon>
 					</template>
@@ -25,8 +27,12 @@
 
 			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of customer" :key="key">
-					<template #key>{{ key }}</template>
-					<template #value>{{ value || "-" }}</template>
+					<template #key>
+						{{ key }}
+					</template>
+					<template #value>
+						{{ value || "-" }}
+					</template>
 				</KVCard>
 			</div>
 		</template>
@@ -34,13 +40,17 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, toRefs, watch } from "vue"
-import { useMessage, NButton, useDialog } from "naive-ui"
+import type { Customer } from "@/types/customers.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { h, ref, toRefs, watch } from "vue"
 import CustomerForm from "./CustomerForm.vue"
-import Api from "@/api"
-import type { Customer } from "@/types/customers.d"
+
+const props = defineProps<{
+	customer: Customer
+}>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -48,9 +58,6 @@ const emit = defineEmits<{
 	(e: "submitted", value: Customer): void
 }>()
 
-const props = defineProps<{
-	customer: Customer
-}>()
 const { customer } = toRefs(props)
 
 const EditIcon = "uil:edit-alt"

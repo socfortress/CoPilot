@@ -7,8 +7,12 @@
 	>
 		<template v-if="type === 'success'">
 			<Icon :name="CheckIcon" class="text-success-color" :size="100" />
-			<h1 class="text-center">Congratulations!</h1>
-			<p class="text-center">Your checkout was successful, and your license will be updated soon.</p>
+			<h1 class="text-center">
+				Congratulations!
+			</h1>
+			<p class="text-center">
+				Your checkout was successful, and your license will be updated soon.
+			</p>
 			<n-spin v-if="loadingLicense" :size="24" />
 			<h4 v-if="license">
 				{{ license }}
@@ -16,7 +20,9 @@
 		</template>
 		<template v-if="type === 'error'">
 			<Icon :name="ErrorIcon" class="text-error-color" :size="100"></Icon>
-			<h1 class="text-center">Checkout canceled</h1>
+			<h1 class="text-center">
+				Checkout canceled
+			</h1>
 		</template>
 		<div>
 			<n-button @click="gotoLicense()">
@@ -30,14 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
-import Api from "@/api"
-import { NButton, NCard, NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 import type { LicenseKey } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { NButton, NCard, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 
-const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()
+const props = defineProps<{ type: "success" | "error", data?: { email?: string } }>()
 const { type, data } = toRefs(props)
 
 const ErrorIcon = "majesticons:exclamation-line"

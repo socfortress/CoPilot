@@ -80,19 +80,19 @@ import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
-const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
+import Icon from "@/components/common/Icon.vue"
+import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 // import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
 import CustomersCard from "@/components/overview/CustomersCard.vue"
-import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
-import { useResizeObserver } from "@vueuse/core"
-import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { useResizeObserver } from "@vueuse/core"
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
 const QuickActionsIcon = "ant-design:thunderbolt-outlined"
 const page = ref()

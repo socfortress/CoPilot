@@ -2,27 +2,27 @@
 	<div class="license-viewer flex justify-center items-center gap-4" :class="{ 'has-side': !!key }">
 		<div class="main-box">
 			<LicenseFeatures
-				@license-key-loaded="licenseKeyLoaded"
 				:hide-key="!!key"
 				:license-data="details"
 				class="h-full"
 				:class="{ 'mt-8': !key }"
+				@license-key-loaded="licenseKeyLoaded"
 			/>
 		</div>
 		<div class="side-box">
 			<n-scrollbar style="max-width: 100%">
-				<LicenseDetails hide-features @license-loaded="licenseLoaded" v-if="key" class="min-h-full" />
+				<LicenseDetails v-if="key" hide-features class="min-h-full" @license-loaded="licenseLoaded" />
 			</n-scrollbar>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NScrollbar } from "naive-ui"
-import LicenseFeatures from "./LicenseFeatures.vue"
-import LicenseDetails from "./LicenseDetails.vue"
 import type { License, LicenseKey } from "@/types/license.d"
+import { NScrollbar } from "naive-ui"
+import { ref } from "vue"
+import LicenseDetails from "./LicenseDetails.vue"
+import LicenseFeatures from "./LicenseFeatures.vue"
 
 const emit = defineEmits<{
 	(e: "licenseKeyLoaded", value: LicenseKey): void

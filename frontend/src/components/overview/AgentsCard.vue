@@ -2,30 +2,30 @@
 	<n-spin :show="loading">
 		<CardStatsDouble
 			title="Agents"
-			firstLabel="Total"
+			first-label="Total"
 			hovered
 			class="cursor-pointer"
-			@click="gotoAgent()"
 			:value="total"
-			secondLabel="Online"
-			:subValue="onlineTotal"
-			:secondStatus="onlineTotal ? 'success' : undefined"
+			second-label="Online"
+			:sub-value="onlineTotal"
+			:second-status="onlineTotal ? 'success' : undefined"
+			@click="gotoAgent()"
 		>
 			<template #icon>
-				<CardStatsIcon :iconName="AgentsIcon" boxed :boxSize="30"></CardStatsIcon>
+				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>
 		</CardStatsDouble>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref } from "vue"
-import { AgentStatus, type Agent } from "@/types/agents.d"
+import Api from "@/api"
 import CardStatsDouble from "@/components/common/CardStatsDouble.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import Api from "@/api"
-import { useMessage, NSpin } from "naive-ui"
 import { useGoto } from "@/composables/useGoto"
+import { type Agent, AgentStatus } from "@/types/agents.d"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 
 const AgentsIcon = "carbon:network-3"
 const { gotoAgent } = useGoto()

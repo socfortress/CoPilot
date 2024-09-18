@@ -25,7 +25,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex gap-2 items-center">
-				<n-button size="small" @click="showStatsDrawer = true" v-if="!isFilterPreselected">
+				<n-button v-if="!isFilterPreselected" size="small" @click="showStatsDrawer = true">
 					<template #icon>
 						<Icon :name="StatsIcon" :size="14"></Icon>
 					</template>
@@ -41,19 +41,21 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
+			<template #description>
+				Alerts are being fetched, this may take up to 1 minute.
+			</template>
 
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
-						:alertsSummary="alertsSummary"
+						:alerts-summary="alertsSummary"
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -83,24 +85,24 @@
 					<div v-if="!isFilterPreselected" class="mb-6">
 						<n-select
 							v-model:value="filterType"
+							:options="[
+								{
+									label: 'Filter by Agent Hostname',
+									value: 'agentHostname',
+								},
+								{
+									label: 'Filter by Index name',
+									value: 'indexName',
+								},
+							]"
+							placeholder="Filter by Agent or Index"
+							clearable
 							@update:value="
 								() => {
 									filters.agentHostname = undefined
 									filters.indexName = undefined
 								}
 							"
-							:options="[
-								{
-									label: 'Filter by Agent Hostname',
-									value: 'agentHostname'
-								},
-								{
-									label: 'Filter by Index name',
-									value: 'indexName'
-								}
-							]"
-							placeholder="Filter by Agent or Index"
-							clearable
 						/>
 						<n-select
 							v-if="filterType === 'agentHostname'"
@@ -134,20 +136,22 @@
 // import { alerts_summary } from "./mock"
 // import type { AlertsSummary } from "@/types/alerts.d"
 
-import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
-import Api from "@/api"
-const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
-import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
-import AlertsFilters from "./AlertsFilters.vue"
-import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import Icon from "@/components/common/Icon.vue"
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
-import type { IndexStats } from "@/types/indices.d"
-import axios from "axios"
 import type { Agent } from "@/types/agents.d"
+import type { IndexStats } from "@/types/indices.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import axios from "axios"
+import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import AlertsFilters from "./AlertsFilters.vue"
+import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
+import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
 
-const props = defineProps<{ agentHostname?: string; indexName?: string }>()
+const props = defineProps<{ agentHostname?: string, indexName?: string }>()
+
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
+
 const { agentHostname, indexName } = toRefs(props)
 
 const message = useMessage()

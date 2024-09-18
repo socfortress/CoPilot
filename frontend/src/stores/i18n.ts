@@ -1,4 +1,4 @@
-import { defineStore, acceptHMRUpdate } from "pinia"
+import { acceptHMRUpdate, defineStore } from "pinia"
 import { useI18n } from "vue-i18n"
 
 export const useLocalesStore = defineStore("i18n", {

@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ highlight }" :id="'event-' + event.id">
+	<div :id="`event-${event.id}`" class="item flex flex-col gap-2 px-5 py-3" :class="{ highlight }">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-3">
 				<n-tooltip trigger="hover">
@@ -23,8 +23,12 @@
 			</div>
 		</div>
 		<div class="main-box">
-			<div class="title">{{ event.title }}</div>
-			<div class="description">{{ event.description }}</div>
+			<div class="title">
+				{{ event.title }}
+			</div>
+			<div class="description">
+				{{ event.description }}
+			</div>
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
 			<div class="notification">
@@ -53,7 +57,7 @@
 							placeholder="Empty"
 							:autosize="{
 								minRows: 3,
-								maxRows: 10
+								maxRows: 10,
 							}"
 						/>
 					</div>
@@ -63,7 +67,7 @@
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="event.field_spec"
-							:initialExpandedDepth="1"
+							:initial-expanded-depth="1"
 						/>
 					</div>
 				</n-tab-pane>
@@ -73,14 +77,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import Icon from "@/components/common/Icon.vue"
+import { NInput, NModal, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import { NModal, NTabs, NTabPane, NInput, NTooltip } from "naive-ui"
 
-const props = defineProps<{ event: EventDefinition; highlight: boolean | null | undefined }>()
+const props = defineProps<{ event: EventDefinition, highlight: boolean | null | undefined }>()
 const { event, highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"

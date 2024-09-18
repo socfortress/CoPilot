@@ -37,7 +37,7 @@ export interface Panel {
 		y: number
 	}
 	id: number
-	options: null | { legend: object; tooltip: object }
+	options: null | { legend: object, tooltip: object }
 	title: string
 	type: null | string
 	collapsed: null | boolean

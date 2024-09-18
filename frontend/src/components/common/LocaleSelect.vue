@@ -5,10 +5,10 @@
 </template>
 
 <script lang="ts" setup>
-import { NSelect, type SelectOption } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import { computed, h, type VNodeChild } from "vue"
 import { useStoreI18n } from "@/composables/useStoreI18n"
+import { NSelect, type SelectOption } from "naive-ui"
+import { computed, h, type VNodeChild } from "vue"
 
 const { getAvailableLocales, getLocale, setLocale, t } = useStoreI18n()
 

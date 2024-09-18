@@ -1,6 +1,8 @@
 <template>
-	<n-button secondary @click="openDialog()" :loading="merging">
-		<template #icon><Icon :name="MergeIcon" /></template>
+	<n-button secondary :loading="merging" @click="openDialog()">
+		<template #icon>
+			<Icon :name="MergeIcon" />
+		</template>
 		Merge into Case
 	</n-button>
 
@@ -24,15 +26,15 @@
 						<CaseItem
 							v-for="item of linkableCases"
 							:key="item.id"
-							:caseData="item"
+							:case-data="item"
 							compact
 							embedded
-							@click="toggleSelectedCase(item)"
 							:class="{ active: selectedCase?.id === item.id }"
+							@click="toggleSelectedCase(item)"
 						/>
 					</template>
 					<template v-else>
-						<n-empty description="No items found" class="justify-center h-48" v-if="!loadingCases" />
+						<n-empty v-if="!loadingCases" description="No items found" class="justify-center h-48" />
 					</template>
 				</div>
 			</n-scrollbar>
@@ -41,7 +43,9 @@
 		<template #footer>
 			<div class="flex justify-end">
 				<n-button type="success" :disabled="!selectedCase" :loading="merging" @click="linkCase()">
-					<template #icon><Icon :name="MergeIcon" /></template>
+					<template #icon>
+						<Icon :name="MergeIcon" />
+					</template>
 					Confirm Merge {{ selectedCase ? `with Case #${selectedCase.id}` : "" }}
 				</n-button>
 			</div>
@@ -50,21 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, toRefs, watch, type Ref } from "vue"
-import { NButton, NModal, NSpin, NEmpty, NScrollbar, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import CaseItem from "../cases/CaseItem.vue"
-import _orderBy from "lodash/orderBy"
-import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import _orderBy from "lodash/orderBy"
+import { NButton, NEmpty, NModal, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { inject, ref, type Ref, toRefs, watch } from "vue"
+import CaseItem from "../cases/CaseItem.vue"
 
 const props = defineProps<{ alert: Alert }>()
-const { alert } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void
 }>()
+
+const { alert } = toRefs(props)
 
 const MergeIcon = "carbon:ibm-cloud-direct-link-1-connect"
 

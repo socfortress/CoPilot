@@ -20,7 +20,9 @@
 								<n-tooltip trigger="hover">
 									<template #trigger>
 										<n-button size="small" @click="showScaDetails(item)">
-											<template #icon><Icon :name="InfoIcon"></Icon></template>
+											<template #icon>
+												<Icon :name="InfoIcon"></Icon>
+											</template>
 										</n-button>
 									</template>
 									Details
@@ -28,8 +30,10 @@
 
 								<n-tooltip trigger="hover">
 									<template #trigger>
-										<n-button size="small" @click="scaDownload(item)" :loading="item.downloading">
-											<template #icon><Icon :name="DownloadIcon"></Icon></template>
+										<n-button size="small" :loading="item.downloading" @click="scaDownload(item)">
+											<template #icon>
+												<Icon :name="DownloadIcon"></Icon>
+											</template>
 										</n-button>
 									</template>
 									Download CSV
@@ -44,11 +48,11 @@
 									{{ item.extract }}
 
 									<n-popover
+										v-if="item.description !== item.extract"
 										placement="top-end"
 										content-class="max-w-96"
 										scrollable
 										to="body"
-										v-if="item.description !== item.extract"
 									>
 										<template #trigger>
 											<span class="cursor-help underline">...</span>
@@ -77,7 +81,7 @@
 				</tbody>
 			</n-table>
 		</n-scrollbar>
-		<n-empty description="No items found" class="justify-center h-48" v-if="!loading && !scaList.length" />
+		<n-empty v-if="!loading && !scaList.length" description="No items found" class="justify-center h-48" />
 
 		<n-modal
 			v-model:show="showDetails"
@@ -94,16 +98,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
-import { NTooltip, NSpin, NEmpty, NScrollbar, NTable, NButton, NPopover, NModal, useMessage } from "naive-ui"
+import type { Agent, AgentSca } from "@/types/agents.d"
 import Api from "@/api"
-import ScaItem from "./ScaItem.vue"
 import Icon from "@/components/common/Icon.vue"
-import { saveAs } from "file-saver"
-import _truncate from "lodash/truncate"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { type Agent, type AgentSca } from "@/types/agents.d"
+import { saveAs } from "file-saver"
+import _truncate from "lodash/truncate"
+import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
+import ScaItem from "./ScaItem.vue"
 
 interface SCAExt extends AgentSca {
 	end_scan_text?: string

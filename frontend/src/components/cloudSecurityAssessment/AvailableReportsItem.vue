@@ -6,13 +6,15 @@
 			</div>
 			<div class="footer-box flex justify-end">
 				<n-popconfirm
-					@positive-click="deleteScoutSuiteReport()"
 					v-model:show="showConfirm"
 					trigger="manual"
+					@positive-click="deleteScoutSuiteReport()"
 					@clickoutside="showConfirm = false"
 				>
 					<template #trigger>
-						<div @click.stop="showConfirm = true" class="delete-btn">delete</div>
+						<div class="delete-btn" @click.stop="showConfirm = true">
+							delete
+						</div>
 					</template>
 					Are you sure you want to delete the report?
 				</n-popconfirm>
@@ -24,15 +26,16 @@
 <script setup lang="ts">
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
 import Api from "@/api"
-import { ref } from "vue"
-import { useMessage, NPopconfirm, NSpin } from "naive-ui"
 import { getBaseUrl } from "@/utils"
+import { NPopconfirm, NSpin, useMessage } from "naive-ui"
+import { ref } from "vue"
+
+const { report } = defineProps<{ report: ScoutSuiteReport }>()
 
 const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
 
-const { report } = defineProps<{ report: ScoutSuiteReport }>()
 const message = useMessage()
 const canceling = ref(false)
 const showConfirm = ref(false)

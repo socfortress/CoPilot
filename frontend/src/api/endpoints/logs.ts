@@ -1,12 +1,12 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Log, LogsQuery, LogsQueryTimeRange } from "@/types/logs.d"
+import { HttpClient } from "../httpClient"
 
 export default {
 	getLogs(query?: LogsQuery) {
 		let method: "get" | "post" = "get"
 		let url = "logs"
-		let body: { time_range: LogsQueryTimeRange } | undefined = undefined
+		let body: { time_range: LogsQueryTimeRange } | undefined
 
 		if (query && "userId" in query) {
 			method = "get"

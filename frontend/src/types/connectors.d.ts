@@ -63,7 +63,7 @@ export type ConnectorRequestPayload =
 			connector_password?: string
 			connector_api_key?: string
 			connector_extra_data?: string
-			/*eslint no-mixed-spaces-and-tabs: "off"*/
+			/* eslint no-mixed-spaces-and-tabs: "off" */
 	  }
 
 export enum ConnectorSupports {

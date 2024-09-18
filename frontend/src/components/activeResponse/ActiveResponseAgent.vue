@@ -6,14 +6,14 @@
 					<ActiveResponseItem
 						v-for="activeResponse of activeResponseList"
 						:key="activeResponse.name"
-						:activeResponse="activeResponse"
+						:active-response="activeResponse"
 						:embedded="embedded"
 						:agent-id="agent.agent_id"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loadingActiveResponse" />
+					<n-empty v-if="!loadingActiveResponse" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -21,12 +21,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
-import ActiveResponseItem from "./ActiveResponseItem.vue"
-import type { Agent } from "@/types/agents.d"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { Agent } from "@/types/agents.d"
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
+import ActiveResponseItem from "./ActiveResponseItem.vue"
 
 const { embedded, agent } = defineProps<{
 	embedded?: boolean

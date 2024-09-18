@@ -1,16 +1,16 @@
 <template>
-	<div class="soc-alerts-list" ref="list">
+	<div ref="list" class="soc-alerts-list">
 		<n-split
+			v-if="!compactMode"
 			direction="horizontal"
 			:default-size="splitDefault"
 			:resize-trigger-size="26"
 			:min="splitMin"
 			:max="splitMax"
-			v-if="!compactMode"
 		>
 			<template #1>
 				<SocAlertsBookmarks
-					:usersList="usersList"
+					:users-list="usersList"
 					@bookmark="reloadAlerts()"
 					@deleted="itemDeleted($event)"
 					@loaded="bookmarksList = $event"
@@ -20,8 +20,8 @@
 			<template #2>
 				<SocAlertsList
 					:highlight="highlight"
-					:bookmarksList="bookmarksList"
-					:usersList="usersList"
+					:bookmarks-list="bookmarksList"
+					:users-list="usersList"
 					@bookmark="reloadBookmarks()"
 					@deleted="reloadBookmarks()"
 					@mounted="socAlertsCTX = $event"
@@ -39,8 +39,8 @@
 		<template v-else>
 			<SocAlertsList
 				:highlight="highlight"
-				:bookmarksList="bookmarksList"
-				:usersList="usersList"
+				:bookmarks-list="bookmarksList"
+				:users-list="usersList"
 				@bookmark="reloadBookmarks()"
 				@deleted="reloadBookmarks()"
 				@mounted="socAlertsCTX = $event"
@@ -64,7 +64,7 @@
 			>
 				<n-drawer-content title="Alerts list" closable :native-scrollbar="false">
 					<SocAlertsBookmarks
-						:usersList="usersList"
+						:users-list="usersList"
 						@bookmark="reloadAlerts()"
 						@deleted="itemDeleted($event)"
 						@loaded="bookmarksList = $event"
@@ -79,15 +79,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NSplit, NBackTop, NButton, NDrawer, NDrawerContent } from "naive-ui"
+import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocUser } from "@/types/soc/user.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useResizeObserver } from "@vueuse/core"
+import { NBackTop, NButton, NDrawer, NDrawerContent, NSplit, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 import SocAlertsBookmarks from "./SocAlertsBookmarks.vue"
 import SocAlertsList from "./SocAlertsList.vue"
-import type { SocAlert } from "@/types/soc/alert.d"
-import Icon from "@/components/common/Icon.vue"
-import type { SocUser } from "@/types/soc/user.d"
-import { useResizeObserver } from "@vueuse/core"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
@@ -99,7 +99,7 @@ const message = useMessage()
 const bookmarksList = ref<SocAlert[]>([])
 const usersList = ref<SocUser[]>([])
 const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
-const socAlertsCTX = ref<{ reload: () => void; itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
+const socAlertsCTX = ref<{ reload: () => void, itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
 
 const list = ref(null)
 const showBookmarkedDrawer = ref(false)

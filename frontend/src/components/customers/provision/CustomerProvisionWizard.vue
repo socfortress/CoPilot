@@ -10,19 +10,19 @@
 							<n-step title="Subscription" />
 							<n-step title="Infrastructure">
 								<template #icon>
-									<Icon :name="SkipIcon" v-if="!isInfrastructureEnabled"></Icon>
+									<Icon v-if="!isInfrastructureEnabled" :name="SkipIcon"></Icon>
 								</template>
 							</n-step>
 							<n-step title="Wazuh Worker">
 								<template #icon>
-									<Icon :name="SkipIcon" v-if="!isWazuhStepEnabled"></Icon>
+									<Icon v-if="!isWazuhStepEnabled" :name="SkipIcon"></Icon>
 								</template>
 							</n-step>
 						</n-steps>
 					</div>
 				</n-scrollbar>
 
-				<n-form :label-width="80" :model="form" :rules="rules" ref="formRef" class="form-container mt-4">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules" class="form-container mt-4">
 					<Transition :name="`slide-form-${slideFormDirection}`">
 						<div v-if="current === 1" class="px-7 flex flex-col gap-3">
 							<div class="flex flex-wrap gap-3">
@@ -55,10 +55,10 @@
 								/>
 							</n-form-item>
 							<n-form-item
+								v-if="showDfirIrisUsername"
 								label="DFIR-IRIS Username"
 								path="dfir_iris_username"
 								class="grow"
-								v-if="showDfirIrisUsername"
 							>
 								<n-input
 									v-model:value.trim="form.dfir_iris_username"
@@ -126,8 +126,8 @@
 										</div>
 										<div>
 											<n-button
-												size="tiny"
 												v-if="dashboardOptions.length"
+												size="tiny"
 												@click="toggleDashboards()"
 											>
 												{{ allDashboardsSelected ? "Deselect All" : "Select All" }}
@@ -224,19 +224,19 @@
 					<slot name="additionalActions"></slot>
 				</div>
 				<div class="flex gap-4">
-					<n-button @click="prev()" v-if="isPrevStepEnabled">
+					<n-button v-if="isPrevStepEnabled" @click="prev()">
 						<template #icon>
 							<Icon :name="ArrowLeftIcon"></Icon>
 						</template>
 						Prev
 					</n-button>
-					<n-button @click="next()" v-if="isNextStepEnabled" icon-placement="right">
+					<n-button v-if="isNextStepEnabled" icon-placement="right" @click="next()">
 						<template #icon>
 							<Icon :name="ArrowRightIcon"></Icon>
 						</template>
 						Next
 					</n-button>
-					<n-button type="primary" @click="validate(submit)" :loading="loading" v-if="isSubmitEnabled">
+					<n-button v-if="isSubmitEnabled" type="primary" :loading="loading" @click="validate(submit)">
 						Submit
 					</n-button>
 				</div>
@@ -246,40 +246,34 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
+import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import _uniqBy from "lodash/uniqBy"
 import {
-	NSteps,
-	NStep,
-	useMessage,
-	NScrollbar,
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
 	NButton,
+	NCard,
 	NForm,
 	NFormItem,
 	NInput,
-	NSelect,
 	NInputNumber,
+	NScrollbar,
+	NSelect,
 	NSpin,
+	NStep,
+	NSteps,
 	NSwitch,
-	NCard,
 	type StepsProps,
-	type FormRules,
-	type FormInst,
-	type FormItemRule,
-	type FormValidationError
+	useMessage
 } from "naive-ui"
-import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import isURL from "validator/es/lib/isURL"
-import isPort from "validator/es/lib/isPort"
 import isIP from "validator/es/lib/isIP"
-import { onBeforeMount } from "vue"
-import _uniqBy from "lodash/uniqBy"
-
-const emit = defineEmits<{
-	(e: "update:loading", value: boolean): void
-	(e: "submitted", value: CustomerMeta): void
-}>()
+import isPort from "validator/es/lib/isPort"
+import isURL from "validator/es/lib/isURL"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	customerCode: string
@@ -287,6 +281,12 @@ const props = defineProps<{
 	mode?: "new" | "update"
 	showDfirIrisUsername?: boolean
 }>()
+
+const emit = defineEmits<{
+	(e: "update:loading", value: boolean): void
+	(e: "submitted", value: CustomerMeta): void
+}>()
+
 const { customerCode, customerName, mode, showDfirIrisUsername } = toRefs(props)
 
 const SkipIcon = "carbon:subtract"
@@ -303,8 +303,8 @@ const currentStatus = ref<StepsProps["status"]>("process")
 const form = ref<CustomerProvision>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
-const subscriptionOptions = ref<{ label: string; value: string }[]>([])
-const dashboardOptions = ref<{ label: string; value: string }[]>([])
+const subscriptionOptions = ref<{ label: string, value: string }[]>([])
+const dashboardOptions = ref<{ label: string, value: string }[]>([])
 
 const allDashboardsSelected = computed(
 	() => form.value.dashboards_to_include.dashboards.length === dashboardOptions.value.length

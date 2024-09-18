@@ -2,7 +2,9 @@
 	<n-spin class="settings" :show="loading">
 		<n-card>
 			<n-form ref="formRef" :label-width="80" :model="formValue" :rules="formRules">
-				<div class="title">General</div>
+				<div class="title">
+					General
+				</div>
 				<div class="flex flex-col md:flex-row md:gap-6">
 					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
 						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailable" />
@@ -18,7 +20,9 @@
 				</div>
 
 				<n-form-item>
-					<n-button type="primary" @click="save()">Save</n-button>
+					<n-button type="primary" @click="save()">
+						Save
+					</n-button>
 				</n-form-item>
 			</n-form>
 		</n-card>
@@ -26,22 +30,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 import {
-	NSpin,
+	type FormInst,
+	type FormValidationError,
+	NButton,
 	NCard,
 	NForm,
 	NFormItem,
-	NButton,
-	NSelect,
 	NRadio,
 	NRadioGroup,
-	type FormValidationError,
-	useMessage,
-	type FormInst
+	NSelect,
+	NSpin,
+	useMessage
 } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { ref } from "vue"
 
 const settingsStore = useSettingsStore()
 

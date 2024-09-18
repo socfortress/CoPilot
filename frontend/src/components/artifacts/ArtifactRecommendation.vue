@@ -19,20 +19,20 @@
 			<div class="flex gap-3 items-center flex-wrap mb-4">
 				<div>Get Recommendations for OS:</div>
 				<n-select
-					size="small"
 					v-model:value="selectedOs"
+					size="small"
 					:options="osOptions"
 					class="!w-32"
 					placeholder="Select OS"
 					:disabled="loading"
 				/>
 				<n-button
+					v-if="!recommendations.length"
 					size="small"
 					type="primary"
 					:loading
-					@click="getRecommendations()"
 					:disabled="!selectedOs"
-					v-if="!recommendations.length"
+					@click="getRecommendations()"
 				>
 					<template #icon>
 						<Icon :name="AiIcon" />
@@ -43,22 +43,26 @@
 			<n-spin :show="loading" class="min-h-48">
 				<div v-if="recommendations.length" class="flex flex-col gap-2">
 					<n-card
-						content-class="bg-secondary-color flex flex-col gap-2 !p-0"
-						class="overflow-hidden item-appear item-appear-bottom item-appear-005"
 						v-for="recommendation of recommendations"
 						:key="recommendation.name"
+						content-class="bg-secondary-color flex flex-col gap-2 !p-0"
+						class="overflow-hidden item-appear item-appear-bottom item-appear-005"
 						size="small"
 					>
 						<strong class="recommendation-name font-mono px-4 pt-3 pb-1">{{ recommendation.name }}</strong>
 						<n-divider class="!m-0" />
-						<div class="recommendation-description px-4 pt-1">{{ recommendation.description }}</div>
-						<p class="recommendation-explanation px-4 pb-3 pt-2">{{ recommendation.explanation }}</p>
+						<div class="recommendation-description px-4 pt-1">
+							{{ recommendation.description }}
+						</div>
+						<p class="recommendation-explanation px-4 pb-3 pt-2">
+							{{ recommendation.explanation }}
+						</p>
 					</n-card>
 				</div>
 				<n-empty
+					v-if="!loading && !recommendations.length"
 					description="Recommendations not found"
 					class="justify-center h-48"
-					v-if="!loading && !recommendations.length"
 				/>
 			</n-spin>
 		</n-modal>
@@ -66,14 +70,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
-import { useMessage, NModal, NSpin, NEmpty, NButton, NDivider, NSelect, NCard } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import _uniqBy from "lodash/uniqBy"
-import type { OsTypesFull } from "@/types/common.d"
 import type { Recommendation } from "@/types/artifacts.d"
+import type { OsTypesFull } from "@/types/common.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import _uniqBy from "lodash/uniqBy"
+import { NButton, NCard, NDivider, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 
 interface RecommendationStore {
 	os: OsTypesFull
@@ -96,7 +100,7 @@ const recommendations = computed<Recommendation[]>(
 	() => recommendationsStore.value.find(item => item.os === selectedOs.value)?.recommendation || []
 )
 
-const osOptions: { label: string; value: OsTypesFull }[] = [
+const osOptions: { label: string, value: OsTypesFull }[] = [
 	{ label: "Windows", value: "Windows" },
 	{ label: "Linux", value: "Linux" },
 	{ label: "MacOS", value: "MacOS" }

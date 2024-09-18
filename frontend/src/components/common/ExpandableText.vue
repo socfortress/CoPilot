@@ -13,8 +13,8 @@
 		</template>
 
 		<div
-			class="expandable-text-popover-container scrollbar-styled"
 			v-shiki="{ fallbackLang: 'json', decode: true }"
+			class="expandable-text-popover-container scrollbar-styled"
 		>
 			<pre> {{ text }} </pre>
 		</div>
@@ -23,9 +23,9 @@
 
 <script setup lang="ts">
 import vShiki from "@/directives/v-shiki"
-import { toRefs } from "vue"
-import { NPopover } from "naive-ui"
 import _truncate from "lodash/truncate"
+import { NPopover } from "naive-ui"
+import { toRefs } from "vue"
 
 const props = defineProps<{
 	text: string

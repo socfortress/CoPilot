@@ -25,7 +25,7 @@
 								{{ user.email }}
 							</td>
 							<td style="max-width: 300px">
-								<div class="flex justify-end" v-if="isAdmin">
+								<div v-if="isAdmin" class="flex justify-end">
 									<n-dropdown
 										trigger="hover"
 										:options="options"
@@ -50,13 +50,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, h } from "vue"
-import { useMessage, NTable, NScrollbar, NSpin, NDropdown, NButton } from "naive-ui"
-import Api from "@/api"
 import type { AuthUser } from "@/types/auth.d"
-import ChangePassword from "./ChangePassword.vue"
-import { useAuthStore } from "@/stores/auth"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
+import { NButton, NDropdown, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
+import { h, onBeforeMount, ref, toRefs } from "vue"
+import ChangePassword from "./ChangePassword.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)

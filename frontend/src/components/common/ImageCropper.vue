@@ -26,8 +26,12 @@
 					</div>
 				</div>
 				<div class="flex justify-end gap-4 mt-4">
-					<n-button secondary @click="closeCropper()">Close</n-button>
-					<n-button v-if="img" type="primary" @click="emitCrop()">Save</n-button>
+					<n-button secondary @click="closeCropper()">
+						Close
+					</n-button>
+					<n-button v-if="img" type="primary" @click="emitCrop()">
+						Save
+					</n-button>
 				</div>
 			</n-card>
 		</n-modal>
@@ -35,16 +39,12 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NCard, NUpload, NUploadDragger, NModal, type UploadSettledFileInfo } from "naive-ui"
+import { NButton, NCard, NModal, NUpload, NUploadDragger, type UploadSettledFileInfo } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
-import { Cropper, CircleStencil, RectangleStencil, type CropperResult } from "vue-advanced-cropper"
+import { CircleStencil, Cropper, type CropperResult, RectangleStencil } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
 
 export type ImageCropperResult = CropperResult
-
-const emit = defineEmits<{
-	(e: "crop", value: ImageCropperResult): void
-}>()
 
 const props = withDefaults(
 	defineProps<{
@@ -53,6 +53,11 @@ const props = withDefaults(
 	}>(),
 	{ placeholder: "Select an image", shape: "square" }
 )
+
+const emit = defineEmits<{
+	(e: "crop", value: ImageCropperResult): void
+}>()
+
 const { placeholder, shape } = toRefs(props)
 
 const stencil = computed(() => (shape.value === "circle" ? CircleStencil : RectangleStencil))

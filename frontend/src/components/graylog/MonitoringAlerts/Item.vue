@@ -1,7 +1,9 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between gap-4">
-			<div class="name">{{ alert.name }}</div>
+			<div class="name">
+				{{ alert.name }}
+			</div>
 			<div class="badge flex mb-2">
 				<Badge :type="isEnabled ? 'active' : 'muted'">
 					<template #iconRight>
@@ -16,7 +18,9 @@
 			</div>
 		</div>
 		<div class="main-box flex justify-between gap-4">
-			<div class="content">{{ alert.value }}</div>
+			<div class="content">
+				{{ alert.value }}
+			</div>
 			<div class="actions-box">
 				<n-button
 					v-if="!isEnabled"
@@ -25,7 +29,9 @@
 					secondary
 					@click="openFormDialog()"
 				>
-					<template #icon><Icon :name="EnableIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="EnableIcon"></Icon>
+					</template>
 					Enable
 				</n-button>
 			</div>
@@ -40,15 +46,17 @@
 					size="small"
 					@click="openFormDialog()"
 				>
-					<template #icon><Icon :name="EnableIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="EnableIcon"></Icon>
+					</template>
 					Enable
 				</n-button>
 			</div>
 		</div>
 
 		<n-modal
-			:title="alert.name"
 			v-model:show="showFormDialog"
+			:title="alert.name"
 			preset="card"
 			segmented
 			:mask-closable="false"
@@ -59,30 +67,34 @@
 				<n-form ref="formRef" :model="formModel" :rules="formRules">
 					<n-form-item path="searchWithinLast" label="Search Within Last (time in seconds)">
 						<n-input-number
-							:min="1"
 							v-model:value="formModel.searchWithinLast"
-							@keydown.enter.prevent
+							:min="1"
 							placeholder="Input time in seconds"
 							clearable
 							class="w-full"
+							@keydown.enter.prevent
 						/>
 					</n-form-item>
 					<n-form-item path="executeEvery" label="Execute Every (time in seconds)">
 						<n-input-number
-							:min="1"
 							v-model:value="formModel.executeEvery"
-							@keydown.enter.prevent
+							:min="1"
 							placeholder="Input time in seconds"
 							clearable
 							class="w-full"
+							@keydown.enter.prevent
 						/>
 					</n-form-item>
 				</n-form>
 			</n-spin>
 			<template #footer>
 				<div class="flex justify-end gap-3">
-					<n-button @click="closeFormDialog()">Close</n-button>
-					<n-button :loading="loadingProvision" type="success" @click="validateForm">Enable</n-button>
+					<n-button @click="closeFormDialog()">
+						Close
+					</n-button>
+					<n-button :loading="loadingProvision" type="success" @click="validateForm">
+						Enable
+					</n-button>
 				</div>
 			</template>
 		</n-modal>
@@ -90,29 +102,29 @@
 </template>
 
 <script setup lang="ts">
+import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
-import { ref } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import {
-	NButton,
-	NSpin,
-	useMessage,
-	NModal,
 	type FormRules,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInputNumber,
-	type FormValidationError
+	NModal,
+	NSpin,
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
-import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
+import { ref } from "vue"
+
+const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert, isEnabled: boolean }>()
 
 const emit = defineEmits<{
 	(e: "provisioned"): void
 }>()
-
-const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert; isEnabled: boolean }>()
 
 const DisabledIcon = "carbon:subtract"
 const EnabledIcon = "ph:check-bold"
@@ -123,7 +135,7 @@ const showFormDialog = ref(false)
 const message = useMessage()
 
 const formRef = ref()
-const formModel = ref<{ searchWithinLast: null | number; executeEvery: null | number }>(getClearFormModel())
+const formModel = ref<{ searchWithinLast: null | number, executeEvery: null | number }>(getClearFormModel())
 const formRules: FormRules = {
 	searchWithinLast: [
 		{

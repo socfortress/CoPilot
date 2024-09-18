@@ -2,7 +2,9 @@
 	<div class="sca-result-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex items-center">
-				<div class="id">#{{ data.id }}</div>
+				<div class="id">
+					#{{ data.id }}
+				</div>
 				<div class="grow"></div>
 				<div class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
@@ -15,8 +17,12 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ data.title }}</div>
-					<div class="description">$ {{ data.command }}</div>
+					<div class="title">
+						{{ data.title }}
+					</div>
+					<div class="description">
+						$ {{ data.command }}
+					</div>
 				</div>
 			</div>
 
@@ -28,22 +34,36 @@
 					"
 					class="uppercase"
 				>
-					<template #label>{{ data.result }}</template>
+					<template #label>
+						{{ data.result }}
+					</template>
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>Compliance</template>
-					<template #value>{{ data.compliance?.length || "-" }}</template>
+					<template #label>
+						Compliance
+					</template>
+					<template #value>
+						{{ data.compliance?.length || "-" }}
+					</template>
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>Condition</template>
-					<template #value>{{ data.condition || "-" }}</template>
+					<template #label>
+						Condition
+					</template>
+					<template #value>
+						{{ data.condition || "-" }}
+					</template>
 				</Badge>
 
 				<Badge type="splitted" color="primary">
-					<template #label>Rules</template>
-					<template #value>{{ data.rules?.length || "-" }}</template>
+					<template #label>
+						Rules
+					</template>
+					<template #value>
+						{{ data.rules?.length || "-" }}
+					</template>
 				</Badge>
 			</div>
 		</div>
@@ -63,11 +83,11 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { ref } from "vue"
-import { NModal, NButton } from "naive-ui"
 import type { ScaPolicyResult } from "@/types/agents.d"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref } from "vue"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 
 const { data, embedded } = defineProps<{

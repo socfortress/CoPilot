@@ -2,13 +2,17 @@
 	<div class="integration-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-3">
 			<div class="header-box flex justify-between items-center">
-				<div class="id">#{{ integration.id }}</div>
+				<div class="id">
+					#{{ integration.id }}
+				</div>
 				<div class="actions flex gap-3">
 					<Badge v-if="integration.deployed" type="active">
 						<template #iconLeft>
 							<Icon :name="DeployIcon" :size="13"></Icon>
 						</template>
-						<template #value>Deployed</template>
+						<template #value>
+							Deployed
+						</template>
 					</Badge>
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
@@ -19,12 +23,14 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ serviceName }}</div>
+					<div class="title">
+						{{ serviceName }}
+					</div>
 				</div>
 				<CustomerIntegrationActions
 					class="actions-box"
 					:integration="integration"
-					hideDeleteButton
+					hide-delete-button
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
 				/>
@@ -33,10 +39,10 @@
 				<CustomerIntegrationActions
 					class="actions-box"
 					:integration="integration"
-					hideDeleteButton
+					hide-delete-button
+					size="small"
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
-					:size="'small'"
 				/>
 			</div>
 		</div>
@@ -51,8 +57,12 @@
 		>
 			<div class="grid gap-2 grid-auto-fit-200">
 				<KVCard v-for="ak of authKeys" :key="ak.key">
-					<template #key>{{ ak.key }}</template>
-					<template #value>{{ ak.value || "-" }}</template>
+					<template #key>
+						{{ ak.key }}
+					</template>
+					<template #value>
+						{{ ak.value || "-" }}
+					</template>
 				</KVCard>
 			</div>
 		</n-modal>
@@ -60,25 +70,25 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, ref, toRefs } from "vue"
-import { NModal, NButton } from "naive-ui"
 import type { CustomerIntegration } from "@/types/integrations.d"
-import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
+import { NButton, NModal } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
+import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
 const props = defineProps<{
 	integration: CustomerIntegration
 	embedded?: boolean
 }>()
-const { integration, embedded } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deployed"): void
 	(e: "deleted"): void
 }>()
+
+const { integration, embedded } = toRefs(props)
 
 const DeployIcon = "carbon:deploy"
 const InfoIcon = "carbon:information"
@@ -86,7 +96,7 @@ const InfoIcon = "carbon:information"
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)
 const authKeys = computed(() => {
-	const keys: { key: string; value: string }[] = []
+	const keys: { key: string, value: string }[] = []
 
 	for (const subscriptions of integration.value.integration_subscriptions) {
 		for (const ak of subscriptions.integration_auth_keys) {
