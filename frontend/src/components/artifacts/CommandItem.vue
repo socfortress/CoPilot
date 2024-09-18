@@ -22,7 +22,7 @@
 					placeholder="Empty"
 					size="large"
 					:autosize="{
-						minRows: 3,
+						minRows: 3
 					}"
 				/>
 			</div>
@@ -38,7 +38,7 @@
 					placeholder="Empty"
 					size="large"
 					:autosize="{
-						minRows: 3,
+						minRows: 3
 					}"
 				/>
 			</div>

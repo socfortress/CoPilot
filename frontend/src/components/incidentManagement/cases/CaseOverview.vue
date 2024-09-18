@@ -33,7 +33,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
-											'cursor-pointer': !loadingStatus,
+											'cursor-pointer': !loadingStatus
 										}"
 									>
 										<span>{{ caseData.case_status || "n/d" }}</span>
@@ -68,7 +68,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
-											'cursor-pointer': !loadingAssignee,
+											'cursor-pointer': !loadingAssignee
 										}"
 									>
 										<span>{{ caseData.assigned_to || "n/d" }}</span>

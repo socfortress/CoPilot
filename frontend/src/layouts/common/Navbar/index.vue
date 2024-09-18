@@ -11,8 +11,8 @@
 			:dropdown-props="{
 				scrollable: true,
 				menuProps: () => ({
-					class: 'main-nav',
-				}),
+					class: 'main-nav'
+				})
 			}"
 			:expanded-keys="expandedKeys"
 			@update:expanded-keys="handleUpdateExpandedKeys"

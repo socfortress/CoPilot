@@ -28,7 +28,7 @@
 							type="textarea"
 							:autosize="{
 								minRows: 3,
-								maxRows: 10,
+								maxRows: 10
 							}"
 						/>
 					</n-form-item>
@@ -53,7 +53,7 @@
 										:rule="{
 											required: true,
 											message: `Field Name required`,
-											trigger: ['input', 'blur'],
+											trigger: ['input', 'blur']
 										}"
 									>
 										<n-input
@@ -71,7 +71,7 @@
 										:rule="{
 											required: true,
 											message: `Field Value required`,
-											trigger: ['input', 'blur'],
+											trigger: ['input', 'blur']
 										}"
 									>
 										<n-input

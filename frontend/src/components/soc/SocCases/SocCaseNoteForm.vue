@@ -9,7 +9,7 @@
 				placeholder="Content..."
 				:autosize="{
 					minRows: 3,
-					maxRows: 10,
+					maxRows: 10
 				}"
 			/>
 			<div class="flex gap-2 justify-end">

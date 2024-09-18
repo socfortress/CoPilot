@@ -66,7 +66,7 @@
 				placeholder="SOCFortress Response"
 				size="large"
 				:autosize="{
-					minRows: 3,
+					minRows: 3
 				}"
 			/>
 		</n-modal>

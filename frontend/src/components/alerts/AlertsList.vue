@@ -86,12 +86,12 @@
 							:options="[
 								{
 									label: 'Filter by Agent Hostname',
-									value: 'agentHostname',
+									value: 'agentHostname'
 								},
 								{
 									label: 'Filter by Index name',
-									value: 'indexName',
-								},
+									value: 'indexName'
+								}
 							]"
 							placeholder="Filter by Agent or Index"
 							clearable

@@ -5,9 +5,9 @@
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
-						themes: codeThemes,
-					}),
-				],
+						themes: codeThemes
+					})
+				]
 			]"
 			class="markdown-style scrollbar-styled"
 			:class="{ codeBgTransparent }"

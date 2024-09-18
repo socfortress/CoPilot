@@ -27,7 +27,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
-											'cursor-pointer': !loadingStatus,
+											'cursor-pointer': !loadingStatus
 										}"
 									>
 										<span>{{ alert.status || "n/d" }}</span>
@@ -62,7 +62,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
-											'cursor-pointer': !loadingAssignee,
+											'cursor-pointer': !loadingAssignee
 										}"
 									>
 										<span>{{ alert.assigned_to || "n/d" }}</span>

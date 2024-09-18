@@ -77,7 +77,7 @@
 					size="large"
 					:autosize="{
 						minRows: 3,
-						maxRows: 10,
+						maxRows: 10
 					}"
 				/>
 			</div>

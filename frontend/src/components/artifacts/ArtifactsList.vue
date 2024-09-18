@@ -55,12 +55,12 @@
 								:options="[
 									{
 										label: 'Agent ',
-										value: 'agentHostname',
+										value: 'agentHostname'
 									},
 									{
 										label: 'OS',
-										value: 'os',
-									},
+										value: 'os'
+									}
 								]"
 								placeholder="Filters..."
 								clearable

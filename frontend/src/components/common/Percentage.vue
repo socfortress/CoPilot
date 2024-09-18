@@ -5,9 +5,9 @@
 			{
 				'color': useColor,
 				'with-background': useBackground,
-				'opacity-50': useOpacity,
+				'opacity-50': useOpacity
 			},
-			direction,
+			direction
 		]"
 	>
 		<span v-if="progress && progress === 'line'" class="progress">

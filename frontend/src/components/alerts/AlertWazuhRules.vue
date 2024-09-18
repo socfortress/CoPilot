@@ -14,7 +14,7 @@
 					readonly
 					placeholder="Empty"
 					:autosize="{
-						minRows: 3,
+						minRows: 3
 					}"
 				/>
 			</div>

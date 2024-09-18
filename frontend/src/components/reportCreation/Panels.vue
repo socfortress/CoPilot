@@ -27,7 +27,7 @@
 												put(to: any) {
 													return to.el.children.length < 4
 												},
-												pull: ['panels'],
+												pull: ['panels']
 											}"
 											class="drop-panels-area flex gap-3 w-full h-full"
 										>

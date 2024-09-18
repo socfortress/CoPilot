@@ -21,7 +21,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingActive,
-											'cursor-pointer': !loadingActive,
+											'cursor-pointer': !loadingActive
 										}"
 										@click.stop="toggleActivePopup()"
 									>
@@ -57,7 +57,7 @@
 										class="flex gap-3 items-center"
 										:class="{
 											'cursor-not-allowed': loadingTimeInterval,
-											'cursor-pointer': !loadingTimeInterval,
+											'cursor-pointer': !loadingTimeInterval
 										}"
 										@click.stop="toggleTimeIntervalPopup()"
 									>

@@ -16,7 +16,7 @@
 							type="textarea"
 							:autosize="{
 								minRows: 5,
-								maxRows: 15,
+								maxRows: 15
 							}"
 						/>
 					</n-form-item>
