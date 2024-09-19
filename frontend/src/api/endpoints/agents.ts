@@ -59,7 +59,9 @@ export default {
 		)
 	},
 	scaResultsDownload(agentId: string | number, policyId: string) {
-		return HttpClient.get<string>(`/agents/${agentId}/csv/sca/${policyId}`)
+		return HttpClient.get<Blob>(`/agents/${agentId}/csv/sca/${policyId}`, {
+			responseType: "blob"
+		})
 	},
 	updateAgent(agentId: string, payload: AgentPayload) {
 		return HttpClient.put<FlaskBaseResponse>(

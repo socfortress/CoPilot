@@ -173,7 +173,7 @@ function scaDownload(sca: SCAExt) {
 		.scaResultsDownload(agent.value.agent_id, sca.policy_id)
 		.then(res => {
 			if (res.data) {
-				saveAs(new Blob([res.data], { type: "text/csv;charset=utf-8" }), fileName)
+				saveAs(res.data, fileName)
 			} else {
 				message.warning("An error occurred. Please try again later.")
 			}
