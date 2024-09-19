@@ -8,7 +8,7 @@ import type {
 	AlertTag,
 	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
-import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
+import type { Case, CaseDataStore, CasePayload } from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import { HttpClient } from "../httpClient"
@@ -226,6 +226,19 @@ export default {
 	},
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
+	},
+	getCaseDataStoreFiles(caseId: number) {
+		return HttpClient.get<FlaskBaseResponse & { case_data_store: CaseDataStore[] }>(
+			`/incidents/db_operations/case/data-store/${caseId}`
+		)
+	},
+	downloadCaseDataStoreFileUrl(caseId: number, fileName: string) {
+		return HttpClient.get<Blob>(`/incidents/db_operations/case/data-store/download/${caseId}/${fileName}`, {
+			responseType: "blob"
+		})
+	},
+	deleteCaseDataStoreFile(caseId: number, fileName: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
 	},
 	// #endregion
 

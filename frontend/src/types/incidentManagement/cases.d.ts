@@ -11,3 +11,15 @@ export interface Case {
 }
 
 export type CasePayload = Omit<Case, "id" | "alerts">
+
+export interface CaseDataStore {
+	id: number
+	case_id: number
+	bucket_name: string
+	object_key: string
+	file_name: string
+	content_type: string
+	file_size: number
+	upload_time: Date
+	file_hash: string
+}
