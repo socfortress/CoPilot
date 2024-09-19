@@ -74,7 +74,6 @@
 import type { CaseDataStore } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import _clone from "lodash/cloneDeep"
 import {
 	NButton,
 	NCollapseTransition,

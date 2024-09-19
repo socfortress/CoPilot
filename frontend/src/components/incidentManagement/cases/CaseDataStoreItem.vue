@@ -88,8 +88,6 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import bytes from "bytes"
 import { saveAs } from "file-saver"
-import _clone from "lodash/cloneDeep"
-import _truncate from "lodash/truncate"
 import { NButton, NPopconfirm, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 
