@@ -30,6 +30,11 @@
 					</template>
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<CaseDataStore :case-id="caseEntity.id" />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -50,6 +55,7 @@ const emit = defineEmits<{
 	(e: "updated", value: Case): void
 }>()
 const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
+const CaseDataStore = defineAsyncComponent(() => import("./CaseDataStore.vue"))
 const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
 
 const { caseData, caseId } = toRefs(props)

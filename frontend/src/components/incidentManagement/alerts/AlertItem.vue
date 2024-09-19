@@ -206,7 +206,7 @@
 						</span>
 					</div>
 					<div class="actions-box">
-						<n-button quaternary size="tiny" @click="handleDelete()">Delete</n-button>
+						<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
 					</div>
 				</div>
 			</div>
