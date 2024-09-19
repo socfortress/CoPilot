@@ -43,7 +43,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime
-from io import BytesIO
+from io import BytesIO, StringIO
+import csv
 from fastapi.responses import StreamingResponse
 import pandas as pd
 
@@ -52,161 +53,140 @@ incidents_report_router = APIRouter()
 
 
 @incidents_report_router.post(
+    "/generate-report",
+    description="Generate a report for all cases.",
+)
+async def get_cases_export_all_route(
+    session: AsyncSession = Depends(get_db),
+) -> AlertTimelineResponse:
+    csv_stream = StringIO()
+    fieldnames = [
+        'Case ID', 'Case Name', 'Case Description', 'Case Creation Time', 'Case Status',
+        'Case Assigned To', 'Case Customer Code', 'Alert ID', 'Alert Name', 'Alert Description',
+        'Alert Status', 'Alert Creation Time', 'Alert Time Closed', 'Alert Source', 'Alert Assigned To',
+        'Assets', 'Tags', 'Comments', 'Customer Code'
+    ]
+    writer = csv.DictWriter(csv_stream, fieldnames=fieldnames, lineterminator='\n')
+    writer.writeheader()
+
+    # Query the cases and related data
+    result = await session.execute(
+        select(Case)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).options(
+                selectinload(Alert.assets),
+                selectinload(Alert.tags).selectinload(AlertToTag.tag),
+                selectinload(Alert.comments)
+            )
+        )
+    )
+    cases = result.scalars().all()
+
+    for case in cases:
+        for alert_link in case.alerts:
+            alert = alert_link.alert
+            assets = ';'.join([asset.asset_name for asset in alert.assets]) if alert.assets else ''
+            tags = ';'.join([alert_tag.tag.tag for alert_tag in alert.tags]) if alert.tags else ''
+            comments = ';'.join([comment.comment for comment in alert.comments]) if alert.comments else ''
+
+            row = {
+                'Case ID': case.id,
+                'Case Name': case.case_name,
+                'Case Description': case.case_description,
+                'Case Creation Time': case.case_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'Case Status': case.case_status,
+                'Case Assigned To': case.assigned_to or '',
+                'Case Customer Code': case.customer_code or '',
+                'Alert ID': alert.id,
+                'Alert Name': alert.alert_name,
+                'Alert Description': alert.alert_description,
+                'Alert Status': alert.status,
+                'Alert Creation Time': alert.alert_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'Alert Time Closed': alert.time_closed.strftime('%Y-%m-%d %H:%M:%S') if alert.time_closed else '',
+                'Alert Source': alert.source,
+                'Alert Assigned To': alert.assigned_to or '',
+                'Assets': assets,
+                'Tags': tags,
+                'Comments': comments,
+                'Customer Code': alert.customer_code
+            }
+            writer.writerow(row)
+
+    # Reset the stream position to the beginning
+    csv_stream.seek(0)
+
+    # Create a StreamingResponse
+    response = StreamingResponse(csv_stream, media_type="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename=cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return response
+
+
+@incidents_report_router.post(
     "/generate-report/{customer_code}",
     description="Generate a report for a customer",
 )
-async def get_alert_timeline_route(
+async def get_cases_export_customer_route(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
-) -> AlertTimelineResponse:
-    """
-    Get the timeline of an alert. This route obtains the process_id from the alert details if it exists
-    and queries the Indexer for all events with the same process_id and hostname within a 24 hour period.
+) -> StreamingResponse:
+    csv_stream = StringIO()
+    fieldnames = [
+        'Case ID', 'Case Name', 'Case Description', 'Case Creation Time', 'Case Status',
+        'Case Assigned To', 'Case Customer Code', 'Alert ID', 'Alert Name', 'Alert Description',
+        'Alert Status', 'Alert Creation Time', 'Alert Time Closed', 'Alert Source', 'Alert Assigned To',
+        'Assets', 'Tags', 'Comments', 'Customer Code'
+    ]
+    writer = csv.DictWriter(csv_stream, fieldnames=fieldnames, lineterminator='\n')
+    writer.writeheader()
 
-    Args:
-        create_alert_request (CreateAlertRequestRoute): The request object containing the details of the alert to be created.
-
-
-    Returns:
-        class AlertTimelineResponse(BaseModel): The response object containing the details of the alert.
-    """
-    # Fetch all cases for the customer
-    cases = session.execute(
+    # Query the cases and related data filtered by customer_code
+    result = await session.execute(
         select(Case)
-        .where(
-            Case.alerts.any(
-                CaseAlertLink.alert.has(
-                    Alert.customer_code == customer_code
-                )
+        .where(Case.customer_code == customer_code)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).options(
+                selectinload(Alert.assets),
+                selectinload(Alert.tags).selectinload(AlertToTag.tag),
+                selectinload(Alert.comments)
             )
         )
-        .options(
-            selectinload(Case.alerts)
-            .selectinload(CaseAlertLink.alert)
-            .selectinload(Alert.comments),
-            selectinload(Case.alerts)
-            .selectinload(CaseAlertLink.alert)
-            .selectinload(Alert.tags)
-            .selectinload(AlertToTag.tag),
-            selectinload(Case.alerts)
-            .selectinload(CaseAlertLink.alert)
-            .selectinload(Alert.assets),
-            selectinload(Case.data_store)
-        )
-    ).all()
-
-    if not cases:
-        raise HTTPException(status_code=404, detail="No cases found for the customer.")
-
-    # Create a BytesIO stream to hold the Excel file
-    output = BytesIO()
-
-    # Create an Excel writer using pandas
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        for case in cases:
-            # Fetch related data
-            alerts = [link.alert for link in case.alerts]
-            data_store_items = case.data_store
-
-            # Create DataFrames for each type of data
-            case_data = {
-                'Case ID': [case.id],
-                'Case Name': [case.case_name],
-                'Case Description': [case.case_description],
-                'Case Creation Time': [case.case_creation_time],
-                'Case Status': [case.case_status],
-                'Assigned To': [case.assigned_to],
-            }
-            df_case = pd.DataFrame(case_data)
-
-            # Alerts DataFrame
-            alerts_data = []
-            for alert in alerts:
-                alert_info = {
-                    'Alert ID': alert.id,
-                    'Alert Name': alert.alert_name,
-                    'Description': alert.alert_description,
-                    'Status': alert.status,
-                    'Creation Time': alert.alert_creation_time,
-                    'Assigned To': alert.assigned_to,
-                }
-                alerts_data.append(alert_info)
-            df_alerts = pd.DataFrame(alerts_data)
-
-            # Comments DataFrame
-            comments_data = []
-            for alert in alerts:
-                for comment in alert.comments:
-                    comment_info = {
-                        'Alert ID': alert.id,
-                        'Comment ID': comment.id,
-                        'User Name': comment.user_name,
-                        'Comment': comment.comment,
-                        'Created At': comment.created_at,
-                    }
-                    comments_data.append(comment_info)
-            df_comments = pd.DataFrame(comments_data)
-
-            # Tags DataFrame
-            tags_data = []
-            for alert in alerts:
-                for tag_link in alert.tags:
-                    tag_info = {
-                        'Alert ID': alert.id,
-                        'Tag': tag_link.tag.tag,
-                    }
-                    tags_data.append(tag_info)
-            df_tags = pd.DataFrame(tags_data)
-
-            # Assets DataFrame
-            assets_data = []
-            for alert in alerts:
-                for asset in alert.assets:
-                    asset_info = {
-                        'Alert ID': alert.id,
-                        'Asset ID': asset.id,
-                        'Asset Name': asset.asset_name,
-                        'Agent ID': asset.agent_id,
-                        'Customer Code': asset.customer_code,
-                        'Index Name': asset.index_name,
-                        'Index ID': asset.index_id,
-                    }
-                    assets_data.append(asset_info)
-            df_assets = pd.DataFrame(assets_data)
-
-            # Write DataFrames to Excel sheets
-            sheet_name = f"Case {case.id}"
-            # Write case data
-            df_case.to_excel(writer, sheet_name=sheet_name, startrow=0, index=False)
-            # Write alerts data
-            alerts_start_row = len(df_case) + 2
-            df_alerts.to_excel(writer, sheet_name=sheet_name, startrow=alerts_start_row, index=False)
-            # Write comments data
-            comments_start_row = alerts_start_row + len(df_alerts) + 2
-            df_comments.to_excel(writer, sheet_name=sheet_name, startrow=comments_start_row, index=False)
-            # Write tags data
-            tags_start_row = comments_start_row + len(df_comments) + 2
-            df_tags.to_excel(writer, sheet_name=sheet_name, startrow=tags_start_row, index=False)
-            # Write assets data
-            assets_start_row = tags_start_row + len(df_tags) + 2
-            df_assets.to_excel(writer, sheet_name=sheet_name, startrow=assets_start_row, index=False)
-
-            # Optionally, adjust column widths and formatting
-            workbook  = writer.book
-            worksheet = writer.sheets[sheet_name]
-
-            for df in [df_case, df_alerts, df_comments, df_tags, df_assets]:
-                for idx, col in enumerate(df.columns):
-                    column_len = df[col].astype(str).str.len().max()
-                    column_len = max(column_len, len(col)) + 2
-                    worksheet.set_column(idx, idx, column_len)
-
-    output.seek(0)
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-    filename = f"Report_{customer_code}_{timestamp}.xlsx"
-
-    return StreamingResponse(
-        output,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment;filename={filename}"}
     )
+    cases = result.scalars().all()
+
+    for case in cases:
+        for alert_link in case.alerts:
+            alert = alert_link.alert
+            assets = ';'.join([asset.asset_name for asset in alert.assets]) if alert.assets else ''
+            tags = ';'.join([alert_tag.tag.tag for alert_tag in alert.tags]) if alert.tags else ''
+            comments = ';'.join([comment.comment for comment in alert.comments]) if alert.comments else ''
+
+            row = {
+                'Case ID': case.id,
+                'Case Name': case.case_name,
+                'Case Description': case.case_description,
+                'Case Creation Time': case.case_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'Case Status': case.case_status,
+                'Case Assigned To': case.assigned_to or '',
+                'Case Customer Code': case.customer_code or '',
+                'Alert ID': alert.id,
+                'Alert Name': alert.alert_name,
+                'Alert Description': alert.alert_description,
+                'Alert Status': alert.status,
+                'Alert Creation Time': alert.alert_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'Alert Time Closed': alert.time_closed.strftime('%Y-%m-%d %H:%M:%S') if alert.time_closed else '',
+                'Alert Source': alert.source,
+                'Alert Assigned To': alert.assigned_to or '',
+                'Assets': assets,
+                'Tags': tags,
+                'Comments': comments,
+                'Customer Code': alert.customer_code
+            }
+            writer.writerow(row)
+
+    # Reset the stream position to the beginning
+    csv_stream.seek(0)
+
+    # Create a StreamingResponse
+    response = StreamingResponse(csv_stream, media_type="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename=cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return response
