@@ -1,19 +1,27 @@
 <template>
-	<div class="flex pinned-pages items-center gap-5">
-		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
+	<div class="pinned-pages flex items-center gap-5 relative overflow-hidden py-2 justify-end w-full">
+		<TransitionGroup name="anim" tag="div" class="flex items-center gap-4 overflow-hidden latest-list">
 			<n-tag
 				v-for="page of latestSanitized"
 				:key="page.name"
 				round
 				:bordered="false"
 				:closable="false"
+				class="bg-transparent flex-shrink overflow-hidden p-0 transition-all duration-300"
 				@close="removeLatestPage(page.name)"
 			>
-				<span class="page-name" :title="page.title" @click="gotoPage(page.name)">
+				<span
+					:title="page.title"
+					class="cursor-pointer ml-0.5 overflow-hidden text-ellipsis hover:underline hover:decoration-2 hover:decoration-[var(--primary-color)]"
+					@click="gotoPage(page.name)"
+				>
 					{{ page.title }}
 				</span>
 				<template #icon>
-					<div class="icon-box" @click="pinPage(page)">
+					<div
+						class="cursor-pointer transition-colors duration-300 mr-0.5 hover:text-[var(--primary-color)]"
+						@click="pinPage(page)"
+					>
 						<Icon :size="14" :name="PinnedIcon"></Icon>
 					</div>
 				</template>
@@ -130,12 +138,7 @@ router.afterEach(route => {
 
 <style lang="scss" scoped>
 .pinned-pages {
-	position: relative;
-	overflow: hidden;
-	padding: 8px 0;
 	container-type: inline-size;
-	justify-content: flex-end;
-	width: 100%;
 
 	:deep() {
 		.n-tag {
@@ -176,29 +179,6 @@ router.afterEach(route => {
 					}
 				}
 			}
-		}
-	}
-
-	.page-name {
-		cursor: pointer;
-		margin-left: 2px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-
-		&:hover {
-			text-decoration: underline;
-			text-decoration-thickness: 2px;
-			text-decoration-color: var(--primary-color);
-		}
-	}
-
-	.icon-box {
-		cursor: pointer;
-		transition: color 0.3s;
-		margin-right: 2px;
-
-		&:hover {
-			color: var(--primary-color);
 		}
 	}
 

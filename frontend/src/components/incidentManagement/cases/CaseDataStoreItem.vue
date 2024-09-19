@@ -90,7 +90,7 @@ import bytes from "bytes"
 import { saveAs } from "file-saver"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
-import { NButton, NPopconfirm, NSpin, NTooltip, useMessage } from "naive-ui"
+import { NButton, NPopconfirm, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 
 const { dataStoreFile, embedded } = defineProps<{
@@ -115,7 +115,7 @@ function downloadFile() {
 	downloading.value = true
 
 	Api.incidentManagement
-		.downloadCaseDataStoreFileUrl(dataStoreFile.case_id, dataStoreFile.file_name)
+		.downloadCaseDataStoreFile(dataStoreFile.case_id, dataStoreFile.file_name)
 		.then(res => {
 			if (res.data) {
 				saveAs(res.data, dataStoreFile.file_name)

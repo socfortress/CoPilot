@@ -232,10 +232,24 @@ export default {
 			`/incidents/db_operations/case/data-store/${caseId}`
 		)
 	},
-	downloadCaseDataStoreFileUrl(caseId: number, fileName: string) {
+	downloadCaseDataStoreFile(caseId: number, fileName: string) {
 		return HttpClient.get<Blob>(`/incidents/db_operations/case/data-store/download/${caseId}/${fileName}`, {
 			responseType: "blob"
 		})
+	},
+	uploadCaseDataStoreFile(caseId: number, file: File) {
+		const form = new FormData()
+		form.append("file", new Blob([file], { type: file.type }), file.name)
+
+		return HttpClient.post<FlaskBaseResponse & { case_data_store: CaseDataStore }>(
+			`/incidents/db_operations/case/data-store/upload`,
+			form,
+			{
+				params: {
+					case_id: caseId
+				}
+			}
+		)
 	},
 	deleteCaseDataStoreFile(caseId: number, fileName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
