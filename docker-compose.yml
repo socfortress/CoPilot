@@ -34,6 +34,18 @@ services:
         volumes:
             - mysql-data:/var/lib/mysql
 
+    copilot-minio:
+        image: quay.io/minio/minio:RELEASE.2024-09-13T20-26-02Z
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        volumes:
+            - ./data/data/minio-data:/data
+        command: server /data --console-address ":9001"
+
     copilot-nuclei-module:
         image: ghcr.io/socfortress/copilot-nuclei-module:latest
 

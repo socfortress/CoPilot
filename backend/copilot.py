@@ -168,8 +168,7 @@ async def init_db():
         await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
         await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
     apply_migrations()
-    # ! Comment out until ready ! #
-    #await create_buckets()
+    await create_buckets()
     await add_connectors(async_engine)
     await delete_connectors(async_engine)
     await create_roles(async_engine)
