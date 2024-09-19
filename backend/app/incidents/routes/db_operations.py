@@ -88,7 +88,7 @@ from app.incidents.services.db_operations import create_alert_tag, alerts_total_
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
-from app.incidents.services.db_operations import create_case_from_alert
+from app.incidents.services.db_operations import create_case_from_alert, list_alerts_by_source, alerts_total_by_source, alerts_closed_by_source, alerts_in_progress_by_source, alerts_open_by_source
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_tag
@@ -546,6 +546,24 @@ async def list_alerts_by_customer_code_endpoint(
         open=await alerts_open_by_customer_code(db, customer_code),
         in_progress=await alerts_in_progress_by_customer_code(db, customer_code),
         closed=await alerts_closed_by_customer_code(db, customer_code),
+        success=True,
+        message="Alerts retrieved successfully",
+    )
+
+@incidents_db_operations_router.get("/alerts/source/{source}", response_model=AlertOutResponse)
+async def list_alerts_by_source_endpoint(
+    source: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    return AlertOutResponse(
+        alerts=await list_alerts_by_source(source, db, page=page, page_size=page_size, order=order),
+        total=await alerts_total_by_source(db, source),
+        open=await alerts_open_by_source(db, source),
+        in_progress=await alerts_in_progress_by_source(db, source),
+        closed=await alerts_closed_by_source(db, source),
         success=True,
         message="Alerts retrieved successfully",
     )

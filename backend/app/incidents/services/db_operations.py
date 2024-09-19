@@ -155,6 +155,22 @@ async def alerts_open_by_customer_code(db: AsyncSession, customer_code: str) -> 
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.customer_code == customer_code)))
     return len(result.scalars().all())
 
+async def alerts_total_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where(Alert.source == source))
+    return len(result.scalars().all())
+
+async def alerts_closed_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.source == source)))
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.source == source)))
+    return len(result.scalars().all())
+
+async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
+    return len(result.scalars().all())
+
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
         select(Alert)
@@ -1253,6 +1269,52 @@ async def list_alerts_by_customer_code(
     result = await db.execute(
         select(Alert)
         .where(Alert.customer_code == customer_code)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+async def list_alerts_by_source(
+    source: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+    result = await db.execute(
+        select(Alert)
+        .where(Alert.source == source)
         .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
