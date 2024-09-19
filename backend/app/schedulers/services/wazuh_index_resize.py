@@ -8,6 +8,7 @@ from app.connectors.wazuh_indexer.routes.monitoring import (
 )
 from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
+from app.connectors.utils import is_connector_verified
 
 
 async def resize_wazuh_index_fields():
@@ -18,13 +19,17 @@ async def resize_wazuh_index_fields():
     to synchronize agents, and updates the job metadata with the last success timestamp.
 
     If the token retrieval fails, it prints a failure message. If the job metadata for
-    'wazuh_index_fields_resize' does not exist, it prints a message indicating the absence of the metadata.
+    'resize_wazuh_index_fields' does not exist, it prints a message indicating the absence of the metadata.
     """
     logger.info("Resizing Wazuh index fields via scheduler...")
     async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Wazuh Indexer connector is not verified.")
+            return None
+        logger.info("Wazuh Indexer connector is verified.")
         await resize_wazuh_index_fields_route()
 
-        stmt = select(JobMetadata).where(JobMetadata.job_id == "wazuh_index_fields_resize")
+        stmt = select(JobMetadata).where(JobMetadata.job_id == "resize_wazuh_index_fields")
         result = await session.execute(stmt)
         job_metadata = result.scalars().first()
 
@@ -34,4 +39,4 @@ async def resize_wazuh_index_fields():
             await session.commit()  # Asynchronously commit the transaction
             logger.info("Updated job metadata with the last success timestamp.")
         else:
-            logger.warning("JobMetadata for 'wazuh_index_fields_resize' not found.")
+            logger.warning("JobMetadata for 'resize_wazuh_index_fields' not found.")
