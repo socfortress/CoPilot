@@ -41,7 +41,9 @@ from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
+from typing import Any, Dict
 from typing import List
+from app.customers.routes.customers import get_customer
 from datetime import datetime
 from io import BytesIO, StringIO
 import csv
@@ -50,26 +52,17 @@ import pandas as pd
 
 incidents_report_router = APIRouter()
 
+# Constants
+FIELDNAMES = [
+    'Case ID', 'Case Name', 'Case Description', 'Case Creation Time', 'Case Status',
+    'Case Assigned To', 'Case Customer Code', 'Alert ID', 'Alert Name', 'Alert Description',
+    'Alert Status', 'Alert Creation Time', 'Alert Time Closed', 'Alert Source', 'Alert Assigned To',
+    'Assets', 'Tags', 'Comments', 'Customer Code'
+]
 
-
-@incidents_report_router.post(
-    "/generate-report",
-    description="Generate a report for all cases.",
-)
-async def get_cases_export_all_route(
-    session: AsyncSession = Depends(get_db),
-) -> AlertTimelineResponse:
-    csv_stream = StringIO()
-    fieldnames = [
-        'Case ID', 'Case Name', 'Case Description', 'Case Creation Time', 'Case Status',
-        'Case Assigned To', 'Case Customer Code', 'Alert ID', 'Alert Name', 'Alert Description',
-        'Alert Status', 'Alert Creation Time', 'Alert Time Closed', 'Alert Source', 'Alert Assigned To',
-        'Assets', 'Tags', 'Comments', 'Customer Code'
-    ]
-    writer = csv.DictWriter(csv_stream, fieldnames=fieldnames, lineterminator='\n')
-    writer.writeheader()
-
-    # Query the cases and related data
+# Helper Functions
+async def fetch_cases_with_related_data(session: AsyncSession) -> List[Case]:
+    """Fetch cases with related alerts, assets, tags, and comments."""
     result = await session.execute(
         select(Case)
         .options(
@@ -80,66 +73,12 @@ async def get_cases_export_all_route(
             )
         )
     )
-    cases = result.scalars().all()
+    return result.scalars().all()
 
-    for case in cases:
-        for alert_link in case.alerts:
-            alert = alert_link.alert
-            assets = ';'.join([asset.asset_name for asset in alert.assets]) if alert.assets else ''
-            tags = ';'.join([alert_tag.tag.tag for alert_tag in alert.tags]) if alert.tags else ''
-            comments = ';'.join([comment.comment for comment in alert.comments]) if alert.comments else ''
-
-            row = {
-                'Case ID': case.id,
-                'Case Name': case.case_name,
-                'Case Description': case.case_description,
-                'Case Creation Time': case.case_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
-                'Case Status': case.case_status,
-                'Case Assigned To': case.assigned_to or '',
-                'Case Customer Code': case.customer_code or '',
-                'Alert ID': alert.id,
-                'Alert Name': alert.alert_name,
-                'Alert Description': alert.alert_description,
-                'Alert Status': alert.status,
-                'Alert Creation Time': alert.alert_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
-                'Alert Time Closed': alert.time_closed.strftime('%Y-%m-%d %H:%M:%S') if alert.time_closed else '',
-                'Alert Source': alert.source,
-                'Alert Assigned To': alert.assigned_to or '',
-                'Assets': assets,
-                'Tags': tags,
-                'Comments': comments,
-                'Customer Code': alert.customer_code
-            }
-            writer.writerow(row)
-
-    # Reset the stream position to the beginning
-    csv_stream.seek(0)
-
-    # Create a StreamingResponse
-    response = StreamingResponse(csv_stream, media_type="text/csv")
-    response.headers["Content-Disposition"] = f"attachment; filename=cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    return response
-
-
-@incidents_report_router.post(
-    "/generate-report/{customer_code}",
-    description="Generate a report for a customer",
-)
-async def get_cases_export_customer_route(
-    customer_code: str,
-    session: AsyncSession = Depends(get_db),
-) -> StreamingResponse:
-    csv_stream = StringIO()
-    fieldnames = [
-        'Case ID', 'Case Name', 'Case Description', 'Case Creation Time', 'Case Status',
-        'Case Assigned To', 'Case Customer Code', 'Alert ID', 'Alert Name', 'Alert Description',
-        'Alert Status', 'Alert Creation Time', 'Alert Time Closed', 'Alert Source', 'Alert Assigned To',
-        'Assets', 'Tags', 'Comments', 'Customer Code'
-    ]
-    writer = csv.DictWriter(csv_stream, fieldnames=fieldnames, lineterminator='\n')
-    writer.writeheader()
-
-    # Query the cases and related data filtered by customer_code
+async def fetch_cases_by_customer(
+    session: AsyncSession, customer_code: str
+) -> List[Case]:
+    """Fetch cases for a specific customer with related data."""
     result = await session.execute(
         select(Case)
         .where(Case.customer_code == customer_code)
@@ -151,42 +90,83 @@ async def get_cases_export_customer_route(
             )
         )
     )
-    cases = result.scalars().all()
+    return result.scalars().all()
 
-    for case in cases:
-        for alert_link in case.alerts:
-            alert = alert_link.alert
-            assets = ';'.join([asset.asset_name for asset in alert.assets]) if alert.assets else ''
-            tags = ';'.join([alert_tag.tag.tag for alert_tag in alert.tags]) if alert.tags else ''
-            comments = ';'.join([comment.comment for comment in alert.comments]) if alert.comments else ''
+def serialize_case_alert_to_row(case: Case, alert: Alert) -> Dict[str, Any]:
+    """Serialize a case and its alert into a CSV row."""
+    assets = ';'.join(asset.asset_name for asset in alert.assets or [])
+    tags = ';'.join(alert_tag.tag.tag for alert_tag in alert.tags or [])
+    comments = ';'.join(comment.comment for comment in alert.comments or [])
 
-            row = {
-                'Case ID': case.id,
-                'Case Name': case.case_name,
-                'Case Description': case.case_description,
-                'Case Creation Time': case.case_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
-                'Case Status': case.case_status,
-                'Case Assigned To': case.assigned_to or '',
-                'Case Customer Code': case.customer_code or '',
-                'Alert ID': alert.id,
-                'Alert Name': alert.alert_name,
-                'Alert Description': alert.alert_description,
-                'Alert Status': alert.status,
-                'Alert Creation Time': alert.alert_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
-                'Alert Time Closed': alert.time_closed.strftime('%Y-%m-%d %H:%M:%S') if alert.time_closed else '',
-                'Alert Source': alert.source,
-                'Alert Assigned To': alert.assigned_to or '',
-                'Assets': assets,
-                'Tags': tags,
-                'Comments': comments,
-                'Customer Code': alert.customer_code
-            }
-            writer.writerow(row)
+    return {
+        'Case ID': case.id,
+        'Case Name': case.case_name,
+        'Case Description': case.case_description,
+        'Case Creation Time': case.case_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+        'Case Status': case.case_status,
+        'Case Assigned To': case.assigned_to or '',
+        'Case Customer Code': case.customer_code or '',
+        'Alert ID': alert.id,
+        'Alert Name': alert.alert_name,
+        'Alert Description': alert.alert_description,
+        'Alert Status': alert.status,
+        'Alert Creation Time': alert.alert_creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+        'Alert Time Closed': alert.time_closed.strftime('%Y-%m-%d %H:%M:%S') if alert.time_closed else '',
+        'Alert Source': alert.source,
+        'Alert Assigned To': alert.assigned_to or '',
+        'Assets': assets,
+        'Tags': tags,
+        'Comments': comments,
+        'Customer Code': alert.customer_code
+    }
 
-    # Reset the stream position to the beginning
+def generate_csv_content(rows: List[Dict[str, Any]]) -> StringIO:
+    """Generate CSV content from rows."""
+    csv_stream = StringIO()
+    writer = csv.DictWriter(csv_stream, fieldnames=FIELDNAMES, lineterminator='\n')
+    writer.writeheader()
+    writer.writerows(rows)
     csv_stream.seek(0)
+    return csv_stream
 
-    # Create a StreamingResponse
+# Route Handler
+@incidents_report_router.post(
+    "/generate-report",
+    description="Generate a report for all cases.",
+)
+async def get_cases_export_all_route(
+    session: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    cases = await fetch_cases_with_related_data(session)
+    rows = [
+        serialize_case_alert_to_row(case, alert_link.alert)
+        for case in cases
+        for alert_link in case.alerts
+    ]
+    csv_stream = generate_csv_content(rows)
+    filename = f"cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
-    response.headers["Content-Disposition"] = f"attachment; filename=cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+@incidents_report_router.post(
+    "/generate-report/{customer_code}",
+    description="Generate a report for a customer",
+)
+async def get_cases_export_customer_route(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    await get_customer(customer_code=customer_code, session=session)
+    cases = await fetch_cases_by_customer(session, customer_code)
+    rows = [
+        serialize_case_alert_to_row(case, alert_link.alert)
+        for case in cases
+        for alert_link in case.alerts
+    ]
+    csv_stream = generate_csv_content(rows)
+    filename = f"cases_export_{customer_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    response = StreamingResponse(csv_stream, media_type="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
