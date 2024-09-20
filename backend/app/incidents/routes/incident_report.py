@@ -166,7 +166,7 @@ async def get_cases_export_customer_route(
         for alert_link in case.alerts
     ]
     csv_stream = generate_csv_content(rows)
-    filename = f"cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"cases_export_{customer_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
