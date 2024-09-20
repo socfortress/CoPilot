@@ -318,45 +318,50 @@ const noteFormVisible = ref([])
 const updateNotes = ref(false)
 
 const extendedInfo = ref<SocCaseExt | null>(null)
-const baseInfo = computed<SocCase | SocCaseExt | null>(() => caseData || extendedInfo.value)
+const baseInfo = computed<(SocCase & Partial<SocCaseExt>) | null>(() => {
+	if (caseData) {
+		return { ...caseData, ...(extendedInfo.value || {}) }
+	}
+	return null
+})
 
 const dFormats = useSettingsStore().dateFormat
 
 const caseOpenDate = computed<string | null>(() => {
-	if (baseInfo.value && "case_open_date" in baseInfo.value) {
+	if (baseInfo.value?.case_open_date) {
 		return baseInfo.value.case_open_date as string
 	}
-	if (baseInfo.value && "open_date" in baseInfo.value) {
+	if (baseInfo.value?.open_date) {
 		return baseInfo.value.open_date as string
 	}
-	if (extendedInfo.value && "open_date" in extendedInfo.value) {
+	if (extendedInfo.value?.open_date) {
 		return extendedInfo.value.open_date as string
 	}
 	return null
 })
 
 const caseCloseDate = computed<string | null>(() => {
-	if (baseInfo.value && "case_close_date" in baseInfo.value) {
+	if (baseInfo.value?.case_close_date) {
 		return baseInfo.value.case_close_date as string
 	}
-	if (baseInfo.value && "close_date" in baseInfo.value) {
+	if (baseInfo.value?.close_date) {
 		return baseInfo.value.close_date as string
 	}
-	if (extendedInfo.value && "close_date" in extendedInfo.value) {
+	if (extendedInfo.value?.close_date) {
 		return extendedInfo.value.close_date as string
 	}
 	return null
 })
 
 const clientName = computed<string | null>(() => {
-	if (baseInfo.value && "client_name" in baseInfo.value) {
+	if (baseInfo.value?.client_name) {
 		return baseInfo.value.client_name as string
 	}
 	return null
 })
 
 const openedBy = computed<string | null>(() => {
-	if (baseInfo.value && "opened_by" in baseInfo.value) {
+	if (baseInfo.value?.opened_by) {
 		return baseInfo.value.opened_by as string
 	}
 	return null
