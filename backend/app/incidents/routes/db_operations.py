@@ -3,6 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from loguru import logger
+from typing import Optional
 from fastapi import UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
@@ -59,13 +60,13 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFie
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
-from app.incidents.services.db_operations import add_asset_name
+from app.incidents.services.db_operations import add_asset_name, list_alerts_multiple_filters
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total, upload_file_to_case, delete_file_from_case, list_all_files, download_file_from_case
 from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists, update_case_customer_code, list_cases_by_customer_code
 from app.incidents.services.db_operations import alert_total_by_assest_name
-from app.incidents.services.db_operations import alerts_closed
+from app.incidents.services.db_operations import alerts_closed, alerts_total_multiple_filters, alerts_closed_multiple_filters, alerts_in_progress_multiple_filters, alerts_open_multiple_filters
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
@@ -564,6 +565,60 @@ async def list_alerts_by_source_endpoint(
         open=await alerts_open_by_source(db, source),
         in_progress=await alerts_in_progress_by_source(db, source),
         closed=await alerts_closed_by_source(db, source),
+        success=True,
+        message="Alerts retrieved successfully",
+    )
+
+@incidents_db_operations_router.get("/alerts/filter", response_model=AlertOutResponse)
+async def list_alerts_multiple_filters_endpoint(
+    assigned_to: Optional[str] = Query(None),
+    alert_title: Optional[str] = Query(None),
+    customer_code: Optional[str] = Query(None),
+    source: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    return AlertOutResponse(
+        alerts=await list_alerts_multiple_filters(
+            assigned_to=assigned_to,
+            alert_title=alert_title,
+            customer_code=customer_code,
+            source=source,
+            db=db,
+            page=page,
+            page_size=page_size,
+            order=order,
+        ),
+        total=await alerts_total_multiple_filters(
+            assigned_to=assigned_to,
+            alert_title=alert_title,
+            customer_code=customer_code,
+            source=source,
+            db=db,
+        ),
+        open=await alerts_open_multiple_filters(
+            assigned_to=assigned_to,
+            alert_title=alert_title,
+            customer_code=customer_code,
+            source=source,
+            db=db,
+        ),
+        in_progress=await alerts_in_progress_multiple_filters(
+            assigned_to=assigned_to,
+            alert_title=alert_title,
+            customer_code=customer_code,
+            source=source,
+            db=db,
+        ),
+        closed=await alerts_closed_multiple_filters(
+            assigned_to=assigned_to,
+            alert_title=alert_title,
+            customer_code=customer_code,
+            source=source,
+            db=db,
+        ),
         success=True,
         message="Alerts retrieved successfully",
     )
