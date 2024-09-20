@@ -103,6 +103,26 @@
 								clearable
 								class="!w-56"
 							/>
+							<n-select
+								v-else-if="filters.type === 'customerCode'"
+								v-model:value="filters.value"
+								:options="customersOptions"
+								placeholder="Value..."
+								:disabled="!filters.type"
+								clearable
+								filterable
+								class="!w-56"
+							/>
+							<n-select
+								v-else-if="filters.type === 'source'"
+								v-model:value="filters.value"
+								:options="sourcesOptions"
+								placeholder="Value..."
+								:disabled="!filters.type"
+								clearable
+								filterable
+								class="!w-56"
+							/>
 							<n-input
 								v-else
 								v-model:value="filters.value"
@@ -161,8 +181,10 @@
 
 <script setup lang="ts">
 import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
+import type { Customer } from "@/types/customers.d"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
@@ -200,6 +222,8 @@ const loading = ref(false)
 const showFilters = ref(false)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
+const configuredSourcesList = ref<SourceName[]>([])
+const customersList = ref<Customer[]>([])
 const linkableCases = ref<Case[]>([])
 let abortController: AbortController | null = null
 
@@ -245,6 +269,10 @@ const statusOptions: { label: string; value: AlertStatus }[] = [
 ]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
+const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ label: o, value: o })))
 
 const highlightedItemFound = ref(!highlight.value)
 const highlightedItemOpened = ref(!highlight.value)
@@ -373,6 +401,36 @@ function getAvailableUsers() {
 		})
 }
 
+function getCustomers() {
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
+function getConfiguredSources() {
+	Api.incidentManagement
+		.getConfiguredSources()
+		.then(res => {
+			if (res.data.success) {
+				configuredSourcesList.value = res.data?.sources || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 function getCases() {
 	Api.incidentManagement
 		.getCasesList()
@@ -404,7 +462,9 @@ onBeforeMount(() => {
 
 	getData()
 	getAvailableUsers()
+	getCustomers()
 	getCases()
+	getConfiguredSources()
 })
 </script>
 

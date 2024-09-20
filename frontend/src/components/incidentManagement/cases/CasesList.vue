@@ -88,6 +88,16 @@
 								clearable
 								class="!w-56"
 							/>
+							<n-select
+								v-else-if="filters.type === 'customerCode'"
+								v-model:value="filters.value"
+								:options="customersOptions"
+								placeholder="Value..."
+								:disabled="!filters.type"
+								clearable
+								filterable
+								class="!w-56"
+							/>
 							<n-input
 								v-else
 								v-model:value="filters.value"
@@ -146,6 +156,7 @@
 
 <script setup lang="ts">
 import type { CasesFilter } from "@/api/endpoints/incidentManagement"
+import type { Customer } from "@/types/customers.d"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
@@ -182,6 +193,7 @@ const loading = ref(false)
 const showFilters = ref(false)
 const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
+const customersList = ref<Customer[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -241,6 +253,9 @@ const statusOptions: { label: string; value: AlertStatus }[] = [
 ]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
 
 const highlightedItemFound = ref(!highlight.value)
 const highlightedItemOpened = ref(!highlight.value)
@@ -350,6 +365,21 @@ function getAvailableUsers() {
 		})
 }
 
+function getCustomers() {
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -368,6 +398,7 @@ onBeforeMount(() => {
 
 	getData()
 	getAvailableUsers()
+	getCustomers()
 })
 </script>
 
