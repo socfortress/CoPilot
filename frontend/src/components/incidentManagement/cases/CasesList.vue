@@ -67,7 +67,7 @@
 								:options="typeOptions"
 								placeholder="Filter by..."
 								clearable
-								class="!w-36"
+								class="!w-40"
 							/>
 
 							<n-select
@@ -170,7 +170,7 @@ import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
 
 export interface CasesListFilter {
-	type: "status" | "assignedTo" | "hostname"
+	type: "status" | "assignedTo" | "hostname" | "customerCode"
 	value: string | AlertStatus
 }
 
@@ -230,7 +230,8 @@ const filtered = computed<boolean>(() => {
 const typeOptions = [
 	{ label: "Status", value: "status" },
 	{ label: "Assigned To", value: "assignedTo" },
-	{ label: "Hostname", value: "hostname" }
+	{ label: "Hostname", value: "hostname" },
+	{ label: "Customer Code", value: "customerCode" }
 ]
 
 const statusOptions: { label: string; value: AlertStatus }[] = [

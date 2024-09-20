@@ -106,7 +106,26 @@
 					<KVCard>
 						<template #key>creation time</template>
 						<template #value>
-							{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
+							{{
+								caseData.case_creation_time
+									? formatDate(caseData.case_creation_time, dFormats.datetime)
+									: "-"
+							}}
+						</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>customer code</template>
+						<template #value>
+							<code
+								v-if="caseData.customer_code"
+								class="cursor-pointer text-primary-color"
+								@click="gotoCustomer({ code: caseData.customer_code })"
+							>
+								{{ caseData.customer_code }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+							<span v-else>-</span>
 						</template>
 					</KVCard>
 				</div>
@@ -128,6 +147,7 @@
 import type { Case } from "@/types/incidentManagement/cases.d"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
@@ -147,8 +167,10 @@ const emit = defineEmits<{
 const { caseData } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
+const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
+const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

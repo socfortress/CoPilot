@@ -134,6 +134,21 @@
 								</template>
 							</Badge>
 						</CaseAssignUser>
+
+						<Badge v-if="caseEntity.customer_code" type="splitted" class="!hidden sm:!flex">
+							<template #label>Customer</template>
+							<template #value>
+								<div class="flex items-center h-full">
+									<code
+										class="cursor-pointer text-primary-color leading-none"
+										@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
+									>
+										#{{ caseEntity.customer_code }}
+										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+									</code>
+								</div>
+							</template>
+						</Badge>
 					</div>
 				</div>
 
@@ -203,6 +218,7 @@ import type { Case } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _clone from "lodash/cloneDeep"
@@ -233,9 +249,11 @@ const emit = defineEmits<{
 
 const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
+const LinkIcon = "carbon:launch"
 const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"
 
+const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
