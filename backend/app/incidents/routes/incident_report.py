@@ -1,54 +1,21 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import Security
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.incidents.schema.alert_collection import AlertsPayload
-from app.incidents.schema.incident_alert import AlertDetailsResponse
-from app.incidents.schema.incident_alert import AlertTimelineResponse
-from app.incidents.schema.incident_alert import AutoCreateAlertResponse
-from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertRequestRoute
-from app.incidents.schema.incident_alert import CreateAlertResponse
-from app.incidents.schema.incident_alert import IndexNamesResponse
-from app.incidents.services.alert_collection import add_copilot_alert_id
-from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
-from app.incidents.services.alert_collection import get_graylog_event_indices
-from app.incidents.services.alert_collection import get_original_alert_id
-from app.incidents.services.alert_collection import get_original_alert_index_name
 from sqlalchemy.orm import selectinload
-from app.incidents.services.incident_alert import create_alert
 from app.incidents.models import Alert
-from app.incidents.models import AlertContext
-from app.incidents.models import AlertTag
-from app.incidents.models import AlertTitleFieldName
-from app.data_store.data_store_schema import CaseDataStoreCreation
-from app.data_store.data_store_operations import upload_case_data_store, delete_file, download_case_data_store
 from app.incidents.models import AlertToTag
-from app.incidents.models import Asset
-from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
-from app.incidents.models import Comment, CaseDataStore
-from app.incidents.models import CustomerCodeFieldName
-from app.incidents.models import FieldName
-from app.incidents.models import Notification
-from app.incidents.models import TimestampFieldName
-from app.incidents.services.incident_alert import get_single_alert_details
-from app.incidents.services.incident_alert import retrieve_alert_timeline
-from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
 from typing import Any, Dict
 from typing import List
 from app.customers.routes.customers import get_customer
 from datetime import datetime
-from io import BytesIO, StringIO
+from io import StringIO
 import csv
 from fastapi.responses import StreamingResponse
-import pandas as pd
 
 incidents_report_router = APIRouter()
 
