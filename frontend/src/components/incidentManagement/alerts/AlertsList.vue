@@ -82,7 +82,7 @@
 								:options="typeOptions"
 								placeholder="Filter by..."
 								clearable
-								class="!w-36"
+								class="!w-40"
 							/>
 
 							<n-select
@@ -185,7 +185,7 @@ import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "
 import AlertItem from "./AlertItem.vue"
 
 export interface AlertsListFilter {
-	type: "status" | "assetName" | "assignedTo" | "tag" | "title"
+	type: "status" | "assetName" | "assignedTo" | "tag" | "title" | "customerCode" | "source"
 	value: string | AlertStatus
 }
 
@@ -233,7 +233,9 @@ const typeOptions = [
 	{ label: "Asset Name", value: "assetName" },
 	{ label: "Assigned To", value: "assignedTo" },
 	{ label: "Tag", value: "tag" },
-	{ label: "Title", value: "title" }
+	{ label: "Title", value: "title" },
+	{ label: "Customer Code", value: "customerCode" },
+	{ label: "Source", value: "source" }
 ]
 
 const statusOptions: { label: string; value: AlertStatus }[] = [

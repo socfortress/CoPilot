@@ -145,7 +145,7 @@
 							</Badge>
 						</AlertAssignUser>
 
-						<Badge type="splitted" class="!hidden sm:!flex">
+						<Badge v-if="alert.customer_code" type="splitted" class="!hidden sm:!flex">
 							<template #label>Customer</template>
 							<template #value>
 								<div class="flex items-center h-full">
@@ -395,6 +395,11 @@ onMounted(() => {
 
 	&.embedded {
 		background-color: var(--bg-secondary-color);
+		border: var(--border-small-100);
+
+		.footer-box {
+			background-color: var(--bg-body);
+		}
 	}
 
 	&:hover {
