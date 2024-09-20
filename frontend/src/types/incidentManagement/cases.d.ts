@@ -6,10 +6,12 @@ export interface Case {
 	case_creation_time: string | Date
 	case_description: string
 	assigned_to: null | string
-	alerts: Alert[]
-	case_status: null | AlertStatus
+	case_status: null | CaseStatus
 	customer_code: null | string
+	alerts: Alert[]
 }
+
+export type CaseStatus = AlertStatus
 
 export type CasePayload = Omit<Case, "id" | "alerts">
 

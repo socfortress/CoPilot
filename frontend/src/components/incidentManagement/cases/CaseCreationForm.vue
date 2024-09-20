@@ -41,6 +41,17 @@
 						/>
 					</n-form-item>
 				</div>
+				<div>
+					<n-form-item label="Customer" path="customer_code">
+						<n-select
+							v-model:value="form.customer_code"
+							:options="customersOptions"
+							placeholder="Value..."
+							clearable
+							to="body"
+						/>
+					</n-form-item>
+				</div>
 
 				<div class="flex justify-between gap-4">
 					<div class="flex gap-4">
@@ -59,8 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
+import type { Customer } from "@/types/customers.d"
+import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
@@ -90,12 +101,14 @@ const emit = defineEmits<{
 }>()
 
 const loadingAvailableUsers = ref(false)
+const loadingCustomersList = ref(false)
 const submitting = ref(false)
-const loading = computed(() => loadingAvailableUsers.value || submitting.value)
+const loading = computed(() => loadingAvailableUsers.value || loadingCustomersList.value || submitting.value)
 const message = useMessage()
 const form = ref<CasePayload>(getForm())
 const formRef = ref<FormInst | null>(null)
 const availableUsers = inject<Ref<string[]>>("assignable-users", ref([]))
+const customersList = inject<Ref<Customer[]>>("customers-list", ref([]))
 
 const rules: FormRules = {
 	case_name: {
@@ -117,16 +130,24 @@ const rules: FormRules = {
 		message: "Please input the Status",
 		required: true,
 		trigger: ["input", "blur"]
+	},
+	customer_code: {
+		message: "Please input the Customer",
+		required: true,
+		trigger: ["input", "blur"]
 	}
 }
 
-const statusOptions: { label: string; value: AlertStatus }[] = [
+const statusOptions: { label: string; value: CaseStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }
 ]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
 
 const isValid = computed(() => {
 	let valid = true
@@ -161,7 +182,8 @@ function getForm() {
 		case_creation_time: new Date(),
 		case_description: "",
 		assigned_to: null,
-		case_status: null
+		case_status: null,
+		customer_code: null
 	}
 	return payload
 }
@@ -219,9 +241,32 @@ function getAvailableUsers() {
 		})
 }
 
+function getCustomers() {
+	loadingCustomersList.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomersList.value = false
+		})
+}
+
 function load() {
 	if (!availableUsers.value.length) {
 		getAvailableUsers()
+	}
+	if (!customersList.value.length) {
+		getCustomers()
 	}
 	reset()
 }

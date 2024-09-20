@@ -155,10 +155,9 @@
 </template>
 
 <script setup lang="ts">
-import type { CasesFilter } from "@/api/endpoints/incidentManagement"
+import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement"
 import type { Customer } from "@/types/customers.d"
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
@@ -181,8 +180,8 @@ import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
 
 export interface CasesListFilter {
-	type: "status" | "assignedTo" | "hostname" | "customerCode"
-	value: string | AlertStatus
+	type: CasesFilterTypes
+	value: string | CaseStatus
 }
 
 const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter; hideFilters?: boolean }>()
@@ -239,14 +238,14 @@ const filtered = computed<boolean>(() => {
 	return !!filters.value.type && !!filters.value.value
 })
 
-const typeOptions = [
+const typeOptions: { label: string; value: CasesFilterTypes }[] = [
 	{ label: "Status", value: "status" },
 	{ label: "Assigned To", value: "assignedTo" },
 	{ label: "Hostname", value: "hostname" },
 	{ label: "Customer Code", value: "customerCode" }
 ]
 
-const statusOptions: { label: string; value: AlertStatus }[] = [
+const statusOptions: { label: string; value: CaseStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }
@@ -305,6 +304,7 @@ watch(
 )
 
 provide("assignable-users", availableUsers)
+provide("customers-list", customersList)
 
 function resetFilters() {
 	filters.value.type = undefined

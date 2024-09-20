@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
+import type { AlertsFilterTypes, AlertsQuery } from "@/api/endpoints/incidentManagement"
 import type { Customer } from "@/types/customers.d"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
@@ -207,7 +207,7 @@ import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "
 import AlertItem from "./AlertItem.vue"
 
 export interface AlertsListFilter {
-	type: "status" | "assetName" | "assignedTo" | "tag" | "title" | "customerCode" | "source"
+	type: AlertsFilterTypes
 	value: string | AlertStatus
 }
 
@@ -252,7 +252,7 @@ const filtered = computed<boolean>(() => {
 	return !!filters.value.type && !!filters.value.value
 })
 
-const typeOptions = [
+const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Status", value: "status" },
 	{ label: "Asset Name", value: "assetName" },
 	{ label: "Assigned To", value: "assignedTo" },
