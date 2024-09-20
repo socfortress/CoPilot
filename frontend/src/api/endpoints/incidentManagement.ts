@@ -19,6 +19,8 @@ export type AlertsFilter =
 	| { assignedTo: string }
 	| { tag: string }
 	| { title: string }
+	| { customerCode: string }
+	| { source: string }
 
 export interface AlertsQuery {
 	page: number
@@ -27,7 +29,11 @@ export interface AlertsQuery {
 	filters: AlertsFilter
 }
 
-export type CasesFilter = { status: AlertStatus } | { assignedTo: string } | { hostname: string }
+export type CasesFilter =
+	| { status: AlertStatus }
+	| { assignedTo: string }
+	| { hostname: string }
+	| { customerCode: string }
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
@@ -98,6 +104,12 @@ export default {
 		}
 		if (args?.filters && "title" in args.filters) {
 			url = `/incidents/db_operations/alerts/title/${args.filters.title}`
+		}
+		if (args?.filters && "customerCode" in args.filters) {
+			url = `/incidents/db_operations/alerts/customer/${args.filters.customerCode}`
+		}
+		if (args?.filters && "source" in args.filters) {
+			url = `/incidents/db_operations/alerts/source/${args.filters.source}`
 		}
 
 		return HttpClient.get<
@@ -182,6 +194,9 @@ export default {
 		}
 		if (filters && "assignedTo" in filters) {
 			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+		}
+		if (filters && "customerCode" in filters) {
+			url = `/incidents/db_operations/case/customer/${filters.customerCode}`
 		}
 		if (filters && "hostname" in filters) {
 			url = `/agents/${filters.hostname}/cases`

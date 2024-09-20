@@ -8,6 +8,7 @@ export interface Case {
 	assigned_to: null | string
 	alerts: Alert[]
 	case_status: null | AlertStatus
+	customer_code: null | string
 }
 
 export type CasePayload = Omit<Case, "id" | "alerts">
