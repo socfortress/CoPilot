@@ -95,6 +95,7 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.2/docker-compose
 mkdir data
 
 # Create the .env file based on the .env.example
+nano .env
 
 # Run Copilot
 docker compose up -d
