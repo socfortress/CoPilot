@@ -36,7 +36,9 @@
 					</div>
 				</n-popover>
 
-				<CaseCreationButton :only-icon="caseCreationButtonOnlyIcon" @submitted="getData()" />
+				<CasesExport size="small" />
+
+				<CaseCreationButton :only-icon="caseCreationButtonOnlyIcon" size="small" @submitted="getData()" />
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -179,6 +181,7 @@ import {
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
+import CasesExport from "./CasesExport.vue"
 
 export interface CasesListFilter {
 	type: CasesFilterTypes
