@@ -101,6 +101,7 @@
 								placeholder="Value..."
 								:disabled="!filters.type"
 								clearable
+								filterable
 								class="!w-56"
 							/>
 							<n-select
