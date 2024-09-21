@@ -1,6 +1,6 @@
 <template>
 	<div class="active-response-actions flex gap-2 justify-end">
-		<n-button type="success" secondary :size="size" :loading="loadingInvoke" @click="showInvokeForm = true">
+		<n-button type="success" secondary :size :loading="loadingInvoke" @click="showInvokeForm = true">
 			<template #icon>
 				<Icon :name="InvokeIcon"></Icon>
 			</template>
