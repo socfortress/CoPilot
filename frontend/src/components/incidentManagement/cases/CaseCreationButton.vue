@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" type="primary" :loading="loading" @click="showForm = true">
+	<n-button :size type="primary" :loading="loading" @click="showForm = true">
 		<template #icon>
 			<Icon :name="NewCaseIcon" :size="14"></Icon>
 		</template>
@@ -25,18 +25,19 @@
 
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases"
+import type { Size } from "naive-ui/es/button/src/interface"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, toRefs, watch } from "vue"
 import CaseCreationForm from "./CaseCreationForm.vue"
 
-const props = defineProps<{ onlyIcon?: boolean }>()
+const props = defineProps<{ onlyIcon?: boolean; size?: Size }>()
 
 const emit = defineEmits<{
 	(e: "submitted", value: Case): void
 }>()
 
-const { onlyIcon } = toRefs(props)
+const { onlyIcon, size } = toRefs(props)
 
 const NewCaseIcon = "carbon:fetch-upload-cloud"
 const formCTX = ref<{ load: () => void } | null>(null)
