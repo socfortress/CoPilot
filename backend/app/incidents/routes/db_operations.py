@@ -1,13 +1,15 @@
+import io
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
-from loguru import logger
-from typing import Optional
-from fastapi import UploadFile, File
+from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
+from loguru import logger
 from sqlalchemy import select
-import io
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
@@ -22,7 +24,7 @@ from app.db.universal_models import Customers
 from app.incidents.models import Alert
 from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
-from app.incidents.schema.db_operations import AlertContextResponse, CaseDataStoreResponse, ListCaseDataStoreResponse
+from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
@@ -37,11 +39,11 @@ from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
-from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
+from app.incidents.schema.db_operations import CaseDataStoreResponse
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentCreate
@@ -49,6 +51,7 @@ from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
+from app.incidents.schema.db_operations import ListCaseDataStoreResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
 from app.incidents.schema.db_operations import PutNotification
@@ -60,36 +63,48 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFie
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
-from app.incidents.services.db_operations import add_asset_name, list_alerts_multiple_filters
+from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total, upload_file_to_case, delete_file_from_case, list_all_files, download_file_from_case
-from app.incidents.services.db_operations import alert_total_by_alert_title, file_exists, update_case_customer_code, list_cases_by_customer_code
+from app.incidents.services.db_operations import alert_total
+from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
-from app.incidents.services.db_operations import alerts_closed, alerts_total_multiple_filters, alerts_closed_multiple_filters, alerts_in_progress_multiple_filters, alerts_open_multiple_filters
+from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
+from app.incidents.services.db_operations import alerts_closed_by_customer_code
+from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
+from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
-from app.incidents.services.db_operations import alerts_in_progress_by_assest_name, list_files_by_case_id
+from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
 from app.incidents.services.db_operations import alerts_in_progress_by_assigned_to
+from app.incidents.services.db_operations import alerts_in_progress_by_customer_code
+from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
+from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
+from app.incidents.services.db_operations import alerts_open_by_customer_code
+from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
+from app.incidents.services.db_operations import alerts_open_multiple_filters
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
+from app.incidents.services.db_operations import alerts_total_by_customer_code
+from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
+from app.incidents.services.db_operations import alerts_total_multiple_filters
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag, alerts_total_by_customer_code, alerts_open_by_customer_code, alerts_in_progress_by_customer_code, alerts_closed_by_customer_code, list_alerts_by_customer_code
+from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
-from app.incidents.services.db_operations import create_case_from_alert, list_alerts_by_source, alerts_total_by_source, alerts_closed_by_source, alerts_in_progress_by_source, alerts_open_by_source
+from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_tag
@@ -97,7 +112,10 @@ from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
 from app.incidents.services.db_operations import delete_field_name
+from app.incidents.services.db_operations import delete_file_from_case
 from app.incidents.services.db_operations import delete_timefield_name
+from app.incidents.services.db_operations import download_file_from_case
+from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
 from app.incidents.services.db_operations import get_alert_title_names
@@ -111,12 +129,18 @@ from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
 from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
+from app.incidents.services.db_operations import list_alerts_by_customer_code
+from app.incidents.services.db_operations import list_alerts_by_source
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
+from app.incidents.services.db_operations import list_alerts_multiple_filters
+from app.incidents.services.db_operations import list_all_files
 from app.incidents.services.db_operations import list_cases
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
+from app.incidents.services.db_operations import list_cases_by_customer_code
 from app.incidents.services.db_operations import list_cases_by_status
+from app.incidents.services.db_operations import list_files_by_case_id
 from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
@@ -125,7 +149,9 @@ from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
+from app.incidents.services.db_operations import update_case_customer_code
 from app.incidents.services.db_operations import update_case_status
+from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
@@ -533,6 +559,7 @@ async def list_alerts_by_title_endpoint(
         message="Alerts retrieved successfully",
     )
 
+
 @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
 async def list_alerts_by_customer_code_endpoint(
     customer_code: str,
@@ -551,6 +578,7 @@ async def list_alerts_by_customer_code_endpoint(
         message="Alerts retrieved successfully",
     )
 
+
 @incidents_db_operations_router.get("/alerts/source/{source}", response_model=AlertOutResponse)
 async def list_alerts_by_source_endpoint(
     source: str,
@@ -568,6 +596,7 @@ async def list_alerts_by_source_endpoint(
         success=True,
         message="Alerts retrieved successfully",
     )
+
 
 @incidents_db_operations_router.get("/alerts/filter", response_model=AlertOutResponse)
 async def list_alerts_multiple_filters_endpoint(
@@ -629,7 +658,6 @@ async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases(db), success=True, message="Cases retrieved successfully")
 
 
-
 @incidents_db_operations_router.put("/case/status", response_model=CaseOutResponse)
 async def update_case_status_endpoint(case_status: UpdateCaseStatus, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await update_case_status(case_status, db)], success=True, message="Case status updated successfully")
@@ -647,9 +675,14 @@ async def update_case_assigned_to_endpoint(assigned_to: AssignedToCase, db: Asyn
         message="Case assigned to user successfully",
     )
 
+
 @incidents_db_operations_router.put("/case/customer-code", response_model=CaseOutResponse)
 async def update_case_customer_code_endpoint(case_id: int, customer_code: str, db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=[await update_case_customer_code(case_id, customer_code, db)], success=True, message="Case customer code updated successfully")
+    return CaseOutResponse(
+        cases=[await update_case_customer_code(case_id, customer_code, db)],
+        success=True,
+        message="Case customer code updated successfully",
+    )
 
 
 @incidents_db_operations_router.delete("/case/{case_id}")
@@ -674,6 +707,7 @@ async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession 
 async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
 
+
 @incidents_db_operations_router.get("/case/customer/{customer_code}", response_model=CaseOutResponse)
 async def list_cases_by_customer_code_endpoint(customer_code: str, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases_by_customer_code(customer_code, db), success=True, message="Cases retrieved successfully")
@@ -684,10 +718,16 @@ async def list_all_case_data_store_files_endpoint(db: AsyncSession = Depends(get
     logger.info("Listing all files in the data store")
     return ListCaseDataStoreResponse(case_data_store=await list_all_files(db), success=True, message="Files retrieved successfully")
 
+
 @incidents_db_operations_router.get("/case/data-store/{case_id}", response_model=ListCaseDataStoreResponse)
 async def list_case_data_store_files_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     logger.info(f"Listing all files in the data store for case {case_id}")
-    return ListCaseDataStoreResponse(case_data_store=await list_files_by_case_id(case_id, db), success=True, message="Files retrieved successfully")
+    return ListCaseDataStoreResponse(
+        case_data_store=await list_files_by_case_id(case_id, db),
+        success=True,
+        message="Files retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/case/data-store/download/{case_id}/{file_name}")
 async def download_case_data_store_file_endpoint(case_id: int, file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:
@@ -696,11 +736,7 @@ async def download_case_data_store_file_endpoint(case_id: int, file_name: str, d
     output = io.BytesIO(file_bytes)
     output.seek(0)
 
-    return StreamingResponse(
-        output,
-        media_type=file_content_type,
-        headers={"Content-Disposition": f"attachment; filename={file_name}"}
-    )
+    return StreamingResponse(output, media_type=file_content_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
 
 
 @incidents_db_operations_router.post("/case/data-store/upload", response_model=CaseDataStoreResponse)
@@ -711,12 +747,18 @@ async def upload_case_data_store_endpoint(
 ):
     if await file_exists(case_id, file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this case")
-    return CaseDataStoreResponse(case_data_store=await upload_file_to_case(case_id, file, db), success=True, message="File uploaded successfully")
+    return CaseDataStoreResponse(
+        case_data_store=await upload_file_to_case(case_id, file, db),
+        success=True,
+        message="File uploaded successfully",
+    )
+
 
 @incidents_db_operations_router.delete("/case/data-store/{case_id}/{file_name}")
 async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db: AsyncSession = Depends(get_db)):
     await delete_file_from_case(case_id, file_name, db)
     return {"message": "File deleted successfully", "success": True}
+
 
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):

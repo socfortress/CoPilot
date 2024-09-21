@@ -37,7 +37,7 @@
 									</code>
 								</div>
 								<div v-else>
-									{{ value === "" ? "-" : (value ?? "-") }}
+									{{ value === "" ? "-" : value ?? "-" }}
 								</div>
 							</template>
 						</KVCard>

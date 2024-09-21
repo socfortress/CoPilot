@@ -44,7 +44,7 @@ const customersOptions = computed(() => {
 				: customersList.value.map(o => ({
 						label: `#${o.customer_code} - ${o.customer_name}`,
 						key: o.customer_code
-					}))
+				  }))
 		}
 	]
 })

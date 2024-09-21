@@ -1,30 +1,35 @@
+import hashlib
 from typing import List
+from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
-from fastapi import UploadFile
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-import hashlib
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import Tuple, Optional
+
+from app.data_store.data_store_operations import delete_file
+from app.data_store.data_store_operations import download_case_data_store
+from app.data_store.data_store_operations import upload_case_data_store
+from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
-from app.data_store.data_store_schema import CaseDataStoreCreation
-from app.data_store.data_store_operations import upload_case_data_store, delete_file, download_case_data_store
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
-from app.incidents.models import Comment, CaseDataStore
+from app.incidents.models import CaseDataStore
+from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
 from app.incidents.models import Notification
@@ -32,9 +37,6 @@ from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
@@ -48,12 +50,17 @@ from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+
 
 async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
     result = await db.execute(select(AlertCreationSettings).where(AlertCreationSettings.customer_code == customer_code))
     if result.scalars().first():
         return True
     raise HTTPException(status_code=404, detail="Customer code not found")
+
 
 async def alert_total(db: AsyncSession) -> int:
     result = await db.execute(select(Alert))
@@ -140,37 +147,46 @@ async def alerts_open_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.assigned_to == assigned_to)))
     return len(result.scalars().all())
 
+
 async def alerts_total_by_customer_code(db: AsyncSession, customer_code: str) -> int:
     result = await db.execute(select(Alert).where(Alert.customer_code == customer_code))
     return len(result.scalars().all())
+
 
 async def alerts_closed_by_customer_code(db: AsyncSession, customer_code: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.customer_code == customer_code)))
     return len(result.scalars().all())
 
+
 async def alerts_in_progress_by_customer_code(db: AsyncSession, customer_code: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.customer_code == customer_code)))
     return len(result.scalars().all())
+
 
 async def alerts_open_by_customer_code(db: AsyncSession, customer_code: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.customer_code == customer_code)))
     return len(result.scalars().all())
 
+
 async def alerts_total_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where(Alert.source == source))
     return len(result.scalars().all())
+
 
 async def alerts_closed_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.source == source)))
     return len(result.scalars().all())
 
+
 async def alerts_in_progress_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.source == source)))
     return len(result.scalars().all())
 
+
 async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
     return len(result.scalars().all())
+
 
 async def alerts_total_multiple_filters(
     db: AsyncSession,
@@ -197,6 +213,7 @@ async def alerts_total_multiple_filters(
     total = result.scalar_one()
     return total
 
+
 async def alerts_closed_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -221,6 +238,7 @@ async def alerts_closed_multiple_filters(
     closed_count = result.scalar_one()
     return closed_count
 
+
 async def alerts_in_progress_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -244,6 +262,7 @@ async def alerts_in_progress_multiple_filters(
     in_progress_count = result.scalar_one()
     return in_progress_count
 
+
 async def alerts_open_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -266,6 +285,7 @@ async def alerts_open_multiple_filters(
     result = await db.execute(query)
     open_count = result.scalar_one()
     return open_count
+
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
@@ -577,6 +597,7 @@ async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSessi
     case.assigned_to = assigned_to
     await db.commit()
     return case
+
 
 async def update_case_customer_code(case_id: int, customer_code: str, db: AsyncSession) -> Case:
     await customer_code_valid(customer_code, db)
@@ -1072,6 +1093,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
         cases_out.append(case_out)
     return cases_out
 
+
 async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
         select(Case)
@@ -1352,6 +1374,7 @@ async def list_alerts_by_title(
         alerts_out.append(alert_out)
     return alerts_out
 
+
 async def list_alerts_by_customer_code(
     customer_code: str,
     db: AsyncSession,
@@ -1397,6 +1420,7 @@ async def list_alerts_by_customer_code(
         )
         alerts_out.append(alert_out)
     return alerts_out
+
 
 async def list_alerts_by_source(
     source: str,
@@ -1618,6 +1642,7 @@ async def list_all_files(db: AsyncSession) -> List[CaseDataStore]:
     result = await db.execute(query)
     return result.scalars().all()
 
+
 async def list_files_by_case_id(case_id: int, db: AsyncSession) -> List[CaseDataStore]:
     query = select(CaseDataStore).where(CaseDataStore.case_id == case_id)
     result = await db.execute(query)
@@ -1625,12 +1650,10 @@ async def list_files_by_case_id(case_id: int, db: AsyncSession) -> List[CaseData
 
 
 async def file_exists(case_id: int, file_name: str, db: AsyncSession) -> bool:
-    query = select(CaseDataStore).where(
-        CaseDataStore.case_id == case_id,
-        CaseDataStore.file_name == file_name
-    )
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id, CaseDataStore.file_name == file_name)
     result = await db.execute(query)
     return result.scalars().first() is not None
+
 
 async def sha256_hash_file(file: UploadFile) -> str:
     await file.seek(0)
@@ -1638,10 +1661,12 @@ async def sha256_hash_file(file: UploadFile) -> str:
     file_hash = hashlib.sha256(file_content).hexdigest()
     return file_hash
 
+
 async def get_file_size(file: UploadFile) -> int:
     await file.seek(0)
     content = await file.read()
     return len(content)
+
 
 async def add_file_to_db(case_id: int, file: UploadFile, file_size: int, file_hash: str, db: AsyncSession) -> None:
     db_file = CaseDataStore(
@@ -1657,6 +1682,7 @@ async def add_file_to_db(case_id: int, file: UploadFile, file_size: int, file_ha
     await db.commit()
     return db_file
 
+
 async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) -> CaseDataStore:
     file_size = await get_file_size(file)
     file_hash = await sha256_hash_file(file)
@@ -1664,12 +1690,13 @@ async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) 
     # Upload the file to Minio
     await upload_case_data_store(
         data=CaseDataStoreCreation(
-        case_id=case_id,
-        bucket_name="copilot-cases",
-        object_key=file.filename,
-        file_name=file.filename,
-        content_type=file.content_type,
-        file_hash=file_hash,),
+            case_id=case_id,
+            bucket_name="copilot-cases",
+            object_key=file.filename,
+            file_name=file.filename,
+            content_type=file.content_type,
+            file_hash=file_hash,
+        ),
         file=file,
     )
 
@@ -1679,16 +1706,15 @@ async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) 
 
 async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSession) -> CaseDataStore:
     logger.info(f"Getting file {file_name} from case {case_id}")
-    query = select(CaseDataStore).where(
-        CaseDataStore.case_id == case_id,
-        CaseDataStore.file_name == file_name
-    )
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id, CaseDataStore.file_name == file_name)
     result = await db.execute(query)
     return result.scalars().first()
+
 
 async def remove_file_from_db(file_id: int, db: AsyncSession) -> None:
     await db.execute(delete(CaseDataStore).where(CaseDataStore.id == file_id))
     await db.commit()
+
 
 async def delete_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> None:
     file = await get_file_by_case_id_and_name(case_id, file_name, db)
@@ -1697,6 +1723,7 @@ async def delete_file_from_case(case_id: int, file_name: str, db: AsyncSession) 
 
     await delete_file(file.bucket_name, file.object_key)
     await remove_file_from_db(file.id, db)
+
 
 async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> Tuple[bytes, str]:
     file = await get_file_by_case_id_and_name(case_id, file_name, db)

@@ -3,12 +3,12 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.future import select
 
+from app.connectors.utils import is_connector_verified
 from app.connectors.wazuh_indexer.routes.monitoring import (
     resize_wazuh_index_fields_route,
 )
 from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
-from app.connectors.utils import is_connector_verified
 
 
 async def resize_wazuh_index_fields():

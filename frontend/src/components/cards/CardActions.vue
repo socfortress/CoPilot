@@ -75,7 +75,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-			]
+		  ]
 		: [
 				{
 					label: "Collapse",
@@ -87,7 +87,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-			]
+		  ]
 )
 
 function menuSelect(key: string) {

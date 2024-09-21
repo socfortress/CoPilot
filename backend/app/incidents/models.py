@@ -150,6 +150,7 @@ class Notification(SQLModel, table=True):
     shuffle_workflow_id: str = Field(max_length=1000, nullable=False)
     enabled: bool = Field(default=True)
 
+
 class CaseDataStore(SQLModel, table=True):
     __tablename__ = "incident_management_case_datastore"
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -248,7 +248,7 @@ def get_function_by_name(function_name: str):
     """
     function_map = {
         "agent_sync": agent_sync,
-        #"wazuh_index_fields_resize": resize_wazuh_index_fields,
+        # "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "resize_wazuh_index_fields": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
         "invoke_sigma_queries_collect": invoke_sigma_queries_collect,

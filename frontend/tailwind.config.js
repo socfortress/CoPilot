@@ -23,8 +23,8 @@ export default {
 				xs: "460px"
 			},
 			height: {
-				"0.75": "0.1875rem",
-				"150": "37.5rem",
+				0.75: "0.1875rem",
+				150: "37.5rem",
 				"60vh": "60vh"
 			},
 			width: {
@@ -37,7 +37,7 @@ export default {
 			},
 			maxHeight: {
 				"50vh": "50vh",
-				"150": "37.5rem"
+				150: "37.5rem"
 			},
 			maxWidth: {
 				"90vw": "90vw"

@@ -11,10 +11,10 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
 from app.db.db_setup import add_connectors
-from app.data_store.data_store_setup import create_buckets
 from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
 from app.db.db_setup import create_available_network_connectors
