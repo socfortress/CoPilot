@@ -76,7 +76,7 @@
 		"vuedraggable": "^4.1.0"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.21.3"
+		"@rollup/rollup-linux-x64-gnu": "^4.22.4"
 	},
 	"devDependencies": {
 		"@antfu/eslint-config": "^3.7.1",
