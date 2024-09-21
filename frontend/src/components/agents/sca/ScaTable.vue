@@ -167,7 +167,7 @@ function showScaDetails(sca: SCAExt) {
 function scaDownload(sca: SCAExt) {
 	sca.downloading = true
 
-	const fileName = `sca-${sca.policy_id}_${new Date().getTime()}.csv`
+	const fileName = `sca_policy:${sca.policy_id}_${formatDate(new Date(), dFormats.datetimesec)}.csv`
 
 	Api.agents
 		.scaResultsDownload(agent.value.agent_id, sca.policy_id)

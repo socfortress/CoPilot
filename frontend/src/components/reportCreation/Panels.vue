@@ -202,6 +202,8 @@ import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/rep
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import { useStorage } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import _kebabCase from "lodash/kebabCase"
@@ -249,6 +251,7 @@ const SettingsIcon = "carbon:settings"
 const AddIcon = "carbon:add-alt"
 const PrintIcon = "carbon:printer"
 const RowSettingsIcon = "carbon:fit-to-height"
+const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
@@ -389,7 +392,7 @@ function print() {
 		}
 	}
 
-	const reportFileName = `report${org.value?.name ? `-${_kebabCase(org.value.name)}` : ""}.pdf`
+	const reportFileName = `report${org.value?.name ? `:${_kebabCase(org.value.name)}` : ""}_${formatDate(new Date(), dFormats.datetimesec)}.pdf`
 
 	Api.reporting
 		.generateReport(payload)

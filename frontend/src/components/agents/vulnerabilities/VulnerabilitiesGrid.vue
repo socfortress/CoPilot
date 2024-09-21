@@ -31,6 +31,8 @@
 import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
 import type { Agent, AgentVulnerabilities } from "@/types/agents.d"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
@@ -46,6 +48,7 @@ const { agent } = toRefs(props)
 let abortController: AbortController | null = null
 const message = useMessage()
 const loading = ref(false)
+const dFormats = useSettingsStore().dateFormat
 const downloading = ref(false)
 const severity = ref<VulnerabilitySeverityType>("Critical")
 const vulnerabilitiesCache = ref<{ [key in VulnerabilitySeverityType | string]: AgentVulnerabilities[] }>({})
@@ -99,7 +102,7 @@ function getVulnerabilities(id: string) {
 function vulnerabilitiesDownload(id: string) {
 	downloading.value = true
 
-	const fileName = `agent-${id}_${severity.value.toLowerCase()}-vulnerabilities.csv`
+	const fileName = `vulnerabilities_agent:${id}_severity:${severity.value.toLowerCase()}_${formatDate(new Date(), dFormats.datetimesec)}.csv`
 
 	Api.agents
 		.agentVulnerabilitiesDownload(id, severity.value)
