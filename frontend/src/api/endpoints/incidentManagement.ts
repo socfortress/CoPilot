@@ -247,6 +247,17 @@ export default {
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
+	exportCases(customerCode?: string) {
+		let url = `/incidents/report/generate-report`
+
+		if (customerCode) {
+			url = `/incidents/report/generate-report/${customerCode}`
+		}
+
+		return HttpClient.post<Blob>(url, {
+			responseType: "blob"
+		})
+	},
 	getCaseDataStoreFiles(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { case_data_store: CaseDataStore[] }>(
 			`/incidents/db_operations/case/data-store/${caseId}`
