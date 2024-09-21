@@ -102,7 +102,10 @@ function getVulnerabilities(id: string) {
 function vulnerabilitiesDownload(id: string) {
 	downloading.value = true
 
-	const fileName = `vulnerabilities_agent:${id}_severity:${severity.value.toLowerCase()}_${formatDate(new Date(), dFormats.datetimesec)}.csv`
+	const fileName = `vulnerabilities_agent:${id}_severity:${severity.value.toLowerCase()}_${formatDate(
+		new Date(),
+		dFormats.datetimesec
+	)}.csv`
 
 	Api.agents
 		.agentVulnerabilitiesDownload(id, severity.value)

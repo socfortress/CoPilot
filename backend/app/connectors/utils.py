@@ -37,6 +37,7 @@ async def get_connector_info_from_db(
         logger.warning("No connector found.")
         return None
 
+
 async def is_connector_verified(connector_name: str, db: AsyncSession) -> bool:
     """
     Checks if a connector is verified.

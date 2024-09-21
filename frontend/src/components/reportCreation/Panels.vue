@@ -392,7 +392,10 @@ function print() {
 		}
 	}
 
-	const reportFileName = `report${org.value?.name ? `:${_kebabCase(org.value.name)}` : ""}_${formatDate(new Date(), dFormats.datetimesec)}.pdf`
+	const reportFileName = `report${org.value?.name ? `:${_kebabCase(org.value.name)}` : ""}_${formatDate(
+		new Date(),
+		dFormats.datetimesec
+	)}.pdf`
 
 	Api.reporting
 		.generateReport(payload)

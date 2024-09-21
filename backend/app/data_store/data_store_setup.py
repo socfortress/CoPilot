@@ -1,7 +1,5 @@
-import os
-
 from loguru import logger
-from miniopy_async import Minio
+
 from app.data_store.data_store_session import create_session
 
 
@@ -16,4 +14,3 @@ async def create_bucket_if_not_exists(bucket_name: str) -> None:
 
 async def create_buckets() -> None:
     await create_bucket_if_not_exists("copilot-cases")
-

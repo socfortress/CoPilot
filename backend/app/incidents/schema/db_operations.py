@@ -11,7 +11,8 @@ from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import Asset
 from app.incidents.models import Case
-from app.incidents.models import CaseAlertLink, CaseDataStore
+from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
 
 
@@ -341,6 +342,7 @@ class CaseDataStoreResponse(BaseModel):
     case_data_store: CaseDataStore
     success: bool
     message: str
+
 
 class ListCaseDataStoreResponse(BaseModel):
     case_data_store: List[CaseDataStore]

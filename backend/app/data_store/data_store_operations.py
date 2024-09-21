@@ -1,14 +1,13 @@
 import os
 
-from loguru import logger
-from miniopy_async import Minio
-from app.data_store.data_store_session import create_session
-from fastapi import UploadFile, HTTPException
-from app.data_store.data_store_schema import CaseDataStoreCreation
 import aiofiles
-import json
-from app.data_store.data_store_session import create_session
 import aiohttp
+from fastapi import HTTPException
+from fastapi import UploadFile
+from loguru import logger
+
+from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_session import create_session
 
 
 async def create_bucket_if_not_exists(bucket_name: str) -> None:
@@ -19,6 +18,7 @@ async def create_bucket_if_not_exists(bucket_name: str) -> None:
     else:
         logger.info(f"Bucket {bucket_name} already exists")
 
+
 async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) -> None:
     client = await create_session()
     logger.info(f"Uploading file {file.filename} to bucket {data.bucket_name}")
@@ -27,7 +27,7 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
     temp_file_path = os.path.join(os.getcwd(), file.filename)
 
     # Save the file to the temporary location
-    async with aiofiles.open(temp_file_path, 'wb') as out_file:
+    async with aiofiles.open(temp_file_path, "wb") as out_file:
         content = await file.read()
         await out_file.write(content)
 
@@ -41,6 +41,7 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
 
     # Optionally, remove the temporary file after upload
     os.remove(temp_file_path)
+
 
 async def download_case_data_store(bucket_name: str, object_name: str) -> bytes:
     client = await create_session()
@@ -69,6 +70,7 @@ async def download_case_data_store(bucket_name: str, object_name: str) -> bytes:
         logger.info(f"Objects in bucket {bucket_name}: {objects_list}")
         raise HTTPException(status_code=404, detail=f"File {object_name} not found in bucket {bucket_name}")
 
+
 async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
     client = await create_session()
     objects = await client.list_objects(bucket_name, prefix=f"{case_id}/")
@@ -89,4 +91,5 @@ async def delete_file(bucket_name: str, object_name: str) -> None:
         logger.info(f"Deleted file {object_name} from bucket {bucket_name}")
     except Exception as e:
         # If an exception is raised, the file does not exist
+        logger.info(f"Error: {e}")
         raise HTTPException(status_code=404, detail=f"File {object_name} not found in bucket {bucket_name}")

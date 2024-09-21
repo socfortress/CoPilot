@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from fastapi import File
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class CaseDataStoreCreation(BaseModel):
     case_id: int
