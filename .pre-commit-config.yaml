@@ -54,12 +54,4 @@ repos:
       rev: v9.11.0
       hooks:
           - id: eslint
-            files: \.([cjt]sx?|[cm]ts|[cm]js|cvue)$ # *.js, *.jsx, *.ts, *.tsx and *.vue
             args: ["--config", "frontend/eslint.config.mjs"]
-            additional_dependencies:
-                - eslint@9.11.0
-                - "@vue/eslint-config-prettier@9.0.0"
-                - "@vue/eslint-config-typescript@13.0.0"
-                - eslint-plugin-cypress@3.3.0
-                - eslint-plugin-vue@9.26.0
-                - globals@15.6.0
