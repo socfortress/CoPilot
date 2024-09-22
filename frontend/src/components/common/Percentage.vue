@@ -10,7 +10,7 @@
 			direction
 		]"
 	>
-		<span class="progress" v-if="progress && progress === 'line'">
+		<span v-if="progress && progress === 'line'" class="progress">
 			<n-progress
 				type="line"
 				:status="direction === 'up' ? 'success' : 'error'"
@@ -21,14 +21,14 @@
 			/>
 		</span>
 		<span v-if="icon && icon === 'arrow'" class="flex items-center percentage-icon">
-			<Icon v-if="direction === 'up'" :name="ChevronUp"></Icon>
-			<Icon v-if="direction === 'down'" :name="ChevronDown"></Icon>
+			<Icon v-if="direction === 'up'" :name="ChevronUp" />
+			<Icon v-if="direction === 'down'" :name="ChevronDown" />
 		</span>
 		<span v-if="icon && icon === 'operator'" class="percentage-icon">
 			{{ direction === "up" ? "+" : "-" }}
 		</span>
 		<span>{{ value }}%</span>
-		<span class="progress flex items-center" v-if="progress && progress === 'circle'">
+		<span v-if="progress && progress === 'circle'" class="progress flex items-center">
 			<n-progress
 				type="circle"
 				:status="direction === 'up' ? 'success' : 'error'"
@@ -42,9 +42,9 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { NProgress } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NProgress } from "naive-ui"
+import { toRefs } from "vue"
 
 export interface PercentageProps {
 	value: number

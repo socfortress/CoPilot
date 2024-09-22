@@ -19,19 +19,19 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import CollectItem from "@/components/artifacts/CollectItem.vue"
-import Api from "@/api"
 import type { CollectResult, FlowResult } from "@/types/flow.d"
+import Api from "@/api"
+import CollectItem from "@/components/artifacts/CollectItem.vue"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
+import { onBeforeMount, ref } from "vue"
 
 const { flow } = defineProps<{
 	flow: FlowResult

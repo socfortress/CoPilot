@@ -1,29 +1,35 @@
 <template>
 	<div class="soc-alert-actions flex flex-col gap-2 justify-center">
-		<n-button v-if="existCase" type="success" secondary @click="openSocCase()" :size="size">
-			<template #icon><Icon :name="ViewIcon"></Icon></template>
+		<n-button v-if="existCase" type="success" secondary :size="size" @click="openSocCase()">
+			<template #icon>
+				<Icon :name="ViewIcon"></Icon>
+			</template>
 			View SOC Case
 		</n-button>
 		<n-button
+			v-else-if="alertId"
 			:loading="loadingCaseCreation"
 			type="warning"
 			secondary
-			@click="createCase()"
 			:size="size"
-			v-else-if="alertId"
+			@click="createCase()"
 		>
-			<template #icon><Icon :name="DangerIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DangerIcon"></Icon>
+			</template>
 			Create SOC Case
 		</n-button>
 		<n-button
+			v-if="alertId"
 			:loading="loadingAlertDelete"
 			:size="size"
 			type="error"
 			secondary
 			@click="handleDelete()"
-			v-if="alertId"
 		>
-			<template #icon><Icon :name="DeleteIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DeleteIcon"></Icon>
+			</template>
 			Delete
 		</n-button>
 
@@ -39,9 +45,9 @@
 			<div class="h-full w-full flex items-center justify-center">
 				<SocCaseItem
 					v-if="caseId"
-					:caseId="caseId"
+					:case-id="caseId"
 					embedded
-					hideSocAlertLink
+					hide-soc-alert-link
 					hide-soc-case-action
 					class="w-full"
 				/>
@@ -51,12 +57,18 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, useDialog, useMessage, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { computed, ref, watch } from "vue"
-import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
+import { NButton, NModal, useDialog, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
+
+const { alertId, caseId, size } = defineProps<{
+	alertId?: string | number | null
+	caseId?: string | number | null
+	size?: Size
+}>()
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -64,12 +76,6 @@ const emit = defineEmits<{
 	(e: "caseCreated", value: string | number): void
 	(e: "deleted"): void
 	(e: "startDeleting"): void
-}>()
-
-const { alertId, caseId, size } = defineProps<{
-	alertId?: string | number | null
-	caseId?: string | number | null
-	size?: Size
 }>()
 
 const DeleteIcon = "ph:trash"

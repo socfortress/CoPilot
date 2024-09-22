@@ -2,27 +2,28 @@
 	<Icon
 		:name="loadingBookmark ? LoadingIcon : isBookmark ? StarActiveIcon : StarIcon"
 		:size="16"
-		@click="toggleBookmark()"
 		class="toggler-bookmark"
 		:class="{ active: isBookmark }"
+		@click="toggleBookmark()"
 	></Icon>
 </template>
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import Icon from "@/components/common/Icon.vue"
-import { ref, toRefs } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useMessage } from "naive-ui"
-
-const emit = defineEmits<{
-	(e: "bookmark", value: boolean): void
-}>()
+import { ref, toRefs } from "vue"
 
 const props = defineProps<{
 	alert: SocAlert
 	isBookmark?: boolean
 }>()
+
+const emit = defineEmits<{
+	(e: "bookmark", value: boolean): void
+}>()
+
 const { alert, isBookmark } = toRefs(props)
 
 const StarActiveIcon = "carbon:star-filled"
@@ -41,7 +42,7 @@ function toggleBookmark() {
 		Api.soc[method](alert.value.alert_id.toString())
 			.then(res => {
 				if (res.data.success) {
-					emit("bookmark", method === "removeAlertBookmark" ? false : true)
+					emit("bookmark", method !== "removeAlertBookmark")
 					message.success(res.data?.message || "Stream started.")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")

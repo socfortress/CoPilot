@@ -1,11 +1,11 @@
 <template>
 	<div class="card-wrapper">
 		<n-spin :show="showSpin" class="h-full">
-			<slot :expand="expand" :reload="reload" :isExpand="isExpand"></slot>
+			<slot :expand="expand" :reload="reload" :is-expand="isExpand" />
 		</n-spin>
 		<n-modal v-model:show="showModal" display-directive="show" class="card-modal-wrapper">
 			<n-spin :show="showSpin">
-				<slot :expand="expand" :reload="reload" :isExpand="isExpand"></slot>
+				<slot :expand="expand" :reload="reload" :is-expand="isExpand" />
 			</n-spin>
 		</n-modal>
 	</div>

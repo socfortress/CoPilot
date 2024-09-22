@@ -1,6 +1,6 @@
 <template>
 	<div class="artifacts-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -38,7 +38,7 @@
 							type="success"
 							:offset="[-4, 0]"
 						>
-							<n-button size="small" v-show="!isFilterPreselected" @click="showFilters = true">
+							<n-button v-show="!isFilterPreselected" size="small" @click="showFilters = true">
 								<template #icon>
 									<Icon :name="FilterIcon"></Icon>
 								</template>
@@ -50,14 +50,8 @@
 					<div class="px-3">
 						<n-input-group class="artifacts-list-filter-combo" :class="{ 'filters-active': filterType }">
 							<n-select
-								class="artifacts-list-filter-type"
 								v-model:value="filterType"
-								@update:value="
-									() => {
-										filters.hostname = undefined
-										filters.os = undefined
-									}
-								"
+								class="artifacts-list-filter-type"
 								:options="[
 									{
 										label: 'Agent ',
@@ -70,6 +64,12 @@
 								]"
 								placeholder="Filters..."
 								clearable
+								@update:value="
+									() => {
+										filters.hostname = undefined
+										filters.os = undefined
+									}
+								"
 							/>
 
 							<n-select
@@ -91,8 +91,8 @@
 						</n-input-group>
 					</div>
 					<div class="px-3 flex justify-end gap-2">
-						<n-button size="small" @click="showFilters = false" secondary>Close</n-button>
-						<n-button size="small" @click="getData()" type="primary" secondary>Submit</n-button>
+						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
+						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
 				</div>
 			</n-popover>
@@ -108,40 +108,41 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="totalArtifacts"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed, nextTick, watch } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NInputGroup, NBadge } from "naive-ui"
-import Api from "@/api"
-import _cloneDeep from "lodash/cloneDeep"
-import Icon from "@/components/common/Icon.vue"
-import ArtifactItem from "./ArtifactItem.vue"
-import type { Agent } from "@/types/agents.d"
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
+import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
+import _cloneDeep from "lodash/cloneDeep"
+import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import ArtifactItem from "./ArtifactItem.vue"
+
+const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
 	(e: "loaded-artifacts", value: Artifact[]): void
 }>()
 
-const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
 const { agentHostname, agents, artifacts } = toRefs(props)
 
 const message = useMessage()

@@ -1,6 +1,8 @@
 <template>
 	<n-button :size="size" :type="type" @click="showForm = true">
-		<template #icon><Icon :name="PackIcon"></Icon></template>
+		<template #icon>
+			<Icon :name="PackIcon"></Icon>
+		</template>
 		Stack Provisioning
 	</n-button>
 
@@ -18,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NButton, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import StackProvisioningList from "./StackProvisioningList.vue"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref } from "vue"
+import StackProvisioningList from "./StackProvisioningList.vue"
 
 const { type, size } = defineProps<{
 	size?: Size

@@ -25,8 +25,8 @@
 						<template #value>
 							<div class="flex">
 								<CaseStatusSwitch
-									:caseData
 									v-slot="{ loading: loadingStatus }"
+									:case-data
 									@updated="updateCase($event)"
 								>
 									<div
@@ -60,8 +60,8 @@
 						<template #value>
 							<div class="flex">
 								<CaseAssignUser
-									:caseData
 									v-slot="{ loading: loadingAssignee }"
+									:case-data
 									@updated="updateCase($event)"
 								>
 									<div
@@ -105,14 +105,37 @@
 
 					<KVCard>
 						<template #key>creation time</template>
-						<template #value>{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}</template>
+						<template #value>
+							{{
+								caseData.case_creation_time
+									? formatDate(caseData.case_creation_time, dFormats.datetime)
+									: "-"
+							}}
+						</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>customer code</template>
+						<template #value>
+							<code
+								v-if="caseData.customer_code"
+								class="cursor-pointer text-primary-color"
+								@click="gotoCustomer({ code: caseData.customer_code })"
+							>
+								{{ caseData.customer_code }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+							<span v-else>-</span>
+						</template>
 					</KVCard>
 				</div>
 			</div>
 
 			<div class="footer-box px-7 py-4 flex justify-end">
 				<n-button type="error" secondary @click="handleDelete()">
-					<template #icon><Icon :name="TrashIcon" /></template>
+					<template #icon>
+						<Icon :name="TrashIcon" />
+					</template>
 					Delete
 				</n-button>
 			</div>
@@ -121,30 +144,33 @@
 </template>
 
 <script setup lang="ts">
+import type { Case } from "@/types/incidentManagement/cases.d"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
-import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
-import StatusIcon from "../common/StatusIcon.vue"
-import AssigneeIcon from "../common/AssigneeIcon.vue"
-import KVCard from "@/components/common/KVCard.vue"
-import Icon from "@/components/common/Icon.vue"
 import { handleDeleteCase } from "./utils"
-import { formatDate } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
-import type { Case } from "@/types/incidentManagement/cases.d"
 
 const props = defineProps<{ caseData: Case }>()
-const { caseData } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
 
+const { caseData } = toRefs(props)
+
 const TrashIcon = "carbon:trash-can"
+const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
+const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

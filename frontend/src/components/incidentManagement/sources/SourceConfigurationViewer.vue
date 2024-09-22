@@ -10,7 +10,7 @@
 			<template #key>Field names</template>
 			<template #value>
 				<div class="flex flex-wrap gap-2">
-					<Badge type="splitted" v-for="field of sourceConfiguration.field_names" :key="field" fluid>
+					<Badge v-for="field of sourceConfiguration.field_names" :key="field" type="splitted" fluid>
 						<template #value>
 							{{ field }}
 						</template>
@@ -40,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
+import type { SourceConfiguration } from "@/types/incidentManagement/sources.d"
 import Badge from "@/components/common/Badge.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import type { SourceConfiguration } from "@/types/incidentManagement/sources.d"
 
 const { sourceConfiguration, showSource } = defineProps<{
 	sourceConfiguration: SourceConfiguration

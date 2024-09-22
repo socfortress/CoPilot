@@ -1,24 +1,24 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<Icon :name="ShieldIcon" v-if="health === IndexHealth.GREEN" :size="18"></Icon>
-		<Icon :name="WarningIcon" v-if="health === IndexHealth.YELLOW" :size="18"></Icon>
-		<Icon :name="DangerIcon" v-if="health === IndexHealth.RED" :size="18"></Icon>
+		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="18"></Icon>
+		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="18"></Icon>
+		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="18"></Icon>
 	</span>
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import Icon from "@/components/common/Icon.vue"
-
-const ShieldIcon = "majesticons:shield-check-line"
-const WarningIcon = "majesticons:shield-exclamation-line"
-const DangerIcon = "majesticons:exclamation-line"
+import { IndexHealth, type IndexStats } from "@/types/indices.d"
+import { toRefs } from "vue"
 
 const props = defineProps<{
 	health: IndexStats["health"]
 	color?: boolean
 }>()
+const ShieldIcon = "majesticons:shield-check-line"
+const WarningIcon = "majesticons:shield-exclamation-line"
+const DangerIcon = "majesticons:exclamation-line"
+
 const { health, color } = toRefs(props)
 </script>
 

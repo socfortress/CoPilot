@@ -2,18 +2,18 @@
 	<div class="page">
 		<CustomersList :highlight="highlight" :reload="reload" @reloaded="reload = false">
 			<CustomerDefaultSettingsButton />
-			<CustomerCreationButton v-model:openForm="openForm" @submitted="reload = true" />
+			<CustomerCreationButton v-model:open-form="openForm" @submitted="reload = true" />
 		</CustomersList>
 	</div>
 </template>
 
 <script setup lang="ts">
-import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerCreationButton from "@/components/customers/CustomerCreationButton.vue"
+import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerDefaultSettingsButton from "@/components/customers/provision/CustomerDefaultSettingsButton.vue"
+import { emitter } from "@/emitter"
 import { onBeforeMount, onMounted, onUnmounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import { emitter } from "@/emitter"
 
 const route = useRoute()
 const router = useRouter()

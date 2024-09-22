@@ -1,17 +1,17 @@
 <template>
 	<div class="icon" :class="{ boxed }" :style="`--size:${boxSize}px`">
-		<div class="bg" v-if="boxed"></div>
-		<Icon :size="iconFinalSize" v-if="$slots.default">
+		<div v-if="boxed" class="bg"></div>
+		<Icon v-if="$slots.default" :size="iconFinalSize">
 			<slot></slot>
 		</Icon>
-		<Icon :size="iconFinalSize" :name="iconName" v-else></Icon>
+		<Icon v-else :size="iconFinalSize" :name="iconName"></Icon>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { toRefs, computed } from "vue"
-import { useThemeStore } from "@/stores/theme"
 import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
+import { computed, toRefs } from "vue"
 
 const props = withDefaults(
 	defineProps<{

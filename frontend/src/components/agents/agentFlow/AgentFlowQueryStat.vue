@@ -25,17 +25,21 @@
 					{{ artifact }}
 				</span>
 			</div>
-			<div class="error-message" v-if="stat.error_message">
+			<div v-if="stat.error_message" class="error-message">
 				{{ stat.error_message }}
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-1">
 				<Badge type="splitted" color="primary">
 					<template #label>Status</template>
-					<template #value>{{ stat.status || "-" }}</template>
+					<template #value>
+						{{ stat.status || "-" }}
+					</template>
 				</Badge>
 				<Badge type="splitted" color="primary">
 					<template #label>Duration</template>
-					<template #value>{{ duration }}</template>
+					<template #value>
+						{{ duration }}
+					</template>
 				</Badge>
 			</div>
 		</div>
@@ -55,16 +59,20 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="`Agent Query Stat ${stat.Artifact ? ': ' + stat.Artifact : ''}`"
+			:title="`Agent Query Stat ${stat.Artifact ? `: ${stat.Artifact}` : ''}`"
 			:bordered="false"
 			segmented
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value === "" ? "-" : value ?? "-" }}</template>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value === "" ? "-" : value ?? "-" }}
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -89,16 +97,16 @@
 </template>
 
 <script setup lang="ts">
-import { NModal, NTabs, NTabPane, NInput, NButton } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
-import { formatDate } from "@/utils"
 import type { FlowQueryStat } from "@/types/flow.d"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import { computed, ref } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import dayjs from "@/utils/dayjs"
 import _pick from "lodash/pick"
-import Badge from "@/components/common/Badge.vue"
+import { NButton, NInput, NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, ref } from "vue"
 
 const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
 

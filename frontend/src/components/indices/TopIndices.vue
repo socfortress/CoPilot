@@ -9,17 +9,17 @@
 </template>
 
 <script setup lang="ts">
+import { useThemeStore } from "@/stores/theme"
+import { IndexHealth, type IndexStats } from "@/types/indices.d"
+import bytes from "bytes"
+import { PieChart } from "echarts/charts"
+
+import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
 import { type ECharts, init as echartsInit, use as echartsUse } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
-import { PieChart } from "echarts/charts"
-import { TooltipComponent, LegendComponent, GridComponent } from "echarts/components"
-
-import { computed, onMounted, ref, toRefs, watch } from "vue"
-import { type IndexStats, IndexHealth } from "@/types/indices.d"
-import bytes from "bytes"
 import _ from "lodash"
-import { NSpin, NCard } from "naive-ui"
-import { useThemeStore } from "@/stores/theme"
+import { NCard, NSpin } from "naive-ui"
+import { computed, onMounted, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
@@ -136,7 +136,7 @@ function getOptions() {
 					minMargin: 10,
 					edgeDistance: 10,
 					lineHeight: 15,
-					//alignTo: "edge",
+					// alignTo: "edge",
 					rich: {
 						name: {
 							color: style.value["fg-color"],
@@ -149,10 +149,7 @@ function getOptions() {
 						}
 					}
 				},
-				labelLayout: function (params: {
-					labelLinePoints: Array<number[]>
-					labelRect: { x: number; width: number }
-				}) {
+				labelLayout(params: { labelLinePoints: Array<number[]>; labelRect: { x: number; width: number } }) {
 					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
 					const points = params.labelLinePoints
 					// Update the end point.

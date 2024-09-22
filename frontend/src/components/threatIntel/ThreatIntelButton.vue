@@ -1,6 +1,8 @@
 <template>
 	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
-		<template #icon><Icon :name="ThreatIcon"></Icon></template>
+		<template #icon>
+			<Icon :name="ThreatIcon"></Icon>
+		</template>
 		Threat Intel
 	</n-button>
 
@@ -18,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import ThreatIntelForm from "./ThreatIntelForm.vue"
-import Icon from "@/components/common/Icon.vue"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NDrawer, NDrawerContent } from "naive-ui"
+import { ref, watch } from "vue"
+import ThreatIntelForm from "./ThreatIntelForm.vue"
 
 const { type, size } = defineProps<{
 	size?: Size

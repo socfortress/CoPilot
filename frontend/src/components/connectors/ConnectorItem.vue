@@ -11,7 +11,7 @@
 								round
 								:size="40"
 								:src="`/images/connectors/${
-									connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'
+									connector ? `${connector.connector_name.toLowerCase()}.svg` : 'default-logo.svg'
 								}`"
 								:alt="`${connector.connector_name} Logo`"
 								fallback-src="/images/img-not-found.svg"
@@ -19,11 +19,13 @@
 						</div>
 
 						<div class="info flex flex-col gap-2">
-							<div class="name">{{ connector.connector_name }}</div>
-							<div class="description" v-if="connector.connector_description">
+							<div class="name">
+								{{ connector.connector_name }}
+							</div>
+							<div v-if="connector.connector_description" class="description">
 								{{ connector.connector_description }}
 							</div>
-							<div class="extra-data" v-if="connector.connector_extra_data">
+							<div v-if="connector.connector_extra_data" class="extra-data">
 								{{ connector.connector_extra_data }}
 							</div>
 						</div>
@@ -54,11 +56,11 @@
 
 				<div class="actions-box flex flex-col gap-2 justify-center">
 					<n-button
-						type="primary"
 						v-if="!connector.connector_verified"
-						@click="verify(connector)"
+						type="primary"
 						:loading="loadingVerify"
 						size="small"
+						@click="verify(connector)"
 					>
 						<template #icon>
 							<Icon :name="VerifyIcon"></Icon>
@@ -69,8 +71,8 @@
 					<n-button
 						:type="!connector.connector_configured ? 'primary' : undefined"
 						:loading="loadingConfiguration"
-						@click="openConfigDialog()"
 						size="small"
+						@click="openConfigDialog()"
 					>
 						<template #icon>
 							<Icon :name="DetailsIcon"></Icon>
@@ -83,8 +85,8 @@
 		</div>
 
 		<n-modal
-			title="Connector configuration"
 			v-model:show="showConfigDialog"
+			title="Connector configuration"
 			:mask-closable="false"
 			:close-on-esc="false"
 			width="600px"
@@ -92,8 +94,8 @@
 			<n-card style="width: 90vw; max-width: 500px">
 				<ConfigForm
 					v-if="showConfigDialog"
-					@loading="loadingConfiguration = $event"
 					:connector="connector"
+					@loading="loadingConfiguration = $event"
 					@close="closeConfigDialog"
 				/>
 			</n-card>
@@ -102,22 +104,23 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, ref, toRefs } from "vue"
-import Api from "@/api"
-import { NAvatar, useMessage, NModal, NSpin, NButton, NCard } from "naive-ui"
 import type { Connector } from "@/types/connectors.d"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { NAvatar, NButton, NCard, NModal, NSpin, useMessage } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 import ConfigForm from "./ConfigForm"
+
+const props = defineProps<{
+	connector: Connector
+}>()
 
 const emit = defineEmits<{
 	(e: "verified"): void
 	(e: "updated"): void
 }>()
 
-const props = defineProps<{
-	connector: Connector
-}>()
 const { connector } = toRefs(props)
 
 const DetailsIcon = "carbon:settings-adjust"

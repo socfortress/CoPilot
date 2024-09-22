@@ -507,18 +507,43 @@ async def return_graylog_events_index_names():
     return list(indices.keys())
 
 
+# async def get_index_source(index_name: str):
+#     """
+#     Get the 10 latest results from the index and search for where the source contains a field name of `syslog_type` or `integration`
+#     """
+#     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+#     query = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
+#     response = es_client.search(index=index_name, body=query)
+#     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
+#         if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
+#             if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
+#                 return hit["_source"]["integration"]  # Return the value of 'integration' if 'syslog_type' equals 'integration'
+#             return hit["_source"]["syslog_type"]  # Return the value of 'syslog_type' for other cases
+#     raise HTTPException(status_code=404, detail=f"Source not found in index {index_name}")
+
+
 async def get_index_source(index_name: str):
     """
     Get the 10 latest results from the index and search for where the source contains a field name of `syslog_type` or `integration`
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    query = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
-    response = es_client.search(index=index_name, body=query)
+
+    # First search for 'syslog_type'
+    query_syslog_type = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
+    response = es_client.search(index=index_name, body=query_syslog_type)
     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
         if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
             if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
                 return hit["_source"]["integration"]  # Return the value of 'integration' if 'syslog_type' equals 'integration'
             return hit["_source"]["syslog_type"]  # Return the value of 'syslog_type' for other cases
+
+    # If no 'syslog_type' found, search for 'integration'
+    query_integration = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "integration"}}]}}}
+    response = es_client.search(index=index_name, body=query_integration)
+    for hit in response["hits"]["hits"]:  # Loop through each hit in the response
+        if "integration" in hit["_source"]:  # Check if 'integration' exists in the source of the hit
+            return hit["_source"]["integration"]  # Return the value of 'integration'
+
     raise HTTPException(status_code=404, detail=f"Source not found in index {index_name}")
 
 

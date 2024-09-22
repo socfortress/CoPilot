@@ -5,9 +5,11 @@
 SOCFortress CoPilot
 
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://socfortress.medium.com/)
-[![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@taylorwalton_socfortress/videos)
+[![YouTube Channel Subscribers](https://img.shields.io/youtube/channel/subscribers/UC4EUQtTxeC8wGrKRafI6pZg)](https://www.youtube.com/@taylorwalton_socfortress/videos)
 [![Discord Shield](https://discordapp.com/api/guilds/871419379999469568/widget.png?style=shield)](https://discord.gg/UN3pNBzaEQ)
 [![GitHub Sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/taylorwalton)
+
+[![Email Us](https://img.shields.io/badge/📧%20Email%20Us-We're%20Here%20to%20Help!-orange?style=for-the-badge)](https://www.socfortress.co/contact_form.html)
 
 </h1><h4 align="center">
 
@@ -83,7 +85,7 @@ systemctl restart docker
 
 ```bash
 #  Clone the CoPilot repository
-wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.1/docker-compose.yml
+wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.2/docker-compose.yml
 
 # Edit the docker-compose.yml file to set the server name and/or the services you want to use
 
@@ -91,6 +93,7 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.1/docker-compose
 mkdir data
 
 # Create the .env file based on the .env.example
+nano .env
 
 # Run Copilot
 docker compose up -d

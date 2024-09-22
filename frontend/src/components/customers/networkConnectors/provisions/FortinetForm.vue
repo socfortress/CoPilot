@@ -1,5 +1,5 @@
 <template>
-	<n-form class="flex flex-col gap-5" :model="options" :rules="rules" ref="formRef">
+	<n-form class="flex flex-col gap-5" :model="options" :rules="rules">
 		<n-form-item label="Protocol" label-placement="left" :show-feedback="false" size="small" path="protocol">
 			<n-select v-model:value="options.protocol" :options="protocolOptions" />
 		</n-form-item>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { NFormItem, NSelect, NForm, NInputNumber, type FormRules, type FormItemRule } from "naive-ui"
+import { type FormItemRule, type FormRules, NForm, NFormItem, NInputNumber, NSelect } from "naive-ui"
 
 export interface FortinetModel {
 	protocol: "tcp" | "udp"

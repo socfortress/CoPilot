@@ -9,7 +9,7 @@ declare global {
 		readonly ready: Promise<undefined>
 		readonly finished: Promise<undefined>
 		readonly updateCallbackDone: Promise<undefined>
-		skipTransition(): void
+		skipTransition: () => void
 	}
 
 	interface CSSStyleDeclaration {

@@ -1,8 +1,8 @@
 <template>
 	<form class="file-drop">
 		<label>
-			<slot></slot>
-			<input type="file" :multiple="multiple" @change="onChange" :accept="accept" />
+			<slot />
+			<input type="file" :multiple="multiple" :accept @change="onChange" />
 		</label>
 	</form>
 </template>
@@ -17,11 +17,11 @@ const props = withDefaults(
 	}>(),
 	{ accept: ".jpg,.jpeg,.png,.webp", multiple: false }
 )
-const { accept, multiple } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "change-file", value: FileList | File | null): void
 }>()
+
+const { accept, multiple } = toRefs(props)
 
 function onChange(event: Event) {
 	const input = event.target as HTMLInputElement

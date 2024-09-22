@@ -2,11 +2,11 @@
 	<div class="soc-assets-list">
 		<n-spin :show="loadingAssets" style="min-height: 50px">
 			<div class="flex flex-col gap-2 px-7 py-4 pb-0">
-				<div class="box" v-if="assetsState">
+				<div v-if="assetsState" class="box">
 					State:
 					<code>{{ assetsState.object_state }}</code>
 				</div>
-				<div class="box" v-if="assetsState">
+				<div v-if="assetsState" class="box">
 					Last update:
 					<code>{{ formatDateTime(assetsState.object_last_update) }}</code>
 				</div>
@@ -15,21 +15,20 @@
 				<SocCaseAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
 			</div>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loadingAssets" />
+				<n-empty v-if="!loadingAssets" description="No items found" class="justify-center h-48" />
 			</template>
 		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
+import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
 import Api from "@/api"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
-import { onBeforeMount } from "vue"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
+import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
 
 const { caseId } = defineProps<{ caseId: string | number }>()
 

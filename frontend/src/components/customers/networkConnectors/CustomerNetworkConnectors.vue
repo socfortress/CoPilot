@@ -3,16 +3,16 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm">
 				<CustomerNetworkConnectorForm
-					:customerCode="customerCode"
-					:customerName="customerName"
-					:disabledIdsList="disabledIds"
+					:customer-code="customerCode"
+					:customer-name="customerName"
+					:disabled-ids-list="disabledIds"
 					@submitted="refreshList()"
 					@close="closeForm()"
 				/>
 			</div>
 			<div v-else>
 				<div class="flex items-center justify-between gap-4 px-7 pt-2">
-					<n-button size="small" @click="openForm()" type="primary">
+					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14"></Icon>
 						</template>
@@ -26,19 +26,19 @@
 							<CustomerNetworkConnectorItem
 								v-for="networkConnector of list"
 								:key="networkConnector.id"
-								:networkConnector="networkConnector"
+								:network-connector="networkConnector"
+								embedded
+								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@deployed="refreshList()"
 								@deleted="refreshList()"
 								@decommissioned="refreshList()"
-								embedded
-								class="item-appear item-appear-bottom item-appear-005 mb-2"
 							/>
 						</template>
 						<template v-else>
 							<n-empty
+								v-if="!loading"
 								description="No network connectors found"
 								class="justify-center h-48"
-								v-if="!loading"
 							/>
 						</template>
 					</div>
@@ -49,13 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import CustomerNetworkConnectorForm from "./CustomerNetworkConnectorForm.vue"
 import CustomerNetworkConnectorItem from "./CustomerNetworkConnectorItem.vue"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 
 const { customerCode, customerName } = defineProps<{
 	customerCode: string

@@ -3,7 +3,7 @@
 		<div class="header flex items-start gap-2">
 			<div class="flex flex-col gap-2 w-full">
 				<div class="grow flex items-center gap-2 flex-wrap">
-					<div class="grow basis-56" v-if="!hideHostnameField">
+					<div v-if="!hideHostnameField" class="grow basis-56">
 						<n-select
 							v-model:value="filters.hostname"
 							:options="agentHostnameOptions"
@@ -27,7 +27,7 @@
 							:loading="loadingArtifacts"
 						/>
 					</div>
-					<div class="grow basis-56" v-if="!hideVelociraptorIdField">
+					<div v-if="!hideVelociraptorIdField" class="grow basis-56">
 						<n-input
 							v-model:value="filters.velociraptor_id"
 							placeholder="Velociraptor id"
@@ -52,7 +52,7 @@
 				</div>
 				<div class="grow flex items-center justify-end gap-2 flex-wrap-reverse">
 					<div class="badges-box flex gap-2 flex-wrap grow">
-						<n-tooltip trigger="hover" v-if="commandTime">
+						<n-tooltip v-if="commandTime" trigger="hover">
 							<template #trigger>
 								<Badge type="splitted" color="primary" hint-cursor>
 									<template #iconLeft>
@@ -62,9 +62,9 @@
 										<span class="flex">
 											{{ formatDate(commandTime, dFormats.timesec) }}
 
-											<n-spin :size="12" v-if="loading" class="ml-2" />
+											<n-spin v-if="loading" :size="12" class="ml-2" />
 
-											{{ responseTime ? " / " + formatDate(responseTime, dFormats.timesec) : "" }}
+											{{ responseTime ? ` / ${formatDate(responseTime, dFormats.timesec)}` : "" }}
 										</span>
 									</template>
 								</Badge>
@@ -72,7 +72,7 @@
 							Last request time / last response time
 						</n-tooltip>
 
-						<Badge type="splitted" color="primary" v-if="diffTime">
+						<Badge v-if="diffTime" type="splitted" color="primary">
 							<template #iconLeft>
 								<Icon :name="StopWatchIcon" :size="15"></Icon>
 							</template>
@@ -83,11 +83,11 @@
 					</div>
 					<n-button
 						size="small"
-						@click="getData()"
 						type="primary"
 						secondary
 						:loading="loading"
 						:disabled="!areFiltersValid"
+						@click="getData()"
 					>
 						Submit
 					</n-button>
@@ -105,7 +105,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -113,24 +113,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
-import { useMessage, NSpin, NButton, NEmpty, NSelect, NInput, NTooltip } from "naive-ui"
-import Api from "@/api"
-import CommandItem from "./CommandItem.vue"
-import Badge from "@/components/common/Badge.vue"
-import type { Agent } from "@/types/agents.d"
 import type { CommandRequest } from "@/api/endpoints/artifacts"
+import type { Agent } from "@/types/agents.d"
 import type { Artifact, CommandResult } from "@/types/artifacts.d"
-import dayjs from "@/utils/dayjs"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-// import { commandResult } from "./mock"
-
-const emit = defineEmits<{
-	(e: "loaded-agents", value: Agent[]): void
-	(e: "loaded-artifacts", value: Artifact[]): void
-}>()
+import dayjs from "@/utils/dayjs"
+import { NButton, NEmpty, NInput, NSelect, NSpin, NTooltip, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
+import CommandItem from "./CommandItem.vue"
 
 const props = defineProps<{
 	hostname?: string
@@ -139,6 +133,14 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
+
+// import { commandResult } from "./mock"
+
+const emit = defineEmits<{
+	(e: "loaded-agents", value: Agent[]): void
+	(e: "loaded-artifacts", value: Artifact[]): void
+}>()
+
 const { hostname, agents, artifacts, hideHostnameField, hideVelociraptorIdField } = toRefs(props)
 
 const TimeIcon = "carbon:time"
@@ -157,7 +159,7 @@ const dFormats = useSettingsStore().dateFormat
 
 const diffTime = computed(() => {
 	if (commandTime.value && responseTime.value) {
-		return dayjs.duration(dayjs(responseTime.value).diff(commandTime.value, "ms", true)).asSeconds() + "s"
+		return `${dayjs.duration(dayjs(responseTime.value).diff(commandTime.value, "ms", true)).asSeconds()}s`
 	} else {
 		return null
 	}

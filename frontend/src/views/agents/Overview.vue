@@ -5,7 +5,7 @@
 				<Icon :name="ArrowIcon" :size="16"></Icon>
 				<span>Agents list</span>
 			</div>
-			<div class="delete-btn" @click.stop="handleDelete" v-if="agent">Delete Agent</div>
+			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
 		</div>
 		<n-spin
 			class="agent-header py-5 px-7 my-4"
@@ -15,7 +15,7 @@
 		>
 			<div class="info grow">
 				<div class="title">
-					<div class="critical" :class="{ active: agent?.critical_asset }" v-if="agent">
+					<div v-if="agent" class="critical" :class="{ active: agent?.critical_asset }">
 						<n-tooltip>
 							Toggle Critical Assets
 							<template #trigger>
@@ -37,9 +37,9 @@
 						{{ agent?.hostname }}
 					</h1>
 
-					<span class="online-badge" v-if="isOnline">ONLINE</span>
+					<span v-if="isOnline" class="online-badge">ONLINE</span>
 
-					<span class="quarantined-badge flex items-center gap-1" v-if="isQuarantined">
+					<span v-if="isQuarantined" class="quarantined-badge flex items-center gap-1">
 						<Icon :name="QuarantinedIcon" :size="15"></Icon>
 						<span>QUARANTINED</span>
 					</span>
@@ -104,29 +104,29 @@
 					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
 						<ArtifactsCollect
 							v-if="agent"
-							@loaded-artifacts="artifacts = $event"
 							:hostname="agent.hostname"
 							:artifacts
 							hide-hostname-field
+							@loaded-artifacts="artifacts = $event"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
 						<ArtifactsCommand
 							v-if="agent"
-							@loaded-artifacts="artifacts = $event"
 							:hostname="agent.hostname"
 							:artifacts
 							hide-hostname-field
+							@loaded-artifacts="artifacts = $event"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
 						<ArtifactsQuarantine
 							v-if="agent"
-							@action-performed="getAgent()"
-							@loaded-artifacts="artifacts = $event"
 							:hostname="agent.hostname"
 							:artifacts
 							hide-hostname-field
+							@action-performed="getAgent()"
+							@loaded-artifacts="artifacts = $event"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
@@ -139,15 +139,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, nextTick, defineAsyncComponent } from "vue"
-import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
-import { useRoute, useRouter } from "vue-router"
+import type { Artifact } from "@/types/artifacts.d"
 import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import type { Artifact } from "@/types/artifacts.d"
-import { AgentStatus, type Agent } from "@/types/agents.d"
+import { type Agent, AgentStatus } from "@/types/agents.d"
+import { NButton, NCard, NSpin, NTabPane, NTabs, NTooltip, useDialog, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
 
 const VulnerabilitiesGrid = defineAsyncComponent(
 	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")

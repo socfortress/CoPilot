@@ -9,17 +9,18 @@
 </template>
 
 <script setup lang="ts">
-import { useMessage, NSpin, NScrollbar, type ScrollbarInst } from "naive-ui"
-import { onBeforeMount, ref, toRefs, watch, nextTick } from "vue"
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
-import Rule from "./Rule.vue"
 import Api from "@/api"
+import { NScrollbar, NSpin, type ScrollbarInst, useMessage } from "naive-ui"
+import { nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import Rule from "./Rule.vue"
+
+const props = defineProps<{ highlight: string | null | undefined }>()
 
 const emit = defineEmits<{
 	(e: "loaded", value: { total: number }): void
 }>()
 
-const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
 const message = useMessage()

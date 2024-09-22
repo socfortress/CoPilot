@@ -1,6 +1,6 @@
+import type { RouteMetaAuth } from "@/types/auth.d"
+import type { Layout } from "@/types/theme.d"
 import "vue-router"
-import { Layout } from "@/types/theme.d"
-import { RouteMetaAuth } from "@/types/auth.d"
 
 // To ensure it is treated as a module, add at least one `export` statement
 export {}

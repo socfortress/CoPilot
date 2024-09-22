@@ -11,7 +11,7 @@
 		<template #default>
 			<NotificationsList :max-items="MAX_ITEMS" class="max-h-50vh">
 				<template #last>
-					<div class="flex justify-center p-4" v-if="list.length > MAX_ITEMS">
+					<div v-if="list.length > MAX_ITEMS" class="flex justify-center p-4">
 						<n-button text @click="showDrawer = true">View all</n-button>
 					</div>
 				</template>
@@ -33,14 +33,14 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NText, NPopover, NBadge, NDrawer, NDrawerContent } from "naive-ui"
-import { computed, ref, onBeforeMount } from "vue"
-import { useThemeStore } from "@/stores/theme"
 import Icon from "@/components/common/Icon.vue"
 import NotificationsList from "@/components/common/Notifications/List.vue"
 import NotificationsToolbar from "@/components/common/Notifications/Toolbar.vue"
-import { useNotifications } from "@/composables/useNotifications"
 import { useHealthchecksNotify } from "@/composables/useHealthchecksNotify"
+import { useNotifications } from "@/composables/useNotifications"
+import { useThemeStore } from "@/stores/theme"
+import { NBadge, NButton, NDrawer, NDrawerContent, NPopover, NText } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 
 const BellIcon = "ph:bell"
 

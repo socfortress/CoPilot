@@ -1,15 +1,24 @@
+import hashlib
 from typing import List
+from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.data_store.data_store_operations import delete_file
+from app.data_store.data_store_operations import download_case_data_store
+from app.data_store.data_store_operations import upload_case_data_store
+from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
@@ -19,6 +28,7 @@ from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
@@ -40,6 +50,16 @@ from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+
+
+async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
+    result = await db.execute(select(AlertCreationSettings).where(AlertCreationSettings.customer_code == customer_code))
+    if result.scalars().first():
+        return True
+    raise HTTPException(status_code=404, detail="Customer code not found")
 
 
 async def alert_total(db: AsyncSession) -> int:
@@ -126,6 +146,145 @@ async def alerts_in_progress_by_assigned_to(db: AsyncSession, assigned_to: str) 
 async def alerts_open_by_assigned_to(db: AsyncSession, assigned_to: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.assigned_to == assigned_to)))
     return len(result.scalars().all())
+
+
+async def alerts_total_by_customer_code(db: AsyncSession, customer_code: str) -> int:
+    result = await db.execute(select(Alert).where(Alert.customer_code == customer_code))
+    return len(result.scalars().all())
+
+
+async def alerts_closed_by_customer_code(db: AsyncSession, customer_code: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.customer_code == customer_code)))
+    return len(result.scalars().all())
+
+
+async def alerts_in_progress_by_customer_code(db: AsyncSession, customer_code: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.customer_code == customer_code)))
+    return len(result.scalars().all())
+
+
+async def alerts_open_by_customer_code(db: AsyncSession, customer_code: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.customer_code == customer_code)))
+    return len(result.scalars().all())
+
+
+async def alerts_total_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where(Alert.source == source))
+    return len(result.scalars().all())
+
+
+async def alerts_closed_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.source == source)))
+    return len(result.scalars().all())
+
+
+async def alerts_in_progress_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.source == source)))
+    return len(result.scalars().all())
+
+
+async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
+    return len(result.scalars().all())
+
+
+async def alerts_total_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    source: Optional[str] = None,
+) -> int:
+    # Build dynamic filters
+    filters = []
+    if assigned_to:
+        filters.append(Alert.assigned_to == assigned_to)
+    if alert_title:
+        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+    if customer_code:
+        filters.append(Alert.customer_code == customer_code)
+    if source:
+        filters.append(Alert.source == source)
+
+    # Build the query
+    query = select(func.count()).select_from(Alert).where(*filters)
+
+    result = await db.execute(query)
+    total = result.scalar_one()
+    return total
+
+
+async def alerts_closed_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    source: Optional[str] = None,
+) -> int:
+    # Include the status filter
+    filters = [Alert.status == "CLOSED"]
+    if assigned_to:
+        filters.append(Alert.assigned_to == assigned_to)
+    if alert_title:
+        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+    if customer_code:
+        filters.append(Alert.customer_code == customer_code)
+    if source:
+        filters.append(Alert.source == source)
+
+    query = select(func.count()).select_from(Alert).where(*filters)
+
+    result = await db.execute(query)
+    closed_count = result.scalar_one()
+    return closed_count
+
+
+async def alerts_in_progress_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    source: Optional[str] = None,
+) -> int:
+    filters = [Alert.status == "IN_PROGRESS"]
+    if assigned_to:
+        filters.append(Alert.assigned_to == assigned_to)
+    if alert_title:
+        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+    if customer_code:
+        filters.append(Alert.customer_code == customer_code)
+    if source:
+        filters.append(Alert.source == source)
+
+    query = select(func.count()).select_from(Alert).where(*filters)
+
+    result = await db.execute(query)
+    in_progress_count = result.scalar_one()
+    return in_progress_count
+
+
+async def alerts_open_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    source: Optional[str] = None,
+) -> int:
+    filters = [Alert.status == "OPEN"]
+    if assigned_to:
+        filters.append(Alert.assigned_to == assigned_to)
+    if alert_title:
+        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+    if customer_code:
+        filters.append(Alert.customer_code == customer_code)
+    if source:
+        filters.append(Alert.source == source)
+
+    query = select(func.count()).select_from(Alert).where(*filters)
+
+    result = await db.execute(query)
+    open_count = result.scalar_one()
+    return open_count
 
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
@@ -440,6 +599,17 @@ async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSessi
     return case
 
 
+async def update_case_customer_code(case_id: int, customer_code: str, db: AsyncSession) -> Case:
+    await customer_code_valid(customer_code, db)
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    case.customer_code = customer_code
+    await db.commit()
+    return case
+
+
 async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
@@ -650,6 +820,7 @@ async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
         case_description=alert.alert_description,
         case_status=alert.status,
         assigned_to=alert.assigned_to,
+        customer_code=alert.customer_code,
     )
     db.add(case)
     try:
@@ -728,6 +899,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         assigned_to=case.assigned_to,
         alerts=alerts_out,
         case_creation_time=case.case_creation_time,
+        customer_code=case.customer_code,
     )
     return case_out
 
@@ -775,6 +947,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             alerts=alerts_out,
             case_creation_time=case.case_creation_time,
             case_status=case.case_status,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -820,6 +993,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -865,6 +1039,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -913,6 +1088,53 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            customer_code=case.customer_code,
+        )
+        cases_out.append(case_out)
+    return cases_out
+
+
+async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case)
+        .where(Case.customer_code == customer_code)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+            customer_code=case.customer_code,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1153,6 +1375,166 @@ async def list_alerts_by_title(
     return alerts_out
 
 
+async def list_alerts_by_customer_code(
+    customer_code: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+    result = await db.execute(
+        select(Alert)
+        .where(Alert.customer_code == customer_code)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+
+async def list_alerts_by_source(
+    source: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+    result = await db.execute(
+        select(Alert)
+        .where(Alert.source == source)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+
+async def list_alerts_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    source: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+    # Build dynamic filters
+    filters = []
+    if assigned_to:
+        filters.append(Alert.assigned_to == assigned_to)
+    if alert_title:
+        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+    if customer_code:
+        filters.append(Alert.customer_code == customer_code)
+    if source:
+        filters.append(Alert.source == source)
+
+    # Build the query with dynamic filters
+    query = (
+        select(Alert)
+        .where(*filters)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size)
+    )
+
+    result = await db.execute(query)
+    alerts = result.scalars().all()
+
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+
+    return alerts_out
+
+
 async def delete_comments(alert_id: int, db: AsyncSession):
     result = await db.execute(select(Comment).where(Comment.alert_id == alert_id))
     comments = result.scalars().all()
@@ -1253,3 +1635,100 @@ async def delete_case(case_id: int, db: AsyncSession):
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error deleting case")
+
+
+async def list_all_files(db: AsyncSession) -> List[CaseDataStore]:
+    query = select(CaseDataStore)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def list_files_by_case_id(case_id: int, db: AsyncSession) -> List[CaseDataStore]:
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def file_exists(case_id: int, file_name: str, db: AsyncSession) -> bool:
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id, CaseDataStore.file_name == file_name)
+    result = await db.execute(query)
+    return result.scalars().first() is not None
+
+
+async def sha256_hash_file(file: UploadFile) -> str:
+    await file.seek(0)
+    file_content = await file.read()
+    file_hash = hashlib.sha256(file_content).hexdigest()
+    return file_hash
+
+
+async def get_file_size(file: UploadFile) -> int:
+    await file.seek(0)
+    content = await file.read()
+    return len(content)
+
+
+async def add_file_to_db(case_id: int, file: UploadFile, file_size: int, file_hash: str, db: AsyncSession) -> None:
+    db_file = CaseDataStore(
+        case_id=case_id,
+        bucket_name="copilot-cases",
+        object_key=f"{case_id}/{file.filename}",
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_size=file_size,
+        file_hash=file_hash,
+    )
+    db.add(db_file)
+    await db.commit()
+    return db_file
+
+
+async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) -> CaseDataStore:
+    file_size = await get_file_size(file)
+    file_hash = await sha256_hash_file(file)
+    await file.seek(0)
+    # Upload the file to Minio
+    await upload_case_data_store(
+        data=CaseDataStoreCreation(
+            case_id=case_id,
+            bucket_name="copilot-cases",
+            object_key=file.filename,
+            file_name=file.filename,
+            content_type=file.content_type,
+            file_hash=file_hash,
+        ),
+        file=file,
+    )
+
+    # Add the file to the database
+    return await add_file_to_db(case_id, file, file_size, file_hash, db)
+
+
+async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSession) -> CaseDataStore:
+    logger.info(f"Getting file {file_name} from case {case_id}")
+    query = select(CaseDataStore).where(CaseDataStore.case_id == case_id, CaseDataStore.file_name == file_name)
+    result = await db.execute(query)
+    return result.scalars().first()
+
+
+async def remove_file_from_db(file_id: int, db: AsyncSession) -> None:
+    await db.execute(delete(CaseDataStore).where(CaseDataStore.id == file_id))
+    await db.commit()
+
+
+async def delete_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> None:
+    file = await get_file_by_case_id_and_name(case_id, file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    await delete_file(file.bucket_name, file.object_key)
+    await remove_file_from_db(file.id, db)
+
+
+async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession) -> Tuple[bytes, str]:
+    file = await get_file_by_case_id_and_name(case_id, file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_content = await download_case_data_store(file.bucket_name, file.object_key)
+    return file_content, file.content_type

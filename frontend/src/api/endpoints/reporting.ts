@@ -1,6 +1,6 @@
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Dashboard, Org, Panel, PanelLink } from "@/types/reporting.d"
 import { HttpClient } from "../httpClient"
-import type { FlaskBaseResponse } from "@/types/flask.d"
 
 export type PanelsLinksTimeUnit = "minutes" | "hours" | "days"
 

@@ -23,7 +23,9 @@
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of timelineDetailsInfo" :key="key">
-							<template #key>{{ key }}</template>
+							<template #key>
+								{{ key }}
+							</template>
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
@@ -34,13 +36,15 @@
 										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
 									</code>
 								</div>
-								<div v-else>{{ value === "" ? "-" : value ?? "-" }}</div>
+								<div v-else>
+									{{ value === "" ? "-" : value ?? "-" }}
+								</div>
 							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
-					<div class="p-7 pt-4" v-if="timelineDetailsSource">
+					<div v-if="timelineDetailsSource" class="p-7 pt-4">
 						<CodeSource :code="timelineDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>
@@ -50,17 +54,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
-import { NModal, NTabs, NTabPane } from "naive-ui"
-import KVCard from "@/components/common/KVCard.vue"
+import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
 import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
-import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import { NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
+
+const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 const { timelineData, embedded } = toRefs(props)
 
 const LinkIcon = "carbon:launch"

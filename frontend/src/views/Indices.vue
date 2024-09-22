@@ -5,7 +5,7 @@
 		</div>
 
 		<div class="section">
-			<Details :indices="indices" v-model="currentIndex" />
+			<Details v-model="currentIndex" :indices="indices" />
 		</div>
 
 		<div class="section">
@@ -14,7 +14,7 @@
 					<ClusterHealth class="stretchy" />
 				</div>
 				<div class="col basis-1/2">
-					<UnhealthyIndices :indices="indices" @click="setIndex" class="stretchy" />
+					<UnhealthyIndices :indices="indices" class="stretchy" @click="setIndex" />
 				</div>
 			</div>
 		</div>
@@ -35,15 +35,16 @@
 <script lang="ts" setup>
 import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
-import { defineAsyncComponent, onBeforeMount, ref } from "vue"
-import IndicesMarquee from "@/components/indices/Marquee.vue"
-import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import Details from "@/components/indices/Details.vue"
+import IndicesMarquee from "@/components/indices/Marquee.vue"
+import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
-const TopIndices = defineAsyncComponent(() => import("@/components/indices/TopIndices.vue"))
-import { useMessage, NCard } from "naive-ui"
+import { NCard, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
+
+const TopIndices = defineAsyncComponent(() => import("@/components/indices/TopIndices.vue"))
 
 const message = useMessage()
 const route = useRoute()

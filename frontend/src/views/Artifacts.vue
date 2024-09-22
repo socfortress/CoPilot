@@ -1,31 +1,31 @@
 <template>
 	<div class="page">
-		<n-tabs type="line" animated v-model:value="activeTab">
+		<n-tabs v-model:value="activeTab" type="line" animated>
 			<n-tab-pane name="artifacts" tab="Artifacts" display-directive="show:lazy">
 				<ArtifactsList @loaded-agents="agents = $event" @loaded-artifacts="artifacts = $event" />
 			</n-tab-pane>
 			<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
 				<ArtifactsCollect
-					@loaded-agents="agents = $event"
-					@loaded-artifacts="artifacts = $event"
 					:agents
 					:artifacts
+					@loaded-agents="agents = $event"
+					@loaded-artifacts="artifacts = $event"
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
 				<ArtifactsCommand
-					@loaded-agents="agents = $event"
-					@loaded-artifacts="artifacts = $event"
 					:agents
 					:artifacts
+					@loaded-agents="agents = $event"
+					@loaded-artifacts="artifacts = $event"
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
 				<ArtifactsQuarantine
-					@loaded-agents="agents = $event"
-					@loaded-artifacts="artifacts = $event"
 					:agents
 					:artifacts
+					@loaded-agents="agents = $event"
+					@loaded-artifacts="artifacts = $event"
 				/>
 			</n-tab-pane>
 		</n-tabs>
@@ -33,10 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from "vue"
-import { NTabs, NTabPane } from "naive-ui"
-import type { Artifact } from "@/types/artifacts.d"
 import type { Agent } from "@/types/agents.d"
+import type { Artifact } from "@/types/artifacts.d"
+import { NTabPane, NTabs } from "naive-ui"
+import { defineAsyncComponent, ref } from "vue"
 
 const ArtifactsList = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsList.vue"))
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))

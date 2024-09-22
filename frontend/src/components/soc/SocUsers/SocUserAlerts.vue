@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loadingAlerts" :size="14">
-		<div class="flex alert-list items-center gap-3" v-if="!loadingAlerts">
+		<div v-if="!loadingAlerts" class="flex alert-list items-center gap-3">
 			<span :class="{ 'text-secondary-color': !alertsList.length, 'font-bold': alertsList.length }">
 				{{ alertsList.length || "No Alters" }}
 			</span>
@@ -27,10 +27,10 @@
 		<div class="h-full w-full flex items-center justify-center">
 			<SocAlertItem
 				v-if="selectedAlertId"
-				:alertId="selectedAlertId"
+				:alert-id="selectedAlertId"
 				embedded
-				hideSocCaseAction
-				hideBookmarkAction
+				hide-soc-case-action
+				hide-bookmark-action
 				class="w-full"
 			/>
 		</div>
@@ -39,11 +39,11 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import { onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
-import { useMessage, NTooltip, NSpin, NModal } from "naive-ui"
-import SocAlertItem from "../SocAlerts/SocAlertItem/SocAlertItem.vue"
 import axios from "axios"
+import { NModal, NSpin, NTooltip, useMessage } from "naive-ui"
+import { onBeforeMount, onBeforeUnmount, ref } from "vue"
+import SocAlertItem from "../SocAlerts/SocAlertItem/SocAlertItem.vue"
 
 const { userId } = defineProps<{
 	userId: string | number

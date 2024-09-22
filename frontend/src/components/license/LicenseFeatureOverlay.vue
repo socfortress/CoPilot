@@ -1,5 +1,5 @@
 <template>
-	<div class="over-layer feature-layer" v-if="showBanner">
+	<div v-if="showBanner" class="over-layer feature-layer">
 		<n-alert title="Feature required">
 			<template #icon>
 				<Icon :name="AlertIcon" :size="18"></Icon>
@@ -23,13 +23,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NAlert, NButton } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { onBeforeMount } from "vue"
 import type { LicenseFeatures } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { NAlert, NButton } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 
 const { feature } = defineProps<{ feature: LicenseFeatures }>()
 

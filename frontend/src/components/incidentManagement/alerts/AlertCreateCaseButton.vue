@@ -1,23 +1,25 @@
 <template>
-	<n-button secondary type="primary" @click="createCase()" :loading="creating">
-		<template #icon><Icon :name="DangerIcon" /></template>
+	<n-button secondary type="primary" :loading="creating" @click="createCase()">
+		<template #icon>
+			<Icon :name="DangerIcon" />
+		</template>
 		Create case
 	</n-button>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NButton, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 
 const props = defineProps<{ alert: Alert }>()
-const { alert } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void
 }>()
+
+const { alert } = toRefs(props)
 
 const DangerIcon = "majesticons:exclamation-line"
 
@@ -44,7 +46,8 @@ function createCase() {
 							case_description: "",
 							case_creation_time: new Date(),
 							assigned_to: null,
-							case_status: null
+							case_status: null,
+							customer_code: null
 						}
 					]
 				})

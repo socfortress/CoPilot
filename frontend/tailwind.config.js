@@ -1,6 +1,7 @@
-import { readFileSync } from "fs"
-import plugin from "tailwindcss/plugin.js"
+import { readFileSync } from "node:fs"
 import _ from "lodash"
+import plugin from "tailwindcss/plugin.js"
+
 const fileUrl = new URL("./src/design-tokens.json", import.meta.url)
 const tokens = JSON.parse(readFileSync(fileUrl))
 
@@ -60,7 +61,7 @@ export default {
 		"!h-0.75"
 	],
 	plugins: [
-		plugin(function ({ addBase, theme }) {
+		plugin(({ addBase, theme }) => {
 			addBase({
 				h1: {
 					fontFamily: getValue(tokens, tokens?.typography?.h1?.fontFamily),

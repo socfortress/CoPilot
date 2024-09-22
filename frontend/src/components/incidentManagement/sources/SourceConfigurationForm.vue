@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" class="creation-report-form">
-		<n-form :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :model="form" :rules="rules">
 			<div class="flex flex-col gap-8">
 				<div class="flex flex-col gap-2">
-					<n-form-item label="Index name" path="index_name" v-if="showIndexNameField">
+					<n-form-item v-if="showIndexNameField" label="Index name" path="index_name">
 						<n-select
 							v-model:value="form.index_name"
 							:options="indexNamesOptions"
@@ -15,7 +15,7 @@
 							:loading="loadingIndexNames"
 						/>
 					</n-form-item>
-					<n-form-item path="source" :show-require-mark="false" v-if="showSourceField" class="source-field">
+					<n-form-item v-if="showSourceField" path="source" :show-require-mark="false" class="source-field">
 						<template #label>
 							<div class="flex justify-between items-end gap-2">
 								<span>
@@ -25,11 +25,11 @@
 
 								<span v-if="isSocfortressRecommendsAvailable">
 									<n-button
-										@click="getSocfortressRecommendsWazuh()"
 										:loading="loadingSocfortressRecommendsWazuh"
 										size="tiny"
 										ghost
 										type="primary"
+										@click="getSocfortressRecommendsWazuh()"
 									>
 										SOCFortress Recommends
 									</n-button>
@@ -40,9 +40,9 @@
 							v-model:value.trim="form.source"
 							placeholder="Please insert Source"
 							clearable
-							@update:value="resetIndexAvailable()"
 							:disabled="disableSourceField"
 							:loading="loadingSource"
+							@update:value="resetIndexAvailable()"
 						/>
 					</n-form-item>
 
@@ -109,12 +109,12 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-3 items-center">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
+						<n-button :disabled="loading" @click="reset()">Reset</n-button>
 						<n-button
 							type="primary"
 							:disabled="!isValid"
-							@click="validate(() => submit())"
 							:loading="submitting"
+							@click="validate(() => submit())"
 						>
 							Submit
 						</n-button>
@@ -126,25 +126,34 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
+import _intersection from "lodash/intersection"
 import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	type MessageReactive,
+	NAlert,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
-	NSpin,
 	NSelect,
-	NAlert,
-	useMessage,
-	type FormValidationError,
-	type FormInst,
-	type FormRules,
-	type MessageReactive,
-	type FormItemRule
+	NSpin,
+	useMessage
 } from "naive-ui"
-import type { SourceConfiguration, SourceName, SourceConfigurationModel } from "@/types/incidentManagement/sources.d"
-import _intersection from "lodash/intersection"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{
+	sourceConfigurationModel?: SourceConfigurationModel
+	showSourceField?: boolean
+	disableSourceField?: boolean
+	showIndexNameField?: boolean
+	disableIndexNameField?: boolean
+	disabledSources?: SourceName[]
+}>()
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
@@ -157,14 +166,6 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{
-	sourceConfigurationModel?: SourceConfigurationModel
-	showSourceField?: boolean
-	disableSourceField?: boolean
-	showIndexNameField?: boolean
-	disableIndexNameField?: boolean
-	disabledSources?: SourceName[]
-}>()
 const {
 	sourceConfigurationModel,
 	showSourceField,

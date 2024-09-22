@@ -13,25 +13,25 @@
 				<SocCaseItem
 					v-for="item of casesList"
 					:key="item"
-					:caseId="item"
-					@deleted="getData()"
+					:case-id="item"
 					class="item-appear item-appear-bottom item-appear-005"
+					@deleted="getData()"
 				/>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, onBeforeUnmount } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
-import Api from "@/api"
 import type { Agent } from "@/types/agents.d"
+import Api from "@/api"
+import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 import axios from "axios"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, onBeforeUnmount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	agent: Agent

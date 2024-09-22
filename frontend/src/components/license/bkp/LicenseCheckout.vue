@@ -3,7 +3,7 @@
 		<div class="flex flex-col gap-1">
 			<p class="flex gap-4 items-center">
 				<span>license</span>
-				<Icon :name="LoadingIcon" v-if="loadingLicense"></Icon>
+				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
 			</p>
 
 			<h3 v-if="!loadingLicense">
@@ -11,7 +11,7 @@
 			</h3>
 		</div>
 
-		<div class="actions-box flex gap-2 mr-2" v-if="!loadingLicense">
+		<div v-if="!loadingLicense" class="actions-box flex gap-2 mr-2">
 			<n-button type="primary" @click="openCheckout()">
 				<template #icon>
 					<Icon :name="licenseKey ? ExtendIcon : LicenseIcon"></Icon>
@@ -35,12 +35,12 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NModal, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import type { LicenseKey } from "@/types/license.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
-import type { LicenseKey } from "@/types/license.d"
 
 const emit = defineEmits<{
 	(e: "loaded"): void
@@ -67,7 +67,7 @@ function getLicense() {
 		.getLicense()
 		.then(res => {
 			if (res.data.success) {
-				//licenseKey.value = res.data?.license_key || ""
+				// licenseKey.value = res.data?.license_key || ""
 				if (licenseKey.value) {
 					emit("loaded")
 				}

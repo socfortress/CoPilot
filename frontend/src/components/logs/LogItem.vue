@@ -14,10 +14,16 @@
 					<div class="method" :class="methodLower">
 						<strong>{{ log.method }}</strong>
 					</div>
-					<div class="route">{{ log.route }}</div>
+					<div class="route">
+						{{ log.route }}
+					</div>
 				</div>
-				<div class="title px-1">{{ log.message }}</div>
-				<div class="description px-1" v-if="log.additional_info">{{ log.additional_info }}</div>
+				<div class="title px-1">
+					{{ log.message }}
+				</div>
+				<div v-if="log.additional_info" class="description px-1">
+					{{ log.additional_info }}
+				</div>
 
 				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
 					<Badge type="splitted" :color="log.event_type === LogEventType.ERROR ? 'danger' : 'primary'">
@@ -28,9 +34,11 @@
 							></Icon>
 						</template>
 						<template #label>Type</template>
-						<template #value>{{ log.event_type }}</template>
+						<template #value>
+							{{ log.event_type }}
+						</template>
 					</Badge>
-					<Badge type="splitted" color="primary" v-if="log.user_id">
+					<Badge v-if="log.user_id" type="splitted" color="primary">
 						<template #iconLeft>
 							<Icon :name="UserIcon" :size="14"></Icon>
 						</template>
@@ -53,13 +61,13 @@
 </template>
 
 <script setup lang="ts">
+import type { AuthUser } from "@/types/auth.d"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { type Log, LogEventType } from "@/types/logs.d"
 import dayjs from "@/utils/dayjs"
-import { LogEventType, type Log } from "@/types/logs.d"
-import Badge from "@/components/common/Badge.vue"
 import { computed } from "vue"
-import type { AuthUser } from "@/types/auth.d"
 
 const { log, users } = defineProps<{ log: Log; users?: AuthUser[] }>()
 

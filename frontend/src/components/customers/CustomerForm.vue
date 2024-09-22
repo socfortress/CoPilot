@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(_, key) of form" :key="key" class="grow">
@@ -20,8 +20,8 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">
+						<n-button :disabled="loading" @click="reset()">Reset</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
 							Submit
 						</n-button>
 					</div>
@@ -32,22 +32,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import type { Customer } from "@/types/customers.d"
 import Api from "@/api"
+import _get from "lodash/get"
+import _trim from "lodash/trim"
 import {
-	useMessage,
+	type FormInst,
+	type FormRules,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
 	NSpin,
-	type FormValidationError,
-	type FormInst,
-	type FormRules
+	useMessage
 } from "naive-ui"
-import type { Customer } from "@/types/customers.d"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+
+const props = defineProps<{
+	customer?: Customer
+	resetOnSubmit?: boolean
+	/** lock customer_code on reset and editing (readonly) */
+	lockCode?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -60,12 +67,6 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{
-	customer?: Customer
-	resetOnSubmit?: boolean
-	/** lock customer_code on reset and editing (readonly) */
-	lockCode?: boolean
-}>()
 const { customer, resetOnSubmit, lockCode } = toRefs(props)
 
 const loading = ref(false)
@@ -80,11 +81,11 @@ const rules: FormRules = {
 		trigger: ["input", "blur"],
 		validator: (rule, value) => {
 			if (value !== value.toLowerCase()) {
-				return Promise.reject("Code must be all lowercase")
+				return new Error("Code must be all lowercase")
 			} else if (!/^[a-z]+$/.test(value)) {
-				return Promise.reject("Code must not contain spaces or special characters")
+				return new Error("Code must not contain spaces or special characters")
 			} else {
-				return Promise.resolve()
+				return true
 			}
 		}
 	},
@@ -211,7 +212,7 @@ function getClearForm(customer?: Partial<Customer>) {
 }
 
 function reset() {
-	let fields = undefined
+	let fields
 	if (lockCode.value) {
 		fields = { customer_code: customer.value?.customer_code || "" }
 	}

@@ -4,7 +4,7 @@
 			<div class="card-header flex gap-4 items-center justify-between">
 				<div class="title flex items-center gap-2">
 					{{ title }}
-					<Icon :name="ArrowRightIcon" v-if="hovered" :size="12"></Icon>
+					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
 				</div>
 				<div class="icon">
 					<slot name="icon"></slot>
@@ -12,12 +12,20 @@
 			</div>
 			<div class="flex card-content">
 				<div class="flex flex-col basis-1/2 value-box" :class="firstStatus">
-					<div class="value">{{ value }}</div>
-					<div class="label" v-if="firstLabel">{{ firstLabel }}</div>
+					<div class="value">
+						{{ value }}
+					</div>
+					<div v-if="firstLabel" class="label">
+						{{ firstLabel }}
+					</div>
 				</div>
 				<div class="flex flex-col basis-1/2 value-box" :class="secondStatus">
-					<div class="value">{{ subValue }}</div>
-					<div class="label" v-if="secondLabel">{{ secondLabel }}</div>
+					<div class="value">
+						{{ subValue }}
+					</div>
+					<div v-if="secondLabel" class="label">
+						{{ secondLabel }}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -25,9 +33,9 @@
 </template>
 
 <script setup lang="ts">
+import Icon from "@/components/common/Icon.vue"
 import { NCard } from "naive-ui"
 import { toRefs } from "vue"
-import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	title: string

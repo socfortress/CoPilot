@@ -66,7 +66,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Context" tab="Context" display-directive="show">
 					<n-spin :show="loading" class="min-h-40">
-						<div class="p-7 pt-4" v-if="alertContext">
+						<div v-if="alertContext" class="p-7 pt-4">
 							<div class="flex flex-wrap gap-3 mb-4">
 								<Badge type="splitted">
 									<template #label>id</template>
@@ -74,7 +74,9 @@
 								</Badge>
 								<Badge type="splitted">
 									<template #label>source</template>
-									<template #value>{{ alertContext.source }}</template>
+									<template #value>
+										{{ alertContext.source }}
+									</template>
 								</Badge>
 							</div>
 
@@ -83,24 +85,24 @@
 					</n-spin>
 				</n-tab-pane>
 				<n-tab-pane
+					v-if="isInvestigationAvailable"
 					name="Investigate"
 					tab="Investigate"
 					display-directive="show:lazy"
-					v-if="isInvestigationAvailable"
 				>
 					<div class="p-7 pt-4">
 						<div class="flex flex-wrap gap-2">
 							<ThreatIntelProcessEvaluationProvider
 								v-for="pn of processNameList"
 								:key="pn"
-								:process-name="pn"
 								v-slot="{ openEvaluation }"
+								:process-name="pn"
 							>
 								<n-card
-									@click="openEvaluation()"
 									size="small"
 									content-class="bg-secondary-color"
 									class="overflow-hidden hover:border-primary-color cursor-pointer"
+									@click="openEvaluation()"
 								>
 									{{ pn }}
 								</n-card>
@@ -130,15 +132,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
-import { NModal, NSpin, NCard, NTabs, NTabPane, useMessage } from "naive-ui"
+import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
+import { NCard, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 
+const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
@@ -148,7 +151,6 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
 const { asset, embedded } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
@@ -158,7 +160,7 @@ const loading = ref(false)
 const showDetails = ref(false)
 const assetNameTruncated = computed(() => _truncate(asset.value.asset_name, { length: 50 }))
 const alertContext = ref<AlertContext | null>(null)
-const processNameList = computed<string[]>(() => alertContext.value?.context?.["process_name"] || [])
+const processNameList = computed<string[]>(() => alertContext.value?.context?.process_name || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)
 
 watch(showDetails, val => {

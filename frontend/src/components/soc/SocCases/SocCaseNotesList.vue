@@ -8,25 +8,25 @@
 				<SocCaseNote v-for="note of notesList" :key="note.note_id" :note="note" />
 			</div>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loadingNotes" />
+				<n-empty v-if="!loadingNotes" description="No items found" class="justify-center h-48" />
 			</template>
 		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeMount } from "vue"
-import SocCaseNote from "./SocCaseNote.vue"
-import Api from "@/api"
-import { useMessage, NSpin, NInput, NEmpty } from "naive-ui"
 import type { SocNote } from "@/types/soc/note.d"
+import Api from "@/api"
 import { refDebounced } from "@vueuse/core"
-import { toRefs } from "vue"
 import axios from "axios"
+import { NEmpty, NInput, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs, watch } from "vue"
+import SocCaseNote from "./SocCaseNote.vue"
+
+const props = defineProps<{ caseId: string | number }>()
 
 const requested = defineModel<boolean | undefined>("requested", { default: false })
 
-const props = defineProps<{ caseId: string | number }>()
 const { caseId } = toRefs(props)
 
 const loadingNotes = ref(false)

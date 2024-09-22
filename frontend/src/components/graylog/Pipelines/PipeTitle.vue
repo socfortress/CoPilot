@@ -1,6 +1,6 @@
 <template>
 	<div class="pipe-title flex items-center gap-1" :class="{ warning: isWarning }">
-		<n-tooltip placement="top-start" trigger="hover" v-if="isWarning">
+		<n-tooltip v-if="isWarning" placement="top-start" trigger="hover">
 			<template #trigger>
 				<Icon :name="DangerIcon" :size="18"></Icon>
 			</template>
@@ -11,10 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { NTooltip } from "naive-ui"
-import { computed, toRefs } from "vue"
 import type { Pipeline } from "@/types/graylog/pipelines.d"
 import Icon from "@/components/common/Icon.vue"
+import { NTooltip } from "naive-ui"
+import { computed, toRefs } from "vue"
 
 const props = defineProps<{ pipeline: Pipeline }>()
 const { pipeline } = toRefs(props)

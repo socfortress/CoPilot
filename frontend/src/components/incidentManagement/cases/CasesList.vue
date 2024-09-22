@@ -1,6 +1,6 @@
 <template>
 	<div class="cases-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="left">
 					<template #trigger>
@@ -36,7 +36,9 @@
 					</div>
 				</n-popover>
 
-				<CaseCreationButton @submitted="getData()" :only-icon="caseCreationButtonOnlyIcon" />
+				<CasesExport size="small" />
+
+				<CaseCreationButton :only-icon="caseCreationButtonOnlyIcon" size="small" @submitted="getData()" />
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -47,7 +49,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0" v-if="!hideFilters">
+			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -67,7 +69,7 @@
 								:options="typeOptions"
 								placeholder="Filter by..."
 								clearable
-								class="!w-36"
+								class="!w-40"
 							/>
 
 							<n-select
@@ -86,6 +88,17 @@
 								placeholder="Value..."
 								:disabled="!filters.type"
 								clearable
+								filterable
+								class="!w-56"
+							/>
+							<n-select
+								v-else-if="filters.type === 'customerCode'"
+								v-model:value="filters.value"
+								:options="customersOptions"
+								placeholder="Value..."
+								:disabled="!filters.type"
+								clearable
+								filterable
 								class="!w-56"
 							/>
 							<n-input
@@ -100,11 +113,11 @@
 					</div>
 					<div class="px-3 flex justify-between gap-2">
 						<div class="flex justify-start gap-2">
-							<n-button size="small" @click="showFilters = false" quaternary>Close</n-button>
+							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
 						</div>
 						<div class="flex justify-end gap-2">
-							<n-button size="small" @click="resetFilters()" secondary>Reset</n-button>
-							<n-button size="small" @click="getData()" type="primary" secondary :loading>
+							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
+							<n-button size="small" type="primary" secondary :loading @click="getData()">
 								Submit
 							</n-button>
 						</div>
@@ -118,9 +131,9 @@
 					<CaseItem
 						v-for="item of itemsPaginated"
 						:key="item.id"
-						:caseData="item"
+						:case-data="item"
 						:highlight="highlight === item.id.toString()"
-						:detailsOnMounted="highlight === item.id.toString() && !highlightedItemOpened"
+						:details-on-mounted="highlight === item.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
 						@opened="highlightedItemOpened = true"
 						@deleted="getData()"
@@ -128,50 +141,51 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, toRefs, provide, nextTick } from "vue"
-import {
-	useMessage,
-	NSpin,
-	NPopover,
-	NButton,
-	NEmpty,
-	NSelect,
-	NPagination,
-	NInputGroup,
-	NBadge,
-	NInput
-} from "naive-ui"
+import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement"
+import type { Customer } from "@/types/customers.d"
+import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
-import Icon from "@/components/common/Icon.vue"
+import {
+	NBadge,
+	NButton,
+	NEmpty,
+	NInput,
+	NInputGroup,
+	NPagination,
+	NPopover,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
+import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import CaseCreationButton from "./CaseCreationButton.vue"
-import { useResizeObserver } from "@vueuse/core"
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
-import type { CasesFilter } from "@/api/endpoints/incidentManagement"
 import CaseItem from "./CaseItem.vue"
+import CasesExport from "./CasesExport.vue"
 
 export interface CasesListFilter {
-	type: "status" | "assignedTo" | "hostname"
-	value: string | AlertStatus
+	type: CasesFilterTypes
+	value: string | CaseStatus
 }
 
 const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter; hideFilters?: boolean }>()
@@ -182,6 +196,7 @@ const loading = ref(false)
 const showFilters = ref(false)
 const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
+const customersList = ref<Customer[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -227,19 +242,23 @@ const filtered = computed<boolean>(() => {
 	return !!filters.value.type && !!filters.value.value
 })
 
-const typeOptions = [
+const typeOptions: { label: string; value: CasesFilterTypes }[] = [
 	{ label: "Status", value: "status" },
 	{ label: "Assigned To", value: "assignedTo" },
-	{ label: "Hostname", value: "hostname" }
+	{ label: "Hostname", value: "hostname" },
+	{ label: "Customer Code", value: "customerCode" }
 ]
 
-const statusOptions: { label: string; value: AlertStatus }[] = [
+const statusOptions: { label: string; value: CaseStatus }[] = [
 	{ label: "Open", value: "OPEN" },
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }
 ]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
 
 const highlightedItemFound = ref(!highlight.value)
 const highlightedItemOpened = ref(!highlight.value)
@@ -289,6 +308,7 @@ watch(
 )
 
 provide("assignable-users", availableUsers)
+provide("customers-list", customersList)
 
 function resetFilters() {
 	filters.value.type = undefined
@@ -309,7 +329,7 @@ function getData() {
 
 	lastFilters.value = _cloneDeep(filters.value)
 
-	let query: CasesFilter | undefined = undefined
+	let query: CasesFilter | undefined
 	if (filtered.value) {
 		// @ts-expect-error filters properties infer are ignored
 		query = { [filters.value.type]: filters.value.value }
@@ -349,6 +369,21 @@ function getAvailableUsers() {
 		})
 }
 
+function getCustomers() {
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -367,6 +402,7 @@ onBeforeMount(() => {
 
 	getData()
 	getAvailableUsers()
+	getCustomers()
 })
 </script>
 

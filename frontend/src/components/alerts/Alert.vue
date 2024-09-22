@@ -11,16 +11,22 @@
 		</div>
 		<div class="main-box flex justify-between gap-4">
 			<div class="content">
-				<div class="rule-description">{{ alert._source.rule_description || alert._source.type }}</div>
-				<div class="rule-groups">{{ alert._source.rule_groups }}</div>
+				<div class="rule-description">
+					{{ alert._source.rule_description || alert._source.type }}
+				</div>
+				<div class="rule-groups">
+					{{ alert._source.rule_groups }}
+				</div>
 
-				<div class="badges-box flex flex-wrap items-center gap-3" v-if="alert._id">
+				<div v-if="alert._id" class="badges-box flex flex-wrap items-center gap-3">
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
 						</template>
 						<template #label>Fired times</template>
-						<template #value>{{ alert._source.rule_firedtimes }}</template>
+						<template #value>
+							{{ alert._source.rule_firedtimes }}
+						</template>
 					</Badge>
 
 					<Badge :type="alert._source.rule_mail ? 'active' : 'muted'">
@@ -79,15 +85,21 @@
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>manager</template>
-						<template #value>{{ alert._source.manager_name }}</template>
+						<template #value>
+							{{ alert._source.manager_name }}
+						</template>
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>decoder</template>
-						<template #value>{{ alert._source.decoder_name }}</template>
+						<template #value>
+							{{ alert._source.decoder_name }}
+						</template>
 					</Badge>
 					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>source</template>
-						<template #value>{{ alert._source.source }}</template>
+						<template #value>
+							{{ alert._source.source }}
+						</template>
 					</Badge>
 				</div>
 			</div>
@@ -95,7 +107,7 @@
 				v-if="!hideActions"
 				class="actions-box"
 				:alert
-				:socAlertField="socAlertCreationField"
+				:soc-alert-field="socAlertCreationField"
 				@start-loading="loading = true"
 				@stop-loading="loading = false"
 				@updated-url="alert._source.alert_url = $event"
@@ -108,15 +120,17 @@
 				v-if="!hideActions"
 				class="actions-box"
 				:alert
-				:socAlertField="socAlertCreationField"
-				:size="'small'"
+				:soc-alert-field="socAlertCreationField"
+				size="small"
 				@start-loading="loading = true"
 				@stop-loading="loading = false"
 				@updated-url="alert._source.alert_url = $event"
 				@updated-id="alert._source.alert_id = $event"
 				@updated-ask-message="alert._source.ask_socfortress_message = $event"
 			/>
-			<div class="time">{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}</div>
+			<div class="time">
+				{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}
+			</div>
 		</div>
 
 		<n-modal
@@ -129,13 +143,15 @@
 			segmented
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Agent" tab="Agent" display-directive="show" v-if="alert._id">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="agentProperties">
+				<n-tab-pane v-if="alert._id" name="Agent" tab="Agent" display-directive="show">
+					<div v-if="agentProperties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of agentProperties" :key="key">
-							<template #key>{{ key }}</template>
+							<template #key>
+								{{ key }}
+							</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="cursor-pointer text-primary-color" @click="gotoAgent(value + '')">
+									<code class="cursor-pointer text-primary-color" @click="gotoAgent(`${value}`)">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -157,9 +173,9 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
+					v-if="alert._source.ask_socfortress_message"
 					name="SOCFortress Response"
 					tab="SOCFortress Response"
-					v-if="alert._source.ask_socfortress_message"
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
@@ -175,15 +191,15 @@
 						/>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Message" tab="Message" v-if="alert._source.message" display-directive="show">
+				<n-tab-pane v-if="alert._source.message" name="Message" tab="Message" display-directive="show">
 					<div class="p-7 pt-4">
 						<CodeSource :code="alert._source.message" :decode="false" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
+					v-if="alert._source.data_document"
 					name="Data document"
 					tab="Data document"
-					v-if="alert._source.data_document"
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
@@ -210,22 +226,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
-import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import _pick from "lodash/pick"
-import KVCard from "@/components/common/KVCard.vue"
-import { useGoto } from "@/composables/useGoto"
 import type { Alert } from "@/types/alerts.d"
 import type { SocAlertField } from "./type.d"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import _pick from "lodash/pick"
+import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 
+const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const { alert, hideActions } = toRefs(props)
 
 const InfoIcon = "carbon:information"

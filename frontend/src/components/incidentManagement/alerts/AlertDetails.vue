@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
 		<n-tabs
+			v-if="alert"
 			type="line"
 			animated
 			:tabs-padding="24"
-			v-if="alert"
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
@@ -27,7 +27,7 @@
 				<div class="p-7 pt-4">
 					<AlertCommentsList
 						:comments="alert.comments"
-						:alertId="alert.id"
+						:alert-id="alert.id"
 						@updated="updateComments($event)"
 					/>
 				</div>
@@ -37,27 +37,26 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
-import { NTabs, NTabPane, NSpin, useMessage } from "naive-ui"
-import _clone from "lodash/cloneDeep"
-import Api from "@/api"
 import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
-
-const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
-const AlertAssetsList = defineAsyncComponent(() => import("./AlertAssetsList.vue"))
-const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList.vue"))
-const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
+import Api from "@/api"
+import _clone from "lodash/cloneDeep"
+import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
 }>()
-const { alertData, alertId } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
 }>()
+const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
+const AlertAssetsList = defineAsyncComponent(() => import("./AlertAssetsList.vue"))
+const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList.vue"))
+const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
+
+const { alertData, alertId } = toRefs(props)
 
 const message = useMessage()
 const loading = ref(false)

@@ -6,10 +6,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Alert } from "@/types/incidentManagement/alerts.d"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NTimeline, NTimelineItem } from "naive-ui"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
 
 const { alert } = defineProps<{ alert: Alert }>()
 

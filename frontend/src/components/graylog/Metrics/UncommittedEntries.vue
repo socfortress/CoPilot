@@ -3,10 +3,10 @@
 		<div class="uncommitted-entries">
 			<div class="chart grow">
 				<div class="label flex items-center gap-3">
-					<Icon :name="DangerIcon" v-if="isWarning"></Icon>
+					<Icon v-if="isWarning" :name="DangerIcon"></Icon>
 					<span>Uncommitted Journal Entries</span>
 				</div>
-				<apexchart height="70" :options="options" :series="series" ref="chart"></apexchart>
+				<apexchart height="70" :options="options" :series="series"></apexchart>
 			</div>
 			<div class="value flex flex-col justify-center" :class="{ warning: isWarning }">
 				<span>{{ value }}</span>
@@ -25,21 +25,21 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import { NButton } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { useGoto } from "@/composables/useGoto"
+import { usHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import "@/assets/scss/apexchart-override.scss"
-import { watch } from "vue"
-import { usHealthcheckStore } from "@/stores/healthcheck"
+import { NButton } from "naive-ui"
+import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
-import { useGoto } from "@/composables/useGoto"
-
-const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
+import "@/assets/scss/apexchart-override.scss"
 
 const props = defineProps<{
 	value: number
 }>()
+
+const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
+
 const { value } = toRefs(props)
 
 const LinkIcon = "carbon:launch"

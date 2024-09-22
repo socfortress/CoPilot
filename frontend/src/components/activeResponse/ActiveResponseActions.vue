@@ -1,7 +1,9 @@
 <template>
 	<div class="active-response-actions flex gap-2 justify-end">
-		<n-button type="success" secondary :size="size" @click="showInvokeForm = true" :loading="loadingInvoke">
-			<template #icon><Icon :name="InvokeIcon"></Icon></template>
+		<n-button type="success" secondary :size :loading="loadingInvoke" @click="showInvokeForm = true">
+			<template #icon>
+				<Icon :name="InvokeIcon"></Icon>
+			</template>
 			Invoke Action
 		</n-button>
 
@@ -16,15 +18,15 @@
 			segmented
 		>
 			<ActiveResponseInvokeForm
-				:activeResponse="activeResponse"
-				:agentId="agentId"
+				:active-response="activeResponse"
+				:agent-id="agentId"
 				@mounted="activeResponseInvokeFormCTX = $event"
 				@submitted="close()"
-				@startLoading="loadingInvoke = true"
-				@stopLoading="loadingInvoke = false"
+				@start-loading="loadingInvoke = true"
+				@stop-loading="loadingInvoke = false"
 			>
 				<template #additionalActions>
-					<n-button @click="close()" secondary>Close</n-button>
+					<n-button secondary @click="close()">Close</n-button>
 				</template>
 			</ActiveResponseInvokeForm>
 		</n-modal>
@@ -32,23 +34,22 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import { computed, ref } from "vue"
-import { watch } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 import type { Size } from "naive-ui/es/button/src/interface"
-
-const emit = defineEmits<{
-	(e: "startLoading"): void
-	(e: "stopLoading"): void
-}>()
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { computed, ref, watch } from "vue"
+import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 
 const { activeResponse, size, agentId } = defineProps<{
 	activeResponse: SupportedActiveResponse
 	agentId?: string | number
 	size?: Size
+}>()
+
+const emit = defineEmits<{
+	(e: "startLoading"): void
+	(e: "stopLoading"): void
 }>()
 
 const InvokeIcon = "solar:playback-speed-outline"

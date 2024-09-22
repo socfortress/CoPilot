@@ -2,8 +2,8 @@
 	<div class="alert-summary flex flex-col">
 		<div class="header-box flex justify-between gap-4">
 			<div class="id flex items-center gap-2" @click="gotoIndex(alertsSummary.index_name)">
-				<IndexIcon :health="alertsSummary.indexStats?.health" color v-if="alertsSummary.indexStats?.health" />
-				<Icon :name="PlaceholderIcon" v-else :size="18" />
+				<IndexIcon v-if="alertsSummary.indexStats?.health" :health="alertsSummary.indexStats?.health" color />
+				<Icon v-else :name="PlaceholderIcon" :size="18" />
 
 				{{ alertsSummary.index_name }}
 
@@ -12,9 +12,9 @@
 			<div class="total-alerts flex items-center flex-wrap justify-end">
 				<n-button
 					v-if="alertsSummary.alerts.length > 3 && showAllAlerts"
-					@click="showAllAlerts = false"
 					class="show-less"
 					size="tiny"
+					@click="showAllAlerts = false"
 				>
 					Show less
 				</n-button>
@@ -30,7 +30,7 @@
 					<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert="alert" />
 				</n-scrollbar>
 
-				<div class="load-more" v-if="alertsSummary.alerts.length > 3" @click="showAllAlerts = true">
+				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
 					<n-button size="small" text class="!w-full">
 						<template #icon>
 							<Icon :name="ExpandIcon"></Icon>
@@ -44,14 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { type AlertsSummary } from "@/types/alerts.d"
-import { NScrollbar, NButton } from "naive-ui"
-import Alert from "./Alert.vue"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
-import Icon from "@/components/common/Icon.vue"
+import type { AlertsSummary } from "@/types/alerts.d"
 import type { IndexStats } from "@/types/indices.d"
-import { ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { NButton, NScrollbar } from "naive-ui"
+import { ref } from "vue"
+import Alert from "./Alert.vue"
 
 export interface AlertsSummaryExt extends AlertsSummary {
 	indexStats?: IndexStats

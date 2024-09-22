@@ -26,22 +26,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 import {
-	NSpin,
+	type FormInst,
+	type FormValidationError,
+	NButton,
 	NCard,
 	NForm,
 	NFormItem,
-	NButton,
-	NSelect,
 	NRadio,
 	NRadioGroup,
-	type FormValidationError,
-	useMessage,
-	type FormInst
+	NSelect,
+	NSpin,
+	useMessage
 } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { ref } from "vue"
 
 const settingsStore = useSettingsStore()
 

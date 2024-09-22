@@ -14,22 +14,22 @@
 		display-directive="show"
 	>
 		<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-			<CustomerForm @mounted="customerFormCTX = $event" @submitted="emit('submitted')" :resetOnSubmit="true" />
+			<CustomerForm :reset-on-submit="true" @mounted="customerFormCTX = $event" @submitted="emit('submitted')" />
 		</n-drawer-content>
 	</n-drawer>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NDrawer, NDrawerContent } from "naive-ui"
+import { ref, watch } from "vue"
 import CustomerForm from "./CustomerForm.vue"
-
-const openForm = defineModel<boolean | undefined>("openForm", { default: false })
 
 const emit = defineEmits<{
 	(e: "submitted"): void
 }>()
+
+const openForm = defineModel<boolean | undefined>("openForm", { default: false })
 
 const AddUserIcon = "carbon:user-follow"
 

@@ -9,20 +9,20 @@
 			@click="gotoSocAlerts()"
 		>
 			<template #icon>
-				<CardStatsIcon :iconName="SOCIcon" boxed :boxSize="40"></CardStatsIcon>
+				<CardStatsIcon :icon-name="SOCIcon" boxed :box-size="40"></CardStatsIcon>
 			</template>
 		</CardStats>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import CardStats from "@/components/common/CardStats.vue"
-import Api from "@/api"
-import { useMessage, NSpin } from "naive-ui"
 import type { SocAlert } from "@/types/soc/alert.d"
+import Api from "@/api"
+import CardStats from "@/components/common/CardStats.vue"
+import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	vertical?: boolean

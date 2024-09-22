@@ -16,9 +16,9 @@
 						</template>
 						<template v-else>
 							<n-empty
+								v-if="!loadingCountByHost"
 								description="No items found"
 								class="justify-center h-48"
-								v-if="!loadingCountByHost"
 							/>
 						</template>
 					</div>
@@ -39,9 +39,9 @@
 						</template>
 						<template v-else>
 							<n-empty
+								v-if="!loadingCountByRule"
 								description="No items found"
 								class="justify-center h-48"
-								v-if="!loadingCountByRule"
 							/>
 						</template>
 					</div>
@@ -62,9 +62,9 @@
 						</template>
 						<template v-else>
 							<n-empty
+								v-if="!loadingCountByRuleHost"
 								description="No items found"
 								class="justify-center h-48"
-								v-if="!loadingCountByRuleHost"
 							/>
 						</template>
 					</div>
@@ -75,28 +75,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, onBeforeUnmount } from "vue"
-import { useMessage, NSpin, NEmpty, NTabs, NTabPane } from "naive-ui"
-import Api from "@/api"
-import AlertsStatsItem from "./AlertsStatsItem.vue"
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
+import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
+import Api from "@/api"
 import axios from "axios"
-import { onMounted } from "vue"
+import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import AlertsStatsItem from "./AlertsStatsItem.vue"
 // import { alerts_by_host, alerts_by_rule, alerts_by_rule_per_host } from "./mock"
 
 const props = withDefaults(defineProps<{ filters?: AlertsSummaryQuery }>(), {
 	filters: () => ({})
 })
+const emit = defineEmits<{
+	(e: "mounted", value: AlertsStatsCTX): void
+}>()
+
 const { filters } = toRefs(props)
 
 export interface AlertsStatsCTX {
 	startSearch: () => void
 }
-
-const emit = defineEmits<{
-	(e: "mounted", value: AlertsStatsCTX): void
-}>()
 
 const message = useMessage()
 const countByHost = ref<AlertsByHost[]>([])

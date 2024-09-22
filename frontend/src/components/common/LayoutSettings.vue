@@ -1,15 +1,15 @@
 <template>
 	<div class="layout-settings flex items-center justify-center shadow-xl" :class="{ open }">
 		<Transition mode="out-in" name="anim">
-			<div class="open-btn flex items-center justify-center" @click="open = true" v-if="!open" key="btn">
-				<Icon :size="24" :name="SettingsIcon"></Icon>
+			<div v-if="!open" key="btn" class="open-btn flex items-center justify-center" @click="open = true">
+				<Icon :size="24" :name="SettingsIcon" />
 			</div>
 
-			<div class="ls-form flex flex-col" v-else key="form">
+			<div v-else key="form" class="ls-form flex flex-col">
 				<div class="ls-header flex items-center justify-between">
 					<div class="ls-title">Layout settings</div>
 					<div class="ls-icon flex items-center">
-						<Icon @click="open = false" :size="20" :name="CloseIcon"></Icon>
+						<Icon :size="20" :name="CloseIcon" @click="open = false" />
 					</div>
 				</div>
 				<n-scrollbar class="ls-main">
@@ -17,21 +17,21 @@
 						<div class="ls-label">Primary color</div>
 						<div class="color-picker-box">
 							<n-color-picker
+								v-if="theme === ThemeEnum.Dark"
 								v-model:value="darkColor"
 								:modes="['hex']"
 								:show-alpha="false"
-								v-if="theme === ThemeEnum.Dark"
 							/>
-							<n-color-picker v-model:value="lightColor" :modes="['hex']" :show-alpha="false" v-else />
+							<n-color-picker v-else v-model:value="lightColor" :modes="['hex']" :show-alpha="false" />
 						</div>
 						<div class="palette flex justify-around mt-3">
-							<n-button text v-for="color of palette" :key="color.light" @click="setPrimary(color)">
+							<n-button v-for="color of palette" :key="color.light" text @click="setPrimary(color)">
 								<template #icon>
 									<Icon
 										:color="theme === ThemeEnum.Dark ? color.dark : color.light"
 										:size="24"
 										:name="ColorIcon"
-									></Icon>
+									/>
 								</template>
 							</n-button>
 						</div>
@@ -43,12 +43,12 @@
 							<div class="basis-1/2">
 								<n-button
 									class="!w-full"
-									@click="theme = ThemeEnum.Light"
 									:type="theme === ThemeEnum.Light ? 'primary' : 'default'"
+									@click="theme = ThemeEnum.Light"
 								>
 									<template #icon>
-										<Icon :name="LightIcon" v-if="theme === ThemeEnum.Light"></Icon>
-										<Icon :name="LightOutlineIcon" v-else></Icon>
+										<Icon v-if="theme === ThemeEnum.Light" :name="LightIcon" />
+										<Icon v-else :name="LightOutlineIcon" />
 									</template>
 									Light
 								</n-button>
@@ -56,12 +56,12 @@
 							<div class="basis-1/2">
 								<n-button
 									class="!w-full"
-									@click="theme = ThemeEnum.Dark"
 									:type="theme === ThemeEnum.Dark ? 'primary' : 'default'"
+									@click="theme = ThemeEnum.Dark"
 								>
 									<template #icon>
-										<Icon :name="DarkIcon" v-if="theme === ThemeEnum.Dark"></Icon>
-										<Icon :name="DarkOutlineIcon" v-else></Icon>
+										<Icon v-if="theme === ThemeEnum.Dark" :name="DarkIcon" />
+										<Icon v-else :name="DarkOutlineIcon" />
 									</template>
 									Dark
 								</n-button>
@@ -79,9 +79,9 @@
 								<!--
 									<n-button
 									class="!w-full"
-									@click="layout = Layout.VerticalNav"
 									:type="layout === Layout.VerticalNav ? 'primary' : 'default'"
 									:disabled="isMobileView"
+									@click="layout = Layout.VerticalNav"
 									>
 										Vertical
 									</n-button>
@@ -90,9 +90,9 @@
 							<div class="basis-1/2">
 								<n-button
 									class="!w-full"
-									@click="layout = Layout.HorizontalNav"
 									:type="layout === Layout.HorizontalNav ? 'primary' : 'default'"
 									:disabled="isMobileView"
+									@click="layout = Layout.HorizontalNav"
 								>
 									Horizontal
 								</n-button>
@@ -136,7 +136,7 @@
 					<div class="ls-section ls-transition-selection">
 						<div class="ls-label">Router transition</div>
 						<div class="ls-input flex justify-between">
-							<n-select v-model:value="routerTransition" :options="transitionOptions"></n-select>
+							<n-select v-model:value="routerTransition" :options="transitionOptions" />
 						</div>
 					</div>
 					<div class="ls-section ls-reset-selection items-center">
@@ -159,12 +159,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
-import { NColorPicker, NButton, NSelect, useOsTheme, NScrollbar, NSwitch } from "naive-ui"
-import { useThemeStore } from "@/stores/theme"
 import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
 import { Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
 import { useWindowSize } from "@vueuse/core"
+import { NButton, NColorPicker, NScrollbar, NSelect, NSwitch, useOsTheme } from "naive-ui"
+import { computed, ref } from "vue"
 
 interface ColorPalette {
 	light: string

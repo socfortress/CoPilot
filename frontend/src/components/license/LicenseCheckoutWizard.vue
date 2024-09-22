@@ -1,11 +1,13 @@
 <template>
 	<n-spin :show="loading" class="min-h-48">
-		<n-empty :description="errorMessage" class="justify-center h-48" v-if="errorMessage">
-			<template #icon><Icon :name="WarningIcon"></Icon></template>
+		<n-empty v-if="errorMessage" :description="errorMessage" class="justify-center h-48">
+			<template #icon>
+				<Icon :name="WarningIcon"></Icon>
+			</template>
 		</n-empty>
 		<template v-else>
 			<template v-if="!selectedSubscription">
-				<div class="list flex flex-col gap-2" v-if="availableSubscriptions.length">
+				<div v-if="availableSubscriptions.length" class="list flex flex-col gap-2">
 					<SubscriptionCard
 						v-for="subscription of availableSubscriptions"
 						:key="subscription.id"
@@ -18,9 +20,9 @@
 				</div>
 				<template v-else>
 					<n-empty
+						v-if="!loading"
 						description="Congratulations, you have already unlocked all available features"
 						class="justify-center h-48"
-						v-if="!loading"
 					>
 						<template #icon>
 							<Icon :name="CheckIcon"></Icon>
@@ -32,7 +34,7 @@
 				<SubscriptionCard :subscription="selectedSubscription" embedded hide-details />
 				<div class="checkout-form item-appear item-appear-bottom item-appear-005 mt-8">
 					<n-spin :show="loadingLicense || loadingSession">
-						<n-form :label-width="80" :model="checkoutForm" :rules="rules" ref="formRef">
+						<n-form :label-width="80" :model="checkoutForm" :rules="rules">
 							<div class="flex flex-col gap-1">
 								<n-form-item label="Company Name" path="company_name">
 									<n-input
@@ -58,8 +60,8 @@
 									<n-button
 										type="success"
 										:disabled="!isValid"
-										@click="createCheckoutSession()"
 										:loading="loadingSession"
+										@click="createCheckoutSession()"
 									>
 										<template #icon>
 											<Icon :name="CartIcon"></Icon>
@@ -77,25 +79,23 @@
 </template>
 
 <script setup lang="ts">
+import type { CheckoutPayload, License, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import {
-	NSpin,
+	type FormItemRule,
+	type FormRules,
+	NButton,
 	NEmpty,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
-	useMessage,
-	type FormItemRule,
-	type FormRules
+	NSpin,
+	useMessage
 } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { onBeforeMount, ref, toRefs } from "vue"
-import { computed } from "vue"
-import SubscriptionCard from "./SubscriptionCard.vue"
-import type { CheckoutPayload, License, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
 import isEmail from "validator/es/lib/isEmail"
-import { watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import SubscriptionCard from "./SubscriptionCard.vue"
 
 const props = defineProps<{
 	featuresData?: LicenseFeatures[]

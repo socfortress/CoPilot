@@ -2,20 +2,20 @@
 	<n-spin :show="loading">
 		<CardStatsDouble
 			title="Healthcheck"
-			firstLabel="Total"
+			first-label="Total"
 			:value="total"
 			hovered
 			class="cursor-pointer"
+			second-label="Critical"
+			:sub-value="criticalTotal"
+			:second-status="criticalTotal ? 'warning' : undefined"
 			@click="gotoHealthcheck()"
-			secondLabel="Critical"
-			:subValue="criticalTotal"
-			:secondStatus="criticalTotal ? 'warning' : undefined"
 		>
 			<template #icon>
 				<CardStatsIcon
-					:iconName="HealthcheckIcon"
+					:icon-name="HealthcheckIcon"
 					boxed
-					:boxSize="30"
+					:box-size="30"
 					:color="criticalTotal ? style['warning-color'] : undefined"
 				></CardStatsIcon>
 			</template>
@@ -24,14 +24,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import CardStatsDouble from "@/components/common/CardStatsDouble.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import Api from "@/api"
-import { useMessage, NSpin } from "naive-ui"
-import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
-import { useThemeStore } from "@/stores/theme"
 import { useGoto } from "@/composables/useGoto"
+import { useThemeStore } from "@/stores/theme"
+import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 
 const HealthcheckIcon = "ph:heartbeat"
 const { gotoHealthcheck } = useGoto()

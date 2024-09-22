@@ -1,11 +1,11 @@
 <template>
 	<n-spin :show="loading" class="job-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-1">
 				<n-form-item label="Time interval (minutes)" path="time_interval" class="grow">
 					<n-input-number
-						:min="1"
 						v-model:value="form.time_interval"
+						:min="1"
 						placeholder="Input time in minutes"
 						clearable
 						class="w-full"
@@ -13,12 +13,12 @@
 				</n-form-item>
 
 				<div class="flex gap-3 justify-end items-center">
-					<n-button @click="reset()" :disabled="loading">Reset</n-button>
+					<n-button :disabled="loading" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"
 						:disabled="!isValid"
-						@click="validate(() => submit())"
 						:loading="submitting"
+						@click="validate(() => submit())"
 					>
 						Submit
 					</n-button>
@@ -29,32 +29,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
-import Api from "@/api"
-import {
-	useMessage,
-	NForm,
-	NFormItem,
-	NButton,
-	NSpin,
-	NInputNumber,
-	type FormValidationError,
-	type FormInst,
-	type FormRules,
-	type FormItemRule,
-	type MessageReactive
-} from "naive-ui"
-import _trim from "lodash/trim"
-import _get from "lodash/get"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
+import Api from "@/api"
+import _get from "lodash/get"
+import _trim from "lodash/trim"
+import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	type MessageReactive,
+	NButton,
+	NForm,
+	NFormItem,
+	NInputNumber,
+	NSpin,
+	useMessage
+} from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 
 const props = defineProps<{ job: Job }>()
-const { job } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: UpdateJobPayload): void
 }>()
+
+const { job } = toRefs(props)
 
 const submitting = ref(false)
 const loading = computed(() => submitting.value)

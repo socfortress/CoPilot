@@ -30,7 +30,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading" class="min-h-32">
-			<div class="list gap-4 grid grid-auto-fill-250" v-if="configuredSourcesList.length">
+			<div v-if="configuredSourcesList.length" class="list gap-4 grid grid-auto-fill-250">
 				<ConfiguredSourceItem
 					v-for="source of configuredSourcesList"
 					:key="source"
@@ -40,7 +40,7 @@
 				/>
 			</div>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</n-spin>
 
@@ -54,18 +54,19 @@
 			content-class="flex flex-col !p-0"
 			segmented
 		>
-			<SourceConfigurationWizard @submitted="getConfiguredSources()" :disabledSources="configuredSourcesList" />
+			<SourceConfigurationWizard :disabled-sources="configuredSourcesList" @submitted="getConfiguredSources()" />
 		</n-modal>
 	</div>
 </template>
+
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from "vue"
-import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
-import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NModal, NPopover, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
+import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
+import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 
 const InfoIcon = "carbon:information"
 const NewSourceConfigurationIcon = "carbon:fetch-upload-cloud"

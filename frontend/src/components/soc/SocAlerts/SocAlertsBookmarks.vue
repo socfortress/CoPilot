@@ -15,7 +15,7 @@
 					<SocAlertItem
 						v-for="alert of bookmarksList"
 						:key="alert.alert_id"
-						:alertData="alert"
+						:alert-data="alert"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						:is-bookmark="true"
 						:users="usersList"
@@ -24,7 +24,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loadingBookmarks" />
+					<n-empty v-if="!loadingBookmarks" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -32,19 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, onMounted, onBeforeUnmount } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
-import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import Api from "@/api"
 import axios from "axios"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 
 const props = defineProps<{
 	usersList?: SocUser[]
 }>()
-const { usersList } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "bookmark"): void
 	(e: "deleted", value?: string): void
@@ -56,6 +54,8 @@ const emit = defineEmits<{
 		}
 	): void
 }>()
+
+const { usersList } = toRefs(props)
 
 let reloadTimeout: NodeJS.Timeout | null = null
 const message = useMessage()

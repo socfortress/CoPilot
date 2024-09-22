@@ -8,7 +8,7 @@
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<span>{{ subscription.name }}</span>
-					<span class="info-btn pt-0.5" @click.stop="showDetails = true" v-if="selectable">
+					<span v-if="selectable" class="info-btn pt-0.5" @click.stop="showDetails = true">
 						<Icon :name="InfoIcon" :size="14"></Icon>
 					</span>
 				</div>
@@ -16,13 +16,15 @@
 					{{ price(subscription.price) }}
 				</div>
 			</div>
-			<div class="main-box flex items-center gap-3" v-if="!hideDetails">
+			<div v-if="!hideDetails" class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-2 grow">
-					<div class="title">{{ subscription.info }}</div>
+					<div class="title">
+						{{ subscription.info }}
+					</div>
 					<div class="description">
 						{{ subscription.short_description }}
 					</div>
-					<div class="flex items-center justify-end" v-if="showDeleteOnCard && licenseData">
+					<div v-if="showDeleteOnCard && licenseData" class="flex items-center justify-end">
 						<n-popconfirm @positive-click="cancelSubscription()">
 							<template #trigger>
 								<n-button text size="small" class="opacity-50">
@@ -55,8 +57,10 @@
 						{{ price(subscription.price) }}
 					</div>
 				</div>
-				<div class="grow">{{ subscription.full_description }}</div>
-				<div class="flex items-center justify-end" v-if="showDeleteOnDialog && licenseData">
+				<div class="grow">
+					{{ subscription.full_description }}
+				</div>
+				<div v-if="showDeleteOnDialog && licenseData" class="flex items-center justify-end">
 					<n-popconfirm to="body" @positive-click="cancelSubscription()">
 						<template #trigger>
 							<n-button text size="small" class="opacity-50">
@@ -75,17 +79,13 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { ref, toRefs } from "vue"
-import { NSpin, NModal, NButton, NPopconfirm, useMessage } from "naive-ui"
-import Api from "@/api"
-import type { License, SubscriptionFeature } from "@/types/license.d"
-import { price } from "@/utils"
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
-
-const emit = defineEmits<{
-	(e: "deleted"): void
-}>()
+import type { License, SubscriptionFeature } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { price } from "@/utils"
+import { NButton, NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 
 const props = defineProps<{
 	subscription: SubscriptionFeature
@@ -97,6 +97,11 @@ const props = defineProps<{
 	showDeleteOnDialog?: boolean
 	licenseData?: License
 }>()
+
+const emit = defineEmits<{
+	(e: "deleted"): void
+}>()
+
 const { subscription, embedded, selectable, disabled, hideDetails, showDeleteOnCard, showDeleteOnDialog, licenseData } =
 	toRefs(props)
 

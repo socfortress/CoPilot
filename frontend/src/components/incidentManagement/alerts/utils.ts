@@ -1,8 +1,8 @@
-import { h } from "vue"
-import Api from "@/api"
-import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
-import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
+import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
+import Api from "@/api"
+import { h } from "vue"
 
 export interface DeleteAlertParams {
 	alert: Alert

@@ -24,10 +24,10 @@
 							<n-input
 								v-model:value="model.password"
 								type="password"
-								@keydown.enter="submit"
 								size="large"
 								show-password-on="click"
 								placeholder="At least 8 characters"
+								@keydown.enter="submit"
 							/>
 						</n-form-item>
 						<n-form-item path="confirmPassword" label="Confirm Password" first>
@@ -35,10 +35,10 @@
 								v-model:value="model.confirmPassword"
 								type="password"
 								:disabled="!model.password"
-								@keydown.enter="submit"
 								size="large"
 								show-password-on="click"
 								placeholder="At least 8 characters"
+								@keydown.enter="submit"
 							/>
 						</n-form-item>
 
@@ -53,26 +53,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue"
+import type { Size, Type } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import {
-	useMessage,
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	NButton,
 	NDrawer,
 	NDrawerContent,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton,
 	NSpin,
-	type FormInst,
-	type FormValidationError,
-	type FormRules,
-	type FormItemRule
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
-import { useAuthStore } from "@/stores/auth"
-import passwordValidator from "password-validator"
-import Icon from "@/components/common/Icon.vue"
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import PasswordValidator from "password-validator"
+import { computed, ref, watch } from "vue"
 
 const { type, size, username } = defineProps<{
 	username: string
@@ -95,7 +95,7 @@ const model = ref({
 })
 const formRef = ref<FormInst | null>(null)
 const storedUserName = useAuthStore().userName
-const passwordSchema = new passwordValidator()
+const passwordSchema = new PasswordValidator()
 
 passwordSchema
 	.is()

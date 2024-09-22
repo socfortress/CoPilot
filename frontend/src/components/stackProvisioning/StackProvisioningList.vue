@@ -6,7 +6,7 @@
 					<StackProvisioningItem v-for="item of list" :key="item.name" :content-pack="item" />
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -14,11 +14,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
-import StackProvisioningItem from "./StackProvisioningItem.vue"
 import type { AvailableContentPack } from "@/types/stackProvisioning.d"
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import StackProvisioningItem from "./StackProvisioningItem.vue"
 
 const message = useMessage()
 const loadingList = ref(false)

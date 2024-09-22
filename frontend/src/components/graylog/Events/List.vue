@@ -39,26 +39,27 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, toRefs, nextTick, watch } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
-import EventItem from "./Item.vue"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { SelectMixedOption } from "naive-ui/es/select/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import EventItem from "./Item.vue"
+
+const props = defineProps<{ highlight: string | null | undefined }>()
 
 const emit = defineEmits<{
 	(e: "loaded", value: EventDefinition[]): void
 }>()
 
-const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
@@ -69,7 +70,7 @@ const loading = ref(false)
 const events = ref<EventDefinition[]>([])
 const priorities = computed<SelectMixedOption[]>(() =>
 	[...new Set(events.value.map(o => o.priority))].map(o => ({
-		label: "Priority " + o.toString(),
+		label: `Priority ${o.toString()}`,
 		value: o
 	}))
 )

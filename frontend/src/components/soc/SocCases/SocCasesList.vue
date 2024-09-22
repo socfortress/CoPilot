@@ -1,6 +1,6 @@
 <template>
 	<div class="soc-cases-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -21,12 +21,12 @@
 				</n-popover>
 
 				<n-button
+					v-if="casesList.length"
 					size="small"
 					type="error"
 					ghost
-					@click="handlePurge()"
 					:loading="loadingPurge"
-					v-if="casesList.length"
+					@click="handlePurge()"
 				>
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
@@ -77,8 +77,8 @@
 						</n-input-group>
 					</div>
 					<div class="px-3 flex justify-end gap-2">
-						<n-button size="small" @click="showFilters = false" secondary>Close</n-button>
-						<n-button size="small" @click="getData()" type="primary" secondary>Submit</n-button>
+						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
+						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
 				</div>
 			</n-popover>
@@ -89,52 +89,52 @@
 					<SocCaseItem
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
-						:caseData="caseData"
-						@deleted="getData()"
+						:case-data="caseData"
 						class="item-appear item-appear-bottom item-appear-005"
+						@deleted="getData()"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch } from "vue"
-import {
-	useMessage,
-	NSpin,
-	NPopover,
-	NButton,
-	NEmpty,
-	NSelect,
-	NPagination,
-	NInputGroup,
-	NBadge,
-	NInputNumber,
-	useDialog
-} from "naive-ui"
-import Api from "@/api"
-import _cloneDeep from "lodash/cloneDeep"
-import _orderBy from "lodash/orderBy"
-import Icon from "@/components/common/Icon.vue"
-import { useResizeObserver } from "@vueuse/core"
 import type { CasesFilter } from "@/api/endpoints/soc"
 import type { DateFormatted, SocCase } from "@/types/soc/case.d"
-import SocCaseItem from "./SocCaseItem.vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
+import { useResizeObserver } from "@vueuse/core"
+import _cloneDeep from "lodash/cloneDeep"
+import _orderBy from "lodash/orderBy"
+import {
+	NBadge,
+	NButton,
+	NEmpty,
+	NInputGroup,
+	NInputNumber,
+	NPagination,
+	NPopover,
+	NSelect,
+	NSpin,
+	useDialog,
+	useMessage
+} from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
+import SocCaseItem from "./SocCaseItem.vue"
 
 const dialog = useDialog()
 const message = useMessage()

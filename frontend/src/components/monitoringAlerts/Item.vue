@@ -6,7 +6,9 @@
 			</div>
 			<div class="main-box flex items-center justify-between gap-4">
 				<div class="content">
-					<div class="title">{{ alert.alert_id }}</div>
+					<div class="title">
+						{{ alert.alert_id }}
+					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="active" class="cursor-pointer" @click="gotoIndex(alert.alert_index)">
@@ -29,7 +31,9 @@
 
 						<Badge type="splitted" color="primary">
 							<template #label>Source</template>
-							<template #value>{{ alert.alert_source }}</template>
+							<template #value>
+								{{ alert.alert_source }}
+							</template>
 						</Badge>
 					</div>
 				</div>
@@ -39,10 +43,10 @@
 					:alert="alert"
 					@deleted="emit('deleted')"
 					@invoked="emit('invoked')"
-					@startDeleting="loadingDelete = true"
-					@stopDeleting="loadingDelete = false"
-					@startInvoking="loadingInvoke = true"
-					@stopInvoking="loadingInvoke = false"
+					@start-deleting="loadingDelete = true"
+					@stop-deleting="loadingDelete = false"
+					@start-invoking="loadingInvoke = true"
+					@stop-invoking="loadingInvoke = false"
 				/>
 			</div>
 			<div class="footer-box flex justify-between items-center gap-3">
@@ -53,10 +57,10 @@
 					inline
 					@deleted="emit('deleted')"
 					@invoked="emit('invoked')"
-					@startDeleting="loadingDelete = true"
-					@stopDeleting="loadingDelete = false"
-					@startInvoking="loadingInvoke = true"
-					@stopInvoking="loadingInvoke = false"
+					@start-deleting="loadingDelete = true"
+					@stop-deleting="loadingDelete = false"
+					@start-invoking="loadingInvoke = true"
+					@stop-invoking="loadingInvoke = false"
 				/>
 			</div>
 		</div>
@@ -64,13 +68,13 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
+import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
+import { NSpin } from "naive-ui"
 import { computed, ref } from "vue"
 import AlertActions from "./ItemActions.vue"
-import { NSpin } from "naive-ui"
-import { useGoto } from "@/composables/useGoto"
-import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 const { alert, embedded } = defineProps<{
 	alert: MonitoringAlert

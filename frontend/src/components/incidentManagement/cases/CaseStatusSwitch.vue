@@ -13,20 +13,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { useMessage, NPopselect } from "naive-ui"
+import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import { NPopselect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	caseData: Case
 }>()
-const { caseData } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Case): void
 }>()
+
+const { caseData } = toRefs(props)
 
 const loading = ref(false)
 const message = useMessage()
@@ -35,14 +34,14 @@ const status = computed(() => caseData.value.case_status)
 const statusOptions = ref<
 	{
 		label: string
-		value: AlertStatus
+		value: CaseStatus
 	}[]
 >([
 	{ label: "Open", value: "OPEN" },
 	{ label: "In progress", value: "IN_PROGRESS" },
 	{ label: "Closed", value: "CLOSED" }
 ])
-const statusSelected = ref<AlertStatus | null>(null)
+const statusSelected = ref<CaseStatus | null>(null)
 
 function updateStatus() {
 	if (statusSelected.value && statusSelected.value !== status.value) {

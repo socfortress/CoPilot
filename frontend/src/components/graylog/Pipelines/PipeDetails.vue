@@ -41,23 +41,24 @@
 </template>
 
 <script setup lang="ts">
-import { NTimeline, NTimelineItem, NButton, NScrollbar, NPopover } from "naive-ui"
-import { computed, toRefs } from "vue"
 import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
 import Icon from "@/components/common/Icon.vue"
-import RulesSmallList, { type RuleExtended } from "./RulesSmallList.vue"
-import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"
+import { computed, toRefs } from "vue"
+import RulesSmallList, { type RuleExtended } from "./RulesSmallList.vue"
 
 interface PipelineFullStageExt extends Omit<PipelineFullStage, "rules" | "rule_ids"> {
 	rules: RuleExtended[]
 }
 
+const props = defineProps<{ pipeline: PipelineFull }>()
+
 const emit = defineEmits<{
 	(e: "clickRule", value: string): void
 }>()
 
-const props = defineProps<{ pipeline: PipelineFull }>()
 const { pipeline } = toRefs(props)
 
 const RulesIcon = "ic:outline-swipe-right-alt"

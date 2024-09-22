@@ -1,8 +1,12 @@
 <template>
 	<div class="collect-item flex flex-wrap gap-2 p-2" :class="{ embedded }">
 		<KVCard v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
-			<template #key>{{ prop.key }}</template>
-			<template #value>{{ prop.value }}</template>
+			<template #key>
+				{{ prop.key }}
+			</template>
+			<template #value>
+				{{ prop.value }}
+			</template>
 		</KVCard>
 		<KVCard class="more" @click="showDetails = true">
 			<template #value>
@@ -16,23 +20,23 @@
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			:bordered="false"
 		>
-			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initialExpandedDepth="2" />
+			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initial-expanded-depth="2" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NModal } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
 import type { CollectResult } from "@/types/artifacts.d"
+import KVCard from "@/components/common/KVCard.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
+import _isNumber from "lodash/isNumber"
+import _isString from "lodash/isString"
+import { NModal } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import KVCard from "@/components/common/KVCard.vue"
-import { onBeforeMount, ref } from "vue"
-import _isString from "lodash/isString"
-import _isNumber from "lodash/isNumber"
-import { formatDate } from "@/utils"
 
 interface Prop {
 	key: string

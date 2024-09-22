@@ -4,7 +4,7 @@ from loguru import logger
 from app.integrations.modules.schema.carbonblack import CollectCarbonBlack
 
 
-async def post_to_copilot_carbonblack_module(data: CollectCarbonBlack, license_key: str):
+async def post_to_copilot_carbonblack_module(data: CollectCarbonBlack, license_key: str = None) -> None:
     """
     Send a POST request to the copilot-huntress-module Docker container.
 
@@ -16,7 +16,7 @@ async def post_to_copilot_carbonblack_module(data: CollectCarbonBlack, license_k
         await client.post(
             "http://copilot-carbonblack-module/collect",
             json=data.dict(),
-            params={"license_key": license_key, "feature_name": "CARBONBLACK"},
+            # params={"license_key": license_key, "feature_name": "CARBONBLACK"},
             timeout=120,
         )
     return None

@@ -10,20 +10,28 @@
 			</div>
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
-					<div class="description mt-2" v-if="link.asset_description">{{ link.asset_description }}</div>
+					<div v-if="link.asset_description" class="description mt-2">
+						{{ link.asset_description }}
+					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="splitted" color="primary">
 							<template #label>Case open date</template>
-							<template #value>{{ formatDate(link.case_open_date) }}</template>
+							<template #value>
+								{{ formatDate(link.case_open_date) }}
+							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
 							<template #label>Asset id</template>
-							<template #value>{{ link.asset_id }}</template>
+							<template #value>
+								{{ link.asset_id }}
+							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
 							<template #label>Compromise status</template>
-							<template #value>{{ link.asset_compromise_status_id || "-" }}</template>
+							<template #value>
+								{{ link.asset_compromise_status_id || "-" }}
+							</template>
 						</Badge>
 					</div>
 				</div>
@@ -42,17 +50,17 @@
 				<div style="min-height: 50px">
 					<n-spin :show="loadingCase">
 						<SocCaseItem
-							:case-data="socCase"
 							v-if="socCase"
+							:case-data="socCase"
 							:embedded="true"
-							@deleted="getSocCase(link.case_id)"
 							class="py-2 -mt-4"
+							@deleted="getSocCase(link.case_id)"
 						/>
 						<template v-else>
 							<n-empty
+								v-if="!loadingCase"
 								description="No Case found"
 								class="justify-center h-28 -mt-4"
-								v-if="!loadingCase"
 							/>
 						</template>
 					</n-spin>
@@ -63,15 +71,15 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { ref } from "vue"
-import Api from "@/api"
-import { useMessage, NSpin, NCollapse, NEmpty, NCollapseItem } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import type { SocCaseAssetLink } from "@/types/soc/asset.d"
 import type { SocCase } from "@/types/soc/case.d"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
+import { NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
+import { ref } from "vue"
 import SocCaseItem from "./SocCaseItem.vue"
 
 const { link } = defineProps<{ link: SocCaseAssetLink }>()

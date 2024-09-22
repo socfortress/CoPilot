@@ -1,5 +1,5 @@
 <template>
-	<ThreatIntelProcessEvaluationProvider :processName v-slot="{ openEvaluation }">
+	<ThreatIntelProcessEvaluationProvider v-slot="{ openEvaluation }" :process-name>
 		<code class="cursor-pointer text-primary-color" @click="openEvaluation()">
 			{{ processName }}
 			<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -8,8 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import ThreatIntelProcessEvaluationProvider from "./ThreatIntelProcessEvaluationProvider.vue"
 import Icon from "@/components/common/Icon.vue"
+import ThreatIntelProcessEvaluationProvider from "./ThreatIntelProcessEvaluationProvider.vue"
 
 const { processName } = defineProps<{
 	processName: string

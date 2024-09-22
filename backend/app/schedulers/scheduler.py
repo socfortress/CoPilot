@@ -126,8 +126,14 @@ async def initialize_job_metadata():
                 "function": agent_sync,
                 "description": "Synchronizes agents with the Wazuh Manager and Velociraptor server.",
             },
+            # {
+            #     "job_id": "wazuh_index_fields_resize",
+            #     "time_interval": 1,
+            #     "function": resize_wazuh_index_fields,
+            #     "description": "Resizes the Wazuh index fields.",
+            # },
             {
-                "job_id": "wazuh_index_fields_resize",
+                "job_id": "resize_wazuh_index_fields",
                 "time_interval": 1,
                 "function": resize_wazuh_index_fields,
                 "description": "Resizes the Wazuh index fields.",
@@ -195,6 +201,7 @@ async def schedule_enabled_jobs(scheduler):
             "invoke_suricata_monitoring_alert",
             "invoke_office365_exchange_online_alert",
             "invoke_office365_threat_intel_alert",
+            "wazuh_index_fields_resize",
         ]
 
         # Disable each job in the list
@@ -241,7 +248,8 @@ def get_function_by_name(function_name: str):
     """
     function_map = {
         "agent_sync": agent_sync,
-        "wazuh_index_fields_resize": resize_wazuh_index_fields,
+        # "wazuh_index_fields_resize": resize_wazuh_index_fields,
+        "resize_wazuh_index_fields": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
         "invoke_sigma_queries_collect": invoke_sigma_queries_collect,
         "invoke_mimecast_integration": invoke_mimecast_integration,

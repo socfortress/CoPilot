@@ -1,7 +1,7 @@
-import { HttpClient } from "../httpClient"
-import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
 import type { OsTypesFull, OsTypesLower } from "@/types/common.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export interface ArtifactsQuery {
 	os?: OsTypesLower
@@ -38,10 +38,10 @@ export default {
 		let url = "/artifacts"
 
 		if (filters?.os) {
-			url = "/artifacts/" + filters.os
+			url = `/artifacts/${filters.os}`
 		}
 		if (filters?.hostname) {
-			url = "/artifacts/hostname/" + filters.hostname
+			url = `/artifacts/hostname/${filters.hostname}`
 		}
 
 		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(url)

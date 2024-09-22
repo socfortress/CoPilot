@@ -1,8 +1,8 @@
 <template>
-	<n-form :model="form" :rules="rules" ref="formRef">
+	<n-form ref="formRef" :model="form" :rules="rules">
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Configuration file" path="file">
-				<n-upload :max="1" accept="application/json, .json, .JSON" v-model:file-list="fileList">
+				<n-upload v-model:file-list="fileList" :max="1" accept="application/json, .json, .JSON">
 					<n-upload-dragger>
 						<div>
 							<Icon :name="UploadIcon" :size="28" :depth="3"></Icon>
@@ -17,19 +17,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment.d"
+import Icon from "@/components/common/Icon.vue"
 import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
 	NForm,
 	NFormItem,
 	NUpload,
 	NUploadDragger,
-	type FormRules,
-	type FormInst,
-	type UploadFileInfo,
-	type FormItemRule
+	type UploadFileInfo
 } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment.d"
+import { computed, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void

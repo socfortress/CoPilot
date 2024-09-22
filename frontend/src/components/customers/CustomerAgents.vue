@@ -7,9 +7,9 @@
 				:agent="agent"
 				bg-secondary
 				show-actions
+				class="item-appear item-appear-bottom item-appear-005"
 				@delete="getAgents()"
 				@click="gotoAgent(agent.agent_id)"
-				class="item-appear item-appear-bottom item-appear-005"
 			/>
 			<n-empty v-if="!list.length" description="No Agents found" class="justify-center h-48" />
 		</div>
@@ -17,13 +17,13 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
-import AgentCard from "@/components/agents/AgentCard.vue"
-import Api from "@/api"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import type { Customer } from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
+import type { Customer } from "@/types/customers.d"
+import Api from "@/api"
+import AgentCard from "@/components/agents/AgentCard.vue"
 import { useGoto } from "@/composables/useGoto"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	customer: Customer

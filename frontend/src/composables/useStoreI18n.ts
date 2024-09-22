@@ -1,5 +1,5 @@
-import { useI18n } from "vue-i18n"
 import { useLocalesStore } from "@/stores/i18n"
+import { useI18n } from "vue-i18n"
 
 export function useStoreI18n() {
 	const { t } = useI18n()

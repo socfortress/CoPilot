@@ -7,11 +7,11 @@
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
-						@crop="setCroppedImage"
 						shape="circle"
-						:placeholder="'Select your profile picture'"
+						placeholder="Select your profile picture"
+						@crop="setCroppedImage"
 					>
-						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()"></Icon>
+						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()" />
 					</ImageCropper>
 				</div>
 				<div class="info grow flex flex-col justify-center">
@@ -23,16 +23,16 @@
 							<n-tooltip placement="top">
 								<template #trigger>
 									<div class="tooltip-wrap">
-										<Icon :name="RoleIcon"></Icon>
+										<Icon :name="RoleIcon" />
 										<span>{{ userRole }}</span>
 									</div>
 								</template>
 								<span>Role</span>
 							</n-tooltip>
 						</div>
-						<div class="item" v-if="userEmail">
+						<div v-if="userEmail" class="item">
 							<div class="tooltip-wrap">
-								<Icon :name="EmailIcon"></Icon>
+								<Icon :name="EmailIcon" />
 								<span>{{ userEmail }}</span>
 							</div>
 						</div>
@@ -44,9 +44,9 @@
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
-						@crop="setCroppedImage"
 						shape="circle"
-						:placeholder="'Select your profile picture'"
+						placeholder="Select your profile picture"
+						@crop="setCroppedImage"
 					>
 						<n-button size="large" type="primary" @click="openCropper()">Edit profile image</n-button>
 					</ImageCropper>
@@ -59,7 +59,7 @@
 			</div>
 		</n-card>
 		<div class="main">
-			<n-tabs tab-class="!hidden" v-model:value="tabActive" animated>
+			<n-tabs v-model:value="tabActive" tab-class="!hidden" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
 				</n-tab-pane>
@@ -69,13 +69,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NButton, NTooltip, NTab, NTabs, NTabPane, NCard } from "naive-ui"
-import { ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
-import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
 import ChangePassword from "@/components/users/ChangePassword.vue"
+import { useAuthStore } from "@/stores/auth"
+import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { ref } from "vue"
 
 const propicEnabled = false
 

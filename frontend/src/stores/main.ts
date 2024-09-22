@@ -1,5 +1,5 @@
-import { defineStore, acceptHMRUpdate } from "pinia"
-import { type LoadingBarInst } from "naive-ui/es/loading-bar/src/LoadingBarProvider"
+import type { LoadingBarInst } from "naive-ui/es/loading-bar/src/LoadingBarProvider"
+import { acceptHMRUpdate, defineStore } from "pinia"
 
 export const useMainStore = defineStore("main", {
 	state: () => ({

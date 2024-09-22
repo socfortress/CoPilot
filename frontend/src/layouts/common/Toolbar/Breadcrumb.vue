@@ -17,14 +17,14 @@
 </template>
 
 <script lang="ts" setup>
-import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
-import _upperCase from "lodash/upperCase"
+import type { RouteLocationNormalizedLoaded } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 import _capitalize from "lodash/capitalize"
 import _split from "lodash/split"
-import { type RouteLocationNormalizedLoaded } from "vue-router"
+import _upperCase from "lodash/upperCase"
+import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
-import { useRouter, useRoute } from "vue-router"
-import Icon from "@/components/common/Icon.vue"
+import { useRoute, useRouter } from "vue-router"
 
 interface Page {
 	name: string
@@ -44,7 +44,6 @@ function goto(page: Partial<Page>) {
 	}
 	if (page.path && page.path !== route.path) {
 		router.push({ path: page.path })
-		return
 	}
 }
 

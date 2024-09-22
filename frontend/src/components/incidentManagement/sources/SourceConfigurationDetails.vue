@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loading || submitting" class="min-h-20">
-		<SourceConfigurationViewer v-if="sourceConfiguration" v-show="!editing" :sourceConfiguration />
+		<SourceConfigurationViewer v-if="sourceConfiguration" v-show="!editing" :source-configuration />
 
-		<div class="flex gap-2 justify-end items-center mt-4" v-if="!editing && !loading">
+		<div v-if="!editing && !loading" class="flex gap-2 justify-end items-center mt-4">
 			<n-button @click="setEditMode()">
 				<template #icon>
 					<Icon :name="EditIcon" :size="16"></Icon>
@@ -14,7 +14,7 @@
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
 			v-show="editing"
-			:sourceConfigurationModel="sourceConfiguration"
+			:source-configuration-model="sourceConfiguration"
 			show-index-name-field
 			@mounted="formCTX = $event"
 			@submitted="updateSourceConfiguration($event)"
@@ -32,14 +32,14 @@
 </template>
 
 <script setup lang="ts">
-import Api from "@/api"
-import { onBeforeMount, ref } from "vue"
-import { useMessage, NSpin, NButton } from "naive-ui"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import SourceConfigurationViewer from "./SourceConfigurationViewer.vue"
-import SourceConfigurationForm from "./SourceConfigurationForm.vue"
-import Icon from "@/components/common/Icon.vue"
 import type { ApiError } from "@/types/common.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
+import SourceConfigurationForm from "./SourceConfigurationForm.vue"
+import SourceConfigurationViewer from "./SourceConfigurationViewer.vue"
 
 const { source } = defineProps<{ source: SourceName }>()
 

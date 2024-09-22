@@ -1,9 +1,9 @@
 <template>
-	<n-spin :show="loading" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
+	<n-spin :id="`customer-${customer.customer_code}`" :show="loading" :class="{ highlight }" class="customer-item">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ customer.customer_code }}</div>
-				<div class="actions" v-if="!hideCardActions">
+				<div v-if="!hideCardActions" class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
 							<Icon :name="DetailsIcon"></Icon>
@@ -21,7 +21,9 @@
 				/>
 
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ customerInfo?.customer_name }}</div>
+					<div class="title">
+						{{ customerInfo?.customer_name }}
+					</div>
 					<div class="description">
 						{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
 					</div>
@@ -34,7 +36,9 @@
 						<Icon :name="UserTypeIcon" :size="14"></Icon>
 					</template>
 					<template #label>Type</template>
-					<template #value>{{ customerInfo?.customer_type || "-" }}</template>
+					<template #value>
+						{{ customerInfo?.customer_type || "-" }}
+					</template>
 				</Badge>
 
 				<n-popover trigger="hover" :disabled="addressLabel === '-'">
@@ -50,27 +54,27 @@
 					</template>
 
 					<div class="flex flex-col gap-1">
-						<div class="box" v-if="customerInfo?.address_line1">
+						<div v-if="customerInfo?.address_line1" class="box">
 							address_line1:
 							<code>{{ customerInfo.address_line1 }}</code>
 						</div>
-						<div class="box" v-if="customerInfo?.address_line2">
+						<div v-if="customerInfo?.address_line2" class="box">
 							address_line2:
 							<code>{{ customerInfo.address_line2 }}</code>
 						</div>
-						<div class="box" v-if="customerInfo?.postal_code">
+						<div v-if="customerInfo?.postal_code" class="box">
 							postal_code:
 							<code>{{ customerInfo.postal_code }}</code>
 						</div>
-						<div class="box" v-if="customerInfo?.city">
+						<div v-if="customerInfo?.city" class="box">
 							city:
 							<code>{{ customerInfo.city }}</code>
 						</div>
-						<div class="box" v-if="customerInfo?.state">
+						<div v-if="customerInfo?.state" class="box">
 							state:
 							<code>{{ customerInfo.state }}</code>
 						</div>
-						<div class="box" v-if="customerInfo?.country">
+						<div v-if="customerInfo?.country" class="box">
 							country:
 							<code>{{ customerInfo.country }}</code>
 						</div>
@@ -81,15 +85,19 @@
 					<template #iconLeft>
 						<Icon :name="PhoneIcon" :size="13"></Icon>
 					</template>
-					<template #value>{{ customerInfo?.phone || "-" }}</template>
+					<template #value>
+						{{ customerInfo?.phone || "-" }}
+					</template>
 				</Badge>
 
-				<Badge type="splitted" color="primary" v-if="customerInfo?.parent_customer_code">
+				<Badge v-if="customerInfo?.parent_customer_code" type="splitted" color="primary">
 					<template #iconLeft>
 						<Icon :name="ParentIcon" :size="13"></Icon>
 					</template>
 					<template #label>Parent</template>
-					<template #value>{{ customerInfo?.parent_customer_code }}</template>
+					<template #value>
+						{{ customerInfo?.parent_customer_code }}
+					</template>
 				</Badge>
 			</div>
 		</div>
@@ -104,21 +112,21 @@
 			segmented
 		>
 			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
-				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'" class="h-full">
+				<n-tabs v-if="selectedTabsGroup === 'customer'" type="line" animated :tabs-padding="24" class="h-full">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
 						<CustomerInfo
+							v-if="customerInfo"
+							v-model:loading="loadingDelete"
 							:customer="customerInfo"
 							@delete="deletedItem()"
 							@submitted="customerInfo = $event"
-							v-model:loading="loadingDelete"
-							v-if="customerInfo"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
 						<CustomerProvision
-							:customerMeta="customerMeta"
-							:customerCode="customer.customer_code"
-							:customerName="customer.customer_name"
+							:customer-meta="customerMeta"
+							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
 							@delete="customerMeta = null"
 							@submitted="customerMeta = $event"
 						/>
@@ -129,14 +137,14 @@
 						display-directive="show:lazy"
 					>
 						<CustomerIntegrations
-							:customerCode="customer.customer_code"
-							:customerName="customer.customer_name"
+							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Network Connectors" tab="Network Connectors" display-directive="show:lazy">
 						<CustomerNetworkConnectors
-							:customerCode="customer.customer_code"
-							:customerName="customer.customer_name"
+							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
 						/>
 					</n-tab-pane>
 					<n-tab-pane
@@ -144,7 +152,7 @@
 						tab="Notification Workflows"
 						display-directive="show:lazy"
 					>
-						<CustomerNotificationsWorkflows :customerCode="customer.customer_code" />
+						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
@@ -152,7 +160,7 @@
 						</div>
 					</template>
 				</n-tabs>
-				<n-tabs type="line" animated :tabs-padding="24" v-else-if="selectedTabsGroup === 'agents'">
+				<n-tabs v-else-if="selectedTabsGroup === 'agents'" type="line" animated :tabs-padding="24">
 					<template #prefix>
 						<div
 							class="pl-6 relative top-1 hover:text-primary-color cursor-pointer"
@@ -164,14 +172,14 @@
 					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
-								<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
-								<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+								<CustomerHealthcheckList source="wazuh" :customer-code="customer.customer_code" />
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
@@ -182,7 +190,10 @@
 					>
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
-								<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+								<CustomerHealthcheckList
+									source="velociraptor"
+									:customer-code="customer.customer_code"
+								/>
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
@@ -193,15 +204,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
+import type { Customer, CustomerMeta } from "@/types/customers.d"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"
-import type { Customer, CustomerMeta } from "@/types/customers.d"
+import { NAvatar, NButton, NModal, NPopover, NScrollbar, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 
+const props = defineProps<{
+	customer: Customer
+	highlight?: boolean | null | undefined
+	hideCardActions?: boolean | null | undefined
+}>()
+const emit = defineEmits<{
+	(e: "delete"): void
+}>()
 const CustomerInfo = defineAsyncComponent(() => import("./CustomerInfo.vue"))
 const CustomerAgents = defineAsyncComponent(() => import("./CustomerAgents.vue"))
 const CustomerProvision = defineAsyncComponent(() => import("./provision/CustomerProvision.vue"))
@@ -214,15 +233,6 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
 
-const emit = defineEmits<{
-	(e: "delete"): void
-}>()
-
-const props = defineProps<{
-	customer: Customer
-	highlight?: boolean | null | undefined
-	hideCardActions?: boolean | null | undefined
-}>()
 const { customer, highlight, hideCardActions } = toRefs(props)
 
 const DetailsIcon = "carbon:settings-adjust"
@@ -244,7 +254,7 @@ const loading = computed(() => loadingFull.value || loadingDelete.value)
 const fallbackAvatar = computed(() => {
 	let text = customer.value.customer_name.slice(0, 2).toUpperCase()
 
-	if (customer.value.customer_name.indexOf(" ") !== -1) {
+	if (customer.value.customer_name.includes(" ")) {
 		const chunks = customer.value.customer_name.split(" ")
 		text = (chunks[0][0] + chunks[1][0]).toUpperCase()
 	}

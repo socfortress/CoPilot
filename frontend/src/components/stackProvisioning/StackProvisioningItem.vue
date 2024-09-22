@@ -1,13 +1,19 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between gap-4">
-			<div class="name">{{ contentPack.name }}</div>
+			<div class="name">
+				{{ contentPack.name }}
+			</div>
 		</div>
 		<div class="main-box flex justify-between gap-4">
-			<div class="description">{{ contentPack.description }}</div>
+			<div class="description">
+				{{ contentPack.description }}
+			</div>
 			<div class="actions-box">
 				<n-button :loading="loadingProvision" type="success" secondary @click="provision(contentPack.name)">
-					<template #icon><Icon :name="DeployIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="DeployIcon"></Icon>
+					</template>
 					Deploy
 				</n-button>
 			</div>
@@ -21,7 +27,9 @@
 					size="small"
 					@click="provision(contentPack.name)"
 				>
-					<template #icon><Icon :name="DeployIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="DeployIcon"></Icon>
+					</template>
 					Deploy
 				</n-button>
 			</div>
@@ -30,17 +38,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import type { AvailableContentPack } from "@/types/stackProvisioning.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, useMessage } from "naive-ui"
-import Api from "@/api"
-import type { AvailableContentPack } from "@/types/stackProvisioning.d"
+import { ref } from "vue"
+
+const { contentPack } = defineProps<{ contentPack: AvailableContentPack }>()
 
 const emit = defineEmits<{
 	(e: "provisioned"): void
 }>()
-
-const { contentPack } = defineProps<{ contentPack: AvailableContentPack }>()
 
 const DeployIcon = "mdi:package-variant-closed-check"
 const loadingProvision = ref(false)

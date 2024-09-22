@@ -2,9 +2,13 @@
 	<div class="active-response-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
-				<div class="title">{{ activeResponse.name }}</div>
+				<div class="title">
+					{{ activeResponse.name }}
+				</div>
 				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon><Icon :name="InfoIcon"></Icon></template>
+					<template #icon>
+						<Icon :name="InfoIcon"></Icon>
+					</template>
 				</n-button>
 			</div>
 			<div class="main-box flex items-center gap-3">
@@ -14,21 +18,21 @@
 					</div>
 				</div>
 				<ActiveResponseActions
-					class="actions-box"
 					v-if="!hideActions"
-					:agentId="agentId"
-					:activeResponse="activeResponse"
+					class="actions-box"
+					:agent-id="agentId"
+					:active-response="activeResponse"
 					@start-loading="loading = true"
 					@stop-loading="loading = false"
 				/>
 			</div>
 			<div class="footer-box flex justify-between items-center gap-4">
 				<ActiveResponseActions
-					class="actions-box"
 					v-if="!hideActions"
-					:agentId="agentId"
-					:activeResponse="activeResponse"
-					:size="'small'"
+					class="actions-box"
+					:agent-id="agentId"
+					:active-response="activeResponse"
+					size="small"
 					@start-loading="loading = true"
 					@stop-loading="loading = false"
 				/>
@@ -43,18 +47,18 @@
 			:bordered="false"
 			segmented
 		>
-			<ActiveResponseDetails :activeResponse="activeResponse" />
+			<ActiveResponseDetails :active-response="activeResponse" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal } from "naive-ui"
+import { ref, toRefs } from "vue"
 import ActiveResponseActions from "./ActiveResponseActions.vue"
 import ActiveResponseDetails from "./ActiveResponseDetails.vue"
-import { NButton, NModal } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	activeResponse: SupportedActiveResponse

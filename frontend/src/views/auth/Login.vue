@@ -1,11 +1,11 @@
 <template>
 	<div class="page-auth">
-		<div class="flex wrapper justify-center" v-if="!isLogged">
-			<div class="image-box basis-2/3" v-if="align === 'right'"></div>
+		<div v-if="!isLogged" class="flex wrapper justify-center">
+			<div v-if="align === 'right'" class="image-box basis-2/3" />
 			<div class="form-box basis-1/3 flex items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type="type" />
 			</div>
-			<div class="image-box basis-2/3" v-if="align === 'left'">
+			<div v-if="align === 'left'" class="image-box basis-2/3">
 				<video playsinline autoplay muted loop poster="/images/login/cover.webp">
 					<source src="/images/login/video.mp4" type="video/mp4" />
 					Your browser does not support the video tag.
@@ -16,12 +16,12 @@
 </template>
 
 <script lang="ts" setup>
-import AuthForm from "@/components/auth/AuthForm.vue"
-import { ref, computed, onBeforeMount, toRefs } from "vue"
-import { useRoute } from "vue-router"
-import { useThemeStore } from "@/stores/theme"
-import { useAuthStore } from "@/stores/auth"
 import type { FormType } from "@/components/auth/types.d"
+import AuthForm from "@/components/auth/AuthForm.vue"
+import { useAuthStore } from "@/stores/auth"
+import { useThemeStore } from "@/stores/theme"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { useRoute } from "vue-router"
 
 type Align = "left" | "center" | "right"
 

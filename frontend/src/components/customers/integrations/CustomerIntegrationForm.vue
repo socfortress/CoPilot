@@ -7,7 +7,7 @@
 						<n-step title="Choose Integration" />
 						<n-step title="Set Auth Keys">
 							<template #icon>
-								<Icon :name="SkipIcon" v-if="!isAuthKeysStepEnabled"></Icon>
+								<Icon v-if="!isAuthKeysStepEnabled" :name="SkipIcon"></Icon>
 							</template>
 						</n-step>
 					</n-steps>
@@ -17,24 +17,24 @@
 
 		<div class="flex flex-col grow overflow-hidden">
 			<Transition :name="`slide-form-${slideFormDirection}`">
-				<div class="available-list grow overflow-hidden" v-if="current === 1">
+				<div v-if="current === 1" class="available-list grow overflow-hidden">
 					<n-scrollbar style="max-height: 355px" trigger="none">
 						<IntegrationsList
+							v-model:selected="selectedIntegration"
 							embedded
 							hide-totals
 							selectable
-							:disabledIdsList="disabledIdsList"
-							v-model:selected="selectedIntegration"
+							:disabled-ids-list="disabledIdsList"
 							class="px-7"
 						/>
 					</n-scrollbar>
 				</div>
-				<div class="auth-key-form px-7 flex flex-wrap gap-3" v-else>
+				<div v-else class="auth-key-form px-7 flex flex-wrap gap-3">
 					<template v-for="ak of authKeysForm" :key="ak.key">
-						<n-form-item :label="ak.key" required class="grow" v-if="ak.type === 'string'">
+						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
 							<n-input v-model:value="ak.value" :placeholder="`Input ${ak.key}...`" clearable />
 						</n-form-item>
-						<n-form-item :label="ak.key" required class="grow" v-if="ak.type === 'selectType'">
+						<n-form-item v-if="ak.type === 'selectType'" :label="ak.key" required class="grow">
 							<n-select
 								v-model:value="ak.value"
 								:options="apiTypeOptions"
@@ -53,24 +53,24 @@
 				<n-button @click="close()">Close</n-button>
 			</div>
 			<div class="flex gap-4">
-				<n-button @click="prev()" v-if="isPrevStepEnabled">
+				<n-button v-if="isPrevStepEnabled" @click="prev()">
 					<template #icon>
 						<Icon :name="ArrowLeftIcon"></Icon>
 					</template>
 					Prev
 				</n-button>
-				<n-button @click="next()" v-if="isNextStepShown" :disabled="!isNextStepEnabled" icon-placement="right">
+				<n-button v-if="isNextStepShown" :disabled="!isNextStepEnabled" icon-placement="right" @click="next()">
 					<template #icon>
 						<Icon :name="ArrowRightIcon"></Icon>
 					</template>
 					Next
 				</n-button>
 				<n-button
+					v-if="isSubmitEnabled"
 					type="primary"
-					@click="submit()"
 					:disabled="!isSubmitValid"
 					:loading="loading"
-					v-if="isSubmitEnabled"
+					@click="submit()"
 				>
 					Submit
 				</n-button>
@@ -80,13 +80,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue"
-import { useMessage, NFormItem, NInput, NSelect, NButton, NScrollbar, NSteps, NStep, type StepsProps } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
 import type { NewIntegration } from "@/api/endpoints/integrations"
 import type { ServiceItemData } from "@/components/services/types"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
+import { NButton, NFormItem, NInput, NScrollbar, NSelect, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
 
 interface AuthKeysInput {
 	key: string

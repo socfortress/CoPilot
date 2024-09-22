@@ -1,7 +1,7 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-2 max-w-80 min-w-72">
@@ -15,8 +15,8 @@
 			<p class="text-right">* It may take several minutes</p>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
-				<n-button :disabled="!isValid" :loading @click="uploadQueries()" type="primary" size="small">
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
+				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload
 				</n-button>
 			</div>
@@ -25,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
-import { NButton, NPopover, NCheckboxGroup, NCheckbox, useMessage } from "naive-ui"
-import Api from "@/api"
 import type { SigmaRuleLevels } from "@/types/sigma.d"
+import Api from "@/api"
+import { NButton, NCheckbox, NCheckboxGroup, NPopover, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

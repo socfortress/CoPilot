@@ -27,7 +27,9 @@
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
 					<div class="title" v-html="note.note_title"></div>
-					<div class="description mt-2" v-if="note.note_details.note_content">{{ excerpt }}</div>
+					<div v-if="note.note_details.note_content" class="description mt-2">
+						{{ excerpt }}
+					</div>
 
 					<!--
 						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
@@ -48,7 +50,9 @@
 				</div>
 			</div>
 			<div class="footer-box flex justify-end items-center gap-3">
-				<div class="time">{{ formatDateTime(note.note_details.note_creationdate) }}</div>
+				<div class="time">
+					{{ formatDateTime(note.note_details.note_creationdate) }}
+				</div>
 			</div>
 		</div>
 
@@ -63,10 +67,14 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value || "-" }}</template>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -96,18 +104,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue"
-import { NModal, NTabs, NTabPane, NInput, NPopover } from "naive-ui"
+import type { SocNote } from "@/types/soc/note.d"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import _omit from "lodash/omit"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import type { SocNote } from "@/types/soc/note.d"
-
-const SocCaseNoteTimeline = defineAsyncComponent(() => import("./SocCaseNoteTimeline.vue"))
+import _omit from "lodash/omit"
+import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 
 const { note } = defineProps<{ note: SocNote }>()
+
+const SocCaseNoteTimeline = defineAsyncComponent(() => import("./SocCaseNoteTimeline.vue"))
 
 const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"

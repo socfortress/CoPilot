@@ -2,13 +2,15 @@
 	<div class="alerts-stats-item flex items-stretch">
 		<div class="info grow flex flex-col gap-1 justify-center">
 			<div
-				class="agent"
 				v-if="summary.agent_name"
+				class="agent"
 				:class="{ 'text-secondary-color': summary.agent_name && summary.rule }"
 			>
 				{{ summary.agent_name }}
 			</div>
-			<div class="rule" v-if="summary.rule">{{ summary.rule }}</div>
+			<div v-if="summary.rule" class="rule">
+				{{ summary.rule }}
+			</div>
 		</div>
 		<div class="count font-mono flex items-center justify-center">
 			<span v-if="summary.number_of_alerts">

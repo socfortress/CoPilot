@@ -15,13 +15,13 @@
 							:key="item.index"
 							class="item"
 							:class="item.health"
-							@click="emit('click', item)"
 							title="Click for details"
+							@click="emit('click', item)"
 						>
 							<IndexCard :index="item" />
 						</div>
 					</template>
-					<n-empty description="No Unhealthy Indices found" v-else>
+					<n-empty v-else description="No Unhealthy Indices found">
 						<template #icon>
 							<Icon :name="ShieldIcon"></Icon>
 						</template>
@@ -34,21 +34,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
-import { type IndexStats, IndexHealth } from "@/types/indices.d"
-import IndexCard from "@/components/indices/IndexCard.vue"
-import { NSpin, NCard, NEmpty, NScrollbar } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import IndexCard from "@/components/indices/IndexCard.vue"
+import { IndexHealth, type IndexStats } from "@/types/indices.d"
+import { NCard, NEmpty, NScrollbar, NSpin } from "naive-ui"
+import { computed, toRefs } from "vue"
 
-const ShieldIcon = "fluent:shield-task-20-regular"
+const props = defineProps<{
+	indices: IndexStats[] | null
+}>()
 
 const emit = defineEmits<{
 	(e: "click", value: IndexStats): void
 }>()
 
-const props = defineProps<{
-	indices: IndexStats[] | null
-}>()
+const ShieldIcon = "fluent:shield-task-20-regular"
+
 const { indices } = toRefs(props)
 
 const loading = computed(() => !indices?.value || indices.value === null)

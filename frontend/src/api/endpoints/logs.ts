@@ -1,24 +1,25 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Log, LogsQuery, LogsQueryTimeRange } from "@/types/logs.d"
+import type { UnionToIntersection } from "type-fest"
+import { HttpClient } from "../httpClient"
 
 export default {
-	getLogs(query?: LogsQuery) {
+	getLogs(query?: Partial<UnionToIntersection<LogsQuery>>) {
 		let method: "get" | "post" = "get"
 		let url = "logs"
-		let body: { time_range: LogsQueryTimeRange } | undefined = undefined
+		let body: { time_range: LogsQueryTimeRange } | undefined
 
-		if (query && "userId" in query) {
+		if (query?.userId) {
 			method = "get"
 			url = `/logs/${query.userId}`
 			body = undefined
-		} else if (query && "timeRange" in query) {
+		} else if (query?.timeRange) {
 			method = "post"
 			url = `/logs/timerange`
 			body = {
 				time_range: query.timeRange
 			}
-		} else if (query && "eventType" in query) {
+		} else if (query?.eventType) {
 			method = "post"
 			url = `/logs/${query.eventType}`
 			body = undefined

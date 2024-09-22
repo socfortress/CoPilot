@@ -2,6 +2,7 @@
 	<nav class="nav" :class="[{ collapsed }, mode]">
 		<n-menu
 			ref="menu"
+			v-model:value="selectedKey"
 			:options="menuOptions"
 			:collapsed="collapsed"
 			:mode="mode"
@@ -13,7 +14,6 @@
 					class: 'main-nav'
 				})
 			}"
-			v-model:value="selectedKey"
 			:expanded-keys="expandedKeys"
 			@update:expanded-keys="handleUpdateExpandedKeys"
 		/>
@@ -21,13 +21,13 @@
 </template>
 
 <script lang="ts" setup>
-import { type MenuInst, NMenu } from "naive-ui"
-import getItems from "./items"
+import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import { useThemeStore } from "@/stores/theme"
-import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-import { useRouter, useRoute, type RouteRecordNormalized } from "vue-router"
 import _uniq from "lodash/uniq"
+import { type MenuInst, NMenu } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { type RouteRecordNormalized, useRoute, useRouter } from "vue-router"
+import getItems from "./items"
 
 const props = withDefaults(
 	defineProps<{

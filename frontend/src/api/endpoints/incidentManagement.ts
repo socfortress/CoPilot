@@ -1,6 +1,4 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
 	Alert,
 	AlertComment,
@@ -10,8 +8,11 @@ import type {
 	AlertTag,
 	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
-import type { Case, CasePayload } from "@/types/incidentManagement/cases.d"
+import type { Case, CaseDataStore, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { KeysOfUnion, UnionToIntersection } from "type-fest"
+import { HttpClient } from "../httpClient"
 
 export type AlertsFilter =
 	| { status: AlertStatus }
@@ -19,15 +20,25 @@ export type AlertsFilter =
 	| { assignedTo: string }
 	| { tag: string }
 	| { title: string }
+	| { customerCode: string }
+	| { source: string }
+
+export type AlertsFilterTypes = KeysOfUnion<AlertsFilter>
 
 export interface AlertsQuery {
 	page: number
 	pageSize: number
 	sort: "asc" | "desc"
-	filters: AlertsFilter
+	filters: Partial<UnionToIntersection<AlertsFilter>>
 }
 
-export type CasesFilter = { status: AlertStatus } | { assignedTo: string } | { hostname: string }
+export type CasesFilter =
+	| { status: CaseStatus }
+	| { assignedTo: string }
+	| { hostname: string }
+	| { customerCode: string }
+
+export type CasesFilterTypes = KeysOfUnion<CasesFilter>
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
@@ -84,20 +95,26 @@ export default {
 	getAlertsList(args: Partial<AlertsQuery>, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/alerts`
 
-		if (args?.filters && "status" in args.filters) {
+		if (args?.filters?.status) {
 			url = `/incidents/db_operations/alerts/status/${args.filters.status}`
 		}
-		if (args?.filters && "assetName" in args.filters) {
+		if (args?.filters?.assetName) {
 			url = `/incidents/db_operations/alerts/asset/${args.filters.assetName}`
 		}
-		if (args?.filters && "assignedTo" in args.filters) {
+		if (args?.filters?.assignedTo) {
 			url = `/incidents/db_operations/alerts/assigned-to/${args.filters.assignedTo}`
 		}
-		if (args?.filters && "tag" in args.filters) {
+		if (args?.filters?.tag) {
 			url = `/incidents/db_operations/alert/tag/${args.filters.tag}`
 		}
-		if (args?.filters && "title" in args.filters) {
+		if (args?.filters?.title) {
 			url = `/incidents/db_operations/alerts/title/${args.filters.title}`
+		}
+		if (args?.filters?.customerCode) {
+			url = `/incidents/db_operations/alerts/customer/${args.filters.customerCode}`
+		}
+		if (args?.filters?.source) {
+			url = `/incidents/db_operations/alerts/source/${args.filters.source}`
 		}
 
 		return HttpClient.get<
@@ -174,16 +191,19 @@ export default {
 	// #endregion
 
 	// #region Cases
-	getCasesList(filters?: CasesFilter) {
+	getCasesList(filters?: Partial<UnionToIntersection<CasesFilter>>) {
 		let url = `/incidents/db_operations/cases`
 
-		if (filters && "status" in filters) {
+		if (filters?.status) {
 			url = `/incidents/db_operations/case/status/${filters.status}`
 		}
-		if (filters && "assignedTo" in filters) {
+		if (filters?.assignedTo) {
 			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
 		}
-		if (filters && "hostname" in filters) {
+		if (filters?.customerCode) {
+			url = `/incidents/db_operations/case/customer/${filters.customerCode}`
+		}
+		if (filters?.hostname) {
 			url = `/agents/${filters.hostname}/cases`
 		}
 
@@ -212,7 +232,7 @@ export default {
 			}
 		)
 	},
-	updateCaseStatus(caseId: number, status: AlertStatus) {
+	updateCaseStatus(caseId: number, status: CaseStatus) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
 			case_id: caseId,
 			status
@@ -226,6 +246,44 @@ export default {
 	},
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
+	},
+	exportCases(customerCode?: string) {
+		let url = `/incidents/report/generate-report`
+
+		if (customerCode) {
+			url = `/incidents/report/generate-report/${customerCode}`
+		}
+
+		return HttpClient.post<Blob>(url, {
+			responseType: "blob"
+		})
+	},
+	getCaseDataStoreFiles(caseId: number) {
+		return HttpClient.get<FlaskBaseResponse & { case_data_store: CaseDataStore[] }>(
+			`/incidents/db_operations/case/data-store/${caseId}`
+		)
+	},
+	downloadCaseDataStoreFile(caseId: number, fileName: string) {
+		return HttpClient.get<Blob>(`/incidents/db_operations/case/data-store/download/${caseId}/${fileName}`, {
+			responseType: "blob"
+		})
+	},
+	uploadCaseDataStoreFile(caseId: number, file: File) {
+		const form = new FormData()
+		form.append("file", new Blob([file], { type: file.type }), file.name)
+
+		return HttpClient.post<FlaskBaseResponse & { case_data_store: CaseDataStore }>(
+			`/incidents/db_operations/case/data-store/upload`,
+			form,
+			{
+				params: {
+					case_id: caseId
+				}
+			}
+		)
+	},
+	deleteCaseDataStoreFile(caseId: number, fileName: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
 	},
 	// #endregion
 

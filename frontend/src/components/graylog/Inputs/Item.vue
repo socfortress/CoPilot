@@ -7,7 +7,9 @@
 					{{ input.creator_user_id }}
 				</div>
 			</div>
-			<div class="time">{{ formatDateTime(input.created_at) }}</div>
+			<div class="time">
+				{{ formatDateTime(input.created_at) }}
+			</div>
 			<n-button size="small" @click.stop="showDetails = true">
 				<template #icon>
 					<Icon :name="InfoIcon"></Icon>
@@ -16,8 +18,12 @@
 		</div>
 		<div class="main-box flex justify-between">
 			<div class="content">
-				<div class="title">{{ input.title }}</div>
-				<div class="name mb-2">{{ input.name }}</div>
+				<div class="title">
+					{{ input.title }}
+				</div>
+				<div class="name mb-2">
+					{{ input.name }}
+				</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
 					<Badge :type="input.global ? 'active' : 'muted'">
 						<template #iconRight>
@@ -40,29 +46,39 @@
 			</div>
 
 			<div class="actions-box flex flex-col justify-end">
-				<n-button @click="stop()" :loading="loading" v-if="isRunning">
-					<template #icon><Icon :name="StopIcon"></Icon></template>
+				<n-button v-if="isRunning" :loading="loading" @click="stop()">
+					<template #icon>
+						<Icon :name="StopIcon"></Icon>
+					</template>
 					Stop input
 				</n-button>
-				<n-button @click="start()" :loading="loading" v-else type="primary">
-					<template #icon><Icon :name="StartIcon"></Icon></template>
+				<n-button v-else :loading="loading" type="primary" @click="start()">
+					<template #icon>
+						<Icon :name="StartIcon"></Icon>
+					</template>
 					Start input
 				</n-button>
 			</div>
 		</div>
 		<div class="footer-box flex justify-between items-center">
 			<div class="actions-box flex flex-col justify-end">
-				<n-button @click="stop()" :loading="loading" v-if="isRunning" size="small">
-					<template #icon><Icon :name="StopIcon"></Icon></template>
+				<n-button v-if="isRunning" :loading="loading" size="small" @click="stop()">
+					<template #icon>
+						<Icon :name="StopIcon"></Icon>
+					</template>
 					Stop
 				</n-button>
-				<n-button @click="start()" :loading="loading" v-else type="primary" size="small">
-					<template #icon><Icon :name="StartIcon"></Icon></template>
+				<n-button v-else :loading="loading" type="primary" size="small" @click="start()">
+					<template #icon>
+						<Icon :name="StartIcon"></Icon>
+					</template>
 					Start
 				</n-button>
 			</div>
 
-			<div class="time">{{ formatDateTime(input.created_at) }}</div>
+			<div class="time">
+				{{ formatDateTime(input.created_at) }}
+			</div>
 		</div>
 
 		<n-modal
@@ -97,7 +113,7 @@
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="input.static_fields"
-							:initialExpandedDepth="1"
+							:initial-expanded-depth="1"
 						/>
 					</div>
 				</n-tab-pane>
@@ -106,7 +122,7 @@
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="input.attributes"
-							:initialExpandedDepth="1"
+							:initial-expanded-depth="1"
 						/>
 					</div>
 				</n-tab-pane>
@@ -116,22 +132,22 @@
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from "@/stores/settings"
-import Icon from "@/components/common/Icon.vue"
+import type { InputExtended } from "@/types/graylog/inputs.d"
+import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import { NModal, NButton, useMessage, NTooltip, NTabs, NTabPane } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { NButton, NModal, NTabPane, NTabs, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import Api from "@/api"
-import type { InputExtended } from "@/types/graylog/inputs.d"
-import { formatDate } from "@/utils"
+
+const { input } = defineProps<{ input: InputExtended }>()
 
 const emit = defineEmits<{
 	(e: "updated"): void
 }>()
-
-const { input } = defineProps<{ input: InputExtended }>()
 
 const UserIcon = "carbon:user"
 const InfoIcon = "carbon:information"

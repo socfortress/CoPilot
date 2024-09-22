@@ -1,7 +1,7 @@
 <template>
-	<button class="fullscreen-switch" @click="toggleFullscreen" alt="fullscreen-switch" aria-label="fullscreen-switch">
-		<Icon :size="20" :name="CloseIcon" v-if="isFullscreen"></Icon>
-		<Icon :size="20" :name="OpenIcon" v-else></Icon>
+	<button class="fullscreen-switch" alt="fullscreen-switch" aria-label="fullscreen-switch" @click="toggleFullscreen">
+		<Icon v-if="isFullscreen" :size="20" :name="CloseIcon"></Icon>
+		<Icon v-else :size="20" :name="OpenIcon"></Icon>
 	</button>
 </template>
 

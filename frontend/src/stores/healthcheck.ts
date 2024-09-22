@@ -1,8 +1,8 @@
-import _toNumber from "lodash/toNumber"
-import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
 import Api from "@/api"
-import { defineStore, acceptHMRUpdate } from "pinia"
+import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import { IndexHealth } from "@/types/indices.d"
+import _toNumber from "lodash/toNumber"
+import { acceptHMRUpdate, defineStore } from "pinia"
 
 export const usHealthcheckStore = defineStore("healthcheck", {
 	state: () => ({

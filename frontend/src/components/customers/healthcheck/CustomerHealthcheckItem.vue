@@ -6,7 +6,7 @@
 					<span>#{{ healthData.id }} - {{ healthData.label }}</span>
 					<Icon :name="InfoIcon" :size="16"></Icon>
 				</div>
-				<div class="time" v-if="cardDate">
+				<div v-if="cardDate" class="time">
 					{{ cardDate }}
 				</div>
 			</div>
@@ -24,14 +24,18 @@
 			</div>
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<Badge type="splitted" color="primary" v-if="agentVersion">
+				<Badge v-if="agentVersion" type="splitted" color="primary">
 					<template #label>Agent version</template>
-					<template #value>{{ agentVersion }}</template>
+					<template #value>
+						{{ agentVersion }}
+					</template>
 				</Badge>
 
-				<Badge type="splitted" color="primary" v-if="source === 'velociraptor'">
+				<Badge v-if="source === 'velociraptor'" type="splitted" color="primary">
 					<template #label>Velociraptor Id</template>
-					<template #value>{{ healthData.velociraptor_id }}</template>
+					<template #value>
+						{{ healthData.velociraptor_id }}
+					</template>
 				</Badge>
 
 				<n-popover overlap placement="bottom-start">
@@ -74,8 +78,12 @@
 		>
 			<div class="grid gap-2 grid-auto-fit-200 px-7 py-6">
 				<KVCard v-for="(value, key) of healthData" :key="key">
-					<template #key>{{ key }}</template>
-					<template #value>{{ value || "-" }}</template>
+					<template #key>
+						{{ key }}
+					</template>
+					<template #value>
+						{{ value || "-" }}
+					</template>
 				</KVCard>
 			</div>
 		</n-modal>
@@ -83,16 +91,16 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, ref } from "vue"
-import KVCard from "@/components/common/KVCard.vue"
-import { NPopover, NModal } from "naive-ui"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
-import dayjs from "@/utils/dayjs"
-import { iconFromOs } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { iconFromOs } from "@/utils"
+import dayjs from "@/utils/dayjs"
+import { NModal, NPopover } from "naive-ui"
+import { computed, ref } from "vue"
 
 const { healthData, source, bgSecondary, type } = defineProps<{
 	healthData: CustomerAgentHealth

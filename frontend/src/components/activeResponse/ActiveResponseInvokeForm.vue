@@ -2,7 +2,7 @@
 	<div class="active-response-invoke-form flex flex-col justify-between grow">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
-				<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 					<div class="grid gap-6 grid-auto-fit-200">
 						<n-form-item label="Action" path="action">
 							<n-select v-model:value="form.action" :options="invokeActionOptions" />
@@ -22,35 +22,40 @@
 			<div class="flex gap-3">
 				<slot name="additionalActions"></slot>
 			</div>
-			<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">Submit</n-button>
+			<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">Submit</n-button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import Api from "@/api"
 import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
 	NButton,
 	NForm,
 	NFormItem,
 	NInput,
 	NSelect,
 	NSpin,
-	useMessage,
-	type FormItemRule,
-	type FormRules,
-	type FormInst,
-	type FormValidationError
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
 import isIP from "validator/es/lib/isIP"
-import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import { computed, onMounted, ref, watch } from "vue"
 
 interface InvokeForm {
 	action: null | InvokeRequestAction
 	ip: string
 }
+
+const { activeResponse, agentId } = defineProps<{
+	activeResponse: SupportedActiveResponse
+	agentId?: string | number
+}>()
 
 const emit = defineEmits<{
 	(e: "submitted"): void
@@ -62,11 +67,6 @@ const emit = defineEmits<{
 			reset: () => void
 		}
 	): void
-}>()
-
-const { activeResponse, agentId } = defineProps<{
-	activeResponse: SupportedActiveResponse
-	agentId?: string | number
 }>()
 
 const message = useMessage()

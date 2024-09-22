@@ -2,7 +2,7 @@
 	<div class="artifacts-quarantine">
 		<div class="header flex justify-end items-start gap-2">
 			<div class="grow flex items-center justify-end gap-2 flex-wrap">
-				<div class="grow basis-56" v-if="!hideHostnameField">
+				<div v-if="!hideHostnameField" class="grow basis-56">
 					<n-select
 						v-model:value="filters.hostname"
 						:options="agentHostnameOptions"
@@ -26,7 +26,7 @@
 						:loading="loadingArtifacts"
 					/>
 				</div>
-				<div class="grow basis-56" v-if="!hideVelociraptorIdField">
+				<div v-if="!hideVelociraptorIdField" class="grow basis-56">
 					<n-input
 						v-model:value="filters.velociraptor_id"
 						placeholder="Velociraptor id"
@@ -47,11 +47,11 @@
 						/>
 						<n-button
 							size="small"
-							@click="getData()"
 							type="primary"
 							secondary
 							:loading="loading"
 							:disabled="!areFiltersValid"
+							@click="getData()"
 						>
 							<Icon :name="SubmitIcon"></Icon>
 						</n-button>
@@ -70,7 +70,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -78,21 +78,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
-import { useMessage, NSpin, NButton, NEmpty, NSelect, NInput, NInputGroup } from "naive-ui"
+import type { QuarantineRequest } from "@/api/endpoints/artifacts"
+import type { Agent } from "@/types/agents.d"
+import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NInput, NInputGroup, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import QuarantineItem from "./QuarantineItem.vue"
-import type { Agent } from "@/types/agents.d"
-import type { QuarantineRequest } from "@/api/endpoints/artifacts"
-import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
-// import { quarantineResult } from "./mock"
-
-const emit = defineEmits<{
-	(e: "loaded-agents", value: Agent[]): void
-	(e: "loaded-artifacts", value: Artifact[]): void
-	(e: "action-performed"): void
-}>()
 
 const props = defineProps<{
 	hostname?: string
@@ -101,6 +94,15 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
+
+// import { quarantineResult } from "./mock"
+
+const emit = defineEmits<{
+	(e: "loaded-agents", value: Agent[]): void
+	(e: "loaded-artifacts", value: Artifact[]): void
+	(e: "action-performed"): void
+}>()
+
 const { hostname, agents, artifacts, hideHostnameField, hideVelociraptorIdField } = toRefs(props)
 
 const message = useMessage()

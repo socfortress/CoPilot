@@ -3,15 +3,17 @@
 		<div class="mb-4">
 			<KVCard>
 				<template #key>cve</template>
-				<template #value>{{ cve }}</template>
+				<template #value>
+					{{ cve }}
+				</template>
 			</KVCard>
 		</div>
-		<div class="flex flex-col gap-3" v-if="epssList.length">
+		<div v-if="epssList.length" class="flex flex-col gap-3">
 			<n-card
-				content-class="bg-secondary-color"
-				class="overflow-hidden item-appear item-appear-bottom item-appear-005"
 				v-for="item of epssList"
 				:key="item.___id"
+				content-class="bg-secondary-color"
+				class="overflow-hidden item-appear item-appear-bottom item-appear-005"
 			>
 				<div class="flex justify-between gap-8 xs:!flex-row flex-col">
 					<n-statistic class="grow" label="Date">
@@ -37,20 +39,20 @@
 			</p>
 		</div>
 		<template v-else>
-			<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+			<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 		</template>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
-import { useMessage, NSpin, NEmpty, NCard, NStatistic } from "naive-ui"
+import type { EpssScore } from "@/types/threatIntel.d"
 import Api from "@/api"
 import KVCard from "@/components/common/KVCard.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import type { EpssScore } from "@/types/threatIntel.d"
+import { onBeforeMount, ref } from "vue"
 
 interface EpssScoreExt extends EpssScore {
 	___id?: string

@@ -1,20 +1,20 @@
 <template>
 	<div class="soc-alerts-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div ref="header" class="header flex items-center justify-end gap-2">
 			<slot name="header"></slot>
 			<div class="grow">
 				<n-input v-model:value="alertTitle" size="small" placeholder="Search by title..." clearable />
 			</div>
 			<div class="delete-box">
-				<n-popover :width="200" placement="bottom" style="max-height: 240px" scrollable v-if="checkedCount">
+				<n-popover v-if="checkedCount" :width="200" placement="bottom" style="max-height: 240px" scrollable>
 					<template #trigger>
 						<n-button
 							size="small"
 							type="error"
 							ghost
-							@click="handleDelete()"
 							:loading="loadingPurge"
 							:disabled="loadingAlerts"
+							@click="handleDelete()"
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="TrashIcon" :size="16"></Icon>
@@ -35,7 +35,7 @@
 					</template>
 					<div class="checked-list flex flex-col gap-2">
 						<div v-for="alertId of checkedList" :key="alertId" class="w-full">
-							<n-button size="small" @click="clearChecked(alertId)" class="!w-full !justify-start">
+							<n-button size="small" class="!w-full !justify-start" @click="clearChecked(alertId)">
 								<template #icon>
 									<Icon :name="CloseIcon" :size="18"></Icon>
 								</template>
@@ -44,7 +44,7 @@
 						</div>
 					</div>
 				</n-popover>
-				<n-button size="small" type="error" ghost @click="handlePurge()" :loading="loadingPurge" v-else>
+				<n-button v-else size="small" type="error" ghost :loading="loadingPurge" @click="handlePurge()">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
 						<span class="hidden xs:block">Purge</span>
@@ -53,11 +53,11 @@
 			</div>
 			<PaginationIndeterminate
 				v-model:page="page"
-				v-model:pageSize="pageSize"
+				v-model:page-size="pageSize"
 				v-model:sort="sort"
-				:pageSizes="pageSizes"
-				:showPageSizes="!compactMode"
-				:showSort="!smallDeviceMode"
+				:page-sizes="pageSizes"
+				:show-page-sizes="!compactMode"
+				:show-sort="!smallDeviceMode"
 			/>
 		</div>
 
@@ -67,7 +67,8 @@
 					<SocAlertItem
 						v-for="alert of alertsList"
 						:key="alert.id"
-						:alertData="alert.data"
+						v-model:checked="alert.checked"
+						:alert-data="alert.data"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						:is-bookmark="isBookmarked(alert.data)"
 						:users="usersList"
@@ -75,13 +76,12 @@
 						show-badges-toggle
 						show-checkbox
 						@check="toggleCheckedList(alert.id, $event)"
-						v-model:checked="alert.checked"
 						@bookmark="bookmark()"
 						@deleted="itemDeleted(alert.id)"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loadingAlerts" />
+					<n-empty v-if="!loadingAlerts" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -89,17 +89,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch, toRefs, nextTick, onBeforeUnmount, onMounted, computed } from "vue"
-import { useMessage, NSpin, NEmpty, NInput, useDialog, NButton, NPopover } from "naive-ui"
-import Api from "@/api"
-import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
+import type { AlertsFilter } from "@/api/endpoints/soc"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import type { AlertsFilter } from "@/api/endpoints/soc"
-import { useResizeObserver, watchDebounced } from "@vueuse/core"
-import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
+import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
+import { NButton, NEmpty, NInput, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs, watch } from "vue"
+import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 // MOCK
 // import { alerts as alertsMock } from "./mock"
 
@@ -108,8 +108,6 @@ const props = defineProps<{
 	bookmarksList?: SocAlert[]
 	usersList?: SocUser[]
 }>()
-const { highlight, bookmarksList, usersList } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "bookmark"): void
 	(e: "deleted", value?: string): void
@@ -121,6 +119,8 @@ const emit = defineEmits<{
 		}
 	): void
 }>()
+
+const { highlight, bookmarksList, usersList } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
 const CloseIcon = "carbon:close"
@@ -376,7 +376,7 @@ useResizeObserver(header, entries => {
 
 onBeforeMount(() => {
 	// MOCK
-	//alertsList.value = alertsMock as unknown as SocAlert[]
+	// alertsList.value = alertsMock as unknown as SocAlert[]
 	getAlerts()
 })
 

@@ -1,36 +1,40 @@
 <template>
 	<div class="alert-actions flex gap-4 justify-end">
 		<n-button
+			v-if="networkConnector.deployed"
 			:loading="loadingDecommission"
 			type="error"
-			v-if="networkConnector.deployed"
 			:size="size"
 			secondary
 			@click="decommissionNetworkConnector()"
 		>
-			<template #icon><Icon :name="DecommissionIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DecommissionIcon"></Icon>
+			</template>
 			Decommission
 		</n-button>
 
 		<n-button
+			v-if="isFortinet && !networkConnector.deployed"
 			:loading="loadingFortinetProvision"
 			type="success"
-			v-if="isFortinet && !networkConnector.deployed"
 			:size="size"
 			secondary
 			@click="showFortinetForm = true"
 		>
-			<template #icon><Icon :name="DeployIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DeployIcon"></Icon>
+			</template>
 			Deploy
 		</n-button>
 
 		<n-button
+			v-if="!hideDeleteButton"
 			:size="size"
 			type="error"
 			ghost
-			@click="handleDelete"
 			:loading="loadingDelete"
-			v-if="!hideDeleteButton"
+			@click="handleDelete"
 		>
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -55,12 +59,14 @@
 				<div class="flex justify-end">
 					<n-button
 						:loading="loadingFortinetProvision"
-						@click="fortinetProvision()"
 						type="success"
 						secondary
 						:disabled="!isFortinetFormValid"
+						@click="fortinetProvision()"
 					>
-						<template #icon><Icon :name="DeployIcon"></Icon></template>
+						<template #icon>
+							<Icon :name="DeployIcon"></Icon>
+						</template>
 						Deploy
 					</n-button>
 				</div>
@@ -70,14 +76,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, watch, ref } from "vue"
-import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import type { Size } from "naive-ui/es/button/src/interface"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import type { FortinetProvision } from "@/api/endpoints/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
+import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref, watch } from "vue"
 import FortinetForm, { type FortinetModel } from "./provisions/FortinetForm.vue"
+
+const { networkConnector, hideDeleteButton, size } = defineProps<{
+	networkConnector: CustomerNetworkConnector
+	hideDeleteButton?: boolean
+	size?: Size
+}>()
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -85,12 +97,6 @@ const emit = defineEmits<{
 	(e: "deployed"): void
 	(e: "decommissioned"): void
 	(e: "deleted"): void
-}>()
-
-const { networkConnector, hideDeleteButton, size } = defineProps<{
-	networkConnector: CustomerNetworkConnector
-	hideDeleteButton?: boolean
-	size?: Size
 }>()
 
 const DeployIcon = "carbon:deploy"

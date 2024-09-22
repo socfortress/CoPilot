@@ -22,22 +22,22 @@
 </template>
 
 <script lang="ts" setup>
-import {
-	NGlobalStyle,
-	NConfigProvider,
-	NDialogProvider,
-	NMessageProvider,
-	NNotificationProvider,
-	NLoadingBarProvider,
-	type GlobalThemeOverrides
-} from "naive-ui"
+import type { ThemeName } from "@/types/theme.d"
+import type { RtlItem } from "naive-ui/es/config-provider/src/internal-interface"
+import GlobalListener from "@/layouts/common/GlobalListener.vue"
 import { useThemeStore } from "@/stores/theme"
 import { useWindowSize } from "@vueuse/core"
+import {
+	type GlobalThemeOverrides,
+	NConfigProvider,
+	NDialogProvider,
+	NGlobalStyle,
+	NLoadingBarProvider,
+	NMessageProvider,
+	NNotificationProvider
+} from "naive-ui"
 import { computed, watch } from "vue"
-import GlobalListener from "@/layouts/common/GlobalListener.vue"
-import type { RtlItem } from "naive-ui/es/config-provider/src/internal-interface"
 import { rtlStyles } from "./rtlProvider"
-import type { ThemeName } from "@/types/theme.d"
 
 const { width } = useWindowSize()
 const themeStore = useThemeStore()
@@ -84,10 +84,10 @@ function setGlobalVars() {
 			body.classList.remove("direction-rtl")
 			body.classList.add("direction-ltr")
 		}
-		//html.dir = isRTL.value ? "rtl" : "ltr"
+		// html.dir = isRTL.value ? "rtl" : "ltr"
 		const { style: htmlStyle } = html
 		for (const key in style.value) {
-			htmlStyle.setProperty("--" + key, style.value[key])
+			htmlStyle.setProperty(`--${key}`, style.value[key])
 		}
 	}
 }

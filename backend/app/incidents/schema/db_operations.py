@@ -12,6 +12,7 @@ from app.incidents.models import AlertTag
 from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
 
 
@@ -208,6 +209,7 @@ class CaseCreate(BaseModel):
     case_creation_time: datetime
     case_status: str
     assigned_to: Optional[str] = None
+    customer_code: Optional[str] = None
 
 
 class LinkedCaseCreate(BaseModel):
@@ -308,6 +310,7 @@ class CaseOut(BaseModel):
     alerts: Optional[List[AlertOut]] = []
     case_status: Optional[str] = None
     case_creation_time: Optional[datetime] = None
+    customer_code: Optional[str] = None
 
 
 class CaseOutResponse(BaseModel):
@@ -333,3 +336,15 @@ class PutNotification(BaseModel):
     customer_code: str
     shuffle_workflow_id: str
     enabled: bool
+
+
+class CaseDataStoreResponse(BaseModel):
+    case_data_store: CaseDataStore
+    success: bool
+    message: str
+
+
+class ListCaseDataStoreResponse(BaseModel):
+    case_data_store: List[CaseDataStore]
+    success: bool
+    message: str

@@ -14,13 +14,13 @@
 						v-for="connector of connectorsList"
 						:key="connector.id"
 						:connector="connector"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						@verified="getConnectors()"
 						@updated="getConnectors()"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loadingConnectors" />
+					<n-empty v-if="!loadingConnectors" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -28,11 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
-import ConnectorItem from "./ConnectorItem.vue"
 import type { Connector } from "@/types/connectors.d"
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import ConnectorItem from "./ConnectorItem.vue"
 
 const message = useMessage()
 const loadingConnectors = ref(false)

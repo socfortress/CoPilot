@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { NResult, NButton } from "naive-ui"
+import { NButton, NResult } from "naive-ui"
 import { useRouter } from "vue-router"
 
 const router = useRouter()

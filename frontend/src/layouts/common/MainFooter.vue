@@ -23,10 +23,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRefs } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import BrainIcon from "@/assets/icons/brain-icon.svg"
+import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
+import { computed, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	boxed: boolean

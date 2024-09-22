@@ -21,20 +21,20 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, toRefs } from "vue"
-import Logo from "../Logo.vue"
-import Breadcrumb from "./Breadcrumb.vue"
-import Avatar from "./Avatar.vue"
-import Search from "./Search.vue"
-import PinnedPages from "./PinnedPages.vue"
-import ThemeSwitch from "./ThemeSwitch.vue"
-import Notifications from "./Notifications.vue"
-import FullscreenSwitch from "./FullscreenSwitch.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useLoadingBar } from "naive-ui"
-import { useRouter } from "vue-router"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
+import { useLoadingBar } from "naive-ui"
+import { onMounted, toRefs } from "vue"
+import { useRouter } from "vue-router"
+import Logo from "../Logo.vue"
+import Avatar from "./Avatar.vue"
+import Breadcrumb from "./Breadcrumb.vue"
+import FullscreenSwitch from "./FullscreenSwitch.vue"
+import Notifications from "./Notifications.vue"
+import PinnedPages from "./PinnedPages.vue"
+import Search from "./Search.vue"
+import ThemeSwitch from "./ThemeSwitch.vue"
 
 const props = defineProps<{
 	boxed: boolean

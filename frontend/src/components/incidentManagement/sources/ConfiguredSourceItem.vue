@@ -6,13 +6,13 @@
 			</div>
 			<div class="footer-box flex justify-end">
 				<n-popconfirm
-					@positive-click="deleteSourceConfiguration()"
 					v-model:show="showConfirm"
 					trigger="manual"
+					@positive-click="deleteSourceConfiguration()"
 					@clickoutside="showConfirm = false"
 				>
 					<template #trigger>
-						<div @click.stop="showConfirm = true" class="delete-btn">delete</div>
+						<div class="delete-btn" @click.stop="showConfirm = true">delete</div>
 					</template>
 					Are you sure you want to delete the source configuration?
 				</n-popconfirm>
@@ -34,17 +34,17 @@
 </template>
 
 <script setup lang="ts">
+import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
+import { NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
-import { useMessage, NPopconfirm, NSpin, NModal } from "naive-ui"
-import type { SourceName } from "@/types/incidentManagement/sources.d"
+
+const { source } = defineProps<{ source: SourceName }>()
 
 const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
-
-const { source } = defineProps<{ source: SourceName }>()
 
 const message = useMessage()
 const canceling = ref(false)

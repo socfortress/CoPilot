@@ -1,12 +1,16 @@
 <template>
 	<div class="alert-comment-item flex gap-3" :class="{ embedded }">
-		<div class="user-pic" v-if="userPic">
+		<div v-if="userPic" class="user-pic">
 			<n-avatar round :size="32" :src="userPic" />
 		</div>
 		<div class="comment grow flex flex-col gap-1">
 			<div class="user flex gap-3 items-center">
-				<div class="user-name">{{ comment.user_name }}</div>
-				<div class="comment-time">{{ formatDate(comment.created_at, dFormats.datetime) }}</div>
+				<div class="user-name">
+					{{ comment.user_name }}
+				</div>
+				<div class="comment-time">
+					{{ formatDate(comment.created_at, dFormats.datetime) }}
+				</div>
 			</div>
 			<div class="comment-message" v-html="message"></div>
 		</div>
@@ -14,19 +18,18 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
-import { NAvatar } from "naive-ui"
-import { getAvatar, getNameInitials } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate, getAvatar, getNameInitials } from "@/utils"
+import { NAvatar } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{ comment: AlertComment; embedded?: boolean }>()
 const { comment, embedded } = toRefs(props)
 
 const dFormats = useSettingsStore().dateFormat
 const userPic = ref("")
-const message = ref(comment.value.comment.replace(/\n/gim, "<br/>"))
+const message = ref(comment.value.comment.replace(/\n/g, "<br/>"))
 
 onBeforeMount(() => {
 	const initials = getNameInitials(comment.value.user_name)

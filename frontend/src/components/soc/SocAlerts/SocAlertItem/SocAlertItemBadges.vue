@@ -7,7 +7,9 @@
 						<Icon :name="StatusIcon" :size="14"></Icon>
 					</template>
 					<template #label>Status</template>
-					<template #value>{{ alert.status?.status_name || "-" }}</template>
+					<template #value>
+						{{ alert.status?.status_name || "-" }}
+					</template>
 				</Badge>
 			</template>
 			{{ alert.status.status_description }}
@@ -17,14 +19,18 @@
 				<Icon :name="SeverityIcon" :size="13"></Icon>
 			</template>
 			<template #label>Severity</template>
-			<template #value>{{ alert.severity?.severity_name || "-" }}</template>
+			<template #value>
+				{{ alert.severity?.severity_name || "-" }}
+			</template>
 		</Badge>
 		<Badge type="splitted" color="primary" class="hide-on-small">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
 			<template #label>Source</template>
-			<template #value>{{ alert.alert_source || "-" }}</template>
+			<template #value>
+				{{ alert.alert_source || "-" }}
+			</template>
 		</Badge>
 		<Badge type="splitted" color="primary" class="hide-on-small">
 			<template #iconLeft>
@@ -47,7 +53,7 @@
 			</template>
 		</Badge>
 
-		<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="emit('updated', $event)">
+		<SocAssignUser v-slot="{ loading }" :alert="alert" :users="users" @updated="emit('updated', $event)">
 			<Badge type="active" class="cursor-pointer">
 				<template #iconLeft>
 					<n-spin :size="16" :show="loading">
@@ -55,7 +61,9 @@
 					</n-spin>
 				</template>
 				<template #label>Owner</template>
-				<template #value>{{ ownerName || "n/d" }}</template>
+				<template #value>
+					{{ ownerName || "n/d" }}
+				</template>
 			</Badge>
 		</SocAssignUser>
 
@@ -77,22 +85,23 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import Icon from "@/components/common/Icon.vue"
+import type { SocUser } from "@/types/soc/user.d"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
+import { NSpin, NTooltip } from "naive-ui"
 import { computed, toRefs } from "vue"
 import SocAssignUser from "./SocAssignUser.vue"
-import { NSpin, NTooltip } from "naive-ui"
-import type { SocUser } from "@/types/soc/user.d"
-import { useGoto } from "@/composables/useGoto"
-
-const emit = defineEmits<{
-	(e: "updated", value: SocAlert): void
-}>()
 
 const props = defineProps<{
 	alert: SocAlert
 	users?: SocUser[]
 }>()
+
+const emit = defineEmits<{
+	(e: "updated", value: SocAlert): void
+}>()
+
 const { alert, users } = toRefs(props)
 
 const LinkIcon = "carbon:launch"

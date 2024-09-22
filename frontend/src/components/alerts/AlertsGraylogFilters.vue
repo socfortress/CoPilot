@@ -21,18 +21,18 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, toRefs } from "vue"
-import { NSelect, NButton, NFormItem } from "naive-ui"
+import type { AlertsQueryTimeRange, GraylogAlertsQuery } from "@/api/endpoints/alerts"
 import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
-import type { AlertsQueryTimeRange, GraylogAlertsQuery } from "@/api/endpoints/alerts"
+import { NButton, NFormItem, NSelect } from "naive-ui"
+import { onBeforeMount, toRefs } from "vue"
 
 const props = defineProps<{ filters: Partial<GraylogAlertsQuery> }>()
-const { filters } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "search"): void
 }>()
+
+const { filters } = toRefs(props)
 
 const SearchIcon = "carbon:search"
 

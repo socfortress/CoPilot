@@ -1,24 +1,24 @@
 <template>
 	<div
 		class="alert-item"
-		:class="['status-' + alert?.status, { compact, embedded, 'cursor-pointer': compact, highlight }]"
+		:class="[`status-${alert?.status}`, { compact, embedded, 'cursor-pointer': compact, highlight }]"
 		@click="compact ? openDetails() : undefined"
 	>
 		<n-spin :show="loading">
-			<div class="flex flex-col" v-if="alert">
+			<div v-if="alert" class="flex flex-col">
 				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon :name="InfoIcon" :size="16" v-if="!compact"></Icon>
+						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 					</div>
 					<div class="time">
 						<n-popover
+							v-if="!compact"
 							overlap
 							placement="top-end"
 							style="max-height: 240px"
 							scrollable
 							to="body"
-							v-if="!compact"
 						>
 							<template #trigger>
 								<div class="flex items-center gap-2 cursor-help">
@@ -29,7 +29,7 @@
 								</div>
 							</template>
 							<div class="flex flex-col py-2 px-1">
-								<AlertTimeline :alert v-if="alert" />
+								<AlertTimeline v-if="alert" :alert />
 							</div>
 						</n-popover>
 						<span v-if="compact && alert.alert_creation_time">
@@ -45,7 +45,7 @@
 						</div>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3" v-if="compact">
+					<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
 						<Badge
 							type="splitted"
 							class="cursor-pointer"
@@ -86,8 +86,8 @@
 							</template>
 						</Badge>
 					</div>
-					<div class="badges-box flex flex-wrap items-center gap-3" v-else>
-						<AlertStatusSwitch :alert v-slot="{ loading: loadingStatus }" @updated="updateAlert($event)">
+					<div v-else class="badges-box flex flex-wrap items-center gap-3">
+						<AlertStatusSwitch v-slot="{ loading: loadingStatus }" :alert @updated="updateAlert($event)">
 							<Badge
 								type="splitted"
 								class="cursor-pointer"
@@ -119,7 +119,7 @@
 							</Badge>
 						</AlertStatusSwitch>
 
-						<AlertAssignUser :alert v-slot="{ loading: loadingAssignee }" @updated="updateAlert($event)">
+						<AlertAssignUser v-slot="{ loading: loadingAssignee }" :alert @updated="updateAlert($event)">
 							<Badge
 								type="splitted"
 								class="cursor-pointer"
@@ -145,7 +145,7 @@
 							</Badge>
 						</AlertAssignUser>
 
-						<Badge type="splitted" class="!hidden sm:!flex">
+						<Badge v-if="alert.customer_code" type="splitted" class="!hidden sm:!flex">
 							<template #label>Customer</template>
 							<template #value>
 								<div class="flex items-center h-full">
@@ -162,13 +162,15 @@
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center" v-if="!compact">
+				<div v-if="!compact" class="footer-box px-5 py-3 flex justify-between items-center">
 					<div class="details flex gap-3 items-center">
-						<Badge type="splitted" v-if="alert.alert_creation_time" class="time">
+						<Badge v-if="alert.alert_creation_time" type="splitted" class="time">
 							<template #iconLeft>
 								<Icon :name="TimeIcon" :size="16" />
 							</template>
-							<template #value>{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}</template>
+							<template #value>
+								{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+							</template>
 						</Badge>
 
 						<n-tooltip trigger="hover">
@@ -191,7 +193,9 @@
 									<template #iconLeft>
 										<Icon :name="CommentsIcon" :size="16" />
 									</template>
-									<template #value>{{ alert.comments?.length || 0 }}</template>
+									<template #value>
+										{{ alert.comments?.length || 0 }}
+									</template>
 								</Badge>
 							</template>
 							Comments
@@ -202,7 +206,7 @@
 						</span>
 					</div>
 					<div class="actions-box">
-						<n-button quaternary size="tiny" @click="handleDelete()">Delete</n-button>
+						<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
 					</div>
 				</div>
 			</div>
@@ -217,36 +221,36 @@
 				content-class="flex flex-col !p-0"
 				:title="alertNameTruncated"
 				closable
-				@close="closeDetails()"
 				:bordered="false"
 				segmented
 				role="modal"
+				@close="closeDetails()"
 			>
-				<AlertDetails v-if="alert" :alertData="alert" @deleted="emitDelete()" @updated="updateAlert($event)" />
+				<AlertDetails v-if="alert" :alert-data="alert" @deleted="emitDelete()" @updated="updateAlert($event)" />
 			</n-card>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
-import { NModal, NPopover, NButton, NSpin, NTooltip, NCard, useMessage, useDialog } from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _clone from "lodash/cloneDeep"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import AlertTimeline from "./AlertTimeline.vue"
-import AlertAssignUser from "./AlertAssignUser.vue"
-import AlertStatusSwitch from "./AlertStatusSwitch.vue"
-import StatusIcon from "../common/StatusIcon.vue"
-import AssigneeIcon from "../common/AssigneeIcon.vue"
-import AlertDetails from "./AlertDetails.vue"
-import { handleDeleteAlert } from "./utils"
 import _truncate from "lodash/truncate"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NButton, NCard, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import AssigneeIcon from "../common/AssigneeIcon.vue"
+import StatusIcon from "../common/StatusIcon.vue"
+import AlertAssignUser from "./AlertAssignUser.vue"
+import AlertDetails from "./AlertDetails.vue"
+import AlertStatusSwitch from "./AlertStatusSwitch.vue"
+import AlertTimeline from "./AlertTimeline.vue"
+import { handleDeleteAlert } from "./utils"
 
 const props = defineProps<{
 	alertData?: Alert
@@ -256,13 +260,13 @@ const props = defineProps<{
 	detailsOnMounted?: boolean
 	highlight?: boolean
 }>()
-const { alertData, alertId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
 }>()
+
+const { alertData, alertId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
@@ -391,6 +395,11 @@ onMounted(() => {
 
 	&.embedded {
 		background-color: var(--bg-secondary-color);
+		border: var(--border-small-100);
+
+		.footer-box {
+			background-color: var(--bg-body);
+		}
 	}
 
 	&:hover {

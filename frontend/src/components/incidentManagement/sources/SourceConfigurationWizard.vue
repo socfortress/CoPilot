@@ -27,10 +27,10 @@
 
 							<div class="flex gap-4 justify-end">
 								<n-button
-									@click="next()"
 									v-if="isNextStepEnabled"
 									icon-placement="right"
 									:disabled="!selectedIndex"
+									@click="next()"
 								>
 									<template #icon>
 										<Icon :name="ArrowRightIcon"></Icon>
@@ -43,17 +43,17 @@
 						<div v-else-if="current === 2" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
 							<SourceConfigurationForm
 								v-if="sourceConfigurationModel"
-								:sourceConfigurationModel
+								:source-configuration-model
 								show-source-field
 								disable-source-field
 								show-index-name-field
 								disable-index-name-field
-								:disabledSources
+								:disabled-sources
 								@mounted="formCTX = $event"
 								@submitted="createSourceConfiguration($event)"
 							>
 								<template #additionalActions>
-									<n-button @click="prev()" :disabled="submitting" v-if="isPrevStepEnabled">
+									<n-button v-if="isPrevStepEnabled" :disabled="submitting" @click="prev()">
 										<template #icon>
 											<Icon :name="ArrowLeftIcon"></Icon>
 										</template>
@@ -70,14 +70,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, toRefs, watch } from "vue"
-import { NSteps, NStep, useMessage, NScrollbar, NButton, NSpin, NSelect, type StepsProps } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { onBeforeMount } from "vue"
-import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import type { ApiError } from "@/types/common.d"
 import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NScrollbar, NSelect, NSpin, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import SourceConfigurationForm from "./SourceConfigurationForm.vue"
+
+const props = defineProps<{ disabledSources?: SourceName[] }>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -90,7 +91,6 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{ disabledSources?: SourceName[] }>()
 const { disabledSources } = toRefs(props)
 
 const ArrowLeftIcon = "carbon:arrow-left"

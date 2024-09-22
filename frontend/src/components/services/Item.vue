@@ -3,8 +3,8 @@
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
-					<div class="check-box mr-2" v-if="selectable">
-						<n-radio size="large" v-model:checked="checked" />
+					<div v-if="selectable" class="check-box mr-2">
+						<n-radio v-model:checked="checked" size="large" />
 					</div>
 					<div class="id">#{{ data.id }}</div>
 				</div>
@@ -18,7 +18,9 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ data.name }}</div>
+					<div class="title">
+						{{ data.name }}
+					</div>
 					<div class="description">
 						{{ data.description }}
 					</div>
@@ -28,7 +30,9 @@
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
 				<code class="py-1">Auth Keys:</code>
 				<Badge v-for="authKey of data.keys" :key="authKey.auth_key_name">
-					<template #value>{{ authKey.auth_key_name }}</template>
+					<template #value>
+						{{ authKey.auth_key_name }}
+					</template>
 				</Badge>
 			</div>
 		</div>
@@ -49,12 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, toRefs } from "vue"
-import { NModal, NRadio, NButton } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
 import type { ServiceItemData, ServiceItemType } from "./types"
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal, NRadio } from "naive-ui"
+import { defineAsyncComponent, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	data: ServiceItemData
@@ -64,6 +67,9 @@ const props = defineProps<{
 	selectable?: boolean
 	disabled?: boolean
 }>()
+
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
+
 const { data, embedded, checked, selectable, disabled } = toRefs(props)
 
 const InfoIcon = "carbon:information"

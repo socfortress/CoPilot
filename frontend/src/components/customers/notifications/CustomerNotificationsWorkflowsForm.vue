@@ -2,7 +2,7 @@
 	<div class="customer-notifications-workflows-form flex flex-col justify-between grow">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
-				<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 					<n-form-item label="Enabled" path="enabled">
 						<n-switch v-model:value="form.enabled" />
 					</n-form-item>
@@ -21,34 +21,39 @@
 				<slot name="additionalActions" :loading></slot>
 			</div>
 			<div class="flex gap-3">
-				<n-button @click="reset()" secondary :disabled="loading">Reset</n-button>
-				<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">Submit</n-button>
+				<n-button secondary :disabled="loading" @click="reset()">Reset</n-button>
+				<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">Submit</n-button>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
+import Api from "@/api"
 import {
+	type FormInst,
+	type FormRules,
+	type FormValidationError,
 	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NSwitch,
 	NSpin,
-	useMessage,
-	type FormRules,
-	type FormInst,
-	type FormValidationError
+	NSwitch,
+	useMessage
 } from "naive-ui"
-import Api from "@/api"
-import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
+import { computed, onMounted, ref, watch } from "vue"
 
 interface IncidentNotificationForm {
 	shuffle_workflow_id: string
 	enabled: boolean
 }
+
+const { incidentNotification, customerCode } = defineProps<{
+	incidentNotification?: IncidentNotification
+	customerCode: string
+}>()
 
 const emit = defineEmits<{
 	(e: "submitted", value: IncidentNotification): void
@@ -60,11 +65,6 @@ const emit = defineEmits<{
 			reset: () => void
 		}
 	): void
-}>()
-
-const { incidentNotification, customerCode } = defineProps<{
-	incidentNotification?: IncidentNotification
-	customerCode: string
 }>()
 
 const message = useMessage()

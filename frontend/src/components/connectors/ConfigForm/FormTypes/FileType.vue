@@ -1,13 +1,13 @@
 <template>
-	<n-form :model="form" :rules="rules" label-width="120px" ref="formRef" label-placement="top">
+	<n-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-placement="top">
 		<n-form-item label="File" path="connector_file">
 			<n-upload
 				class="file-upload-wrap"
 				:max="1"
 				:show-file-list="true"
+				accept=".yaml, .YAML, .yml, .YML"
 				@change="handleChange"
 				@remove="handleChange"
-				accept=".yaml, .YAML, .yml, .YML"
 			>
 				<n-upload-dragger>
 					<div>
@@ -22,37 +22,38 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
 	NForm,
 	NFormItem,
 	NUpload,
 	NUploadDragger,
-	type FormRules,
-	type FormInst,
-	type FormItemRule,
 	type UploadFileInfo
 } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { onMounted, ref, toRefs } from "vue"
 
 export interface IFileForm {
 	connector_file: File | null
 }
 
-const UploadIcon = "carbon:cloud-upload"
+const props = defineProps<{
+	form: IFileForm
+}>()
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void
 }>()
 
-const props = defineProps<{
-	form: IFileForm
-}>()
+const UploadIcon = "carbon:cloud-upload"
+
 const { form } = toRefs(props)
 
 const formRef = ref<FormInst>()
 
-const handleChange = ({ file }: { file: UploadFileInfo }) => {
+function handleChange({ file }: { file: UploadFileInfo }) {
 	if (file.status === "removed") {
 		form.value.connector_file = null
 	} else {
@@ -61,14 +62,14 @@ const handleChange = ({ file }: { file: UploadFileInfo }) => {
 	formRef.value?.validate()
 }
 
-const validateFile = (rule: FormItemRule, value: File) => {
+function validateFile(rule: FormItemRule, value: File) {
 	if (!value) {
 		return new Error("Please input a valid File")
 	}
 
 	const stringCheck = value.name + value.type
 
-	if (stringCheck.indexOf("yaml") === -1) {
+	if (!stringCheck.includes("yaml")) {
 		return new Error("Please input a valid File")
 	}
 

@@ -23,16 +23,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, toRefs } from "vue"
-import { NTabs, NTabPane, NInput } from "naive-ui"
 import type { WazuhRuleExclude } from "@/types/alerts.d"
+import { NInput, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, toRefs } from "vue"
+
+const props = defineProps<{ data: WazuhRuleExclude }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const props = defineProps<{ data: WazuhRuleExclude }>()
 const { data } = toRefs(props)
 
-const wazuh_rule = computed(() => data.value.wazuh_rule.replace(/\\\\/gim, "\\\\\\\\"))
+const wazuh_rule = computed(() => data.value.wazuh_rule.replace(/\\\\/g, "\\\\\\\\"))
 </script>
 
 <style lang="scss" scoped>

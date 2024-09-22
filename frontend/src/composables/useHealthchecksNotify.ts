@@ -1,9 +1,9 @@
-import { computed, watch } from "vue"
 import { usHealthcheckStore } from "@/stores/healthcheck"
-import { useNotifications, type Notification } from "./useNotifications"
 import { IndexHealth } from "@/types/indices.d"
 import _capitalize from "lodash/capitalize"
+import { computed, watch } from "vue"
 import { useGoto } from "./useGoto"
+import { type Notification, useNotifications } from "./useNotifications"
 
 export function useHealthchecksNotify() {
 	return {
@@ -19,7 +19,7 @@ export function useHealthchecksNotify() {
 			usHealthcheckStore().start()
 
 			watch(uncommittedJournalEntries, (val, old) => {
-				if (val != old) {
+				if (val !== old) {
 					const obj: Notification = {
 						id: "uncommittedJournalEntries",
 						category: "alert",
@@ -45,7 +45,7 @@ export function useHealthchecksNotify() {
 			})
 
 			watch(clusterStatus, (val, old) => {
-				if (val != old) {
+				if (val !== old) {
 					const obj: Notification = {
 						id: "clusterHealth",
 						category: "alert",

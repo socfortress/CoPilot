@@ -3,13 +3,15 @@
 		<div class="time text-secondary-color">
 			{{ formatDate(quarantine.Time, dFormats.datetimesec) }}
 		</div>
-		<div class="result">{{ quarantine.Result }}</div>
+		<div class="result">
+			{{ quarantine.Result }}
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from "@/stores/settings"
 import type { QuarantineResult } from "@/types/artifacts.d"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
 const { quarantine } = defineProps<{ quarantine: QuarantineResult }>()

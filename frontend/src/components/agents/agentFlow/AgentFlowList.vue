@@ -19,20 +19,20 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import AgentFlowItem from "./AgentFlowItem.vue"
-import Api from "@/api"
 import type { Agent } from "@/types/agents.d"
 import type { FlowResult } from "@/types/flow.d"
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
+import { onBeforeMount, ref, toRefs } from "vue"
+import AgentFlowItem from "./AgentFlowItem.vue"
 
 interface FlowResultExt extends FlowResult {
 	id?: string

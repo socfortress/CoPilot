@@ -12,7 +12,7 @@
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
 					<div class="title" v-html="asset.asset_name"></div>
-					<div class="description mt-2" v-if="asset.asset_description">
+					<div v-if="asset.asset_description" class="description mt-2">
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
@@ -29,21 +29,31 @@
 								</code>
 							</a>
 						</template>
-						<template v-else>{{ excerpt }}</template>
+						<template v-else>
+							{{ excerpt }}
+						</template>
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="splitted" color="primary">
 							<template #label>Status</template>
-							<template #value>{{ asset.analysis_status }}</template>
+							<template #value>
+								{{ asset.analysis_status }}
+							</template>
 						</Badge>
 						<Badge type="splitted" color="primary">
 							<template #label>Type</template>
-							<template #value>{{ asset.asset_type }}</template>
+							<template #value>
+								{{ asset.asset_type }}
+							</template>
 						</Badge>
-						<Badge type="splitted" color="primary" v-for="tag of tags" :key="tag.key">
-							<template #label>{{ tag.key }}</template>
-							<template #value v-if="tag.value !== undefined">{{ tag.value || "-" }}</template>
+						<Badge v-for="tag of tags" :key="tag.key" type="splitted" color="primary">
+							<template #label>
+								{{ tag.key }}
+							</template>
+							<template v-if="tag.value !== undefined" #value>
+								{{ tag.value || "-" }}
+							</template>
 						</Badge>
 					</div>
 				</div>
@@ -61,10 +71,14 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value || "-" }}</template>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -90,7 +104,7 @@
 					<div v-if="asset.link?.length" class="px-4 flex flex-col gap-2">
 						<SocCaseAssetLink
 							v-for="link of asset.link"
-							:key="link.case_id + '-' + link.asset_id"
+							:key="`${link.case_id}-${link.asset_id}`"
 							:link="link"
 						/>
 					</div>
@@ -104,20 +118,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue"
-import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
+import type { SocCaseAsset } from "@/types/soc/asset.d"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import Badge from "@/components/common/Badge.vue"
 import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"
-import type { SocCaseAsset } from "@/types/soc/asset.d"
-
-const SocCaseAssetLink = defineAsyncComponent(() => import("./SocCaseAssetLink.vue"))
+import { NEmpty, NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 
 const { asset } = defineProps<{ asset: SocCaseAsset }>()
+
+const SocCaseAssetLink = defineAsyncComponent(() => import("./SocCaseAssetLink.vue"))
 
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
@@ -134,7 +148,7 @@ const excerpt = computed(() => {
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/gim, "<br>") || "Empty"
+	return text.replace(/\n/g, "<br>") || "Empty"
 })
 
 const tags = computed<{ key: string; value?: string }[]>(() => {

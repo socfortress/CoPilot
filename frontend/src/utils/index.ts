@@ -1,10 +1,11 @@
+import type { OsTypesFull } from "@/types/common.d"
+import process from "node:process"
 import Icon from "@/components/common/Icon.vue"
-import { type Component, h } from "vue"
+import dayjs from "@/utils/dayjs"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
-import dayjs from "@/utils/dayjs"
-import type { OsTypesFull } from "@/types/common.d"
 import _trim from "lodash/trim"
+import { type Component, h } from "vue"
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {
@@ -25,12 +26,12 @@ export function isEnvProd() {
 	return process.env.NODE_ENV === "production"
 }
 
-export const isMobile = () => {
+export function isMobile() {
 	return detectMobile
 }
 
-export const isUrlLike = (text: string) => {
-	const urlPattern = new RegExp("^(https?:\\/\\/)", "i")
+export function isUrlLike(text: string) {
+	const urlPattern = /^https?:\/\//i
 	return urlPattern.test(text)
 }
 
@@ -44,18 +45,18 @@ export function renderIcon(icon: Component | string) {
 
 export function iconFromOs(os: string): string {
 	const test = os.toLowerCase()
-	if (test.indexOf("mac") !== -1 || test.indexOf("darwin") !== -1 || test.indexOf("apple") !== -1) {
+	if (test.includes("mac") || test.includes("darwin") || test.includes("apple")) {
 		return "mdi:apple"
 	}
-	if (test.indexOf("win") !== -1 || test.indexOf("microsoft") !== -1) {
+	if (test.includes("win") || test.includes("microsoft")) {
 		return "mdi:microsoft"
 	}
 	if (
-		test.indexOf("linux") !== -1 ||
-		test.indexOf("unix") !== -1 ||
-		test.indexOf("x11") !== -1 ||
-		test.indexOf("debian") !== -1 ||
-		test.indexOf("centos") !== -1
+		test.includes("linux") ||
+		test.includes("unix") ||
+		test.includes("x11") ||
+		test.includes("debian") ||
+		test.includes("centos")
 	) {
 		return "mdi:linux"
 	}
@@ -65,19 +66,19 @@ export function iconFromOs(os: string): string {
 
 export function getOS(): OsTypesFull {
 	let os: OsTypesFull = "Unknown"
-	if (navigator.userAgent.indexOf("Win") != -1) os = "Windows"
-	if (navigator.userAgent.indexOf("Mac") != -1) os = "MacOS"
-	if (navigator.userAgent.indexOf("X11") != -1) os = "UNIX"
-	if (navigator.userAgent.indexOf("Linux") != -1) os = "Linux"
+	if (navigator.userAgent.includes("Win")) os = "Windows"
+	if (navigator.userAgent.includes("Mac")) os = "MacOS"
+	if (navigator.userAgent.includes("X11")) os = "UNIX"
+	if (navigator.userAgent.includes("Linux")) os = "Linux"
 
 	return os
 }
 
-export const delay = (t: number) => {
+export function delay(t: number) {
 	return new Promise(res => setTimeout(res, t))
 }
 
-export const hashMD5 = (text: number | string) => {
+export function hashMD5(text: number | string) {
 	return md5(text.toString())
 }
 
@@ -118,7 +119,7 @@ export function getBaseUrl() {
 export function getNameInitials(name: string, cap?: number) {
 	let initials = name.slice(0, 2)
 
-	if (name.indexOf(" ") !== -1) {
+	if (name.includes(" ")) {
 		initials = name
 			.split(" ")
 			.map(chunk => chunk[0])

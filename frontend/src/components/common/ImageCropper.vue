@@ -1,33 +1,33 @@
 <template>
 	<div class="image-cropper">
-		<slot :openCropper="openCropper"></slot>
+		<slot :open-cropper="openCropper" />
 
 		<n-modal v-model:show="showCropper">
 			<n-card class="image-cropper-modal flex flex-col" content-class="!p-5">
 				<div class="aspect-square">
-					<div class="upload-box" v-if="!img">
-						<n-upload accept="image/*" :show-file-list="false" @change="setImage" v-show="!img">
+					<div v-if="!img" class="upload-box">
+						<n-upload v-show="!img" accept="image/*" :show-file-list="false" @change="setImage">
 							<n-upload-dragger>
 								<div>{{ placeholder }}</div>
 							</n-upload-dragger>
 						</n-upload>
 					</div>
-					<div class="crop-box" v-if="img">
+					<div v-if="img" class="crop-box">
 						<Cropper
-							class="cropper aspect-square"
 							ref="cropper"
+							class="cropper aspect-square"
 							:src="img"
 							:stencil-size="stencilSize"
 							:stencil-props="stencilProps"
 							:resize-image="resizeImage"
 							image-restriction="stencil"
 							:stencil-component="stencil"
-						></Cropper>
+						/>
 					</div>
 				</div>
 				<div class="flex justify-end gap-4 mt-4">
-					<n-button @click="closeCropper()" secondary>Close</n-button>
-					<n-button @click="emitCrop()" type="primary" v-if="img">Save</n-button>
+					<n-button secondary @click="closeCropper()">Close</n-button>
+					<n-button v-if="img" type="primary" @click="emitCrop()">Save</n-button>
 				</div>
 			</n-card>
 		</n-modal>
@@ -35,16 +35,12 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NCard, NUpload, NUploadDragger, NModal, type UploadSettledFileInfo } from "naive-ui"
+import { NButton, NCard, NModal, NUpload, NUploadDragger, type UploadSettledFileInfo } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
-import { Cropper, CircleStencil, RectangleStencil, type CropperResult } from "vue-advanced-cropper"
+import { CircleStencil, Cropper, type CropperResult, RectangleStencil } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
 
 export type ImageCropperResult = CropperResult
-
-const emit = defineEmits<{
-	(e: "crop", value: ImageCropperResult): void
-}>()
 
 const props = withDefaults(
 	defineProps<{
@@ -53,6 +49,11 @@ const props = withDefaults(
 	}>(),
 	{ placeholder: "Select an image", shape: "square" }
 )
+
+const emit = defineEmits<{
+	(e: "crop", value: ImageCropperResult): void
+}>()
+
 const { placeholder, shape } = toRefs(props)
 
 const stencil = computed(() => (shape.value === "circle" ? CircleStencil : RectangleStencil))

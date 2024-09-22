@@ -48,13 +48,13 @@
 </template>
 
 <script setup lang="ts">
+import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import QueryActiveAllForm from "./actionsProviders/QueryActiveAllForm.vue"
 import QueryDeleteAll from "./actionsProviders/QueryDeleteAll.vue"
 import QueryDownloadAll from "./actionsProviders/QueryDownloadAll.vue"
 import QueryUploadDB from "./actionsProviders/QueryUploadDB.vue"
 import QueryUploadFile from "./actionsProviders/QueryUploadFile.vue"
-import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

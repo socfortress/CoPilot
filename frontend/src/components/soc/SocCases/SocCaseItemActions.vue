@@ -8,27 +8,38 @@
 			secondary
 			@click="reopenCase()"
 		>
-			<template #icon><Icon :name="OpenIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="OpenIcon"></Icon>
+			</template>
 			Reopen
 		</n-button>
 		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size="size" @click="closeCase()">
-			<template #icon><Icon :name="CloseIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="CloseIcon"></Icon>
+			</template>
 			Close
 		</n-button>
 		<n-button :loading="loadingCaseDelete" :size="size" type="error" secondary @click="handleDelete()">
-			<template #icon><Icon :name="DeleteIcon"></Icon></template>
+			<template #icon>
+				<Icon :name="DeleteIcon"></Icon>
+			</template>
 			Delete
 		</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, useDialog, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { computed, watch, ref } from "vue"
-import { StateName, type SocCase, type SocCaseExt } from "@/types/soc/case.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
+
+const { caseData, size } = defineProps<{
+	caseData: SocCase | SocCaseExt | null
+	size?: Size
+}>()
 
 const emit = defineEmits<{
 	(e: "closed"): void
@@ -37,11 +48,6 @@ const emit = defineEmits<{
 	(e: "startDeleting"): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
-}>()
-
-const { caseData, size } = defineProps<{
-	caseData: SocCase | SocCaseExt | null
-	size?: Size
 }>()
 
 const DeleteIcon = "ph:trash"

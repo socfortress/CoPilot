@@ -8,30 +8,40 @@
 			<div class="flex justify-end">
 				<n-button type="primary" :disabled="!isValid" @click="create()">Submit</n-button>
 			</div>
-			<div class="response" :class="{ error }" v-if="error || !!response">
-				<div class="message" v-if="error">
+			<div v-if="error || !!response" class="response" :class="{ error }">
+				<div v-if="error" class="message">
 					{{ error }}
 				</div>
 				<div v-else class="list">
 					<div class="item">
 						<div class="key">type</div>
-						<div class="value">{{ response?.type || "-" }}</div>
+						<div class="value">
+							{{ response?.type || "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">value</div>
-						<div class="value">{{ response?.value || "-" }}</div>
+						<div class="value">
+							{{ response?.value || "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">ioc_source</div>
-						<div class="value">{{ response?.ioc_source || "-" }}</div>
+						<div class="value">
+							{{ response?.ioc_source || "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">comment</div>
-						<div class="value">{{ response?.comment || "-" }}</div>
+						<div class="value">
+							{{ response?.comment || "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">score</div>
-						<div class="value">{{ response?.score || "-" }}</div>
+						<div class="value">
+							{{ response?.score || "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">timestamp</div>
@@ -42,7 +52,7 @@
 					<div class="item">
 						<div class="key">report_url</div>
 						<div class="value">
-							<a :href="response.report_url" target="_blank" v-if="response?.report_url">
+							<a v-if="response?.report_url" :href="response.report_url" target="_blank">
 								{{ response.report_url }}
 							</a>
 							<span v-else>-</span>
@@ -51,7 +61,7 @@
 					<div class="item">
 						<div class="key">virustotal_url</div>
 						<div class="value">
-							<a :href="response.virustotal_url" target="_blank" v-if="response?.virustotal_url">
+							<a v-if="response?.virustotal_url" :href="response.virustotal_url" target="_blank">
 								{{ response.virustotal_url }}
 							</a>
 							<span v-else>-</span>
@@ -64,13 +74,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
-import { useMessage, NSpin, NButton, NInput } from "naive-ui"
+import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _trim from "lodash/trim"
-import type { ThreatIntelResponse } from "@/types/threatIntel.d"
+import { NButton, NInput, NSpin, useMessage } from "naive-ui"
+import { computed, onMounted, ref } from "vue"
 
 const emit = defineEmits<{
 	(

@@ -42,7 +42,7 @@
 				</div>
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</n-spin>
 
@@ -59,14 +59,15 @@
 		</n-modal>
 	</div>
 </template>
+
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from "vue"
-import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NModal, NPopover, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import AvailableReportsItem from "./AvailableReportsItem.vue"
 import CreationReportForm from "./CreationReportForm.vue"
-import Api from "@/api"
 
 const InfoIcon = "carbon:information"
 const NewReportIcon = "carbon:fetch-upload-cloud"

@@ -1,14 +1,14 @@
 <template>
-	<n-popover trigger="manual" to="body" content-class="px-0" v-model:show="show" @clickoutside="closePopup()">
+	<n-popover v-model:show="show" trigger="manual" to="body" content-class="px-0" @clickoutside="closePopup()">
 		<template #trigger>
-			<slot :loading :togglePopup />
+			<slot :loading :toggle-popup />
 		</template>
 
 		<div class="py-1 flex flex-col gap-2 max-w-80">
 			<n-upload
+				v-model:file-list="fileList"
 				:max="1"
 				accept="application/x-yaml, .yaml, .YAML, .yml, .YML"
-				v-model:file-list="fileList"
 				:disabled="loading"
 			>
 				<n-upload-dragger>
@@ -21,8 +21,8 @@
 			</n-upload>
 
 			<div class="flex gap-2 justify-between">
-				<n-button @click="closePopup()" quaternary size="small">Close</n-button>
-				<n-button :disabled="!isValid" :loading @click="uploadQueries()" type="primary" size="small">
+				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
+				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload
 				</n-button>
 			</div>
@@ -31,10 +31,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
-import { NButton, NPopover, NUpload, NUploadDragger, useMessage, type UploadFileInfo } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NButton, NPopover, NUpload, NUploadDragger, type UploadFileInfo, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

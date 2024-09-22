@@ -1,19 +1,27 @@
 <template>
-	<div class="flex pinned-pages items-center gap-5">
-		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
+	<div class="pinned-pages flex items-center gap-5 relative overflow-hidden py-2 justify-end w-full">
+		<TransitionGroup name="anim" tag="div" class="flex items-center gap-4 overflow-hidden latest-list">
 			<n-tag
+				v-for="page of latestSanitized"
+				:key="page.name"
 				round
 				:bordered="false"
 				:closable="false"
-				v-for="page of latestSanitized"
-				:key="page.name"
+				class="bg-transparent flex-shrink overflow-hidden p-0 transition-all duration-300"
 				@close="removeLatestPage(page.name)"
 			>
-				<span class="page-name" @click="gotoPage(page.name)" :title="page.title">
+				<span
+					:title="page.title"
+					class="cursor-pointer ml-0.5 overflow-hidden text-ellipsis hover:underline hover:decoration-2 hover:decoration-[var(--primary-color)]"
+					@click="gotoPage(page.name)"
+				>
 					{{ page.title }}
 				</span>
 				<template #icon>
-					<div class="icon-box" @click="pinPage(page)">
+					<div
+						class="cursor-pointer transition-colors duration-300 mr-0.5 hover:text-[var(--primary-color)]"
+						@click="pinPage(page)"
+					>
 						<Icon :size="14" :name="PinnedIcon"></Icon>
 					</div>
 				</template>
@@ -33,12 +41,12 @@
 					</template>
 					<div class="flex flex-col">
 						<n-button
-							size="small"
-							quaternary
-							@click="gotoPage(page.name)"
 							v-for="page of pinned"
 							:key="page.name"
+							size="small"
+							quaternary
 							class="!justify-start"
+							@click="gotoPage(page.name)"
 						>
 							<template #icon>
 								<Icon
@@ -58,15 +66,15 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, type RouteLocationNormalized, type RouteRecordName } from "vue-router"
-import { type RemovableRef, useStorage } from "@vueuse/core"
-import { computed, type ComputedRef } from "vue"
-import { NTag, NPopover, NButton, NBadge } from "naive-ui"
-import _takeRight from "lodash/takeRight"
-import _split from "lodash/split"
-import _uniqBy from "lodash/uniqBy"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
+import { type RemovableRef, useStorage } from "@vueuse/core"
+import _split from "lodash/split"
+import _takeRight from "lodash/takeRight"
+import _uniqBy from "lodash/uniqBy"
+import { NBadge, NButton, NPopover, NTag } from "naive-ui"
+import { computed, type ComputedRef } from "vue"
+import { type RouteLocationNormalized, type RouteRecordName, useRouter } from "vue-router"
 
 interface Page {
 	name: RouteRecordName | string
@@ -78,31 +86,30 @@ const PinnedIcon = "tabler:pinned"
 const CloseIcon = "carbon:close"
 const router = useRouter()
 const themeStore = useThemeStore()
-
 const style = computed(() => themeStore.style)
+const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
+const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 
-const removeLatestPage = (pageName: RouteRecordName | string) => {
+function removeLatestPage(pageName: RouteRecordName | string) {
 	latest.value = latest.value.filter(page => page.name !== pageName)
 	return true
 }
-const removePinnedPage = (pageName: RouteRecordName | string) => {
+function removePinnedPage(pageName: RouteRecordName | string) {
 	pinned.value = pinned.value.filter(page => page.name !== pageName)
 	return true
 }
-const gotoPage = (pageName: RouteRecordName | string) => {
+function gotoPage(pageName: RouteRecordName | string) {
 	router.push({ name: pageName })
 	return true
 }
 
-const pinPage = (page: Page) => {
+function pinPage(page: Page) {
 	const isPresent = pinned.value.findIndex(p => p.name === page.name) !== -1
 	if (!isPresent) {
 		pinned.value = [page, ...pinned.value]
 	}
 	return true
 }
-const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
-const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 
 const latestSanitized: ComputedRef<Page[]> = computed(() => {
 	return _takeRight(
@@ -111,7 +118,7 @@ const latestSanitized: ComputedRef<Page[]> = computed(() => {
 	) as Page[]
 })
 
-const checkRoute = (route: RouteLocationNormalized) => {
+function checkRoute(route: RouteLocationNormalized) {
 	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
 
 	if (route.name && title && !route.meta?.skipPin) {
@@ -131,12 +138,7 @@ router.afterEach(route => {
 
 <style lang="scss" scoped>
 .pinned-pages {
-	position: relative;
-	overflow: hidden;
-	padding: 8px 0;
 	container-type: inline-size;
-	justify-content: flex-end;
-	width: 100%;
 
 	:deep() {
 		.n-tag {
@@ -177,29 +179,6 @@ router.afterEach(route => {
 					}
 				}
 			}
-		}
-	}
-
-	.page-name {
-		cursor: pointer;
-		margin-left: 2px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-
-		&:hover {
-			text-decoration: underline;
-			text-decoration-thickness: 2px;
-			text-decoration-color: var(--primary-color);
-		}
-	}
-
-	.icon-box {
-		cursor: pointer;
-		transition: color 0.3s;
-		margin-right: 2px;
-
-		&:hover {
-			color: var(--primary-color);
 		}
 	}
 

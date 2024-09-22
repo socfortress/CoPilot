@@ -1,5 +1,4 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { Agent } from "@/types/agents.d"
 import type {
 	Customer,
 	CustomerAgentHealth,
@@ -8,7 +7,8 @@ import type {
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings
 } from "@/types/customers.d"
-import type { Agent } from "@/types/agents.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export interface CustomerAgentsHealthcheckQuery {
 	minutes?: number
@@ -29,7 +29,7 @@ export default {
 	// #region Customer
 	getCustomers(code?: string) {
 		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
-			`/customers${code ? "/" + code : ""}`
+			`/customers${code ? `/${code}` : ""}`
 		)
 	},
 	createCustomer(customer: Customer) {

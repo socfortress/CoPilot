@@ -4,14 +4,14 @@
 			<slot />
 		</template>
 		<template v-else>
-			<Icon v-if="icon" :icon="icon" :width="size" :height="size" />
+			<Icon v-if="icon" :icon :width="size" :height="size" />
 		</template>
 	</component>
 </template>
 
 <script setup lang="ts">
-import { NIconWrapper, NIcon } from "naive-ui"
-import { Icon, loadIcon, type IconifyIcon } from "@iconify/vue"
+import { Icon, type IconifyIcon, loadIcon } from "@iconify/vue"
+import { NIcon, NIconWrapper } from "naive-ui"
 import { computed, ref, watchEffect } from "vue"
 
 const props = defineProps<{

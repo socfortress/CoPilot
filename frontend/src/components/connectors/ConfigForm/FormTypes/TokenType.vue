@@ -1,5 +1,5 @@
 <template>
-	<n-form :model="form" :rules="rules" label-width="120px" ref="formRef" label-placement="top">
+	<n-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-placement="top">
 		<n-form-item label="Connector URL" path="connector_url">
 			<n-input v-model:value="form.connector_url" required type="text" />
 		</n-form-item>
@@ -10,27 +10,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, toRefs } from "vue"
+import { type FormInst, type FormItemRule, type FormRules, NForm, NFormItem, NInput } from "naive-ui"
 import isURL from "validator/es/lib/isURL"
-import { NForm, NFormItem, NInput, type FormRules, type FormInst, type FormItemRule } from "naive-ui"
+import { onMounted, ref, toRefs } from "vue"
 
 export interface ITokenForm {
 	connector_url: string
 	connector_api_key: string
 }
 
+const props = defineProps<{
+	form: ITokenForm
+}>()
+
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void
 }>()
 
-const props = defineProps<{
-	form: ITokenForm
-}>()
 const { form } = toRefs(props)
 
 const formRef = ref<FormInst>()
 
-const validateUrl = (rule: FormItemRule, value: string) => {
+function validateUrl(rule: FormItemRule, value: string) {
 	if (!value) {
 		return new Error("Please input a valid URL")
 	}

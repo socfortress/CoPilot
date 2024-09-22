@@ -5,9 +5,9 @@
 				:size="size"
 				:type="job.enabled ? 'warning' : 'success'"
 				secondary
-				@click="toggleState()"
 				:loading="loadingAction"
 				class="grow"
+				@click="toggleState()"
 			>
 				<template #icon>
 					<Icon :name="job.enabled ? PauseIcon : StartIcon"></Icon>
@@ -15,22 +15,22 @@
 				{{ job.enabled ? "Pause" : "Start" }}
 			</n-button>
 
-			<NextTooltip :job-id="job.id" v-if="job.enabled && !inline" />
+			<NextTooltip v-if="job.enabled && !inline" :job-id="job.id" />
 		</div>
 		<div class="flex gap-3 items-center">
-			<n-button :size="size" type="success" secondary @click="run()" :loading="loadingRun">
+			<n-button :size="size" type="success" secondary :loading="loadingRun" @click="run()">
 				<template #icon>
 					<Icon :name="RunIcon"></Icon>
 				</template>
 				Run once
 			</n-button>
-			<n-button :size="size" secondary @click="showForm = true" :loading="loadingUpdate">
+			<n-button :size="size" secondary :loading="loadingUpdate" @click="showForm = true">
 				<template #icon>
 					<Icon :name="UpdatedIcon"></Icon>
 				</template>
 			</n-button>
 
-			<NextTooltip :job-id="job.id" v-if="job.enabled && inline" />
+			<NextTooltip v-if="job.enabled && inline" :job-id="job.id" />
 		</div>
 	</div>
 
@@ -43,20 +43,20 @@
 		:bordered="false"
 		segmented
 	>
-		<JobForm @updated="update($event)" :job="job" />
+		<JobForm :job="job" @updated="update($event)" />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NButton, NModal, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import JobForm from "./JobForm.vue"
-import NextTooltip from "./NextTooltip.vue"
+import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
-import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NModal, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
+import JobForm from "./JobForm.vue"
+import NextTooltip from "./NextTooltip.vue"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
 const { job, size, inline } = toRefs(props)

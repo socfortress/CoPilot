@@ -27,29 +27,29 @@
 				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
 			</template>
 			<template v-else>
-				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
+				v-if="messages.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="messages.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton, NEmpty } from "naive-ui"
-import Api from "@/api"
-import MessageItem from "./Item.vue"
-import Icon from "@/components/common/Icon.vue"
-import { nanoid } from "nanoid"
 import type { MessageExtended } from "@/types/graylog/messages.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
+import { nanoid } from "nanoid"
+import { onBeforeMount, ref, watch } from "vue"
+import MessageItem from "./Item.vue"
 
 const InfoIcon = "carbon:information"
 

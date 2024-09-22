@@ -4,7 +4,7 @@
 		:description="loadingDelete ? 'Deleting Soc Case' : 'Loading Soc Case'"
 	>
 		<div class="soc-case-item" :class="{ embedded }">
-			<div class="flex flex-col gap-2 px-5 py-3" v-if="baseInfo">
+			<div v-if="baseInfo" class="flex flex-col gap-2 px-5 py-3">
 				<div class="header-box flex justify-between">
 					<div class="flex items-center gap-2">
 						<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
@@ -12,7 +12,7 @@
 							<Icon :name="InfoIcon" :size="16"></Icon>
 						</div>
 					</div>
-					<div class="time" v-if="caseOpenDate">
+					<div v-if="caseOpenDate" class="time">
 						<n-popover overlap placement="top-end">
 							<template #trigger>
 								<div class="flex items-center gap-2 cursor-help">
@@ -26,7 +26,7 @@
 								<n-timeline>
 									<n-timeline-item
 										type="success"
-										:title="`Open ${openedBy ? '[' + openedBy + ']' : ''}`"
+										:title="`Open ${openedBy ? `[${openedBy}]` : ''}`"
 										:time="formatDate(caseOpenDate)"
 									/>
 									<n-timeline-item
@@ -42,7 +42,9 @@
 				<div class="main-box flex items-center justify-between gap-4">
 					<div class="content">
 						<div class="title" v-html="baseInfo.case_name"></div>
-						<div class="description mt-2" v-if="baseInfo.case_description">{{ excerpt }}</div>
+						<div v-if="baseInfo.case_description" class="description mt-2">
+							{{ excerpt }}
+						</div>
 
 						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 							<Badge
@@ -53,27 +55,33 @@
 									<Icon :name="StatusIcon" :size="14"></Icon>
 								</template>
 								<template #label>State</template>
-								<template #value>{{ baseInfo.state_name }}</template>
+								<template #value>
+									{{ baseInfo.state_name }}
+								</template>
 							</Badge>
 							<Badge type="splitted" color="primary">
 								<template #iconLeft>
 									<Icon :name="OwnerIcon" :size="16"></Icon>
 								</template>
 								<template #label>Owner</template>
-								<template #value>{{ baseInfo.owner }}</template>
+								<template #value>
+									{{ baseInfo.owner }}
+								</template>
 							</Badge>
 							<Badge type="splitted" color="primary">
 								<template #iconLeft>
 									<Icon :name="CustomerIcon" :size="13"></Icon>
 								</template>
 								<template #label>Client</template>
-								<template #value>{{ clientName || "-" }}</template>
+								<template #value>
+									{{ clientName || "-" }}
+								</template>
 							</Badge>
 							<Badge
 								v-if="baseInfo.case_soc_id && !hideSocAlertLink"
 								type="active"
-								@click="openSocAlert()"
 								class="cursor-pointer"
+								@click="openSocAlert()"
 							>
 								<template #iconRight>
 									<Icon :name="LinkIcon" :size="14"></Icon>
@@ -85,25 +93,27 @@
 					<SocCaseItemActions
 						v-if="!hideSocCaseAction"
 						class="actions-box"
-						:caseData="baseInfo"
+						:case-data="baseInfo"
 						@closed="setClosed()"
 						@reopened="setReopened()"
 						@deleted="deleteCase()"
-						@startDeleting="loadingDelete = true"
+						@start-deleting="loadingDelete = true"
 					/>
 				</div>
 				<div class="footer-box flex justify-between items-center gap-3">
 					<SocCaseItemActions
 						v-if="!hideSocCaseAction"
 						class="actions-box !flex-row"
-						:caseData="baseInfo"
-						:size="'small'"
+						:case-data="baseInfo"
+						size="small"
 						@closed="setClosed()"
 						@reopened="setReopened()"
 						@deleted="deleteCase()"
-						@startDeleting="loadingDelete = true"
+						@start-deleting="loadingDelete = true"
 					/>
-					<div class="time" v-if="caseOpenDate">{{ formatDate(caseOpenDate) }}</div>
+					<div v-if="caseOpenDate" class="time">
+						{{ formatDate(caseOpenDate) }}
+					</div>
 				</div>
 			</div>
 
@@ -119,10 +129,10 @@
 				<div class="h-full w-full flex items-center justify-center">
 					<SocAlertItem
 						v-if="baseInfo?.case_soc_id"
-						:alertId="baseInfo.case_soc_id"
+						:alert-id="baseInfo.case_soc_id"
 						embedded
-						hideBookmarkAction
-						hideSocCaseAction
+						hide-bookmark-action
+						hide-soc-case-action
 						class="w-full"
 					/>
 				</div>
@@ -133,28 +143,28 @@
 				preset="card"
 				content-class="!p-0"
 				:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-				:title="'SOC Case: ' + baseInfo?.case_uuid"
+				:title="`SOC Case: ${baseInfo?.case_uuid}`"
 				:bordered="false"
 				segmented
 			>
 				<n-tabs type="line" animated :tabs-padding="24">
 					<n-tab-pane name="Info" tab="Info" display-directive="show">
 						<n-spin :show="loadingDetails">
-							<div class="px-7 py-4" v-if="extendedInfo">
-								<div class="flex gap-2 mb-2" v-if="tags.length">
+							<div v-if="extendedInfo" class="px-7 py-4">
+								<div v-if="tags.length" class="flex gap-2 mb-2">
 									<code v-for="tag of tags" :key="tag">{{ tag }}</code>
 								</div>
 								<div>{{ extendedInfo.case_name }}</div>
 							</div>
-							<div class="flex flex-col gap-2 px-7 py-4" v-if="extendedInfo">
-								<div class="box" v-if="baseInfo && !hideSocAlertLink">
+							<div v-if="extendedInfo" class="flex flex-col gap-2 px-7 py-4">
+								<div v-if="baseInfo && !hideSocAlertLink" class="box">
 									soc id:
 									<code class="cursor-pointer text-primary-color" @click="openSocAlert()">
 										#{{ baseInfo.case_soc_id }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
 								</div>
-								<div class="box" v-if="extendedInfo?.protagonists && extendedInfo?.protagonists.length">
+								<div v-if="extendedInfo?.protagonists && extendedInfo?.protagonists.length" class="box">
 									protagonists:
 									<code
 										v-for="protagonist of extendedInfo.protagonists"
@@ -165,9 +175,11 @@
 									</code>
 								</div>
 							</div>
-							<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
+							<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 								<KVCard v-for="(value, key) of properties" :key="key">
-									<template #key>{{ key }}</template>
+									<template #key>
+										{{ key }}
+									</template>
 									<template #value>
 										<template
 											v-if="key === 'customer_code' && value && value !== 'Customer Not Found'"
@@ -189,7 +201,7 @@
 						</n-spin>
 					</n-tab-pane>
 					<n-tab-pane name="Description" tab="Description" display-directive="show">
-						<div class="p-7 pt-4" v-if="baseInfo">
+						<div v-if="baseInfo" class="p-7 pt-4">
 							<n-input
 								:value="baseInfo.case_description"
 								type="textarea"
@@ -205,7 +217,7 @@
 					<n-tab-pane name="History" tab="History" display-directive="show:lazy">
 						<n-spin :show="loadingDetails">
 							<div class="p-7 pt-4">
-								<SocCaseTimeline :caseData="extendedInfo" v-if="extendedInfo" />
+								<SocCaseTimeline v-if="extendedInfo" :case-data="extendedInfo" />
 							</div>
 						</n-spin>
 					</n-tab-pane>
@@ -214,7 +226,7 @@
 					</n-tab-pane>
 					<n-tab-pane name="Notes" tab="Notes" display-directive="show:lazy">
 						<div class="px-4">
-							<n-collapse display-directive="show" v-model:expanded-names="noteFormVisible">
+							<n-collapse v-model:expanded-names="noteFormVisible" display-directive="show">
 								<template #arrow>
 									<div class="mx-4 flex">
 										<Icon :name="AddIcon"></Icon>
@@ -236,7 +248,7 @@
 							</n-collapse>
 						</div>
 						<n-divider class="!my-2" />
-						<SocCaseNotesList v-if="baseInfo" :case-id="baseInfo.case_id" v-model:requested="updateNotes" />
+						<SocCaseNotesList v-if="baseInfo" v-model:requested="updateNotes" :case-id="baseInfo.case_id" />
 					</n-tab-pane>
 				</n-tabs>
 			</n-modal>
@@ -245,38 +257,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
-import {
-	useMessage,
-	NPopover,
-	NSpin,
-	NTimeline,
-	NTimelineItem,
-	NModal,
-	NTabs,
-	NTabPane,
-	NDivider,
-	NInput,
-	NCollapse,
-	NCollapseItem
-} from "naive-ui"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import Badge from "@/components/common/Badge.vue"
-import Api from "@/api"
+import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
+import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"
 import dayjs from "@/utils/dayjs"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
-import { useGoto } from "@/composables/useGoto"
-import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
-
-const SocCaseTimeline = defineAsyncComponent(() => import("./SocCaseTimeline.vue"))
-const SocCaseAssetsList = defineAsyncComponent(() => import("./SocCaseAssetsList.vue"))
-const SocCaseNoteForm = defineAsyncComponent(() => import("./SocCaseNoteForm.vue"))
-const SocCaseNotesList = defineAsyncComponent(() => import("./SocCaseNotesList.vue"))
-const SocCaseItemActions = defineAsyncComponent(() => import("./SocCaseItemActions.vue"))
-const SocAlertItem = defineAsyncComponent(() => import("../SocAlerts/SocAlertItem/SocAlertItem.vue"))
+import {
+	NCollapse,
+	NCollapseItem,
+	NDivider,
+	NInput,
+	NModal,
+	NPopover,
+	NSpin,
+	NTabPane,
+	NTabs,
+	NTimeline,
+	NTimelineItem,
+	useMessage
+} from "naive-ui"
+import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 
 const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defineProps<{
 	caseData?: SocCase
@@ -285,10 +290,15 @@ const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defi
 	hideSocAlertLink?: boolean
 	hideSocCaseAction?: boolean
 }>()
-
 const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
+const SocCaseTimeline = defineAsyncComponent(() => import("./SocCaseTimeline.vue"))
+const SocCaseAssetsList = defineAsyncComponent(() => import("./SocCaseAssetsList.vue"))
+const SocCaseNoteForm = defineAsyncComponent(() => import("./SocCaseNoteForm.vue"))
+const SocCaseNotesList = defineAsyncComponent(() => import("./SocCaseNotesList.vue"))
+const SocCaseItemActions = defineAsyncComponent(() => import("./SocCaseItemActions.vue"))
+const SocAlertItem = defineAsyncComponent(() => import("../SocAlerts/SocAlertItem/SocAlertItem.vue"))
 
 const TimeIcon = "carbon:time"
 const InfoIcon = "carbon:information"
@@ -307,46 +317,51 @@ const message = useMessage()
 const noteFormVisible = ref([])
 const updateNotes = ref(false)
 
-const baseInfo = computed<SocCase | SocCaseExt | null>(() => caseData || extendedInfo.value)
 const extendedInfo = ref<SocCaseExt | null>(null)
+const baseInfo = computed<(SocCase & Partial<SocCaseExt>) | null>(() => {
+	if (caseData) {
+		return { ...caseData, ...(extendedInfo.value || {}) }
+	}
+	return null
+})
 
 const dFormats = useSettingsStore().dateFormat
 
 const caseOpenDate = computed<string | null>(() => {
-	if (baseInfo.value && "case_open_date" in baseInfo.value) {
+	if (baseInfo.value?.case_open_date) {
 		return baseInfo.value.case_open_date as string
 	}
-	if (baseInfo.value && "open_date" in baseInfo.value) {
+	if (baseInfo.value?.open_date) {
 		return baseInfo.value.open_date as string
 	}
-	if (extendedInfo.value && "open_date" in extendedInfo.value) {
+	if (extendedInfo.value?.open_date) {
 		return extendedInfo.value.open_date as string
 	}
 	return null
 })
 
 const caseCloseDate = computed<string | null>(() => {
-	if (baseInfo.value && "case_close_date" in baseInfo.value) {
+	if (baseInfo.value?.case_close_date) {
 		return baseInfo.value.case_close_date as string
 	}
-	if (baseInfo.value && "close_date" in baseInfo.value) {
+	if (baseInfo.value?.close_date) {
 		return baseInfo.value.close_date as string
 	}
-	if (extendedInfo.value && "close_date" in extendedInfo.value) {
+	if (extendedInfo.value?.close_date) {
 		return extendedInfo.value.close_date as string
 	}
 	return null
 })
 
 const clientName = computed<string | null>(() => {
-	if (baseInfo.value && "client_name" in baseInfo.value) {
+	if (baseInfo.value?.client_name) {
 		return baseInfo.value.client_name as string
 	}
 	return null
 })
 
 const openedBy = computed<string | null>(() => {
-	if (baseInfo.value && "opened_by" in baseInfo.value) {
+	if (baseInfo.value?.opened_by) {
 		return baseInfo.value.opened_by as string
 	}
 	return null

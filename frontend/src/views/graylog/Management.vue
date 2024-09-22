@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<n-tabs type="line" animated v-model:value="activeTab">
+		<n-tabs v-model:value="activeTab" type="line" animated>
 			<n-tab-pane name="messages" tab="Messages" display-directive="show:lazy">
 				<Messages />
 			</n-tab-pane>
@@ -36,10 +36,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
-import { NTabs, NTabPane, NButton, NDrawer, NDrawerContent } from "naive-ui"
-import { useRoute, useRouter } from "vue-router"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import { NButton, NDrawer, NDrawerContent, NTabPane, NTabs } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 
 const Messages = defineAsyncComponent(() => import("@/components/graylog/Messages/List.vue"))
 const Alerts = defineAsyncComponent(() => import("@/components/graylog/Alerts/List.vue"))
@@ -64,7 +64,7 @@ function gotoEventsPage(event_definition_id: string) {
 }
 
 watch(activeTab, val => {
-	router.replace({ hash: "#" + val })
+	router.replace({ hash: `#${val}` })
 })
 
 onBeforeMount(() => {

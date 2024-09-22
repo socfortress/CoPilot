@@ -17,13 +17,13 @@
 						:key="customer.customer_code"
 						:customer="customer"
 						:highlight="customer.customer_code === highlight"
-						:hideCardActions="loadingCustomers"
-						@delete="getCustomers()"
+						:hide-card-actions="loadingCustomers"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						@delete="getCustomers()"
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loadingCustomers" />
+					<n-empty v-if="!loadingCustomers" description="No items found" class="justify-center h-48" />
 				</template>
 			</div>
 		</n-spin>
@@ -31,18 +31,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch, toRefs, nextTick } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
-import Api from "@/api"
-import CustomerItem from "./CustomerItem.vue"
 import type { Customer } from "@/types/customers.d"
+import Api from "@/api"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import CustomerItem from "./CustomerItem.vue"
 
 const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
-const { highlight, reload } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "reloaded"): void
 }>()
+
+const { highlight, reload } = toRefs(props)
 
 const message = useMessage()
 const loadingCustomers = ref(false)

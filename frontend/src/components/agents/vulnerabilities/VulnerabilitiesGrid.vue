@@ -16,27 +16,29 @@
 		</div>
 		<n-spin content-class="min-h-48" :show="loading">
 			<div class="group gap-4 grid grid-auto-fill-200">
-				<VulnerabilityCard :vulnerability="item" v-for="item of vulnerabilities" :key="item.id" hide-tooltip />
+				<VulnerabilityCard v-for="item of vulnerabilities" :key="item.id" :vulnerability="item" hide-tooltip />
 			</div>
 			<n-empty
+				v-if="!loading && !vulnerabilities.length"
 				description="No vulnerabilities detected"
 				class="justify-center h-48"
-				v-if="!loading && !vulnerabilities.length"
 			/>
 		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, watch, computed } from "vue"
-import { NButton, NSpin, NEmpty, NFormItem, NSelect, useMessage } from "naive-ui"
+import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
+import type { Agent, AgentVulnerabilities } from "@/types/agents.d"
 import Api from "@/api"
-import VulnerabilityCard from "./VulnerabilityCard.vue"
-import { nanoid } from "nanoid"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import axios from "axios"
 import { saveAs } from "file-saver"
-import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
-import { type Agent, type AgentVulnerabilities } from "@/types/agents.d"
+import { NButton, NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
+import { nanoid } from "nanoid"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import VulnerabilityCard from "./VulnerabilityCard.vue"
 
 const props = defineProps<{
 	agent: Agent
@@ -46,6 +48,7 @@ const { agent } = toRefs(props)
 let abortController: AbortController | null = null
 const message = useMessage()
 const loading = ref(false)
+const dFormats = useSettingsStore().dateFormat
 const downloading = ref(false)
 const severity = ref<VulnerabilitySeverityType>("Critical")
 const vulnerabilitiesCache = ref<{ [key in VulnerabilitySeverityType | string]: AgentVulnerabilities[] }>({})
@@ -99,7 +102,10 @@ function getVulnerabilities(id: string) {
 function vulnerabilitiesDownload(id: string) {
 	downloading.value = true
 
-	const fileName = `agent-${id}_${severity.value.toLowerCase()}-vulnerabilities.csv`
+	const fileName = `vulnerabilities_agent:${id}_severity:${severity.value.toLowerCase()}_${formatDate(
+		new Date(),
+		dFormats.datetimesec
+	)}.csv`
 
 	Api.agents
 		.agentVulnerabilitiesDownload(id, severity.value)

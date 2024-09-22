@@ -3,31 +3,31 @@
 		<n-form-item path="email" label="Email">
 			<n-input
 				v-model:value="model.email"
-				@keydown.enter="forgotPassword"
 				placeholder="Example@email.com"
 				size="large"
+				@keydown.enter="forgotPassword"
 			/>
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
 			<div class="w-full">
-				<n-button type="primary" @click="forgotPassword" class="!w-full" size="large">Send Reset Link</n-button>
+				<n-button type="primary" class="!w-full" size="large" @click="forgotPassword">Send Reset Link</n-button>
 			</div>
 		</div>
 	</n-form>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue"
 import {
 	type FormInst,
-	type FormValidationError,
 	type FormRules,
-	useMessage,
+	type FormValidationError,
+	NButton,
 	NForm,
 	NFormItem,
 	NInput,
-	NButton
+	useMessage
 } from "naive-ui"
+import { ref } from "vue"
 
 interface ModelType {
 	email: string | null

@@ -2102,4 +2102,4 @@ const alerts_by_rule_per_host = [
 	}
 ]
 
-export { alerts_summary, alerts_by_host, alerts_by_rule, alerts_by_rule_per_host }
+export { alerts_by_host, alerts_by_rule, alerts_by_rule_per_host, alerts_summary }

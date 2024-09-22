@@ -23,16 +23,16 @@
 									:key="agent.agent_id"
 									:agent="agent"
 									show-actions
+									class="item-appear item-appear-bottom item-appear-005"
 									@delete="syncAgents()"
 									@click="gotoAgent(agent.agent_id)"
-									class="item-appear item-appear-bottom item-appear-005"
 								/>
 							</template>
 							<template v-else>
 								<n-empty
+									v-if="!loadingAgents"
 									description="No items found"
 									class="justify-center h-48"
-									v-if="!loadingAgents"
 								/>
 							</template>
 						</div>
@@ -53,14 +53,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from "vue"
-import { AgentStatus, type Agent } from "@/types/agents.d"
+import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
-import Api from "@/api"
-import { useMessage, NSpin, NScrollbar, NEmpty, NPagination } from "naive-ui"
-import _debounce from "lodash/debounce"
 import { useGoto } from "@/composables/useGoto"
+import { type Agent, AgentStatus } from "@/types/agents.d"
+import _debounce from "lodash/debounce"
+import { NEmpty, NPagination, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 
 const message = useMessage()
 const { gotoAgent } = useGoto()
@@ -82,12 +82,11 @@ watch(textFilter, val => {
 })
 
 const agentsFiltered = computed(() => {
-	return agents.value.filter(
-		({ hostname, ip_address, agent_id, label }) =>
-			(hostname + ip_address + agent_id + label)
-				.toString()
-				.toLowerCase()
-				.indexOf(textFilterDebounced.value.toString().toLowerCase()) !== -1
+	return agents.value.filter(({ hostname, ip_address, agent_id, label }) =>
+		(hostname + ip_address + agent_id + label)
+			.toString()
+			.toLowerCase()
+			.includes(textFilterDebounced.value.toString().toLowerCase())
 	)
 })
 

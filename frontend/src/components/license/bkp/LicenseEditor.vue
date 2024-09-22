@@ -1,20 +1,20 @@
 <template>
 	<n-spin :show="loading">
 		<div class="license-box" :class="{ loading: loadingLicense && !licenseKey }">
-			<p class="flex gap-4 items-center" v-if="loadingLicense || licenseKey">
+			<p v-if="loadingLicense || licenseKey" class="flex gap-4 items-center">
 				<span>your license:</span>
-				<Icon :name="LoadingIcon" v-if="loadingLicense"></Icon>
+				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
 			</p>
 			<div v-if="!loadingLicense && !licenseKey">
-				<p class="flex gap-4 items-center" v-if="!creationEnabled">no license found</p>
+				<p v-if="!creationEnabled" class="flex gap-4 items-center">no license found</p>
 				<div class="flex items-center gap-4 mt-2">
 					<div class="actions-box flex gap-2">
 						<n-button
+							v-if="!creationEnabled"
 							type="primary"
 							:loading="loadingCreation"
-							@click="enableCreation()"
-							v-if="!creationEnabled"
 							size="small"
+							@click="enableCreation()"
 						>
 							<template #icon>
 								<Icon :name="LicenseIcon"></Icon>
@@ -24,21 +24,21 @@
 					</div>
 				</div>
 			</div>
-			<div class="flex items-center gap-4 mt-1" v-if="!replaceEnabled && licenseKey">
+			<div v-if="!replaceEnabled && licenseKey" class="flex items-center gap-4 mt-1">
 				<h3>{{ licenseKey }}</h3>
 				<div class="actions-box flex gap-2">
-					<n-button secondary :disabled="replaceEnabled" @click="enableReplace()" size="small">
+					<n-button secondary :disabled="replaceEnabled" size="small" @click="enableReplace()">
 						<template #icon>
 							<Icon :name="EditIcon"></Icon>
 						</template>
 						Edit
 					</n-button>
 					<n-button
+						v-if="!extendEnabled"
 						type="primary"
 						:loading="loadingExtend"
-						@click="enableExtend()"
-						v-if="!extendEnabled"
 						size="small"
+						@click="enableExtend()"
 					>
 						<template #icon>
 							<Icon :name="ExtendIcon"></Icon>
@@ -49,7 +49,7 @@
 			</div>
 		</div>
 
-		<div class="replace-box mt-2 flex gap-2" v-if="replaceEnabled">
+		<div v-if="replaceEnabled" class="replace-box mt-2 flex gap-2">
 			<n-input v-model:value="licenseKeyModel" class="grow !max-w-72" clearable />
 			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">Reset</n-button>
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKeyModel" @click="replaceLicense()">
@@ -60,7 +60,7 @@
 			</n-button>
 		</div>
 
-		<div class="extend-box mt-5 flex gap-2" v-if="extendEnabled">
+		<div v-if="extendEnabled" class="extend-box mt-5 flex gap-2">
 			<n-input-number v-model:value="period" class="grow !max-w-44" :min="1">
 				<template #prefix>
 					<div class="min-w-12">Day{{ period === 1 ? "" : "s" }}</div>
@@ -75,8 +75,8 @@
 			</n-button>
 		</div>
 
-		<div class="create-box flex flex-col gap-2" v-if="creationEnabled">
-			<n-form :label-width="80" :model="creationForm" :rules="rules" ref="formRef">
+		<div v-if="creationEnabled" class="create-box flex flex-col gap-2">
+			<n-form ref="formRef" :label-width="80" :model="creationForm" :rules="rules">
 				<div class="grid gap-2 grid-auto-fit-200">
 					<n-form-item label="Name" path="name">
 						<n-input v-model:value.trim="creationForm.name" placeholder="Input name..." clearable />
@@ -112,26 +112,25 @@
 </template>
 
 <script setup lang="ts">
+import type { NewLicensePayload } from "@/api/endpoints/license"
+import type { LicenseKey } from "@/types/license.d"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import {
+	type FormInst,
+	type FormItemRule,
+	type FormRules,
+	type FormValidationError,
+	NButton,
+	NForm,
+	NFormItem,
 	NInput,
 	NInputNumber,
-	NButton,
 	NSpin,
-	NFormItem,
-	NForm,
-	useMessage,
-	type FormRules,
-	type FormItemRule,
-	type FormInst,
-	type FormValidationError
+	useMessage
 } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Api from "@/api"
-import { onBeforeMount, ref } from "vue"
 import isEmail from "validator/es/lib/isEmail"
-import { computed } from "vue"
-import type { LicenseKey } from "@/types/license.d"
-import type { NewLicensePayload } from "@/api/endpoints/license"
+import { computed, onBeforeMount, ref } from "vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

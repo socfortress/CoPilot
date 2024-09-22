@@ -156,12 +156,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168579.77425": {
+			1705168579.77425: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168579.823584": {
+			1705168579.823584: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -344,12 +344,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705169119.780053": {
+			1705169119.780053: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705169119.827961": {
+			1705169119.827961: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -532,12 +532,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167979.768851": {
+			1705167979.768851: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167979.819793": {
+			1705167979.819793: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -720,12 +720,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168399.775005": {
+			1705168399.775005: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168399.82801": {
+			1705168399.82801: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -908,12 +908,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168819.76398": {
+			1705168819.76398: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168819.814266": {
+			1705168819.814266: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -1096,12 +1096,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705169059.778518": {
+			1705169059.778518: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705169059.836505": {
+			1705169059.836505: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -1284,12 +1284,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167619.769534": {
+			1705167619.769534: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167619.818835": {
+			1705167619.818835: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -1472,12 +1472,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167859.765731": {
+			1705167859.765731: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167859.811671": {
+			1705167859.811671: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -1660,12 +1660,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168219.77573": {
+			1705168219.77573: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168219.828675": {
+			1705168219.828675: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -1848,12 +1848,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168459.770737": {
+			1705168459.770737: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168459.833107": {
+			1705168459.833107: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2036,12 +2036,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168699.769288": {
+			1705168699.769288: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168699.82393": {
+			1705168699.82393: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2224,12 +2224,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168879.764017": {
+			1705168879.764017: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168879.817701": {
+			1705168879.817701: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2412,12 +2412,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168999.77058": {
+			1705168999.77058: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168999.817484": {
+			1705168999.817484: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2600,12 +2600,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167439.771146": {
+			1705167439.771146: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167439.81702": {
+			1705167439.81702: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2788,12 +2788,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167499.763375": {
+			1705167499.763375: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167499.822182": {
+			1705167499.822182: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -2976,12 +2976,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167679.773684": {
+			1705167679.773684: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167679.826435": {
+			1705167679.826435: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -3164,12 +3164,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167739.775084": {
+			1705167739.775084: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167739.822561": {
+			1705167739.822561: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -3352,12 +3352,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167919.768401": {
+			1705167919.768401: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167919.813058": {
+			1705167919.813058: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -3540,12 +3540,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168039.764918": {
+			1705168039.764918: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168039.809592": {
+			1705168039.809592: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -3728,12 +3728,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168159.760292": {
+			1705168159.760292: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168159.810327": {
+			1705168159.810327: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -3916,12 +3916,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168279.771562": {
+			1705168279.771562: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168279.821397": {
+			1705168279.821397: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -4104,12 +4104,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168339.77171": {
+			1705168339.77171: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168339.818058": {
+			1705168339.818058: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -4292,12 +4292,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705009819.765604": {
+			1705009819.765604: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705009819.813519": {
+			1705009819.813519: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -4480,12 +4480,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168639.769476": {
+			1705168639.769476: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168639.823149": {
+			1705168639.823149: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -4668,12 +4668,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705097539.778607": {
+			1705097539.778607: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705097539.82934": {
+			1705097539.82934: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -4856,12 +4856,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168759.779238": {
+			1705168759.779238: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168759.835745": {
+			1705168759.835745: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5044,12 +5044,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166419.774267": {
+			1705166419.774267: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166419.832241": {
+			1705166419.832241: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5232,12 +5232,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168939.767156": {
+			1705168939.767156: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168939.818993": {
+			1705168939.818993: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5420,12 +5420,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166479.762014": {
+			1705166479.762014: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166479.80864": {
+			1705166479.80864: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5608,12 +5608,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166659.774677": {
+			1705166659.774677: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166659.825521": {
+			1705166659.825521: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5796,12 +5796,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166359.781171": {
+			1705166359.781171: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166359.834287": {
+			1705166359.834287: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -5984,12 +5984,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167379.768553": {
+			1705167379.768553: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167379.821981": {
+			1705167379.821981: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -6172,12 +6172,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166959.770099": {
+			1705166959.770099: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166959.818128": {
+			1705166959.818128: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -6360,12 +6360,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167559.773929": {
+			1705167559.773929: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167559.824655": {
+			1705167559.824655: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -6548,12 +6548,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166719.766816": {
+			1705166719.766816: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166719.81852": {
+			1705166719.81852: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -6736,12 +6736,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167079.767064": {
+			1705167079.767064: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167079.811045": {
+			1705167079.811045: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -6924,12 +6924,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166599.766987": {
+			1705166599.766987: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166599.827963": {
+			1705166599.827963: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -7112,12 +7112,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167799.771157": {
+			1705167799.771157: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167799.823734": {
+			1705167799.823734: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -7300,12 +7300,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166899.778191": {
+			1705166899.778191: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166899.832702": {
+			1705166899.832702: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -7488,12 +7488,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166779.769931": {
+			1705166779.769931: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166779.819621": {
+			1705166779.819621: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -7676,12 +7676,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167139.766918": {
+			1705167139.766918: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167139.81798": {
+			1705167139.81798: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -7864,12 +7864,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168099.775378": {
+			1705168099.775378: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168099.832125": {
+			1705168099.832125: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8052,12 +8052,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167259.768425": {
+			1705167259.768425: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167259.814414": {
+			1705167259.814414: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8240,12 +8240,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166839.772684": {
+			1705166839.772684: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166839.825065": {
+			1705166839.825065: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8428,12 +8428,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167019.77548": {
+			1705167019.77548: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167019.827344": {
+			1705167019.827344: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8616,12 +8616,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167199.758733": {
+			1705167199.758733: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167199.807584": {
+			1705167199.807584: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8804,12 +8804,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705167319.764755": {
+			1705167319.764755: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705167319.815539": {
+			1705167319.815539: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -8992,12 +8992,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705168519.779179": {
+			1705168519.779179: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705168519.830021": {
+			1705168519.830021: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -9180,12 +9180,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705166539.773169": {
+			1705166539.773169: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705166539.824737": {
+			1705166539.824737: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""
@@ -9368,12 +9368,12 @@ export const alerts = [
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
 		modification_history: {
-			"1705169179.770221": {
+			1705169179.770221: {
 				user: "administrator",
 				user_id: 1,
 				action: "Alert created"
 			},
-			"1705169179.823647": {
+			1705169179.823647: {
 				user: "administrator",
 				user_id: 1,
 				action: "updated alert: \"assets\" from \"[]\" to \"[{'asset_name': 'ANSYDWDC01', 'asset_ip': '139.180.134.102', 'asset_description': 'Microsoft Windows Server 2016 Standard', 'asset_type_id': 9, 'asset_tags': 'agent_id:102'}]\""

@@ -31,6 +31,7 @@ from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName

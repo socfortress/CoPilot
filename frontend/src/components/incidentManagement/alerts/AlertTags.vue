@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="deletingTag" size="small" content-class="flex flex-wrap gap-2">
-		<n-tag closable @close="deleteTag(tag.id)" v-for="tag of alert.tags" :key="tag.id" size="small">
+		<n-tag v-for="tag of alert.tags" :key="tag.id" closable size="small" @close="deleteTag(tag.id)">
 			{{ tag.tag }}
 		</n-tag>
 
-		<n-dynamic-tags @create="newAlertTag" size="small" :value="[]">
+		<n-dynamic-tags size="small" :value="[]" @create="newAlertTag">
 			<template #trigger="{ activate, disabled }">
 				<n-button
 					size="tiny"
@@ -25,19 +25,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
-import { NButton, NSpin, NTag, NDynamicTags, useMessage } from "naive-ui"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _trim from "lodash/trim"
-import Api from "@/api"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NButton, NDynamicTags, NSpin, NTag, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 
 const props = defineProps<{ alert: Alert }>()
-const { alert } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void
 }>()
+
+const { alert } = toRefs(props)
 
 const AddIcon = "carbon:add"
 

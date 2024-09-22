@@ -1,6 +1,6 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { AvailableIntegration, CustomerIntegration } from "@/types/integrations.d"
+import { HttpClient } from "../httpClient"
 
 export interface NewIntegration {
 	customer_code: string

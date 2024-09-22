@@ -1,5 +1,5 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
+	<n-tabs v-if="alert" type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
 			<SocAlertItemContext :alert="alert" class="p-7 pt-4" />
 		</n-tab-pane>
@@ -11,7 +11,9 @@
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
 			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of alert.customer" :key="key">
-					<template #key>{{ key }}</template>
+					<template #key>
+						{{ key }}
+					</template>
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 							<code
@@ -43,9 +45,9 @@
 					<template #key>user_login</template>
 					<template #value>
 						<SocAssignUser
+							v-slot="{ loading }"
 							:alert="alert"
 							:users="users"
-							v-slot="{ loading }"
 							@updated="emit('updated', $event)"
 						>
 							<div class="flex items-center gap-2 cursor-pointer text-primary-color">
@@ -79,7 +81,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
 			<div class="p-7 pt-4">
-				<SimpleJsonViewer class="vuesjv-override" :model-value="socAlertDetail" :initialExpandedDepth="1" />
+				<SimpleJsonViewer class="vuesjv-override" :model-value="socAlertDetail" :initial-expanded-depth="1" />
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
@@ -89,30 +91,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from "vue"
-import { NTabs, NTabPane, NSpin } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import KVCard from "@/components/common/KVCard.vue"
-import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
-import { useGoto } from "@/composables/useGoto"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-
-const SocAlertItemTimeline = defineAsyncComponent(() => import("./SocAlertItemTimeline.vue"))
-const SocAssignUser = defineAsyncComponent(() => import("./SocAssignUser.vue"))
-const SocAlertItemContext = defineAsyncComponent(() => import("./SocAlertItemContext.vue"))
-const SocAlertAssetsList = defineAsyncComponent(() => import("../SocAlertAssets/SocAlertAssetsList.vue"))
-
-const emit = defineEmits<{
-	(e: "updated", value: SocAlert): void
-}>()
+import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
+import "@/assets/scss/vuesjv-override.scss"
 
 const { alert } = defineProps<{
 	alert: SocAlert
 	users?: SocUser[]
 }>()
+const emit = defineEmits<{
+	(e: "updated", value: SocAlert): void
+}>()
+const SocAlertItemTimeline = defineAsyncComponent(() => import("./SocAlertItemTimeline.vue"))
+const SocAssignUser = defineAsyncComponent(() => import("./SocAssignUser.vue"))
+const SocAlertItemContext = defineAsyncComponent(() => import("./SocAlertItemContext.vue"))
+const SocAlertAssetsList = defineAsyncComponent(() => import("../SocAlertAssets/SocAlertAssetsList.vue"))
 
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"

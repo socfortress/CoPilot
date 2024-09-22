@@ -19,12 +19,14 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ serviceName }}</div>
+					<div class="title">
+						{{ serviceName }}
+					</div>
 				</div>
 				<CustomerNetworkConnectorActions
 					class="actions-box"
-					:networkConnector="networkConnector"
-					hideDeleteButton
+					:network-connector="networkConnector"
+					hide-delete-button
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
 					@decommissioned="emit('decommissioned')"
@@ -33,12 +35,12 @@
 			<div class="footer-box flex justify-between items-center gap-4">
 				<CustomerNetworkConnectorActions
 					class="actions-box"
-					:networkConnector="networkConnector"
-					hideDeleteButton
+					:network-connector="networkConnector"
+					hide-delete-button
+					size="small"
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
 					@decommissioned="emit('decommissioned')"
-					:size="'small'"
 				/>
 			</div>
 		</div>
@@ -53,8 +55,12 @@
 		>
 			<div class="grid gap-2 grid-auto-fit-200">
 				<KVCard v-for="ak of authKeys" :key="ak.key">
-					<template #key>{{ ak.key }}</template>
-					<template #value>{{ ak.value || "-" }}</template>
+					<template #key>
+						{{ ak.key }}
+					</template>
+					<template #value>
+						{{ ak.value || "-" }}
+					</template>
 				</KVCard>
 			</div>
 		</n-modal>
@@ -62,26 +68,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
-import { NModal, NButton } from "naive-ui"
-import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
-import Icon from "@/components/common/Icon.vue"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
+import { NButton, NModal } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
+import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
 
 const props = defineProps<{
 	networkConnector: CustomerNetworkConnector
 	embedded?: boolean
 }>()
-const { networkConnector, embedded } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "deployed"): void
 	(e: "decommissioned"): void
 	(e: "deleted"): void
 }>()
+
+const { networkConnector, embedded } = toRefs(props)
 
 const DeployIcon = "carbon:deploy"
 const InfoIcon = "carbon:information"

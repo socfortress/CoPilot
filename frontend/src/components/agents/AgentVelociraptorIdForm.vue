@@ -13,11 +13,11 @@
 			>
 				<template #suffix>
 					<Icon
+						v-if="!loading"
 						:name="CloseIcon"
 						:size="13"
 						class="cursor-pointer"
 						@click="editing = false"
-						v-if="!loading"
 					/>
 				</template>
 			</n-input>
@@ -29,22 +29,23 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
-import Api from "@/api"
-import { useMessage, NInput, NButton, NInputGroup } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 import type { Agent } from "@/types/agents.d"
-
-const velociraptorId = defineModel<string>("velociraptorId", { default: "" })
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { NButton, NInput, NInputGroup, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	agent: Agent
 }>()
-const { agent } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "updated", value: string): void
 }>()
+
+const velociraptorId = defineModel<string>("velociraptorId", { default: "" })
+
+const { agent } = toRefs(props)
 
 const LoadingIcon = "eos-icons:loading"
 const EditIcon = "uil:edit-alt"

@@ -13,19 +13,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeMount, ref, toRefs, watch, type Ref } from "vue"
-import { useMessage, NPopselect } from "naive-ui"
-import Api from "@/api"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import Api from "@/api"
+import { NPopselect, useMessage } from "naive-ui"
+import { computed, inject, onBeforeMount, ref, type Ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	caseData: Case
 }>()
-const { caseData } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "updated", value: Case): void
 }>()
+
+const { caseData } = toRefs(props)
 
 const loadingUsers = ref(false)
 const users = inject<Ref<string[]>>("assignable-users", ref([]))

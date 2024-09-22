@@ -1,5 +1,5 @@
 <template>
-	<slot :openEvaluation />
+	<slot :open-evaluation />
 
 	<n-modal
 		v-model:show="showDetails"
@@ -11,7 +11,7 @@
 		segmented
 	>
 		<n-spin :show="loading" class="min-h-48">
-			<n-tabs type="line" animated :tabs-padding="24" v-if="evaluation">
+			<n-tabs v-if="evaluation" type="line" animated :tabs-padding="24">
 				<n-tab-pane
 					name="Overview"
 					tab="Overview"
@@ -23,7 +23,7 @@
 							<div class="flex justify-between gap-8 flex-wrap">
 								<n-statistic label="Rank" :value="evaluation.rank" tabular-nums />
 								<n-statistic label="EPS" :value="eps" tabular-nums />
-								<n-statistic label="Host Prevalence" :value="evaluation.host_prev + '%'" tabular-nums />
+								<n-statistic label="Host Prevalence" :value="`${evaluation.host_prev}%`" tabular-nums />
 							</div>
 						</n-card>
 					</div>
@@ -51,46 +51,52 @@
 					<ListPercentage
 						class="p-7 pt-4"
 						:list="evaluation.hashes"
-						labelKey="hash"
-						percentageKey="percentage"
+						label-key="hash"
+						percentage-key="percentage"
 					/>
 				</n-tab-pane>
 				<n-tab-pane name="Network" tab="Network" display-directive="show:lazy">
-					<ListPercentage class="p-7 pt-4" :list="evaluation.network" labelKey="port" percentageKey="usage" />
+					<ListPercentage
+						class="p-7 pt-4"
+						:list="evaluation.network"
+						label-key="port"
+						percentage-key="usage"
+					/>
 				</n-tab-pane>
 				<n-tab-pane name="Parents" tab="Parents" display-directive="show:lazy">
 					<ListPercentage
 						class="p-7 pt-4"
 						:list="evaluation.parents"
-						labelKey="name"
-						percentageKey="percentage"
+						label-key="name"
+						percentage-key="percentage"
 					/>
 				</n-tab-pane>
 				<n-tab-pane name="Paths" tab="Paths" display-directive="show:lazy">
 					<ListPercentage
 						class="p-7 pt-4"
 						:list="evaluation.paths"
-						labelKey="directory"
-						percentageKey="percentage"
+						label-key="directory"
+						percentage-key="percentage"
 					/>
 				</n-tab-pane>
 			</n-tabs>
-			<n-empty description="Evaluation not found" class="justify-center h-48" v-if="!loading && !evaluation" />
+			<n-empty v-if="!loading && !evaluation" description="Evaluation not found" class="justify-center h-48" />
 		</n-spin>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue"
-import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
-import Api from "@/api"
-const ListPercentage = defineAsyncComponent(() => import("@/components/common/ListPercentage.vue"))
-import _toSafeInteger from "lodash/toSafeInteger"
 import type { EvaluationData } from "@/types/threatIntel.d"
+import Api from "@/api"
+import _toSafeInteger from "lodash/toSafeInteger"
+import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 
 const { processName } = defineProps<{
 	processName: string
 }>()
+
+const ListPercentage = defineAsyncComponent(() => import("@/components/common/ListPercentage.vue"))
 
 const evaluation = ref<EvaluationData | null>(null)
 const showDetails = ref<boolean>(false)

@@ -1,5 +1,3 @@
-import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
 import type {
 	ScoutSuiteAwsReportPayload,
 	ScoutSuiteAzureReportPayload,
@@ -7,6 +5,8 @@ import type {
 	ScoutSuiteReport,
 	ScoutSuiteReportPayload
 } from "@/types/cloudSecurityAssessment.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
+import { HttpClient } from "../httpClient"
 
 export default {
 	getAvailableScoutSuiteReports() {

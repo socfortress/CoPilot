@@ -12,7 +12,9 @@
 						<n-tooltip>
 							{{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
 							<template #trigger>
-								<div class="hostname" :class="{ online: isOnline }">{{ agent.hostname }}</div>
+								<div class="hostname" :class="{ online: isOnline }">
+									{{ agent.hostname }}
+								</div>
 							</template>
 						</n-tooltip>
 						<div class="critical" :class="{ active: agent.critical_asset }">
@@ -32,7 +34,7 @@
 								</template>
 							</n-tooltip>
 						</div>
-						<div class="quarantined" v-show="agent.quarantined">
+						<div v-show="agent.quarantined" class="quarantined">
 							<n-tooltip>
 								Quarantined
 								<template #trigger>
@@ -47,10 +49,12 @@
 					<div class="os" :title="agent.os">
 						{{ agent.os }}
 					</div>
-					<div class="ip-address" :title="agent.ip_address">{{ agent.ip_address }}</div>
+					<div class="ip-address" :title="agent.ip_address">
+						{{ agent.ip_address }}
+					</div>
 				</div>
 
-				<div class="agent-actions" v-if="showActions">
+				<div v-if="showActions" class="agent-actions">
 					<div class="box">
 						<n-tooltip>
 							Delete
@@ -70,23 +74,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
-import { AgentStatus, type Agent } from "@/types/agents.d"
-import dayjs from "@/utils/dayjs"
-import { handleDeleteAgent, toggleAgentCritical } from "./utils"
-import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-
-const emit = defineEmits<{
-	(e: "delete"): void
-}>()
+import { type Agent, AgentStatus } from "@/types/agents.d"
+import dayjs from "@/utils/dayjs"
+import { NButton, NCard, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
+import { handleDeleteAgent, toggleAgentCritical } from "./utils"
 
 const props = defineProps<{
 	agent: Agent
 	showActions?: boolean
 	bgSecondary?: boolean
 }>()
+
+const emit = defineEmits<{
+	(e: "delete"): void
+}>()
+
 const { agent, showActions, bgSecondary } = toRefs(props)
 
 const QuarantinedIcon = "ph:seal-warning-light"

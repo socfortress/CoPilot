@@ -5,7 +5,7 @@
 				<Vue3Marquee
 					class="marquee-wrap"
 					:duration="(list?.length || 0) * 1"
-					:pauseOnHover="true"
+					:pause-on-hover="true"
 					:clone="false"
 					:gradient="true"
 					:gradient-color="gradientColor"
@@ -16,8 +16,8 @@
 						:key="item.index"
 						class="item flex items-center gap-2"
 						:class="item.health"
-						@click="emit('click', item)"
 						title="Click to select"
+						@click="emit('click', item)"
 					>
 						<IndexIcon :health="item.health" color />
 						{{ item.index }}
@@ -25,7 +25,7 @@
 				</Vue3Marquee>
 			</n-spin>
 		</n-card>
-		<div class="info" v-if="list?.length">
+		<div v-if="list?.length" class="info">
 			<i class="mdi mdi-information-outline"></i>
 			Click on an index to select
 		</div>
@@ -33,21 +33,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs, watch, onBeforeMount } from "vue"
 import type { IndexStats } from "@/types/indices.d"
-import { Vue3Marquee } from "vue3-marquee"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { NSpin, NCard, useMessage } from "naive-ui"
-import { useThemeStore } from "@/stores/theme"
 import Api from "@/api"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { useThemeStore } from "@/stores/theme"
+import { NCard, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { Vue3Marquee } from "vue3-marquee"
+
+const props = defineProps<{
+	indices?: IndexStats[] | null
+}>()
 
 const emit = defineEmits<{
 	(e: "click", value: IndexStats): void
 }>()
 
-const props = defineProps<{
-	indices?: IndexStats[] | null
-}>()
 const { indices } = toRefs(props)
 
 const list = ref(indices.value)

@@ -1,5 +1,5 @@
 <template>
-	<n-form :model="form" :rules="rules" ref="formRef">
+	<n-form ref="formRef" :model="form" :rules="rules">
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Access Key ID" path="access_key_id">
 				<n-input v-model:value.trim="form.access_key_id" placeholder="Please insert Access Key ID" clearable />
@@ -18,9 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { NForm, NFormItem, NInput, type FormRules, type FormInst } from "naive-ui"
 import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment.d"
+import { type FormInst, type FormRules, NForm, NFormItem, NInput } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void

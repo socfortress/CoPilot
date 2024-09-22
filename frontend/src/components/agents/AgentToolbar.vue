@@ -3,16 +3,16 @@
 		<div class="wrapper flex flex-col gap-6 py-3 px-4">
 			<div class="flex flex-col gap-2">
 				<div class="agent-search flex gap-3">
-					<n-input placeholder="Search for an agent" clearable v-model:value="textFilter">
+					<n-input v-model:value="textFilter" placeholder="Search for an agent" clearable>
 						<template #prefix>
 							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
-					<n-button @click="emit('sync')" :loading="syncing">Sync</n-button>
+					<n-button :loading="syncing" @click="emit('sync')">Sync</n-button>
 				</div>
 				<div class="search-info">
 					<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
-					<span class="mh-5" v-if="agentsFilteredLength !== agentsLength">/</span>
+					<span v-if="agentsFilteredLength !== agentsLength" class="mh-5">/</span>
 					<strong class="font-mono">{{ agentsLength }}</strong>
 					Agents
 				</div>
@@ -20,32 +20,32 @@
 
 			<div class="agents-list flex grow flex-col overflow-hidden">
 				<n-scrollbar>
-					<div class="agents-critical-list" v-if="agentsCritical?.length">
+					<div v-if="agentsCritical?.length" class="agents-critical-list">
 						<div class="title">
 							Critical Assets
 							<small class="text-secondary-color font-mono">({{ agentsCritical.length }})</small>
 						</div>
 						<div class="list">
 							<div
-								class="item"
 								v-for="agent in agentsCritical"
 								:key="agent.agent_id"
+								class="item"
 								@click="emit('click', agent)"
 							>
 								{{ agent.hostname }}
 							</div>
 						</div>
 					</div>
-					<div class="agents-online-list" v-if="agentsOnline?.length">
+					<div v-if="agentsOnline?.length" class="agents-online-list">
 						<div class="title">
 							Online Agents
 							<small class="text-secondary-color font-mono">({{ agentsOnline.length }})</small>
 						</div>
 						<div class="list">
 							<div
-								class="item"
 								v-for="agent in agentsOnline"
 								:key="agent.agent_id"
+								class="item"
 								@click="emit('click', agent)"
 							>
 								{{ agent.hostname }}
@@ -59,18 +59,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
-import { type Agent } from "@/types/agents.d"
-import { NInput, NButton, NCard, NScrollbar } from "naive-ui"
+import type { Agent } from "@/types/agents.d"
 import Icon from "@/components/common/Icon.vue"
-
-const SearchIcon = "carbon:search"
-
-const emit = defineEmits<{
-	(e: "sync"): void
-	(e: "update:modelValue", value: string): void
-	(e: "click", value: Agent): void
-}>()
+import { NButton, NCard, NInput, NScrollbar } from "naive-ui"
+import { computed, toRefs } from "vue"
 
 const props = defineProps<{
 	modelValue: string
@@ -80,6 +72,15 @@ const props = defineProps<{
 	agentsCritical?: Agent[]
 	agentsOnline?: Agent[]
 }>()
+
+const emit = defineEmits<{
+	(e: "sync"): void
+	(e: "update:modelValue", value: string): void
+	(e: "click", value: Agent): void
+}>()
+
+const SearchIcon = "carbon:search"
+
 const { modelValue, syncing, agentsLength, agentsFilteredLength, agentsCritical, agentsOnline } = toRefs(props)
 
 const textFilter = computed<string>({

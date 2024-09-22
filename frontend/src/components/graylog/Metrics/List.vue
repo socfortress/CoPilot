@@ -32,12 +32,12 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs, computed } from "vue"
-import { NCard, NProgress } from "naive-ui"
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"
 import _trim from "lodash/trim"
+import { NCard, NProgress } from "naive-ui"
+import { computed, toRefs } from "vue"
 
 interface Metrics {
 	groupName: string
