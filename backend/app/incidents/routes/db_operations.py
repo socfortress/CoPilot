@@ -619,6 +619,8 @@ async def list_alerts_multiple_filters_endpoint(
     - alert_title (str, optional): Filter by alert title.
     - customer_code (str, optional): Filter by customer code.
     - source (str, optional): Filter by source.
+    - asset_name (str, optional): Filter by asset name.
+    - status (str, optional): Filter by status.
     - page (int, default=1): Page number.
     - page_size (int, default=25): Number of alerts per page.
     - order (str, default='desc'): Sorting order ('asc' or 'desc').
