@@ -609,6 +609,28 @@ async def list_alerts_multiple_filters_endpoint(
     order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Endpoint to list alerts with multiple filters.
+
+    Parameters:
+    - assigned_to (str, optional): Filter by assigned user.
+    - alert_title (str, optional): Filter by alert title.
+    - customer_code (str, optional): Filter by customer code.
+    - source (str, optional): Filter by source.
+    - page (int, default=1): Page number.
+    - page_size (int, default=25): Number of alerts per page.
+    - order (str, default='desc'): Sorting order ('asc' or 'desc').
+    - db (AsyncSession): Database session.
+
+    Returns:
+    - alerts (List[AlertOut]): List of alerts matching the filters.
+    - total (int): Total number of alerts matching the filters.
+    - open (int): Number of open alerts matching the filters.
+    - in_progress (int): Number of alerts in progress matching the filters.
+    - closed (int): Number of closed alerts matching the filters.
+    - success (bool): Indicates if the operation was successful.
+    - message (str): Success message.
+    """
     return AlertOutResponse(
         alerts=await list_alerts_multiple_filters(
             assigned_to=assigned_to,
