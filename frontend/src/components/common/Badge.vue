@@ -166,8 +166,8 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 			& > span {
 				&:last-child {
 					line-height: 1.1;
-					padding-top: 5px;
-					padding-bottom: 5px;
+					padding-top: 2px;
+					padding-bottom: 2px;
 					display: flex;
 					align-items: center;
 				}
