@@ -29,7 +29,7 @@
 							Close :
 							<code>{{ statusCloseTotal }}</code>
 						</div>
-						<div class="box text-success-color">
+						<div class="box text-secondary-color">
 							N/D :
 							<code>{{ statusUndefinedTotal }}</code>
 						</div>
