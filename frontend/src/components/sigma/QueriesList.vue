@@ -287,7 +287,8 @@ onBeforeMount(() => {
 			position: absolute;
 			top: 2px;
 			left: 54px;
-			transform: translateY(100%);
+			transform: rotateX(90deg);
+			transform-origin: top center;
 			transition:
 				opacity var(--router-transition-duration) ease-out,
 				transform var(--router-transition-duration) ease-out;
@@ -299,7 +300,7 @@ onBeforeMount(() => {
 			@apply pt-3;
 
 			&::after {
-				transform: translateY(0%);
+				transform: rotateX(0deg);
 			}
 		}
 	}

@@ -147,7 +147,20 @@
 					</div>
 				</div>
 			</n-popover>
+
+			<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+				<template #icon>
+					<Icon :name="FilterIcon"></Icon>
+				</template>
+			</n-button>
 		</div>
+
+		<div class="filters-box" :class="{ open: showFiltersView }">
+			<n-card size="small" :bordered="false">
+				<AlertsFilters />
+			</n-card>
+		</div>
+
 		<n-spin :show="loading">
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsList.length">
@@ -188,13 +201,14 @@ import type { Case } from "@/types/incidentManagement/cases.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useResizeObserver } from "@vueuse/core"
+import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
 import {
 	NBadge,
 	NButton,
+	NCard,
 	NEmpty,
 	NInput,
 	NInputGroup,
@@ -206,6 +220,7 @@ import {
 } from "naive-ui"
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import AlertItem from "./AlertItem.vue"
+import AlertsFilters from "./AlertsFilters.vue"
 
 export interface AlertsListFilter {
 	type: AlertsFilterTypes
@@ -221,6 +236,7 @@ const InfoIcon = "carbon:information"
 const message = useMessage()
 const loading = ref(false)
 const showFilters = ref(false)
+const showFiltersView = useStorage<boolean>("incident-management-alerts-list-filters-view-state", false, localStorage)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
 const configuredSourcesList = ref<SourceName[]>([])
@@ -474,6 +490,52 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
+	}
+
+	.filters-box {
+		overflow: hidden;
+		display: grid;
+		grid-template-rows: 0fr;
+		padding-top: 0px;
+		opacity: 0;
+		position: relative;
+		transition:
+			opacity var(--router-transition-duration) ease-out,
+			grid-template-rows var(--router-transition-duration) ease-out,
+			padding-top var(--router-transition-duration) ease-out;
+
+		&::after {
+			--size: 10px;
+			content: "";
+			width: 0;
+			height: 0;
+			border-left: var(--size) solid transparent;
+			border-right: var(--size) solid transparent;
+			border-bottom: var(--size) solid var(--bg-secondary-color);
+			position: absolute;
+			top: 2px;
+			right: 8px;
+			transform: rotateX(90deg);
+			transform-origin: top center;
+			transition:
+				opacity var(--router-transition-duration) ease-out,
+				transform var(--router-transition-duration) ease-out;
+		}
+
+		& > * {
+			background-color: var(--bg-secondary-color);
+			overflow: hidden;
+		}
+
+		&.open {
+			grid-template-rows: 1fr;
+			opacity: 1;
+			@apply pt-3;
+
+			&::after {
+				transform: rotateX(0deg);
+			}
+		}
 	}
 }
 </style>
