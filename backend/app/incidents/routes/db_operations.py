@@ -9,6 +9,7 @@ from fastapi import Query
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from typing import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -606,6 +607,7 @@ async def list_alerts_multiple_filters_endpoint(
     source: Optional[str] = Query(None),
     asset_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    tags: Optional[List[str]] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
@@ -621,6 +623,7 @@ async def list_alerts_multiple_filters_endpoint(
     - source (str, optional): Filter by source.
     - asset_name (str, optional): Filter by asset name.
     - status (str, optional): Filter by status.
+    - tags (List[str], optional): Filter by tags.
     - page (int, default=1): Page number.
     - page_size (int, default=25): Number of alerts per page.
     - order (str, default='desc'): Sorting order ('asc' or 'desc').
@@ -643,6 +646,7 @@ async def list_alerts_multiple_filters_endpoint(
             source=source,
             asset_name=asset_name,
             status=status,
+            tags=tags,
             db=db,
             page=page,
             page_size=page_size,
@@ -655,6 +659,7 @@ async def list_alerts_multiple_filters_endpoint(
             source=source,
             asset_name=asset_name,
             status=status,
+            tags=tags,
             db=db,
         ),
         open=await alerts_open_multiple_filters(
@@ -664,6 +669,7 @@ async def list_alerts_multiple_filters_endpoint(
             source=source,
             asset_name=asset_name,
             status=status,
+            tags=tags,
             db=db,
         ),
         in_progress=await alerts_in_progress_multiple_filters(
@@ -673,6 +679,7 @@ async def list_alerts_multiple_filters_endpoint(
             source=source,
             asset_name=asset_name,
             status=status,
+            tags=tags,
             db=db,
         ),
         closed=await alerts_closed_multiple_filters(
@@ -682,6 +689,7 @@ async def list_alerts_multiple_filters_endpoint(
             source=source,
             asset_name=asset_name,
             status=status,
+            tags=tags,
             db=db,
         ),
         success=True,
