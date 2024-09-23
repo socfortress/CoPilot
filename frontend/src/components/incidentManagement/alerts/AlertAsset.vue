@@ -1,6 +1,11 @@
 <template>
-	<div class="alert-asset-item" :class="{ embedded }">
-		<div class="flex flex-col cursor-pointer" @click="showDetails = true">
+	<div class="alert-asset-item" :class="{ embedded, badge }">
+		<code v-if="badge" @click="showDetails = true">
+			<span>{{ asset.asset_name }}</span>
+			<Icon :name="ViewIcon" :size="14" />
+		</code>
+
+		<div v-else class="flex flex-col cursor-pointer" @click="showDetails = true">
 			<div class="main-box flex flex-col gap-3 px-5 py-3">
 				<div class="content flex flex-col gap-1 grow">
 					<div class="title">
@@ -139,9 +144,10 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
 import { NCard, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 
-const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
+const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: boolean; badge?: boolean }>()
+
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
@@ -151,21 +157,20 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const { asset, embedded } = toRefs(props)
-
+const ViewIcon = "iconoir:eye-alt"
 const LinkIcon = "carbon:launch"
 const { gotoAgent, gotoIndex } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
-const assetNameTruncated = computed(() => _truncate(asset.value.asset_name, { length: 50 }))
+const assetNameTruncated = computed(() => _truncate(asset.asset_name, { length: 50 }))
 const alertContext = ref<AlertContext | null>(null)
 const processNameList = computed<string[]>(() => alertContext.value?.context?.process_name || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)
 
 watch(showDetails, val => {
 	if (val && !alertContext.value) {
-		getAlertContext(asset.value.alert_context_id)
+		getAlertContext(asset.alert_context_id)
 	}
 })
 
@@ -192,23 +197,39 @@ function getAlertContext(alertContextId: number) {
 
 <style lang="scss" scoped>
 .alert-asset-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
+	&:not(.badge) {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
+		transition: all 0.2s var(--bezier-ease);
+		border: var(--border-small-050);
+		overflow: hidden;
 
-	.main-box {
-		.content {
-			word-break: break-word;
+		&:hover {
+			box-shadow: 0px 0px 0px 1px var(--primary-color);
+		}
+
+		.main-box {
+			.content {
+				word-break: break-word;
+			}
 		}
 	}
 
 	&.embedded {
 		background-color: var(--bg-secondary-color);
 	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
+
+	&.badge {
+		color: var(--primary-color);
+		line-height: 1;
+		cursor: pointer;
+
+		code {
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			padding: 2px 5px;
+		}
 	}
 }
 </style>
