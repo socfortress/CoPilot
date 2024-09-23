@@ -195,6 +195,7 @@ async def alerts_total_multiple_filters(
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> int:
     # Build dynamic filters
     filters = []
@@ -210,9 +211,18 @@ async def alerts_total_multiple_filters(
         filters.append(Asset.asset_name == asset_name)
     if status:
         filters.append(Alert.status == status)
+    if tags:
+        filters.append(AlertTag.tag.in_(tags))
 
     # Build the query
-    query = select(func.count()).select_from(Alert).join(Asset, isouter=True).where(*filters)
+    query = (
+        select(func.count())
+        .select_from(Alert)
+        .join(Asset, isouter=True)
+        .join(AlertToTag, isouter=True)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .where(*filters)
+    )
 
     result = await db.execute(query)
     total = result.scalar_one()
@@ -227,6 +237,7 @@ async def alerts_closed_multiple_filters(
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> int:
     # Include the status filter
     filters = [Alert.status == "CLOSED"]
@@ -242,8 +253,17 @@ async def alerts_closed_multiple_filters(
         filters.append(Asset.asset_name == asset_name)
     if status:
         filters.append(Alert.status == status)
+    if tags:
+        filters.append(AlertTag.tag.in_(tags))
 
-    query = select(func.count()).select_from(Alert).join(Asset, isouter=True).where(*filters)
+    query = (
+        select(func.count())
+        .select_from(Alert)
+        .join(Asset, isouter=True)
+        .join(AlertToTag, isouter=True)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .where(*filters)
+    )
 
     result = await db.execute(query)
     closed_count = result.scalar_one()
@@ -258,6 +278,7 @@ async def alerts_in_progress_multiple_filters(
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> int:
     filters = [Alert.status == "IN_PROGRESS"]
     if assigned_to:
@@ -272,8 +293,17 @@ async def alerts_in_progress_multiple_filters(
         filters.append(Asset.asset_name == asset_name)
     if status:
         filters.append(Alert.status == status)
+    if tags:
+        filters.append(AlertTag.tag.in_(tags))
 
-    query = select(func.count()).select_from(Alert).join(Asset, isouter=True).where(*filters)
+    query = (
+        select(func.count())
+        .select_from(Alert)
+        .join(Asset, isouter=True)
+        .join(AlertToTag, isouter=True)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .where(*filters)
+    )
 
     result = await db.execute(query)
     in_progress_count = result.scalar_one()
@@ -288,6 +318,7 @@ async def alerts_open_multiple_filters(
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> int:
     filters = [Alert.status == "OPEN"]
     if assigned_to:
@@ -302,13 +333,21 @@ async def alerts_open_multiple_filters(
         filters.append(Asset.asset_name == asset_name)
     if status:
         filters.append(Alert.status == status)
+    if tags:
+        filters.append(AlertTag.tag.in_(tags))
 
-    query = select(func.count()).select_from(Alert).join(Asset, isouter=True).where(*filters)
+    query = (
+        select(func.count())
+        .select_from(Alert)
+        .join(Asset, isouter=True)
+        .join(AlertToTag, isouter=True)
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .where(*filters)
+    )
 
     result = await db.execute(query)
     open_count = result.scalar_one()
     return open_count
-
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
@@ -1491,7 +1530,6 @@ async def list_alerts_by_source(
         alerts_out.append(alert_out)
     return alerts_out
 
-
 async def list_alerts_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -1500,6 +1538,7 @@ async def list_alerts_multiple_filters(
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
@@ -1521,11 +1560,15 @@ async def list_alerts_multiple_filters(
         filters.append(Asset.asset_name == asset_name)
     if status:
         filters.append(Alert.status == status)
+    if tags:
+        filters.append(AlertTag.tag.in_(tags))
 
     # Build the query with dynamic filters
     query = (
         select(Alert)
         .join(Asset, isouter=True)  # Join with Asset table
+        .join(AlertToTag, isouter=True)  # Join with AlertToTag table
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
         .where(*filters)
         .options(
             selectinload(Alert.comments),
