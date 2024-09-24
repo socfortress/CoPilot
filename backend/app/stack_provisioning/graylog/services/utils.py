@@ -1,8 +1,9 @@
 from fastapi import HTTPException
 from loguru import logger
+from packaging.version import InvalidVersion
+from packaging.version import Version
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from packaging.version import Version, InvalidVersion
 
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
