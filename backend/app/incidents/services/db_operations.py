@@ -10,6 +10,7 @@ from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy import func
+from sqlalchemy import distinct
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -187,6 +188,168 @@ async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
     return len(result.scalars().all())
 
+# async def alerts_total_multiple_filters(
+#     db: AsyncSession,
+#     assigned_to: Optional[str] = None,
+#     alert_title: Optional[str] = None,
+#     customer_code: Optional[str] = None,
+#     source: Optional[str] = None,
+#     asset_name: Optional[str] = None,
+#     status: Optional[str] = None,
+#     tags: Optional[List[str]] = None,
+# ) -> int:
+#     # Build dynamic filters
+#     filters = []
+#     if assigned_to:
+#         filters.append(Alert.assigned_to == assigned_to)
+#     if alert_title:
+#         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+#     if customer_code:
+#         filters.append(Alert.customer_code == customer_code)
+#     if source:
+#         filters.append(Alert.source == source)
+#     if asset_name:
+#         filters.append(Asset.asset_name == asset_name)
+#     if status:
+#         filters.append(Alert.status == status)
+#     if tags:
+#         filters.append(AlertTag.tag.in_(tags))
+
+#     # Build the query
+#     query = (
+#         select(func.count())
+#         .select_from(Alert)
+#         .join(Asset, isouter=True)
+#         .join(AlertToTag, isouter=True)
+#         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+#         .where(*filters)
+#     )
+
+#     result = await db.execute(query)
+#     total = result.scalar_one()
+#     return total
+
+
+# async def alerts_closed_multiple_filters(
+#     db: AsyncSession,
+#     assigned_to: Optional[str] = None,
+#     alert_title: Optional[str] = None,
+#     customer_code: Optional[str] = None,
+#     source: Optional[str] = None,
+#     asset_name: Optional[str] = None,
+#     status: Optional[str] = None,
+#     tags: Optional[List[str]] = None,
+# ) -> int:
+#     # Include the status filter
+#     filters = [Alert.status == "CLOSED"]
+#     if assigned_to:
+#         filters.append(Alert.assigned_to == assigned_to)
+#     if alert_title:
+#         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+#     if customer_code:
+#         filters.append(Alert.customer_code == customer_code)
+#     if source:
+#         filters.append(Alert.source == source)
+#     if asset_name:
+#         filters.append(Asset.asset_name == asset_name)
+#     if status:
+#         filters.append(Alert.status == status)
+#     if tags:
+#         filters.append(AlertTag.tag.in_(tags))
+
+#     query = (
+#         select(func.count())
+#         .select_from(Alert)
+#         .join(Asset, isouter=True)
+#         .join(AlertToTag, isouter=True)
+#         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+#         .where(*filters)
+#     )
+
+#     result = await db.execute(query)
+#     closed_count = result.scalar_one()
+#     return closed_count
+
+
+# async def alerts_in_progress_multiple_filters(
+#     db: AsyncSession,
+#     assigned_to: Optional[str] = None,
+#     alert_title: Optional[str] = None,
+#     customer_code: Optional[str] = None,
+#     source: Optional[str] = None,
+#     asset_name: Optional[str] = None,
+#     status: Optional[str] = None,
+#     tags: Optional[List[str]] = None,
+# ) -> int:
+#     filters = [Alert.status == "IN_PROGRESS"]
+#     if assigned_to:
+#         filters.append(Alert.assigned_to == assigned_to)
+#     if alert_title:
+#         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+#     if customer_code:
+#         filters.append(Alert.customer_code == customer_code)
+#     if source:
+#         filters.append(Alert.source == source)
+#     if asset_name:
+#         filters.append(Asset.asset_name == asset_name)
+#     if status:
+#         filters.append(Alert.status == status)
+#     if tags:
+#         filters.append(AlertTag.tag.in_(tags))
+
+#     query = (
+#         select(func.count())
+#         .select_from(Alert)
+#         .join(Asset, isouter=True)
+#         .join(AlertToTag, isouter=True)
+#         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+#         .where(*filters)
+#     )
+
+#     result = await db.execute(query)
+#     in_progress_count = result.scalar_one()
+#     return in_progress_count
+
+
+# async def alerts_open_multiple_filters(
+#     db: AsyncSession,
+#     assigned_to: Optional[str] = None,
+#     alert_title: Optional[str] = None,
+#     customer_code: Optional[str] = None,
+#     source: Optional[str] = None,
+#     asset_name: Optional[str] = None,
+#     status: Optional[str] = None,
+#     tags: Optional[List[str]] = None,
+# ) -> int:
+#     filters = [Alert.status == "OPEN"]
+#     if assigned_to:
+#         filters.append(Alert.assigned_to == assigned_to)
+#     if alert_title:
+#         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+#     if customer_code:
+#         filters.append(Alert.customer_code == customer_code)
+#     if source:
+#         filters.append(Alert.source == source)
+#     if asset_name:
+#         filters.append(Asset.asset_name == asset_name)
+#     if status:
+#         filters.append(Alert.status == status)
+#     if tags:
+#         filters.append(AlertTag.tag.in_(tags))
+
+#     query = (
+#         select(func.count())
+#         .select_from(Alert)
+#         .join(Asset, isouter=True)
+#         .join(AlertToTag, isouter=True)
+#         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+#         .where(*filters)
+#     )
+
+#     result = await db.execute(query)
+#     open_count = result.scalar_one()
+#     return open_count
+
 async def alerts_total_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -216,7 +379,7 @@ async def alerts_total_multiple_filters(
 
     # Build the query
     query = (
-        select(func.count())
+        select(func.count(distinct(Alert.id)))
         .select_from(Alert)
         .join(Asset, isouter=True)
         .join(AlertToTag, isouter=True)
@@ -257,7 +420,7 @@ async def alerts_closed_multiple_filters(
         filters.append(AlertTag.tag.in_(tags))
 
     query = (
-        select(func.count())
+        select(func.count(distinct(Alert.id)))
         .select_from(Alert)
         .join(Asset, isouter=True)
         .join(AlertToTag, isouter=True)
@@ -297,7 +460,7 @@ async def alerts_in_progress_multiple_filters(
         filters.append(AlertTag.tag.in_(tags))
 
     query = (
-        select(func.count())
+        select(func.count(distinct(Alert.id)))
         .select_from(Alert)
         .join(Asset, isouter=True)
         .join(AlertToTag, isouter=True)
@@ -337,7 +500,7 @@ async def alerts_open_multiple_filters(
         filters.append(AlertTag.tag.in_(tags))
 
     query = (
-        select(func.count())
+        select(func.count(distinct(Alert.id)))
         .select_from(Alert)
         .join(Asset, isouter=True)
         .join(AlertToTag, isouter=True)
@@ -1530,6 +1693,83 @@ async def list_alerts_by_source(
         alerts_out.append(alert_out)
     return alerts_out
 
+# async def list_alerts_multiple_filters(
+#     db: AsyncSession,
+#     assigned_to: Optional[str] = None,
+#     alert_title: Optional[str] = None,
+#     customer_code: Optional[str] = None,
+#     source: Optional[str] = None,
+#     asset_name: Optional[str] = None,
+#     status: Optional[str] = None,
+#     tags: Optional[List[str]] = None,
+#     page: int = 1,
+#     page_size: int = 25,
+#     order: str = "desc",
+# ) -> List[AlertOut]:
+#     offset = (page - 1) * page_size
+#     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+#     # Build dynamic filters
+#     filters = []
+#     if assigned_to:
+#         filters.append(Alert.assigned_to == assigned_to)
+#     if alert_title:
+#         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
+#     if customer_code:
+#         filters.append(Alert.customer_code == customer_code)
+#     if source:
+#         filters.append(Alert.source == source)
+#     if asset_name:
+#         filters.append(Asset.asset_name == asset_name)
+#     if status:
+#         filters.append(Alert.status == status)
+#     if tags:
+#         filters.append(AlertTag.tag.in_(tags))
+
+#     # Build the query with dynamic filters
+#     query = (
+#         select(Alert)
+#         .join(Asset, isouter=True)  # Join with Asset table
+#         .join(AlertToTag, isouter=True)  # Join with AlertToTag table
+#         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+#         .where(*filters)
+#         .options(
+#             selectinload(Alert.comments),
+#             selectinload(Alert.assets),
+#             selectinload(Alert.cases),
+#             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+#         )
+#         .order_by(order_by)
+#         .offset(offset)
+#         .limit(page_size)
+#     )
+
+#     result = await db.execute(query)
+#     alerts = result.scalars().all()
+
+#     alerts_out = []
+#     for alert in alerts:
+#         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+#         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+#         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+#         alert_out = AlertOut(
+#             id=alert.id,
+#             alert_creation_time=alert.alert_creation_time,
+#             time_closed=alert.time_closed,
+#             alert_name=alert.alert_name,
+#             alert_description=alert.alert_description,
+#             status=alert.status,
+#             customer_code=alert.customer_code,
+#             source=alert.source,
+#             assigned_to=alert.assigned_to,
+#             comments=comments,
+#             assets=assets,
+#             tags=tags,
+#         )
+#         alerts_out.append(alert_out)
+
+#     return alerts_out
+
 async def list_alerts_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -1566,6 +1806,7 @@ async def list_alerts_multiple_filters(
     # Build the query with dynamic filters
     query = (
         select(Alert)
+        .distinct(Alert.id)
         .join(Asset, isouter=True)  # Join with Asset table
         .join(AlertToTag, isouter=True)  # Join with AlertToTag table
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
