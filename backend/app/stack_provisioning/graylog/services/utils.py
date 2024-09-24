@@ -1,5 +1,7 @@
 from fastapi import HTTPException
 from loguru import logger
+from packaging.version import InvalidVersion
+from packaging.version import Version
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -36,15 +38,16 @@ async def system_version_check(compatible_version: str) -> bool:
     system_version = await get_graylog_version()
     logger.info(f"Graylog System version: {system_version}")
 
-    # Split the version strings at the '+' character and compare the parts before the '+'
-    system_version = system_version.split("+")[0]
-    compatible_version = compatible_version.split("+")[0]
+    try:
+        system_version_parsed = Version(system_version)
+        compatible_version_parsed = Version(compatible_version)
+    except InvalidVersion as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid version format: {e}",
+        )
 
-    # Split these parts at the '.' character and convert them to integers
-    system_version_parts = list(map(int, system_version.split(".")))
-    compatible_version_parts = list(map(int, compatible_version.split(".")))
-
-    if system_version_parts >= compatible_version_parts:
+    if system_version_parsed >= compatible_version_parsed:
         return True
     else:
         raise HTTPException(
