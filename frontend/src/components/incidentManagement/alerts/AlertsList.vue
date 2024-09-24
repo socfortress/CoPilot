@@ -32,18 +32,38 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="info grow lg:flex gap-2 hidden text-sm">
-				Total :
-				<code>{{ total }}</code>
+			<div class="info grow lg:flex gap-1 hidden text-sm items-center">
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
+					<div class="flex items-center gap-2">
+						<span>Total</span>
+						<code class="py-1">{{ total }}</code>
+					</div>
+				</n-button>
 				<span>/</span>
-				<span class="text-secondary-color">Open :</span>
-				<code class="text-error-color">{{ statusOpenTotal }}</code>
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
+					<div class="flex items-center gap-2">
+						<span>Open</span>
+						<code class="py-1 text-error-color">{{ statusOpenTotal }}</code>
+					</div>
+				</n-button>
 				<span>/</span>
-				<span class="text-secondary-color">In Progress :</span>
-				<code class="text-warning-color">{{ statusInProgressTotal }}</code>
+				<n-button
+					quaternary
+					size="small"
+					@click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
+				>
+					<div class="flex items-center gap-2">
+						<span>In Progress</span>
+						<code class="py-1 text-warning-color">{{ statusInProgressTotal }}</code>
+					</div>
+				</n-button>
 				<span>/</span>
-				<span class="text-secondary-color">Close :</span>
-				<code class="text-success-color">{{ statusCloseTotal }}</code>
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
+					<div class="flex items-center gap-2">
+						<span>Close</span>
+						<code class="py-1 text-success-color">{{ statusCloseTotal }}</code>
+					</div>
+				</n-button>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -63,7 +83,7 @@
 				:disabled="loading"
 			/>
 
-			<n-badge v-if="!hideFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
+			<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
 				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
 					<template #icon>
 						<Icon :name="FilterIcon"></Icon>
@@ -72,9 +92,14 @@
 			</n-badge>
 		</div>
 
-		<div class="filters-box" :class="{ open: showFiltersView }">
+		<div v-if="showFilters" class="filters-box" :class="{ open: showFiltersView }">
 			<n-card size="small" :bordered="false">
-				<AlertsFilters use-query-string @submit="applyFilters" />
+				<AlertsFilters
+					:use-query-string="!preset?.length"
+					:preset
+					@submit="applyFilters"
+					@mounted="filtersCTX = $event"
+				/>
 			</n-card>
 		</div>
 
@@ -111,11 +136,9 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsFilterTypes, AlertsQuery } from "@/api/endpoints/incidentManagement"
-import type { Customer } from "@/types/customers.d"
-import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
-import type { SourceName } from "@/types/incidentManagement/sources.d"
 import type { AlertsListFilter } from "./types.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -123,28 +146,19 @@ import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
-import {
-	NBadge,
-	NButton,
-	NCard,
-	NEmpty,
-	NInput,
-	NInputGroup,
-	NPagination,
-	NPopover,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
-import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
+import { NBadge, NButton, NCard, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, provide, ref, watch } from "vue"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
-const { highlight, preset, hideFilters } = defineProps<{
-	highlight?: string | null
-	preset?: AlertsListFilter[]
-	hideFilters?: boolean
-}>()
+const { highlight, preset, showFilters } = withDefaults(
+	defineProps<{
+		highlight?: string | null
+		preset?: AlertsListFilter[]
+		showFilters?: boolean
+	}>(),
+	{ showFilters: true }
+)
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
@@ -175,8 +189,8 @@ const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
 const statusCloseTotal = ref(0)
 
+const filtersCTX = ref<{ setFilter: (payload: AlertsListFilter[]) => void } | null>(null)
 const filters = ref<AlertsListFilter[]>([])
-const lastFilters = ref<AlertsListFilter[]>([])
 
 const filtered = computed<boolean>(() => {
 	return !!filters.value.length
@@ -239,7 +253,6 @@ function getData() {
 	abortController = new AbortController()
 
 	loading.value = true
-	lastFilters.value = _cloneDeep(filters.value)
 
 	const query: Partial<AlertsQuery> = {
 		page: currentPage.value,
@@ -314,7 +327,7 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
-	if (preset?.length) {
+	if (!showFilters && preset?.length) {
 		filters.value = preset
 	}
 

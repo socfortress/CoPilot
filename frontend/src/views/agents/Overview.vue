@@ -96,8 +96,8 @@
 							<AlertsList
 								v-if="agent"
 								class="px-1"
-								:preset="{ type: 'assetName', value: agent.hostname }"
-								hide-filters
+								:preset="[{ type: 'assetName', value: agent.hostname }]"
+								:show-filters="false"
 							/>
 						</div>
 					</n-tab-pane>
