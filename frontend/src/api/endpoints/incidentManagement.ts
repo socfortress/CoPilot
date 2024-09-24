@@ -4,6 +4,7 @@ import type {
 	AlertComment,
 	AlertContext,
 	AlertDetails,
+	AlertsFilter,
 	AlertStatus,
 	AlertTag,
 	AlertTimeline
@@ -12,24 +13,21 @@ import type { Case, CaseDataStore, CasePayload, CaseStatus } from "@/types/incid
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
+import _castArray from "lodash/castArray"
 import { HttpClient } from "../httpClient"
 
-export type AlertsFilter =
-	| { status: AlertStatus }
-	| { assetName: string }
-	| { assignedTo: string }
-	| { tag: string }
-	| { title: string }
-	| { customerCode: string }
-	| { source: string }
-
+export type AlertsListFilterValue = string | string[] | AlertStatus | null
 export type AlertsFilterTypes = KeysOfUnion<AlertsFilter>
 
 export interface AlertsQuery {
 	page: number
 	pageSize: number
 	sort: "asc" | "desc"
-	filters: Partial<UnionToIntersection<AlertsFilter>>
+	filter: Partial<UnionToIntersection<AlertsFilter>>
+	filters: {
+		type: AlertsFilterTypes
+		value: AlertsListFilterValue
+	}[]
 }
 
 export type CasesFilter =
@@ -95,35 +93,75 @@ export default {
 	getAlertsList(args: Partial<AlertsQuery>, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/alerts`
 
-		if (args?.filters?.status) {
-			url = `/incidents/db_operations/alerts/status/${args.filters.status}`
+		if (args?.filter?.status) {
+			url = `/incidents/db_operations/alerts/status/${args.filter.status}`
 		}
-		if (args?.filters?.assetName) {
-			url = `/incidents/db_operations/alerts/asset/${args.filters.assetName}`
+		if (args?.filter?.assetName) {
+			url = `/incidents/db_operations/alerts/asset/${args.filter.assetName}`
 		}
-		if (args?.filters?.assignedTo) {
-			url = `/incidents/db_operations/alerts/assigned-to/${args.filters.assignedTo}`
+		if (args?.filter?.assignedTo) {
+			url = `/incidents/db_operations/alerts/assigned-to/${args.filter.assignedTo}`
 		}
-		if (args?.filters?.tag) {
-			url = `/incidents/db_operations/alert/tag/${args.filters.tag}`
+		if (args?.filter?.tag) {
+			url = `/incidents/db_operations/alert/tag/${_castArray(args.filter.tag).join(",")}`
 		}
-		if (args?.filters?.title) {
-			url = `/incidents/db_operations/alerts/title/${args.filters.title}`
+		if (args?.filter?.title) {
+			url = `/incidents/db_operations/alerts/title/${args.filter.title}`
 		}
-		if (args?.filters?.customerCode) {
-			url = `/incidents/db_operations/alerts/customer/${args.filters.customerCode}`
+		if (args?.filter?.customerCode) {
+			url = `/incidents/db_operations/alerts/customer/${args.filter.customerCode}`
 		}
-		if (args?.filters?.source) {
-			url = `/incidents/db_operations/alerts/source/${args.filters.source}`
+		if (args?.filter?.source) {
+			url = `/incidents/db_operations/alerts/source/${args.filter.source}`
+		}
+
+		const params: any = {
+			page: args.page || 1,
+			page_size: args.pageSize || 25,
+			order: args.sort || "desc"
+		}
+
+		if (args.filters?.length) {
+			for (const filter of args.filters) {
+				if (filter.value?.length) {
+					switch (filter.type) {
+						case "assignedTo":
+							params.assigned_to = filter.value
+							break
+						case "title":
+							params.alert_title = filter.value
+							break
+						case "customerCode":
+							params.customer_code = filter.value
+							break
+						case "source":
+							params.source = filter.value
+							break
+						case "assetName":
+							params.asset_name = filter.value
+							break
+						case "status":
+							params.status = filter.value
+							break
+						case "tag":
+							params.tags = _castArray(filter.value)
+							break
+						default:
+							params[filter.type] = filter.value
+							break
+					}
+				}
+			}
+
+			url = `/incidents/db_operations/alerts/filter`
 		}
 
 		return HttpClient.get<
 			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
 		>(url, {
-			params: {
-				page: args.page || 1,
-				page_size: args.pageSize || 25,
-				order: args.sort || "desc"
+			params,
+			paramsSerializer: {
+				indexes: null // remove brackets in array types
 			},
 			signal
 		})

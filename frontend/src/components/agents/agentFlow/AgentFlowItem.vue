@@ -85,7 +85,7 @@
 								{{ key }}
 							</template>
 							<template #value>
-								{{ value === "" ? "-" : value ?? "-" }}
+								{{ value === "" ? "-" : (value ?? "-") }}
 							</template>
 						</KVCard>
 					</div>

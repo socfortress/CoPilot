@@ -4,10 +4,10 @@
 			status === 'OPEN'
 				? WarningIcon
 				: status === 'IN_PROGRESS'
-				? ProgressIcon
-				: status === 'CLOSED'
-				? CheckIcon
-				: UnknownIcon
+					? ProgressIcon
+					: status === 'CLOSED'
+						? CheckIcon
+						: UnknownIcon
 		"
 		:size="size || 16"
 	/>

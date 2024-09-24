@@ -54,8 +54,8 @@
 								alert.status === 'OPEN'
 									? 'danger'
 									: alert.status === 'IN_PROGRESS'
-									? 'warning'
-									: 'success'
+										? 'warning'
+										: 'success'
 							"
 						>
 							<template #iconLeft>
@@ -96,8 +96,8 @@
 									alert.status === 'OPEN'
 										? 'danger'
 										: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
+											? 'warning'
+											: 'success'
 								"
 							>
 								<template #iconLeft>
@@ -156,6 +156,15 @@
 										#{{ alert.customer_code }}
 										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
 									</code>
+								</div>
+							</template>
+						</Badge>
+
+						<Badge v-if="alert.assets?.length" type="splitted" fluid class="!hidden sm:!flex">
+							<template #label>Assets</template>
+							<template #value>
+								<div class="flex flex-wrap gap-1">
+									<AlertAssetItem v-for="asset of alert.assets" :key="asset.id" :asset badge />
 								</div>
 							</template>
 						</Badge>
@@ -243,7 +252,7 @@ import { formatDate } from "@/utils"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
 import { NButton, NCard, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
@@ -260,11 +269,14 @@ const props = defineProps<{
 	detailsOnMounted?: boolean
 	highlight?: boolean
 }>()
+
 const emit = defineEmits<{
 	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
 }>()
+
+const AlertAssetItem = defineAsyncComponent(() => import("./AlertAsset.vue"))
 
 const { alertData, alertId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 

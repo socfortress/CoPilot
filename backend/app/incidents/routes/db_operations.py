@@ -1,4 +1,5 @@
 import io
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -604,17 +605,48 @@ async def list_alerts_multiple_filters_endpoint(
     alert_title: Optional[str] = Query(None),
     customer_code: Optional[str] = Query(None),
     source: Optional[str] = Query(None),
+    asset_name: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    tags: Optional[List[str]] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Endpoint to list alerts with multiple filters.
+
+    Parameters:
+    - assigned_to (str, optional): Filter by assigned user.
+    - alert_title (str, optional): Filter by alert title.
+    - customer_code (str, optional): Filter by customer code.
+    - source (str, optional): Filter by source.
+    - asset_name (str, optional): Filter by asset name.
+    - status (str, optional): Filter by status.
+    - tags (List[str], optional): Filter by tags.
+    - page (int, default=1): Page number.
+    - page_size (int, default=25): Number of alerts per page.
+    - order (str, default='desc'): Sorting order ('asc' or 'desc').
+    - db (AsyncSession): Database session.
+
+    Returns:
+    - alerts (List[AlertOut]): List of alerts matching the filters.
+    - total (int): Total number of alerts matching the filters.
+    - open (int): Number of open alerts matching the filters.
+    - in_progress (int): Number of alerts in progress matching the filters.
+    - closed (int): Number of closed alerts matching the filters.
+    - success (bool): Indicates if the operation was successful.
+    - message (str): Success message.
+    """
     return AlertOutResponse(
         alerts=await list_alerts_multiple_filters(
             assigned_to=assigned_to,
             alert_title=alert_title,
             customer_code=customer_code,
             source=source,
+            asset_name=asset_name,
+            status=status,
+            tags=tags,
             db=db,
             page=page,
             page_size=page_size,
@@ -625,6 +657,9 @@ async def list_alerts_multiple_filters_endpoint(
             alert_title=alert_title,
             customer_code=customer_code,
             source=source,
+            asset_name=asset_name,
+            status=status,
+            tags=tags,
             db=db,
         ),
         open=await alerts_open_multiple_filters(
@@ -632,6 +667,9 @@ async def list_alerts_multiple_filters_endpoint(
             alert_title=alert_title,
             customer_code=customer_code,
             source=source,
+            asset_name=asset_name,
+            status=status,
+            tags=tags,
             db=db,
         ),
         in_progress=await alerts_in_progress_multiple_filters(
@@ -639,6 +677,9 @@ async def list_alerts_multiple_filters_endpoint(
             alert_title=alert_title,
             customer_code=customer_code,
             source=source,
+            asset_name=asset_name,
+            status=status,
+            tags=tags,
             db=db,
         ),
         closed=await alerts_closed_multiple_filters(
@@ -646,6 +687,9 @@ async def list_alerts_multiple_filters_endpoint(
             alert_title=alert_title,
             customer_code=customer_code,
             source=source,
+            asset_name=asset_name,
+            status=status,
+            tags=tags,
             db=db,
         ),
         success=True,

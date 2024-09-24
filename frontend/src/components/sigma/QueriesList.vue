@@ -34,6 +34,12 @@
 					<div class="flex items-center gap-2">
 						<Icon :name="ToolsIcon" :size="16"></Icon>
 						<span class="hidden xs:block">Actions</span>
+						<Icon
+							class="!hidden xs:!block transition-transform"
+							:class="{ '!rotate-90': showActionsView }"
+							:name="ChevronIcon"
+							:size="16"
+						></Icon>
 					</div>
 				</n-button>
 			</div>
@@ -141,6 +147,7 @@ interface QueriesFilter {
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 const ToolsIcon = "carbon:tools"
+const ChevronIcon = "carbon:chevron-right"
 
 const message = useMessage()
 const loading = ref(false)
@@ -263,15 +270,38 @@ onBeforeMount(() => {
 		grid-template-rows: 0fr;
 		padding-top: 0px;
 		opacity: 0;
+		position: relative;
 		transition:
 			opacity var(--router-transition-duration) ease-out,
 			grid-template-rows var(--router-transition-duration) ease-out,
 			padding-top var(--router-transition-duration) ease-out;
 
+		&::after {
+			--size: 10px;
+			content: "";
+			width: 0;
+			height: 0;
+			border-left: var(--size) solid transparent;
+			border-right: var(--size) solid transparent;
+			border-bottom: var(--size) solid var(--bg-secondary-color);
+			position: absolute;
+			top: 2px;
+			left: 54px;
+			transform: rotateX(90deg);
+			transform-origin: top center;
+			transition:
+				opacity var(--router-transition-duration) ease-out,
+				transform var(--router-transition-duration) ease-out;
+		}
+
 		&.open {
 			grid-template-rows: 1fr;
 			opacity: 1;
 			@apply pt-3;
+
+			&::after {
+				transform: rotateX(0deg);
+			}
 		}
 	}
 }

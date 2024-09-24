@@ -54,8 +54,8 @@ const title = computed<string>(() =>
 	typeRef.value === "signin"
 		? "SOCFortress CoPilot"
 		: typeRef.value === "signup"
-		? "SOCFortress CoPilot"
-		: "Forgot Password"
+			? "SOCFortress CoPilot"
+			: "Forgot Password"
 )
 
 function gotoSignIn() {
