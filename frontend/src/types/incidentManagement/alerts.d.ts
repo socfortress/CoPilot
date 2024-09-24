@@ -1,4 +1,14 @@
+import type { KeysOfUnion } from "type-fest"
 import type { Case } from "./cases.d"
+
+export type AlertsFilter =
+	| { status: AlertStatus }
+	| { assetName: string }
+	| { assignedTo: string }
+	| { tag: string | string[] }
+	| { title: string }
+	| { customerCode: string }
+	| { source: string }
 
 export interface Alert {
 	id: number

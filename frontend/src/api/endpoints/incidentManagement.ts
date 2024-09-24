@@ -4,6 +4,7 @@ import type {
 	AlertComment,
 	AlertContext,
 	AlertDetails,
+	AlertsFilter,
 	AlertStatus,
 	AlertTag,
 	AlertTimeline
@@ -15,15 +16,7 @@ import type { KeysOfUnion, UnionToIntersection } from "type-fest"
 import _castArray from "lodash/castArray"
 import { HttpClient } from "../httpClient"
 
-export type AlertsFilter =
-	| { status: AlertStatus }
-	| { assetName: string }
-	| { assignedTo: string }
-	| { tag: string | string[] }
-	| { title: string }
-	| { customerCode: string }
-	| { source: string }
-
+export type AlertsListFilterValue = string | string[] | AlertStatus | null
 export type AlertsFilterTypes = KeysOfUnion<AlertsFilter>
 
 export interface AlertsQuery {
@@ -33,7 +26,7 @@ export interface AlertsQuery {
 	filter: Partial<UnionToIntersection<AlertsFilter>>
 	filters: {
 		type: AlertsFilterTypes
-		value: string | string[] | AlertStatus | null
+		value: AlertsListFilterValue
 	}[]
 }
 
