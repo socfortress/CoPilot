@@ -1,4 +1,3 @@
-import type { KeysOfUnion } from "type-fest"
 import type { Case } from "./cases.d"
 
 export type AlertsFilter =

@@ -8,10 +8,10 @@
 							caseData.case_status === 'OPEN'
 								? 'danger'
 								: caseData.case_status === 'IN_PROGRESS'
-								? 'warning'
-								: caseData.case_status === 'CLOSED'
-								? 'success'
-								: undefined
+									? 'warning'
+									: caseData.case_status === 'CLOSED'
+										? 'success'
+										: undefined
 						"
 						size="lg"
 						class="grow w-full"
