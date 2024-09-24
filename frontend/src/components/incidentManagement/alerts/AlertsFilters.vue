@@ -2,7 +2,7 @@
 	<div class="alerts-filters flex flex-wrap gap-3">
 		<div v-for="filter of filters" :key="filter.type">
 			<n-input-group v-if="filter.type === 'status'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
 					v-model:value="filter.value"
 					size="small"
@@ -18,7 +18,7 @@
 			</n-input-group>
 
 			<n-input-group v-if="filter.type === 'assignedTo'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
 					v-model:value="filter.value"
 					:options="usersOptions"
@@ -36,7 +36,7 @@
 			</n-input-group>
 
 			<n-input-group v-if="filter.type === 'customerCode'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
 					v-model:value="filter.value"
 					:options="customersOptions"
@@ -54,7 +54,7 @@
 			</n-input-group>
 
 			<n-input-group v-if="filter.type === 'source'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
 					v-model:value="filter.value"
 					:options="sourcesOptions"
@@ -72,7 +72,7 @@
 			</n-input-group>
 
 			<n-input-group v-if="filter.type === 'tag'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
 					v-model:value="filter.value"
 					filterable
@@ -92,8 +92,10 @@
 				</n-button>
 			</n-input-group>
 
-			<n-input-group v-if="filter.type === 'title'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+			<n-input-group
+				v-if="filter.type === 'title' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -102,8 +104,10 @@
 				</n-button>
 			</n-input-group>
 
-			<n-input-group v-if="filter.type === 'assetName'">
-				<n-input-group-label size="small">{{ filter.label }}</n-input-group-label>
+			<n-input-group
+				v-if="filter.type === 'assetName' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -128,14 +132,16 @@
 			</n-button>
 		</n-dropdown>
 
-		<n-button v-if="filters.length" size="small" secondary type="primary" @click="submit()">Submit</n-button>
+		<n-button v-if="filters.length && isDirty" size="small" secondary type="primary" @click="submit()">
+			Submit
+		</n-button>
 
 		<n-button v-if="filters.length" size="small" quaternary @click="reset()">Reset</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AlertsFilterTypes } from "@/api/endpoints/incidentManagement"
+import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement"
 import type { Customer } from "@/types/customers.d"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
@@ -144,15 +150,22 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
+import _isEqual from "lodash/isEqual"
 import _orderBy from "lodash/orderBy"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, ref, type Ref } from "vue"
+import { computed, inject, onBeforeMount, onMounted, ref, type Ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
-const { useQueryString } = defineProps<{ useQueryString?: boolean }>()
+const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
 
 const emit = defineEmits<{
 	(e: "submit", value: AlertsListFilter[]): void
+	(
+		e: "mounted",
+		value: {
+			setFilter: (payload: AlertsListFilter[]) => void
+		}
+	): void
 }>()
 
 const AddIcon = "carbon:add"
@@ -187,18 +200,43 @@ const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 ]
 
 const filters = ref<AlertsListFilter[]>([])
+const lastFilters = ref<AlertsListFilter[]>([])
+
 const availableFilters = computed(() =>
 	typeOptions
 		.filter(o => !filters.value.map(f => f.type).includes(o.value))
 		.map(t => ({ key: t.value, label: t.label }))
 )
 
+const isDirty = computed(() => !_isEqual(filters.value, lastFilters.value))
+
+function getFilterLabel(type: AlertsFilterTypes): string {
+	return typeOptions.find(o => o.value === type)?.label || type
+}
+
 function addFilter(key: AlertsFilterTypes) {
-	filters.value.push({ type: key, value: null, label: typeOptions.find(o => o.value === key)?.label || key })
+	filters.value.push({ type: key, value: null })
 }
 
 function delFilter(key: AlertsFilterTypes) {
 	filters.value = filters.value.filter(o => o.type !== key)
+}
+
+function setFilter(newFilters: AlertsListFilter[]) {
+	for (const newFilter of newFilters) {
+		const filterIndex = filters.value.findIndex(o => o.type === newFilter.type)
+
+		if (filterIndex !== -1) {
+			if (newFilter.value) {
+				filters.value[filterIndex].value = newFilter.value
+			} else {
+				delFilter(newFilter.type)
+			}
+		} else if (newFilter.value) {
+			filters.value.push(newFilter)
+		}
+	}
+	submit()
 }
 
 function reset() {
@@ -207,24 +245,22 @@ function reset() {
 }
 
 function submit() {
-	emit("submit", filters.value)
+	lastFilters.value = _cloneDeep(filters.value)
+	emit("submit", lastFilters.value)
 	setQueryString()
 }
 
 function setQueryString() {
-	if (useQueryString) {
-		router.replace({
-			query: filters.value.reduce(
-				(acc, curr) => {
-					if (curr.value) {
-						acc[curr.type] = curr.value
-					}
-					return acc
-				},
-				{} as { [key: string]: string }
-			)
-		})
-	}
+	if (!useQueryString) return
+
+	const query = filters.value
+		.filter(filter => filter.value)
+		.reduce<Record<string, string | string[]>>((acc, filter) => {
+			acc[filter.type] = filter.value as string | string[]
+			return acc
+		}, {})
+
+	router.replace({ query })
 }
 
 function getQueryString() {
@@ -232,9 +268,9 @@ function getQueryString() {
 		filters.value = Object.entries(route.query)
 			.filter(o => !!o[0] && !!o[1])
 			.map(o => ({
-				type: o[0],
+				type: o[0] as AlertsFilterTypes,
 				label: typeOptions.find(t => t.value === o[0])?.label || o[0],
-				value: o[1]
+				value: o[1] as AlertsListFilterValue
 			}))
 	}
 }
@@ -312,9 +348,20 @@ function load() {
 }
 
 onBeforeMount(() => {
-	getQueryString()
-	if (useQueryString && filters.value.length) {
+	if (preset?.length) {
+		filters.value = preset
+	} else {
+		getQueryString()
+	}
+
+	if ((useQueryString || preset?.length) && filters.value.length) {
 		submit()
 	}
+})
+
+onMounted(() => {
+	emit("mounted", {
+		setFilter
+	})
 })
 </script>
