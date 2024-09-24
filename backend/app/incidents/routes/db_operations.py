@@ -1,4 +1,5 @@
 import io
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,7 +10,6 @@ from fastapi import Query
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from typing import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

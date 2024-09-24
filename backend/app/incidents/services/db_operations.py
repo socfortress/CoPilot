@@ -9,8 +9,8 @@ from loguru import logger
 from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
-from sqlalchemy import func
 from sqlalchemy import distinct
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -188,6 +188,7 @@ async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
     return len(result.scalars().all())
 
+
 async def alerts_total_multiple_filters(
     db: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -349,6 +350,7 @@ async def alerts_open_multiple_filters(
     result = await db.execute(query)
     open_count = result.scalar_one()
     return open_count
+
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
     result = await db.execute(
@@ -1530,6 +1532,7 @@ async def list_alerts_by_source(
         )
         alerts_out.append(alert_out)
     return alerts_out
+
 
 async def list_alerts_multiple_filters(
     db: AsyncSession,
