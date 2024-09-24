@@ -269,6 +269,7 @@ const props = defineProps<{
 	detailsOnMounted?: boolean
 	highlight?: boolean
 }>()
+
 const emit = defineEmits<{
 	(e: "opened"): void
 	(e: "deleted"): void

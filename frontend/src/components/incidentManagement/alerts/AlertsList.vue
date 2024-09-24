@@ -62,102 +62,19 @@
 				class="max-w-20"
 				:disabled="loading"
 			/>
-			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
-				<template #trigger>
-					<div class="bg-color border-radius">
-						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="showFilters = true">
-								<template #icon>
-									<Icon :name="FilterIcon"></Icon>
-								</template>
-							</n-button>
-						</n-badge>
-					</div>
-				</template>
-				<div class="py-1 flex flex-col gap-2">
-					<div class="px-3">
-						<n-input-group>
-							<n-select
-								v-model:value="filters.type"
-								:options="typeOptions"
-								placeholder="Filter by..."
-								clearable
-								class="!w-40"
-							/>
 
-							<n-select
-								v-if="filters.type === 'status'"
-								v-model:value="filters.value"
-								:options="statusOptions"
-								placeholder="Value..."
-								:disabled="!filters.type"
-								clearable
-								class="!w-56"
-							/>
-							<n-select
-								v-else-if="filters.type === 'assignedTo'"
-								v-model:value="filters.value"
-								:options="usersOptions"
-								placeholder="Value..."
-								:disabled="!filters.type"
-								clearable
-								filterable
-								class="!w-56"
-							/>
-							<n-select
-								v-else-if="filters.type === 'customerCode'"
-								v-model:value="filters.value"
-								:options="customersOptions"
-								placeholder="Value..."
-								:disabled="!filters.type"
-								clearable
-								filterable
-								class="!w-56"
-							/>
-							<n-select
-								v-else-if="filters.type === 'source'"
-								v-model:value="filters.value"
-								:options="sourcesOptions"
-								placeholder="Value..."
-								:disabled="!filters.type"
-								clearable
-								filterable
-								class="!w-56"
-							/>
-							<n-input
-								v-else
-								v-model:value="filters.value"
-								placeholder="Value..."
-								:disabled="!filters.type"
-								clearable
-								class="!w-56"
-							/>
-						</n-input-group>
-					</div>
-					<div class="px-3 flex justify-between gap-2">
-						<div class="flex justify-start gap-2">
-							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
-						</div>
-						<div class="flex justify-end gap-2">
-							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
-							<n-button size="small" type="primary" secondary :loading @click="getData()">
-								Submit
-							</n-button>
-						</div>
-					</div>
-				</div>
-			</n-popover>
-
-			<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
-				<template #icon>
-					<Icon :name="FilterIcon"></Icon>
-				</template>
-			</n-button>
+			<n-badge v-if="!hideFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
+				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+					<template #icon>
+						<Icon :name="FilterIcon"></Icon>
+					</template>
+				</n-button>
+			</n-badge>
 		</div>
 
 		<div class="filters-box" :class="{ open: showFiltersView }">
 			<n-card size="small" :bordered="false">
-				<AlertsFilters />
+				<AlertsFilters use-query-string @submit="applyFilters" />
 			</n-card>
 		</div>
 
@@ -199,6 +116,7 @@ import type { Customer } from "@/types/customers.d"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
+import type { AlertsListFilter } from "./types.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
@@ -222,25 +140,20 @@ import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
-export interface AlertsListFilter {
-	type: AlertsFilterTypes
-	value: string | AlertStatus
-}
-
-const props = defineProps<{ highlight?: string | null; preset?: AlertsListFilter; hideFilters?: boolean }>()
-const { highlight, preset, hideFilters } = toRefs(props)
+const { highlight, preset, hideFilters } = defineProps<{
+	highlight?: string | null
+	preset?: AlertsListFilter[]
+	hideFilters?: boolean
+}>()
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loading = ref(false)
-const showFilters = ref(false)
 const showFiltersView = useStorage<boolean>("incident-management-alerts-list-filters-view-state", false, localStorage)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
-const configuredSourcesList = ref<SourceName[]>([])
-const customersList = ref<Customer[]>([])
 const linkableCases = ref<Case[]>([])
 let abortController: AbortController | null = null
 
@@ -262,52 +175,15 @@ const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
 const statusCloseTotal = ref(0)
 
-const filters = ref<Partial<AlertsListFilter>>({})
-const lastFilters = ref<Partial<AlertsListFilter>>({})
+const filters = ref<AlertsListFilter[]>([])
+const lastFilters = ref<AlertsListFilter[]>([])
 
 const filtered = computed<boolean>(() => {
-	return !!filters.value.type && !!filters.value.value
+	return !!filters.value.length
 })
 
-const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
-	{ label: "Status", value: "status" },
-	{ label: "Asset Name", value: "assetName" },
-	{ label: "Assigned To", value: "assignedTo" },
-	{ label: "Tag", value: "tag" },
-	{ label: "Title", value: "title" },
-	{ label: "Customer Code", value: "customerCode" },
-	{ label: "Source", value: "source" }
-]
-
-const statusOptions: { label: string; value: AlertStatus }[] = [
-	{ label: "Open", value: "OPEN" },
-	{ label: "Closed", value: "CLOSED" },
-	{ label: "In progress", value: "IN_PROGRESS" }
-]
-
-const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
-const customersOptions = computed(() =>
-	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
-)
-const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ label: o, value: o })))
-
-const highlightedItemFound = ref(!highlight.value)
-const highlightedItemOpened = ref(!highlight.value)
-
-watch(showFilters, val => {
-	if (!val) {
-		filters.value = _cloneDeep(lastFilters.value)
-	}
-})
-
-watch(
-	() => filters.value.type,
-	() => {
-		if (!preset.value) {
-			filters.value.value = undefined
-		}
-	}
-)
+const highlightedItemFound = ref(!highlight)
+const highlightedItemOpened = ref(!highlight)
 
 watch([currentPage, sort], () => {
 	getData()
@@ -326,7 +202,7 @@ watch(
 	() => {
 		if (
 			alertsList.value.length &&
-			!alertsList.value.find(o => o.id.toString() === highlight.value) &&
+			!alertsList.value.find(o => o.id.toString() === highlight) &&
 			currentPage.value < total.value &&
 			!highlightedItemFound.value
 		) {
@@ -335,7 +211,7 @@ watch(
 			})
 		}
 
-		if (alertsList.value.find(o => o.id.toString() === highlight.value)) {
+		if (alertsList.value.find(o => o.id.toString() === highlight)) {
 			highlightedItemFound.value = true
 		}
 	},
@@ -346,10 +222,8 @@ provide("assignable-users", availableUsers)
 
 provide("linkable-cases", linkableCases)
 
-function resetFilters() {
-	filters.value.type = undefined
-	filters.value.value = undefined
-	showFilters.value = false
+function applyFilters(newFilters: AlertsListFilter[]) {
+	filters.value = newFilters
 	getData()
 }
 
@@ -364,7 +238,6 @@ function getData() {
 	abortController?.abort()
 	abortController = new AbortController()
 
-	showFilters.value = false
 	loading.value = true
 	lastFilters.value = _cloneDeep(filters.value)
 
@@ -375,8 +248,7 @@ function getData() {
 	}
 
 	if (filtered.value) {
-		// @ts-expect-error filters properties infer are ignored
-		query.filters = { [filters.value.type]: filters.value.value }
+		query.filters = filters.value
 	}
 
 	Api.incidentManagement
@@ -418,36 +290,6 @@ function getAvailableUsers() {
 		})
 }
 
-function getCustomers() {
-	Api.customers
-		.getCustomers()
-		.then(res => {
-			if (res.data.success) {
-				customersList.value = res.data?.customers || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-}
-
-function getConfiguredSources() {
-	Api.incidentManagement
-		.getConfiguredSources()
-		.then(res => {
-			if (res.data.success) {
-				configuredSourcesList.value = res.data?.sources || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-}
-
 function getCases() {
 	Api.incidentManagement
 		.getCasesList()
@@ -472,16 +314,13 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
-	if (preset.value?.type && preset.value.value) {
-		filters.value.type = preset.value.type
-		filters.value.value = preset.value.value
+	if (preset?.length) {
+		filters.value = preset
 	}
 
 	getData()
 	getAvailableUsers()
-	getCustomers()
 	getCases()
-	getConfiguredSources()
 })
 </script>
 
