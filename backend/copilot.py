@@ -103,13 +103,13 @@ app.add_middleware(
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
 # Comment out logging for now, not sure I want to use it
-app.middleware("http")(log_requests)  # using the imported middleware
+#app.middleware("http")(log_requests)  # using the imported middleware
 
 
 ################## ! Exception Handlers ! ##################
-app.add_exception_handler(HTTPException, custom_http_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(ValueError, value_error_handler)
+#app.add_exception_handler(HTTPException, custom_http_exception_handler)
+#app.add_exception_handler(RequestValidationError, validation_exception_handler)
+#app.add_exception_handler(ValueError, value_error_handler)
 
 
 ################## ! INCLUDE ROUTES ! ##################
