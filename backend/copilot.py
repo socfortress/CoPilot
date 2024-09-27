@@ -28,7 +28,6 @@ from app.db.db_setup import ensure_scheduler_user_removed
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
-#from app.middleware.logger import log_requests
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -74,6 +73,9 @@ from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+
+# from app.middleware.logger import log_requests
+
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file
