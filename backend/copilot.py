@@ -28,7 +28,7 @@ from app.db.db_setup import ensure_scheduler_user_removed
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
-from app.middleware.logger import log_requests
+#from app.middleware.logger import log_requests
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -103,7 +103,7 @@ app.add_middleware(
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
 # Comment out logging for now, not sure I want to use it
-#app.middleware("http")(log_requests)  # using the imported middleware
+# app.middleware("http")(log_requests)  # using the imported middleware
 
 
 ################## ! Exception Handlers ! ##################
