@@ -107,9 +107,9 @@ app.add_middleware(
 
 
 ################## ! Exception Handlers ! ##################
-#app.add_exception_handler(HTTPException, custom_http_exception_handler)
-#app.add_exception_handler(RequestValidationError, validation_exception_handler)
-#app.add_exception_handler(ValueError, value_error_handler)
+app.add_exception_handler(HTTPException, custom_http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValueError, value_error_handler)
 
 
 ################## ! INCLUDE ROUTES ! ##################
