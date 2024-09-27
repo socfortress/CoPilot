@@ -150,14 +150,15 @@ import { computed, nextTick, onBeforeMount, provide, ref, watch } from "vue"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
-const { highlight, preset, showFilters } = withDefaults(
-	defineProps<{
-		highlight?: string | null
-		preset?: AlertsListFilter[]
-		showFilters?: boolean
-	}>(),
-	{ showFilters: true }
-)
+const {
+	highlight,
+	preset,
+	showFilters = true
+} = defineProps<{
+	highlight?: string | null
+	preset?: AlertsListFilter[]
+	showFilters?: boolean
+}>()
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
