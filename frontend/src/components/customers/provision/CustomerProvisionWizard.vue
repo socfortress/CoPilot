@@ -273,7 +273,7 @@ import {
 import isIP from "validator/es/lib/isIP"
 import isPort from "validator/es/lib/isPort"
 import isURL from "validator/es/lib/isURL"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	customerCode: string
@@ -560,7 +560,14 @@ function toggleDashboards() {
 	if (allDashboardsSelected.value) {
 		form.value.dashboards_to_include.dashboards = []
 	} else {
-		form.value.dashboards_to_include.dashboards = dashboardOptions.value.map(o => o.value)
+		form.value.dashboards_to_include.dashboards = dashboardOptions.value
+			.filter(
+				o =>
+					!["EDR_WAZUH_INVENOTRY", "EDR_WAZUH_INVENTORY", "EDR_AGENT_INVENTORY"]
+						.map(d => d.toLowerCase())
+						.includes(o.value.toLowerCase())
+			)
+			.map(o => o.value)
 	}
 }
 
@@ -613,6 +620,20 @@ async function submit() {
 			loading.value = false
 		})
 }
+
+function formPreset(step: number) {
+	switch (step) {
+		case 2:
+			if (!form.value.customer_index_name) {
+				form.value.customer_index_name = `wazuh-${form.value.customer_code}`
+			}
+			break
+	}
+}
+
+watch(current, val => {
+	formPreset(val)
+})
 
 onBeforeMount(() => {
 	getProvisioningDefaultSettings()
