@@ -2,7 +2,7 @@
 	<div class="header-bar flex items-center gap-3">
 		<Logo :mini="false" :dark="isDark" class="anim-wrap" />
 		<n-scrollbar class="grow" x-scrollable>
-			<Navbar :collapsed="false" mode="horizontal"></Navbar>
+			<Navbar :collapsed="false" mode="horizontal" />
 		</n-scrollbar>
 	</div>
 </template>

@@ -1,28 +1,20 @@
 <template>
-	<div class="pinned-pages flex items-center gap-5 relative overflow-hidden py-2 justify-end w-full">
-		<TransitionGroup name="anim" tag="div" class="flex items-center gap-4 overflow-hidden latest-list">
+	<div class="flex pinned-pages items-center gap-5">
+		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				v-for="page of latestSanitized"
 				:key="page.name"
 				round
 				:bordered="false"
 				:closable="false"
-				class="bg-transparent flex-shrink overflow-hidden p-0 transition-all duration-300"
 				@close="removeLatestPage(page.name)"
 			>
-				<span
-					:title="page.title"
-					class="cursor-pointer ml-0.5 overflow-hidden text-ellipsis hover:underline hover:decoration-2 hover:decoration-[var(--primary-color)]"
-					@click="gotoPage(page.name)"
-				>
+				<span class="page-name" :title="page.title" @click="gotoPage(page.name)">
 					{{ page.title }}
 				</span>
 				<template #icon>
-					<div
-						class="cursor-pointer transition-colors duration-300 mr-0.5 hover:text-[var(--primary-color)]"
-						@click="pinPage(page)"
-					>
-						<Icon :size="14" :name="PinnedIcon"></Icon>
+					<div class="icon-box" @click="pinPage(page)">
+						<Icon :size="14" :name="PinnedIcon" />
 					</div>
 				</template>
 			</n-tag>
@@ -33,7 +25,7 @@
 				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover" class="!p-1">
 					<template #trigger>
 						<n-button size="small" class="!h-8">
-							<span class="flex items-center gap-3">
+							<span class="flex items-center gap-2">
 								Shortcuts
 								<n-badge :value="pinned.length" :color="style['divider-030-color']" />
 							</span>
@@ -48,15 +40,17 @@
 							class="!justify-start"
 							@click="gotoPage(page.name)"
 						>
-							<template #icon>
+							<span class="flex items-center gap-1">
 								<Icon
 									:size="20"
 									:name="CloseIcon"
 									class="opacity-50 hover:text-red-500 hover:opacity-100"
 									@click.stop="removePinnedPage(page.name)"
-								></Icon>
-							</template>
-							{{ page.title }}
+								/>
+								<span class="px-2">
+									{{ page.title }}
+								</span>
+							</span>
 						</n-button>
 					</div>
 				</n-popover>
@@ -89,6 +83,12 @@ const themeStore = useThemeStore()
 const style = computed(() => themeStore.style)
 const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
 const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
+const latestSanitized: ComputedRef<Page[]> = computed(() => {
+	return _takeRight(
+		latest.value.filter(page => pinned.value.findIndex(p => p.name === page.name) === -1).reverse(),
+		3
+	) as Page[]
+})
 
 function removeLatestPage(pageName: RouteRecordName | string) {
 	latest.value = latest.value.filter(page => page.name !== pageName)
@@ -111,13 +111,6 @@ function pinPage(page: Page) {
 	return true
 }
 
-const latestSanitized: ComputedRef<Page[]> = computed(() => {
-	return _takeRight(
-		latest.value.filter(page => pinned.value.findIndex(p => p.name === page.name) === -1).reverse(),
-		3
-	) as Page[]
-})
-
 function checkRoute(route: RouteLocationNormalized) {
 	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
 
@@ -138,16 +131,22 @@ router.afterEach(route => {
 
 <style lang="scss" scoped>
 .pinned-pages {
+	position: relative;
+	overflow: hidden;
+	padding: 8px 0;
 	container-type: inline-size;
+	justify-content: flex-end;
+	width: 100%;
 
 	:deep() {
 		.n-tag {
 			background-color: transparent;
 			flex-shrink: 1;
 			overflow: hidden;
+			gap: 4px;
 
 			&.n-tag--round {
-				padding: 0;
+				padding: 0 !important;
 				transition: all 0.3s;
 			}
 			.n-tag__icon {
@@ -179,6 +178,27 @@ router.afterEach(route => {
 					}
 				}
 			}
+		}
+	}
+
+	.page-name {
+		cursor: pointer;
+		overflow: hidden;
+		text-overflow: ellipsis;
+
+		&:hover {
+			text-decoration: underline;
+			text-decoration-thickness: 2px;
+			text-decoration-color: var(--primary-color);
+		}
+	}
+
+	.icon-box {
+		cursor: pointer;
+		transition: color 0.3s;
+
+		&:hover {
+			color: var(--primary-color);
 		}
 	}
 

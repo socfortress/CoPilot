@@ -3,7 +3,7 @@
 		<n-scrollbar ref="scrollbar">
 			<Toolbar :boxed="toolbarBoxed" class="gradient-bg-sidebar" />
 			<div class="view" :class="[{ boxed }, `route-${routeName}`]">
-				<slot></slot>
+				<slot />
 			</div>
 			<MainFooter v-if="footerShown" :boxed="boxed" />
 		</n-scrollbar>
