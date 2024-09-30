@@ -214,11 +214,14 @@ const areAllCustomerFieldsUniques = computed(() => {
 	return uniques.length === form.value.custom_fields.length
 })
 
-const isCustomerCodePresent = computed(() => {
+/**  @deprecated */
+/*
+ const isCustomerCodePresent = computed(() => {
 	const field = form.value.custom_fields.filter(o => o.name === "CUSTOMER_CODE" && !!o.value)
 
 	return !!field.length
 })
+*/
 
 const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] = [
 	{ label: "Low", value: CustomProvisionPriority.LOW },
@@ -261,6 +264,7 @@ const rules: FormRules = {
 	},
 	custom_fields: {
 		required: true,
+		// eslint-disable-next-line unused-imports/no-unused-vars
 		validator(rule: FormItemRule, value: string) {
 			if (!areAllCustomerFieldsFilled.value) {
 				return new Error(`Please fill all customer fields`)
@@ -270,9 +274,13 @@ const rules: FormRules = {
 				return new Error(`There are duplicated fields`)
 			}
 
+			/**  @deprecated */
+			/*
 			if (!value.length || !isCustomerCodePresent.value) {
 				return new Error(`At least one custom field with name CUSTOMER_CODE is required`)
 			}
+			*/
+
 			return true
 		},
 		trigger: ["input", "blur"]
@@ -284,9 +292,12 @@ const isValid = computed(() => {
 		return false
 	}
 
+	/**  @deprecated */
+	/*
 	if (!isCustomerCodePresent.value) {
 		return false
 	}
+	*/
 
 	if (!areAllCustomerFieldsUniques.value) {
 		return false
