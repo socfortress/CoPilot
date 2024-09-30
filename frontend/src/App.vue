@@ -22,11 +22,11 @@
 
 <script lang="ts" setup>
 import type { Layout, RouterTransition, ThemeName } from "@/types/theme.d"
-import SearchDialog from "@/components/common/SearchDialog.vue"
 import Blank from "@/app-layouts/Blank/index.vue"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
 import HorizontalNav from "@/app-layouts/HorizontalNav/index.vue"
+import SearchDialog from "@/components/common/SearchDialog.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
