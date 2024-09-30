@@ -12,9 +12,7 @@
 				<n-scrollbar ref="scrollContent" class="!h-96">
 					<div class="conten-wrap">
 						<div v-for="group of filteredGroups" :key="group.name" class="group">
-							<div class="group-title">
-								{{ group.name }}
-							</div>
+							<div class="group-title">{{ group.name }}</div>
 							<div class="group-list">
 								<button
 									v-for="item of group.items"
@@ -25,7 +23,13 @@
 									@click="callAction(item.action)"
 								>
 									<div class="icon">
-										<n-avatar v-if="item.iconImage" round :size="28" :src="item.iconImage" />
+										<n-avatar
+											v-if="item.iconImage"
+											round
+											:size="28"
+											:src="item.iconImage"
+											:img-props="{ alt: 'avatar' }"
+										/>
 										<Icon v-if="item.iconName" :name="item.iconName" :size="16" />
 									</div>
 									<div class="title grow">
@@ -36,9 +40,7 @@
 											:text-to-highlight="item.title"
 										/>
 									</div>
-									<div class="label">
-										{{ item.label }}
-									</div>
+									<div class="label">{{ item.label }}</div>
 								</button>
 							</div>
 						</div>
@@ -86,7 +88,7 @@ interface GroupItem {
 	key: number | string
 	title: string
 	label: string
-	tags?: string
+	tags?: string[]
 	action: () => void
 }
 
@@ -190,53 +192,32 @@ const groups = ref<Groups>([
 ])
 
 const keywords = computed<string[]>(() => {
-	if (search.value.length > 1) {
-		return search.value.split(" ").filter(k => k)
-	} else {
-		return []
-	}
+	return search.value.length > 1 ? search.value.split(" ").filter(k => k) : []
 })
+
 const filteredGroups = computed<Groups>(() => {
-	if (keywords.value.length === 0) {
-		return groups.value
-	}
-	const newGroups: Groups = []
-	for (const group of groups.value) {
-		const items = group.items.filter(item => {
-			if (keywords.value.filter(k => item.title.toLowerCase().includes(k.toLowerCase())).length !== 0) {
-				return true
-			}
-			if (
-				item.tags &&
-				keywords.value.filter(k => item.tags?.toLowerCase().indexOf(k.toLowerCase()) !== -1).length !== 0
-			) {
-				return true
-			}
-			return false
-		})
-		if (items.length) {
-			newGroups.push({
-				name: group.name,
-				items
-			})
-		}
-	}
-	return newGroups
+	if (!keywords.value.length) return groups.value
+
+	return groups.value
+		.map(group => ({
+			name: group.name,
+			items: group.items.filter(
+				item =>
+					keywords.value.some(k => item.title.toLowerCase().includes(k.toLowerCase())) ||
+					item.tags?.some(t => keywords.value.some(k => t.toLowerCase().includes(k.toLowerCase())))
+			)
+		}))
+		.filter(group => group.items.length)
 })
 
 const filteredFlattenItems = computed<GroupItem[]>(() => {
-	const items = []
-
-	for (const group of filteredGroups.value) {
-		items.push(...group.items)
-	}
-
-	return items
+	return filteredGroups.value.reduce((acc, group) => [...acc, ...group.items], [] as GroupItem[])
 })
 
 function openBox(e?: MouseEvent) {
 	if (!showSearchBox.value) {
 		showSearchBox.value = true
+
 		setTimeout(() => {
 			search.value = ""
 			activeItem.value = null
@@ -244,15 +225,18 @@ function openBox(e?: MouseEvent) {
 	}
 	return e
 }
+
 function closeBox() {
 	showSearchBox.value = false
 	search.value = ""
 	activeItem.value = null
 }
+
 function callAction(action: () => void) {
 	action()
 	closeBox()
 }
+
 function nextItem() {
 	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
 	if (currentIndex === filteredFlattenItems.value.length - 1 || activeItem.value === null) {
@@ -262,6 +246,7 @@ function nextItem() {
 	}
 	centerItem()
 }
+
 function prevItem() {
 	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
 	if (currentIndex === 0 || activeItem.value === null) {
@@ -271,12 +256,14 @@ function prevItem() {
 	}
 	centerItem()
 }
+
 function performAction() {
 	const item = filteredFlattenItems.value.find(item => item.key === activeItem.value)
 	if (item) {
 		callAction(item.action)
 	}
 }
+
 function centerItem() {
 	const element = document.getElementById(activeItem.value?.toString() || "")
 	if (element && scrollContent.value) {

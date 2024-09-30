@@ -2,15 +2,16 @@
 	<n-split
 		ref="splitPane"
 		direction="horizontal"
-		:default-size="splitDefault"
+		:default-size="sanitizedDefaultSplit"
 		:min="0"
 		:max="1"
 		:resize-trigger-size="0"
 		:disabled="!enableResize || splitDisabled"
 		class="wrapper flex grow"
 		:class="[{ 'sidebar-open': sidebarOpen }, `sidebar-position-${sidebarPosition}`]"
+		:pane1-style="pane1Style"
 	>
-		<template #1>
+		<template #[tplNameSide]>
 			<div v-if="sidebarAvailable" ref="sidebar" class="sidebar flex flex-col">
 				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center">
 					<slot name="sidebar-header" />
@@ -36,7 +37,7 @@
 			</div>
 		</template>
 
-		<template #2>
+		<template #[tplNameMain]>
 			<div class="main flex-grow flex flex-col">
 				<div v-if="$slots['main-toolbar']" class="main-toolbar flex items-center">
 					<div v-if="sidebarAvailable && !hideMenuBtn" class="menu-btn flex justify-center opacity-50">
@@ -96,8 +97,11 @@ const props = withDefaults(
 		sidebarContentClass?: string
 		enableResize?: boolean
 		disableContainerQuery?: boolean
+		defaultSplit?: number
+		maxSidebarWidth?: number
+		minSidebarWidth?: number
 	}>(),
-	{ sidebarPosition: "left", useMainScroll: true }
+	{ sidebarPosition: "left", useMainScroll: true, defaultSplit: 0.3, maxSidebarWidth: 450, minSidebarWidth: 250 }
 )
 
 const emit = defineEmits<{
@@ -112,25 +116,36 @@ const {
 	mainContentStyle,
 	mainContentClass,
 	sidebarContentStyle,
-	sidebarContentClass
+	sidebarContentClass,
+	enableResize,
+	disableContainerQuery,
+	defaultSplit,
+	maxSidebarWidth,
+	minSidebarWidth
 } = toRefs(props)
 
 const MenuIcon = "ph:list-light"
 const SplitIcon = "carbon:draggable"
 
 const splitPane = ref()
-const splitDefault = ref(0.3)
+const sanitizedDefaultSplit = ref(defaultSplit.value)
 const splitDisabled = ref(false)
 
 const slots = useSlots()
 const sidebarOpen = ref(false)
 const sidebar = ref(null)
 const mainScrollbar = ref<typeof NScrollbar | null>(null)
+const { width } = useWindowSize()
 const sidebarAvailable = computed(
 	() => !!slots["sidebar-header"] || !!slots["sidebar-content"] || !!slots["sidebar-footer"]
 )
-
-onClickOutside(sidebar, () => closeSidebar())
+const isSidebarLeft = computed<boolean>(() => sidebarPosition.value === "left")
+const tplNameMain = computed<1 | 2>(() => (isSidebarLeft.value ? 2 : 1))
+const tplNameSide = computed<1 | 2>(() => (isSidebarLeft.value ? 1 : 2))
+const pane1Style = computed(() => ({
+	maxWidth: isSidebarLeft.value ? `${maxSidebarWidth.value}px` : `calc(100% - ${minSidebarWidth.value}px)`,
+	minWidth: isSidebarLeft.value ? `${minSidebarWidth.value}px` : `calc(100% - ${maxSidebarWidth.value}px)`
+}))
 
 function closeSidebar() {
 	sidebarOpen.value = false
@@ -140,6 +155,8 @@ function openSidebar() {
 	sidebarOpen.value = true
 }
 
+onClickOutside(sidebar, () => closeSidebar())
+
 watch(
 	sidebarOpen,
 	val => {
@@ -148,12 +165,10 @@ watch(
 	{ immediate: true }
 )
 
-const { width } = useWindowSize()
-
 watch(
 	width,
 	val => {
-		splitDefault.value = val <= 700 ? 0 : 0.3
+		sanitizedDefaultSplit.value = val <= 700 ? 0 : isSidebarLeft.value ? defaultSplit.value : 1 - defaultSplit.value
 		splitDisabled.value = val <= 700
 	},
 	{ immediate: true }
@@ -178,18 +193,6 @@ onMounted(() => {
 	border: 1px solid var(--border-color);
 	background-color: var(--bg-color);
 	direction: ltr;
-
-	:deep() {
-		.n-split-pane-1,
-		.n-split-pane-2 {
-			overflow: hidden;
-			height: 100%;
-		}
-		.n-split-pane-1 {
-			min-width: 250px;
-			max-width: min(450px, calc(100% - 400px));
-		}
-	}
 
 	.split-trigger {
 		height: 100%;
@@ -225,9 +228,6 @@ onMounted(() => {
 
 	.sidebar {
 		background-color: var(--bg-secondary-color);
-		min-width: 250px;
-		//max-width: calc(100% - 400px);
-		//width: 35%;
 		height: 100%;
 		overflow: hidden;
 		border-right: 1px solid var(--border-color);
@@ -307,28 +307,12 @@ onMounted(() => {
 		}
 	}
 
-	&.sidebar-position-right {
-		flex-direction: row-reverse;
-
-		.sidebar {
-			border-right: none;
-			border-left: 1px solid var(--border-color);
-		}
-	}
-
 	@media (max-width: 700px) {
 		--mb-toolbar-height: 62px;
 		height: 100%;
 		overflow: hidden;
 		border-radius: 0;
 		border: none;
-
-		:deep() {
-			.n-split-pane-1 {
-				min-width: 0;
-				max-width: 0;
-			}
-		}
 
 		&::before {
 			content: "";
@@ -399,7 +383,23 @@ onMounted(() => {
 			}
 		}
 
+		&.sidebar-position-left {
+			:deep() {
+				.n-split-pane-1 {
+					min-width: 0 !important;
+					max-width: 0 !important;
+				}
+			}
+		}
+
 		&.sidebar-position-right {
+			:deep() {
+				.n-split-pane-1 {
+					min-width: 100% !important;
+					max-width: 100% !important;
+				}
+			}
+
 			&::before,
 			.sidebar {
 				left: initial;

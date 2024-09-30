@@ -1,7 +1,7 @@
 <template>
 	<n-breadcrumb class="breadcrumb">
 		<n-breadcrumb-item @click="goto({ path: '/' })">
-			<Icon :size="16" :name="HomeIcon"></Icon>
+			<Icon :size="16" :name="HomeIcon" />
 		</n-breadcrumb-item>
 		<TransitionGroup name="anim">
 			<n-breadcrumb-item

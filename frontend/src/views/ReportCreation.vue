@@ -39,7 +39,7 @@ const panels = ref<Panel[]>([])
 </script>
 
 <style lang="scss" scoped>
-@import "../layouts/HorizontalNav/_variables.scss";
+@import "../app-layouts/HorizontalNav/_variables.scss";
 
 .page {
 	overflow: hidden;

@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/layouts/common/Navbar/index.vue"
+import Navbar from "@/app-layouts/common/Navbar/index.vue"
 import { useThemeStore } from "@/stores/theme"
 import { isMobile } from "@/utils"
 import { onClickOutside, useElementHover } from "@vueuse/core"

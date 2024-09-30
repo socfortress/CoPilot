@@ -3,7 +3,7 @@
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="logo-box flex items-center gap-2 cursor-pointer" @click="openNav()">
 				<Logo mini />
-				<Icon :size="20" name="carbon:chevron-right"></Icon>
+				<Icon :size="20" name="carbon:chevron-right" />
 			</div>
 
 			<Breadcrumb class="grow" />

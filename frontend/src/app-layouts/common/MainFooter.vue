@@ -10,7 +10,7 @@
 				<a
 					href="https://www.socfortress.co/"
 					target="_blank"
-					alt="D*VERSE"
+					alt="SOCFortress"
 					rel="noopener noreferrer"
 					class="mx-1"
 				>

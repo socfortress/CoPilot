@@ -32,7 +32,7 @@
 
 <script lang="ts" setup>
 import type { FormType } from "./types.d"
-import Logo from "@/layouts/common/Logo.vue"
+import Logo from "@/app-layouts/common/Logo.vue"
 import { useThemeStore } from "@/stores/theme"
 import { NButton } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

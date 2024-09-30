@@ -43,6 +43,7 @@ export default antfu({
 		"vue/html-self-closing": "off",
 		"vue/singleline-html-element-content-newline": "off",
 		"vue/comma-dangle": "off",
-		"vue/quote-props": "off"
+		"vue/quote-props": "off",
+		"vue/one-component-per-file": "off"
 	}
 })

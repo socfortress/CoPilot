@@ -8,8 +8,8 @@
 </template>
 
 <script lang="ts" setup>
-import Logo from "@/layouts/common/Logo.vue"
-import Navbar from "@/layouts/common/Navbar/index.vue"
+import Logo from "@/app-layouts/common/Logo.vue"
+import Navbar from "@/app-layouts/common/Navbar/index.vue"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed } from "vue"

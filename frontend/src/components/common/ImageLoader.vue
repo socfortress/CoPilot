@@ -2,6 +2,7 @@
 	<img
 		v-if="isImageError && fallback"
 		:src="fallback"
+		:alt="props.alt"
 		class="image-fallback"
 		draggable="false"
 		:class="imageClass"
@@ -10,6 +11,7 @@
 	<img
 		v-if="!isImageError"
 		:src="mainSrc"
+		:alt="props.alt"
 		draggable="false"
 		class="image-loading"
 		:class="imageClass"
@@ -39,6 +41,10 @@ const props = defineProps({
 		type: String
 	},
 	imageClass: {
+		type: String,
+		default: ""
+	},
+	alt: {
 		type: String,
 		default: ""
 	}
