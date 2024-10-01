@@ -60,7 +60,7 @@
 		"mitt": "^3.0.1",
 		"naive-ui": "^2.40.1",
 		"password-validator": "^5.3.0",
-		"pinia": "^2.2.2",
+		"pinia": "^2.2.4",
 		"pinia-plugin-persistedstate": "^4.0.2",
 		"secure-ls": "^2.0.0",
 		"shiki": "^1.21.0",
@@ -76,7 +76,7 @@
 		"vuedraggable": "^4.1.0"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.22.5"
+		"@rollup/rollup-linux-x64-gnu": "^4.23.0"
 	},
 	"devDependencies": {
 		"@antfu/eslint-config": "^3.7.3",
@@ -125,9 +125,9 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.7.0",
+			"@typescript-eslint/eslint-plugin": "^8.8.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.7.0",
+			"@typescript-eslint/parser": "^8.8.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}

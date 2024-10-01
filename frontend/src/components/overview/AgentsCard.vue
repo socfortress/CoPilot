@@ -1,27 +1,17 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsDouble
-			title="Agents"
-			first-label="Total"
-			hovered
-			class="cursor-pointer"
-			:value="total"
-			second-label="Online"
-			:sub-value="onlineTotal"
-			:second-status="onlineTotal ? 'success' : undefined"
-			@click="gotoAgent()"
-		>
+		<CardStatsMulti title="Agents" hovered class="cursor-pointer h-full" :values @click="gotoAgent()">
 			<template #icon>
 				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>
-		</CardStatsDouble>
+		</CardStatsMulti>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import Api from "@/api"
-import CardStatsDouble from "@/components/common/CardStatsDouble.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
+import CardStatsMulti, { type ItemProps } from "@/components/common/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { type Agent, AgentStatus } from "@/types/agents.d"
 import { NSpin, useMessage } from "naive-ui"
@@ -32,14 +22,16 @@ const { gotoAgent } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const agents = ref<Agent[]>([])
-
 const total = computed<number>(() => {
 	return agents.value.length || 0
 })
-
 const onlineTotal = computed(() => {
 	return agents.value.filter(({ wazuh_agent_status }) => wazuh_agent_status === AgentStatus.Active).length || 0
 })
+const values = computed<ItemProps[]>(() => [
+	{ value: total.value, label: "Total" },
+	{ value: onlineTotal.value, label: "Online", status: onlineTotal.value ? "success" : undefined }
+])
 
 function getData() {
 	loading.value = true

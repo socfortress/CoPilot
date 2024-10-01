@@ -1,16 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsDouble
-			title="Healthcheck"
-			first-label="Total"
-			:value="total"
-			hovered
-			class="cursor-pointer"
-			second-label="Critical"
-			:sub-value="criticalTotal"
-			:second-status="criticalTotal ? 'warning' : undefined"
-			@click="gotoHealthcheck()"
-		>
+		<CardStatsMulti title="Healthcheck" hovered class="cursor-pointer h-full" :values @click="gotoHealthcheck()">
 			<template #icon>
 				<CardStatsIcon
 					:icon-name="HealthcheckIcon"
@@ -19,14 +9,14 @@
 					:color="criticalTotal ? style['warning-color'] : undefined"
 				></CardStatsIcon>
 			</template>
-		</CardStatsDouble>
+		</CardStatsMulti>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import Api from "@/api"
-import CardStatsDouble from "@/components/common/CardStatsDouble.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
+import CardStatsMulti, { type ItemProps } from "@/components/common/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
 import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
@@ -38,16 +28,17 @@ const { gotoHealthcheck } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])
-
 const style = computed(() => useThemeStore().style)
-
 const total = computed<number>(() => {
 	return healthcheck.value.length || 0
 })
-
 const criticalTotal = computed<number>(() => {
 	return healthcheck.value.filter(o => o.level === InfluxDBAlertLevel.Crit).length || 0
 })
+const values = computed<ItemProps[]>(() => [
+	{ value: total.value, label: "Total" },
+	{ value: criticalTotal.value, label: "Critical", status: criticalTotal.value ? "warning" : undefined }
+])
 
 function getData() {
 	loading.value = true

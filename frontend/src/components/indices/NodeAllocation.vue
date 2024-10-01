@@ -3,7 +3,9 @@
 		<template #header>
 			<div class="flex align-center justify-between">
 				<span>Nodes Allocation</span>
-				<span class="text-secondary-color font-mono">{{ indicesAllocation.length }}</span>
+				<span v-if="indicesAllocation.length" class="text-secondary-color font-mono">
+					{{ indicesAllocation.length }}
+				</span>
 			</div>
 		</template>
 		<n-spin :show="loading">
@@ -59,6 +61,9 @@
 						</div>
 					</n-scrollbar>
 				</template>
+				<template v-else>
+					<n-empty v-if="!loading" description="No allocations found" class="justify-center h-48" />
+				</template>
 			</div>
 		</n-spin>
 	</n-card>
@@ -67,7 +72,7 @@
 <script setup lang="ts">
 import type { IndexAllocation } from "@/types/indices.d"
 import Api from "@/api"
-import { NCard, NProgress, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { NCard, NEmpty, NProgress, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref } from "vue"
 

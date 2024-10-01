@@ -3,6 +3,7 @@
 		<n-card>
 			<n-spin :show="loading">
 				<n-collapse
+					v-if="pipelines.length"
 					v-model:expanded-names="selectedPipeline"
 					accordion
 					:style="minHeight ? `min-height: ${minHeight}` : ''"
@@ -23,6 +24,9 @@
 						</div>
 					</n-collapse-item>
 				</n-collapse>
+				<template v-else>
+					<n-empty v-if="!loading" description="No pipelines found" class="justify-center h-32" />
+				</template>
 			</n-spin>
 		</n-card>
 
@@ -47,7 +51,7 @@ import Icon from "@/components/common/Icon.vue"
 import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
-import { NButton, NCard, NCollapse, NCollapseItem, NModal, NSpin, useMessage } from "naive-ui"
+import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{

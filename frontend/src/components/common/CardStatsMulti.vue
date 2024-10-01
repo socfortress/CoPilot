@@ -1,30 +1,27 @@
 <template>
 	<n-card content-style="padding:0" :class="{ hovered }">
-		<div class="flex flex-col overflow-hidden">
+		<div class="flex flex-col overflow-hidden h-full">
 			<div class="card-header flex gap-4 items-center justify-between">
-				<div class="title flex items-center gap-2">
-					{{ title }}
+				<div class="title flex items-center gap-2 grow">
+					<span class="truncate">{{ title }}</span>
 					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
 				</div>
 				<div class="icon">
 					<slot name="icon"></slot>
 				</div>
 			</div>
-			<div class="flex card-content">
-				<div class="flex flex-col basis-1/2 value-box" :class="firstStatus">
-					<div class="value">
-						{{ value }}
+			<div class="flex card-content grow">
+				<div
+					v-for="item of values"
+					:key="JSON.stringify(item)"
+					class="flex flex-col value-box"
+					:class="[item.status, values.length !== 1 ? `basis-1/${values.length}` : 'grow']"
+				>
+					<div class="value grow flex justify-center items-center">
+						{{ item.value }}
 					</div>
-					<div v-if="firstLabel" class="label">
-						{{ firstLabel }}
-					</div>
-				</div>
-				<div class="flex flex-col basis-1/2 value-box" :class="secondStatus">
-					<div class="value">
-						{{ subValue }}
-					</div>
-					<div v-if="secondLabel" class="label">
-						{{ secondLabel }}
+					<div v-if="item.label" class="label">
+						{{ item.label }}
 					</div>
 				</div>
 			</div>
@@ -37,17 +34,18 @@ import Icon from "@/components/common/Icon.vue"
 import { NCard } from "naive-ui"
 import { toRefs } from "vue"
 
+export interface ItemProps {
+	value: number | string
+	label?: string
+	status?: "success" | "warning" | "error"
+}
+
 const props = defineProps<{
 	title: string
-	value?: number | string
-	subValue?: number | string
-	firstLabel?: string
-	secondLabel?: string
-	firstStatus?: "success" | "warning" | "error"
-	secondStatus?: "success" | "warning" | "error"
+	values: ItemProps[]
 	hovered?: boolean
 }>()
-const { title, value, subValue, firstLabel, secondLabel, firstStatus, secondStatus, hovered } = toRefs(props)
+const { title, values, hovered } = toRefs(props)
 
 const ArrowRightIcon = "carbon:arrow-right"
 </script>
@@ -74,7 +72,7 @@ const ArrowRightIcon = "carbon:arrow-right"
 			text-align: center;
 			overflow: hidden;
 
-			&:first-child {
+			&:not(:last-child) {
 				border-right: var(--border-small-050);
 			}
 

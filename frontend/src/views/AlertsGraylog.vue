@@ -4,7 +4,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AlertsGraylogList from "@/components/alerts/AlertsGraylogList.vue"
 </script>
 
