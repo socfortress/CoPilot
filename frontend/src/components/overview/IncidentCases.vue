@@ -8,7 +8,7 @@
 			@click="gotoIncidentManagementCases()"
 		>
 			<template #icon>
-				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
+				<CardStatsIcon :icon-name="CasesIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>
 		</CardStatsBars>
 	</n-spin>
@@ -23,7 +23,7 @@ import { useGoto } from "@/composables/useGoto"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 
-const AgentsIcon = "carbon:network-3"
+const CasesIcon = "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries"
 const { gotoIncidentManagementCases } = useGoto()
 const message = useMessage()
 const loading = ref(false)

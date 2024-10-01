@@ -26,16 +26,17 @@
 					<div
 						v-for="item of sanitizedValues"
 						:key="JSON.stringify(item)"
-						class="flex justify-between items-center item"
+						class="flex items-center item gap-3"
 						:class="item.status"
 					>
-						<div class="label flex gap-2 items-center">
+						<div class="label flex gap-2 items-center truncate">
 							<span class="badge"></span>
-							<span>{{ item.label }}</span>
+							<span class="font-mono truncate">{{ item.label }}</span>
 						</div>
-						<div class="value flex gap-2 font-mono">
+						<div class="divider grow"></div>
+						<div class="value flex gap-3 font-mono whitespace-nowrap">
+							<span v-if="!item.isTotal" class="opacity-50">{{ item.percentage }}%</span>
 							<strong>{{ item.value }}</strong>
-							<span class="opacity-50">0%</span>
 						</div>
 					</div>
 				</div>
@@ -162,17 +163,24 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 		}
 
 		.list {
-			font-size: 14px;
-			gap: 6px;
+			font-size: 13px;
+			gap: 4px;
 
 			.item {
 				line-height: 1;
+				padding: 3px 4px;
 
 				.badge {
 					height: 10px;
 					width: 10px;
+					min-width: 10px;
 					border-radius: var(--border-radius-small);
 					background-color: var(--fg-color);
+				}
+
+				.divider {
+					height: 1px;
+					background-color: var(--hover-010-color);
 				}
 
 				&.success {
