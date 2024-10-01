@@ -180,7 +180,7 @@ async def update_customer_meta_table(
         customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
         customer_meta_wazuh_api_port=request.wazuh_api_port,
         customer_meta_wazuh_auth_password=request.wazuh_auth_password,
-        customer_meta_iris_customer_id=request.dfir_iris_id,
+        #customer_meta_iris_customer_id=request.dfir_iris_id,
     )
     session.add(customer_meta)
     await session.commit()
