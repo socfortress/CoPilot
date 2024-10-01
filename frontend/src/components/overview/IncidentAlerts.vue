@@ -32,7 +32,7 @@ const inProgressCount = ref(0)
 const closedCount = ref(0)
 const values = computed<ItemProps[]>(() => [
 	{ value: total.value, label: "Total", isTotal: true },
-	{ value: openedCount.value, label: "Opened", status: "error" },
+	{ value: openedCount.value, label: "Open", status: "error" },
 	{ value: inProgressCount.value, label: "In Progress", status: "warning" },
 	{ value: closedCount.value, label: "Closed", status: "success" }
 ])
