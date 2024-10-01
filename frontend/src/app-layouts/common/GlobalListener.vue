@@ -2,7 +2,7 @@
 	<slot />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useGlobalActions } from "@/composables/useGlobalActions"
 import { useMessage, useNotification } from "naive-ui"
 

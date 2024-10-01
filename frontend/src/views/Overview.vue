@@ -20,22 +20,21 @@
 			</div>
 		</div>
 		<div class="section">
-			<div class="columns column-800 overflow-hidden">
-				<div class="basis-2/5">
-					<AgentsCard />
+			<div class="grid grid-flow-row-dense grid-cols-12 gap-6">
+				<div class="col-span-12 xs:col-span-12 sm:col-span-4 lg:col-span-2">
+					<AgentsCard class="h-full" />
 				</div>
-				<div class="basis-2/5">
-					<HealthcheckCard />
+				<div class="col-span-12 xs:col-span-6 sm:col-span-4 lg:col-span-2">
+					<HealthcheckCard class="h-full" />
 				</div>
-				<div class="basis-1/5 flex gap-6">
-					<!--
-						<div class="grow overflow-hidden">
-							<SocAlertsCard class="h-full" :vertical="cardDirection === 'vertical'" />
-						</div>
-					-->
-					<div class="grow overflow-hidden">
-						<CustomersCard class="h-full" :vertical="cardDirection === 'vertical'" />
-					</div>
+				<div class="col-span-12 xs:col-span-6 sm:col-span-4 lg:col-span-2">
+					<CustomersCard class="h-full" />
+				</div>
+				<div class="col-span-12 lg:col-span-3">
+					<IncidentAlerts class="h-full" />
+				</div>
+				<div class="col-span-12 lg:col-span-3">
+					<IncidentCases class="h-full" />
 				</div>
 			</div>
 		</div>
@@ -43,7 +42,7 @@
 			<IndicesMarquee @click="gotoIndex($event.index)" />
 		</div>
 		<div class="section">
-			<div class="columns">
+			<div class="columns flex-col lg:flex-row">
 				<div class="col basis-1/2">
 					<ClusterHealth class="stretchy" />
 				</div>
@@ -85,15 +84,16 @@ import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
+import CustomersCard from "@/components/overview/CustomersCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
+import IncidentAlerts from "@/components/overview/IncidentAlerts.vue"
+import IncidentCases from "@/components/overview/IncidentCases.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
-// import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
-import CustomersCard from "@/components/overview/CustomersCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useResizeObserver } from "@vueuse/core"
+import { NButton, NDrawer, NDrawerContent } from "naive-ui"
+import { defineAsyncComponent, ref } from "vue"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
@@ -122,30 +122,6 @@ useResizeObserver(page, entries => {
 
 			.stretchy {
 				height: 100%;
-			}
-		}
-	}
-
-	@media (max-width: 1000px) {
-		.section {
-			.columns {
-				&:not(.column-1200, .column-800) {
-					flex-direction: column;
-				}
-			}
-		}
-	}
-	@media (max-width: 800px) {
-		.section {
-			.columns.column-800 {
-				flex-direction: column;
-			}
-		}
-	}
-	@media (max-width: 1200px) {
-		.section {
-			.columns.column-1200 {
-				flex-direction: column;
 			}
 		}
 	}

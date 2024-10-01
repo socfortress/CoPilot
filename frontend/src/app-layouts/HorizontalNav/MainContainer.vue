@@ -3,7 +3,7 @@
 		<n-scrollbar ref="scrollbar">
 			<Toolbar :boxed="toolbarBoxed" class="gradient-bg-sidebar" />
 			<div class="view" :class="[{ boxed }, `route-${routeName}`]">
-				<slot></slot>
+				<slot />
 			</div>
 			<MainFooter v-if="footerShown" :boxed="boxed" />
 		</n-scrollbar>
@@ -11,8 +11,8 @@
 </template>
 
 <script lang="ts" setup>
-import MainFooter from "@/layouts/common/MainFooter.vue"
-import Toolbar from "@/layouts/common/Toolbar/index.vue"
+import MainFooter from "@/app-layouts/common/MainFooter.vue"
+import Toolbar from "@/app-layouts/common/Toolbar/index.vue"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
@@ -31,7 +31,7 @@ const scrollbar = ref()
 onMounted(() => {
 	router.afterEach(() => {
 		if (scrollbar?.value?.scrollTo) {
-			scrollbar?.value.scrollTo({ top: 0 })
+			scrollbar?.value.scrollTo({ top: 0, behavior: "smooth" })
 		}
 	})
 })

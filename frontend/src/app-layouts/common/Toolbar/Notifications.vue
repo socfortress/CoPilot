@@ -2,7 +2,7 @@
 	<n-popover :show-arrow="false" placement="bottom" content-class="!p-0 w-72">
 		<template #trigger>
 			<n-badge :show="hasUnread" dot :color="primaryColor">
-				<Icon :name="BellIcon" :size="21" class="trigger-icon"></Icon>
+				<Icon :name="BellIcon" :size="21" class="trigger-icon" />
 			</n-badge>
 		</template>
 		<template #header>

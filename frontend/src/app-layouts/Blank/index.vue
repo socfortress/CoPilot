@@ -1,7 +1,7 @@
 <template>
 	<div class="layout flex">
 		<MainContainer class="grow">
-			<slot></slot>
+			<slot />
 		</MainContainer>
 	</div>
 </template>

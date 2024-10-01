@@ -1,6 +1,6 @@
 <template>
 	<n-popselect v-model:value="currentLocale" :options="list" :render-label="renderLabel">
-		<Icon :size="19" :name="MultiLanguageIcon"></Icon>
+		<Icon :size="19" :name="MultiLanguageIcon" />
 	</n-popselect>
 </template>
 

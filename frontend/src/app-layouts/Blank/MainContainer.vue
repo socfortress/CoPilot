@@ -2,7 +2,7 @@
 	<div class="main">
 		<n-scrollbar ref="scrollbar">
 			<div class="view" :class="[{ boxed }, `route-${routeName}`]">
-				<slot></slot>
+				<slot />
 			</div>
 		</n-scrollbar>
 	</div>
@@ -24,7 +24,7 @@ const scrollbar = ref()
 onMounted(() => {
 	router.afterEach(() => {
 		if (scrollbar?.value?.scrollTo) {
-			scrollbar?.value.scrollTo({ top: 0 })
+			scrollbar?.value.scrollTo({ top: 0, behavior: "smooth" })
 		}
 	})
 })

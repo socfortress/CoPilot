@@ -29,6 +29,9 @@
 					</div>
 				</n-scrollbar>
 			</div>
+			<template v-else>
+				<n-empty v-if="!loading" description="No cluster found" class="justify-center h-48" />
+			</template>
 		</n-spin>
 	</n-card>
 </template>
@@ -37,7 +40,7 @@
 import type { ClusterHealth } from "@/types/indices.d"
 import Api from "@/api"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { NCard, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { NCard, NEmpty, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 
 const message = useMessage()

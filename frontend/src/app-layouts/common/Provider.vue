@@ -24,7 +24,7 @@
 <script lang="ts" setup>
 import type { ThemeName } from "@/types/theme.d"
 import type { RtlItem } from "naive-ui/es/config-provider/src/internal-interface"
-import GlobalListener from "@/layouts/common/GlobalListener.vue"
+import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
 import { useThemeStore } from "@/stores/theme"
 import { useWindowSize } from "@vueuse/core"
 import {
@@ -36,7 +36,7 @@ import {
 	NMessageProvider,
 	NNotificationProvider
 } from "naive-ui"
-import { computed, watch } from "vue"
+import { computed, onBeforeMount, watch } from "vue"
 import { rtlStyles } from "./rtlProvider"
 
 const { width } = useWindowSize()
@@ -48,29 +48,17 @@ const style = computed(() => themeStore.style)
 const isRTL = computed(() => themeStore.isRTL)
 const rtlOptions = computed<RtlItem[] | undefined>(() => (isRTL.value ? rtlStyles : undefined))
 
-watch(
-	[isRTL, style],
-	() => {
-		setGlobalVars()
-	},
-	{ immediate: true }
-)
+watch([isRTL, style], () => {
+	setGlobalVars()
+})
 
-watch(
-	themeName,
-	(val, old) => {
-		setThemeName(val, old)
-	},
-	{ immediate: true }
-)
+watch(themeName, (val, old) => {
+	setThemeName(val, old)
+})
 
-watch(
-	width,
-	() => {
-		themeStore.updateVars()
-	},
-	{ immediate: true }
-)
+watch(width, () => {
+	themeStore.updateVars()
+})
 
 // This function allows you to utilize the values in the style object as variables within your CSS/SCSS code like: var(-–bg-color)
 function setGlobalVars() {
@@ -101,4 +89,10 @@ function setThemeName(val: ThemeName, old?: ThemeName) {
 		html.classList.add(`theme-${val}`)
 	}
 }
+
+onBeforeMount(() => {
+	themeStore.updateVars()
+	setGlobalVars()
+	setThemeName(themeName.value)
+})
 </script>

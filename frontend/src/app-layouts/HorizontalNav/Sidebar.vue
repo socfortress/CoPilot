@@ -7,7 +7,7 @@
 		<div ref="sidebar" class="sidebar-wrap grow flex flex-col">
 			<SidebarHeader :logo-mini="sidebarClosed" />
 			<n-scrollbar>
-				<Navbar :collapsed="sidebarClosed"></Navbar>
+				<Navbar :collapsed="sidebarClosed" />
 			</n-scrollbar>
 			<SidebarFooter :collapsed="sidebarClosed" />
 		</div>
@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/layouts/common/Navbar/index.vue"
+import Navbar from "@/app-layouts/common/Navbar/index.vue"
 import { useThemeStore } from "@/stores/theme"
 import { isMobile } from "@/utils"
 import { onClickOutside, useElementHover } from "@vueuse/core"

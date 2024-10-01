@@ -6,7 +6,6 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
 from pydantic import validator
 
 
@@ -254,17 +253,20 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
         example=300000,
     )
 
-    @root_validator
-    def check_customer_code(cls, values):
-        custom_fields = values.get("custom_fields")
-        if custom_fields is None:
-            raise HTTPException(
-                status_code=400,
-                detail="At least one custom field with name CUSTOMER_CODE is required",
-            )
-        if not any(field.name == "CUSTOMER_CODE" for field in custom_fields):
-            raise HTTPException(
-                status_code=400,
-                detail="At least one custom field with name CUSTOMER_CODE is required",
-            )
-        return values
+    # ! I think I can remove the requirement for the CUSTOMER_CODE field.
+    # ! The new incident management doesnt require the CUSTOMER_CODE to be preset but
+    # ! rather looks for valid CustomerCodeKeys(Enum) # !
+    # @root_validator
+    # def check_customer_code(cls, values):
+    #     custom_fields = values.get("custom_fields")
+    #     if custom_fields is None:
+    #         raise HTTPException(
+    #             status_code=400,
+    #             detail="At least one custom field with name CUSTOMER_CODE is required",
+    #         )
+    #     if not any(field.name == "CUSTOMER_CODE" for field in custom_fields):
+    #         raise HTTPException(
+    #             status_code=400,
+    #             detail="At least one custom field with name CUSTOMER_CODE is required",
+    #         )
+    #     return values

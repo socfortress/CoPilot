@@ -58,7 +58,9 @@ export default {
 		"w-72",
 		"max-h-50vh",
 		"max-w-90vw",
-		"!h-0.75"
+		"!h-0.75",
+		"basis-1/4",
+		"basis-1/5"
 	],
 	plugins: [
 		plugin(({ addBase, theme }) => {

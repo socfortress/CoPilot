@@ -1,33 +1,27 @@
 <template>
 	<n-spin :show="loading">
-		<CardStats
+		<CardStatsMulti
 			title="Customers"
-			:value="total"
-			:vertical="vertical"
 			hovered
 			class="cursor-pointer h-full"
+			:values="[{ value: total, label: 'Total' }]"
 			@click="gotoCustomer()"
 		>
 			<template #icon>
-				<CardStatsIcon :icon-name="CustomersIcon" boxed :box-size="40"></CardStatsIcon>
+				<CardStatsIcon :icon-name="CustomersIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>
-		</CardStats>
+		</CardStatsMulti>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
 import Api from "@/api"
-import CardStats from "@/components/common/CardStats.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
+import CardStatsMulti from "@/components/common/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-
-const props = defineProps<{
-	vertical?: boolean
-}>()
-const { vertical } = toRefs(props)
+import { computed, onBeforeMount, ref } from "vue"
 
 const CustomersIcon = "carbon:user-multiple"
 const { gotoCustomer } = useGoto()

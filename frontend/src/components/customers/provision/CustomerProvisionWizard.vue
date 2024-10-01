@@ -563,7 +563,7 @@ function toggleDashboards() {
 		form.value.dashboards_to_include.dashboards = dashboardOptions.value
 			.filter(
 				o =>
-					!["EDR_WAZUH_INVENOTRY", "EDR_WAZUH_INVENTORY", "EDR_AGENT_INVENTORY"]
+					!["EDR_WAZUH_INVENTORY", "EDR_AGENT_INVENTORY"]
 						.map(d => d.toLowerCase())
 						.includes(o.value.toLowerCase())
 			)

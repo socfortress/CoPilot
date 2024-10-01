@@ -2,7 +2,6 @@ import App from "@/App.vue"
 import { getI18NConf, type Locales, type MessageSchema } from "@/lang/config"
 import router from "@/router"
 import { createPinia } from "pinia"
-
 import { createPersistedState } from "pinia-plugin-persistedstate"
 import { createApp } from "vue"
 import { createI18n } from "vue-i18n"

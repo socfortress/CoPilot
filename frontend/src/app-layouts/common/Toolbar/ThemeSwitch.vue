@@ -2,12 +2,12 @@
 	<button class="theme-switch" alt="theme-switch" aria-label="theme-switch" @click="toggleTheme">
 		<Transition name="rotate">
 			<Icon v-if="isThemeDark" :size="20">
-				<Iconify :icon="Sunny" class="hover"></Iconify>
-				<Iconify :icon="SunnyOutline"></Iconify>
+				<Iconify :icon="Sunny" class="hover" />
+				<Iconify :icon="SunnyOutline" />
 			</Icon>
 			<Icon v-else :size="20">
-				<Iconify :icon="Moon" class="hover"></Iconify>
-				<Iconify :icon="MoonOutline"></Iconify>
+				<Iconify :icon="Moon" class="hover" />
+				<Iconify :icon="MoonOutline" />
 			</Icon>
 		</Transition>
 	</button>
@@ -29,8 +29,8 @@ const isThemeDark = computed<boolean>(() => themeStore.isThemeDark)
 function toggleTheme(event?: MouseEvent) {
 	const isAppearanceTransition =
 		typeof document !== "undefined" &&
-		document?.startViewTransition &&
-		!window?.matchMedia("(prefers-reduced-motion: reduce)").matches
+		document.startViewTransition &&
+		!window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 	if (!isAppearanceTransition || !event) {
 		themeStore.toggleTheme()

@@ -2,14 +2,14 @@
 	<div class="header-bar flex items-center gap-3">
 		<Logo :mini="false" :dark="isDark" class="anim-wrap" />
 		<n-scrollbar class="grow" x-scrollable>
-			<Navbar :collapsed="false" mode="horizontal"></Navbar>
+			<Navbar :collapsed="false" mode="horizontal" />
 		</n-scrollbar>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import Logo from "@/layouts/common/Logo.vue"
-import Navbar from "@/layouts/common/Navbar/index.vue"
+import Logo from "@/app-layouts/common/Logo.vue"
+import Navbar from "@/app-layouts/common/Navbar/index.vue"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed } from "vue"

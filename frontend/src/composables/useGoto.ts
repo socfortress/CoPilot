@@ -61,6 +61,10 @@ export function useGoto() {
 		router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 	}
 
+	function gotoIncidentManagementAlerts(alertId?: number) {
+		router.push({ name: "IncidentManagement-Alerts", query: alertId ? { alert_id: alertId } : {} })
+	}
+
 	function gotoIncidentManagementCases(caseId?: number) {
 		router.push({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
@@ -78,6 +82,7 @@ export function useGoto() {
 		gotoSocUsers,
 		gotoAlerts,
 		gotoConnectors,
+		gotoIncidentManagementAlerts,
 		gotoIncidentManagementCases
 	}
 }

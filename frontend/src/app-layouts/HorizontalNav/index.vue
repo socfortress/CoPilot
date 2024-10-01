@@ -3,7 +3,7 @@
 		<HeaderBar />
 		<Sidebar />
 		<MainContainer class="grow">
-			<slot></slot>
+			<slot />
 		</MainContainer>
 	</div>
 </template>
