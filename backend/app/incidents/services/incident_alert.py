@@ -307,7 +307,7 @@ async def validate_syslog_type_source(source: str, session: AsyncSession) -> boo
     if source not in sources.sources:
         raise HTTPException(
             status_code=400,
-            detail=f"Syslog type {source} is not configured in the system",
+            detail=f"Incident Management: {source} Source must be configured",
         )
 
 
