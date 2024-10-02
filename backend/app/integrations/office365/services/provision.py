@@ -72,7 +72,7 @@ async def get_wazuh_configuration(file_name: str) -> str:
     Returns:
         str: The Wazuh configuration data.
     """
-    endpoint = "manager/configuration"
+    endpoint = "/manager/configuration"
     params = {"raw": True}
     response = await send_get_request(endpoint=endpoint, params=params)
     config_data = response["data"]
