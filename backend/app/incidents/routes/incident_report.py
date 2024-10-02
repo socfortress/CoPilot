@@ -129,7 +129,7 @@ async def get_cases_export_all_route(
 
 
 @incidents_report_router.post(
-    "/generate-report/{customer_code}",
+    "/generate-report-csv/{customer_code}",
     description="Generate a report for a customer",
 )
 async def get_cases_export_customer_route(
