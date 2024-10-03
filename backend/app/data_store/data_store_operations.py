@@ -66,7 +66,7 @@ async def upload_case_report_template_data_store(data: CaseReportTemplateDataSto
     os.remove(temp_file_path)
 
 
-async def download_case_data_store(bucket_name: str, object_name: str) -> bytes:
+async def download_data_store(bucket_name: str, object_name: str) -> bytes:
     client = await create_session()
     logger.info(f"Downloading file {object_name} from bucket {bucket_name}")
     try:

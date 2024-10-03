@@ -17,7 +17,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.data_store.data_store_operations import delete_file
-from app.data_store.data_store_operations import download_case_data_store
+from app.data_store.data_store_operations import download_data_store
 from app.data_store.data_store_operations import upload_case_data_store, upload_case_report_template_data_store
 from app.data_store.data_store_schema import CaseDataStoreCreation, CaseReportTemplateDataStoreCreation
 from app.incidents.models import Alert
@@ -1857,7 +1857,7 @@ async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_content = await download_case_data_store(file.bucket_name, file.object_key)
+    file_content = await download_data_store(file.bucket_name, file.object_key)
     return file_content, file.content_type
 
 async def delete_report_template(file_name: str, db: AsyncSession) -> None:
@@ -1867,3 +1867,11 @@ async def delete_report_template(file_name: str, db: AsyncSession) -> None:
 
     await delete_file(file.bucket_name, file.object_key)
     await remove_report_template_from_db(file.id, db)
+
+async def download_report_template(file_name: str, db: AsyncSession) -> Tuple[bytes, str]:
+    file = await get_report_template_by_name(file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_content = await download_data_store(file.bucket_name, file.object_key)
+    return file_content, file.content_type

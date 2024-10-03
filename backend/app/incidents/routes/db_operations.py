@@ -67,7 +67,7 @@ from app.incidents.services.db_operations import add_alert_title_name, report_te
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total
+from app.incidents.services.db_operations import alert_total, download_report_template
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
@@ -808,6 +808,14 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
 
+@incidents_db_operations_router.get("/case-report-template/download/{file_name}")
+async def download_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:
+    file_bytes, file_content_type = await download_report_template(file_name, db)
+    logger.info(f"Streaming file {file_name}")
+    output = io.BytesIO(file_bytes)
+    output.seek(0)
+
+    return StreamingResponse(output, media_type=file_content_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
 
 @incidents_db_operations_router.post("/case-report-template/upload", response_model=CaseReportTemplateDataStoreResponse)
 async def upload_case_report_template_endpoint(
