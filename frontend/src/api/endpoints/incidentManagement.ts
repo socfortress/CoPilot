@@ -289,7 +289,7 @@ export default {
 		let url = `/incidents/report/generate-report`
 
 		if (customerCode) {
-			url = `/incidents/report/generate-report/${customerCode}`
+			url = `/incidents/report/generate-report-csv/${customerCode}`
 		}
 
 		return HttpClient.post<Blob>(url, {
