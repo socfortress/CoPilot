@@ -113,7 +113,7 @@ def generate_csv_content(rows: List[Dict[str, Any]]) -> StringIO:
 
 # Route Handler
 @incidents_report_router.post(
-    "/generate-report",
+    "/generate-report-csv",
     description="Generate a report for all cases.",
 )
 async def get_cases_export_all_route(
