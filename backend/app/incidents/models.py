@@ -165,3 +165,17 @@ class CaseDataStore(SQLModel, table=True):
     file_hash: str = Field(max_length=128, nullable=False)  # Hash of the file (e.g., SHA-256)
 
     case: "Case" = Relationship(back_populates="data_store")
+
+
+class CaseReportTemplateDataStore(SQLModel, table=True):
+    __tablename__ = "incident_management_case_report_template_datastore"
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    report_template_name: str = Field(max_length=255, nullable=False)
+    bucket_name: str = Field(max_length=255, nullable=False)  # Name of the MinIO bucket
+    object_key: str = Field(max_length=1024, nullable=False)  # Path/key of the file in MinIO
+    file_name: str = Field(max_length=255, nullable=False)  # Original file name uploaded by the user
+    content_type: Optional[str] = Field(max_length=100, nullable=True)  # MIME type of the file
+    file_size: Optional[int] = Field(nullable=True)  # File size in bytes
+    upload_time: datetime = Field(default_factory=datetime.utcnow)  # Time of upload
+    file_hash: str = Field(max_length=128, nullable=False)  # Hash of the file (e.g., SHA-256)

@@ -28,6 +28,7 @@ from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
+from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
