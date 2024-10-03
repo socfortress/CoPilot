@@ -286,7 +286,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
 	exportCases(customerCode?: string) {
-		let url = `/incidents/report/generate-report`
+		let url = `/incidents/report/generate-report-csv`
 
 		if (customerCode) {
 			url = `/incidents/report/generate-report-csv/${customerCode}`
