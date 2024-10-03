@@ -62,8 +62,8 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhFieldNa
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
-from app.incidents.schema.db_operations import UpdateCaseStatus
-from app.incidents.services.db_operations import add_alert_title_name
+from app.incidents.schema.db_operations import UpdateCaseStatus, CaseReportTemplateDataStoreResponse
+from app.incidents.services.db_operations import add_alert_title_name, report_template_exists
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
@@ -72,7 +72,7 @@ from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
-from app.incidents.services.db_operations import alerts_closed_by_asset_name
+from app.incidents.services.db_operations import alerts_closed_by_asset_name, upload_report_template
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
 from app.incidents.services.db_operations import alerts_closed_by_customer_code
 from app.incidents.services.db_operations import alerts_closed_by_source
@@ -807,3 +807,17 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+
+
+@incidents_db_operations_router.post("/case-report-template/upload", response_model=CaseReportTemplateDataStoreResponse)
+async def upload_case_report_template_endpoint(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    if await report_template_exists(file.filename, db):
+        raise HTTPException(status_code=400, detail="File name already exists for this template")
+    return CaseReportTemplateDataStoreResponse(
+        case_report_template_data_store=await upload_report_template(file, db),
+        success=True,
+        message="File uploaded successfully",
+    )

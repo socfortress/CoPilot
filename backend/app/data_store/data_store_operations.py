@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from fastapi import UploadFile
 from loguru import logger
 
-from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_schema import CaseDataStoreCreation, CaseReportTemplateDataStoreCreation
 from app.data_store.data_store_session import create_session
 
 
@@ -35,6 +35,29 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
     await client.fput_object(
         bucket_name=data.bucket_name,
         object_name=f"{data.case_id}/{file.filename}",
+        file_path=temp_file_path,
+        content_type=data.content_type,
+    )
+
+    # Optionally, remove the temporary file after upload
+    os.remove(temp_file_path)
+
+async def upload_case_report_template_data_store(data: CaseReportTemplateDataStoreCreation, file: UploadFile) -> None:
+    client = await create_session()
+    logger.info(f"Uploading file {file.filename} to bucket {data.bucket_name}")
+
+    # Define the temporary file path
+    temp_file_path = os.path.join(os.getcwd(), file.filename)
+
+    # Save the file to the temporary location
+    async with aiofiles.open(temp_file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+
+    # Upload the file to Minio
+    await client.fput_object(
+        bucket_name=data.bucket_name,
+        object_name=f"{file.filename}",
         file_path=temp_file_path,
         content_type=data.content_type,
     )

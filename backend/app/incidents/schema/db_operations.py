@@ -10,7 +10,7 @@ from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import Asset
-from app.incidents.models import Case
+from app.incidents.models import Case, CaseReportTemplateDataStore
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
@@ -348,3 +348,10 @@ class ListCaseDataStoreResponse(BaseModel):
     case_data_store: List[CaseDataStore]
     success: bool
     message: str
+
+
+class CaseReportTemplateDataStoreResponse(BaseModel):
+    case_report_template_data_store: CaseReportTemplateDataStore
+    success: bool
+    message: str
+
