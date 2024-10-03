@@ -1827,9 +1827,19 @@ async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSe
     result = await db.execute(query)
     return result.scalars().first()
 
+async def get_report_template_by_name(file_name: str, db: AsyncSession) -> CaseReportTemplateDataStore:
+    logger.info(f"Getting file {file_name}")
+    query = select(CaseReportTemplateDataStore).where(CaseReportTemplateDataStore.report_template_name == file_name)
+    result = await db.execute(query)
+    return result.scalars().first()
+
 
 async def remove_file_from_db(file_id: int, db: AsyncSession) -> None:
     await db.execute(delete(CaseDataStore).where(CaseDataStore.id == file_id))
+    await db.commit()
+
+async def remove_report_template_from_db(file_id: int, db: AsyncSession) -> None:
+    await db.execute(delete(CaseReportTemplateDataStore).where(CaseReportTemplateDataStore.id == file_id))
     await db.commit()
 
 
@@ -1849,3 +1859,11 @@ async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession
 
     file_content = await download_case_data_store(file.bucket_name, file.object_key)
     return file_content, file.content_type
+
+async def delete_report_template(file_name: str, db: AsyncSession) -> None:
+    file = await get_report_template_by_name(file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    await delete_file(file.bucket_name, file.object_key)
+    await remove_report_template_from_db(file.id, db)

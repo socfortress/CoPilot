@@ -63,7 +63,7 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhRespons
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus, CaseReportTemplateDataStoreResponse
-from app.incidents.services.db_operations import add_alert_title_name, report_template_exists
+from app.incidents.services.db_operations import add_alert_title_name, report_template_exists, delete_report_template
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
@@ -821,3 +821,9 @@ async def upload_case_report_template_endpoint(
         success=True,
         message="File uploaded successfully",
     )
+
+
+@incidents_db_operations_router.delete("/case-report-template/{file_name}")
+async def delete_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)):
+    await delete_report_template(file_name, db)
+    return {"message": "File deleted successfully", "success": True}
