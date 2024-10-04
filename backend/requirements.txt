@@ -72,7 +72,8 @@ kombu==5.3.2
 libmagic==1.0
 licensing==0.43
 loguru==0.7.2
-lxml==4.9.3
+#lxml==4.9.3 Bump down for python-docx
+lxml==4.9.2
 maec==4.1.0.17
 Markdown==3.4.4
 markdown-it-py==3.0.0
