@@ -182,10 +182,7 @@ async def get_cases_export_docx_route(
     if not case:
         raise HTTPException(status_code=404, detail="No cases found")
 
-    logger.info(f"Case: {case}")
-
     context = create_case_context(case)
-    logger.info(f"Context: {context}")
 
     template_file_content = await download_template(template_name)
     tmp_template_name = save_template_to_tempfile(template_file_content)

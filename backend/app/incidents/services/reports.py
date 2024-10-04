@@ -10,34 +10,6 @@ async def download_template(template_name: str) -> bytes:
     """Retrieve the template file content from the data store."""
     return await download_data_store(bucket_name="copilot-case-report-templates", object_name=template_name)
 
-# def create_case_context(case) -> Dict[str, Dict[str, str]]:
-#     """Prepare the context for the Jinja template."""
-#     return {
-#         "case": {
-#             "name": case.case_name,
-#             "description": case.case_description,
-#             "assigned_to": case.assigned_to,
-#             "case_creation_time": case.case_creation_time,
-#             "id": case.id,
-#             "alerts": [
-#                 {
-#                     "alert_name": alert.alert.alert_name,
-#                     "alert_description": alert.alert.alert_description,
-#                     "status": alert.alert.status,
-#                     "tags": [tag.tag.tag for tag in alert.alert.tags],
-#                     "assets": [
-#                         {
-#                             "asset_name": asset.asset_name,
-#                             "agent_id": asset.agent_id,
-#                         }
-#                         for asset in alert.alert.assets
-#                     ]
-#                 }
-#                 for alert in case.alerts
-#             ]
-#         }
-#     }
-
 def create_case_context(case) -> Dict[str, Dict[str, str]]:
     """Prepare the context for the Jinja template."""
     return {
