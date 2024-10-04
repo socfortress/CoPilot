@@ -3,10 +3,13 @@ from datetime import datetime
 from io import StringIO
 from typing import Any
 from typing import Dict
+from docxtpl import DocxTemplate
+from fastapi.responses import FileResponse
 from typing import List
-
-from fastapi import APIRouter
+import os
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
+from tempfile import NamedTemporaryFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -15,6 +18,7 @@ from sqlmodel import select
 from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert
+from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
 from app.incidents.models import AlertToTag
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
@@ -143,4 +147,32 @@ async def get_cases_export_customer_route(
     filename = f"cases_export_{customer_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+@incidents_report_router.post(
+    "/generate-report-docx",
+    description="Generate a docx report for a case.",
+)
+async def get_cases_export_docx_route(
+    template_name: str,
+    session: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    cases = await fetch_cases_with_related_data(session)
+    if not cases:
+        raise HTTPException(status_code=404, detail="No cases found")
+
+    first_case = cases[0]
+    context = create_case_context(first_case)
+
+    template_file_content = await download_template(template_name)
+    tmp_template_name = save_template_to_tempfile(template_file_content)
+
+    rendered_file_name = render_document_with_context(tmp_template_name, context)
+
+    response = create_file_response(rendered_file_name)
+
+    # Clean up temporary files
+    cleanup_temp_files([tmp_template_name])
+
     return response
