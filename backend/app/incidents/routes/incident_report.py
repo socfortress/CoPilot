@@ -17,7 +17,7 @@ from sqlmodel import select
 from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert, Asset
-from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
+#from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
 from app.incidents.models import AlertToTag
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
