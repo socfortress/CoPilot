@@ -17,11 +17,12 @@ from sqlmodel import select
 
 from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
-from app.incidents.models import Alert
+from app.incidents.models import Alert, Asset
 from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
 from app.incidents.models import AlertToTag
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from loguru import logger
 
 incidents_report_router = APIRouter()
 
@@ -74,6 +75,24 @@ async def fetch_cases_by_customer(session: AsyncSession, customer_code: str) -> 
         ),
     )
     return result.scalars().all()
+
+async def fetch_case_by_id(session: AsyncSession, case_id: int) -> Case:
+    """Fetch a case by its ID."""
+    result = await session.execute(
+        select(Case)
+        .where(Case.id == case_id)
+        .options(
+            selectinload(Case.alerts)
+            .selectinload(CaseAlertLink.alert)
+            .options(
+                selectinload(Alert.assets).selectinload(Asset.alert_context),  # Load alert_context
+                selectinload(Alert.tags).selectinload(AlertToTag.tag),
+                selectinload(Alert.comments)
+            ),
+        ),
+    )
+    return result.scalars().first()
+
 
 
 def serialize_case_alert_to_row(case: Case, alert: Alert) -> Dict[str, Any]:
@@ -156,14 +175,17 @@ async def get_cases_export_customer_route(
 )
 async def get_cases_export_docx_route(
     template_name: str,
+    case_id: int,
     session: AsyncSession = Depends(get_db),
 ) -> FileResponse:
-    cases = await fetch_cases_with_related_data(session)
-    if not cases:
+    case = await fetch_case_by_id(session, case_id)
+    if not case:
         raise HTTPException(status_code=404, detail="No cases found")
 
-    first_case = cases[0]
-    context = create_case_context(first_case)
+    logger.info(f"Case: {case}")
+
+    context = create_case_context(case)
+    logger.info(f"Context: {context}")
 
     template_file_content = await download_template(template_name)
     tmp_template_name = save_template_to_tempfile(template_file_content)
