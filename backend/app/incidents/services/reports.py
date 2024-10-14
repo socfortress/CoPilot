@@ -3,13 +3,14 @@ from fastapi.responses import FileResponse
 from tempfile import NamedTemporaryFile
 import os
 from docxtpl import DocxTemplate
+from typing import Optional
 from app.data_store.data_store_operations import download_data_store
 from loguru import logger
 
 async def download_template(template_name: str) -> bytes:
     """Retrieve the template file content from the data store."""
     return await download_data_store(bucket_name="copilot-case-report-templates", object_name=template_name)
-
+# ! TODO: Make this more modular ! #
 def create_case_context(case) -> Dict[str, Dict[str, str]]:
     """Prepare the context for the Jinja template."""
     return {
@@ -66,11 +67,11 @@ def render_document_with_context(template_path: str, context: Dict[str, Dict[str
         doc.save(tmp.name)
         return tmp.name
 
-def create_file_response(file_path: str) -> FileResponse:
+def create_file_response(file_path: str, file_name: Optional[str] = "case_report.docx") -> FileResponse:
     """Create a FileResponse object for the rendered document."""
     return FileResponse(
         file_path,
-        filename="case_report.docx",
+        filename=file_name,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
 

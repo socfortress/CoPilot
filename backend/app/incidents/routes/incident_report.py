@@ -3,6 +3,7 @@ from datetime import datetime
 from io import StringIO
 from typing import Any
 from typing import Dict
+from typing import Optional
 from fastapi.responses import FileResponse
 from typing import List
 import os
@@ -21,6 +22,7 @@ from app.incidents.services.reports import download_template, create_case_contex
 from app.incidents.models import AlertToTag
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.schema.db_operations import CaseDownloadDocxRequest
 from loguru import logger
 
 incidents_report_router = APIRouter()
@@ -167,28 +169,27 @@ async def get_cases_export_customer_route(
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
-
+# ! TODO - Should I enable other doc types? # !
 @incidents_report_router.post(
     "/generate-report-docx",
     description="Generate a docx report for a case.",
 )
 async def get_cases_export_docx_route(
-    template_name: str,
-    case_id: int,
+    request: CaseDownloadDocxRequest,
     session: AsyncSession = Depends(get_db),
 ) -> FileResponse:
-    case = await fetch_case_by_id(session, case_id)
+    case = await fetch_case_by_id(session, request.case_id)
     if not case:
         raise HTTPException(status_code=404, detail="No cases found")
 
     context = create_case_context(case)
 
-    template_file_content = await download_template(template_name)
+    template_file_content = await download_template(request.template_name)
     tmp_template_name = save_template_to_tempfile(template_file_content)
 
     rendered_file_name = render_document_with_context(tmp_template_name, context)
 
-    response = create_file_response(rendered_file_name)
+    response = create_file_response(file_path=rendered_file_name, file_name=request.file_name)
 
     # Clean up temporary files
     cleanup_temp_files([tmp_template_name])

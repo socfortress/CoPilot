@@ -14,6 +14,7 @@ from app.incidents.models import Case, CaseReportTemplateDataStore
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
 from app.incidents.models import Comment
+from pydantic import validator
 
 
 class SocfortressRecommendsWazuhFieldNames(Enum):
@@ -354,4 +355,15 @@ class CaseReportTemplateDataStoreResponse(BaseModel):
     case_report_template_data_store: CaseReportTemplateDataStore
     success: bool
     message: str
+
+class CaseDownloadDocxRequest(BaseModel):
+    case_id: int
+    template_name: str
+    file_name: Optional[str] = "case_report.docx"
+
+    @validator('file_name', pre=True, always=True)
+    def ensure_docx_extension(cls, v):
+        if v and not v.endswith('.docx'):
+            return f"{v}.docx"
+        return v
 
