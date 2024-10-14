@@ -124,7 +124,7 @@ from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
-from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.db_operations import get_timefield_names, upload_report_template_to_data_store
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
@@ -816,6 +816,15 @@ async def list_case_report_template_data_store_files_endpoint(db: AsyncSession =
         case_report_template_data_store=await list_case_report_template_data_store_files(),
         success=True,
         message="Files retrieved successfully",
+    )
+
+@incidents_db_operations_router.post("/case-report-template/default-template", response_model=CaseReportTemplateDataStoreListResponse)
+async def create_default_case_report_template_endpoint(db: AsyncSession = Depends(get_db)):
+    logger.info("Creating default file in the data store")
+    return CaseReportTemplateDataStoreListResponse(
+        case_report_template_data_store=await upload_report_template_to_data_store(db),
+        success=True,
+        message="Default file created successfully",
     )
 
 @incidents_db_operations_router.get("/case-report-template/download/{file_name}")

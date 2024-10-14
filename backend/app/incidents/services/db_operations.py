@@ -5,10 +5,14 @@ from typing import Tuple
 
 from fastapi import HTTPException
 from fastapi import UploadFile
+import os
 from loguru import logger
+import io
 from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
+from pathlib import Path
+import mimetypes
 from sqlalchemy import distinct
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -41,7 +45,7 @@ from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
-from app.incidents.schema.db_operations import AssetCreate
+from app.incidents.schema.db_operations import AssetCreate, CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
@@ -1875,3 +1879,34 @@ async def download_report_template(file_name: str, db: AsyncSession) -> Tuple[by
 
     file_content = await download_data_store(file.bucket_name, file.object_key)
     return file_content, file.content_type
+
+async def upload_report_template_to_data_store(db: AsyncSession) -> CaseReportTemplateDataStoreListResponse:
+    current_dir = Path(os.getcwd())
+    templates_dir = current_dir.parent / "backend" / "app" / "incidents" / "templates"
+
+    templates_list = []
+
+    for file in templates_dir.iterdir():
+        logger.info(f"Uploading report template {file.name} to Minio")
+        if file.is_file():
+            if await report_template_exists(file.name, db):
+                raise HTTPException(status_code=400, detail="File name already exists for this template")
+            with open(file, "rb") as f:
+                content = f.read()
+                content_type = mimetypes.guess_type(file)[0]
+                upload_file = UploadFile(filename=file.name, file=io.BytesIO(content))
+                await upload_case_report_template_data_store(
+                    data=CaseReportTemplateDataStoreCreation(
+                        report_template_name=file.name,
+                        bucket_name="copilot-case-report-templates",
+                        object_key=file.name,
+                        file_name=file.name,
+                        content_type=content_type,
+                        file_hash=hashlib.sha256(content).hexdigest(),
+                    ),
+                    file=upload_file,
+                )
+            templates_list.append(file.name)
+            await add_report_template_to_db(upload_file, len(content), hashlib.sha256(content).hexdigest(), db)
+
+    return templates_list
