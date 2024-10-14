@@ -56,7 +56,7 @@ from app.incidents.schema.db_operations import ListCaseDataStoreResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
 from app.incidents.schema.db_operations import PutNotification
-from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName, CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhFieldNames
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
@@ -154,6 +154,7 @@ from app.incidents.services.db_operations import update_case_customer_code
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import validate_source_exists
+from app.data_store.data_store_operations import list_case_report_template_data_store_files
 
 incidents_db_operations_router = APIRouter()
 
@@ -807,6 +808,15 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+
+@incidents_db_operations_router.get("/case-report-template", response_model=CaseReportTemplateDataStoreListResponse)
+async def list_case_report_template_data_store_files_endpoint(db: AsyncSession = Depends(get_db)):
+    logger.info("Listing all files in the data store")
+    return CaseReportTemplateDataStoreListResponse(
+        case_report_template_data_store=await list_case_report_template_data_store_files(),
+        success=True,
+        message="Files retrieved successfully",
+    )
 
 @incidents_db_operations_router.get("/case-report-template/download/{file_name}")
 async def download_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:

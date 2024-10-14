@@ -367,3 +367,8 @@ class CaseDownloadDocxRequest(BaseModel):
             return f"{v}.docx"
         return v
 
+class CaseReportTemplateDataStoreListResponse(BaseModel):
+    case_report_template_data_store: List[str]
+    success: bool
+    message: str
+
