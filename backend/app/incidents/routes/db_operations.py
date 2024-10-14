@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+import mimetypes
 from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
@@ -841,6 +842,11 @@ async def upload_case_report_template_endpoint(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
+    # Check if the file type is a .docx
+    mime_type, _ = mimetypes.guess_type(file.filename)
+    if mime_type != "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        raise HTTPException(status_code=400, detail="Invalid file type. Only .docx files are allowed.")
+
     if await report_template_exists(file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this template")
     return CaseReportTemplateDataStoreResponse(
