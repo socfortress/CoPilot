@@ -17,7 +17,7 @@ from sqlmodel import select
 from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert, Asset
-#from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
+from app.incidents.services.reports import download_template, create_case_context, save_template_to_tempfile, render_document_with_context, create_file_response, cleanup_temp_files
 from app.incidents.models import AlertToTag
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
@@ -168,29 +168,29 @@ async def get_cases_export_customer_route(
     return response
 
 
-# @incidents_report_router.post(
-#     "/generate-report-docx",
-#     description="Generate a docx report for a case.",
-# )
-# async def get_cases_export_docx_route(
-#     template_name: str,
-#     case_id: int,
-#     session: AsyncSession = Depends(get_db),
-# ) -> FileResponse:
-#     case = await fetch_case_by_id(session, case_id)
-#     if not case:
-#         raise HTTPException(status_code=404, detail="No cases found")
+@incidents_report_router.post(
+    "/generate-report-docx",
+    description="Generate a docx report for a case.",
+)
+async def get_cases_export_docx_route(
+    template_name: str,
+    case_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    case = await fetch_case_by_id(session, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="No cases found")
 
-#     context = create_case_context(case)
+    context = create_case_context(case)
 
-#     template_file_content = await download_template(template_name)
-#     tmp_template_name = save_template_to_tempfile(template_file_content)
+    template_file_content = await download_template(template_name)
+    tmp_template_name = save_template_to_tempfile(template_file_content)
 
-#     rendered_file_name = render_document_with_context(tmp_template_name, context)
+    rendered_file_name = render_document_with_context(tmp_template_name, context)
 
-#     response = create_file_response(rendered_file_name)
+    response = create_file_response(rendered_file_name)
 
-#     # Clean up temporary files
-#     cleanup_temp_files([tmp_template_name])
+    # Clean up temporary files
+    cleanup_temp_files([tmp_template_name])
 
-#     return response
+    return response

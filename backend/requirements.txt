@@ -110,7 +110,7 @@ prompt-toolkit==3.0.39
 protobuf==4.24.4
 psycopg2-binary==2.9.9
 pyasn1==0.5.0
-#docxtpl==0.18.0 Comment out for now
+docxtpl==0.18.0
 pycountry==22.3.5
 pycparser==2.21
 # pydantic==1.10.13
