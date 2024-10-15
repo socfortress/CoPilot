@@ -9,7 +9,13 @@ import type {
 	AlertTag,
 	AlertTimeline
 } from "@/types/incidentManagement/alerts.d"
-import type { Case, CaseDataStore, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
+import type {
+	Case,
+	CaseDataStore,
+	CasePayload,
+	CaseReportTemplateDataStore,
+	CaseStatus
+} from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
@@ -39,6 +45,12 @@ export type CasesFilter =
 export type CasesFilterTypes = KeysOfUnion<CasesFilter>
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
+
+export interface CaseReportPayload {
+	case_id: number
+	file_name: string
+	template_name: string
+}
 
 export default {
 	// #region Sources
@@ -322,6 +334,38 @@ export default {
 	},
 	deleteCaseDataStoreFile(caseId: number, fileName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
+	},
+	getCaseReportTemplate() {
+		return HttpClient.get<FlaskBaseResponse & { case_report_template_data_store: string[] }>(
+			`/incidents/db_operations/case-report-template`
+		)
+	},
+	uploadDefaultCaseReportTemplate() {
+		return HttpClient.post<FlaskBaseResponse & { case_report_template_data_store: string[] }>(
+			`/incidents/db_operations/case-report-template/default-template`
+		)
+	},
+	uploadCustomCaseReportTemplate(file: File) {
+		const form = new FormData()
+		form.append("file", new Blob([file], { type: file.type }), file.name)
+
+		return HttpClient.post<FlaskBaseResponse & { case_report_template_data_store: CaseReportTemplateDataStore }>(
+			`/incidents/db_operations/case-report-template/upload`,
+			form
+		)
+	},
+	downloadCaseReportTemplate(fileName: string) {
+		return HttpClient.get<Blob>(`/incidents/db_operations/case-report-template/download/${fileName}`, {
+			responseType: "blob"
+		})
+	},
+	deleteCaseReportTemplate(fileName: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case-report-template/${fileName}`)
+	},
+	generateCaseReportTemplate(payload: CaseReportPayload) {
+		return HttpClient.post<Blob>(`/incidents/report/generate-report-docx`, payload, {
+			responseType: "blob"
+		})
 	},
 	// #endregion
 
