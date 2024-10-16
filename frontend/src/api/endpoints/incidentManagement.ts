@@ -362,7 +362,7 @@ export default {
 	deleteCaseReportTemplate(fileName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case-report-template/${fileName}`)
 	},
-	generateCaseReportTemplate(payload: CaseReportPayload) {
+	generateCaseReport(payload: CaseReportPayload) {
 		return HttpClient.post<Blob>(`/incidents/report/generate-report-docx`, payload, {
 			responseType: "blob"
 		})
