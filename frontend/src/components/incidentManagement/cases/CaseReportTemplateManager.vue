@@ -10,7 +10,11 @@
 						Upload Report Template file
 					</n-button>
 
-					<n-button @click="uploadDefaultTemplate()">
+					<n-button
+						v-if="!isDefaultTemplatePresent && templateNameList.length"
+						:loading="checkingDefaultTemplate"
+						@click="uploadDefaultTemplate()"
+					>
 						<template #icon>
 							<Icon :name="DefaultTemplateIcon" />
 						</template>
@@ -140,7 +144,7 @@ import {
 	type UploadFileInfo,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 
 const UploadIcon = "carbon:cloud-upload"
 const DownloadIcon = "carbon:document-download"
@@ -150,6 +154,7 @@ const message = useMessage()
 const loadingList = computed(() => caseReportTemplateStore.loading)
 const uploading = ref(false)
 const canceling = ref(false)
+const checkingDefaultTemplate = ref(false)
 const downloading = ref<false | string>(false)
 const loading = computed(() => loadingList.value || uploading.value || canceling.value)
 const showUploadForm = ref(false)
@@ -157,6 +162,7 @@ const templateNameList = computed(() => caseReportTemplateStore.templatesList)
 const fileList = ref<UploadFileInfo[]>([])
 const newFile = computed<File | null>(() => fileList.value?.[0]?.file || null)
 const isValid = computed(() => !!newFile.value)
+const isDefaultTemplatePresent = ref(true)
 
 function openUploadForm() {
 	showUploadForm.value = true
@@ -210,6 +216,26 @@ function uploadDefaultTemplate() {
 		})
 }
 
+function checkDefaultCaseReportTemplateExists() {
+	checkingDefaultTemplate.value = true
+
+	Api.incidentManagement
+		.checkDefaultCaseReportTemplateExists()
+		.then(res => {
+			if (res.data.success) {
+				isDefaultTemplatePresent.value = res.data.default_template_exists
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			checkingDefaultTemplate.value = false
+		})
+}
+
 function downloadTemplate(templateName: string) {
 	downloading.value = templateName
 
@@ -255,6 +281,10 @@ function refreshTemplates() {
 		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 	})
 }
+
+watch(templateNameList, () => {
+	checkDefaultCaseReportTemplateExists()
+})
 
 onBeforeMount(() => {
 	refreshTemplates()
