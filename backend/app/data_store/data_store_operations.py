@@ -1,13 +1,14 @@
 import os
+from typing import Optional
 
 import aiofiles
 import aiohttp
 from fastapi import HTTPException
 from fastapi import UploadFile
-from typing import Optional
 from loguru import logger
 
-from app.data_store.data_store_schema import CaseDataStoreCreation, CaseReportTemplateDataStoreCreation
+from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
 from app.data_store.data_store_session import create_session
 
 
@@ -42,6 +43,7 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
 
     # Optionally, remove the temporary file after upload
     os.remove(temp_file_path)
+
 
 async def upload_case_report_template_data_store(data: CaseReportTemplateDataStoreCreation, file: UploadFile) -> None:
     client = await create_session()
@@ -99,6 +101,7 @@ async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
     client = await create_session()
     objects = await client.list_objects(bucket_name, prefix=f"{case_id}/")
     return objects
+
 
 async def list_case_report_template_data_store_files(bucket_name: Optional[str] = "copilot-case-report-templates") -> list:
     client = await create_session()

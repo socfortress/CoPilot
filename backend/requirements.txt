@@ -40,6 +40,7 @@ Deprecated==1.2.14
 dfir-iris-client==2.0.4
 dnspython==2.4.2
 dnstwist==20230918
+docxtpl==0.18.0
 drawsvg==2.3.0
 ecdsa==0.18.0
 elasticsearch7==7.10.1
@@ -110,7 +111,6 @@ prompt-toolkit==3.0.39
 protobuf==4.24.4
 psycopg2-binary==2.9.9
 pyasn1==0.5.0
-docxtpl==0.18.0
 pycountry==22.3.5
 pycparser==2.21
 # pydantic==1.10.13

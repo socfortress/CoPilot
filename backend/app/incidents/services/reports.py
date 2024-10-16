@@ -1,16 +1,19 @@
-from typing import Dict
-from fastapi.responses import FileResponse
-from tempfile import NamedTemporaryFile
 import os
-from docxtpl import DocxTemplate
+from tempfile import NamedTemporaryFile
+from typing import Dict
 from typing import Optional
+
+from docxtpl import DocxTemplate
+from fastapi.responses import FileResponse
+
 from app.data_store.data_store_operations import download_data_store
-from loguru import logger
+
 
 async def download_template(template_name: str) -> bytes:
     """Retrieve the template file content from the data store."""
     return await download_data_store(bucket_name="copilot-case-report-templates", object_name=template_name)
-# ! TODO: Make this more modular ! #
+
+
 def create_case_context(case) -> Dict[str, Dict[str, str]]:
     """Prepare the context for the Jinja template."""
     return {
@@ -42,15 +45,20 @@ def create_case_context(case) -> Dict[str, Dict[str, str]]:
                         for comment in alert.alert.comments
                     ],
                     "context": {
-                        "source": alert.alert.assets[0].alert_context.source if alert.alert.assets and alert.alert.assets[0].alert_context else None,
-                        "context": alert.alert.assets[0].alert_context.context if alert.alert.assets and alert.alert.assets[0].alert_context else None,
-                    } if alert.alert.assets else None
+                        "source": alert.alert.assets[0].alert_context.source
+                        if alert.alert.assets and alert.alert.assets[0].alert_context
+                        else None,
+                        "context": alert.alert.assets[0].alert_context.context
+                        if alert.alert.assets and alert.alert.assets[0].alert_context
+                        else None,
+                    }
+                    if alert.alert.assets
+                    else None,
                 }
                 for alert in case.alerts
-            ]
-        }
+            ],
+        },
     }
-
 
 
 def save_template_to_tempfile(template_file_content: bytes) -> str:
@@ -58,6 +66,7 @@ def save_template_to_tempfile(template_file_content: bytes) -> str:
     with NamedTemporaryFile(delete=False, suffix=".docx") as tmp_template:
         tmp_template.write(template_file_content)
         return tmp_template.name
+
 
 def render_document_with_context(template_path: str, context: Dict[str, Dict[str, str]]) -> str:
     """Load and render the document template with the given context."""
@@ -67,6 +76,7 @@ def render_document_with_context(template_path: str, context: Dict[str, Dict[str
         doc.save(tmp.name)
         return tmp.name
 
+
 def create_file_response(file_path: str, file_name: Optional[str] = "case_report.docx") -> FileResponse:
     """Create a FileResponse object for the rendered document."""
     return FileResponse(
@@ -74,6 +84,7 @@ def create_file_response(file_path: str, file_name: Optional[str] = "case_report
         filename=file_name,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
+
 
 def cleanup_temp_files(file_paths: list):
     """Clean up the temporary files."""

@@ -1,10 +1,10 @@
 import io
+import mimetypes
 from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-import mimetypes
 from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
@@ -21,6 +21,9 @@ from app.connectors.wazuh_indexer.utils.universal import (
 from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
 from app.connectors.wazuh_indexer.utils.universal import get_index_source
 from app.customer_provisioning.routes.provision import check_customer_exists
+from app.data_store.data_store_operations import (
+    list_case_report_template_data_store_files,
+)
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
@@ -40,40 +43,43 @@ from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
-from app.incidents.schema.db_operations import AvailableUsersResponse, DefaultReportTemplateFileNames
+from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
 from app.incidents.schema.db_operations import CaseOutResponse
+from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
+from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
+from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
 from app.incidents.schema.db_operations import PutNotification
-from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName, CaseReportTemplateDataStoreListResponse
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhFieldNames
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
-from app.incidents.schema.db_operations import UpdateCaseStatus, CaseReportTemplateDataStoreResponse
-from app.incidents.services.db_operations import add_alert_title_name, report_template_exists, delete_report_template
+from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total, download_report_template
+from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
-from app.incidents.services.db_operations import alerts_closed_by_asset_name, upload_report_template
+from app.incidents.services.db_operations import alerts_closed_by_asset_name
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
 from app.incidents.services.db_operations import alerts_closed_by_customer_code
 from app.incidents.services.db_operations import alerts_closed_by_source
@@ -115,8 +121,10 @@ from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
+from app.incidents.services.db_operations import delete_report_template
 from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
+from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
@@ -125,7 +133,7 @@ from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
-from app.incidents.services.db_operations import get_timefield_names, upload_report_template_to_data_store
+from app.incidents.services.db_operations import get_timefield_names
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
@@ -148,14 +156,16 @@ from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
 from app.incidents.services.db_operations import replace_field_name
 from app.incidents.services.db_operations import replace_timefield_name
+from app.incidents.services.db_operations import report_template_exists
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_customer_code
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import upload_file_to_case
+from app.incidents.services.db_operations import upload_report_template
+from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
-from app.data_store.data_store_operations import list_case_report_template_data_store_files
 
 incidents_db_operations_router = APIRouter()
 
@@ -810,6 +820,7 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
 
+
 @incidents_db_operations_router.get("/case-report-template", response_model=CaseReportTemplateDataStoreListResponse)
 async def list_case_report_template_data_store_files_endpoint(db: AsyncSession = Depends(get_db)):
     logger.info("Listing all files in the data store")
@@ -818,6 +829,7 @@ async def list_case_report_template_data_store_files_endpoint(db: AsyncSession =
         success=True,
         message="Files retrieved successfully",
     )
+
 
 @incidents_db_operations_router.get("/case-report-template/do-default-template-exists")
 async def check_default_case_report_template_exists_endpoint(db: AsyncSession = Depends(get_db)):
@@ -838,7 +850,6 @@ async def check_default_case_report_template_exists_endpoint(db: AsyncSession = 
     return {"success": True, "message": "No default case report templates exist", "default_template_exists": False}
 
 
-
 @incidents_db_operations_router.post("/case-report-template/default-template", response_model=CaseReportTemplateDataStoreListResponse)
 async def create_default_case_report_template_endpoint(db: AsyncSession = Depends(get_db)):
     """
@@ -857,6 +868,7 @@ async def create_default_case_report_template_endpoint(db: AsyncSession = Depend
         message="Default file created successfully",
     )
 
+
 @incidents_db_operations_router.get("/case-report-template/download/{file_name}")
 async def download_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:
     file_bytes, file_content_type = await download_report_template(file_name, db)
@@ -865,6 +877,7 @@ async def download_case_report_template_endpoint(file_name: str, db: AsyncSessio
     output.seek(0)
 
     return StreamingResponse(output, media_type=file_content_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
+
 
 @incidents_db_operations_router.post("/case-report-template/upload", response_model=CaseReportTemplateDataStoreResponse)
 async def upload_case_report_template_endpoint(

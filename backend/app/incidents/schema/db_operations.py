@@ -5,16 +5,17 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import validator
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import Asset
-from app.incidents.models import Case, CaseReportTemplateDataStore
+from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
+from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
-from pydantic import validator
 
 
 class SocfortressRecommendsWazuhFieldNames(Enum):
@@ -356,22 +357,24 @@ class CaseReportTemplateDataStoreResponse(BaseModel):
     success: bool
     message: str
 
+
 class CaseDownloadDocxRequest(BaseModel):
     case_id: int
     template_name: str
     file_name: Optional[str] = "case_report.docx"
 
-    @validator('file_name', pre=True, always=True)
+    @validator("file_name", pre=True, always=True)
     def ensure_docx_extension(cls, v):
-        if v and not v.endswith('.docx'):
+        if v and not v.endswith(".docx"):
             return f"{v}.docx"
         return v
+
 
 class CaseReportTemplateDataStoreListResponse(BaseModel):
     case_report_template_data_store: List[str]
     success: bool
     message: str
 
+
 class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
-
