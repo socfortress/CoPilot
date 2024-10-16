@@ -40,7 +40,7 @@ from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
-from app.incidents.schema.db_operations import AvailableUsersResponse
+from app.incidents.schema.db_operations import AvailableUsersResponse, DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
@@ -818,6 +818,26 @@ async def list_case_report_template_data_store_files_endpoint(db: AsyncSession =
         success=True,
         message="Files retrieved successfully",
     )
+
+@incidents_db_operations_router.get("/case-report-template/do-default-template-exists")
+async def check_default_case_report_template_exists_endpoint(db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to check if any of the default case report template files exist in the data store.
+
+    If any of them do, return True, else return False.
+
+    Returns:
+    - success (bool): Indicates if the operation was successful.
+    - message (str): Success message.
+    - default_template_exists (bool): Indicates if any of the default case report template files exist in the data store.
+    """
+    for template in DefaultReportTemplateFileNames:
+        if await report_template_exists(template.value, db):
+            return {"success": True, "message": "Default case report template exists", "default_template_exists": True}
+    
+    return {"success": True, "message": "No default case report templates exist", "default_template_exists": False}
+
+
 
 @incidents_db_operations_router.post("/case-report-template/default-template", response_model=CaseReportTemplateDataStoreListResponse)
 async def create_default_case_report_template_endpoint(db: AsyncSession = Depends(get_db)):
