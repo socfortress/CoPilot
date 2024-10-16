@@ -372,3 +372,6 @@ class CaseReportTemplateDataStoreListResponse(BaseModel):
     success: bool
     message: str
 
+class DefaultReportTemplateFileNames(Enum):
+    CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
+
