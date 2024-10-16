@@ -138,7 +138,7 @@
 					</template>
 					Delete
 				</n-button>
-				<CasesReportButton :case-id="caseData.id" />
+				<CaseReportButton :case-id="caseData.id" />
 			</div>
 		</div>
 	</n-spin>
@@ -156,7 +156,7 @@ import { ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
-import CasesReportButton from "./CasesReportButton.vue"
+import CaseReportButton from "./CaseReportButton.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"
 
