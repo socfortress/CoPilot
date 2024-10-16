@@ -105,10 +105,7 @@ const dataStore = ref<CaseDataStore[]>([])
 const fileList = ref<UploadFileInfo[]>([])
 const newFile = computed<File | null>(() => fileList.value?.[0]?.file || null)
 
-const isValid = computed(() => {
-	if (!newFile.value) return false
-	return true
-})
+const isValid = computed(() => !!newFile.value)
 
 function deleteDataStoreFile(dataStoreFile: CaseDataStore) {
 	dataStore.value = dataStore.value.filter(o => o.id !== dataStoreFile.id)
