@@ -1,4 +1,8 @@
 import hashlib
+import io
+import mimetypes
+import os
+from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -17,9 +21,11 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.data_store.data_store_operations import delete_file
-from app.data_store.data_store_operations import download_case_data_store
+from app.data_store.data_store_operations import download_data_store
 from app.data_store.data_store_operations import upload_case_data_store
+from app.data_store.data_store_operations import upload_case_report_template_data_store
 from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
@@ -30,6 +36,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
+from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
@@ -45,6 +52,7 @@ from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
+from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import LinkedCaseCreate
@@ -1733,6 +1741,12 @@ async def file_exists(case_id: int, file_name: str, db: AsyncSession) -> bool:
     return result.scalars().first() is not None
 
 
+async def report_template_exists(file_name: str, db: AsyncSession) -> bool:
+    query = select(CaseReportTemplateDataStore).where(CaseReportTemplateDataStore.report_template_name == file_name)
+    result = await db.execute(query)
+    return result.scalars().first() is not None
+
+
 async def sha256_hash_file(file: UploadFile) -> str:
     await file.seek(0)
     file_content = await file.read()
@@ -1753,6 +1767,21 @@ async def add_file_to_db(case_id: int, file: UploadFile, file_size: int, file_ha
         object_key=f"{case_id}/{file.filename}",
         file_name=file.filename,
         content_type=file.content_type,
+        file_size=file_size,
+        file_hash=file_hash,
+    )
+    db.add(db_file)
+    await db.commit()
+    return db_file
+
+
+async def add_report_template_to_db(file: UploadFile, file_size: int, file_hash: str, db: AsyncSession) -> None:
+    db_file = CaseReportTemplateDataStore(
+        report_template_name=file.filename,
+        bucket_name="copilot-case-report-templates",
+        object_key=file.filename,
+        content_type=file.content_type,
+        file_name=file.filename,
         file_size=file_size,
         file_hash=file_hash,
     )
@@ -1782,6 +1811,27 @@ async def upload_file_to_case(case_id: int, file: UploadFile, db: AsyncSession) 
     return await add_file_to_db(case_id, file, file_size, file_hash, db)
 
 
+async def upload_report_template(file: UploadFile, db: AsyncSession) -> CaseReportTemplateDataStore:
+    file_size = await get_file_size(file)
+    file_hash = await sha256_hash_file(file)
+    await file.seek(0)
+    # Upload the file to Minio
+    await upload_case_report_template_data_store(
+        data=CaseReportTemplateDataStoreCreation(
+            report_template_name=file.filename,
+            bucket_name="copilot-case-report-templates",
+            object_key=file.filename,
+            file_name=file.filename,
+            content_type=file.content_type,
+            file_hash=file_hash,
+        ),
+        file=file,
+    )
+
+    # Add the file to the database
+    return await add_report_template_to_db(file, file_size, file_hash, db)
+
+
 async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSession) -> CaseDataStore:
     logger.info(f"Getting file {file_name} from case {case_id}")
     query = select(CaseDataStore).where(CaseDataStore.case_id == case_id, CaseDataStore.file_name == file_name)
@@ -1789,8 +1839,20 @@ async def get_file_by_case_id_and_name(case_id: int, file_name: str, db: AsyncSe
     return result.scalars().first()
 
 
+async def get_report_template_by_name(file_name: str, db: AsyncSession) -> CaseReportTemplateDataStore:
+    logger.info(f"Getting file {file_name}")
+    query = select(CaseReportTemplateDataStore).where(CaseReportTemplateDataStore.report_template_name == file_name)
+    result = await db.execute(query)
+    return result.scalars().first()
+
+
 async def remove_file_from_db(file_id: int, db: AsyncSession) -> None:
     await db.execute(delete(CaseDataStore).where(CaseDataStore.id == file_id))
+    await db.commit()
+
+
+async def remove_report_template_from_db(file_id: int, db: AsyncSession) -> None:
+    await db.execute(delete(CaseReportTemplateDataStore).where(CaseReportTemplateDataStore.id == file_id))
     await db.commit()
 
 
@@ -1808,5 +1870,55 @@ async def download_file_from_case(case_id: int, file_name: str, db: AsyncSession
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_content = await download_case_data_store(file.bucket_name, file.object_key)
+    file_content = await download_data_store(file.bucket_name, file.object_key)
     return file_content, file.content_type
+
+
+async def delete_report_template(file_name: str, db: AsyncSession) -> None:
+    file = await get_report_template_by_name(file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    await delete_file(file.bucket_name, file.object_key)
+    await remove_report_template_from_db(file.id, db)
+
+
+async def download_report_template(file_name: str, db: AsyncSession) -> Tuple[bytes, str]:
+    file = await get_report_template_by_name(file_name, db)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_content = await download_data_store(file.bucket_name, file.object_key)
+    return file_content, file.content_type
+
+
+async def upload_report_template_to_data_store(db: AsyncSession) -> CaseReportTemplateDataStoreListResponse:
+    current_dir = Path(os.getcwd())
+    templates_dir = current_dir.parent / "backend" / "app" / "incidents" / "templates"
+
+    templates_list = []
+
+    for file in templates_dir.iterdir():
+        logger.info(f"Uploading report template {file.name} to Minio")
+        if file.is_file():
+            if await report_template_exists(file.name, db):
+                raise HTTPException(status_code=400, detail="File name already exists for this template")
+            with open(file, "rb") as f:
+                content = f.read()
+                content_type = mimetypes.guess_type(file)[0]
+                upload_file = UploadFile(filename=file.name, file=io.BytesIO(content))
+                await upload_case_report_template_data_store(
+                    data=CaseReportTemplateDataStoreCreation(
+                        report_template_name=file.name,
+                        bucket_name="copilot-case-report-templates",
+                        object_key=file.name,
+                        file_name=file.name,
+                        content_type=content_type,
+                        file_hash=hashlib.sha256(content).hexdigest(),
+                    ),
+                    file=upload_file,
+                )
+            templates_list.append(file.name)
+            await add_report_template_to_db(upload_file, len(content), hashlib.sha256(content).hexdigest(), db)
+
+    return templates_list

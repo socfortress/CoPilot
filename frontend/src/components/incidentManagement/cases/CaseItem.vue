@@ -160,8 +160,11 @@
 								<code class="ml-2">{{ caseEntity.alerts.length }}</code>
 							</template>
 							<template #header-extra>
-								<div class="actions-box">
-									<n-button quaternary size="tiny" @click="handleDelete()">Delete Case</n-button>
+								<div class="actions-box flex gap-2 items-center ml-2">
+									<n-button quaternary size="tiny" class="!hidden xs:!flex" @click="handleDelete()">
+										Delete Case
+									</n-button>
+									<CaseReportButton :case-id="caseEntity.id" size="tiny" />
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">
@@ -230,6 +233,7 @@ import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseDetails from "./CaseDetails.vue"
+import CaseReportButton from "./CaseReportButton.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"
 

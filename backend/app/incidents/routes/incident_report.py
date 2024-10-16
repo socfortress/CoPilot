@@ -7,6 +7,8 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,8 +18,16 @@ from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert
 from app.incidents.models import AlertToTag
+from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.schema.db_operations import CaseDownloadDocxRequest
+from app.incidents.services.reports import cleanup_temp_files
+from app.incidents.services.reports import create_case_context
+from app.incidents.services.reports import create_file_response
+from app.incidents.services.reports import download_template
+from app.incidents.services.reports import render_document_with_context
+from app.incidents.services.reports import save_template_to_tempfile
 
 incidents_report_router = APIRouter()
 
@@ -72,6 +82,24 @@ async def fetch_cases_by_customer(session: AsyncSession, customer_code: str) -> 
     return result.scalars().all()
 
 
+async def fetch_case_by_id(session: AsyncSession, case_id: int) -> Case:
+    """Fetch a case by its ID."""
+    result = await session.execute(
+        select(Case)
+        .where(Case.id == case_id)
+        .options(
+            selectinload(Case.alerts)
+            .selectinload(CaseAlertLink.alert)
+            .options(
+                selectinload(Alert.assets).selectinload(Asset.alert_context),  # Load alert_context
+                selectinload(Alert.tags).selectinload(AlertToTag.tag),
+                selectinload(Alert.comments),
+            ),
+        ),
+    )
+    return result.scalars().first()
+
+
 def serialize_case_alert_to_row(case: Case, alert: Alert) -> Dict[str, Any]:
     """Serialize a case and its alert into a CSV row."""
     assets = ";".join(asset.asset_name for asset in alert.assets or [])
@@ -113,7 +141,7 @@ def generate_csv_content(rows: List[Dict[str, Any]]) -> StringIO:
 
 # Route Handler
 @incidents_report_router.post(
-    "/generate-report",
+    "/generate-report-csv",
     description="Generate a report for all cases.",
 )
 async def get_cases_export_all_route(
@@ -129,7 +157,7 @@ async def get_cases_export_all_route(
 
 
 @incidents_report_router.post(
-    "/generate-report/{customer_code}",
+    "/generate-report-csv/{customer_code}",
     description="Generate a report for a customer",
 )
 async def get_cases_export_customer_route(
@@ -143,4 +171,31 @@ async def get_cases_export_customer_route(
     filename = f"cases_export_{customer_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+@incidents_report_router.post(
+    "/generate-report-docx",
+    description="Generate a docx report for a case.",
+)
+async def get_cases_export_docx_route(
+    request: CaseDownloadDocxRequest,
+    session: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    case = await fetch_case_by_id(session, request.case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="No cases found")
+
+    context = create_case_context(case)
+
+    template_file_content = await download_template(request.template_name)
+    tmp_template_name = save_template_to_tempfile(template_file_content)
+
+    rendered_file_name = render_document_with_context(tmp_template_name, context)
+
+    response = create_file_response(file_path=rendered_file_name, file_name=request.file_name)
+
+    # Clean up temporary files
+    cleanup_temp_files([tmp_template_name])
+
     return response

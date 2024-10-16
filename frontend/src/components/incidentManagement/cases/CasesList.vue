@@ -36,9 +36,30 @@
 					</div>
 				</n-popover>
 
-				<CasesExport size="small" />
+				<n-popover v-if="showMobileMenu" overlap placement="left" display-directive="show">
+					<template #trigger>
+						<div class="bg-color border-radius">
+							<n-button size="small" class="!cursor-pointer">
+								<template #icon>
+									<Icon :name="MenuIcon"></Icon>
+								</template>
+							</n-button>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2 py-1">
+						<CasesExport show-icon size="small" />
+						<CaseCreationButton show-icon size="small" @submitted="getData()" />
+					</div>
+				</n-popover>
 
-				<CaseCreationButton :only-icon="caseCreationButtonOnlyIcon" size="small" @submitted="getData()" />
+				<CasesExport v-if="!showMobileMenu" :show-icon="caseExportButtonShowIcon" size="small" />
+
+				<CaseCreationButton
+					v-if="!showMobileMenu"
+					:show-icon="caseCreationButtonShowIcon"
+					size="small"
+					@submitted="getData()"
+				/>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -201,7 +222,9 @@ const customersList = ref<Customer[]>([])
 const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
-const caseCreationButtonOnlyIcon = ref(false)
+const caseCreationButtonShowIcon = ref(false)
+const caseExportButtonShowIcon = ref(false)
+const showMobileMenu = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
 const header = ref()
@@ -217,6 +240,7 @@ const itemsPaginated = computed(() => {
 })
 
 const FilterIcon = "carbon:filter-edit"
+const MenuIcon = "carbon:overflow-menu-horizontal"
 const InfoIcon = "carbon:information"
 
 const total = computed<number>(() => {
@@ -390,8 +414,9 @@ useResizeObserver(header, entries => {
 
 	pageSlot.value = width < 700 ? 5 : 8
 	simpleMode.value = width < 550
-
-	caseCreationButtonOnlyIcon.value = (width < 580 && width > 549) || width < 390
+	caseCreationButtonShowIcon.value = width >= 580
+	caseExportButtonShowIcon.value = width >= 580
+	showMobileMenu.value = width <= 420
 })
 
 onBeforeMount(() => {

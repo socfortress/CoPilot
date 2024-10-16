@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import aiofiles
 import aiohttp
@@ -7,6 +8,7 @@ from fastapi import UploadFile
 from loguru import logger
 
 from app.data_store.data_store_schema import CaseDataStoreCreation
+from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
 from app.data_store.data_store_session import create_session
 
 
@@ -43,7 +45,31 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
     os.remove(temp_file_path)
 
 
-async def download_case_data_store(bucket_name: str, object_name: str) -> bytes:
+async def upload_case_report_template_data_store(data: CaseReportTemplateDataStoreCreation, file: UploadFile) -> None:
+    client = await create_session()
+    logger.info(f"Uploading file {file.filename} to bucket {data.bucket_name}")
+
+    # Define the temporary file path
+    temp_file_path = os.path.join(os.getcwd(), file.filename)
+
+    # Save the file to the temporary location
+    async with aiofiles.open(temp_file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+
+    # Upload the file to Minio
+    await client.fput_object(
+        bucket_name=data.bucket_name,
+        object_name=f"{file.filename}",
+        file_path=temp_file_path,
+        content_type=data.content_type,
+    )
+
+    # Optionally, remove the temporary file after upload
+    os.remove(temp_file_path)
+
+
+async def download_data_store(bucket_name: str, object_name: str) -> bytes:
     client = await create_session()
     logger.info(f"Downloading file {object_name} from bucket {bucket_name}")
     try:
@@ -75,6 +101,17 @@ async def list_case_data_store_files(bucket_name: str, case_id: int) -> list:
     client = await create_session()
     objects = await client.list_objects(bucket_name, prefix=f"{case_id}/")
     return objects
+
+
+async def list_case_report_template_data_store_files(bucket_name: Optional[str] = "copilot-case-report-templates") -> list:
+    client = await create_session()
+    objects_list = []
+    logger.info(f"Listing objects in bucket {bucket_name}")
+    objects = await client.list_objects(bucket_name)
+    for obj in objects:
+        logger.info(f"Object: {obj.object_name}")
+        objects_list.append(obj.object_name)
+    return objects_list
 
 
 async def create_buckets() -> None:

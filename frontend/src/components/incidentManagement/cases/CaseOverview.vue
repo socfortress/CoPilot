@@ -131,13 +131,14 @@
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 flex justify-end">
+			<div class="footer-box px-7 py-4 gap-3 flex justify-end">
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />
 					</template>
 					Delete
 				</n-button>
+				<CaseReportButton :case-id="caseData.id" />
 			</div>
 		</div>
 	</n-spin>
@@ -155,6 +156,7 @@ import { ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
+import CaseReportButton from "./CaseReportButton.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"
 

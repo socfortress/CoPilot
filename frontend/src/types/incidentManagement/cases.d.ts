@@ -26,3 +26,15 @@ export interface CaseDataStore {
 	upload_time: Date
 	file_hash: string
 }
+
+export interface CaseReportTemplateDataStore {
+	id: number
+	report_template_name: string
+	bucket_name: string
+	object_key: string
+	file_name: string
+	content_type: string
+	file_size: number
+	upload_time: Date
+	file_hash: string
+}

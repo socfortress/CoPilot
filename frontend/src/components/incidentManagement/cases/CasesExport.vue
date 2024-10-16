@@ -1,7 +1,7 @@
 <template>
 	<n-dropdown placement="bottom-start" trigger="click" :options="customersOptions" @select="exportCases">
 		<n-button :size :loading="exporting" secondary @click="load()">
-			<template #icon>
+			<template v-if="showIcon" #icon>
 				<Icon :name="DownloadIcon" :size="14" />
 			</template>
 			Export
@@ -20,7 +20,7 @@ import { saveAs } from "file-saver"
 import { NButton, NDropdown, useMessage } from "naive-ui"
 import { computed, inject, ref, type Ref } from "vue"
 
-const { size } = defineProps<{ size?: Size }>()
+const { size, showIcon } = defineProps<{ size?: Size; showIcon?: boolean }>()
 
 const DownloadIcon = "carbon:cloud-download"
 const loadingCustomersList = ref(false)

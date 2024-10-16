@@ -40,6 +40,7 @@ Deprecated==1.2.14
 dfir-iris-client==2.0.4
 dnspython==2.4.2
 dnstwist==20230918
+docxtpl==0.18.0
 drawsvg==2.3.0
 ecdsa==0.18.0
 elasticsearch7==7.10.1
@@ -72,7 +73,8 @@ kombu==5.3.2
 libmagic==1.0
 licensing==0.43
 loguru==0.7.2
-lxml==4.9.3
+#lxml==4.9.3 Bump down for python-docx
+lxml==4.9.2
 maec==4.1.0.17
 Markdown==3.4.4
 markdown-it-py==3.0.0
@@ -162,7 +164,8 @@ tqdm==4.66.1
 typer==0.9.0
 types-python-dateutil==2.8.19.14
 typing==3.7.4.3
-typing_extensions==4.8.0
+#typing_extensions==4.8.0 Bump to 4.9.0
+typing_extensions==4.9.0
 tzdata==2023.3
 tzlocal==5.2
 ujson==5.8.0
