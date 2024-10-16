@@ -9,7 +9,7 @@ SOCFortress CoPilot
 [![Discord Shield](https://discordapp.com/api/guilds/871419379999469568/widget.png?style=shield)](https://discord.gg/UN3pNBzaEQ)
 [![GitHub Sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/taylorwalton)
 
-[![Email Us](https://img.shields.io/badge/📧%20Email%20Us-We're%20Here%20to%20Help!-orange?style=for-the-badge)](https://www.socfortress.co/contact_form.html)
+[![Get in Touch](https://img.shields.io/badge/📧%20Get%20in%20Touch-Friendly%20Support%20Awaits!-blue?style=for-the-badge)](https://www.socfortress.co/contact_form.html)
 
 </h1><h4 align="center">
 
