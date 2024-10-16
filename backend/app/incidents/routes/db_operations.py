@@ -834,13 +834,22 @@ async def check_default_case_report_template_exists_endpoint(db: AsyncSession = 
     for template in DefaultReportTemplateFileNames:
         if await report_template_exists(template.value, db):
             return {"success": True, "message": "Default case report template exists", "default_template_exists": True}
-    
+
     return {"success": True, "message": "No default case report templates exist", "default_template_exists": False}
 
 
 
 @incidents_db_operations_router.post("/case-report-template/default-template", response_model=CaseReportTemplateDataStoreListResponse)
 async def create_default_case_report_template_endpoint(db: AsyncSession = Depends(get_db)):
+    """
+    Create a default case report template in the data store.
+
+    Returns:
+        CaseReportTemplateDataStoreListResponse: The response containing the created case report template data store.
+
+    Raises:
+        None
+    """
     logger.info("Creating default file in the data store")
     return CaseReportTemplateDataStoreListResponse(
         case_report_template_data_store=await upload_report_template_to_data_store(db),
