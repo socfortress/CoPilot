@@ -6,3 +6,6 @@ export type OsTypesLower = "linux" | "windows" | "macos"
 export type SafeAny = string | number | object
 export type ApiError = AxiosError<FlaskBaseResponse>
 export type ApiCommonResponse<T = unknown> = AxiosResponse<FlaskBaseResponse & T>
+export type DeepNullable<T> = {
+	[K in keyof T]: DeepNullable<T[K]> | null
+}
