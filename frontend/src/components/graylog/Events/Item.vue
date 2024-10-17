@@ -82,7 +82,7 @@ import Icon from "@/components/common/Icon.vue"
 import { NInput, NModal, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const props = defineProps<{ event: EventDefinition; highlight: boolean | null | undefined }>()
 const { event, highlight } = toRefs(props)

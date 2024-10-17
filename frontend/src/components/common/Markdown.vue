@@ -22,7 +22,7 @@ import { codeThemes, getHighlighter } from "@/utils/highlighter"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
 import { toRefs } from "vue"
-import "@/assets/scss/vue-md-it-override.scss"
+import "@/assets/scss/overrides/vue-md-it-override.scss"
 
 const props = defineProps<{
 	source: string

@@ -36,7 +36,7 @@ import _isString from "lodash/isString"
 import { NModal } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 interface Prop {
 	key: string

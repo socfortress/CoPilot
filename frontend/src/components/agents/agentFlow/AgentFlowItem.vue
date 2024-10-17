@@ -178,7 +178,7 @@ import _pick from "lodash/pick"
 import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
 const AgentFlowTimeline = defineAsyncComponent(() => import("./AgentFlowTimeline.vue"))

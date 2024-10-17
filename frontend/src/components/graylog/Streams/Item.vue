@@ -112,7 +112,7 @@ import { formatDate } from "@/utils"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const props = defineProps<{ stream: Stream }>()
 const { stream } = toRefs(props)

@@ -100,7 +100,7 @@ import { useGoto } from "@/composables/useGoto"
 import { NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { alert } = defineProps<{
 	alert: SocAlert
