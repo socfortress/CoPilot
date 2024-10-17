@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading" class="active-response-wizard">
 		<div class="wrapper flex flex-col">
-			<div class="grow flex flex-col">
+			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
 						<n-steps :current="current" size="small" :status="currentStatus">
@@ -12,9 +12,9 @@
 					</div>
 				</n-scrollbar>
 
-				<div class="mt-4 grow flex flex-col">
+				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="px-7 flex flex-col gap-2">
+						<div v-if="current === 1" class="flex flex-col gap-2 px-7">
 							<div class="os-button" @click="setOs('linux')">
 								<Icon :size="18" :name="iconFromOs('linux')"></Icon>
 								<span>LINUX</span>
@@ -47,13 +47,13 @@
 										<n-empty
 											v-if="!loadingActiveResponse"
 											description="No items found"
-											class="justify-center h-48"
+											class="h-48 justify-center"
 										/>
 									</template>
 								</div>
 							</n-spin>
 						</div>
-						<div v-else-if="current === 3" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
+						<div v-else-if="current === 3" class="flex grow flex-col px-7 pb-7" style="min-height: 401px">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
 								:active-response="selectedActiveResponse"
@@ -218,7 +218,7 @@ onMounted(() => {
 		transition: all 0.2s var(--bezier-ease);
 		cursor: pointer;
 		line-height: 1;
-		@apply p-4 flex gap-3 items-center;
+		@apply flex items-center gap-3 p-4;
 
 		&:hover {
 			box-shadow: 0px 0px 0px 1px inset var(--primary-color);

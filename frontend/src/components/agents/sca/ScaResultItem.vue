@@ -1,6 +1,6 @@
 <template>
 	<div class="sca-result-item" :class="{ embedded }">
-		<div class="px-4 py-3 flex flex-col gap-2">
+		<div class="flex flex-col gap-2 px-4 py-3">
 			<div class="header-box flex items-center">
 				<div class="id">#{{ data.id }}</div>
 				<div class="grow"></div>
@@ -14,7 +14,7 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ data.title }}
 					</div>
@@ -22,7 +22,7 @@
 				</div>
 			</div>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 				<Badge
 					type="splitted"
 					:color="

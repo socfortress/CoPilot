@@ -1,8 +1,8 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow min-h-48" content-class="flex flex-col grow gap-4">
+	<n-spin :show="loading" class="flex min-h-48 grow flex-col" content-class="flex flex-col grow gap-4">
 		<div>
 			<n-collapse-transition :show="!showUploadForm">
-				<div class="flex items-center gap-3 flex-wrap">
+				<div class="flex flex-wrap items-center gap-3">
 					<n-button v-if="templateNameList.length" type="primary" @click="openUploadForm()">
 						<template #icon>
 							<Icon :name="UploadIcon" />
@@ -104,7 +104,7 @@
 					<n-empty v-if="!loading" class="min-h-48">
 						<div class="flex flex-col items-center gap-4">
 							<p>No templates found</p>
-							<div class="flex items-center gap-3 flex-wrap">
+							<div class="flex flex-wrap items-center gap-3">
 								<n-button type="primary" :loading="uploading" @click="openUploadForm()">
 									<template #icon>
 										<Icon :name="UploadIcon" />

@@ -47,7 +47,7 @@
 				<n-button v-else size="small" type="error" ghost :loading="loadingPurge" @click="handlePurge()">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Purge</span>
+						<span class="xs:block hidden">Purge</span>
 					</div>
 				</n-button>
 			</div>
@@ -81,7 +81,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingAlerts" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingAlerts" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

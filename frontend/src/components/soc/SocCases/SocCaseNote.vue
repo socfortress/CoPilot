@@ -3,7 +3,7 @@
 		<div class="flex flex-col gap-2 px-5 py-4">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ note.note_id }} - {{ note.note_details.note_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -11,14 +11,14 @@
 				<div class="time">
 					<n-popover overlap placement="top-end">
 						<template #trigger>
-							<div class="flex items-center gap-2 cursor-help">
+							<div class="flex cursor-help items-center gap-2">
 								<span>
 									{{ formatDateTime(note.note_details.note_creationdate) }}
 								</span>
 								<Icon :name="TimeIcon" :size="16"></Icon>
 							</div>
 						</template>
-						<div class="flex flex-col py-2 px-1">
+						<div class="flex flex-col px-1 py-2">
 							<SocCaseNoteTimeline :note="note" />
 						</div>
 					</n-popover>
@@ -49,7 +49,7 @@
 					-->
 				</div>
 			</div>
-			<div class="footer-box flex justify-end items-center gap-3">
+			<div class="footer-box flex items-center justify-end gap-3">
 				<div class="time">
 					{{ formatDateTime(note.note_details.note_creationdate) }}
 				</div>
@@ -67,7 +67,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}

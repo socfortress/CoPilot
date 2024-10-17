@@ -3,7 +3,7 @@
 		<CardStatsBars
 			title="Alerts"
 			hovered
-			class="cursor-pointer h-full"
+			class="h-full cursor-pointer"
 			:values
 			@click="gotoIncidentManagementAlerts()"
 		>

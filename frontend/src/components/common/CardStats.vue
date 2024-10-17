@@ -1,11 +1,11 @@
 <template>
 	<n-card :class="{ hovered }">
-		<div class="flex items-center h-full overflow-hidden">
+		<div class="flex h-full items-center overflow-hidden">
 			<div class="card-wrap flex gap-4" :class="{ 'flex-col items-center text-center': vertical }">
 				<div class="icon flex flex-col justify-center">
 					<slot name="icon"></slot>
 				</div>
-				<div class="info flex flex-col grow overflow-hidden">
+				<div class="info flex grow flex-col overflow-hidden">
 					<div class="title flex items-center gap-2">
 						{{ title }}
 						<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>

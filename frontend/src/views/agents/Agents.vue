@@ -1,5 +1,5 @@
 <template>
-	<div class="page page-wrapped flex flex-col page-without-footer">
+	<div class="page page-wrapped page-without-footer flex flex-col">
 		<div class="wrapper flex grow gap-4">
 			<div class="sidebar">
 				<AgentToolbar
@@ -13,8 +13,8 @@
 					@click="gotoAgent($event.agent_id)"
 				/>
 			</div>
-			<div class="main grow flex flex-col overflow-hidden">
-				<n-spin class="w-full h-full overflow-hidden flex flex-col" :show="loadingAgents">
+			<div class="main flex grow flex-col overflow-hidden">
+				<n-spin class="flex h-full w-full flex-col overflow-hidden" :show="loadingAgents">
 					<n-scrollbar class="grow">
 						<div class="agents-list flex flex-grow flex-col gap-3">
 							<template v-if="agentsFiltered.length">
@@ -32,7 +32,7 @@
 								<n-empty
 									v-if="!loadingAgents"
 									description="No items found"
-									class="justify-center h-48"
+									class="h-48 justify-center"
 								/>
 							</template>
 						</div>

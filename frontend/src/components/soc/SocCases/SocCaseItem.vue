@@ -7,7 +7,7 @@
 			<div v-if="baseInfo" class="flex flex-col gap-2 px-5 py-3">
 				<div class="header-box flex justify-between">
 					<div class="flex items-center gap-2">
-						<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+						<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 							<span>{{ baseInfo.case_uuid }}</span>
 							<Icon :name="InfoIcon" :size="16"></Icon>
 						</div>
@@ -15,14 +15,14 @@
 					<div v-if="caseOpenDate" class="time">
 						<n-popover overlap placement="top-end">
 							<template #trigger>
-								<div class="flex items-center gap-2 cursor-help">
+								<div class="flex cursor-help items-center gap-2">
 									<span>
 										{{ formatDate(caseOpenDate) }}
 									</span>
 									<Icon :name="TimeIcon" :size="16"></Icon>
 								</div>
 							</template>
-							<div class="flex flex-col py-2 px-1">
+							<div class="flex flex-col px-1 py-2">
 								<n-timeline>
 									<n-timeline-item
 										type="success"
@@ -46,7 +46,7 @@
 							{{ excerpt }}
 						</div>
 
-						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+						<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 							<Badge
 								type="splitted"
 								:color="baseInfo.state_name === StateName.Open ? 'warning' : 'primary'"
@@ -100,7 +100,7 @@
 						@start-deleting="loadingDelete = true"
 					/>
 				</div>
-				<div class="footer-box flex justify-between items-center gap-3">
+				<div class="footer-box flex items-center justify-between gap-3">
 					<SocCaseItemActions
 						v-if="!hideSocCaseAction"
 						class="actions-box !flex-row"
@@ -126,7 +126,7 @@
 				:bordered="false"
 				segmented
 			>
-				<div class="h-full w-full flex items-center justify-center">
+				<div class="flex h-full w-full items-center justify-center">
 					<SocAlertItem
 						v-if="baseInfo?.case_soc_id"
 						:alert-id="baseInfo.case_soc_id"
@@ -151,7 +151,7 @@
 					<n-tab-pane name="Info" tab="Info" display-directive="show">
 						<n-spin :show="loadingDetails">
 							<div v-if="extendedInfo" class="px-7 py-4">
-								<div v-if="tags.length" class="flex gap-2 mb-2">
+								<div v-if="tags.length" class="mb-2 flex gap-2">
 									<code v-for="tag of tags" :key="tag">{{ tag }}</code>
 								</div>
 								<div>{{ extendedInfo.case_name }}</div>
@@ -159,7 +159,7 @@
 							<div v-if="extendedInfo" class="flex flex-col gap-2 px-7 py-4">
 								<div v-if="baseInfo && !hideSocAlertLink" class="box">
 									soc id:
-									<code class="cursor-pointer text-primary-color" @click="openSocAlert()">
+									<code class="text-primary-color cursor-pointer" @click="openSocAlert()">
 										#{{ baseInfo.case_soc_id }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -175,7 +175,7 @@
 									</code>
 								</div>
 							</div>
-							<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+							<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 								<KVCard v-for="(value, key) of properties" :key="key">
 									<template #key>
 										{{ key }}
@@ -185,7 +185,7 @@
 											v-if="key === 'customer_code' && value && value !== 'Customer Not Found'"
 										>
 											<code
-												class="cursor-pointer text-primary-color"
+												class="text-primary-color cursor-pointer"
 												@click="gotoCustomer({ code: value })"
 											>
 												#{{ value }}
@@ -234,9 +234,9 @@
 								</template>
 								<n-collapse-item name="1">
 									<template #header>
-										<div class="py-3 -ml-2">New note</div>
+										<div class="-ml-2 py-3">New note</div>
 									</template>
-									<div class="p-3 pt-0 -mt-2">
+									<div class="-mt-2 p-3 pt-0">
 										<SocCaseNoteForm
 											v-if="baseInfo"
 											:case-id="baseInfo.case_id"

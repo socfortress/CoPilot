@@ -1,5 +1,5 @@
 <template>
-	<div class="alert-actions flex flex-col gap-2 justify-end">
+	<div class="alert-actions flex flex-col justify-end gap-2">
 		<n-button v-if="socAlertFieldValue" type="success" secondary :size="size" @click="gotoSocAlertUrl()">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>

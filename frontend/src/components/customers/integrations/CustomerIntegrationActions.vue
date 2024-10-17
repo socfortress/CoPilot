@@ -1,5 +1,5 @@
 <template>
-	<div class="alert-actions flex gap-4 justify-end">
+	<div class="alert-actions flex justify-end gap-4">
 		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size="size" secondary @click="provision()">
 			<template #icon>
 				<Icon :name="DeployIcon"></Icon>

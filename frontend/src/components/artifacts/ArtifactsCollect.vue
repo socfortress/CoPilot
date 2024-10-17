@@ -1,6 +1,6 @@
 <template>
 	<div class="artifacts-collect">
-		<div class="header flex justify-end items-start gap-2">
+		<div class="header flex items-start justify-end gap-2">
 			<div v-if="isDirty" class="info flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -20,7 +20,7 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="grow flex items-center justify-end gap-2 flex-wrap">
+			<div class="flex grow flex-wrap items-center justify-end gap-2">
 				<div v-if="!hideHostnameField" class="grow basis-56">
 					<n-select
 						v-model:value="filters.hostname"
@@ -69,7 +69,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list grid gap-3 my-7">
+			<div class="list my-7 grid gap-3">
 				<template v-if="collectList.length">
 					<CollectItem
 						v-for="collect of collectList"
@@ -79,7 +79,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

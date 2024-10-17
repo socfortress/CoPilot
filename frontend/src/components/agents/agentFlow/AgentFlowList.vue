@@ -1,14 +1,14 @@
 <template>
 	<n-spin :show="loading">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<div class="box">
 					Total:
 					<code>{{ flowList.length }}</code>
 				</div>
 			</div>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="list my-3 flex flex-col gap-2">
 			<template v-if="flowList.length">
 				<AgentFlowItem
 					v-for="item of flowList"
@@ -19,7 +19,7 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 	</n-spin>

@@ -13,7 +13,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingActiveResponse" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingActiveResponse" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

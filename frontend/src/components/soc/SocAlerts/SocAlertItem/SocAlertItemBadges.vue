@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-wrap items-center gap-3 mt-3">
+	<div class="mt-3 flex flex-wrap items-center gap-3">
 		<n-tooltip placement="top-start" trigger="hover">
 			<template #trigger>
 				<Badge type="splitted" color="primary" hint-cursor>
@@ -40,7 +40,7 @@
 			<template #value>
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
-						class="cursor-pointer text-primary-color"
+						class="text-primary-color cursor-pointer"
 						@click="gotoCustomer({ code: alert.customer.customer_code })"
 					>
 						{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}

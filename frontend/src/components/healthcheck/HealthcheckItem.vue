@@ -9,7 +9,7 @@
 			</div>
 		</div>
 		<div class="main-box flex justify-between gap-4">
-			<div class="content flex gap-3 items-center">
+			<div class="content flex items-center gap-3">
 				<div class="level mt-1">
 					<Icon v-if="alert.level === InfluxDBAlertLevel.Crit" :name="WarningIcon" :size="20" />
 					<Icon v-else :name="OKIcon" :size="20" />
@@ -19,7 +19,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="footer-box flex justify-end items-center gap-3">
+		<div class="footer-box flex items-center justify-end gap-3">
 			<div class="time">
 				{{ formatDate(alert.time) }}
 			</div>

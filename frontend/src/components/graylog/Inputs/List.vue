@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading" class="flex flex-col">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -44,7 +44,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-scrollbar>

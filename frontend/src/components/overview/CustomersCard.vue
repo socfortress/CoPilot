@@ -3,7 +3,7 @@
 		<CardStatsMulti
 			title="Customers"
 			hovered
-			class="cursor-pointer h-full"
+			class="h-full cursor-pointer"
 			:values="[{ value: total, label: 'Total' }]"
 			@click="gotoCustomer()"
 		>

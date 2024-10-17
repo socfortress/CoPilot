@@ -9,7 +9,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 				<KVCard v-for="(value, key) of alert.customer" :key="key">
 					<template #key>
 						{{ key }}
@@ -17,7 +17,7 @@
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 							<code
-								class="cursor-pointer text-primary-color"
+								class="text-primary-color cursor-pointer"
 								@click="gotoCustomer({ code: value.toString() })"
 							>
 								#{{ value }}
@@ -40,7 +40,7 @@
 					<template #label>Go to users page</template>
 				</Badge>
 			</div>
-			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 				<KVCard>
 					<template #key>user_login</template>
 					<template #value>
@@ -50,7 +50,7 @@
 							:users="users"
 							@updated="emit('updated', $event)"
 						>
-							<div class="flex items-center gap-2 cursor-pointer text-primary-color">
+							<div class="text-primary-color flex cursor-pointer items-center gap-2">
 								<n-spin :size="16" :show="loading">
 									<Icon :name="EditIcon" :size="16"></Icon>
 								</n-spin>

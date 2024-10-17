@@ -1,8 +1,8 @@
 <template>
 	<div class="service-item" :class="{ embedded, selectable, disabled }">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
-				<div class="flex items-center gap-2 cursor-pointer">
+		<div class="flex flex-col gap-2 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
+				<div class="flex cursor-pointer items-center gap-2">
 					<div v-if="selectable" class="check-box mr-2">
 						<n-radio v-model:checked="checked" size="large" />
 					</div>
@@ -17,7 +17,7 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ data.name }}
 					</div>
@@ -27,7 +27,7 @@
 				</div>
 			</div>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 				<code class="py-1">Auth Keys:</code>
 				<Badge v-for="authKey of data.keys" :key="authKey.auth_key_name">
 					<template #value>

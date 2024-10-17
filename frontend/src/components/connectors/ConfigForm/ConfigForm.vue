@@ -55,7 +55,7 @@
 
 			<div class="connector-footer mt-4">
 				<n-form-item>
-					<div class="flex gap-2 justify-end w-full">
+					<div class="flex w-full justify-end gap-2">
 						<n-button type="primary" @click="saveConnector()">Save</n-button>
 						<n-button @click="closeForm(false)">Cancel</n-button>
 					</div>
@@ -305,7 +305,7 @@ onMounted(() => {
 	.connector-header {
 		display: flex;
 		align-items: center;
-		@apply gap-5 mb-7;
+		@apply mb-7 gap-5;
 
 		.connector-image {
 			border: 2px solid var(--bg-body);

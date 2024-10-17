@@ -9,7 +9,7 @@
 
 				<Icon :name="LinkIcon" :size="14" />
 			</div>
-			<div class="total-alerts flex items-center flex-wrap justify-end">
+			<div class="total-alerts flex flex-wrap items-center justify-end">
 				<n-button
 					v-if="alertsSummary.alerts.length > 3 && showAllAlerts"
 					class="show-less"
@@ -20,7 +20,7 @@
 				</n-button>
 				<span>
 					Alerts:
-					<strong class="font-mono ml-2">{{ alertsSummary.total_alerts }}</strong>
+					<strong class="ml-2 font-mono">{{ alertsSummary.total_alerts }}</strong>
 				</span>
 			</div>
 		</div>

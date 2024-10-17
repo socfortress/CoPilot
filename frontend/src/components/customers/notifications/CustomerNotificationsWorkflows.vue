@@ -27,7 +27,7 @@
 						</div>
 					</template>
 					<template v-else>
-						<n-empty v-if="!loading" class="justify-center h-48">
+						<n-empty v-if="!loading" class="h-48 justify-center">
 							<div class="flex flex-col items-center gap-4">
 								<p>No Notification found</p>
 

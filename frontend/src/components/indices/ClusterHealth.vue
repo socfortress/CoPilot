@@ -1,7 +1,7 @@
 <template>
 	<n-card class="cluster-health" segmented>
 		<template #header>
-			<div class="flex align-center justify-between">
+			<div class="align-center flex justify-between">
 				<span>Overall Health</span>
 				<IndexIcon v-if="cluster" :health="cluster.status" color />
 			</div>
@@ -12,7 +12,7 @@
 					<div class="card-wrap">
 						<div v-for="prop of propsOrder" :key="prop" class="box">
 							<template v-if="prop === 'status'">
-								<div class="value uppercase flex align-center gap-2">
+								<div class="value align-center flex gap-2 uppercase">
 									<IndexIcon :health="cluster.status" color />
 									{{ cluster.status }}
 								</div>
@@ -30,7 +30,7 @@
 				</n-scrollbar>
 			</div>
 			<template v-else>
-				<n-empty v-if="!loading" description="No cluster found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No cluster found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
 	</n-card>
@@ -110,7 +110,7 @@ onBeforeMount(() => {
 		min-height: 50px;
 
 		.card-wrap {
-			@apply py-3 px-4 gap-6 gap-x-6;
+			@apply gap-6 gap-x-6 px-4 py-3;
 			column-width: 12rem;
 			column-count: auto;
 

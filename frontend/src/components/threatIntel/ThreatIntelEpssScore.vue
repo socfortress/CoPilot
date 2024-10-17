@@ -13,9 +13,9 @@
 				v-for="item of epssList"
 				:key="item.___id"
 				content-class="bg-secondary-color"
-				class="overflow-hidden item-appear item-appear-bottom item-appear-005"
+				class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 			>
-				<div class="flex justify-between gap-8 xs:!flex-row flex-col">
+				<div class="xs:!flex-row flex flex-col justify-between gap-8">
 					<n-statistic class="grow" label="Date">
 						<span class="stats-value whitespace-nowrap">
 							{{ formatDate(item.date, dFormats.date) }}
@@ -39,7 +39,7 @@
 			</p>
 		</div>
 		<template v-else>
-			<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+			<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 		</template>
 	</n-spin>
 </template>

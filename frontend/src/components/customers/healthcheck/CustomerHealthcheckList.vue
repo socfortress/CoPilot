@@ -1,5 +1,5 @@
 <template>
-	<div class="flex mb-6 justify-end">
+	<div class="mb-6 flex justify-end">
 		<div>
 			<n-input-group>
 				<n-select
@@ -47,7 +47,7 @@
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
-			<n-empty v-if="!healthyList.length && !unhealthyList.length && !loading" class="justify-center h-48" />
+			<n-empty v-if="!healthyList.length && !unhealthyList.length && !loading" class="h-48 justify-center" />
 		</div>
 	</n-spin>
 </template>

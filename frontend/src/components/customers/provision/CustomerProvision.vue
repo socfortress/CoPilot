@@ -30,7 +30,7 @@
 					</n-button>
 				</div>
 
-				<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+				<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 					<KVCard v-for="(value, key) of customerMeta" :key="key">
 						<template #key>
 							{{ key }}

@@ -1,5 +1,5 @@
 <template>
-	<div class="soc-case-actions flex flex-col gap-2 justify-center">
+	<div class="soc-case-actions flex flex-col justify-center gap-2">
 		<n-button
 			v-if="isCaseClosed"
 			:loading="loadingCaseReopen"

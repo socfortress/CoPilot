@@ -2,7 +2,7 @@
 	<div class="customer-integration-form flex flex-col gap-4">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
-				<div class="px-7 pt-4 pb-2">
+				<div class="px-7 pb-2 pt-4">
 					<n-steps :current="current" size="small" :status="currentStatus">
 						<n-step title="Choose Integration" />
 						<n-step title="Set Auth Keys">
@@ -15,7 +15,7 @@
 			</n-scrollbar>
 		</div>
 
-		<div class="flex flex-col grow overflow-hidden">
+		<div class="flex grow flex-col overflow-hidden">
 			<Transition :name="`slide-form-${slideFormDirection}`">
 				<div v-if="current === 1" class="available-list grow overflow-hidden">
 					<n-scrollbar style="max-height: 355px" trigger="none">
@@ -29,7 +29,7 @@
 						/>
 					</n-scrollbar>
 				</div>
-				<div v-else class="auth-key-form px-7 flex flex-wrap gap-3">
+				<div v-else class="auth-key-form flex flex-wrap gap-3 px-7">
 					<template v-for="ak of authKeysForm" :key="ak.key">
 						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
 							<n-input v-model:value="ak.value" :placeholder="`Input ${ak.key}...`" clearable />

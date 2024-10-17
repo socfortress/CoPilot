@@ -5,9 +5,9 @@
 			<Icon :name="ViewIcon" :size="14" />
 		</code>
 
-		<div v-else class="flex flex-col cursor-pointer" @click="showDetails = true">
+		<div v-else class="flex cursor-pointer flex-col" @click="showDetails = true">
 			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ asset.asset_name }}
 					</div>
@@ -17,13 +17,13 @@
 					<Badge type="splitted">
 						<template #label>Index</template>
 						<template #value>
-							<div class="flex items-center h-full">
+							<div class="flex h-full items-center">
 								<code
-									class="cursor-pointer text-primary-color leading-none"
+									class="text-primary-color cursor-pointer leading-none"
 									@click.stop="gotoIndex(asset.index_name)"
 								>
 									{{ asset.index_name }}
-									<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 								</code>
 							</div>
 						</template>
@@ -32,13 +32,13 @@
 					<Badge type="splitted">
 						<template #label>Agent</template>
 						<template #value>
-							<div class="flex items-center h-full">
+							<div class="flex h-full items-center">
 								<code
-									class="cursor-pointer text-primary-color leading-none"
+									class="text-primary-color cursor-pointer leading-none"
 									@click.stop="gotoAgent(asset.agent_id)"
 								>
 									{{ asset.agent_id }}
-									<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 								</code>
 							</div>
 						</template>
@@ -72,7 +72,7 @@
 				<n-tab-pane name="Context" tab="Context" display-directive="show">
 					<n-spin :show="loading" class="min-h-40">
 						<div v-if="alertContext" class="p-7 pt-4">
-							<div class="flex flex-wrap gap-3 mb-4">
+							<div class="mb-4 flex flex-wrap gap-3">
 								<Badge type="splitted">
 									<template #label>id</template>
 									<template #value>#{{ alertContext.id }}</template>
@@ -106,7 +106,7 @@
 								<n-card
 									size="small"
 									content-class="bg-secondary-color"
-									class="overflow-hidden hover:border-primary-color cursor-pointer"
+									class="hover:border-primary-color cursor-pointer overflow-hidden"
 									@click="openEvaluation()"
 								>
 									{{ pn }}

@@ -33,7 +33,7 @@
 								@keydown.enter="signUp"
 							/>
 						</n-form-item>
-						<div class="flex items-center justify-end mt-3">
+						<div class="mt-3 flex items-center justify-end">
 							<n-button
 								type="primary"
 								size="large"
@@ -113,7 +113,7 @@
 						</n-form-item>
 						-->
 
-						<div class="flex items-center justify-between mt-3 gap-3">
+						<div class="mt-3 flex items-center justify-between gap-3">
 							<n-button size="large" @click="wizardCurrent = 1">
 								<template #icon>
 									<Icon :name="ArrowLeftIcon"></Icon>

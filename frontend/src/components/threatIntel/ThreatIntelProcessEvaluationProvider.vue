@@ -20,7 +20,7 @@
 				>
 					<div class="px-7">
 						<n-card content-class="bg-secondary-color" class="overflow-hidden">
-							<div class="flex justify-between gap-8 flex-wrap">
+							<div class="flex flex-wrap justify-between gap-8">
 								<n-statistic label="Rank" :value="evaluation.rank" tabular-nums />
 								<n-statistic label="EPS" :value="eps" tabular-nums />
 								<n-statistic label="Host Prevalence" :value="`${evaluation.host_prev}%`" tabular-nums />
@@ -80,7 +80,7 @@
 					/>
 				</n-tab-pane>
 			</n-tabs>
-			<n-empty v-if="!loading && !evaluation" description="Evaluation not found" class="justify-center h-48" />
+			<n-empty v-if="!loading && !evaluation" description="Evaluation not found" class="h-48 justify-center" />
 		</n-spin>
 	</n-modal>
 </template>

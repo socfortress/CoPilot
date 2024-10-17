@@ -14,7 +14,7 @@
 			</transition>
 		</div>
 
-		<div class="sign-text text-center mt-10">
+		<div class="sign-text mt-10 text-center">
 			<div v-if="typeRef === 'signin'" class="sign-text">
 				Don't you have an account?
 				<n-button text type="primary" size="large" @click="gotoSignUp()">Sign up</n-button>

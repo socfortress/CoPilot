@@ -1,5 +1,5 @@
 <template>
-	<div class="soc-alert-actions flex flex-col gap-2 justify-center">
+	<div class="soc-alert-actions flex flex-col justify-center gap-2">
 		<n-button v-if="existCase" type="success" secondary :size="size" @click="openSocCase()">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>
@@ -42,7 +42,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="h-full w-full flex items-center justify-center">
+			<div class="flex h-full w-full items-center justify-center">
 				<SocCaseItem
 					v-if="caseId"
 					:case-id="caseId"

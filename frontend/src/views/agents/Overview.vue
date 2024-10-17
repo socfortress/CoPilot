@@ -8,7 +8,7 @@
 			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
 		</div>
 		<n-spin
-			class="agent-header py-5 px-7 my-4"
+			class="agent-header my-4 px-7 py-5"
 			content-class="flex justify-between gap-y-1 gap-x-6 flex-wrap items-start"
 			:class="{ critical: agent?.critical_asset, online: isOnline }"
 			:show="loadingAgent"
@@ -46,13 +46,13 @@
 				</div>
 				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 			</div>
-			<div class="actions flex items-center justify-end grow">
+			<div class="actions flex grow items-center justify-end">
 				<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
 					Upgrade Wazuh Agent
 				</n-button>
 			</div>
 		</n-spin>
-		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
+		<n-card class="px-4 py-1 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
 				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
@@ -342,7 +342,7 @@ onBeforeMount(() => {
 				color: var(--success-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
-				@apply text-xs py-1 px-2;
+				@apply px-2 py-1 text-xs;
 			}
 
 			.quarantined-badge {

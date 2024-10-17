@@ -7,7 +7,7 @@
 				</Suspense>
 			</template>
 			<template v-else>
-				<n-empty v-if="!loadingActiveResponse" description="No description found" class="justify-center h-48" />
+				<n-empty v-if="!loadingActiveResponse" description="No description found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
 	</div>

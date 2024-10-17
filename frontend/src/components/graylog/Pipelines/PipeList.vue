@@ -25,7 +25,7 @@
 					</n-collapse-item>
 				</n-collapse>
 				<template v-else>
-					<n-empty v-if="!loading" description="No pipelines found" class="justify-center h-32" />
+					<n-empty v-if="!loading" description="No pipelines found" class="h-32 justify-center" />
 				</template>
 			</n-spin>
 		</n-card>

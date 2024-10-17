@@ -8,7 +8,7 @@
 				<Icon v-if="!hideTimeline" :name="TimeIcon" :size="16"></Icon>
 			</div>
 		</template>
-		<div class="flex flex-col py-2 px-1">
+		<div class="flex flex-col px-1 py-2">
 			<SocAlertItemTimeline :alert="alert" />
 		</div>
 	</n-popover>

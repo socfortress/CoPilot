@@ -1,7 +1,7 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
-		<div class="header-box flex justify-between items-center gap-3">
-			<div class="id grow flex flex-wrap gap-2">
+		<div class="header-box flex items-center justify-between gap-3">
+			<div class="id flex grow flex-wrap gap-2">
 				<span>
 					{{ formatDate(stat.first_active, dFormats.datetimesecmill) }}
 				</span>
@@ -19,7 +19,7 @@
 				</n-button>
 			</div>
 		</div>
-		<div class="main-box flex flex-col gap-2 mt-2">
+		<div class="main-box mt-2 flex flex-col gap-2">
 			<div class="content flex flex-wrap gap-2">
 				<span v-for="artifact of stat.names_with_response" :key="artifact" class="artifact-label">
 					{{ artifact }}
@@ -28,7 +28,7 @@
 			<div v-if="stat.error_message" class="error-message">
 				{{ stat.error_message }}
 			</div>
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-1">
+			<div class="badges-box mt-1 flex flex-wrap items-center gap-3">
 				<Badge type="splitted" color="primary">
 					<template #label>Status</template>
 					<template #value>
@@ -65,7 +65,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}

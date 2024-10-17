@@ -10,7 +10,7 @@
 						<div class="label">name</div>
 					</div>
 					<div class="box">
-						<div class="value uppercase flex align-center gap-2">
+						<div class="value align-center flex gap-2 uppercase">
 							<IndexIcon :health="index.health" color />
 							{{ index.health }}
 						</div>
@@ -37,7 +37,7 @@
 						<div class="label">replica_count</div>
 					</div>
 				</div>
-				<div v-if="showActions" class="group actions">
+				<div v-if="showActions" class="actions group">
 					<div class="box">
 						<!--
 						<el-tooltip content="Rotate" placement="top" :show-arrow="false">
@@ -138,7 +138,7 @@ function deleteIndex() {
 
 <style lang="scss" scoped>
 .index-card {
-	@apply py-3 px-4 gap-6;
+	@apply gap-6 px-4 py-3;
 	border: 2px solid transparent;
 	border-radius: var(--border-radius);
 

@@ -1,7 +1,7 @@
 <template>
 	<div class="artifacts-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -46,7 +46,7 @@
 						</n-badge>
 					</div>
 				</template>
-				<div class="py-1 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
 						<n-input-group class="artifacts-list-filter-combo" :class="{ 'filters-active': filterType }">
 							<n-select
@@ -90,7 +90,7 @@
 							/>
 						</n-input-group>
 					</div>
-					<div class="px-3 flex justify-end gap-2">
+					<div class="flex justify-end gap-2 px-3">
 						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
 						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
@@ -98,7 +98,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="list my-3 flex flex-col gap-2">
 				<template v-if="artifactsList.length">
 					<ArtifactItem
 						v-for="artifact of itemsPaginated"
@@ -108,7 +108,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

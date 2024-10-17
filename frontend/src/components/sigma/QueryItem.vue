@@ -2,11 +2,11 @@
 	<div class="sigma-query-item" :class="{ embedded }" @click="openDetails()">
 		<n-spin :show="loading">
 			<div class="flex flex-col">
-				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
+				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
+					<div class="id flex cursor-pointer items-center gap-2" @click="openDetails()">
 						<span>#{{ query.id }}</span>
 					</div>
-					<div class="status flex gap-2 items-center">
+					<div class="status flex items-center gap-2">
 						<span>{{ query.active ? "Active" : "Inactive" }}</span>
 						<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success-color"></Icon>
 						<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary-color"></Icon>
@@ -14,14 +14,14 @@
 				</div>
 
 				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex flex-col gap-1 grow">
+					<div class="content flex grow flex-col gap-1">
 						<div class="title">
 							{{ query.rule_name }}
 						</div>
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center gap-4">
+				<div class="footer-box flex items-center justify-between gap-4 px-5 py-3">
 					<div class="badges-box flex flex-wrap items-center gap-3">
 						<QueryTimeIntervalForm
 							v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
@@ -40,7 +40,7 @@
 								</template>
 								<template #label>Time Interval</template>
 								<template #value>
-									<div class="flex gap-2 items-center">
+									<div class="flex items-center gap-2">
 										{{ query.time_interval || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
@@ -54,7 +54,7 @@
 							</template>
 							<template #label>Last execution time</template>
 							<template #value>
-								<div class="flex gap-2 items-center">
+								<div class="flex items-center gap-2">
 									{{
 										query.last_execution_time
 											? formatDate(query.last_execution_time, dFormats.datetimesec)

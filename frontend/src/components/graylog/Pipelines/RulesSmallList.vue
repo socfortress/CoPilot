@@ -5,7 +5,7 @@
 				<span class="spacer">
 					<Icon :name="ViewIcon" :size="16"></Icon>
 				</span>
-				<span class="grow title">
+				<span class="title grow">
 					{{ rule.title }}
 				</span>
 				<span class="spacer small"></span>

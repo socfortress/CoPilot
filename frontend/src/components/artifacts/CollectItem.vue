@@ -10,7 +10,7 @@
 		</KVCard>
 		<KVCard class="more" @click="showDetails = true">
 			<template #value>
-				<div class="h-full w-full flex items-center text-center justify-center">view more...</div>
+				<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
 			</template>
 		</KVCard>
 

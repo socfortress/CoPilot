@@ -6,8 +6,8 @@
 	>
 		<n-spin :show="loading">
 			<div v-if="alert" class="flex flex-col">
-				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="openDetails()">
+				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
+					<div class="id flex cursor-pointer items-center gap-2" @click="openDetails()">
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
 						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -21,14 +21,14 @@
 							to="body"
 						>
 							<template #trigger>
-								<div class="flex items-center gap-2 cursor-help">
+								<div class="flex cursor-help items-center gap-2">
 									<span v-if="alert.alert_creation_time">
 										{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
 									</span>
 									<Icon :name="TimeIcon" :size="16"></Icon>
 								</div>
 							</template>
-							<div class="flex flex-col py-2 px-1">
+							<div class="flex flex-col px-1 py-2">
 								<AlertTimeline v-if="alert" :alert />
 							</div>
 						</n-popover>
@@ -39,7 +39,7 @@
 				</div>
 
 				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex flex-col gap-1 grow">
+					<div class="content flex grow flex-col gap-1">
 						<div class="title">
 							{{ alert.alert_name }}
 						</div>
@@ -63,7 +63,7 @@
 							</template>
 							<template #label>Status</template>
 							<template #value>
-								<div class="flex gap-2 items-center">
+								<div class="flex items-center gap-2">
 									{{ alert.status || "n/d" }}
 								</div>
 							</template>
@@ -80,7 +80,7 @@
 							</template>
 							<template #label>Assignee</template>
 							<template #value>
-								<div class="flex gap-2 items-center">
+								<div class="flex items-center gap-2">
 									{{ alert.assigned_to || "n/d" }}
 								</div>
 							</template>
@@ -111,7 +111,7 @@
 								</template>
 								<template #label>Status</template>
 								<template #value>
-									<div class="flex gap-2 items-center">
+									<div class="flex items-center gap-2">
 										{{ alert.status || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
@@ -137,7 +137,7 @@
 								</template>
 								<template #label>Assignee</template>
 								<template #value>
-									<div class="flex gap-2 items-center">
+									<div class="flex items-center gap-2">
 										{{ alert.assigned_to || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
@@ -148,13 +148,13 @@
 						<Badge v-if="alert.customer_code" type="splitted" class="!hidden sm:!flex">
 							<template #label>Customer</template>
 							<template #value>
-								<div class="flex items-center h-full">
+								<div class="flex h-full items-center">
 									<code
-										class="cursor-pointer text-primary-color leading-none"
+										class="text-primary-color cursor-pointer leading-none"
 										@click.stop="gotoCustomer({ code: alert.customer_code })"
 									>
 										#{{ alert.customer_code }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 							</template>
@@ -171,8 +171,8 @@
 					</div>
 				</div>
 
-				<div v-if="!compact" class="footer-box px-5 py-3 flex justify-between items-center">
-					<div class="details flex gap-3 items-center">
+				<div v-if="!compact" class="footer-box flex items-center justify-between px-5 py-3">
+					<div class="details flex items-center gap-3">
 						<Badge v-if="alert.alert_creation_time" type="splitted" class="time">
 							<template #iconLeft>
 								<Icon :name="TimeIcon" :size="16" />
@@ -184,7 +184,7 @@
 
 						<n-tooltip trigger="hover">
 							<template #trigger>
-								<Badge type="splitted" class="!hidden xs:!flex">
+								<Badge type="splitted" class="xs:!flex !hidden">
 									<template #iconLeft>
 										<Icon :name="AssetsIcon" :size="16" />
 									</template>
@@ -198,7 +198,7 @@
 
 						<n-tooltip trigger="hover">
 							<template #trigger>
-								<Badge type="splitted" class="!hidden xs:!flex">
+								<Badge type="splitted" class="xs:!flex !hidden">
 									<template #iconLeft>
 										<Icon :name="CommentsIcon" :size="16" />
 									</template>

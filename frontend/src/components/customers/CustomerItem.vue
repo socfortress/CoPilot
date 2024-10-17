@@ -1,7 +1,7 @@
 <template>
 	<n-spin :id="`customer-${customer.customer_code}`" :show="loading" :class="{ highlight }" class="customer-item">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
+		<div class="flex flex-col gap-2 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
 				<div class="id">#{{ customer.customer_code }}</div>
 				<div v-if="!hideCardActions" class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
@@ -20,7 +20,7 @@
 					:size="40"
 				/>
 
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ customerInfo?.customer_name }}
 					</div>
@@ -30,7 +30,7 @@
 				</div>
 			</div>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 				<Badge type="splitted" color="primary">
 					<template #iconLeft>
 						<Icon :name="UserTypeIcon" :size="14"></Icon>
@@ -155,7 +155,7 @@
 						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
 					<template #suffix>
-						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
+						<div class="hover:text-primary-color cursor-pointer pr-8" @click="selectedTabsGroup = 'agents'">
 							Agents
 						</div>
 					</template>
@@ -163,7 +163,7 @@
 				<n-tabs v-else-if="selectedTabsGroup === 'agents'" type="line" animated :tabs-padding="24">
 					<template #prefix>
 						<div
-							class="pl-6 relative top-1 hover:text-primary-color cursor-pointer"
+							class="hover:text-primary-color relative top-1 cursor-pointer pl-6"
 							@click="selectedTabsGroup = 'customer'"
 						>
 							<Icon :name="ArrowIcon" :size="20"></Icon>

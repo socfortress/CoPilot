@@ -17,7 +17,7 @@
 					</n-form-item>
 					<n-form-item v-if="showSourceField" path="source" :show-require-mark="false" class="source-field">
 						<template #label>
-							<div class="flex justify-between items-end gap-2">
+							<div class="flex items-end justify-between gap-2">
 								<span>
 									Source
 									<span class="n-form-item-label__asterisk">*</span>
@@ -108,7 +108,7 @@
 					<div>
 						<slot name="additionalActions"></slot>
 					</div>
-					<div class="flex gap-3 items-center">
+					<div class="flex items-center gap-3">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
 						<n-button
 							type="primary"

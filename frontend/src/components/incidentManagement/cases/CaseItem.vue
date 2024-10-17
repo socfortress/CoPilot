@@ -5,8 +5,8 @@
 	>
 		<n-spin :show="loading">
 			<div v-if="caseEntity" class="flex flex-col">
-				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="compact ? undefined : openDetails()">
+				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
+					<div class="id flex cursor-pointer items-center gap-2" @click="compact ? undefined : openDetails()">
 						<span>#{{ caseEntity.id }}</span>
 						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -16,7 +16,7 @@
 				</div>
 
 				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex flex-col gap-1 grow">
+					<div class="content flex grow flex-col gap-1">
 						<div class="title">
 							{{ caseEntity.case_name }}
 						</div>
@@ -42,7 +42,7 @@
 							</template>
 							<template #label>Status</template>
 							<template #value>
-								<div class="flex gap-2 items-center">
+								<div class="flex items-center gap-2">
 									{{ caseEntity.case_status || "n/d" }}
 								</div>
 							</template>
@@ -59,7 +59,7 @@
 							</template>
 							<template #label>Assignee</template>
 							<template #value>
-								<div class="flex gap-2 items-center">
+								<div class="flex items-center gap-2">
 									{{ caseEntity.assigned_to || "n/d" }}
 								</div>
 							</template>
@@ -97,7 +97,7 @@
 								</template>
 								<template #label>Status</template>
 								<template #value>
-									<div class="flex gap-2 items-center">
+									<div class="flex items-center gap-2">
 										{{ caseEntity.case_status || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
@@ -127,7 +127,7 @@
 								</template>
 								<template #label>Assignee</template>
 								<template #value>
-									<div class="flex gap-2 items-center">
+									<div class="flex items-center gap-2">
 										{{ caseEntity.assigned_to || "n/d" }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
@@ -138,13 +138,13 @@
 						<Badge v-if="caseEntity.customer_code" type="splitted" class="!hidden sm:!flex">
 							<template #label>Customer</template>
 							<template #value>
-								<div class="flex items-center h-full">
+								<div class="flex h-full items-center">
 									<code
-										class="cursor-pointer text-primary-color leading-none"
+										class="text-primary-color cursor-pointer leading-none"
 										@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
 									>
 										#{{ caseEntity.customer_code }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 							</template>
@@ -152,7 +152,7 @@
 					</div>
 				</div>
 
-				<div v-if="!compact" class="footer-box px-5 py-3 flex justify-between items-center">
+				<div v-if="!compact" class="footer-box flex items-center justify-between px-5 py-3">
 					<n-collapse :trigger-areas="['main', 'arrow']">
 						<n-collapse-item name="alerts-list">
 							<template #header>
@@ -160,8 +160,8 @@
 								<code class="ml-2">{{ caseEntity.alerts.length }}</code>
 							</template>
 							<template #header-extra>
-								<div class="actions-box flex gap-2 items-center ml-2">
-									<n-button quaternary size="tiny" class="!hidden xs:!flex" @click="handleDelete()">
+								<div class="actions-box ml-2 flex items-center gap-2">
+									<n-button quaternary size="tiny" class="xs:!flex !hidden" @click="handleDelete()">
 										Delete Case
 									</n-button>
 									<CaseReportButton :case-id="caseEntity.id" size="tiny" />
@@ -182,7 +182,7 @@
 									<n-empty
 										v-if="!loading"
 										description="No alerts attached"
-										class="justify-center h-24"
+										class="h-24 justify-center"
 									/>
 								</template>
 							</div>

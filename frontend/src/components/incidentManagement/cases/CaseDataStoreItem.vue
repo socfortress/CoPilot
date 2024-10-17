@@ -2,11 +2,11 @@
 	<div class="data-store-file" :class="{ embedded }">
 		<n-spin :show="canceling">
 			<div class="flex flex-col">
-				<div class="header-box px-5 py-3 pb-0 flex justify-between items-center gap-3">
+				<div class="header-box flex items-center justify-between gap-3 px-5 py-3 pb-0">
 					<div class="id flex items-center">
 						<span>
 							#{{ dataStoreFile.id }}
-							<span class="hidden xs:inline">- {{ dataStoreFile.bucket_name }}</span>
+							<span class="xs:inline hidden">- {{ dataStoreFile.bucket_name }}</span>
 						</span>
 					</div>
 					<div class="time">
@@ -22,15 +22,15 @@
 							{{ dataStoreFile.file_name }}
 						</span>
 
-						<small v-if="dataStoreFile.file_hash" class="text-secondary-color font-mono hidden sm:inline">
+						<small v-if="dataStoreFile.file_hash" class="text-secondary-color hidden font-mono sm:inline">
 							hash:
 							{{ dataStoreFile.file_hash }}
 						</small>
 					</div>
 				</div>
 
-				<div class="footer-box px-5 py-3 flex justify-between items-center">
-					<div class="details gap-3 items-center hidden sm:flex">
+				<div class="footer-box flex items-center justify-between px-5 py-3">
+					<div class="details hidden items-center gap-3 sm:flex">
 						<Badge v-if="dataStoreFile.content_type" type="splitted">
 							<template #label>type</template>
 							<template #value>
@@ -44,7 +44,7 @@
 							</template>
 						</Badge>
 					</div>
-					<div class="actions-box flex flex-wrap gap-3 justify-end w-full sm:w-auto">
+					<div class="actions-box flex w-full flex-wrap justify-end gap-3 sm:w-auto">
 						<n-popconfirm
 							v-model:show="showDeleteConfirm"
 							trigger="manual"

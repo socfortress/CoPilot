@@ -4,14 +4,14 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-4">
+		<div class="flex flex-col gap-4 py-1">
 			<div>
 				Are you sure you want to delete the Query
 				<strong>#{{ query.id }}</strong>
 				?
 			</div>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :loading type="error" size="small" @click="deleteQuery()">
 					<template #icon>

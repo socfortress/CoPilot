@@ -1,9 +1,9 @@
 <template>
 	<div class="customer-notifications-workflows-item" :class="{ embedded }" @click="openForm()">
-		<div class="px-4 py-3 flex flex-col gap-1">
-			<div class="header-box flex justify-between items-center">
+		<div class="flex flex-col gap-1 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
 				<div class="label">shuffle_workflow_id</div>
-				<div class="status flex gap-2 items-center">
+				<div class="status flex items-center gap-2">
 					<span>{{ incidentNotification.enabled ? "Enabled" : "Disabled" }}</span>
 					<Icon
 						v-if="incidentNotification.enabled"
@@ -15,7 +15,7 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col grow">
+				<div class="content flex grow flex-col">
 					<div class="title">
 						{{ incidentNotification.shuffle_workflow_id }}
 					</div>

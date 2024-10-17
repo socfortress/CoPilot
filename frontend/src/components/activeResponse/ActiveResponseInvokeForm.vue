@@ -1,9 +1,9 @@
 <template>
-	<div class="active-response-invoke-form flex flex-col justify-between grow">
+	<div class="active-response-invoke-form flex grow flex-col justify-between">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
 				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
-					<div class="grid gap-6 grid-auto-fit-200">
+					<div class="grid-auto-fit-200 grid gap-6">
 						<n-form-item label="Action" path="action">
 							<n-select v-model:value="form.action" :options="invokeActionOptions" />
 						</n-form-item>

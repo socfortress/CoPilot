@@ -38,7 +38,7 @@
 							<n-empty
 								v-if="!loading"
 								description="No network connectors found"
-								class="justify-center h-48"
+								class="h-48 justify-center"
 							/>
 						</template>
 					</div>

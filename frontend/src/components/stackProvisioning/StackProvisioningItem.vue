@@ -18,7 +18,7 @@
 				</n-button>
 			</div>
 		</div>
-		<div class="footer-box flex justify-between items-center gap-4">
+		<div class="footer-box flex items-center justify-between gap-4">
 			<div class="actions-box">
 				<n-button
 					:loading="loadingProvision"

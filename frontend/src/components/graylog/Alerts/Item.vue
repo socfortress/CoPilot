@@ -4,7 +4,7 @@
 			<div class="id">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="flex items-center gap-2 cursor-help">
+						<div class="flex cursor-help items-center gap-2">
 							<span>#{{ alertsEvent.event.id }}</span>
 							<Icon :name="InfoIcon" :size="16"></Icon>
 						</div>
@@ -13,7 +13,7 @@
 						<div class="box">
 							event_definition_id:
 							<code
-								class="cursor-pointer text-primary-color"
+								class="text-primary-color cursor-pointer"
 								@click="gotoEventsPage(alertsEvent.event.event_definition_id)"
 							>
 								{{ alertsEvent.event.event_definition_id }}
@@ -30,7 +30,7 @@
 						</div>
 						<div class="box">
 							index_name:
-							<code class="cursor-pointer text-primary-color" @click="gotoIndex(alertsEvent.index_name)">
+							<code class="text-primary-color cursor-pointer" @click="gotoIndex(alertsEvent.index_name)">
 								{{ alertsEvent.index_name }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -53,14 +53,14 @@
 			<div class="time">
 				<n-popover overlap placement="top-end">
 					<template #trigger>
-						<div class="flex items-center gap-2 cursor-help">
+						<div class="flex cursor-help items-center gap-2">
 							<span>
 								{{ formatDateTime(alertsEvent.event.timestamp) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
-					<div class="flex flex-col py-2 px-1">
+					<div class="flex flex-col px-1 py-2">
 						<n-timeline>
 							<n-timeline-item
 								type="success"
@@ -82,7 +82,7 @@
 				{{ alertsEvent.event.message }}
 			</div>
 		</div>
-		<div class="footer-box flex justify-end items-center gap-3">
+		<div class="footer-box flex items-center justify-end gap-3">
 			<div class="time">
 				{{ formatDateTime(alertsEvent.event.timestamp) }}
 			</div>

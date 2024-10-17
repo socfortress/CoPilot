@@ -11,7 +11,7 @@
 				@delete="getAgents()"
 				@click="gotoAgent(agent.agent_id)"
 			/>
-			<n-empty v-if="!list.length" description="No Agents found" class="justify-center h-48" />
+			<n-empty v-if="!list.length" description="No Agents found" class="h-48 justify-center" />
 		</div>
 	</n-spin>
 </template>

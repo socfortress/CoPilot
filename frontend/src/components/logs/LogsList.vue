@@ -1,7 +1,7 @@
 <template>
 	<div class="logs-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -31,7 +31,7 @@
 				<n-button size="small" type="error" ghost :loading="loadingPurge" @click="showPurgeConfirm = true">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Purge</span>
+						<span class="xs:block hidden">Purge</span>
 					</div>
 				</n-button>
 			</div>
@@ -68,7 +68,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="list my-3 flex flex-col gap-2">
 				<template v-if="logsList.length">
 					<LogItem
 						v-for="log of itemsPaginated"
@@ -79,7 +79,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No Logs found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No Logs found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

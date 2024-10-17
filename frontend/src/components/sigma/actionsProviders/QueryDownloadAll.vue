@@ -4,10 +4,10 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-4 max-w-80">
+		<div class="flex max-w-80 flex-col gap-4 py-1">
 			<div>This will download ALL Sigma queries, are you sure you want to proceed?</div>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :loading type="primary" size="small" @click="downloadQueries()">Yes I'm sure</n-button>
 			</div>

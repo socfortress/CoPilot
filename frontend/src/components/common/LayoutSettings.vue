@@ -24,7 +24,7 @@
 							/>
 							<n-color-picker v-else v-model:value="lightColor" :modes="['hex']" :show-alpha="false" />
 						</div>
-						<div class="palette flex justify-around mt-3">
+						<div class="palette mt-3 flex justify-around">
 							<n-button v-for="color of palette" :key="color.light" text @click="setPrimary(color)">
 								<template #icon>
 									<Icon
@@ -72,7 +72,7 @@
 					<div class="ls-section ls-nav-selection">
 						<div class="ls-label">
 							Navbar
-							<span v-if="isMobileView" class="opacity-50 px-1">desktop only</span>
+							<span v-if="isMobileView" class="px-1 opacity-50">desktop only</span>
 						</div>
 						<div class="flex items-center gap-2">
 							<div class="basis-1/2">
@@ -101,17 +101,17 @@
 					</div>
 					<div class="ls-section ls-boxed-selection">
 						<div class="flex flex-col gap-3">
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<div class="switch-label">
 									View boxed
-									<span v-if="isMobileView" class="opacity-50 px-1">desktop only</span>
+									<span v-if="isMobileView" class="px-1 opacity-50">desktop only</span>
 								</div>
 								<n-switch v-model:value="boxed" :disabled="isMobileView" size="small" />
 							</div>
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<div class="switch-label">
 									Toolbar boxed
-									<span v-if="isMobileView" class="opacity-50 px-1">desktop only</span>
+									<span v-if="isMobileView" class="px-1 opacity-50">desktop only</span>
 								</div>
 								<n-switch
 									v-model:value="toolbarBoxed"
@@ -119,14 +119,14 @@
 									size="small"
 								/>
 							</div>
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<div class="switch-label">Footer visible</div>
 								<n-switch v-model:value="footerShown" size="small" />
 							</div>
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<div class="switch-label">
 									RTL
-									<span class="opacity-50 px-1">beta</span>
+									<span class="px-1 opacity-50">beta</span>
 								</div>
 								<n-switch v-model:value="rtl" size="small" />
 							</div>
@@ -140,7 +140,7 @@
 						</div>
 					</div>
 					<div class="ls-section ls-reset-selection items-center">
-						<n-button class="!w-full !mb-3" strong secondary type="primary" @click="reset()">
+						<n-button class="!mb-3 !w-full" strong secondary type="primary" @click="reset()">
 							Restore default
 						</n-button>
 						<a

@@ -1,8 +1,8 @@
 <template>
 	<div class="page-auth">
-		<div v-if="!isLogged" class="flex wrapper justify-center">
+		<div v-if="!isLogged" class="wrapper flex justify-center">
 			<div v-if="align === 'right'" class="image-box basis-2/3" />
-			<div class="form-box basis-1/3 flex items-center justify-center" :class="{ centered: align === 'center' }">
+			<div class="form-box flex basis-1/3 items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type="type" />
 			</div>
 			<div v-if="align === 'left'" class="image-box basis-2/3">

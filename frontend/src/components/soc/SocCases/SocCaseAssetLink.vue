@@ -2,7 +2,7 @@
 	<div class="soc-asset-link">
 		<div class="flex flex-col gap-2 px-5 py-4 pb-2">
 			<div class="header-box flex justify-between">
-				<div class="flex items-center gap-2 cursor-helper">
+				<div class="cursor-helper flex items-center gap-2">
 					<div class="id flex items-center gap-2">
 						<span>{{ link.case_name }}</span>
 					</div>
@@ -14,7 +14,7 @@
 						{{ link.asset_description }}
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+					<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 						<Badge type="splitted" color="primary">
 							<template #label>Case open date</template>
 							<template #value>
@@ -45,7 +45,7 @@
 			</template>
 			<n-collapse-item>
 				<template #header>
-					<div class="py-3 -ml-2">SOC Case details</div>
+					<div class="-ml-2 py-3">SOC Case details</div>
 				</template>
 				<div style="min-height: 50px">
 					<n-spin :show="loadingCase">
@@ -53,14 +53,14 @@
 							v-if="socCase"
 							:case-data="socCase"
 							:embedded="true"
-							class="py-2 -mt-4"
+							class="-mt-4 py-2"
 							@deleted="getSocCase(link.case_id)"
 						/>
 						<template v-else>
 							<n-empty
 								v-if="!loadingCase"
 								description="No Case found"
-								class="justify-center h-28 -mt-4"
+								class="-mt-4 h-28 justify-center"
 							/>
 						</template>
 					</n-spin>

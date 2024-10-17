@@ -5,7 +5,7 @@
 			:value="total"
 			:vertical="vertical"
 			hovered
-			class="cursor-pointer h-full"
+			class="h-full cursor-pointer"
 			@click="gotoSocAlerts()"
 		>
 			<template #icon>

@@ -1,5 +1,5 @@
 <template>
-	<div class="license-viewer flex justify-center items-center gap-4" :class="{ 'has-side': !!key }">
+	<div class="license-viewer flex items-center justify-center gap-4" :class="{ 'has-side': !!key }">
 		<div class="main-box">
 			<LicenseFeatures
 				:hide-key="!!key"

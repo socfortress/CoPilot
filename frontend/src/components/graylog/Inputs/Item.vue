@@ -1,7 +1,7 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex items-center gap-3">
-			<div class="info flex items-center gap-2 grow">
+			<div class="info flex grow items-center gap-2">
 				<div class="user flex items-center gap-2">
 					<Icon :name="UserIcon" :size="14"></Icon>
 					{{ input.creator_user_id }}
@@ -60,7 +60,7 @@
 				</n-button>
 			</div>
 		</div>
-		<div class="footer-box flex justify-between items-center">
+		<div class="footer-box flex items-center justify-between">
 			<div class="actions-box flex flex-col justify-end">
 				<n-button v-if="isRunning" :loading="loading" size="small" @click="stop()">
 					<template #icon>

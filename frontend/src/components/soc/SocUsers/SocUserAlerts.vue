@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loadingAlerts" :size="14">
-		<div v-if="!loadingAlerts" class="flex alert-list items-center gap-3">
+		<div v-if="!loadingAlerts" class="alert-list flex items-center gap-3">
 			<span :class="{ 'text-secondary-color': !alertsList.length, 'font-bold': alertsList.length }">
 				{{ alertsList.length || "No Alters" }}
 			</span>
@@ -24,7 +24,7 @@
 		:bordered="false"
 		segmented
 	>
-		<div class="h-full w-full flex items-center justify-center">
+		<div class="flex h-full w-full items-center justify-center">
 			<SocAlertItem
 				v-if="selectedAlertId"
 				:alert-id="selectedAlertId"

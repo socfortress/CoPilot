@@ -4,7 +4,7 @@
 			<AlertCommentItem v-for="comment of commentsList" :key="comment.id" :comment embedded />
 		</template>
 		<template v-else>
-			<n-empty description="No comments found" class="justify-center h-48" />
+			<n-empty description="No comments found" class="h-48 justify-center" />
 		</template>
 		<n-spin :show="submitting">
 			<div class="comment-form mt-6 flex flex-col gap-3">
@@ -19,7 +19,7 @@
 						}"
 					/>
 				</div>
-				<div class="tool-box flex gap-2 justify-end">
+				<div class="tool-box flex justify-end gap-2">
 					<n-button secondary :disabled="submitting" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"

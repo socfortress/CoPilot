@@ -1,5 +1,5 @@
 <template>
-	<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+	<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 		<KVCard v-for="(value, key) of asset" :key="key">
 			<template #key>
 				{{ key }}
@@ -8,29 +8,29 @@
 				<div v-if="key === 'id'">#{{ value }}</div>
 				<div v-else-if="key === 'customer_code'">
 					<code
-						class="cursor-pointer text-primary-color"
+						class="text-primary-color cursor-pointer"
 						@click.stop="gotoCustomer({ code: asset.customer_code })"
 					>
 						#{{ asset.customer_code }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'agent_id'">
-					<code class="cursor-pointer text-primary-color" @click.stop="gotoAgent(asset.agent_id)">
+					<code class="text-primary-color cursor-pointer" @click.stop="gotoAgent(asset.agent_id)">
 						{{ asset.agent_id }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_name'">
-					<code class="cursor-pointer text-primary-color" @click.stop="gotoIndex(asset.index_name)">
+					<code class="text-primary-color cursor-pointer" @click.stop="gotoIndex(asset.index_name)">
 						{{ asset.index_name }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_id'">
-					<code class="cursor-pointer text-primary-color" @click.stop="openAlertDetails()">
+					<code class="text-primary-color cursor-pointer" @click.stop="openAlertDetails()">
 						{{ asset.index_id }}
-						<Icon :name="ViewIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="ViewIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else>
@@ -52,7 +52,7 @@
 		<n-spin :show="loading" class="min-h-40">
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of alertDetailsInfo" :key="key">
 							<template #key>
 								{{ key }}
@@ -60,11 +60,11 @@
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="cursor-pointer text-primary-color"
+										class="text-primary-color cursor-pointer"
 										@click.stop="gotoIndex(alertDetailsInfo._index)"
 									>
 										{{ alertDetailsInfo._index }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 								<div v-else>

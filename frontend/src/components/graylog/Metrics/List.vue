@@ -13,7 +13,7 @@
 				<div
 					v-for="metric of group.throughputMetrics"
 					:key="metric.metric"
-					class="flex items-center gap-4 metric-wrap"
+					class="metric-wrap flex items-center gap-4"
 				>
 					<div class="metric basis-2/3">
 						{{ metric.metric }}
@@ -92,7 +92,7 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 		.list {
 			background-color: var(--bg-secondary-color);
 			.metric-wrap {
-				@apply py-3 px-4;
+				@apply px-4 py-3;
 				.metric {
 					line-height: 1.1;
 				}

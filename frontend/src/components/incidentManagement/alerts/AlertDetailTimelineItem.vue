@@ -1,8 +1,8 @@
 <template>
 	<div class="alert-timeline-item" :class="{ embedded }">
-		<div class="flex flex-col cursor-pointer" @click="showDetails = true">
+		<div class="flex cursor-pointer flex-col" @click="showDetails = true">
 			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ timelineData._source.rule_description }}
 					</div>
@@ -21,7 +21,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of timelineDetailsInfo" :key="key">
 							<template #key>
 								{{ key }}
@@ -29,11 +29,11 @@
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="cursor-pointer text-primary-color"
+										class="text-primary-color cursor-pointer"
 										@click.stop="gotoIndex(timelineDetailsInfo._index)"
 									>
 										{{ timelineDetailsInfo._index }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 								<div v-else>

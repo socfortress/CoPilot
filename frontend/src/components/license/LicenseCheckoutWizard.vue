@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="min-h-48">
-		<n-empty v-if="errorMessage" :description="errorMessage" class="justify-center h-48">
+		<n-empty v-if="errorMessage" :description="errorMessage" class="h-48 justify-center">
 			<template #icon>
 				<Icon :name="WarningIcon"></Icon>
 			</template>
@@ -22,7 +22,7 @@
 					<n-empty
 						v-if="!loading"
 						description="Congratulations, you have already unlocked all available features"
-						class="justify-center h-48"
+						class="h-48 justify-center"
 					>
 						<template #icon>
 							<Icon :name="CheckIcon"></Icon>

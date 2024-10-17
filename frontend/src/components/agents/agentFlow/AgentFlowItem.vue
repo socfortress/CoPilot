@@ -2,7 +2,7 @@
 	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-2">
-				<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+				<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 					<span>{{ flow.session_id }}</span>
 					<Icon :name="InfoIcon" :size="16"></Icon>
 				</div>
@@ -10,14 +10,14 @@
 			<div class="time">
 				<n-popover overlap placement="top-end" class="max-h-64" scrollable to="body">
 					<template #trigger>
-						<div class="flex items-center gap-2 cursor-help">
+						<div class="flex cursor-help items-center gap-2">
 							<span>
 								{{ formatDate(flow.start_time, dFormats.datetimesec) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
-					<div class="flex flex-col py-2 px-1">
+					<div class="flex flex-col px-1 py-2">
 						<AgentFlowTimeline :flow="flow" />
 					</div>
 				</n-popover>
@@ -29,7 +29,7 @@
 					{{ artifact }}
 				</span>
 			</div>
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+			<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 				<Badge type="splitted" color="primary">
 					<template #label>State</template>
 					<template #value>
@@ -79,7 +79,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}
@@ -118,7 +118,7 @@
 							</li>
 						</ul>
 					</div>
-					<n-empty v-else description="No items found" class="justify-center h-48" />
+					<n-empty v-else description="No items found" class="h-48 justify-center" />
 				</n-tab-pane>
 				<n-tab-pane name="Uploaded files" tab="Uploaded files" display-directive="show:lazy">
 					<div v-if="flow.uploaded_files.length" class="p-7 pt-4">
@@ -128,7 +128,7 @@
 							</li>
 						</ul>
 					</div>
-					<n-empty v-else description="No items found" class="justify-center h-48" />
+					<n-empty v-else description="No items found" class="h-48 justify-center" />
 				</n-tab-pane>
 				<n-tab-pane name="Query stats" tab="Query stats" display-directive="show:lazy">
 					<div class="p-7 pt-4" style="container-type: inline-size">
@@ -138,10 +138,10 @@
 								:key="stat.first_active + stat.last_active"
 								:stat="stat"
 								embedded
-								class="mb-2 item-appear item-appear-bottom item-appear-005"
+								class="item-appear item-appear-bottom item-appear-005 mb-2"
 							/>
 						</template>
-						<n-empty v-else description="No items found" class="justify-center h-48" />
+						<n-empty v-else description="No items found" class="h-48 justify-center" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Request" tab="Request" display-directive="show:lazy">

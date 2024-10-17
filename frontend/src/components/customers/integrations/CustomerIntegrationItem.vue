@@ -1,7 +1,7 @@
 <template>
 	<div class="integration-item" :class="{ embedded }">
-		<div class="px-4 py-3 flex flex-col gap-3">
-			<div class="header-box flex justify-between items-center">
+		<div class="flex flex-col gap-3 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
 				<div class="id">#{{ integration.id }}</div>
 				<div class="actions flex gap-3">
 					<Badge v-if="integration.deployed" type="active">
@@ -18,7 +18,7 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
 						{{ serviceName }}
 					</div>
@@ -31,7 +31,7 @@
 					@deleted="emit('deleted')"
 				/>
 			</div>
-			<div class="footer-box flex justify-between items-center gap-4">
+			<div class="footer-box flex items-center justify-between gap-4">
 				<CustomerIntegrationActions
 					class="actions-box"
 					:integration="integration"
@@ -51,7 +51,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-fit-200">
+			<div class="grid-auto-fit-200 grid gap-2">
 				<KVCard v-for="ak of authKeys" :key="ak.key">
 					<template #key>
 						{{ ak.key }}

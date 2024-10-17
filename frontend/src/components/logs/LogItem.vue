@@ -25,7 +25,7 @@
 					{{ log.additional_info }}
 				</div>
 
-				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+				<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 					<Badge type="splitted" :color="log.event_type === LogEventType.ERROR ? 'danger' : 'primary'">
 						<template #iconLeft>
 							<Icon

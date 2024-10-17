@@ -1,13 +1,13 @@
 <template>
 	<div class="overview-section">
-		<div class="property-group gap-2 grid grid-auto-fit-250">
+		<div class="property-group grid-auto-fit-250 grid gap-2">
 			<KVCard v-for="item of propsSanitized" :key="item.key">
 				<template #key>
 					{{ item.key }}
 				</template>
 				<template #value>
 					<template v-if="item.key === 'customer_code' && item.val !== '-'">
-						<code class="cursor-pointer text-primary-color" @click="gotoCustomer({ code: item.val })">
+						<code class="text-primary-color cursor-pointer" @click="gotoCustomer({ code: item.val })">
 							{{ item.val }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>

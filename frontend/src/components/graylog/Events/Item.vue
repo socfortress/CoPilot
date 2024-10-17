@@ -11,7 +11,7 @@
 					Priority
 				</n-tooltip>
 				<div class="id">
-					<div class="flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ event.id }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -30,7 +30,7 @@
 				{{ event.description }}
 			</div>
 		</div>
-		<div class="footer-box flex justify-end items-center gap-3">
+		<div class="footer-box flex items-center justify-end gap-3">
 			<div class="notification">
 				Notifications:
 				<strong>{{ event.notifications.length }}</strong>

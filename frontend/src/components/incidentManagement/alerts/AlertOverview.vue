@@ -1,17 +1,17 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
-		<div class="flex flex-col gap-4 grow justify-between">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:!flex-row flex-col gap-4">
+				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
 					<KVCard
 						:color="
 							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
 						"
 						size="lg"
-						class="grow w-full"
+						class="w-full grow"
 					>
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<StatusIcon :status="alert.status" />
 								<span>Status</span>
 							</div>
@@ -24,7 +24,7 @@
 									@updated="updateAlert($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
 											'cursor-pointer': !loadingStatus
@@ -44,9 +44,9 @@
 						</template>
 					</KVCard>
 
-					<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
+					<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<AssigneeIcon :assignee="alert.assigned_to" />
 								<span>Assigned to</span>
 							</div>
@@ -59,7 +59,7 @@
 									@updated="updateAlert($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
 											'cursor-pointer': !loadingAssignee
@@ -89,7 +89,7 @@
 					</KVCard>
 				</div>
 
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
+				<div class="grid-auto-fit-250 grid gap-2 px-7">
 					<KVCard>
 						<template #key>id</template>
 						<template #value>#{{ alert.id }}</template>
@@ -106,7 +106,7 @@
 						<template #key>customer code</template>
 						<template #value>
 							<code
-								class="cursor-pointer text-primary-color"
+								class="text-primary-color cursor-pointer"
 								@click="gotoCustomer({ code: alert.customer_code })"
 							>
 								{{ alert.customer_code }}
@@ -138,12 +138,12 @@
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 flex items-center gap-2">
+			<div class="footer-box flex items-center gap-2 px-7 py-4">
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<div v-if="linkedCases.length" class="flex flex-wrap gap-3 items-center">
+				<div v-if="linkedCases.length" class="flex flex-wrap items-center gap-3">
 					<span>Linked Cases:</span>
 					<AlertLinkedCases :alert />
 				</div>

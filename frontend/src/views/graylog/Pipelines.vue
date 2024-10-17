@@ -33,7 +33,7 @@
 			<n-drawer-content closable body-content-style="padding:0">
 				<template #header>
 					<span>Rules list</span>
-					<span v-if="rulesTotal !== null" class="font-mono ml-2 text-secondary-color">{{ rulesTotal }}</span>
+					<span v-if="rulesTotal !== null" class="text-secondary-color ml-2 font-mono">{{ rulesTotal }}</span>
 				</template>
 				<RulesList :highlight="highlightRule" @loaded="rulesTotal = $event.total" />
 			</n-drawer-content>

@@ -1,6 +1,6 @@
 <template>
 	<div class="job-actions flex flex-col gap-3" :class="{ '!flex-row': inline }">
-		<div class="flex gap-3 items-center">
+		<div class="flex items-center gap-3">
 			<n-button
 				:size="size"
 				:type="job.enabled ? 'warning' : 'success'"
@@ -17,7 +17,7 @@
 
 			<NextTooltip v-if="job.enabled && !inline" :job-id="job.id" />
 		</div>
-		<div class="flex gap-3 items-center">
+		<div class="flex items-center gap-3">
 			<n-button :size="size" type="success" secondary :loading="loadingRun" @click="run()">
 				<template #icon>
 					<Icon :name="RunIcon"></Icon>

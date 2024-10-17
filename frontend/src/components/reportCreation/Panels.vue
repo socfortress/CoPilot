@@ -1,7 +1,7 @@
 <template>
-	<n-spin v-model:show="loading" class="overflow-hidden h-full w-full" content-class="overflow-hidden h-full w-full">
-		<div v-if="org" class="report-panels h-full w-full flex gap-2">
-			<div class="panels-container grow h-full flex flex-col gap-4">
+	<n-spin v-model:show="loading" class="h-full w-full overflow-hidden" content-class="overflow-hidden h-full w-full">
+		<div v-if="org" class="report-panels flex h-full w-full gap-2">
+			<div class="panels-container flex h-full grow flex-col gap-4">
 				<div class="rows-container">
 					<n-scrollbar style="max-height: 100%" trigger="none">
 						<div class="drag-wrapper">
@@ -29,7 +29,7 @@
 												},
 												pull: ['panels']
 											}"
-											class="drop-panels-area flex gap-3 w-full h-full"
+											class="drop-panels-area flex h-full w-full gap-3"
 										>
 											<template #header>
 												<div class="left-box flex justify-end">
@@ -58,7 +58,7 @@
 																</n-button>
 															</template>
 
-															<div class="py-1 flex gap-3 items-center">
+															<div class="flex items-center gap-3 py-1">
 																<div class="text-secondary-color text-sm">
 																	Row height:
 																</div>
@@ -113,10 +113,10 @@
 						</div>
 					</n-scrollbar>
 				</div>
-				<div class="toolbar pr-4 flex items-center justify-between gap-2">
+				<div class="toolbar flex items-center justify-between gap-2 pr-4">
 					<n-button
 						v-if="dashboard || panelsReady"
-						class="add-task-btn flex items-center justify-center !mt-0"
+						class="add-task-btn !mt-0 flex items-center justify-center"
 						@click="addRow()"
 					>
 						<template #icon>
@@ -161,7 +161,7 @@
 						</draggable>
 					</div>
 				</n-scrollbar>
-				<div v-else class="p-3 h-full">
+				<div v-else class="h-full p-3">
 					<div class="empty-message p-3">
 						<div v-if="!dashboard">
 							Select a
@@ -503,14 +503,14 @@ onMounted(() => {
 					z-index: 0;
 					width: unset;
 					height: unset;
-					@apply top-3 bottom-3 left-3 right-3;
+					@apply bottom-3 left-3 right-3 top-3;
 				}
 
 				.drop-panels-area {
 					position: absolute;
 					width: unset;
 					height: unset;
-					@apply top-3 bottom-3 left-3 right-3;
+					@apply bottom-3 left-3 right-3 top-3;
 				}
 
 				.left-box {

@@ -1,6 +1,6 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24" class="grow" pane-wrapper-class="flex flex-col grow">
-		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
+		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 			<div class="pt-1">
 				<QueryOverview :query @updated="updateQuery($event)" @deleted="emit('deleted', query)" />
 			</div>

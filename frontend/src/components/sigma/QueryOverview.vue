@@ -1,11 +1,11 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
-		<div class="flex flex-col gap-4 grow justify-between">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:!flex-row flex-col gap-4">
-					<KVCard :color="query.active ? 'success' : undefined" size="lg" class="grow w-full">
+				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
+					<KVCard :color="query.active ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<Icon :name="query.active ? EnabledIcon : DisabledIcon" />
 								<span>Status</span>
 							</div>
@@ -18,7 +18,7 @@
 									@updated="updateQuery($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingActive,
 											'cursor-pointer': !loadingActive
@@ -39,9 +39,9 @@
 						</template>
 					</KVCard>
 
-					<KVCard size="lg" class="grow w-full">
+					<KVCard size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<Icon :name="TimeIntervalIcon" />
 								<span>Time Interval</span>
 							</div>
@@ -54,7 +54,7 @@
 									@updated="updateQuery($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingTimeInterval,
 											'cursor-pointer': !loadingTimeInterval
@@ -85,7 +85,7 @@
 					</KVCard>
 				</div>
 
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
+				<div class="grid-auto-fit-250 grid gap-2 px-7">
 					<KVCard>
 						<template #key>last execution time</template>
 						<template #value>
@@ -106,7 +106,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 flex items-center gap-2">
+			<div class="footer-box flex items-center gap-2 px-7 py-4">
 				<div class="grow"></div>
 
 				<QueryDeleteOne

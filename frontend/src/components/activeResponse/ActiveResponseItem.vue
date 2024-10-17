@@ -1,7 +1,7 @@
 <template>
 	<div class="active-response-item" :class="{ embedded }">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
+		<div class="flex flex-col gap-2 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
 				<div class="title">
 					{{ activeResponse.name }}
 				</div>
@@ -12,7 +12,7 @@
 				</n-button>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="description">
 						{{ activeResponse.description }}
 					</div>
@@ -26,7 +26,7 @@
 					@stop-loading="loading = false"
 				/>
 			</div>
-			<div class="footer-box flex justify-between items-center gap-4">
+			<div class="footer-box flex items-center justify-between gap-4">
 				<ActiveResponseActions
 					v-if="!hideActions"
 					class="actions-box"

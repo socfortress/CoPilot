@@ -3,8 +3,8 @@
 		<div v-if="userPic" class="user-pic">
 			<n-avatar round :size="32" :src="userPic" />
 		</div>
-		<div class="comment grow flex flex-col gap-1">
-			<div class="user flex gap-3 items-center">
+		<div class="comment flex grow flex-col gap-1">
+			<div class="user flex items-center gap-3">
 				<div class="user-name">
 					{{ comment.user_name }}
 				</div>

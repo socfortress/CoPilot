@@ -1,5 +1,5 @@
 <template>
-	<div class="page grow flex flex-col" :class="{ 'limit-height': licenseKey }">
+	<div class="page flex grow flex-col" :class="{ 'limit-height': licenseKey }">
 		<LicenseViewer
 			class="grow"
 			:class="{ 'overflow-hidden': licenseKey }"

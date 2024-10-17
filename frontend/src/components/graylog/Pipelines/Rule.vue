@@ -1,9 +1,9 @@
 <template>
-	<div :id="`rule-${rule.id}`" class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ highlight }">
+	<div :id="`rule-${rule.id}`" class="item mb-2 flex flex-col gap-2 px-5 py-3" :class="{ highlight }">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-3">
 				<div class="id">
-					<div class="flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ rule.id }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -12,14 +12,14 @@
 			<div class="time">
 				<n-popover overlap placement="top-end">
 					<template #trigger>
-						<div class="flex items-center gap-2 cursor-help">
+						<div class="flex cursor-help items-center gap-2">
 							<span>
 								{{ formatDateTime(rule.modified_at) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
-					<div class="flex flex-col py-2 px-1">
+					<div class="flex flex-col px-1 py-2">
 						<n-timeline>
 							<n-timeline-item type="success" title="Created" :time="formatDateTime(rule.created_at)" />
 							<n-timeline-item
@@ -40,7 +40,7 @@
 				{{ rule.description }}
 			</div>
 		</div>
-		<div class="footer-box flex justify-end items-center gap-3">
+		<div class="footer-box flex items-center justify-end gap-3">
 			<div class="time">
 				{{ formatDateTime(rule.modified_at) }}
 			</div>

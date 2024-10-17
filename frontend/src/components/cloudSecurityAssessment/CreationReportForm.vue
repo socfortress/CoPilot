@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="creation-report-form">
 		<n-form ref="baseFormRef" :model="baseForm" :rules="rules">
 			<div class="flex flex-col gap-2">
-				<div class="flex gap-4 items-start">
+				<div class="flex items-start gap-4">
 					<n-form-item label="Type" path="report_type" class="w-32">
 						<n-select
 							v-model:value="baseForm.report_type"
@@ -42,7 +42,7 @@
 					@mounted="typeFormRef = $event"
 				/>
 
-				<div class="flex justify-between gap-4 mt-8">
+				<div class="mt-8 flex justify-between gap-4">
 					<n-button :disabled="loading" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"

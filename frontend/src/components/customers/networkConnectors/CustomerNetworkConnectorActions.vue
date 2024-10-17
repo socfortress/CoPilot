@@ -1,5 +1,5 @@
 <template>
-	<div class="alert-actions flex gap-4 justify-end">
+	<div class="alert-actions flex justify-end gap-4">
 		<n-button
 			v-if="networkConnector.deployed"
 			:loading="loadingDecommission"

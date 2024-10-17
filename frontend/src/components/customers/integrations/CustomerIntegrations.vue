@@ -34,7 +34,7 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty v-if="!loading" description="No integrations found" class="justify-center h-48" />
+							<n-empty v-if="!loading" description="No integrations found" class="h-48 justify-center" />
 						</template>
 					</div>
 				</n-spin>

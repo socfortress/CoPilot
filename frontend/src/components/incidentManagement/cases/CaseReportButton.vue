@@ -32,7 +32,7 @@
 						</n-input-group>
 					</n-form-item>
 
-					<div class="flex justify-between gap-4 mt-8">
+					<div class="mt-8 flex justify-between gap-4">
 						<n-button :disabled="exporting" @click="reset()">Reset</n-button>
 						<n-button
 							type="primary"

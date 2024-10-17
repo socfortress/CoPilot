@@ -5,8 +5,8 @@
 		@click="selectable ? () => {} : (showDetails = true)"
 	>
 		<n-spin :show="canceling" content-class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
-				<div class="flex items-center gap-2 cursor-pointer">
+			<div class="header-box flex items-center justify-between">
+				<div class="flex cursor-pointer items-center gap-2">
 					<span>{{ subscription.name }}</span>
 					<span v-if="selectable" class="info-btn pt-0.5" @click.stop="showDetails = true">
 						<Icon :name="InfoIcon" :size="14"></Icon>
@@ -17,7 +17,7 @@
 				</div>
 			</div>
 			<div v-if="!hideDetails" class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-2 grow">
+				<div class="content flex grow flex-col gap-2">
 					<div class="title">
 						{{ subscription.info }}
 					</div>
@@ -50,10 +50,10 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<n-spin :show="canceling" content-class="flex flex-col gap-4 grow" class="flex flex-col grow">
-				<div class="flex gap-4 justify-between">
+			<n-spin :show="canceling" content-class="flex flex-col gap-4 grow" class="flex grow flex-col">
+				<div class="flex justify-between gap-4">
 					<div>{{ subscription.info }}</div>
-					<div class="font-mono whitespace-nowrap text-primary-color">
+					<div class="text-primary-color whitespace-nowrap font-mono">
 						{{ price(subscription.price) }}
 					</div>
 				</div>

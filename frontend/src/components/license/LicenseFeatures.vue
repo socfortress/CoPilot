@@ -2,8 +2,8 @@
 	<div class="license-features" :class="{ loading }">
 		<div class="license-features-box flex items-center justify-center">
 			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
-				<div v-if="!loading" class="wrapper h-full flex flex-col gap-4">
-					<div class="flex justify-between items-center gap-4">
+				<div v-if="!loading" class="wrapper flex h-full flex-col gap-4">
+					<div class="flex items-center justify-between gap-4">
 						<h3>
 							{{ features.length ? "Your features" : "Unlock features" }}
 						</h3>
@@ -29,7 +29,7 @@
 										@deleted="load()"
 									/>
 								</template>
-								<n-empty v-else description="No features unlocked" class="justify-center h-48">
+								<n-empty v-else description="No features unlocked" class="h-48 justify-center">
 									<template #icon>
 										<Icon :name="NoFeaturesIcon"></Icon>
 									</template>

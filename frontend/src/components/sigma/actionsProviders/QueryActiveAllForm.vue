@@ -4,15 +4,15 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-2 justify-center min-w-52">
-			<div class="flex gap-2 items-center">
+		<div class="flex min-w-52 flex-col justify-center gap-2 py-1">
+			<div class="flex items-center gap-2">
 				<n-button :loading type="success" @click="updateActive(true)">Activates all Sigma queries</n-button>
 				<n-button :loading @click="updateActive(false)">Deactivates all Sigma queries</n-button>
 			</div>
 
 			<p class="text-right">* It may take several minutes</p>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 			</div>
 		</div>

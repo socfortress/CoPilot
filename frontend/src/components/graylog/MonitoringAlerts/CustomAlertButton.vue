@@ -2,7 +2,7 @@
 	<n-button size="small" type="primary" secondary :loading="loading" @click="showForm = true">
 		<div class="flex items-center gap-2">
 			<Icon :name="DangerIcon" :size="18"></Icon>
-			<span class="hidden xs:block">Custom Alert</span>
+			<span class="xs:block hidden">Custom Alert</span>
 		</div>
 	</n-button>
 

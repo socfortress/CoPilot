@@ -4,7 +4,7 @@
 		class="sidebar flex flex-col"
 		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
 	>
-		<div ref="sidebar" class="sidebar-wrap grow flex flex-col">
+		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
 			<SidebarHeader :logo-mini="sidebarClosed" />
 			<n-scrollbar>
 				<Navbar :collapsed="sidebarClosed" />

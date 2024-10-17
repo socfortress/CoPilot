@@ -1,12 +1,12 @@
 <template>
 	<div ref="page" class="page">
-		<div class="section justify-end lg:justify-between flex gap-3">
-			<div class="left-box hidden lg:flex gap-3">
+		<div class="section flex justify-end gap-3 lg:justify-between">
+			<div class="left-box hidden gap-3 lg:flex">
 				<StackProvisioningButton size="small" type="primary" />
 				<CloudSecurityAssessmentButton size="small" type="primary" />
 				<WebVulnerabilityAssessmentButton size="small" type="primary" />
 			</div>
-			<div class="right-box hidden lg:flex gap-3">
+			<div class="right-box hidden gap-3 lg:flex">
 				<ActiveResponseWizardButton size="small" type="primary" />
 				<ThreatIntelButton size="small" type="primary" />
 			</div>
@@ -21,13 +21,13 @@
 		</div>
 		<div class="section">
 			<div class="grid grid-flow-row-dense grid-cols-12 gap-6">
-				<div class="col-span-12 xs:col-span-12 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-12 col-span-12 sm:col-span-4 lg:col-span-2">
 					<AgentsCard class="h-full" />
 				</div>
-				<div class="col-span-12 xs:col-span-6 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-6 col-span-12 sm:col-span-4 lg:col-span-2">
 					<HealthcheckCard class="h-full" />
 				</div>
-				<div class="col-span-12 xs:col-span-6 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-6 col-span-12 sm:col-span-4 lg:col-span-2">
 					<CustomersCard class="h-full" />
 				</div>
 				<div class="col-span-12 lg:col-span-3">

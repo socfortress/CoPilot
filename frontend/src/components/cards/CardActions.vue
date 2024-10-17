@@ -17,7 +17,7 @@
 			</n-dropdown>
 		</template>
 		<template #default>
-			<div class="overflow-hidden w-full">
+			<div class="w-full overflow-hidden">
 				<n-scrollbar x-scrollable class="!w-full" trigger="none">
 					<slot />
 				</n-scrollbar>

@@ -3,7 +3,7 @@
 		<div class="flex flex-col gap-2 px-5 py-4">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -34,7 +34,7 @@
 						</template>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+					<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 						<Badge type="splitted" color="primary">
 							<template #label>Status</template>
 							<template #value>
@@ -71,7 +71,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}
@@ -101,7 +101,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Link" tab="Link" display-directive="show:lazy">
-					<div v-if="asset.link?.length" class="px-4 flex flex-col gap-2">
+					<div v-if="asset.link?.length" class="flex flex-col gap-2 px-4">
 						<SocCaseAssetLink
 							v-for="link of asset.link"
 							:key="`${link.case_id}-${link.asset_id}`"
@@ -109,7 +109,7 @@
 						/>
 					</div>
 					<template v-else>
-						<n-empty description="No items found" class="justify-center h-48" />
+						<n-empty description="No items found" class="h-48 justify-center" />
 					</template>
 				</n-tab-pane>
 			</n-tabs>

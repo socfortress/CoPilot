@@ -3,7 +3,7 @@
 		<div v-if="license" class="flex flex-col gap-4">
 			<KVCard v-if="!hideKey">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="KeyIcon" :size="14"></Icon>
 						<span>Key</span>
 					</span>
@@ -14,16 +14,16 @@
 			</KVCard>
 			<KVCard v-if="!hideFeatures">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="FeaturesIcon" :size="14"></Icon>
 						<span>Features</span>
 					</span>
 				</template>
 				<template #value>
-					<div v-if="features.length" class="grid gap-2 grid-auto-fit-200">
+					<div v-if="features.length" class="grid-auto-fit-200 grid gap-2">
 						<KVCard v-for="feature of features" :key="feature">
 							<template #value>
-								<span class="flex gap-3 items-center">
+								<span class="flex items-center gap-3">
 									<Icon :name="CheckIcon" :size="14" class="text-primary-color"></Icon>
 									<span>{{ feature }}</span>
 								</span>
@@ -35,7 +35,7 @@
 			</KVCard>
 			<KVCard>
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="ExpiresIcon" :size="14"></Icon>
 						<span>Expires</span>
 					</span>
@@ -47,7 +47,7 @@
 			</KVCard>
 			<KVCard>
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="CustomerIcon" :size="14"></Icon>
 						<span>Customer</span>
 					</span>
@@ -78,7 +78,7 @@
 			</KVCard>
 			<KVCard v-if="dockerCompose">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="ConfigIcon" :size="14"></Icon>
 						<span>Docker Configuration</span>
 					</span>

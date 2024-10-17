@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-notifications-workflows-form flex flex-col justify-between grow">
+	<div class="customer-notifications-workflows-form flex grow flex-col justify-between">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
 				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">

@@ -1,8 +1,8 @@
 <template>
 	<n-card content-style="padding:0" :class="{ hovered }">
 		<div class="flex flex-col overflow-hidden">
-			<div class="card-header flex gap-4 items-center justify-between">
-				<div class="title flex items-center gap-2 grow">
+			<div class="card-header flex items-center justify-between gap-4">
+				<div class="title flex grow items-center gap-2">
 					<span class="truncate">{{ title }}</span>
 					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
 				</div>
@@ -10,7 +10,7 @@
 					<slot name="icon"></slot>
 				</div>
 			</div>
-			<div class="flex flex-col gap-3 card-content">
+			<div class="card-content flex flex-col gap-3">
 				<div class="bars flex">
 					<div
 						v-for="item of barValues"
@@ -26,15 +26,15 @@
 					<div
 						v-for="item of sanitizedValues"
 						:key="JSON.stringify(item)"
-						class="flex items-center item gap-3"
+						class="item flex items-center gap-3"
 						:class="item.status"
 					>
-						<div class="label flex gap-2 items-center truncate">
+						<div class="label flex items-center gap-2 truncate">
 							<span class="badge"></span>
-							<span class="font-mono truncate">{{ item.label }}</span>
+							<span class="truncate font-mono">{{ item.label }}</span>
 						</div>
 						<div class="divider grow"></div>
-						<div class="value flex gap-3 font-mono whitespace-nowrap">
+						<div class="value flex gap-3 whitespace-nowrap font-mono">
 							<span v-if="!item.isTotal" class="opacity-50">{{ item.percentage }}%</span>
 							<strong>{{ item.value }}</strong>
 						</div>

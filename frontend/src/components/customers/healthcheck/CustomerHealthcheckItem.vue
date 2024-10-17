@@ -1,8 +1,8 @@
 <template>
 	<div class="customer-healthcheck-item" :class="[{ 'bg-secondary': bgSecondary }, type]">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
-				<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+		<div class="flex flex-col gap-2 px-4 py-3">
+			<div class="header-box flex items-center justify-between">
+				<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 					<span>#{{ healthData.id }} - {{ healthData.label }}</span>
 					<Icon :name="InfoIcon" :size="16"></Icon>
 				</div>
@@ -12,9 +12,9 @@
 			</div>
 
 			<div class="main-box">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex grow flex-col gap-1">
 					<div class="title">
-						<Icon :name="iconFromOs(healthData.os)" :size="16" class="mr-1 relative top-0.5"></Icon>
+						<Icon :name="iconFromOs(healthData.os)" :size="16" class="relative top-0.5 mr-1"></Icon>
 						{{ healthData.os }}
 					</div>
 					<div class="description">
@@ -23,7 +23,7 @@
 				</div>
 			</div>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 				<Badge v-if="agentVersion" type="splitted" color="primary">
 					<template #label>Agent version</template>
 					<template #value>
@@ -53,7 +53,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="box">
 							agent_id:
-							<code class="cursor-pointer text-primary-color" @click="gotoAgent(healthData.agent_id)">
+							<code class="text-primary-color cursor-pointer" @click="gotoAgent(healthData.agent_id)">
 								{{ healthData.agent_id }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -76,7 +76,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-fit-200 px-7 py-6">
+			<div class="grid-auto-fit-200 grid gap-2 px-7 py-6">
 				<KVCard v-for="(value, key) of healthData" :key="key">
 					<template #key>
 						{{ key }}

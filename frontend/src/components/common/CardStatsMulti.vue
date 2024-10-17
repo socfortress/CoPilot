@@ -1,8 +1,8 @@
 <template>
 	<n-card content-style="padding:0" :class="{ hovered }">
-		<div class="flex flex-col overflow-hidden h-full">
-			<div class="card-header flex gap-4 items-center justify-between">
-				<div class="title flex items-center gap-2 grow">
+		<div class="flex h-full flex-col overflow-hidden">
+			<div class="card-header flex items-center justify-between gap-4">
+				<div class="title flex grow items-center gap-2">
 					<span class="truncate">{{ title }}</span>
 					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
 				</div>
@@ -10,14 +10,14 @@
 					<slot name="icon"></slot>
 				</div>
 			</div>
-			<div class="flex card-content grow">
+			<div class="card-content flex grow">
 				<div
 					v-for="item of values"
 					:key="JSON.stringify(item)"
-					class="flex flex-col value-box"
+					class="value-box flex flex-col"
 					:class="[item.status, values.length !== 1 ? `basis-1/${values.length}` : 'grow']"
 				>
-					<div class="value grow flex justify-center items-center">
+					<div class="value flex grow items-center justify-center">
 						{{ item.value }}
 					</div>
 					<div v-if="item.label" class="label">

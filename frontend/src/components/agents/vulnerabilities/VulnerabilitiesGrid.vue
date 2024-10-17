@@ -1,6 +1,6 @@
 <template>
 	<div class="vulnerabilities-section">
-		<div class="toolbar flex items-center gap-3 mb-8">
+		<div class="toolbar mb-8 flex items-center gap-3">
 			<n-form-item label="Severity" label-placement="left" size="small" :show-feedback="false">
 				<n-select v-model:value="severity" :options="severityOptions" class="!w-28" />
 			</n-form-item>
@@ -15,13 +15,13 @@
 			</n-button>
 		</div>
 		<n-spin content-class="min-h-48" :show="loading">
-			<div class="group gap-4 grid grid-auto-fill-200">
+			<div class="grid-auto-fill-200 group grid gap-4">
 				<VulnerabilityCard v-for="item of vulnerabilities" :key="item.id" :vulnerability="item" hide-tooltip />
 			</div>
 			<n-empty
 				v-if="!loading && !vulnerabilities.length"
 				description="No vulnerabilities detected"
-				class="justify-center h-48"
+				class="h-48 justify-center"
 			/>
 		</n-spin>
 	</div>

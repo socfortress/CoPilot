@@ -4,7 +4,7 @@
 			<div class="name">
 				{{ alert.name }}
 			</div>
-			<div class="badge flex mb-2">
+			<div class="badge mb-2 flex">
 				<Badge :type="isEnabled ? 'active' : 'muted'">
 					<template #iconRight>
 						<Icon :name="isEnabled ? EnabledIcon : DisabledIcon" :size="13"></Icon>
@@ -36,7 +36,7 @@
 				</n-button>
 			</div>
 		</div>
-		<div class="footer-box flex justify-between items-center gap-4">
+		<div class="footer-box flex items-center justify-between gap-4">
 			<div class="actions-box">
 				<n-button
 					v-if="!isEnabled"

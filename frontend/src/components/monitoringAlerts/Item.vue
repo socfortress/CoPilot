@@ -10,7 +10,7 @@
 						{{ alert.alert_id }}
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+					<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 						<Badge type="active" class="cursor-pointer" @click="gotoIndex(alert.alert_index)">
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
@@ -49,7 +49,7 @@
 					@stop-invoking="loadingInvoke = false"
 				/>
 			</div>
-			<div class="footer-box flex justify-between items-center gap-3">
+			<div class="footer-box flex items-center justify-between gap-3">
 				<AlertActions
 					class="actions-box !flex-row"
 					:alert="alert"

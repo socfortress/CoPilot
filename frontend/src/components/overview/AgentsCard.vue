@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsMulti title="Agents" hovered class="cursor-pointer h-full" :values @click="gotoAgent()">
+		<CardStatsMulti title="Agents" hovered class="h-full cursor-pointer" :values @click="gotoAgent()">
 			<template #icon>
 				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>

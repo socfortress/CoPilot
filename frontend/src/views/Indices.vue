@@ -20,7 +20,7 @@
 		</div>
 
 		<n-card class="section overflow-hidden" content-style="padding:0">
-			<div class="columns flex column-1200 !gap-0">
+			<div class="columns column-1200 flex !gap-0">
 				<div class="col basis-2/5">
 					<NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
 				</div>

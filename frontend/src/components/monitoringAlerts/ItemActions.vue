@@ -1,5 +1,5 @@
 <template>
-	<div class="alert-actions flex flex-col gap-3 justify-center" :class="{ '!flex-row': inline }">
+	<div class="alert-actions flex flex-col justify-center gap-3" :class="{ '!flex-row': inline }">
 		<n-button :loading="loadingInvoke" type="success" secondary :size="size" @click="invoke()">
 			<template #icon>
 				<Icon :name="InvokeIcon"></Icon>

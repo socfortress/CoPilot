@@ -6,7 +6,7 @@
 					<JobCard v-for="job of jobs" :key="job.id" :job="job" class="mb-2" />
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

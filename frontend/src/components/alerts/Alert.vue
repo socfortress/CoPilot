@@ -1,7 +1,7 @@
 <template>
 	<div class="alert-details flex flex-col gap-2 px-5 py-4">
 		<div class="header-box flex justify-between">
-			<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+			<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 				<span>#{{ alert._id || alert._source.id }}</span>
 				<Icon :name="InfoIcon" :size="16"></Icon>
 			</div>
@@ -52,7 +52,7 @@
 							<div class="box">
 								agent_id:
 								<code
-									class="cursor-pointer text-primary-color"
+									class="text-primary-color cursor-pointer"
 									@click="gotoAgent(alert._source.agent_id)"
 								>
 									{{ alert._source.agent_id }}
@@ -70,7 +70,7 @@
 							<div class="box">
 								agent_labels_customer:
 								<code
-									class="cursor-pointer text-primary-color"
+									class="text-primary-color cursor-pointer"
 									@click="gotoCustomer({ code: alert._source.agent_labels_customer })"
 								>
 									{{ alert._source.agent_labels_customer }}
@@ -115,7 +115,7 @@
 				@updated-ask-message="alert._source.ask_socfortress_message = $event"
 			/>
 		</div>
-		<div class="footer-box flex justify-between items-center gap-4">
+		<div class="footer-box flex items-center justify-between gap-4">
 			<AlertActions
 				v-if="!hideActions"
 				class="actions-box"
@@ -144,21 +144,21 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="alert._id" name="Agent" tab="Agent" display-directive="show">
-					<div v-if="agentProperties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of agentProperties" :key="key">
 							<template #key>
 								{{ key }}
 							</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="cursor-pointer text-primary-color" @click="gotoAgent(`${value}`)">
+									<code class="text-primary-color cursor-pointer" @click="gotoAgent(`${value}`)">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
 								</template>
 								<template v-else-if="key === 'agent_labels_customer'">
 									<code
-										class="cursor-pointer text-primary-color"
+										class="text-primary-color cursor-pointer"
 										@click="gotoCustomer(value ? { code: value.toString() } : undefined)"
 									>
 										{{ value }}

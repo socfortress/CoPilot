@@ -3,7 +3,7 @@
 		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 !py-8">
 			<div class="px-7">
 				<n-card content-class="bg-secondary-color" class="overflow-hidden">
-					<div class="flex justify-between gap-8 flex-wrap">
+					<div class="flex flex-wrap justify-between gap-8">
 						<n-statistic label="Checks" :value="sca.total_checks" tabular-nums />
 						<n-statistic label="Pass" :value="sca.pass" tabular-nums />
 						<n-statistic label="Fail" :value="sca.fail" tabular-nums />
@@ -14,7 +14,7 @@
 			</div>
 			<div class="px-7">
 				<n-card content-class="bg-secondary-color" class="overflow-hidden">
-					<div class="flex justify-between gap-8 xs:!flex-row flex-col">
+					<div class="xs:!flex-row flex flex-col justify-between gap-8">
 						<n-statistic
 							class="grow"
 							label="Start scan"
@@ -28,7 +28,7 @@
 					</div>
 				</n-card>
 			</div>
-			<div v-if="properties" class="grid gap-2 grid-auto-fit-200 px-7">
+			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
 				<KVCard v-for="(value, key) of properties" :key="key">
 					<template #key>
 						{{ key }}

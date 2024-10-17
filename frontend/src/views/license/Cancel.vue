@@ -1,5 +1,5 @@
 <template>
-	<div class="page grow flex flex-col justify-center items-center">
+	<div class="page flex grow flex-col items-center justify-center">
 		<LicenseCheckoutResponse class="max-w-96" type="error" />
 	</div>
 </template>

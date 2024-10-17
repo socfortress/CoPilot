@@ -24,7 +24,7 @@
 
 				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules" class="form-container mt-4">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="px-7 flex flex-col gap-3">
+						<div v-if="current === 1" class="flex flex-col gap-3 px-7">
 							<div class="flex flex-wrap gap-3">
 								<n-form-item label="Customer Code" path="customer_code" class="grow">
 									<n-input
@@ -68,8 +68,8 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 2" class="px-7 flex flex-col gap-3">
-							<div class="flex flex-col sm:flex-row gap-3">
+						<div v-else-if="current === 2" class="flex flex-col gap-3 px-7">
+							<div class="flex flex-col gap-3 sm:flex-row">
 								<n-form-item
 									label="Customer Index name"
 									path="customer_index_name"
@@ -97,7 +97,7 @@
 							</div>
 						</div>
 
-						<div v-else-if="current === 3" class="px-7 flex flex-col gap-3">
+						<div v-else-if="current === 3" class="flex flex-col gap-3 px-7">
 							<n-form-item label="Subscriptions" path="customer_subscription" class="grow">
 								<n-select
 									v-model:value="form.customer_subscription"
@@ -119,7 +119,7 @@
 								:show-require-mark="false"
 							>
 								<template #label>
-									<div class="flex items-center justify-between gap-4 w-full">
+									<div class="flex w-full items-center justify-between gap-4">
 										<div>
 											Dashboards
 											<span class="n-form-item-label__asterisk">*</span>
@@ -148,7 +148,7 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 4" class="px-7 flex gap-3">
+						<div v-else-if="current === 4" class="flex gap-3 px-7">
 							<n-card class="grow">
 								<n-form-item label="Deploy HA Proxy" path="provision_ha_proxy">
 									<n-switch v-model:value="form.provision_ha_proxy" clearable />
@@ -161,7 +161,7 @@
 							</n-card>
 						</div>
 
-						<div v-else-if="current === 5" class="px-7 flex flex-wrap gap-3">
+						<div v-else-if="current === 5" class="flex flex-wrap gap-3 px-7">
 							<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
 								<n-input
 									v-model:value="form.wazuh_auth_password"

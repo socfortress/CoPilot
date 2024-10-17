@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loading" class="connector-item">
-		<div class="px-4 py-3 flex flex-col gap-2">
+		<div class="flex flex-col gap-2 px-4 py-3">
 			<div class="main-box flex gap-6">
-				<div class="content flex flex-col gap-2 grow">
+				<div class="content flex grow flex-col gap-2">
 					<div class="flex gap-4">
 						<div class="avatar">
 							<n-avatar
@@ -31,7 +31,7 @@
 						</div>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+					<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
 						<Badge :type="connector.connector_configured ? 'active' : 'muted'">
 							<template #iconRight>
 								<Icon
@@ -54,7 +54,7 @@
 					</div>
 				</div>
 
-				<div class="actions-box flex flex-col gap-2 justify-center">
+				<div class="actions-box flex flex-col justify-center gap-2">
 					<n-button
 						v-if="!connector.connector_verified"
 						type="primary"

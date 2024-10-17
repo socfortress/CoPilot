@@ -3,7 +3,7 @@
 		<div class="flex flex-col gap-2 px-5 py-4">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2">
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -36,7 +36,7 @@
 						</template>
 					</div>
 
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+					<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
 						<Badge v-if="asset.date_added" type="splitted" color="primary">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
@@ -77,7 +77,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}
@@ -86,7 +86,7 @@
 								<template v-if="key === 'asset_tags'">
 									<code
 										v-if="value && value !== '-'"
-										class="cursor-pointer text-primary-color"
+										class="text-primary-color cursor-pointer"
 										@click="gotoAgent(value)"
 									>
 										{{ value }}
@@ -102,7 +102,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Type" tab="Type" display-directive="show">
-					<div v-if="assetType" class="grid gap-2 grid-auto-fit-250 p-7 pt-4">
+					<div v-if="assetType" class="grid-auto-fit-250 grid gap-2 p-7 pt-4">
 						<KVCard v-for="(value, key) of assetType" :key="key">
 							<template #key>
 								{{ key }}

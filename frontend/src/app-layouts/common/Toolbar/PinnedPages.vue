@@ -1,5 +1,5 @@
 <template>
-	<div class="flex pinned-pages items-center gap-5">
+	<div class="pinned-pages flex items-center gap-5">
 		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				v-for="page of latestSanitized"
@@ -20,7 +20,7 @@
 			</n-tag>
 		</TransitionGroup>
 
-		<Transition name="anim" tag="div" class="flex items-center shortcuts-container">
+		<Transition name="anim" tag="div" class="shortcuts-container flex items-center">
 			<div v-if="pinned.length" class="flex items-center">
 				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover" class="!p-1">
 					<template #trigger>

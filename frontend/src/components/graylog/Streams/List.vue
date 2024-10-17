@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -45,7 +45,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Enabled:</div>
+						<div class="text-secondary-color mb-1 text-sm">Enabled:</div>
 						<n-select
 							v-model:value="enabledFilter"
 							size="small"
@@ -57,7 +57,7 @@
 					</div>
 					<n-divider class="!my-3" />
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Editable:</div>
+						<div class="text-secondary-color mb-1 text-sm">Editable:</div>
 						<n-select
 							v-model:value="editableFilter"
 							size="small"
@@ -70,12 +70,12 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="list my-3 flex flex-col gap-2">
 			<template v-if="itemsPaginated.length">
 				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">

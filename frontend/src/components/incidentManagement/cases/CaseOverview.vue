@@ -1,8 +1,8 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
-		<div class="flex flex-col gap-4 grow justify-between">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:!flex-row flex-col gap-4">
+				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
 					<KVCard
 						:color="
 							caseData.case_status === 'OPEN'
@@ -14,10 +14,10 @@
 										: undefined
 						"
 						size="lg"
-						class="grow w-full"
+						class="w-full grow"
 					>
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<StatusIcon :status="caseData.case_status" />
 								<span>Status</span>
 							</div>
@@ -30,7 +30,7 @@
 									@updated="updateCase($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
 											'cursor-pointer': !loadingStatus
@@ -50,9 +50,9 @@
 						</template>
 					</KVCard>
 
-					<KVCard :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
+					<KVCard :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<AssigneeIcon :assignee="caseData.assigned_to" />
 								<span>Assigned to</span>
 							</div>
@@ -65,7 +65,7 @@
 									@updated="updateCase($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
 											'cursor-pointer': !loadingAssignee
@@ -97,7 +97,7 @@
 					</KVCard>
 				</div>
 
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
+				<div class="grid-auto-fit-250 grid gap-2 px-7">
 					<KVCard>
 						<template #key>id</template>
 						<template #value>#{{ caseData.id }}</template>
@@ -119,7 +119,7 @@
 						<template #value>
 							<code
 								v-if="caseData.customer_code"
-								class="cursor-pointer text-primary-color"
+								class="text-primary-color cursor-pointer"
 								@click="gotoCustomer({ code: caseData.customer_code })"
 							>
 								{{ caseData.customer_code }}
@@ -131,7 +131,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 gap-3 flex justify-end">
+			<div class="footer-box flex justify-end gap-3 px-7 py-4">
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />

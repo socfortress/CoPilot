@@ -1,6 +1,6 @@
 <template>
 	<div class="connectors-list">
-		<div class="header mb-4 flex gap-5 justify-between items-center">
+		<div class="header mb-4 flex items-center justify-between gap-5">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
@@ -20,7 +20,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingConnectors" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingConnectors" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

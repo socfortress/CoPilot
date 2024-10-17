@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-stats-item flex items-stretch">
-		<div class="info grow flex flex-col gap-1 justify-center">
+		<div class="info flex grow flex-col justify-center gap-1">
 			<div
 				v-if="summary.agent_name"
 				class="agent"
@@ -12,7 +12,7 @@
 				{{ summary.rule }}
 			</div>
 		</div>
-		<div class="count font-mono flex items-center justify-center">
+		<div class="count flex items-center justify-center font-mono">
 			<span v-if="summary.number_of_alerts">
 				{{ summary.number_of_alerts }}
 			</span>

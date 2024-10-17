@@ -3,16 +3,16 @@
 		:id="`alert-${alert?.alert_id}`"
 		:show="loading"
 		:description="loadingDelete ? 'Deleting Soc Alert' : 'Loading Soc Alert'"
-		class="soc-alert-item flex flex-col gap-0 min-h-36 pb-2"
+		class="soc-alert-item flex min-h-36 flex-col gap-0 pb-2"
 		:class="{ bookmarked: isBookmark, highlight, embedded }"
 	>
-		<div v-if="alert" class="soc-alert-info px-5 py-3 flex flex-col gap-3">
+		<div v-if="alert" class="soc-alert-info flex flex-col gap-3 px-5 py-3">
 			<div class="header-box flex justify-between">
-				<div class="flex items-center gap-2 cursor-pointer">
+				<div class="flex cursor-pointer items-center gap-2">
 					<div v-if="showCheckbox" class="check-box mr-2">
 						<n-checkbox v-model:checked="checked" size="large" />
 					</div>
-					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
+					<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
 						<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
@@ -57,7 +57,7 @@
 					@click="showBadges = !showBadges"
 				>
 					{{ showBadges ? "Less info" : "More info" }}
-					<span class="transition-transform flex items-center" :class="{ 'rotate-90': showBadges }">
+					<span class="flex items-center transition-transform" :class="{ 'rotate-90': showBadges }">
 						<Icon :name="ChevronIcon" :size="14"></Icon>
 					</span>
 				</div>
@@ -66,7 +66,7 @@
 				</n-collapse-transition>
 			</div>
 
-			<div class="footer-box flex justify-between items-center gap-4">
+			<div class="footer-box flex items-center justify-between gap-4">
 				<SocAlertItemActions
 					v-if="!hideSocCaseAction"
 					class="actions-box grow !flex-wrap !justify-start"
@@ -91,7 +91,7 @@
 			</template>
 			<n-collapse-item>
 				<template #header>
-					<div class="py-3 -ml-2">Alert details</div>
+					<div class="-ml-2 py-3">Alert details</div>
 				</template>
 				<AlertItem :alert="alertObject" hide-actions class="-mt-4" />
 			</n-collapse-item>

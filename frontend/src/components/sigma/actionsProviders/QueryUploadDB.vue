@@ -4,7 +4,7 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-2 max-w-80 min-w-72">
+		<div class="flex min-w-72 max-w-80 flex-col gap-2 py-1">
 			<div>Choose the level to load:</div>
 
 			<n-checkbox-group v-model:value="ruleLevels" class="flex gap-4" :disabled="loading">
@@ -14,7 +14,7 @@
 
 			<p class="text-right">* It may take several minutes</p>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload
