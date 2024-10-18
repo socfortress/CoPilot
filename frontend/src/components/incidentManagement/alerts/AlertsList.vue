@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -17,15 +17,15 @@
 							Total :
 							<code>{{ total }}</code>
 						</div>
-						<div class="box text-error-color">
+						<div class="box text-error">
 							Open :
 							<code>{{ statusOpenTotal }}</code>
 						</div>
-						<div class="box text-warning-color">
+						<div class="box text-warning">
 							In Progress :
 							<code>{{ statusInProgressTotal }}</code>
 						</div>
-						<div class="box text-success-color">
+						<div class="box text-success">
 							Close :
 							<code>{{ statusCloseTotal }}</code>
 						</div>
@@ -43,7 +43,7 @@
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
 					<div class="flex items-center gap-2">
 						<span>Open</span>
-						<code class="text-error-color py-1">{{ statusOpenTotal }}</code>
+						<code class="text-error py-1">{{ statusOpenTotal }}</code>
 					</div>
 				</n-button>
 				<span>/</span>
@@ -54,14 +54,14 @@
 				>
 					<div class="flex items-center gap-2">
 						<span>In Progress</span>
-						<code class="text-warning-color py-1">{{ statusInProgressTotal }}</code>
+						<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
 					</div>
 				</n-button>
 				<span>/</span>
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
 					<div class="flex items-center gap-2">
 						<span>Close</span>
-						<code class="text-success-color py-1">{{ statusCloseTotal }}</code>
+						<code class="text-success py-1">{{ statusCloseTotal }}</code>
 					</div>
 				</n-button>
 			</div>

@@ -1,6 +1,6 @@
 <template>
 	<div class="artifact-item flex flex-col gap-1 px-5 py-3">
-		<div class="name text-secondary-color">
+		<div class="name text-secondary">
 			{{ artifact.name }}
 		</div>
 		<div class="description">

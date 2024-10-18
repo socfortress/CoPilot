@@ -23,7 +23,7 @@
 								alt="asset url"
 								rel="nofollow noopener noreferrer"
 							>
-								<code class="text-primary-color">
+								<code class="text-primary">
 									<span>
 										{{ asset.asset_description }}
 									</span>
@@ -86,7 +86,7 @@
 								<template v-if="key === 'asset_tags'">
 									<code
 										v-if="value && value !== '-'"
-										class="text-primary-color cursor-pointer"
+										class="text-primary cursor-pointer"
 										@click="gotoAgent(value)"
 									>
 										{{ value }}

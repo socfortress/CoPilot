@@ -2,7 +2,7 @@
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 !py-8">
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color" class="overflow-hidden">
+				<n-card content-class="bg-secondary" class="overflow-hidden">
 					<div class="flex flex-wrap justify-between gap-8">
 						<n-statistic label="Checks" :value="sca.total_checks" tabular-nums />
 						<n-statistic label="Pass" :value="sca.pass" tabular-nums />
@@ -13,7 +13,7 @@
 				</n-card>
 			</div>
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color" class="overflow-hidden">
+				<n-card content-class="bg-secondary" class="overflow-hidden">
 					<div class="xs:!flex-row flex flex-col justify-between gap-8">
 						<n-statistic
 							class="grow"

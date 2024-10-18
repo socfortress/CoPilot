@@ -2,17 +2,17 @@
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color" class="overflow-hidden">
+				<n-card content-class="bg-secondary" class="overflow-hidden">
 					<div class="flex flex-wrap justify-between gap-8">
 						<n-statistic label="Result" tabular-nums>
 							<span
 								class="uppercase"
 								:class="
 									data.result === 'failed'
-										? 'text-error-color'
+										? 'text-error'
 										: data.result === 'not applicable'
-											? 'text-warning-color'
-											: 'text-success-color'
+											? 'text-warning'
+											: 'text-success'
 								"
 							>
 								{{ data.result }}
@@ -28,7 +28,7 @@
 			</div>
 
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+				<n-card content-class="bg-secondary !p-0" class="overflow-hidden">
 					<div
 						v-shiki="{ lang: 'shell', decode: true }"
 						class="scrollbar-styled code-bg-transparent overflow-hidden"
@@ -114,7 +114,7 @@
 				<n-card
 					v-for="item of data.compliance"
 					:key="item.key"
-					content-class="bg-secondary-color flex flex-col gap-2"
+					content-class="bg-secondary flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
 				>
@@ -128,7 +128,7 @@
 				<n-card
 					v-for="item of data.rules"
 					:key="item.type + item.rule"
-					content-class="bg-secondary-color flex flex-col gap-2"
+					content-class="bg-secondary flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
 				>

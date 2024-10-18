@@ -20,7 +20,7 @@ const licenseKey = ref<LicenseKey | undefined>(undefined)
 .page {
 	&.limit-height {
 		@media (min-width: 801px) {
-			max-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height) - 66px);
+			max-height: calc(100dvh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height) - 66px);
 			overflow: hidden;
 		}
 	}

@@ -140,7 +140,7 @@
 							<template #value>
 								<div class="flex h-full items-center">
 									<code
-										class="text-primary-color cursor-pointer leading-none"
+										class="text-primary cursor-pointer leading-none"
 										@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
 									>
 										#{{ caseEntity.customer_code }}

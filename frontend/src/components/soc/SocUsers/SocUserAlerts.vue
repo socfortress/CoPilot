@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loadingAlerts" :size="14">
 		<div v-if="!loadingAlerts" class="alert-list flex items-center gap-3">
-			<span :class="{ 'text-secondary-color': !alertsList.length, 'font-bold': alertsList.length }">
+			<span :class="{ 'text-secondary': !alertsList.length, 'font-bold': alertsList.length }">
 				{{ alertsList.length || "No Alters" }}
 			</span>
 			<div class="flex flex-wrap gap-2">

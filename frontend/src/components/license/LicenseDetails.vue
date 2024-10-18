@@ -24,7 +24,7 @@
 						<KVCard v-for="feature of features" :key="feature">
 							<template #value>
 								<span class="flex items-center gap-3">
-									<Icon :name="CheckIcon" :size="14" class="text-primary-color"></Icon>
+									<Icon :name="CheckIcon" :size="14" class="text-primary"></Icon>
 									<span>{{ feature }}</span>
 								</span>
 							</template>
@@ -42,7 +42,7 @@
 				</template>
 				<template #value>
 					{{ expiresText }}
-					<span class="text-secondary-color">({{ periodText }})</span>
+					<span class="text-secondary">({{ periodText }})</span>
 				</template>
 			</KVCard>
 			<KVCard>

@@ -106,7 +106,7 @@
 						<template #key>customer code</template>
 						<template #value>
 							<code
-								class="text-primary-color cursor-pointer"
+								class="text-primary cursor-pointer"
 								@click="gotoCustomer({ code: alert.customer_code })"
 							>
 								{{ alert.customer_code }}

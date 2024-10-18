@@ -44,7 +44,7 @@
 						<span>QUARANTINED</span>
 					</span>
 				</div>
-				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
+				<div class="label text-secondary mt-2">Agent #{{ agent?.agent_id }}</div>
 			</div>
 			<div class="actions flex grow items-center justify-end">
 				<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">

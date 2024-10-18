@@ -22,7 +22,7 @@
 							{{ dataStoreFile.file_name }}
 						</span>
 
-						<small v-if="dataStoreFile.file_hash" class="text-secondary-color hidden font-mono sm:inline">
+						<small v-if="dataStoreFile.file_hash" class="text-secondary hidden font-mono sm:inline">
 							hash:
 							{{ dataStoreFile.file_hash }}
 						</small>

@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -17,7 +17,7 @@
 							Total :
 							<code>{{ total }}</code>
 						</div>
-						<div class="box text-warning-color">
+						<div class="box text-warning">
 							Critical :
 							<code>{{ criticalTotal }}</code>
 						</div>

@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -45,7 +45,7 @@
 			/>
 			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>

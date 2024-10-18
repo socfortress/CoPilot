@@ -23,7 +23,7 @@
 					<div v-if="agentsCritical?.length" class="agents-critical-list">
 						<div class="title">
 							Critical Assets
-							<small class="text-secondary-color font-mono">({{ agentsCritical.length }})</small>
+							<small class="text-secondary font-mono">({{ agentsCritical.length }})</small>
 						</div>
 						<div class="list">
 							<div
@@ -39,7 +39,7 @@
 					<div v-if="agentsOnline?.length" class="agents-online-list">
 						<div class="title">
 							Online Agents
-							<small class="text-secondary-color font-mono">({{ agentsOnline.length }})</small>
+							<small class="text-secondary font-mono">({{ agentsOnline.length }})</small>
 						</div>
 						<div class="list">
 							<div

@@ -29,7 +29,7 @@
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="text-primary-color cursor-pointer"
+										class="text-primary cursor-pointer"
 										@click.stop="gotoIndex(timelineDetailsInfo._index)"
 									>
 										{{ timelineDetailsInfo._index }}

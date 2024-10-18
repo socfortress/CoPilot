@@ -4,7 +4,7 @@
 			<div
 				v-if="summary.agent_name"
 				class="agent"
-				:class="{ 'text-secondary-color': summary.agent_name && summary.rule }"
+				:class="{ 'text-secondary': summary.agent_name && summary.rule }"
 			>
 				{{ summary.agent_name }}
 			</div>

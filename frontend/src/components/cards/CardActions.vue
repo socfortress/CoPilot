@@ -1,7 +1,7 @@
 <template>
 	<n-card hoverable size="large" :class="{ actionBoxTransparent }">
 		<template v-if="showImage" #cover>
-			<img :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
+			<img alt="cover" :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
 		</template>
 		<template #header>
 			<div v-if="title" class="title">

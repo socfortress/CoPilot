@@ -14,7 +14,7 @@ import MainContainer from "./MainContainer.vue"
 .layout {
 	width: 100vw;
 	height: 100vh;
-	height: 100svh;
+	height: 100dvh;
 	overflow: hidden;
 	perspective: 1000px;
 }

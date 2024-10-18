@@ -4,7 +4,7 @@
 			<slot />
 		</template>
 		<template v-else>
-			<Icon v-if="icon" :icon :width="size" :height="size" />
+			<Icon v-if="icon" :icon :width="options.size || undefined" :height="options.size || undefined" />
 		</template>
 	</component>
 </template>

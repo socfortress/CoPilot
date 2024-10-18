@@ -1,6 +1,6 @@
 <template>
 	<div class="quarantine-item flex flex-col gap-1 px-5 py-3">
-		<div class="time text-secondary-color">
+		<div class="time text-secondary">
 			{{ formatDate(quarantine.Time, dFormats.datetimesec) }}
 		</div>
 		<div class="result">

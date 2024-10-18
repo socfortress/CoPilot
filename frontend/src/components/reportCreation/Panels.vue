@@ -59,9 +59,7 @@
 															</template>
 
 															<div class="flex items-center gap-3 py-1">
-																<div class="text-secondary-color text-sm">
-																	Row height:
-																</div>
+																<div class="text-secondary text-sm">Row height:</div>
 																<n-switch
 																	v-model:value="row.height"
 																	size="small"

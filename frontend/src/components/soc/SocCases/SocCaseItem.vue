@@ -159,7 +159,7 @@
 							<div v-if="extendedInfo" class="flex flex-col gap-2 px-7 py-4">
 								<div v-if="baseInfo && !hideSocAlertLink" class="box">
 									soc id:
-									<code class="text-primary-color cursor-pointer" @click="openSocAlert()">
+									<code class="text-primary cursor-pointer" @click="openSocAlert()">
 										#{{ baseInfo.case_soc_id }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -185,7 +185,7 @@
 											v-if="key === 'customer_code' && value && value !== 'Customer Not Found'"
 										>
 											<code
-												class="text-primary-color cursor-pointer"
+												class="text-primary cursor-pointer"
 												@click="gotoCustomer({ code: value })"
 											>
 												#{{ value }}

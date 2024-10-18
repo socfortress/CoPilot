@@ -1,13 +1,15 @@
-import type { ColorType, Layout, RouterTransition, ThemeName } from "@/types/theme.d"
+import type { ColorType, Layout, RouterTransition } from "@/types/theme.d"
 import type { BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
 import { getCssVars, getDefaultState } from "@/theme"
-import { ThemeEnum } from "@/types/theme.d"
+import { ThemeNameEnum } from "@/types/theme.d"
 import { exportPrimaryShades, getThemeColors, getTypeValue, type PrimaryShade } from "@/utils/theme"
+import { useWindowSize } from "@vueuse/core"
 import _get from "lodash/get"
 import _pick from "lodash/pick"
 import _set from "lodash/set"
 import { darkTheme, type GlobalThemeOverrides, lightTheme, type ThemeCommonVars } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
+import { watch } from "vue"
 
 export const useThemeStore = defineStore("theme", {
 	state: () => getDefaultState(),
@@ -30,16 +32,16 @@ export const useThemeStore = defineStore("theme", {
 		setRouterTransition(routerTransition: RouterTransition): void {
 			this.routerTransition = routerTransition
 		},
-		setTheme(themeName: ThemeName): void {
+		setTheme(themeName: ThemeNameEnum): void {
 			this.themeName = themeName
 		},
 		setThemeLight(): void {
-			this.themeName = ThemeEnum.Light
+			this.themeName = ThemeNameEnum.Light
 		},
 		setThemeDark(): void {
-			this.themeName = ThemeEnum.Dark
+			this.themeName = ThemeNameEnum.Dark
 		},
-		setColor(theme: ThemeName, colorType: ColorType, color: string): void {
+		setColor(theme: ThemeNameEnum, colorType: ColorType, color: string): void {
 			this.colors[theme][colorType] = color
 
 			if (colorType === "primary") {
@@ -77,7 +79,7 @@ export const useThemeStore = defineStore("theme", {
 		closeSidebar(): void {
 			this.sidebar.collapsed = true
 		},
-		updateVars() {
+		updateResponsiveVars() {
 			for (const key in this.responsive.override) {
 				if (_get(this, key) && key in this.responsive.override) {
 					_set(
@@ -89,18 +91,73 @@ export const useThemeStore = defineStore("theme", {
 					)
 				}
 			}
-
+		},
+		ensureSidebarState() {
 			// auto close sidebar on resize
 			if (this.sidebar.autoClose) {
 				if (!this.sidebar.collapsed && window.innerWidth <= this.sidebar.autoCloseBreakpoint) {
 					this.sidebar.collapsed = true
 				}
 			}
+		},
+		setDocumentThemeName(val: ThemeNameEnum, old?: ThemeNameEnum) {
+			if (document) {
+				const html = document.children[0] as HTMLElement
+				if (old) {
+					html.classList.remove(`theme-${old}`)
+				}
+				html.classList.add(`theme-${val}`)
+			}
+		},
+		// This function allows you to utilize the values in the style object as variables within your CSS/SCSS code like: var(-–bg-color)
+		setCssGlobalVars() {
+			if (document) {
+				const html = document.children[0] as HTMLElement
+				const body = document.getElementsByTagName("body")?.[0]
+				if (this.isRTL && body) {
+					body.classList.add("direction-rtl")
+					body.classList.remove("direction-ltr")
+				} else {
+					body.classList.remove("direction-rtl")
+					body.classList.add("direction-ltr")
+				}
+				// html.dir = this.isRTL ? "rtl" : "ltr"
+				const { style: htmlStyle } = html
+				for (const key in this.style) {
+					htmlStyle.setProperty(`--${key}`, this.style[key])
+				}
+			}
+		},
+		startWatchers() {
+			const { width } = useWindowSize()
+
+			watch([() => this.isRTL, () => this.style], () => {
+				this.setCssGlobalVars()
+			})
+
+			watch(
+				() => this.themeName,
+				(val, old) => {
+					this.setDocumentThemeName(val, old)
+				}
+			)
+
+			watch(width, () => {
+				this.updateResponsiveVars()
+				this.ensureSidebarState()
+			})
+		},
+		initTheme() {
+			this.updateResponsiveVars()
+			this.ensureSidebarState()
+			this.setCssGlobalVars()
+			this.setDocumentThemeName(this.themeName)
+			this.startWatchers()
 		}
 	},
 	getters: {
 		naiveTheme(state): BuiltInGlobalTheme {
-			return state.themeName === ThemeEnum.Dark ? darkTheme : lightTheme
+			return state.themeName === ThemeNameEnum.Dark ? darkTheme : lightTheme
 		},
 		themeOverrides(state): GlobalThemeOverrides {
 			const {
@@ -235,10 +292,10 @@ export const useThemeStore = defineStore("theme", {
 			return getCssVars(state, this)
 		},
 		isThemeDark(state): boolean {
-			return state.themeName === ThemeEnum.Dark
+			return state.themeName === ThemeNameEnum.Dark
 		},
 		isThemeLight(state): boolean {
-			return state.themeName === ThemeEnum.Light
+			return state.themeName === ThemeNameEnum.Light
 		},
 		isBoxed(state): boolean {
 			return state.boxed.enabled

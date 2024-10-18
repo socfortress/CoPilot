@@ -13,7 +13,7 @@
 						<div class="box">
 							event_definition_id:
 							<code
-								class="text-primary-color cursor-pointer"
+								class="text-primary cursor-pointer"
 								@click="gotoEventsPage(alertsEvent.event.event_definition_id)"
 							>
 								{{ alertsEvent.event.event_definition_id }}
@@ -30,7 +30,7 @@
 						</div>
 						<div class="box">
 							index_name:
-							<code class="text-primary-color cursor-pointer" @click="gotoIndex(alertsEvent.index_name)">
+							<code class="text-primary cursor-pointer" @click="gotoIndex(alertsEvent.index_name)">
 								{{ alertsEvent.index_name }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>

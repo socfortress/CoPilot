@@ -2,7 +2,7 @@
 	<code
 		v-for="linkedCase of linkedCases"
 		:key="linkedCase.id"
-		class="text-primary-color cursor-pointer"
+		class="text-primary cursor-pointer"
 		@click="gotoIncidentManagementCases(linkedCase.id)"
 	>
 		#{{ linkedCase.id }}

@@ -119,7 +119,7 @@
 						<template #value>
 							<code
 								v-if="caseData.customer_code"
-								class="text-primary-color cursor-pointer"
+								class="text-primary cursor-pointer"
 								@click="gotoCustomer({ code: caseData.customer_code })"
 							>
 								{{ caseData.customer_code }}

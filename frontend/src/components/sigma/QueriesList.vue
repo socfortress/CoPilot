@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -18,12 +18,12 @@
 							<code>{{ total }}</code>
 						</div>
 						<div class="box">
-							<span class="text-success-color">Active</span>
+							<span class="text-success">Active</span>
 							:
 							<code>{{ activeTotal }}</code>
 						</div>
 						<div class="box">
-							<span class="text-secondary-color">Inactive</span>
+							<span class="text-secondary">Inactive</span>
 							:
 							<code>{{ inactiveTotal }}</code>
 						</div>
@@ -54,7 +54,7 @@
 			/>
 			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
@@ -93,7 +93,7 @@
 		</div>
 
 		<div class="actions-box" :class="{ open: showActionsView }">
-			<n-card size="small" content-class="bg-secondary-color" class="overflow-hidden" :bordered="false">
+			<n-card size="small" content-class="bg-secondary" class="overflow-hidden" :bordered="false">
 				<QueriesActions @updated="getData()" />
 			</n-card>
 		</div>

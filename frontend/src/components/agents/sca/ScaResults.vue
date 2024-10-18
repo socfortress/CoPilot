@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -19,15 +19,15 @@
 						</div>
 						<div class="box">
 							Passed:
-							<code class="text-success-color">{{ totalPassed }}</code>
+							<code class="text-success">{{ totalPassed }}</code>
 						</div>
 						<div class="box">
 							Not applicable:
-							<code class="text-warning-color">{{ totalNA }}</code>
+							<code class="text-warning">{{ totalNA }}</code>
 						</div>
 						<div class="box">
 							Failed:
-							<code class="text-error-color">{{ totalFailed }}</code>
+							<code class="text-error">{{ totalFailed }}</code>
 						</div>
 					</div>
 				</n-popover>
@@ -43,7 +43,7 @@
 			/>
 			<n-popover overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-button size="small">
 							<template #icon>
 								<Icon :name="FilterIcon"></Icon>
@@ -53,7 +53,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color mb-1 text-sm">Result:</div>
+						<div class="text-secondary mb-1 text-sm">Result:</div>
 						<n-select
 							v-model:value="resultFilter"
 							size="small"

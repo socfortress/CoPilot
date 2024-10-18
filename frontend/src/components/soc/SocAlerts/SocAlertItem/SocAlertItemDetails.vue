@@ -16,10 +16,7 @@
 					</template>
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-							<code
-								class="text-primary-color cursor-pointer"
-								@click="gotoCustomer({ code: value.toString() })"
-							>
+							<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: value.toString() })">
 								#{{ value }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -50,7 +47,7 @@
 							:users="users"
 							@updated="emit('updated', $event)"
 						>
-							<div class="text-primary-color flex cursor-pointer items-center gap-2">
+							<div class="text-primary flex cursor-pointer items-center gap-2">
 								<n-spin :size="16" :show="loading">
 									<Icon :name="EditIcon" :size="16"></Icon>
 								</n-spin>

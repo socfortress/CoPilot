@@ -19,7 +19,7 @@
 						<template #value>
 							<div class="flex h-full items-center">
 								<code
-									class="text-primary-color cursor-pointer leading-none"
+									class="text-primary cursor-pointer leading-none"
 									@click.stop="gotoIndex(asset.index_name)"
 								>
 									{{ asset.index_name }}
@@ -34,7 +34,7 @@
 						<template #value>
 							<div class="flex h-full items-center">
 								<code
-									class="text-primary-color cursor-pointer leading-none"
+									class="text-primary cursor-pointer leading-none"
 									@click.stop="gotoAgent(asset.agent_id)"
 								>
 									{{ asset.agent_id }}
@@ -105,8 +105,8 @@
 							>
 								<n-card
 									size="small"
-									content-class="bg-secondary-color"
-									class="hover:border-primary-color cursor-pointer overflow-hidden"
+									content-class="bg-secondary"
+									class="hover:border-primary cursor-pointer overflow-hidden"
 									@click="openEvaluation()"
 								>
 									{{ pn }}

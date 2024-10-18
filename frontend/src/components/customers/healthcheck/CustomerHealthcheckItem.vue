@@ -53,7 +53,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="box">
 							agent_id:
-							<code class="text-primary-color cursor-pointer" @click="gotoAgent(healthData.agent_id)">
+							<code class="text-primary cursor-pointer" @click="gotoAgent(healthData.agent_id)">
 								{{ healthData.agent_id }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>

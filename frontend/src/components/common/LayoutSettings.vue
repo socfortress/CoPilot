@@ -17,7 +17,7 @@
 						<div class="ls-label">Primary color</div>
 						<div class="color-picker-box">
 							<n-color-picker
-								v-if="theme === ThemeEnum.Dark"
+								v-if="theme === ThemeNameEnum.Dark"
 								v-model:value="darkColor"
 								:modes="['hex']"
 								:show-alpha="false"
@@ -28,7 +28,7 @@
 							<n-button v-for="color of palette" :key="color.light" text @click="setPrimary(color)">
 								<template #icon>
 									<Icon
-										:color="theme === ThemeEnum.Dark ? color.dark : color.light"
+										:color="theme === ThemeNameEnum.Dark ? color.dark : color.light"
 										:size="24"
 										:name="ColorIcon"
 									/>
@@ -43,11 +43,11 @@
 							<div class="basis-1/2">
 								<n-button
 									class="!w-full"
-									:type="theme === ThemeEnum.Light ? 'primary' : 'default'"
-									@click="theme = ThemeEnum.Light"
+									:type="theme === ThemeNameEnum.Light ? 'primary' : 'default'"
+									@click="theme = ThemeNameEnum.Light"
 								>
 									<template #icon>
-										<Icon v-if="theme === ThemeEnum.Light" :name="LightIcon" />
+										<Icon v-if="theme === ThemeNameEnum.Light" :name="LightIcon" />
 										<Icon v-else :name="LightOutlineIcon" />
 									</template>
 									Light
@@ -56,11 +56,11 @@
 							<div class="basis-1/2">
 								<n-button
 									class="!w-full"
-									:type="theme === ThemeEnum.Dark ? 'primary' : 'default'"
-									@click="theme = ThemeEnum.Dark"
+									:type="theme === ThemeNameEnum.Dark ? 'primary' : 'default'"
+									@click="theme = ThemeNameEnum.Dark"
 								>
 									<template #icon>
-										<Icon v-if="theme === ThemeEnum.Dark" :name="DarkIcon" />
+										<Icon v-if="theme === ThemeNameEnum.Dark" :name="DarkIcon" />
 										<Icon v-else :name="DarkOutlineIcon" />
 									</template>
 									Dark
@@ -161,7 +161,7 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
-import { Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
+import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import { useWindowSize } from "@vueuse/core"
 import { NButton, NColorPicker, NScrollbar, NSelect, NSwitch, useOsTheme } from "naive-ui"
 import { computed, ref } from "vue"
@@ -225,12 +225,12 @@ const theme = computed({
 
 const darkColor = computed({
 	get: () => themeStore.darkPrimaryColor,
-	set: val => themeStore.setColor(ThemeEnum.Dark, "primary", val)
+	set: val => themeStore.setColor(ThemeNameEnum.Dark, "primary", val)
 })
 
 const lightColor = computed({
 	get: () => themeStore.lightPrimaryColor,
-	set: val => themeStore.setColor(ThemeEnum.Light, "primary", val)
+	set: val => themeStore.setColor(ThemeNameEnum.Light, "primary", val)
 })
 
 const rtl = computed({
@@ -262,14 +262,14 @@ const palette = ref<Palette>([
 ])
 
 function setPrimary(color: ColorPalette) {
-	themeStore.setColor(ThemeEnum.Dark, "primary", color.dark)
-	themeStore.setColor(ThemeEnum.Light, "primary", color.light)
+	themeStore.setColor(ThemeNameEnum.Dark, "primary", color.dark)
+	themeStore.setColor(ThemeNameEnum.Light, "primary", color.light)
 }
 
 function reset() {
-	themeStore.setColor(ThemeEnum.Dark, "primary", "#00E19B")
-	themeStore.setColor(ThemeEnum.Light, "primary", "#00B27B")
-	themeStore.setTheme(useOsTheme().value || ThemeEnum.Light)
+	themeStore.setColor(ThemeNameEnum.Dark, "primary", "#00E19B")
+	themeStore.setColor(ThemeNameEnum.Light, "primary", "#00B27B")
+	themeStore.setTheme(useOsTheme().value === "dark" ? ThemeNameEnum.Dark : ThemeNameEnum.Light)
 	themeStore.setLayout(Layout.HorizontalNav)
 	themeStore.setRouterTransition(RouterTransition.FadeUp)
 	themeStore.setRTL(false)

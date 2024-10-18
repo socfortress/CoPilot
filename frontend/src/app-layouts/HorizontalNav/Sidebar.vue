@@ -62,7 +62,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "./variables";
+@import "variables";
 
 .sidebar {
 	position: fixed;
@@ -74,7 +74,7 @@ onMounted(() => {
 	//padding-right: 1px;
 	width: var(--sidebar-open-width);
 	height: 100vh;
-	height: 100svh;
+	height: 100dvh;
 	overflow-x: hidden;
 	overflow-y: auto;
 	background-color: var(--bg-sidebar);

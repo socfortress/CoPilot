@@ -150,7 +150,7 @@
 							<template #value>
 								<div class="flex h-full items-center">
 									<code
-										class="text-primary-color cursor-pointer leading-none"
+										class="text-primary cursor-pointer leading-none"
 										@click.stop="gotoCustomer({ code: alert.customer_code })"
 									>
 										#{{ alert.customer_code }}
@@ -210,9 +210,7 @@
 							Comments
 						</n-tooltip>
 
-						<span v-for="tag of alert.tags" :key="tag.tag" class="text-secondary-color">
-							#{{ tag.tag }}
-						</span>
+						<span v-for="tag of alert.tags" :key="tag.tag" class="text-secondary">#{{ tag.tag }}</span>
 					</div>
 					<div class="actions-box">
 						<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>

@@ -21,7 +21,7 @@
 								alt="asset url"
 								rel="nofollow noopener noreferrer"
 							>
-								<code class="text-primary-color">
+								<code class="text-primary">
 									<span>
 										{{ asset.asset_description }}
 									</span>

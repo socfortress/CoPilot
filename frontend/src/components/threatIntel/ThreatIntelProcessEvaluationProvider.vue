@@ -19,7 +19,7 @@
 					class="flex flex-col gap-4 !py-8"
 				>
 					<div class="px-7">
-						<n-card content-class="bg-secondary-color" class="overflow-hidden">
+						<n-card content-class="bg-secondary" class="overflow-hidden">
 							<div class="flex flex-wrap justify-between gap-8">
 								<n-statistic label="Rank" :value="evaluation.rank" tabular-nums />
 								<n-statistic label="EPS" :value="eps" tabular-nums />

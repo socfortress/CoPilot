@@ -18,7 +18,31 @@ export default {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
 	darkMode: ["class"],
 	theme: {
+		fontFamily: {
+			sans: ["var(--font-family)", "sans-serif"],
+			serif: ["var(--font-family-display)", "serif"],
+			display: ["var(--font-family-display)", "serif"],
+			mono: ["var(--font-family-mono)", "monospace"]
+		},
 		extend: {
+			colors: {
+				primary: "var(--primary-color)"
+			},
+			backgroundColor: {
+				default: "var(--bg-color)",
+				secondary: "var(--bg-secondary-color)"
+			},
+			textColor: {
+				default: "var(--fg-color)",
+				secondary: "var(--fg-secondary-color)",
+				warning: "var(--warning-color)",
+				error: "var(--error-color)",
+				success: "var(--success-color)"
+			},
+			borderRadius: {
+				default: "var(--border-radius)",
+				small: "var(--border-radius-small)"
+			},
 			screens: {
 				xs: "460px"
 			},

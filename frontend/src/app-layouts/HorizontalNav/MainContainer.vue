@@ -38,7 +38,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "./variables";
+@import "variables";
 
 .main {
 	width: 100%;

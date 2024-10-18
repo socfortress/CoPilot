@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -35,7 +35,7 @@
 			/>
 			<n-popover overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-button size="small">
 							<template #icon>
 								<Icon :name="FilterIcon"></Icon>
@@ -45,7 +45,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color mb-1 text-sm">Enabled:</div>
+						<div class="text-secondary mb-1 text-sm">Enabled:</div>
 						<n-select
 							v-model:value="enabledFilter"
 							size="small"
@@ -57,7 +57,7 @@
 					</div>
 					<n-divider class="!my-3" />
 					<div class="px-3">
-						<div class="text-secondary-color mb-1 text-sm">Editable:</div>
+						<div class="text-secondary mb-1 text-sm">Editable:</div>
 						<n-select
 							v-model:value="editableFilter"
 							size="small"

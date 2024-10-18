@@ -22,14 +22,12 @@
 
 		<Transition name="anim" tag="div" class="shortcuts-container flex items-center">
 			<div v-if="pinned.length" class="flex items-center">
-				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover" class="!p-1">
+				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="!p-1">
 					<template #trigger>
-						<n-button size="small" class="!h-8">
-							<span class="flex items-center gap-2">
-								Shortcuts
-								<n-badge :value="pinned.length" :color="style['divider-030-color']" />
-							</span>
-						</n-button>
+						<button class="shortcuts-btn flex items-center gap-2">
+							<span>Shortcuts</span>
+							<n-badge :value="pinned.length" :color="style['divider-030-color']" />
+						</button>
 					</template>
 					<div class="flex flex-col">
 						<n-button
@@ -181,6 +179,23 @@ router.afterEach(route => {
 		}
 	}
 
+	.shortcuts-btn {
+		border-radius: 50px;
+		background-color: var(--bg-color);
+		gap: 10px;
+		height: 32px;
+		cursor: pointer;
+		padding: 0px 8px;
+		padding-left: 10px;
+		outline: none;
+		transition: all 0.2s var(--bezier-ease);
+		border: none;
+
+		&:hover {
+			background-color: var(--bg-secondary-color);
+		}
+	}
+
 	.page-name {
 		cursor: pointer;
 		overflow: hidden;
@@ -227,6 +242,15 @@ router.afterEach(route => {
 	@container (max-width: 140px) {
 		.shortcuts-container {
 			display: none;
+		}
+	}
+}
+
+.direction-rtl {
+	.pinned-pages {
+		.shortcuts-btn {
+			padding-right: 10px;
+			padding-left: 8px;
 		}
 	}
 }

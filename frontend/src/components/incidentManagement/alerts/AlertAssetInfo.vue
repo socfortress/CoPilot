@@ -7,28 +7,25 @@
 			<template #value>
 				<div v-if="key === 'id'">#{{ value }}</div>
 				<div v-else-if="key === 'customer_code'">
-					<code
-						class="text-primary-color cursor-pointer"
-						@click.stop="gotoCustomer({ code: asset.customer_code })"
-					>
+					<code class="text-primary cursor-pointer" @click.stop="gotoCustomer({ code: asset.customer_code })">
 						#{{ asset.customer_code }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'agent_id'">
-					<code class="text-primary-color cursor-pointer" @click.stop="gotoAgent(asset.agent_id)">
+					<code class="text-primary cursor-pointer" @click.stop="gotoAgent(asset.agent_id)">
 						{{ asset.agent_id }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_name'">
-					<code class="text-primary-color cursor-pointer" @click.stop="gotoIndex(asset.index_name)">
+					<code class="text-primary cursor-pointer" @click.stop="gotoIndex(asset.index_name)">
 						{{ asset.index_name }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_id'">
-					<code class="text-primary-color cursor-pointer" @click.stop="openAlertDetails()">
+					<code class="text-primary cursor-pointer" @click.stop="openAlertDetails()">
 						{{ asset.index_id }}
 						<Icon :name="ViewIcon" :size="14" class="relative top-0.5" />
 					</code>
@@ -60,7 +57,7 @@
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="text-primary-color cursor-pointer"
+										class="text-primary cursor-pointer"
 										@click.stop="gotoIndex(alertDetailsInfo._index)"
 									>
 										{{ alertDetailsInfo._index }}

@@ -51,10 +51,7 @@
 						<div class="flex flex-col gap-1">
 							<div class="box">
 								agent_id:
-								<code
-									class="text-primary-color cursor-pointer"
-									@click="gotoAgent(alert._source.agent_id)"
-								>
+								<code class="text-primary cursor-pointer" @click="gotoAgent(alert._source.agent_id)">
 									{{ alert._source.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
@@ -70,7 +67,7 @@
 							<div class="box">
 								agent_labels_customer:
 								<code
-									class="text-primary-color cursor-pointer"
+									class="text-primary cursor-pointer"
 									@click="gotoCustomer({ code: alert._source.agent_labels_customer })"
 								>
 									{{ alert._source.agent_labels_customer }}
@@ -151,14 +148,14 @@
 							</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="text-primary-color cursor-pointer" @click="gotoAgent(`${value}`)">
+									<code class="text-primary cursor-pointer" @click="gotoAgent(`${value}`)">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
 								</template>
 								<template v-else-if="key === 'agent_labels_customer'">
 									<code
-										class="text-primary-color cursor-pointer"
+										class="text-primary cursor-pointer"
 										@click="gotoCustomer(value ? { code: value.toString() } : undefined)"
 									>
 										{{ value }}

@@ -1,5 +1,5 @@
 import tokens from "@/design-tokens.json"
-import { Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
+import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import { hex2rgb } from "@/utils/theme"
 import { type ThemeCommonVars, useOsTheme } from "naive-ui"
 
@@ -22,7 +22,7 @@ const osTheme = useOsTheme()
 export function getDefaultState() {
 	return {
 		layout: Layout.HorizontalNav, // Type of layout, with vertical or horizontal navigation
-		themeName: osTheme.value || ThemeEnum.Light, // Theme name (Dark, Light), with fallback to the light theme
+		themeName: osTheme.value === "dark" ? ThemeNameEnum.Dark : ThemeNameEnum.Light, // Theme name (Dark, Light), with fallback to the light theme
 		routerTransition: RouterTransition.FadeUp, // Type of transition for the router
 		routerTransitionDuration: 0.3, // Duration of the router transition in seconds
 		rtl: false, // RTL (right to left) mode toggle
@@ -180,9 +180,11 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"view-padding": `${viewPadding}px`,
 		"border-radius": `${borderRadius}`,
 		"border-radius-small": `${borderRadiusSmall}`,
+
 		"font-family": `${fontFamily}`,
 		"font-family-display": `${fontFamilyDisplay}`,
 		"font-family-mono": `${fontFamilyMono}`,
+
 		"code-color": `${codeColor}`,
 		"primary-color": `${primaryColor}`,
 		"tab-color": `${tabColor}`,
@@ -250,6 +252,9 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"secondary4-opacity-005-color": `${secondary4Opacity005}`,
 		"secondary4-opacity-010-color": `${secondary4Opacity010}`,
 		"secondary4-opacity-020-color": `${secondary4Opacity020}`,
-		"secondary4-opacity-030-color": `${secondary4Opacity030}`
+		"secondary4-opacity-030-color": `${secondary4Opacity030}`,
+
+		"border-small-050": `1px solid ${borderColor}`,
+		"border-small-100": `1px solid ${divider010}`
 	}
 }

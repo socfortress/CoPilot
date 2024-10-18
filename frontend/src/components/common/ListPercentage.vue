@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-2">
 		<n-empty v-if="!list.length" description="No items found" class="h-48 justify-center" />
 
-		<div class="list-header text-secondary-color flex items-center justify-between gap-4 font-mono text-sm">
+		<div class="list-header text-secondary flex items-center justify-between gap-4 font-mono text-sm">
 			<div class="borde basis-2/3 truncate">
 				{{ labelKey }}
 			</div>

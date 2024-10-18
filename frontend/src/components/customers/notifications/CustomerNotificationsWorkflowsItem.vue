@@ -9,9 +9,9 @@
 						v-if="incidentNotification.enabled"
 						:name="EnabledIcon"
 						:size="14"
-						class="text-success-color"
+						class="text-success"
 					></Icon>
-					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary-color"></Icon>
+					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary"></Icon>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">

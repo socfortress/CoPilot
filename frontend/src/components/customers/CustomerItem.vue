@@ -155,7 +155,7 @@
 						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
 					<template #suffix>
-						<div class="hover:text-primary-color cursor-pointer pr-8" @click="selectedTabsGroup = 'agents'">
+						<div class="hover:text-primary cursor-pointer pr-8" @click="selectedTabsGroup = 'agents'">
 							Agents
 						</div>
 					</template>
@@ -163,7 +163,7 @@
 				<n-tabs v-else-if="selectedTabsGroup === 'agents'" type="line" animated :tabs-padding="24">
 					<template #prefix>
 						<div
-							class="hover:text-primary-color relative top-1 cursor-pointer pl-6"
+							class="hover:text-primary relative top-1 cursor-pointer pl-6"
 							@click="selectedTabsGroup = 'customer'"
 						>
 							<Icon :name="ArrowIcon" :size="20"></Icon>

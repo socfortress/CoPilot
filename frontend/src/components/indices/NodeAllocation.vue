@@ -3,7 +3,7 @@
 		<template #header>
 			<div class="align-center flex justify-between">
 				<span>Nodes Allocation</span>
-				<span v-if="indicesAllocation.length" class="text-secondary-color font-mono">
+				<span v-if="indicesAllocation.length" class="text-secondary font-mono">
 					{{ indicesAllocation.length }}
 				</span>
 			</div>

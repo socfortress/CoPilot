@@ -1,13 +1,13 @@
+@use "sass:meta";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import "_variables";
-@import "common";
-@import "helpers";
-@import "fonts";
-@import "router-animations";
-@import "overrides/naive-override";
+@include meta.load-css("fonts");
+@include meta.load-css("common");
+@include meta.load-css("common-animations");
+@include meta.load-css("router-animations");
+@include meta.load-css("overrides/naive-override");
 
 html,
 body {

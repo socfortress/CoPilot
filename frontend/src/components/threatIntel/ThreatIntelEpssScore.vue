@@ -12,7 +12,7 @@
 			<n-card
 				v-for="item of epssList"
 				:key="item.___id"
-				content-class="bg-secondary-color"
+				content-class="bg-secondary"
 				class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 			>
 				<div class="xs:!flex-row flex flex-col justify-between gap-8">

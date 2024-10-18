@@ -6,25 +6,25 @@
 
 <script lang="ts" setup>
 import Icon from "@/components/common/Icon.vue"
-import { useStoreI18n } from "@/composables/useStoreI18n"
+import { useLocalesStore } from "@/stores/i18n"
 import { NPopselect, type SelectOption } from "naive-ui"
 import { computed, h, type VNodeChild } from "vue"
 
 const MultiLanguageIcon = "ion:language-outline"
 
-const storeI18n = useStoreI18n()
+const localesStore = useLocalesStore()
 
-const { getAvailableLocales, getLocale, setLocale, t } = storeI18n
+const { setLocale, t } = localesStore
 
 const list = computed(() =>
-	getAvailableLocales().map(i => ({
+	localesStore.availableLocales.map(i => ({
 		label: i,
 		value: i
 	}))
 )
 
 const currentLocale = computed({
-	get: () => getLocale(),
+	get: () => localesStore.locale,
 	set: v => setLocale(v)
 })
 
@@ -43,12 +43,22 @@ function renderLabel(option: SelectOption): VNodeChild {
 			{},
 			{
 				default: () => {
-					if (option.label === "it") return t("italian")
-					if (option.label === "en") return t("english")
-					if (option.label === "es") return t("spanish")
-					if (option.label === "fr") return t("french")
-					if (option.label === "de") return t("german")
-					if (option.label === "jp") return t("japanese")
+					switch (option.label) {
+						case "it":
+							return t("italian")
+						case "en":
+							return t("english")
+						case "es":
+							return t("spanish")
+						case "fr":
+							return t("french")
+						case "de":
+							return t("german")
+						case "jp":
+							return t("japanese")
+						default:
+							return option.label
+					}
 				}
 			}
 		)

@@ -158,9 +158,6 @@ function setCroppedImage(result: ImageCropperResult) {
 						display: flex;
 					}
 				}
-				.actions {
-					// display: none;
-				}
 			}
 		}
 		.section-selector {

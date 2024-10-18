@@ -40,7 +40,7 @@
 			<template #value>
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
-						class="text-primary-color cursor-pointer"
+						class="text-primary cursor-pointer"
 						@click="gotoCustomer({ code: alert.customer.customer_code })"
 					>
 						{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
