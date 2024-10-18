@@ -3,7 +3,7 @@
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
-					<KVCard
+					<CardKV
 						:color="
 							caseData.case_status === 'OPEN'
 								? 'danger'
@@ -48,9 +48,9 @@
 								</CaseStatusSwitch>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
+					<CardKV :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
 								<AssigneeIcon :assignee="caseData.assigned_to" />
@@ -83,27 +83,27 @@
 								</CaseAssignUser>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>description</template>
 						<template #value>
 							<span class="whitespace-pre-wrap">
 								{{ caseData.case_description ?? "-" }}
 							</span>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="grid-auto-fit-250 grid gap-2 px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ caseData.id }}</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>creation time</template>
 						<template #value>
 							{{
@@ -112,9 +112,9 @@
 									: "-"
 							}}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>customer code</template>
 						<template #value>
 							<code
@@ -127,7 +127,7 @@
 							</code>
 							<span v-else>-</span>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 
@@ -147,7 +147,7 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"

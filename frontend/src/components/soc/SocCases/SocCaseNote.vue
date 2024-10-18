@@ -68,14 +68,14 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<KVCard v-for="(value, key) of properties" :key="key">
+						<CardKV v-for="(value, key) of properties" :key="key">
 							<template #key>
 								{{ key }}
 							</template>
 							<template #value>
 								{{ value || "-" }}
 							</template>
-						</KVCard>
+						</CardKV>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Content" tab="Content" display-directive="show">
@@ -106,7 +106,7 @@
 <script setup lang="ts">
 import type { SocNote } from "@/types/soc/note.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import _omit from "lodash/omit"

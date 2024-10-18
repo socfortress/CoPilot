@@ -77,14 +77,14 @@
 			segmented
 		>
 			<div class="grid-auto-fit-200 grid gap-2 px-7 py-6">
-				<KVCard v-for="(value, key) of healthData" :key="key">
+				<CardKV v-for="(value, key) of healthData" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						{{ value || "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-modal>
 	</div>
@@ -94,7 +94,7 @@
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"

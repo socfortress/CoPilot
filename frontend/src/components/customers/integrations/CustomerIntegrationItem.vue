@@ -52,14 +52,14 @@
 			segmented
 		>
 			<div class="grid-auto-fit-200 grid gap-2">
-				<KVCard v-for="ak of authKeys" :key="ak.key">
+				<CardKV v-for="ak of authKeys" :key="ak.key">
 					<template #key>
 						{{ ak.key }}
 					</template>
 					<template #value>
 						{{ ak.value || "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-modal>
 	</div>
@@ -69,7 +69,7 @@
 import type { CustomerIntegration } from "@/types/integrations.d"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

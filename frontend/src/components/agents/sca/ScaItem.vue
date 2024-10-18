@@ -29,7 +29,7 @@
 				</n-card>
 			</div>
 			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
-				<KVCard v-for="(value, key) of properties" :key="key">
+				<CardKV v-for="(value, key) of properties" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
@@ -52,7 +52,7 @@
 							{{ value ?? "-" }}
 						</template>
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Description" tab="Description" display-directive="show">
@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _pick from "lodash/pick"

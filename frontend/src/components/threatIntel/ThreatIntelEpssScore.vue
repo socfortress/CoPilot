@@ -1,12 +1,12 @@
 <template>
 	<n-spin :show="loading" content-class="min-h-32">
 		<div class="mb-4">
-			<KVCard>
+			<CardKV>
 				<template #key>cve</template>
 				<template #value>
 					{{ cve }}
 				</template>
-			</KVCard>
+			</CardKV>
 		</div>
 		<div v-if="epssList.length" class="flex flex-col gap-3">
 			<n-card
@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import type { EpssScore } from "@/types/threatIntel.d"
 import Api from "@/api"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"

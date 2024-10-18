@@ -24,14 +24,14 @@
 			</div>
 
 			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-				<KVCard v-for="(value, key) of customer" :key="key">
+				<CardKV v-for="(value, key) of customer" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						{{ value || "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</template>
 	</div>
@@ -41,7 +41,7 @@
 import type { Customer } from "@/types/customers.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { h, ref, toRefs, watch } from "vue"
 import CustomerForm from "./CustomerForm.vue"

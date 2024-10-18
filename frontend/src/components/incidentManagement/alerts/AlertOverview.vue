@@ -3,7 +3,7 @@
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
-					<KVCard
+					<CardKV
 						:color="
 							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
 						"
@@ -42,9 +42,9 @@
 								</AlertStatusSwitch>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
+					<CardKV :color="alert.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
 								<AssigneeIcon :assignee="alert.assigned_to" />
@@ -77,32 +77,32 @@
 								</AlertAssignUser>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>description</template>
 						<template #value>
 							{{ alert.alert_description ?? "-" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="grid-auto-fit-250 grid gap-2 px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ alert.id }}</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>source</template>
 						<template #value>
 							{{ alert.source ?? "-" }}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>customer code</template>
 						<template #value>
 							<code
@@ -113,28 +113,28 @@
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>assets</template>
 						<template #value>
 							{{ alert.assets.length }}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>comments</template>
 						<template #value>
 							{{ alert.comments.length }}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>tags</template>
 						<template #value>
 							<AlertTags :alert @updated="updateAlert" />
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 
@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"

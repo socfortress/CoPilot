@@ -1,18 +1,18 @@
 <template>
 	<div class="collect-item flex flex-wrap gap-2 p-2" :class="{ embedded }">
-		<KVCard v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
+		<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
 			<template #key>
 				{{ prop.key }}
 			</template>
 			<template #value>
 				{{ prop.value }}
 			</template>
-		</KVCard>
-		<KVCard class="more" @click="showDetails = true">
+		</CardKV>
+		<CardKV class="more" @click="showDetails = true">
 			<template #value>
 				<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
 			</template>
-		</KVCard>
+		</CardKV>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import type { CollectResult } from "@/types/artifacts.d"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"

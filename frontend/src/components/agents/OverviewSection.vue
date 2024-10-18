@@ -1,7 +1,7 @@
 <template>
 	<div class="overview-section">
 		<div class="property-group grid-auto-fit-250 grid gap-2">
-			<KVCard v-for="item of propsSanitized" :key="item.key">
+			<CardKV v-for="item of propsSanitized" :key="item.key">
 				<template #key>
 					{{ item.key }}
 				</template>
@@ -19,7 +19,7 @@
 						{{ item.val ?? "-" }}
 					</template>
 				</template>
-			</KVCard>
+			</CardKV>
 		</div>
 	</div>
 </template>
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"

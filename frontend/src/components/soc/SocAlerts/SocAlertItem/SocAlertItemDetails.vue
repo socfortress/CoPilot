@@ -10,7 +10,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
 			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-				<KVCard v-for="(value, key) of alert.customer" :key="key">
+				<CardKV v-for="(value, key) of alert.customer" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
@@ -25,7 +25,7 @@
 							{{ value || "-" }}
 						</template>
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
@@ -38,7 +38,7 @@
 				</Badge>
 			</div>
 			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-				<KVCard>
+				<CardKV>
 					<template #key>user_login</template>
 					<template #value>
 						<SocAssignUser
@@ -55,20 +55,20 @@
 							</div>
 						</SocAssignUser>
 					</template>
-				</KVCard>
-				<KVCard v-if="alert.owner">
+				</CardKV>
+				<CardKV v-if="alert.owner">
 					<template #key>user_name</template>
 					<template #value>
 						<span>#{{ alert.owner.id }}</span>
 						{{ alert.owner.user_name }}
 					</template>
-				</KVCard>
-				<KVCard v-if="alert.owner">
+				</CardKV>
+				<CardKV v-if="alert.owner">
 					<template #key>user_email</template>
 					<template #value>
 						{{ alert.owner.user_email }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="History" tab="History" display-directive="show:lazy">
@@ -92,7 +92,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"

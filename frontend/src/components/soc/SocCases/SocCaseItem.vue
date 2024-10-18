@@ -176,7 +176,7 @@
 								</div>
 							</div>
 							<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-								<KVCard v-for="(value, key) of properties" :key="key">
+								<CardKV v-for="(value, key) of properties" :key="key">
 									<template #key>
 										{{ key }}
 									</template>
@@ -196,7 +196,7 @@
 											{{ value || "-" }}
 										</template>
 									</template>
-								</KVCard>
+								</CardKV>
 							</div>
 						</n-spin>
 					</n-tab-pane>
@@ -260,7 +260,7 @@
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"

@@ -39,14 +39,14 @@
 			</div>
 
 			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
-				<KVCard v-for="(value, key) of properties" :key="key">
+				<CardKV v-for="(value, key) of properties" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						{{ value ?? "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Description" tab="Description" display-directive="show:lazy">
@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents.d"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"

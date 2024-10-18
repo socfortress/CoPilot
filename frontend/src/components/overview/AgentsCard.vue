@@ -10,8 +10,8 @@
 
 <script setup lang="ts">
 import Api from "@/api"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import CardStatsMulti, { type ItemProps } from "@/components/common/CardStatsMulti.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
+import CardStatsMulti, { type ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { type Agent, AgentStatus } from "@/types/agents.d"
 import { NSpin, useMessage } from "naive-ui"

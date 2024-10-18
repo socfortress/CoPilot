@@ -3,7 +3,7 @@
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
-					<KVCard :color="query.active ? 'success' : undefined" size="lg" class="w-full grow">
+					<CardKV :color="query.active ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
 								<Icon :name="query.active ? EnabledIcon : DisabledIcon" />
@@ -37,9 +37,9 @@
 								</QueryActiveForm>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard size="lg" class="w-full grow">
+					<CardKV size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
 								<Icon :name="TimeIntervalIcon" />
@@ -73,20 +73,20 @@
 								</QueryTimeIntervalForm>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>name</template>
 						<template #value>
 							{{ query.rule_name ?? "-" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="grid-auto-fit-250 grid gap-2 px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>last execution time</template>
 						<template #value>
 							{{
@@ -95,14 +95,14 @@
 									: "n/d"
 							}}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>last updated</template>
 						<template #value>
 							{{ query.last_updated ? formatDate(query.last_updated, dFormats.datetimesec) : "n/d" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 
@@ -129,7 +129,7 @@
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NButton, NSpin } from "naive-ui"

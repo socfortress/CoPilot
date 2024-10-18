@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 import Api from "@/api"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import CardStatsMulti, { type ItemProps } from "@/components/common/CardStatsMulti.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
+import CardStatsMulti, { type ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
 import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
