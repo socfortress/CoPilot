@@ -1,48 +1,56 @@
 <template>
-	<div
-		class="alert-item"
-		:class="[`status-${alert?.status}`, { compact, embedded, 'cursor-pointer': compact, highlight }]"
-		@click="compact ? openDetails() : undefined"
-	>
-		<n-spin :show="loading">
-			<div v-if="alert" class="flex flex-col">
-				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
-					<div class="id flex cursor-pointer items-center gap-2" @click="openDetails()">
-						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
-					</div>
-					<div class="time">
-						<n-popover
-							v-if="!compact"
-							overlap
-							placement="top-end"
-							style="max-height: 240px"
-							scrollable
-							to="body"
-						>
-							<template #trigger>
-								<div class="flex cursor-help items-center gap-2">
-									<span v-if="alert.alert_creation_time">
-										{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
-									</span>
-									<Icon :name="TimeIcon" :size="16"></Icon>
-								</div>
-							</template>
-							<div class="flex flex-col px-1 py-2">
-								<AlertTimeline v-if="alert" :alert />
-							</div>
-						</n-popover>
-						<span v-if="compact && alert.alert_creation_time">
-							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
-						</span>
-					</div>
+	<div>
+		<CardEntity
+			:loading
+			:embedded
+			hoverable
+			:size="compact ? 'small' : 'medium'"
+			:clickable="compact"
+			:highlighted="highlight"
+			@click="compact ? openDetails() : undefined"
+		>
+			<template v-if="alert" #headerTitle>
+				<div
+					class="flex cursor-pointer items-center gap-2"
+					:class="{ 'hover:text-primary cursor-pointer': !compact }"
+					@click="compact ? undefined : openDetails()"
+				>
+					<span>#{{ alert.id }} - {{ alert.source }}</span>
+					<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 				</div>
-
-				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex grow flex-col gap-1">
-						<div class="title">
-							{{ alert.alert_name }}
+			</template>
+			<template v-if="alert?.alert_creation_time" #headerExtra>
+				<div :class="{ 'hidden sm:block': !compact }">
+					<n-popover
+						v-if="!compact"
+						overlap
+						placement="top-end"
+						style="max-height: 240px"
+						scrollable
+						to="body"
+					>
+						<template #trigger>
+							<div class="flex cursor-help items-center gap-2">
+								<span v-if="alert.alert_creation_time">
+									{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+								</span>
+								<Icon :name="TimeIcon" :size="16"></Icon>
+							</div>
+						</template>
+						<div class="flex flex-col px-1 py-2">
+							<AlertTimeline v-if="alert" :alert />
 						</div>
+					</n-popover>
+					<span v-if="compact && alert.alert_creation_time">
+						{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+					</span>
+				</div>
+			</template>
+
+			<template v-if="alert" #default>
+				<div class="flex flex-col gap-3">
+					<div class="title">
+						{{ alert.alert_name }}
 					</div>
 
 					<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
@@ -170,54 +178,61 @@
 						</Badge>
 					</div>
 				</div>
+			</template>
 
-				<div v-if="!compact" class="footer-box flex items-center justify-between px-5 py-3">
-					<div class="details flex items-center gap-3">
-						<Badge v-if="alert.alert_creation_time" type="splitted" class="time">
-							<template #iconLeft>
-								<Icon :name="TimeIcon" :size="16" />
-							</template>
-							<template #value>
-								{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
-							</template>
-						</Badge>
+			<template v-if="alert && !compact" #footerTitle>
+				<div class="flex items-center gap-3">
+					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:!hidden': !compact }">
+						<template #iconLeft>
+							<Icon :name="TimeIcon" :size="16" />
+						</template>
+						<template #value>
+							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+						</template>
+					</Badge>
 
-						<n-tooltip trigger="hover">
-							<template #trigger>
-								<Badge type="splitted" class="xs:!flex !hidden">
-									<template #iconLeft>
-										<Icon :name="AssetsIcon" :size="16" />
-									</template>
-									<template #value>
-										{{ alert.assets?.length || 0 }}
-									</template>
-								</Badge>
-							</template>
-							Assets
-						</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<Badge type="splitted" class="xs:!flex !hidden">
+								<template #iconLeft>
+									<Icon :name="AssetsIcon" :size="16" />
+								</template>
+								<template #value>
+									{{ alert.assets?.length || 0 }}
+								</template>
+							</Badge>
+						</template>
+						Assets
+					</n-tooltip>
 
-						<n-tooltip trigger="hover">
-							<template #trigger>
-								<Badge type="splitted" class="xs:!flex !hidden">
-									<template #iconLeft>
-										<Icon :name="CommentsIcon" :size="16" />
-									</template>
-									<template #value>
-										{{ alert.comments?.length || 0 }}
-									</template>
-								</Badge>
-							</template>
-							Comments
-						</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<Badge type="splitted" class="xs:!flex !hidden">
+								<template #iconLeft>
+									<Icon :name="CommentsIcon" :size="16" />
+								</template>
+								<template #value>
+									{{ alert.comments?.length || 0 }}
+								</template>
+							</Badge>
+						</template>
+						Comments
+					</n-tooltip>
 
-						<span v-for="tag of alert.tags" :key="tag.tag" class="text-secondary">#{{ tag.tag }}</span>
-					</div>
-					<div class="actions-box">
-						<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
-					</div>
+					<span
+						v-for="tag of alert.tags"
+						:key="tag.tag"
+						class="text-secondary"
+						:class="{ 'hidden sm:inline-block': !compact }"
+					>
+						#{{ tag.tag }}
+					</span>
 				</div>
-			</div>
-		</n-spin>
+			</template>
+			<template v-if="alert && !compact" #footerExtra>
+				<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -243,6 +258,7 @@
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
@@ -368,79 +384,3 @@ onMounted(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.alert-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		color: var(--fg-secondary-color);
-
-		.id {
-			word-break: break-word;
-			line-height: 1.2;
-		}
-	}
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	.footer-box {
-		border-top: var(--border-small-100);
-		font-size: 13px;
-		background-color: var(--bg-secondary-color);
-
-		.time {
-			display: none;
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-		border: var(--border-small-100);
-
-		.footer-box {
-			background-color: var(--bg-body);
-		}
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-
-	&.highlight {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-
-	&:not(.compact) {
-		.header-box {
-			.id {
-				&:hover {
-					color: var(--primary-color);
-				}
-			}
-		}
-
-		@container (max-width: 600px) {
-			.header-box {
-				.time {
-					display: none;
-				}
-			}
-			.footer-box {
-				.time {
-					display: flex;
-				}
-			}
-		}
-	}
-}
-</style>

@@ -68,8 +68,8 @@
 <script setup lang="ts">
 import type { CustomerIntegration } from "@/types/integrations.d"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

@@ -80,8 +80,8 @@
 
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents.d"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _pick from "lodash/pick"

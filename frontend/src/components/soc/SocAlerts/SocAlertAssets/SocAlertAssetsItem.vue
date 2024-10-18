@@ -150,8 +150,8 @@
 <script setup lang="ts">
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { isUrlLike } from "@/utils"

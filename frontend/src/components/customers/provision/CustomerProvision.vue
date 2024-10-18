@@ -48,8 +48,8 @@
 <script setup lang="ts">
 import type { CustomerMeta } from "@/types/customers.d"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"

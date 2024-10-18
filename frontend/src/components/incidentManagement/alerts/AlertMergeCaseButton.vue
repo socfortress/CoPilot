@@ -29,7 +29,7 @@
 							:case-data="item"
 							compact
 							embedded
-							:class="{ active: selectedCase?.id === item.id }"
+							:highlight="selectedCase?.id === item.id"
 							@click="toggleSelectedCase(item)"
 						/>
 					</template>

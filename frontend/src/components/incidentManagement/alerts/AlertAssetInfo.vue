@@ -84,8 +84,8 @@
 <script setup lang="ts">
 import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
 import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"

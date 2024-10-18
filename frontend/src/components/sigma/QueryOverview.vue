@@ -128,8 +128,8 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NButton, NSpin } from "naive-ui"

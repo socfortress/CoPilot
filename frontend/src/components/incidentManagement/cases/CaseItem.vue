@@ -1,25 +1,31 @@
 <template>
-	<div
-		class="case-item"
-		:class="[`status-${caseEntity?.case_status}`, { compact, embedded, 'cursor-pointer': compact, highlight }]"
-	>
-		<n-spin :show="loading">
-			<div v-if="caseEntity" class="flex flex-col">
-				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
-					<div class="id flex cursor-pointer items-center gap-2" @click="compact ? undefined : openDetails()">
-						<span>#{{ caseEntity.id }}</span>
-						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
-					</div>
-					<div v-if="caseEntity.case_creation_time" class="time">
-						{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
-					</div>
+	<div>
+		<CardEntity
+			:loading
+			:embedded
+			hoverable
+			:size="compact ? 'small' : 'medium'"
+			:clickable="compact"
+			:highlighted="highlight"
+		>
+			<template v-if="caseEntity" #headerTitle>
+				<div
+					class="flex items-center gap-2 break-words"
+					:class="{ 'hover:text-primary cursor-pointer': !compact }"
+					@click="compact ? undefined : openDetails()"
+				>
+					<span>#{{ caseEntity.id }}</span>
+					<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
 				</div>
+			</template>
+			<template v-if="caseEntity?.case_creation_time" #headerExtra>
+				{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
+			</template>
 
-				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex grow flex-col gap-1">
-						<div class="title">
-							{{ caseEntity.case_name }}
-						</div>
+			<template v-if="caseEntity" #default>
+				<div class="flex flex-col gap-3">
+					<div class="title">
+						{{ caseEntity.case_name }}
 					</div>
 
 					<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
@@ -151,8 +157,10 @@
 						</Badge>
 					</div>
 				</div>
+			</template>
 
-				<div v-if="!compact" class="footer-box flex items-center justify-between px-5 py-3">
+			<template v-if="caseEntity && !compact" #footer>
+				<div class="flex items-center justify-between">
 					<n-collapse :trigger-areas="['main', 'arrow']">
 						<n-collapse-item name="alerts-list">
 							<template #header>
@@ -189,8 +197,8 @@
 						</n-collapse-item>
 					</n-collapse>
 				</div>
-			</div>
-		</n-spin>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -220,6 +228,7 @@
 import type { Case } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
@@ -338,59 +347,3 @@ onMounted(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.case-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		color: var(--fg-secondary-color);
-
-		.id {
-			word-break: break-word;
-			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	.footer-box {
-		border-top: var(--border-small-100);
-		font-size: 13px;
-		background-color: var(--bg-secondary-color);
-
-		.time {
-			display: none;
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-040-color);
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-040-color);
-	}
-
-	&.highlight {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-}
-</style>

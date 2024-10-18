@@ -40,8 +40,8 @@
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { h, ref, toRefs, watch } from "vue"
 import CustomerForm from "./CustomerForm.vue"

@@ -259,8 +259,8 @@
 <script setup lang="ts">
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"

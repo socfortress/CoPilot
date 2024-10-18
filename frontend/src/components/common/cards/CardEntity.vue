@@ -1,166 +1,136 @@
 <template>
-	<n-card hoverable size="large" :class="{ actionBoxTransparent }">
-		<template v-if="showImage" #cover>
-			<img alt="cover" :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
-		</template>
-		<template #header>
-			<div v-if="title" class="title">
-				{{ title }}
+	<n-card
+		class="card-entity"
+		content-class="!p-0"
+		:class="[`card-size-${size}`, { embedded, highlighted, clickable, hoverable, disabled }]"
+	>
+		<n-spin :show="loading">
+			<div class="card-entity-wrapper flex flex-col">
+				<div class="main-box flex flex-col">
+					<div v-if="$slots.header" class="header-box">
+						<slot name="header" />
+					</div>
+
+					<div
+						v-if="!$slots.header && ($slots.headerTitle || $slots.headerExtra)"
+						class="header-box flex items-center justify-between"
+					>
+						<div>
+							<slot name="headerTitle" />
+						</div>
+						<div>
+							<slot name="headerExtra" />
+						</div>
+					</div>
+
+					<div v-if="$slots.default" class="content-box">
+						<slot name="default" />
+					</div>
+				</div>
+
+				<div v-if="$slots.footer" class="footer-box">
+					<slot name="footer" />
+				</div>
+
+				<div
+					v-if="!$slots.footer && ($slots.footerTitle || $slots.footerExtra)"
+					class="footer-box flex items-center justify-between"
+				>
+					<div>
+						<slot name="footerTitle" />
+					</div>
+					<div>
+						<slot name="footerExtra" />
+					</div>
+				</div>
 			</div>
-			<div v-if="!hideSubtitle && subtitle" class="subtitle">
-				{{ subtitle }}
-			</div>
-		</template>
-		<template #header-extra>
-			<n-dropdown v-if="!hideMenu" :options="menuOptions" placement="bottom-end" to="body" @select="menuSelect">
-				<Icon :size="20" :name="MenuIcon" />
-			</n-dropdown>
-		</template>
-		<template #default>
-			<div class="w-full overflow-hidden">
-				<n-scrollbar x-scrollable class="!w-full" trigger="none">
-					<slot />
-				</n-scrollbar>
-			</div>
-		</template>
-		<template v-if="$slots.footer" #footer>
-			<slot name="footer" />
-		</template>
-		<template v-if="$slots.action" #action>
-			<slot name="action" />
-		</template>
+		</n-spin>
 	</n-card>
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { renderIcon } from "@/utils"
-import { NCard, NDropdown, NScrollbar } from "naive-ui"
-import { computed, onMounted, ref, toRefs } from "vue"
+import { NCard, NSpin } from "naive-ui"
 
-const props = defineProps<{
-	showImage?: boolean
-	hideSubtitle?: boolean
-	actionBoxTransparent?: boolean
-	hideMenu?: boolean
-	reload?: (state: boolean) => void
-	expand?: (state: boolean) => void
-	isExpand?: () => boolean
-	title?: string
-	subtitle?: string
-	image?: string
+const { size, embedded, highlighted, clickable, hoverable, disabled, loading } = defineProps<{
+	size?: "medium" | "small" | "large"
+	embedded?: boolean
+	highlighted?: boolean
+	clickable?: boolean
+	hoverable?: boolean
+	disabled?: boolean
+	loading?: boolean
 }>()
-const MenuIcon = "carbon:overflow-menu-vertical"
-const ContractIcon = "fluent:contract-down-left-24-regular"
-const ExpandIcon = "fluent:expand-up-right-24-regular"
-const ReloadIcon = "tabler:refresh"
-
-const { showImage, hideSubtitle, title, subtitle, image, actionBoxTransparent, hideMenu, reload, expand, isExpand } =
-	toRefs(props)
-
-let reloadTimeout: NodeJS.Timeout | null = null
-const showExpandButton = ref(true)
-
-/* eslint no-mixed-spaces-and-tabs: "off" */
-const menuOptions = computed(() =>
-	showExpandButton.value
-		? [
-				{
-					label: "Expand",
-					key: "expand",
-					icon: renderIcon(ExpandIcon)
-				},
-				{
-					label: "Reload",
-					key: "reload",
-					icon: renderIcon(ReloadIcon)
-				}
-			]
-		: [
-				{
-					label: "Collapse",
-					key: "collapse",
-					icon: renderIcon(ContractIcon)
-				},
-				{
-					label: "Reload",
-					key: "reload",
-					icon: renderIcon(ReloadIcon)
-				}
-			]
-)
-
-function menuSelect(key: string) {
-	if (key === "expand") {
-		expand?.value?.(true)
-	}
-	if (key === "collapse") {
-		expand?.value?.(false)
-	}
-	if (key === "reload") {
-		reload?.value?.(true)
-
-		if (reloadTimeout) {
-			clearTimeout(reloadTimeout)
-		}
-
-		reloadTimeout = setTimeout(() => {
-			reload?.value?.(false)
-		}, 1000)
-	}
-}
-
-onMounted(() => {
-	if (isExpand?.value) {
-		showExpandButton.value = !isExpand?.value()
-	}
-})
 </script>
 
 <style lang="scss" scoped>
-.n-card {
-	.title {
-		line-height: 1.2;
-	}
-	.subtitle {
-		line-height: 1.2;
-		font-size: 14px;
-		opacity: 0.6;
-		margin-top: 6px;
-		font-weight: 500;
-		font-family: var(--font-family);
-	}
+.card-entity {
+	transition: all 0.2s var(--bezier-ease);
+	overflow: hidden;
 
-	:deep() {
-		.n-card-header {
-			align-items: flex-start;
-		}
+	.card-entity-wrapper {
+		.main-box {
+			@apply gap-3 px-5 py-3;
 
-		.n-card__footer {
-			margin: 0 auto;
-			overflow-x: clip;
-			width: calc(100% - 2px);
-			.vue-apexcharts {
-				margin-left: -18px;
-				margin-right: -18px;
+			.header-box {
+				font-family: var(--font-family-mono);
+				font-size: 13px;
+				color: var(--fg-secondary-color);
+			}
+			.content-box {
+				word-break: break-word;
 			}
 		}
 
-		.n-card__action {
-			padding: 0;
-			//overflow-x: clip;
-			.vue-apexcharts {
-				width: calc(100% - 2px);
-				margin: 0 auto;
+		.footer-box {
+			border-top: var(--border-small-100);
+			font-size: 13px;
+			background-color: var(--bg-secondary-color);
+			@apply gap-3 px-5 py-3;
+		}
+	}
+
+	&.card-size-small {
+		.card-entity-wrapper {
+			.main-box,
+			.footer-box {
+				@apply gap-2 px-3 py-2;
 			}
 		}
 	}
 
-	&.actionBoxTransparent {
-		:deep() {
-			.n-card__action {
-				background-color: transparent;
+	&.card-size-large {
+		.card-entity-wrapper {
+			.main-box,
+			.footer-box {
+				@apply gap-6 px-8 py-6;
 			}
+		}
+	}
+
+	&.clickable {
+		@apply cursor-pointer;
+	}
+
+	&.embedded {
+		background-color: var(--bg-secondary-color);
+		border: var(--border-small-100);
+
+		.footer-box {
+			background-color: var(--bg-body);
+		}
+	}
+
+	&.hoverable {
+		&:hover {
+			box-shadow: 0px 0px 0px 1px var(--primary-040-color);
+		}
+	}
+
+	&.highlighted {
+		box-shadow: 0px 0px 0px 1px var(--primary-color);
+
+		&:hover {
+			box-shadow: 0px 0px 0px 2px var(--primary-color);
 		}
 	}
 }

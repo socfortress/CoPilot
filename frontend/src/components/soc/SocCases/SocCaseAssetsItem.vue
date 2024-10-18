@@ -120,8 +120,8 @@
 <script setup lang="ts">
 import type { SocCaseAsset } from "@/types/soc/asset.d"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
