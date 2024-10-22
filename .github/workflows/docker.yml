@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [update-template]
+        branches: [main]
 
 jobs:
     build-backend:
