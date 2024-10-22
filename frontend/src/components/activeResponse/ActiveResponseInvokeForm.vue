@@ -18,7 +18,7 @@
 				</p>
 			</n-spin>
 		</div>
-		<div class="buttons-box flex justify-end gap-3">
+		<div class="buttons-box flex justify-between gap-3">
 			<div class="flex gap-3">
 				<slot name="additionalActions"></slot>
 			</div>

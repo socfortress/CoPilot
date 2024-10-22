@@ -1,83 +1,74 @@
 <template>
-	<div class="sigma-query-item" :class="{ embedded }" @click="openDetails()">
-		<n-spin :show="loading">
-			<div class="flex flex-col">
-				<div class="header-box flex items-center justify-between px-5 py-3 pb-0">
-					<div class="id flex cursor-pointer items-center gap-2" @click="openDetails()">
-						<span>#{{ query.id }}</span>
-					</div>
-					<div class="status flex items-center gap-2">
-						<span>{{ query.active ? "Active" : "Inactive" }}</span>
-						<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success"></Icon>
-						<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary"></Icon>
-					</div>
+	<div>
+		<CardEntity :loading :embedded hoverable clickable @click="openDetails()">
+			<template #headerMain>#{{ query.id }}</template>
+			<template #headerExtra>
+				<div class="flex items-center gap-2">
+					<span>{{ query.active ? "Active" : "Inactive" }}</span>
+					<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success"></Icon>
+					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary"></Icon>
 				</div>
-
-				<div class="main-box flex flex-col gap-3 px-5 py-3">
-					<div class="content flex grow flex-col gap-1">
-						<div class="title">
-							{{ query.rule_name }}
-						</div>
-					</div>
-				</div>
-
-				<div class="footer-box flex items-center justify-between gap-4 px-5 py-3">
-					<div class="badges-box flex flex-wrap items-center gap-3">
-						<QueryTimeIntervalForm
-							v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
-							:query
-							@updated="updateQuery($event)"
-						>
-							<Badge type="splitted" bright point-cursor @click.stop="toggleTimeIntervalPopup()">
-								<template #iconLeft>
-									<n-spin
-										:size="12"
-										:show="loadingTimeInterval"
-										content-class="flex flex-col justify-center"
-									>
-										<Icon :name="TimeIntervalIcon" />
-									</n-spin>
-								</template>
-								<template #label>Time Interval</template>
-								<template #value>
-									<div class="flex items-center gap-2">
-										{{ query.time_interval || "n/d" }}
-										<Icon :name="EditIcon" :size="13" />
-									</div>
-								</template>
-							</Badge>
-						</QueryTimeIntervalForm>
-
-						<Badge type="splitted" bright fluid class="!hidden sm:!flex">
+			</template>
+			<template #default>
+				{{ query.rule_name }}
+			</template>
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
+					<QueryTimeIntervalForm
+						v-slot="{ loading: loadingTimeInterval, togglePopup: toggleTimeIntervalPopup }"
+						:query
+						@updated="updateQuery($event)"
+					>
+						<Badge type="splitted" bright point-cursor @click.stop="toggleTimeIntervalPopup()">
 							<template #iconLeft>
-								<Icon :name="TimeIcon" />
+								<n-spin
+									:size="12"
+									:show="loadingTimeInterval"
+									content-class="flex flex-col justify-center"
+								>
+									<Icon :name="TimeIntervalIcon" />
+								</n-spin>
 							</template>
-							<template #label>Last execution time</template>
+							<template #label>Time Interval</template>
 							<template #value>
 								<div class="flex items-center gap-2">
-									{{
-										query.last_execution_time
-											? formatDate(query.last_execution_time, dFormats.datetimesec)
-											: "n/d"
-									}}
+									{{ query.time_interval || "n/d" }}
+									<Icon :name="EditIcon" :size="13" />
 								</div>
 							</template>
 						</Badge>
-					</div>
-					<div class="actions-box">
-						<QueryDeleteOne
-							v-slot="{ loading: loadingDelete, togglePopup: toggleDeletePopup }"
-							:query
-							@deleted="emit('deleted', query)"
-						>
-							<n-button quaternary size="tiny" :loading="loadingDelete" @click.stop="toggleDeletePopup()">
-								Delete
-							</n-button>
-						</QueryDeleteOne>
-					</div>
+					</QueryTimeIntervalForm>
+
+					<Badge type="splitted" bright fluid class="!hidden sm:!flex">
+						<template #iconLeft>
+							<Icon :name="TimeIcon" />
+						</template>
+						<template #label>Last execution time</template>
+						<template #value>
+							<div class="flex items-center gap-2">
+								{{
+									query.last_execution_time
+										? formatDate(query.last_execution_time, dFormats.datetimesec)
+										: "n/d"
+								}}
+							</div>
+						</template>
+					</Badge>
 				</div>
-			</div>
-		</n-spin>
+			</template>
+
+			<template #footerExtra>
+				<QueryDeleteOne
+					v-slot="{ loading: loadingDelete, togglePopup: toggleDeletePopup }"
+					:query
+					@deleted="emit('deleted', query)"
+				>
+					<n-button quaternary size="tiny" :loading="loadingDelete" @click.stop="toggleDeletePopup()">
+						Delete
+					</n-button>
+				</QueryDeleteOne>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -102,6 +93,7 @@
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
@@ -150,44 +142,3 @@ function closeDetails() {
 	showDetails.value = false
 }
 </script>
-
-<style lang="scss" scoped>
-.sigma-query-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
-	cursor: pointer;
-
-	.header-box {
-		font-size: 13px;
-
-		.id {
-			color: var(--fg-secondary-color);
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			line-height: 1.2;
-		}
-	}
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	.footer-box {
-		border-top: var(--border-small-100);
-		font-size: 13px;
-		background-color: var(--bg-secondary-color);
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-}
-</style>

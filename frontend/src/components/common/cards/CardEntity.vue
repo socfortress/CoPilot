@@ -12,11 +12,11 @@
 					</div>
 
 					<div
-						v-if="!$slots.header && ($slots.headerTitle || $slots.headerExtra)"
+						v-if="!$slots.header && ($slots.headerMain || $slots.headerExtra)"
 						class="header-box flex items-center justify-between"
 					>
 						<div>
-							<slot name="headerTitle" />
+							<slot name="headerMain" />
 						</div>
 						<div>
 							<slot name="headerExtra" />
@@ -28,16 +28,20 @@
 					</div>
 				</div>
 
+				<div v-if="$slots.mainExtra" class="extra-box">
+					<slot name="mainExtra" />
+				</div>
+
 				<div v-if="$slots.footer" class="footer-box">
 					<slot name="footer" />
 				</div>
 
 				<div
-					v-if="!$slots.footer && ($slots.footerTitle || $slots.footerExtra)"
+					v-if="!$slots.footer && ($slots.footerMain || $slots.footerExtra)"
 					class="footer-box flex items-center justify-between"
 				>
 					<div>
-						<slot name="footerTitle" />
+						<slot name="footerMain" />
 					</div>
 					<div>
 						<slot name="footerExtra" />
@@ -69,22 +73,33 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 
 	.card-entity-wrapper {
 		.main-box {
-			@apply gap-3 px-5 py-3;
-
 			.header-box {
 				font-family: var(--font-family-mono);
 				font-size: 13px;
 				color: var(--fg-secondary-color);
+
+				:deep(.n-button) {
+					font-family: var(--font-family);
+				}
 			}
 			.content-box {
 				word-break: break-word;
 			}
 		}
 
+		.extra-box {
+			border-top: var(--border-small-050);
+		}
+
 		.footer-box {
-			border-top: var(--border-small-100);
+			border-top: var(--border-small-050);
 			font-size: 13px;
 			background-color: var(--bg-secondary-color);
+		}
+
+		.main-box,
+		.extra-box,
+		.footer-box {
 			@apply gap-3 px-5 py-3;
 		}
 	}
@@ -92,6 +107,7 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 	&.card-size-small {
 		.card-entity-wrapper {
 			.main-box,
+			.extra-box,
 			.footer-box {
 				@apply gap-2 px-3 py-2;
 			}
@@ -101,6 +117,7 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 	&.card-size-large {
 		.card-entity-wrapper {
 			.main-box,
+			.extra-box,
 			.footer-box {
 				@apply gap-6 px-8 py-6;
 			}

@@ -8,7 +8,7 @@
 			:clickable="compact"
 			:highlighted="highlight"
 		>
-			<template v-if="caseEntity" #headerTitle>
+			<template v-if="caseEntity" #headerMain>
 				<div
 					class="flex items-center gap-2 break-words"
 					:class="{ 'hover:text-primary cursor-pointer': !compact }"
@@ -23,12 +23,60 @@
 			</template>
 
 			<template v-if="caseEntity" #default>
-				<div class="flex flex-col gap-3">
-					<div class="title">
-						{{ caseEntity.case_name }}
-					</div>
+				{{ caseEntity.case_name }}
+			</template>
 
-					<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
+			<template v-if="caseEntity" #mainExtra>
+				<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
+					<Badge
+						type="splitted"
+						class="cursor-pointer"
+						bright
+						:color="
+							caseEntity.case_status === 'OPEN'
+								? 'danger'
+								: caseEntity.case_status === 'IN_PROGRESS'
+									? 'warning'
+									: caseEntity.case_status === 'CLOSED'
+										? 'success'
+										: undefined
+						"
+					>
+						<template #iconLeft>
+							<StatusIcon :status="caseEntity.case_status" />
+						</template>
+						<template #label>Status</template>
+						<template #value>
+							<div class="flex items-center gap-2">
+								{{ caseEntity.case_status || "n/d" }}
+							</div>
+						</template>
+					</Badge>
+
+					<Badge
+						type="splitted"
+						class="cursor-pointer"
+						bright
+						:color="caseEntity.assigned_to ? 'success' : undefined"
+					>
+						<template #iconLeft>
+							<AssigneeIcon :assignee="caseEntity.assigned_to" />
+						</template>
+						<template #label>Assignee</template>
+						<template #value>
+							<div class="flex items-center gap-2">
+								{{ caseEntity.assigned_to || "n/d" }}
+							</div>
+						</template>
+					</Badge>
+				</div>
+
+				<div v-else class="badges-box flex flex-wrap items-center gap-3">
+					<CaseStatusSwitch
+						v-slot="{ loading: loadingStatus }"
+						:case-data="caseEntity"
+						@updated="updateCase($event)"
+					>
 						<Badge
 							type="splitted"
 							class="cursor-pointer"
@@ -44,16 +92,25 @@
 							"
 						>
 							<template #iconLeft>
-								<StatusIcon :status="caseEntity.case_status" />
+								<n-spin :size="12" :show="loadingStatus" content-class="flex flex-col justify-center">
+									<StatusIcon :status="caseEntity.case_status" />
+								</n-spin>
 							</template>
 							<template #label>Status</template>
 							<template #value>
 								<div class="flex items-center gap-2">
 									{{ caseEntity.case_status || "n/d" }}
+									<Icon :name="EditIcon" :size="13" />
 								</div>
 							</template>
 						</Badge>
+					</CaseStatusSwitch>
 
+					<CaseAssignUser
+						v-slot="{ loading: loadingAssignee }"
+						:case-data="caseEntity"
+						@updated="updateCase($event)"
+					>
 						<Badge
 							type="splitted"
 							class="cursor-pointer"
@@ -61,101 +118,34 @@
 							:color="caseEntity.assigned_to ? 'success' : undefined"
 						>
 							<template #iconLeft>
-								<AssigneeIcon :assignee="caseEntity.assigned_to" />
+								<n-spin :size="12" :show="loadingAssignee" content-class="flex flex-col justify-center">
+									<AssigneeIcon :assignee="caseEntity.assigned_to" />
+								</n-spin>
 							</template>
 							<template #label>Assignee</template>
 							<template #value>
 								<div class="flex items-center gap-2">
 									{{ caseEntity.assigned_to || "n/d" }}
+									<Icon :name="EditIcon" :size="13" />
 								</div>
 							</template>
 						</Badge>
-					</div>
+					</CaseAssignUser>
 
-					<div v-else class="badges-box flex flex-wrap items-center gap-3">
-						<CaseStatusSwitch
-							v-slot="{ loading: loadingStatus }"
-							:case-data="caseEntity"
-							@updated="updateCase($event)"
-						>
-							<Badge
-								type="splitted"
-								class="cursor-pointer"
-								bright
-								:color="
-									caseEntity.case_status === 'OPEN'
-										? 'danger'
-										: caseEntity.case_status === 'IN_PROGRESS'
-											? 'warning'
-											: caseEntity.case_status === 'CLOSED'
-												? 'success'
-												: undefined
-								"
-							>
-								<template #iconLeft>
-									<n-spin
-										:size="12"
-										:show="loadingStatus"
-										content-class="flex flex-col justify-center"
-									>
-										<StatusIcon :status="caseEntity.case_status" />
-									</n-spin>
-								</template>
-								<template #label>Status</template>
-								<template #value>
-									<div class="flex items-center gap-2">
-										{{ caseEntity.case_status || "n/d" }}
-										<Icon :name="EditIcon" :size="13" />
-									</div>
-								</template>
-							</Badge>
-						</CaseStatusSwitch>
-
-						<CaseAssignUser
-							v-slot="{ loading: loadingAssignee }"
-							:case-data="caseEntity"
-							@updated="updateCase($event)"
-						>
-							<Badge
-								type="splitted"
-								class="cursor-pointer"
-								bright
-								:color="caseEntity.assigned_to ? 'success' : undefined"
-							>
-								<template #iconLeft>
-									<n-spin
-										:size="12"
-										:show="loadingAssignee"
-										content-class="flex flex-col justify-center"
-									>
-										<AssigneeIcon :assignee="caseEntity.assigned_to" />
-									</n-spin>
-								</template>
-								<template #label>Assignee</template>
-								<template #value>
-									<div class="flex items-center gap-2">
-										{{ caseEntity.assigned_to || "n/d" }}
-										<Icon :name="EditIcon" :size="13" />
-									</div>
-								</template>
-							</Badge>
-						</CaseAssignUser>
-
-						<Badge v-if="caseEntity.customer_code" type="splitted" class="!hidden sm:!flex">
-							<template #label>Customer</template>
-							<template #value>
-								<div class="flex h-full items-center">
-									<code
-										class="text-primary cursor-pointer leading-none"
-										@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
-									>
-										#{{ caseEntity.customer_code }}
-										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
-									</code>
-								</div>
-							</template>
-						</Badge>
-					</div>
+					<Badge v-if="caseEntity.customer_code" type="splitted" class="!hidden sm:!flex">
+						<template #label>Customer</template>
+						<template #value>
+							<div class="flex h-full items-center">
+								<code
+									class="text-primary cursor-pointer leading-none"
+									@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
+								>
+									#{{ caseEntity.customer_code }}
+									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+								</code>
+							</div>
+						</template>
+					</Badge>
 				</div>
 			</template>
 
