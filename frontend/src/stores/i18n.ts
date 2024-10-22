@@ -17,7 +17,7 @@ import {
 	type NLocale
 } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
-import { useI18n } from "vue-i18n"
+import { type ComposerTranslation, useI18n } from "vue-i18n"
 
 export type I18nLangCode = Locale
 
@@ -33,7 +33,7 @@ export const useLocalesStore = defineStore("i18n", {
 		}
 	},
 	getters: {
-		t() {
+		t(): ComposerTranslation {
 			return useI18n().t
 		},
 		naiveuiLocales(): { code: I18nLangCode; ui: NLocale; date: NDateLocale }[] {
