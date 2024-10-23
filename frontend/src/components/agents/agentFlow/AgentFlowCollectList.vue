@@ -58,6 +58,7 @@ function getData() {
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			// collectList.value = collect_result
 		})
 		.finally(() => {
 			loading.value = false

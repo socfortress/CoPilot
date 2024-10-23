@@ -1,63 +1,62 @@
 <template>
-	<div class="sca-result-item" :class="{ embedded }">
-		<div class="flex flex-col gap-2 px-4 py-3">
-			<div class="header-box flex items-center">
-				<div class="id">#{{ data.id }}</div>
-				<div class="grow"></div>
-				<div class="actions">
-					<n-button size="small" @click.stop="showDetails = true">
-						<template #icon>
-							<Icon :name="DetailsIcon"></Icon>
+	<div>
+		<CardEntity :embedded hoverable>
+			<template #headerMain>#{{ data.id }}</template>
+			<template #headerExtra>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="DetailsIcon"></Icon>
+					</template>
+					Details
+				</n-button>
+			</template>
+			<template #default>
+				<div class="flex flex-col gap-1">
+					<div>{{ data.title }}</div>
+					<p class="text-sm">$ {{ data.command }}</p>
+				</div>
+			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge
+						type="splitted"
+						:color="
+							data.result === 'failed'
+								? 'danger'
+								: data.result === 'not applicable'
+									? 'warning'
+									: 'success'
+						"
+						class="uppercase"
+					>
+						<template #label>
+							{{ data.result }}
 						</template>
-						Details
-					</n-button>
+					</Badge>
+
+					<Badge type="splitted" color="primary">
+						<template #label>Compliance</template>
+						<template #value>
+							{{ data.compliance?.length || "-" }}
+						</template>
+					</Badge>
+
+					<Badge type="splitted" color="primary">
+						<template #label>Condition</template>
+						<template #value>
+							{{ data.condition || "-" }}
+						</template>
+					</Badge>
+
+					<Badge type="splitted" color="primary">
+						<template #label>Rules</template>
+						<template #value>
+							{{ data.rules?.length || "-" }}
+						</template>
+					</Badge>
 				</div>
-			</div>
-			<div class="main-box flex items-center gap-3">
-				<div class="content flex grow flex-col gap-1">
-					<div class="title">
-						{{ data.title }}
-					</div>
-					<div class="description">$ {{ data.command }}</div>
-				</div>
-			</div>
-
-			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
-				<Badge
-					type="splitted"
-					:color="
-						data.result === 'failed' ? 'danger' : data.result === 'not applicable' ? 'warning' : 'success'
-					"
-					class="uppercase"
-				>
-					<template #label>
-						{{ data.result }}
-					</template>
-				</Badge>
-
-				<Badge type="splitted" color="primary">
-					<template #label>Compliance</template>
-					<template #value>
-						{{ data.compliance?.length || "-" }}
-					</template>
-				</Badge>
-
-				<Badge type="splitted" color="primary">
-					<template #label>Condition</template>
-					<template #value>
-						{{ data.condition || "-" }}
-					</template>
-				</Badge>
-
-				<Badge type="splitted" color="primary">
-					<template #label>Rules</template>
-					<template #value>
-						{{ data.rules?.length || "-" }}
-					</template>
-				</Badge>
-			</div>
-		</div>
-
+			</template>
+		</CardEntity>
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
@@ -75,6 +74,7 @@
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
@@ -88,41 +88,3 @@ const { data, embedded } = defineProps<{
 const DetailsIcon = "carbon:settings-adjust"
 const showDetails = ref(false)
 </script>
-
-<style lang="scss" scoped>
-.sca-result-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.header-box {
-		font-size: 13px;
-		.id {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-}
-</style>

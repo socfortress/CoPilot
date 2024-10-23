@@ -1,18 +1,22 @@
 <template>
-	<div class="collect-item flex flex-wrap gap-2 p-2" :class="{ embedded }">
-		<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
-			<template #key>
-				{{ prop.key }}
-			</template>
-			<template #value>
-				{{ prop.value }}
-			</template>
-		</CardKV>
-		<CardKV class="more" @click="showDetails = true">
-			<template #value>
-				<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
-			</template>
-		</CardKV>
+	<div>
+		<CardEntity :embedded hoverable size="small">
+			<div class="collect-item grid-auto-fit-200 grid gap-2">
+				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
+					<template #key>
+						{{ prop.key }}
+					</template>
+					<template #value>
+						{{ prop.value }}
+					</template>
+				</CardKV>
+				<CardKV class="hover:!border-primary cursor-pointer" @click="showDetails = true">
+					<template #value>
+						<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
+					</template>
+				</CardKV>
+			</div>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -27,6 +31,7 @@
 
 <script setup lang="ts">
 import type { CollectResult } from "@/types/artifacts.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
@@ -97,34 +102,8 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .collect-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-	min-height: 160px;
-	max-width: 100%;
-	overflow: hidden;
-
-	.kv-card {
-		&.more {
-			cursor: pointer;
-			transition: all 0.2s;
-
-			&:hover {
-				border-color: var(--primary-color);
-			}
-		}
-	}
-
-	&:hover {
-		border-color: var(--primary-color);
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
 	@container (max-width: 500px) {
+		display: flex;
 		flex-direction: column;
 
 		.hide-mobile {

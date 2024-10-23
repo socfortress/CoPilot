@@ -124,6 +124,10 @@ const textFilter = computed<string>({
 					&:not(:last-child) {
 						@apply mb-2;
 					}
+
+					&:hover {
+						background-color: var(--bg-secondary-color);
+					}
 				}
 			}
 

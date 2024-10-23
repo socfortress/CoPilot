@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-healthcheck-item" :class="[{ 'bg-secondary': bgSecondary }, type]">
+	<div class="customer-healthcheck-item" :class="[{ embedded }, type]">
 		<div class="flex flex-col gap-2 px-4 py-3">
 			<div class="header-box flex items-center justify-between">
 				<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
@@ -102,11 +102,11 @@ import dayjs from "@/utils/dayjs"
 import { NModal, NPopover } from "naive-ui"
 import { computed, ref } from "vue"
 
-const { healthData, source, bgSecondary, type } = defineProps<{
+const { healthData, source, embedded, type } = defineProps<{
 	healthData: CustomerAgentHealth
 	source: CustomerHealthcheckSource
 	type?: "healthy" | "unhealthy"
-	bgSecondary?: boolean
+	embedded?: boolean
 }>()
 
 const InfoIcon = "carbon:information"
@@ -159,7 +159,7 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 	transition: all 0.2s var(--bezier-ease);
 	border: var(--border-small-050);
 
-	&.bg-secondary {
+	&.embedded {
 		background-color: var(--bg-secondary-color);
 	}
 

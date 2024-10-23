@@ -1,13 +1,12 @@
 <template>
-	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
-		<div class="header-box flex justify-between">
-			<div class="flex items-center gap-2">
-				<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
-					<span>{{ flow.session_id }}</span>
-					<Icon :name="InfoIcon" :size="16"></Icon>
+	<div>
+		<CardEntity :embedded hoverable clickable @click="showDetails = true">
+			<template #headerMain>
+				<div class="flex items-center gap-2">
+					{{ flow.session_id }}
 				</div>
-			</div>
-			<div class="time">
+			</template>
+			<template #headerExtra>
 				<n-popover overlap placement="top-end" class="max-h-64" scrollable to="body">
 					<template #trigger>
 						<div class="flex cursor-help items-center gap-2">
@@ -21,52 +20,56 @@
 						<AgentFlowTimeline :flow="flow" />
 					</div>
 				</n-popover>
-			</div>
-		</div>
-		<div class="main-box">
-			<div class="content flex flex-wrap gap-2">
-				<span v-for="artifact of flow.artifacts_with_results" :key="artifact" class="artifact-label">
-					{{ artifact }}
-				</span>
-			</div>
-			<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
-				<Badge type="splitted" color="primary">
-					<template #label>State</template>
-					<template #value>
-						{{ flow.state || "-" }}
-					</template>
-				</Badge>
-				<Badge type="splitted" color="primary">
-					<template #label>Status</template>
-					<template #value>
-						{{ flow.status || "-" }}
-					</template>
-				</Badge>
-				<Badge type="splitted" color="primary">
-					<template #label>Exec. time</template>
-					<template #value>
-						{{ executionDuration }}
-					</template>
-				</Badge>
-				<Badge :type="flow.dirty ? 'active' : 'muted'">
-					<template #iconRight>
-						<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14"></Icon>
-					</template>
-					<template #label>Dirty</template>
-				</Badge>
-				<Badge :type="flow.user_notified ? 'active' : 'muted'">
-					<template #iconRight>
-						<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14"></Icon>
-					</template>
-					<template #label>User notified</template>
-				</Badge>
-			</div>
-		</div>
-		<div class="footer-box">
-			<div class="time">
-				{{ formatDate(flow.start_time, dFormats.datetimesec) }}
-			</div>
-		</div>
+			</template>
+			<template #default>
+				<div class="flex flex-wrap gap-2">
+					<Badge
+						v-for="artifact of flow.artifacts_with_results"
+						:key="artifact"
+						color="primary"
+						type="splitted"
+					>
+						<template #value>
+							{{ artifact }}
+						</template>
+					</Badge>
+				</div>
+			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge type="splitted" color="primary">
+						<template #label>State</template>
+						<template #value>
+							{{ flow.state || "-" }}
+						</template>
+					</Badge>
+					<Badge type="splitted" color="primary">
+						<template #label>Status</template>
+						<template #value>
+							{{ flow.status || "-" }}
+						</template>
+					</Badge>
+					<Badge type="splitted" color="primary">
+						<template #label>Exec. time</template>
+						<template #value>
+							{{ executionDuration }}
+						</template>
+					</Badge>
+					<Badge :type="flow.dirty ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Dirty</template>
+					</Badge>
+					<Badge :type="flow.user_notified ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>User notified</template>
+					</Badge>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -154,8 +157,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Collect" tab="Collect" display-directive="show:lazy">
-					<!-- TODO: replace max-height or similar with TailWind classes -->
-					<n-scrollbar style="max-height: 430px" trigger="none">
+					<n-scrollbar class="max-h-106" trigger="none">
 						<div class="px-7">
 							<AgentFlowCollectList :flow="flow" />
 						</div>
@@ -169,6 +171,7 @@
 <script setup lang="ts">
 import type { FlowResult } from "@/types/flow.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -186,7 +189,6 @@ const AgentFlowQueryStat = defineAsyncComponent(() => import("./AgentFlowQuerySt
 const AgentFlowCollectList = defineAsyncComponent(() => import("./AgentFlowCollectList.vue"))
 
 const TimeIcon = "carbon:time"
-const InfoIcon = "carbon:information"
 const DisabledIcon = "carbon:subtract"
 const EnabledIcon = "ri:check-line"
 
@@ -211,84 +213,3 @@ const properties = computed(() => {
 	])
 })
 </script>
-
-<style lang="scss" scoped>
-.item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		.id {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-		.time {
-			color: var(--fg-secondary-color);
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.artifact-label {
-				background-color: var(--bg-secondary-color);
-				padding: 3px 8px;
-				border-radius: var(--border-radius);
-			}
-		}
-	}
-	.footer-box {
-		font-family: var(--font-family-mono);
-		display: none;
-		text-align: right;
-		font-size: 13px;
-		margin-top: 10px;
-
-		.time {
-			color: var(--fg-secondary-color);
-			width: 100%;
-		}
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-
-		.main-box {
-			.content {
-				.artifact-label {
-					background-color: var(--bg-color);
-				}
-			}
-		}
-	}
-
-	@container (max-width: 550px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>

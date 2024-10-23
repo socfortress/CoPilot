@@ -13,7 +13,7 @@
 
 					<div
 						v-if="!$slots.header && ($slots.headerMain || $slots.headerExtra)"
-						class="header-box flex items-center justify-between"
+						class="header-box flex flex-wrap items-center justify-between"
 					>
 						<div>
 							<slot name="headerMain" />
@@ -102,6 +102,12 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 		.footer-box {
 			@apply gap-3 px-5 py-3;
 		}
+
+		.main-box {
+			.header-box {
+				@apply gap-3;
+			}
+		}
 	}
 
 	&.card-size-small {
@@ -110,6 +116,12 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 			.extra-box,
 			.footer-box {
 				@apply gap-2 px-3 py-2;
+			}
+
+			.main-box {
+				.header-box {
+					@apply gap-2;
+				}
 			}
 		}
 	}
@@ -120,6 +132,12 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 			.extra-box,
 			.footer-box {
 				@apply gap-6 px-8 py-6;
+			}
+
+			.main-box {
+				.header-box {
+					@apply gap-6;
+				}
 			}
 		}
 	}
@@ -139,15 +157,15 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 
 	&.hoverable {
 		&:hover {
-			box-shadow: 0px 0px 0px 1px var(--primary-040-color);
+			border-color: var(--primary-040-color);
 		}
 	}
 
 	&.highlighted {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
+		border-color: var(--primary-color);
 
 		&:hover {
-			box-shadow: 0px 0px 0px 2px var(--primary-color);
+			box-shadow: 0px 0px 0px 1px var(--primary-color);
 		}
 	}
 }

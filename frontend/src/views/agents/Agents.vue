@@ -23,6 +23,8 @@
 									:key="agent.agent_id"
 									:agent="agent"
 									show-actions
+									hoverable
+									clickable
 									class="item-appear item-appear-bottom item-appear-005"
 									@delete="syncAgents()"
 									@click="gotoAgent(agent.agent_id)"

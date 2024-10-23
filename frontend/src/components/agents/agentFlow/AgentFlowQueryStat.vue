@@ -1,58 +1,46 @@
 <template>
-	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
-		<div class="header-box flex items-center justify-between gap-3">
-			<div class="id flex grow flex-wrap gap-2">
-				<span>
-					{{ formatDate(stat.first_active, dFormats.datetimesecmill) }}
-				</span>
-				<span>•</span>
-				<span>
-					{{ formatDate(stat.last_active, dFormats.datetimesecmill) }}
-				</span>
-			</div>
-			<div class="actions whitespace-nowrap">
-				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon>
-						<Icon :name="InfoIcon"></Icon>
-					</template>
-					Details
-				</n-button>
-			</div>
-		</div>
-		<div class="main-box mt-2 flex flex-col gap-2">
-			<div class="content flex flex-wrap gap-2">
-				<span v-for="artifact of stat.names_with_response" :key="artifact" class="artifact-label">
-					{{ artifact }}
-				</span>
-			</div>
-			<div v-if="stat.error_message" class="error-message">
-				{{ stat.error_message }}
-			</div>
-			<div class="badges-box mt-1 flex flex-wrap items-center gap-3">
-				<Badge type="splitted" color="primary">
-					<template #label>Status</template>
-					<template #value>
-						{{ stat.status || "-" }}
-					</template>
-				</Badge>
-				<Badge type="splitted" color="primary">
-					<template #label>Duration</template>
-					<template #value>
-						{{ duration }}
-					</template>
-				</Badge>
-			</div>
-		</div>
-		<div class="footer-box">
-			<div class="actions whitespace-nowrap">
-				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon>
-						<Icon :name="InfoIcon"></Icon>
-					</template>
-					Details
-				</n-button>
-			</div>
-		</div>
+	<div>
+		<CardEntity :embedded hoverable clickable @click.stop="showDetails = true">
+			<template #headerMain>
+				<div class="flex grow flex-wrap gap-2">
+					<span>
+						{{ formatDate(stat.first_active, dFormats.datetimesecmill) }}
+					</span>
+					<span>•</span>
+					<span>
+						{{ formatDate(stat.last_active, dFormats.datetimesecmill) }}
+					</span>
+				</div>
+			</template>
+			<template #default>
+				<div class="flex flex-wrap gap-2">
+					<Badge v-for="artifact of stat.names_with_response" :key="artifact" color="primary" type="splitted">
+						<template #value>
+							{{ artifact }}
+						</template>
+					</Badge>
+				</div>
+				<div v-if="stat.error_message" class="text-error mt-3">
+					{{ stat.error_message }}
+				</div>
+			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge type="splitted" color="primary">
+						<template #label>Status</template>
+						<template #value>
+							{{ stat.status || "-" }}
+						</template>
+					</Badge>
+					<Badge type="splitted" color="primary">
+						<template #label>Duration</template>
+						<template #value>
+							{{ duration }}
+						</template>
+					</Badge>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -99,6 +87,7 @@
 <script setup lang="ts">
 import type { FlowQueryStat } from "@/types/flow.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -109,8 +98,6 @@ import { NButton, NInput, NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, ref } from "vue"
 
 const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
-
-const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
@@ -130,67 +117,3 @@ const properties = computed(() => {
 	])
 })
 </script>
-
-<style lang="scss" scoped>
-.item {
-	background-color: var(--bg-color);
-	border-radius: var(--border-radius);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-
-	.header-box {
-		font-size: 13px;
-		.id {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.artifact-label {
-				background-color: var(--bg-secondary-color);
-				padding: 3px 8px;
-				border-radius: var(--border-radius);
-			}
-		}
-	}
-	.footer-box {
-		display: none;
-		text-align: right;
-		font-size: 13px;
-		margin-top: 10px;
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-
-		.main-box {
-			.content {
-				.artifact-label {
-					background-color: var(--bg-color);
-				}
-			}
-		}
-	}
-
-	@container (max-width: 550px) {
-		.header-box {
-			.actions {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>
