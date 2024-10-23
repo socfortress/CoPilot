@@ -41,6 +41,7 @@
 		"@fontsource/lexend": "^5.1.1",
 		"@fontsource/public-sans": "^5.1.1",
 		"@shikijs/markdown-it": "^1.22.0",
+		"@tailwindcss/container-queries": "^0.1.1",
 		"@vueuse/core": "^11.1.0",
 		"axios": "^1.7.7",
 		"bytes": "^3.1.2",
@@ -50,7 +51,7 @@
 		"echarts": "^5.5.1",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.5.2",
-		"jose": "^5.9.4",
+		"jose": "^5.9.6",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
@@ -84,8 +85,8 @@
 		"@types/file-saver": "^2.0.7",
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
-		"@types/lodash": "^4.17.11",
-		"@types/node": "^22.7.6",
+		"@types/lodash": "^4.17.12",
+		"@types/node": "^22.7.8",
 		"@types/validator": "^13.12.2",
 		"@vitejs/plugin-vue": "^5.1.4",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
@@ -94,21 +95,21 @@
 		"autoprefixer": "^10.4.20",
 		"cypress": "^13.15.0",
 		"depcheck": "^1.4.7",
-		"eslint": "^9.12.0",
+		"eslint": "^9.13.0",
 		"flourite": "^1.3.0",
 		"fs-extra": "^11.2.0",
 		"jsdom": "^25.0.1",
-		"npm-run-all2": "^6.2.4",
+		"npm-run-all2": "^7.0.0",
 		"postcss": "^8.4.47",
 		"prettier": "^3.3.3",
 		"prettier-plugin-tailwindcss": "^0.6.8",
-		"sass": "^1.80.2",
+		"sass": "^1.80.3",
 		"start-server-and-test": "^2.0.8",
 		"tailwind-config-viewer": "^2.0.4",
 		"tailwindcss": "^3.4.14",
 		"taze": "^0.17.2",
 		"type-fest": "^4.26.1",
-		"typescript": "~5.5.4",
+		"typescript": "~5.6.3",
 		"unplugin-vue-components": "^0.27.4",
 		"vite": "^5.4.9",
 		"vite-bundle-visualizer": "^1.2.1",
@@ -119,19 +120,20 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.10.0",
+			"@typescript-eslint/eslint-plugin": "^8.11.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.10.0",
+			"@typescript-eslint/parser": "^8.11.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}
 	},
 	"overrides": {
 		"@typescript-eslint/eslint-plugin": {
-			"eslint": "^9.12.0"
+			"eslint": "^9.13.0"
 		},
 		"@typescript-eslint/parser": {
-			"eslint": "^9.12.0"
-		}
+			"eslint": "^9.13.0"
+		},
+		"@typescript-eslint/typescript-estree": "^8.11.0"
 	}
 }
