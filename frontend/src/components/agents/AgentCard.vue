@@ -72,7 +72,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { type Agent, AgentStatus } from "@/types/agents.d"
 import dayjs from "@/utils/dayjs"
-import { NButton, NCard, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import { handleDeleteAgent, toggleAgentCritical } from "./utils"
 
