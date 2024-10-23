@@ -23,6 +23,7 @@
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			:bordered="false"
+			title="Collected Item"
 		>
 			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initial-expanded-depth="2" />
 		</n-modal>
@@ -73,15 +74,17 @@ onBeforeMount(() => {
 		}
 
 		if (prop.value && typeof prop.value === "string") {
-			prop.value = dayjs(value).isValid() ? formatDate(value, dFormats.datetimesec).toString() : value.toString()
+			prop.value = dayjs(prop.value).isValid()
+				? formatDate(prop.value, dFormats.datetimesec).toString()
+				: prop.value
 		}
 
 		if (prop.value && typeof prop.value === "number") {
 			const numText = prop.value.toString()
 
 			if (numText.length === 10 || numText.length === 13) {
-				if (dayjs(value).isValid()) {
-					prop.value = formatDate(value, dFormats.datetimesec).toString()
+				if (dayjs(prop.value).isValid()) {
+					prop.value = formatDate(prop.value, dFormats.datetimesec).toString()
 				}
 			}
 		}

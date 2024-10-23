@@ -4,7 +4,7 @@ export interface Artifact {
 }
 
 export interface CollectResult {
-	[key: string]: string | number
+	[key: string]: string | number | null | object
 }
 
 export interface CommandResult {

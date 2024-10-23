@@ -69,11 +69,12 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-7 grid gap-3">
+			<div class="list my-7 flex flex-col gap-3">
 				<template v-if="collectList.length">
 					<CollectItem
 						v-for="collect of collectList"
-						:key="collect.___id"
+						:key="`${collect.___id}`"
+						embedded
 						:collect="collect"
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
@@ -106,8 +107,6 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
-
-// import { collectResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -259,11 +258,10 @@ onBeforeMount(() => {
 	// MOCK
 	/*
 	collectList.value = collectResult.map(o => {
-		// @ts-ignore
 		o.___id = nanoid()
 		return o
-	}) as CollectResultExt[]
-	*/
+	})
+	 */
 })
 </script>
 

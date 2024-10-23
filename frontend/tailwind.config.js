@@ -88,6 +88,7 @@ export default {
 		"basis-1/5"
 	],
 	plugins: [
+		require("@tailwindcss/container-queries"),
 		plugin(({ addBase, theme }) => {
 			addBase({
 				h1: {

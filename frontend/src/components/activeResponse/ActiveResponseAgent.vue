@@ -48,6 +48,10 @@ function getAvailableIntegrations() {
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
+			// MOCK
+			/*
+			activeResponseList.value = supported_active_response
+			*/
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")

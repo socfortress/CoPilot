@@ -287,7 +287,9 @@ onBeforeMount(() => {
 	})
 
 	// MOCK
-	// commandList.value = commandResult as CommandResult[]
+	/*
+	commandList.value = commandResult
+	*/
 })
 </script>
 

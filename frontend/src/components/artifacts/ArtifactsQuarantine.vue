@@ -60,7 +60,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-7 grid gap-3">
+			<div class="my-7 flex min-h-28 flex-col gap-3">
 				<template v-if="quarantineList.length">
 					<QuarantineItem
 						v-for="quarantine of quarantineList"
@@ -94,8 +94,6 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
-
-// import { quarantineResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -243,15 +241,8 @@ onBeforeMount(() => {
 	})
 
 	// MOCK
-	// quarantineList.value = quarantineResult as QuarantineResult[]
+	/*
+	quarantineList.value = quarantineResult
+	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-quarantine {
-	.list {
-		container-type: inline-size;
-		min-height: 100px;
-	}
-}
-</style>
