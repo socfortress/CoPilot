@@ -93,6 +93,7 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 			background-color: var(--bg-secondary-color);
 			.metric-wrap {
 				@apply px-4 py-3;
+
 				.metric {
 					line-height: 1.1;
 				}

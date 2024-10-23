@@ -1,30 +1,23 @@
 <template>
-	<div class="item flex flex-col gap-2 px-5 py-3">
-		<div class="header-box flex items-center gap-3">
-			<div class="info flex grow items-center gap-2">
-				<div class="user flex items-center gap-2">
+	<div>
+		<CardEntity hoverable :embedded>
+			<template #headerMain>
+				<div class="flex items-center gap-2">
 					<Icon :name="UserIcon" :size="14"></Icon>
 					{{ input.creator_user_id }}
 				</div>
-			</div>
-			<div class="time">
-				{{ formatDateTime(input.created_at) }}
-			</div>
-			<n-button size="small" @click.stop="showDetails = true">
-				<template #icon>
-					<Icon :name="InfoIcon"></Icon>
-				</template>
-			</n-button>
-		</div>
-		<div class="main-box flex justify-between">
-			<div class="content">
-				<div class="title">
+			</template>
+			<template #headerExtra>{{ formatDateTime(input.created_at) }}</template>
+			<template #default>
+				<div class="flex flex-col gap-1">
 					{{ input.title }}
+					<p>
+						{{ input.name }}
+					</p>
 				</div>
-				<div class="name mb-2">
-					{{ input.name }}
-				</div>
-				<div class="badges-box flex flex-wrap items-center gap-3">
+			</template>
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
 					<Badge :type="input.global ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
@@ -43,43 +36,30 @@
 						{{ formatDateTime(input.started_at) }}
 					</n-tooltip>
 				</div>
-			</div>
-
-			<div class="actions-box flex flex-col justify-end">
-				<n-button v-if="isRunning" :loading="loading" @click="stop()">
-					<template #icon>
-						<Icon :name="StopIcon"></Icon>
-					</template>
-					Stop input
-				</n-button>
-				<n-button v-else :loading="loading" type="primary" @click="start()">
-					<template #icon>
-						<Icon :name="StartIcon"></Icon>
-					</template>
-					Start input
-				</n-button>
-			</div>
-		</div>
-		<div class="footer-box flex items-center justify-between">
-			<div class="actions-box flex flex-col justify-end">
-				<n-button v-if="isRunning" :loading="loading" size="small" @click="stop()">
-					<template #icon>
-						<Icon :name="StopIcon"></Icon>
-					</template>
-					Stop
-				</n-button>
-				<n-button v-else :loading="loading" type="primary" size="small" @click="start()">
-					<template #icon>
-						<Icon :name="StartIcon"></Icon>
-					</template>
-					Start
-				</n-button>
-			</div>
-
-			<div class="time">
-				{{ formatDateTime(input.created_at) }}
-			</div>
-		</div>
+			</template>
+			<template #footerExtra>
+				<div class="flex flex-wrap items-center justify-end gap-3">
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="InfoIcon"></Icon>
+						</template>
+						Details
+					</n-button>
+					<n-button v-if="isRunning" :loading="loading" type="warning" size="small" secondary @click="stop()">
+						<template #icon>
+							<Icon :name="StopIcon"></Icon>
+						</template>
+						Stop input
+					</n-button>
+					<n-button v-else :loading="loading" type="success" secondary size="small" @click="start()">
+						<template #icon>
+							<Icon :name="StartIcon"></Icon>
+						</template>
+						Start input
+					</n-button>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -135,6 +115,7 @@
 import type { InputExtended } from "@/types/graylog/inputs.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
@@ -143,7 +124,7 @@ import { computed, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
-const { input } = defineProps<{ input: InputExtended }>()
+const { input, embedded } = defineProps<{ input: InputExtended; embedded?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "updated"): void
@@ -209,69 +190,3 @@ function start() {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-secondary-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-100);
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		.user {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-		}
-		.time {
-			color: var(--fg-secondary-color);
-		}
-	}
-	.main-box {
-		word-break: break-word;
-
-		.name {
-			color: var(--fg-secondary-color);
-			font-size: 13px;
-		}
-	}
-
-	.footer-box {
-		display: none;
-		text-align: right;
-		font-size: 13px;
-		margin-top: 10px;
-
-		.time {
-			font-family: var(--font-family-mono);
-			color: var(--fg-secondary-color);
-			width: 100%;
-		}
-	}
-
-	&.default {
-		background-color: var(--primary-005-color);
-		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
-	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-
-	@container (max-width: 650px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.main-box {
-			.actions-box {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>

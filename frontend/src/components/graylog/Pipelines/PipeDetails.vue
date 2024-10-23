@@ -1,13 +1,13 @@
 <template>
 	<div class="pipe-details flex flex-wrap justify-between gap-1">
-		<div class="description">
+		<div class="flex w-full flex-wrap items-center justify-between gap-2">
 			<p v-if="pipeline.description">
 				{{ pipeline.description }}
 			</p>
-		</div>
 
-		<div class="time">
-			{{ formatDate(pipeline.modified_at, dFormats.datetimesec) }}
+			<div class="text-secondary text-right font-mono text-sm">
+				{{ formatDate(pipeline.modified_at, dFormats.datetimesec) }}
+			</div>
 		</div>
 	</div>
 
@@ -94,13 +94,3 @@ const stages = computed<PipelineFullStageExt[]>(() => {
 	return stages
 })
 </script>
-
-<style lang="scss" scoped>
-.time {
-	font-family: var(--font-family-mono);
-	font-size: 13px;
-	text-align: right;
-	color: var(--fg-secondary-color);
-	line-height: 1.6;
-}
-</style>

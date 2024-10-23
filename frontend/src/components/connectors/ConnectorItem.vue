@@ -1,60 +1,53 @@
 <template>
-	<n-spin :show="loading" class="connector-item">
-		<div class="flex flex-col gap-2 px-4 py-3">
-			<div class="main-box flex gap-6">
-				<div class="content flex grow flex-col gap-2">
-					<div class="flex gap-4">
-						<div class="avatar">
-							<n-avatar
-								class="connector-image"
-								object-fit="contain"
-								round
-								:size="40"
-								:src="`/images/connectors/${
-									connector ? `${connector.connector_name.toLowerCase()}.svg` : 'default-logo.svg'
-								}`"
-								:alt="`${connector.connector_name} Logo`"
-								fallback-src="/images/img-not-found.svg"
-							/>
+	<div>
+		<CardEntity :loading>
+			<template #default>
+				<div class="flex items-start gap-4">
+					<n-avatar
+						class="mt-0.5"
+						object-fit="contain"
+						round
+						:size="40"
+						:src="`/images/connectors/${
+							connector ? `${connector.connector_name.toLowerCase()}.svg` : 'default-logo.svg'
+						}`"
+						:alt="`${connector.connector_name} Logo`"
+						fallback-src="/images/img-not-found.svg"
+					/>
+
+					<div class="flex flex-col gap-1">
+						<div>
+							{{ connector.connector_name }}
 						</div>
-
-						<div class="info flex flex-col gap-2">
-							<div class="name">
-								{{ connector.connector_name }}
-							</div>
-							<div v-if="connector.connector_description" class="description">
-								{{ connector.connector_description }}
-							</div>
-							<div v-if="connector.connector_extra_data" class="extra-data">
-								{{ connector.connector_extra_data }}
-							</div>
+						<div v-if="connector.connector_description" class="description">
+							{{ connector.connector_description }}
 						</div>
-					</div>
-
-					<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
-						<Badge :type="connector.connector_configured ? 'active' : 'muted'">
-							<template #iconRight>
-								<Icon
-									:name="connector.connector_configured ? EnabledIcon : DisabledIcon"
-									:size="14"
-								></Icon>
-							</template>
-							<template #label>Configured</template>
-						</Badge>
-
-						<Badge :type="connector.connector_verified ? 'active' : 'muted'">
-							<template #iconRight>
-								<Icon
-									:name="connector.connector_verified ? EnabledIcon : DisabledIcon"
-									:size="14"
-								></Icon>
-							</template>
-							<template #label>Verified</template>
-						</Badge>
+						<p v-if="connector.connector_extra_data" class="extra-data">
+							{{ connector.connector_extra_data }}
+						</p>
 					</div>
 				</div>
+			</template>
 
-				<div class="actions-box flex flex-col justify-center gap-2">
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge :type="connector.connector_configured ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="connector.connector_configured ? EnabledIcon : DisabledIcon" :size="14" />
+						</template>
+						<template #label>Configured</template>
+					</Badge>
+
+					<Badge :type="connector.connector_verified ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="connector.connector_verified ? EnabledIcon : DisabledIcon" :size="14" />
+						</template>
+						<template #label>Verified</template>
+					</Badge>
+				</div>
+			</template>
+			<template #footerExtra>
+				<div class="flex flex-wrap justify-end gap-2">
 					<n-button
 						v-if="!connector.connector_verified"
 						type="primary"
@@ -81,8 +74,8 @@
 						{{ !connector.connector_configured ? "Configure" : "Update" }}
 					</n-button>
 				</div>
-			</div>
-		</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showConfigDialog"
@@ -100,13 +93,14 @@
 				/>
 			</n-card>
 		</n-modal>
-	</n-spin>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { Connector } from "@/types/connectors.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { NAvatar, NButton, NCard, NModal, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
@@ -164,38 +158,3 @@ function verify(connector: Connector) {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.connector-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.main-box {
-		.connector-image {
-			border: 2px solid var(--bg-body);
-			min-width: 40px;
-			min-height: 40px;
-		}
-		.content {
-			word-break: break-word;
-
-			.name {
-				font-weight: bold;
-			}
-			.description {
-				font-size: 13px;
-			}
-			.extra-data {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-}
-</style>

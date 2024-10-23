@@ -52,7 +52,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<PipeList min-height="28px" @open-rule="gotoGraylogPipelines($event)" />
+			<PipeList @open-rule="gotoGraylogPipelines($event)" />
 		</div>
 
 		<n-drawer

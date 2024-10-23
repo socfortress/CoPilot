@@ -1,5 +1,5 @@
 <template>
-	<div class="pipe-title flex items-center gap-1" :class="{ warning: isWarning }">
+	<div class="flex items-center gap-1 leading-[1.1]" :class="{ 'text-warning': isWarning }">
 		<n-tooltip v-if="isWarning" placement="top-start" trigger="hover">
 			<template #trigger>
 				<Icon :name="DangerIcon" :size="18"></Icon>
@@ -25,13 +25,3 @@ const isWarning = computed<boolean>(() => {
 	return !!pipeline.value.errors
 })
 </script>
-
-<style lang="scss" scoped>
-.pipe-title {
-	line-height: 1.1;
-
-	&.warning {
-		color: var(--secondary3-color);
-	}
-}
-</style>

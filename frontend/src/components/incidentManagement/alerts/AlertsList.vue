@@ -104,7 +104,7 @@
 		</div>
 
 		<n-spin :show="loading">
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsList.length">
 					<AlertItem
 						v-for="alert of alertsList"
@@ -339,11 +339,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .alerts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-
 	.filters-box {
 		overflow: hidden;
 		display: grid;

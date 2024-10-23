@@ -22,7 +22,7 @@
 			</div>
 			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
 		</div>
-		<div class="list my-3 flex flex-col gap-2">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="messages.length">
 				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
 			</template>
@@ -94,10 +94,3 @@ onBeforeMount(() => {
 	getData(currentPage.value)
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

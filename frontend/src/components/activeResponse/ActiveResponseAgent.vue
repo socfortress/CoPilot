@@ -1,7 +1,7 @@
 <template>
 	<div class="active-response-list">
 		<n-spin :show="loadingActiveResponse">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="activeResponseList.length">
 					<ActiveResponseItem
 						v-for="activeResponse of activeResponseList"
@@ -65,12 +65,3 @@ onBeforeMount(() => {
 	getAvailableIntegrations()
 })
 </script>
-
-<style lang="scss" scoped>
-.active-response-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

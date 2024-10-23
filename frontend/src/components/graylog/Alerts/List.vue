@@ -50,7 +50,7 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list my-3 flex flex-col gap-2">
+		<div class="my-3 flex min-h-28 flex-col gap-2">
 			<template v-if="alertsEvents.length">
 				<AlertsEventItem
 					v-for="alertsEvent of alertsEvents"
@@ -84,6 +84,7 @@ import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import AlertsEventItem from "./Item.vue"
+import { alerts_event_element } from "./mock"
 
 const emit = defineEmits<{
 	(e: "clickEvent", value: string): void
@@ -207,12 +208,9 @@ watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
 
 onBeforeMount(() => {
 	getData(currentPage.value, pageSize.value, timerange.value)
+	// MOCK
+	/*
+	alertsEvents.value = alerts_event_element
+	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

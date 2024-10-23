@@ -69,7 +69,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-7 flex flex-col gap-3">
+			<div class="my-7 flex min-h-52 flex-col gap-3">
 				<template v-if="collectList.length">
 					<CollectItem
 						v-for="collect of collectList"
@@ -97,6 +97,7 @@ import { NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "n
 import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import CollectItem from "./CollectItem.vue"
+import { collectResult } from "./mock"
 
 const props = defineProps<{
 	hostname?: string
@@ -261,24 +262,6 @@ onBeforeMount(() => {
 		o.___id = nanoid()
 		return o
 	})
-	 */
+	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-collect {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-		grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
-		grid-auto-flow: row dense;
-	}
-
-	@media (max-width: 490px) {
-		.list {
-			display: flex;
-			flex-direction: column;
-		}
-	}
-}
-</style>

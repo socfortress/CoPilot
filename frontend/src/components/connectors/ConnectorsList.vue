@@ -8,7 +8,7 @@
 			<div class="text-secondary text-right">Configure connections to your toolset</div>
 		</div>
 		<n-spin :show="loadingConnectors">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="connectorsList.length">
 					<ConnectorItem
 						v-for="connector of connectorsList"
@@ -66,12 +66,3 @@ onBeforeMount(() => {
 	getConnectors()
 })
 </script>
-
-<style lang="scss" scoped>
-.connectors-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

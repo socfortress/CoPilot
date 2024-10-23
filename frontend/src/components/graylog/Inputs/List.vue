@@ -34,11 +34,12 @@
 			/>
 		</div>
 		<n-scrollbar class="my-3">
-			<div class="list flex flex-col gap-2">
+			<div class="list flex min-h-52 flex-col gap-2">
 				<template v-if="itemsFiltered.length">
 					<InputItem
 						v-for="input of itemsFiltered"
 						:key="input.id"
+						embedded
 						:input="input"
 						@updated="getData('running')"
 					/>
@@ -164,8 +165,5 @@ onBeforeMount(() => {
 	padding: var(--n-body-padding);
 	padding-top: 0;
 	padding-bottom: 0;
-	container-type: inline-size;
-	box-sizing: border-box;
-	min-height: 200px;
 }
 </style>

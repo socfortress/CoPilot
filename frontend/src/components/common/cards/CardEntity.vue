@@ -38,7 +38,7 @@
 
 				<div
 					v-if="!$slots.footer && ($slots.footerMain || $slots.footerExtra)"
-					class="footer-box flex items-center justify-between"
+					class="footer-box flex flex-wrap items-start justify-between"
 				>
 					<div>
 						<slot name="footerMain" />
@@ -162,7 +162,8 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 	}
 
 	&.highlighted {
-		border-color: var(--primary-color);
+		background-color: var(--primary-005-color);
+		border-color: var(--primary-030-color);
 
 		&:hover {
 			box-shadow: 0px 0px 0px 1px var(--primary-color);

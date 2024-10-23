@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loading" class="rules-list">
 		<n-scrollbar ref="scrollContent">
-			<div class="list">
-				<Rule v-for="rule of rules" :key="rule.id" :rule="rule" :highlight="highlight === rule.id" />
+			<div class="list flex min-h-52 flex-col gap-2">
+				<Rule v-for="rule of rules" :key="rule.id" :rule="rule" :highlight="highlight === rule.id" embedded />
 			</div>
 		</n-scrollbar>
 	</n-spin>
@@ -98,9 +98,6 @@ onBeforeMount(() => {
 
 	.list {
 		padding: var(--n-body-padding);
-		container-type: inline-size;
-		box-sizing: border-box;
-		min-height: 200px;
 		padding-bottom: 50vh;
 	}
 }

@@ -95,7 +95,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-7 flex flex-col gap-3">
+			<div class="my-7 flex min-h-52 flex-col gap-3">
 				<template v-if="commandList.length">
 					<CommandItem
 						v-for="command of commandList"
@@ -133,8 +133,6 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
-
-// import { commandResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -292,12 +290,3 @@ onBeforeMount(() => {
 	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-command {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>
