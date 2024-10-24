@@ -84,7 +84,6 @@ import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import AlertsEventItem from "./Item.vue"
-import { alerts_event_element } from "./mock"
 
 const emit = defineEmits<{
 	(e: "clickEvent", value: string): void

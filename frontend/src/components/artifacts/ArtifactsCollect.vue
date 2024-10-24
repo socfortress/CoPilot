@@ -97,7 +97,6 @@ import { NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "n
 import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import CollectItem from "./CollectItem.vue"
-import { collectResult } from "./mock"
 
 const props = defineProps<{
 	hostname?: string

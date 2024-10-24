@@ -102,7 +102,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NAvatar, NButton, NCard, NModal, NSpin, useMessage } from "naive-ui"
+import { NAvatar, NButton, NCard, NModal, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import ConfigForm from "./ConfigForm"
 

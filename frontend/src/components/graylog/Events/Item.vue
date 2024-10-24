@@ -72,7 +72,6 @@
 <script setup lang="ts">
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
 import { NInput, NModal, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"

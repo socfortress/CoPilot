@@ -78,7 +78,6 @@ import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSpin, useMessage }
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, provide, ref } from "vue"
 import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import { alerts_summary } from "./mock"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 

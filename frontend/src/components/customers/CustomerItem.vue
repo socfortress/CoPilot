@@ -222,7 +222,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"
-import { NAvatar, NButton, NModal, NPopover, NScrollbar, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{

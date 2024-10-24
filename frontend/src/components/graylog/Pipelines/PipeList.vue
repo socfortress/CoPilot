@@ -53,8 +53,7 @@ import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs, watch } from "vue"
-import { pipeline_full } from "./mock"
+import { onBeforeMount, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "openRule", value: string): void

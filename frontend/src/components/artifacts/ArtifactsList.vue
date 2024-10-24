@@ -135,7 +135,6 @@ import _cloneDeep from "lodash/cloneDeep"
 import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import ArtifactItem from "./ArtifactItem.vue"
-import { artifact_list } from "./mock"
 
 const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
 
