@@ -138,28 +138,37 @@ export interface AlertSourceContent {
 	data_win_eventdata_currentDirectory?: string
 	data_win_eventdata_description?: string
 	data_win_eventdata_fileVersion?: string
+	data_win_eventdata_fWLink?: string
 	data_win_eventdata_grantedAccess?: string
 	data_win_eventdata_hashes?: string
 	data_win_eventdata_image?: string
 	data_win_eventdata_integrityLevel?: AlertSourceDataWinEventdataIntegrityLevel
 	data_win_eventdata_logonGuid?: string
 	data_win_eventdata_logonId?: string
+	data_win_eventdata_newThreadId?: string
 	data_win_eventdata_originalFileName?: string
 	data_win_eventdata_parentCommandLine?: string
 	data_win_eventdata_parentImage?: string
 	data_win_eventdata_parentProcessGuid?: string
 	data_win_eventdata_parentProcessId?: string
 	data_win_eventdata_parentUser?: string
+	data_win_eventdata_path?: string
 	data_win_eventdata_processGuid?: string
 	data_win_eventdata_processId?: string
 	data_win_eventdata_product?: string
 	data_win_eventdata_ruleName?: string
 	data_win_eventdata_sourceImage?: string
+	data_win_eventdata_sourceProcessGuid?: string
 	data_win_eventdata_sourceProcessGUID?: string
 	data_win_eventdata_sourceProcessId?: string
 	data_win_eventdata_sourceThreadId?: string
 	data_win_eventdata_sourceUser?: string
+	data_win_eventdata_startAddress?: string
+	data_win_eventdata_startFunction?: string
+	data_win_eventdata_startModule?: string
+	data_win_eventdata_state?: string
 	data_win_eventdata_targetImage?: string
+	data_win_eventdata_targetProcessGuid?: string
 	data_win_eventdata_targetProcessGUID?: string
 	data_win_eventdata_targetProcessId?: string
 	data_win_eventdata_targetUser?: string
@@ -208,16 +217,19 @@ export interface AlertSourceContent {
 	rule_description: string
 	rule_firedtimes: number
 	rule_gdpr?: string
+	rule_gpg13?: string
 	rule_group1: string
 	rule_group2?: string
 	rule_group3?: AlertSourceDataLogsourceProduct
 	rule_groups: string
+	rule_hipaa?: string
 	rule_id: string
 	rule_level: number
 	rule_mail: boolean
 	rule_mitre_id?: string
 	rule_mitre_tactic?: string
 	rule_mitre_technique?: string
+	rule_nist_800_53?: string
 	rule_pci_dss?: string
 	rule_tsc?: string
 	sha256?: string
@@ -269,7 +281,8 @@ export enum AlertSourceDataWinEventdataIntegrityLevel {
 }
 
 export enum AlertSourceDataWinSystemSeverityValue {
-	Information = "INFORMATION"
+	Information = "INFORMATION",
+	Warning = "WARNING"
 }
 
 export enum AlertSourceDecoderName {

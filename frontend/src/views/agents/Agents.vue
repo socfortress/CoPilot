@@ -10,7 +10,7 @@
 					:agents-critical="agentsCritical"
 					:agents-online="agentsOnline"
 					@sync="syncAgents()"
-					@click="gotoAgent($event.agent_id)"
+					@click.stop="gotoAgent($event.agent_id)"
 				/>
 			</div>
 			<div class="main flex grow flex-col overflow-hidden">
@@ -27,7 +27,7 @@
 									clickable
 									class="item-appear item-appear-bottom item-appear-005"
 									@delete="syncAgents()"
-									@click="gotoAgent(agent.agent_id)"
+									@click.stop="gotoAgent(agent.agent_id)"
 								/>
 							</template>
 							<template v-else>

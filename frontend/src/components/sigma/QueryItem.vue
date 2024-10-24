@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity :loading :embedded hoverable clickable @click="openDetails()">
+		<CardEntity :loading :embedded hoverable clickable @click.stop="openDetails()">
 			<template #headerMain>#{{ query.id }}</template>
 			<template #headerExtra>
 				<div class="flex items-center gap-2">

@@ -1,5 +1,5 @@
 <template>
-	<CardEntity :loading="canceling" hoverable clickable @click="openReport()">
+	<CardEntity :loading="canceling" hoverable clickable @click.stop="openReport()">
 		<template #default>
 			{{ report }}
 		</template>

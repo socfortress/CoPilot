@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity :loading="canceling" hoverable clickable @click="openConfiguredSource()">
+		<CardEntity :loading="canceling" hoverable clickable @click.stop="openConfiguredSource()">
 			<template #default>
 				{{ source }}
 			</template>

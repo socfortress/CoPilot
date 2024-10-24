@@ -1,6 +1,6 @@
 <template>
-	<div class="alert-actions flex flex-col justify-end gap-2">
-		<n-button v-if="socAlertFieldValue" type="success" secondary :size="size" @click="gotoSocAlertUrl()">
+	<div class="flex flex-wrap justify-end gap-2">
+		<n-button v-if="socAlertFieldValue" type="success" secondary :size="size" @click.stop="gotoSocAlertUrl()">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>
 			</template>
@@ -12,14 +12,14 @@
 			type="warning"
 			secondary
 			:size="size"
-			@click="createAlert()"
+			@click.stop="createAlert()"
 		>
 			<template #icon>
 				<Icon :name="DangerIcon"></Icon>
 			</template>
 			Create SOC Alert
 		</n-button>
-		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click="showSocResponse = true">
+		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click.stop="showSocResponse = true">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>
 			</template>
@@ -31,7 +31,7 @@
 			type="warning"
 			secondary
 			:size="size"
-			@click="askSOCFortress()"
+			@click.stop="askSOCFortress()"
 		>
 			<template #icon>
 				<Icon :name="AskIcon"></Icon>
@@ -43,7 +43,7 @@
 			:loading="loadingWazuhRuleExclude"
 			secondary
 			:size="size"
-			@click="wazuhManagerRuleExclude()"
+			@click.stop="wazuhManagerRuleExclude()"
 		>
 			<template #icon>
 				<Icon :name="RulesIcon"></Icon>

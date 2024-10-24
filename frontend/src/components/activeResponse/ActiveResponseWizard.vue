@@ -15,19 +15,19 @@
 				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`slide-form-${slideFormDirection}`">
 						<div v-if="current === 1" class="flex flex-col gap-2 px-7">
-							<CardEntity embedded hoverable clickable @click="setOs('linux')">
+							<CardEntity embedded hoverable clickable @click.stop="setOs('linux')">
 								<div class="flex items-center gap-3">
 									<Icon :size="18" :name="iconFromOs('linux')"></Icon>
 									<span>LINUX</span>
 								</div>
 							</CardEntity>
-							<CardEntity embedded hoverable clickable @click="setOs('windows')">
+							<CardEntity embedded hoverable clickable @click.stop="setOs('windows')">
 								<div class="flex items-center gap-3">
 									<Icon :size="18" :name="iconFromOs('windows')"></Icon>
 									<span>WINDOWS</span>
 								</div>
 							</CardEntity>
-							<CardEntity embedded hoverable clickable @click="setOs('macos')">
+							<CardEntity embedded hoverable clickable @click.stop="setOs('macos')">
 								<div class="flex items-center gap-3">
 									<Icon :size="18" :name="iconFromOs('macos')"></Icon>
 									<span>MACOS</span>
@@ -46,7 +46,7 @@
 											embedded
 											clickable
 											hide-actions
-											@click="setActiveResponse(activeResponse)"
+											@click.stop="setActiveResponse(activeResponse)"
 										/>
 									</template>
 									<template v-else>
@@ -69,7 +69,7 @@
 								@stop-loading="loadingActiveResponseInvoke = false"
 							>
 								<template #additionalActions>
-									<n-button :disabled="loadingActiveResponseInvoke" @click="prev()">
+									<n-button :disabled="loadingActiveResponseInvoke" @click.stop="prev()">
 										<template #icon>
 											<Icon :name="ArrowLeftIcon"></Icon>
 										</template>
@@ -84,7 +84,7 @@
 
 			<div v-if="current !== 3" class="flex justify-between gap-4 p-7 pt-4">
 				<div class="flex gap-4">
-					<n-button v-if="isPrevStepEnabled" @click="prev()">
+					<n-button v-if="isPrevStepEnabled" @click.stop="prev()">
 						<template #icon>
 							<Icon :name="ArrowLeftIcon"></Icon>
 						</template>

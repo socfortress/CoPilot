@@ -98,7 +98,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="artifactsList.length">
 					<ArtifactItem
 						v-for="artifact of itemsPaginated"
@@ -135,6 +135,7 @@ import _cloneDeep from "lodash/cloneDeep"
 import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import ArtifactItem from "./ArtifactItem.vue"
+import { artifact_list } from "./mock"
 
 const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
 
@@ -224,6 +225,11 @@ function getData(cb?: (artifacts: Artifact[]) => void) {
 		.catch(err => {
 			artifactsList.value = []
 
+			// MOCK
+			/*
+			artifactsList.value = artifact_list
+			*/
+
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
@@ -290,15 +296,6 @@ onBeforeMount(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>
 
 <style lang="scss">
 .artifacts-list-filter-combo {

@@ -1,18 +1,21 @@
 <template>
-	<div class="alert-summary flex flex-col">
-		<div class="header-box flex justify-between gap-4">
-			<div class="id flex items-center gap-2" @click="gotoIndex(alertsSummary.index_name)">
+	<CardEntity class="alert-summary">
+		<template #headerMain>
+			<div
+				class="hover:text-primary flex cursor-pointer items-center gap-2"
+				@click="gotoIndex(alertsSummary.index_name)"
+			>
 				<IndexIcon v-if="alertsSummary.indexStats?.health" :health="alertsSummary.indexStats?.health" color />
 				<Icon v-else :name="PlaceholderIcon" :size="18" />
-
-				{{ alertsSummary.index_name }}
-
+				index: {{ alertsSummary.index_name }}
 				<Icon :name="LinkIcon" :size="14" />
 			</div>
-			<div class="total-alerts flex flex-wrap items-center justify-end">
+		</template>
+		<template #headerExtra>
+			<div class="flex min-h-6 flex-wrap items-center justify-end gap-3">
 				<n-button
 					v-if="alertsSummary.alerts.length > 3 && showAllAlerts"
-					class="show-less"
+					class="animate-fade opacity-0"
 					size="tiny"
 					@click="showAllAlerts = false"
 				>
@@ -23,29 +26,34 @@
 					<strong class="ml-2 font-mono">{{ alertsSummary.total_alerts }}</strong>
 				</span>
 			</div>
-		</div>
-		<div class="main-box">
-			<div class="alert-list" :class="{ expand: showAllAlerts }">
-				<n-scrollbar class="list-scroll" trigger="none">
-					<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert="alert" />
-				</n-scrollbar>
+		</template>
+		<template #mainExtra>
+			<div class="main-box">
+				<div class="alert-list" :class="{ expand: showAllAlerts }">
+					<n-scrollbar class="list-scroll" trigger="none">
+						<div class="flex flex-col gap-2">
+							<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert="alert" embedded />
+						</div>
+					</n-scrollbar>
 
-				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
-					<n-button size="small" text class="!w-full">
-						<template #icon>
-							<Icon :name="ExpandIcon"></Icon>
-						</template>
-						See all alerts
-					</n-button>
+					<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
+						<n-button size="small" text class="!w-full">
+							<template #icon>
+								<Icon :name="ExpandIcon"></Icon>
+							</template>
+							See all alerts
+						</n-button>
+					</div>
 				</div>
 			</div>
-		</div>
-	</div>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { AlertsSummary } from "@/types/alerts.d"
 import type { IndexStats } from "@/types/indices.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -69,46 +77,6 @@ const { gotoIndex } = useGoto()
 
 <style lang="scss" scoped>
 .alert-summary {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	overflow: hidden;
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.header-box {
-		font-size: 15px;
-		padding: 14px 16px;
-		min-height: 52px;
-		border-bottom: var(--border-small-100);
-
-		.id {
-			word-break: break-word;
-			cursor: pointer;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-		.total-alerts {
-			text-align: right;
-			gap: 7px;
-
-			.show-less {
-				opacity: 0;
-				animation: show-less-fade 0.3s forwards;
-
-				@keyframes show-less-fade {
-					from {
-						opacity: 0;
-					}
-					to {
-						opacity: 1;
-					}
-				}
-			}
-		}
-	}
-
 	.main-box {
 		.alert-list {
 			position: relative;
@@ -163,10 +131,6 @@ const { gotoIndex } = useGoto()
 				}
 			}
 		}
-	}
-
-	&:hover {
-		border-color: var(--primary-color);
 	}
 }
 </style>

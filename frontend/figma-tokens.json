@@ -92,6 +92,18 @@
 			"value": "rgba(255, 182, 0, 0.6)",
 			"type": "color"
 		},
+		"color-light-primary-070": {
+			"value": "rgba(255, 182, 0, 0.7)",
+			"type": "color"
+		},
+		"color-light-primary-080": {
+			"value": "rgba(255, 182, 0, 0.8)",
+			"type": "color"
+		},
+		"color-light-primary-090": {
+			"value": "rgba(255, 182, 0, 0.9)",
+			"type": "color"
+		},
 		"color-light-info": {
 			"value": "#6267FF",
 			"type": "color"
@@ -112,16 +124,160 @@
 			"value": "rgba(98, 103, 255, 0.05)",
 			"type": "color"
 		},
+		"color-light-info-010": {
+			"value": "rgba(98, 103, 255, 0.1)",
+			"type": "color"
+		},
+		"color-light-info-020": {
+			"value": "rgba(98, 103, 255, 0.2)",
+			"type": "color"
+		},
+		"color-light-info-030": {
+			"value": "rgba(98, 103, 255, 0.3)",
+			"type": "color"
+		},
+		"color-light-info-040": {
+			"value": "rgba(98, 103, 255, 0.4)",
+			"type": "color"
+		},
+		"color-light-info-050": {
+			"value": "rgba(98, 103, 255, 0.5)",
+			"type": "color"
+		},
+		"color-light-info-060": {
+			"value": "rgba(98, 103, 255, 0.6)",
+			"type": "color"
+		},
+		"color-light-info-070": {
+			"value": "rgba(98, 103, 255, 0.7)",
+			"type": "color"
+		},
+		"color-light-info-080": {
+			"value": "rgba(98, 103, 255, 0.8)",
+			"type": "color"
+		},
+		"color-light-info-090": {
+			"value": "rgba(98, 103, 255, 0.9)",
+			"type": "color"
+		},
 		"color-light-success-005": {
 			"value": "rgba(0, 178, 123, 0.05)",
+			"type": "color"
+		},
+		"color-light-success-010": {
+			"value": "rgba(0, 178, 123, 0.1)",
+			"type": "color"
+		},
+		"color-light-success-020": {
+			"value": "rgba(0, 178, 123, 0.2)",
+			"type": "color"
+		},
+		"color-light-success-030": {
+			"value": "rgba(0, 178, 123, 0.3)",
+			"type": "color"
+		},
+		"color-light-success-040": {
+			"value": "rgba(0, 178, 123, 0.4)",
+			"type": "color"
+		},
+		"color-light-success-050": {
+			"value": "rgba(0, 178, 123, 0.5)",
+			"type": "color"
+		},
+		"color-light-success-060": {
+			"value": "rgba(0, 178, 123, 0.6)",
+			"type": "color"
+		},
+		"color-light-success-070": {
+			"value": "rgba(0, 178, 123, 0.7)",
+			"type": "color"
+		},
+		"color-light-success-080": {
+			"value": "rgba(0, 178, 123, 0.8)",
+			"type": "color"
+		},
+		"color-light-success-090": {
+			"value": "rgba(0, 178, 123, 0.9)",
 			"type": "color"
 		},
 		"color-light-warning-005": {
 			"value": "rgba(227, 194, 47, 0.05)",
 			"type": "color"
 		},
+		"color-light-warning-010": {
+			"value": "rgba(227, 194, 47, 0.1)",
+			"type": "color"
+		},
+		"color-light-warning-020": {
+			"value": "rgba(227, 194, 47, 0.2)",
+			"type": "color"
+		},
+		"color-light-warning-030": {
+			"value": "rgba(227, 194, 47, 0.3)",
+			"type": "color"
+		},
+		"color-light-warning-040": {
+			"value": "rgba(227, 194, 47, 0.4)",
+			"type": "color"
+		},
+		"color-light-warning-050": {
+			"value": "rgba(227, 194, 47, 0.5)",
+			"type": "color"
+		},
+		"color-light-warning-060": {
+			"value": "rgba(227, 194, 47, 0.6)",
+			"type": "color"
+		},
+		"color-light-warning-070": {
+			"value": "rgba(227, 194, 47, 0.7)",
+			"type": "color"
+		},
+		"color-light-warning-080": {
+			"value": "rgba(227, 194, 47, 0.8)",
+			"type": "color"
+		},
+		"color-light-warning-090": {
+			"value": "rgba(227, 194, 47, 0.9)",
+			"type": "color"
+		},
 		"color-light-error-005": {
 			"value": "rgba(255, 1, 86, 0.05)",
+			"type": "color"
+		},
+		"color-light-error-010": {
+			"value": "rgba(255, 1, 86, 0.1)",
+			"type": "color"
+		},
+		"color-light-error-020": {
+			"value": "rgba(255, 1, 86, 0.2)",
+			"type": "color"
+		},
+		"color-light-error-030": {
+			"value": "rgba(255, 1, 86, 0.3)",
+			"type": "color"
+		},
+		"color-light-error-040": {
+			"value": "rgba(255, 1, 86, 0.4)",
+			"type": "color"
+		},
+		"color-light-error-050": {
+			"value": "rgba(255, 1, 86, 0.5)",
+			"type": "color"
+		},
+		"color-light-error-060": {
+			"value": "rgba(255, 1, 86, 0.6)",
+			"type": "color"
+		},
+		"color-light-error-070": {
+			"value": "rgba(255, 1, 86, 0.7)",
+			"type": "color"
+		},
+		"color-light-error-080": {
+			"value": "rgba(255, 1, 86, 0.8)",
+			"type": "color"
+		},
+		"color-light-error-090": {
+			"value": "rgba(255, 1, 86, 0.9)",
 			"type": "color"
 		},
 		"color-light-secondary-1": {
@@ -292,6 +448,18 @@
 			"value": "rgba(255, 182, 0, 0.6)",
 			"type": "color"
 		},
+		"color-dark-primary-070": {
+			"value": "rgba(255, 182, 0, 0.7)",
+			"type": "color"
+		},
+		"color-dark-primary-080": {
+			"value": "rgba(255, 182, 0, 0.8)",
+			"type": "color"
+		},
+		"color-dark-primary-090": {
+			"value": "rgba(255, 182, 0, 0.9)",
+			"type": "color"
+		},
 		"color-dark-info": {
 			"value": "#6267FF",
 			"type": "color"
@@ -312,16 +480,160 @@
 			"value": "rgba(98, 103, 255, 0.05)",
 			"type": "color"
 		},
+		"color-dark-info-010": {
+			"value": "rgba(98, 103, 255, 0.1)",
+			"type": "color"
+		},
+		"color-dark-info-020": {
+			"value": "rgba(98, 103, 255, 0.2)",
+			"type": "color"
+		},
+		"color-dark-info-030": {
+			"value": "rgba(98, 103, 255, 0.3)",
+			"type": "color"
+		},
+		"color-dark-info-040": {
+			"value": "rgba(98, 103, 255, 0.4)",
+			"type": "color"
+		},
+		"color-dark-info-050": {
+			"value": "rgba(98, 103, 255, 0.5)",
+			"type": "color"
+		},
+		"color-dark-info-060": {
+			"value": "rgba(98, 103, 255, 0.6)",
+			"type": "color"
+		},
+		"color-dark-info-070": {
+			"value": "rgba(98, 103, 255, 0.7)",
+			"type": "color"
+		},
+		"color-dark-info-080": {
+			"value": "rgba(98, 103, 255, 0.8)",
+			"type": "color"
+		},
+		"color-dark-info-090": {
+			"value": "rgba(98, 103, 255, 0.9)",
+			"type": "color"
+		},
 		"color-dark-success-005": {
 			"value": "rgba(0, 178, 123, 0.05)",
+			"type": "color"
+		},
+		"color-dark-success-010": {
+			"value": "rgba(0, 178, 123, 0.1)",
+			"type": "color"
+		},
+		"color-dark-success-020": {
+			"value": "rgba(0, 178, 123, 0.2)",
+			"type": "color"
+		},
+		"color-dark-success-030": {
+			"value": "rgba(0, 178, 123, 0.3)",
+			"type": "color"
+		},
+		"color-dark-success-040": {
+			"value": "rgba(0, 178, 123, 0.4)",
+			"type": "color"
+		},
+		"color-dark-success-050": {
+			"value": "rgba(0, 178, 123, 0.5)",
+			"type": "color"
+		},
+		"color-dark-success-060": {
+			"value": "rgba(0, 178, 123, 0.6)",
+			"type": "color"
+		},
+		"color-dark-success-070": {
+			"value": "rgba(0, 178, 123, 0.7)",
+			"type": "color"
+		},
+		"color-dark-success-080": {
+			"value": "rgba(0, 178, 123, 0.8)",
+			"type": "color"
+		},
+		"color-dark-success-090": {
+			"value": "rgba(0, 178, 123, 0.9)",
 			"type": "color"
 		},
 		"color-dark-warning-005": {
 			"value": "rgba(227, 194, 47, 0.05)",
 			"type": "color"
 		},
+		"color-dark-warning-010": {
+			"value": "rgba(227, 194, 47, 0.1)",
+			"type": "color"
+		},
+		"color-dark-warning-020": {
+			"value": "rgba(227, 194, 47, 0.2)",
+			"type": "color"
+		},
+		"color-dark-warning-030": {
+			"value": "rgba(227, 194, 47, 0.3)",
+			"type": "color"
+		},
+		"color-dark-warning-040": {
+			"value": "rgba(227, 194, 47, 0.4)",
+			"type": "color"
+		},
+		"color-dark-warning-050": {
+			"value": "rgba(227, 194, 47, 0.5)",
+			"type": "color"
+		},
+		"color-dark-warning-060": {
+			"value": "rgba(227, 194, 47, 0.6)",
+			"type": "color"
+		},
+		"color-dark-warning-070": {
+			"value": "rgba(227, 194, 47, 0.7)",
+			"type": "color"
+		},
+		"color-dark-warning-080": {
+			"value": "rgba(227, 194, 47, 0.8)",
+			"type": "color"
+		},
+		"color-dark-warning-090": {
+			"value": "rgba(227, 194, 47, 0.9)",
+			"type": "color"
+		},
 		"color-dark-error-005": {
 			"value": "rgba(255, 1, 86, 0.05)",
+			"type": "color"
+		},
+		"color-dark-error-010": {
+			"value": "rgba(255, 1, 86, 0.1)",
+			"type": "color"
+		},
+		"color-dark-error-020": {
+			"value": "rgba(255, 1, 86, 0.2)",
+			"type": "color"
+		},
+		"color-dark-error-030": {
+			"value": "rgba(255, 1, 86, 0.3)",
+			"type": "color"
+		},
+		"color-dark-error-040": {
+			"value": "rgba(255, 1, 86, 0.4)",
+			"type": "color"
+		},
+		"color-dark-error-050": {
+			"value": "rgba(255, 1, 86, 0.5)",
+			"type": "color"
+		},
+		"color-dark-error-060": {
+			"value": "rgba(255, 1, 86, 0.6)",
+			"type": "color"
+		},
+		"color-dark-error-070": {
+			"value": "rgba(255, 1, 86, 0.7)",
+			"type": "color"
+		},
+		"color-dark-error-080": {
+			"value": "rgba(255, 1, 86, 0.8)",
+			"type": "color"
+		},
+		"color-dark-error-090": {
+			"value": "rgba(255, 1, 86, 0.9)",
 			"type": "color"
 		},
 		"color-dark-secondary-1": {
@@ -556,6 +868,18 @@
 			"value": "{color-light-primary-060}",
 			"type": "color"
 		},
+		"color-primary-070": {
+			"value": "{color-light-primary-070}",
+			"type": "color"
+		},
+		"color-primary-080": {
+			"value": "{color-light-primary-080}",
+			"type": "color"
+		},
+		"color-primary-090": {
+			"value": "{color-light-primary-090}",
+			"type": "color"
+		},
 		"color-info": {
 			"value": "{color-light-info}",
 			"type": "color"
@@ -576,16 +900,160 @@
 			"value": "{color-light-info-005}",
 			"type": "color"
 		},
+		"color-info-010": {
+			"value": "{color-light-info-010}",
+			"type": "color"
+		},
+		"color-info-020": {
+			"value": "{color-light-info-020}",
+			"type": "color"
+		},
+		"color-info-030": {
+			"value": "{color-light-info-030}",
+			"type": "color"
+		},
+		"color-info-040": {
+			"value": "{color-light-info-040}",
+			"type": "color"
+		},
+		"color-info-050": {
+			"value": "{color-light-info-050}",
+			"type": "color"
+		},
+		"color-info-060": {
+			"value": "{color-light-info-060}",
+			"type": "color"
+		},
+		"color-info-070": {
+			"value": "{color-light-info-070}",
+			"type": "color"
+		},
+		"color-info-080": {
+			"value": "{color-light-info-080}",
+			"type": "color"
+		},
+		"color-info-090": {
+			"value": "{color-light-info-090}",
+			"type": "color"
+		},
 		"color-success-005": {
 			"value": "{color-light-success-005}",
+			"type": "color"
+		},
+		"color-success-010": {
+			"value": "{color-light-success-010}",
+			"type": "color"
+		},
+		"color-success-020": {
+			"value": "{color-light-success-020}",
+			"type": "color"
+		},
+		"color-success-030": {
+			"value": "{color-light-success-030}",
+			"type": "color"
+		},
+		"color-success-040": {
+			"value": "{color-light-success-040}",
+			"type": "color"
+		},
+		"color-success-050": {
+			"value": "{color-light-success-050}",
+			"type": "color"
+		},
+		"color-success-060": {
+			"value": "{color-light-success-060}",
+			"type": "color"
+		},
+		"color-success-070": {
+			"value": "{color-light-success-070}",
+			"type": "color"
+		},
+		"color-success-080": {
+			"value": "{color-light-success-080}",
+			"type": "color"
+		},
+		"color-success-090": {
+			"value": "{color-light-success-090}",
 			"type": "color"
 		},
 		"color-warning-005": {
 			"value": "{color-light-warning-005}",
 			"type": "color"
 		},
+		"color-warning-010": {
+			"value": "{color-light-warning-010}",
+			"type": "color"
+		},
+		"color-warning-020": {
+			"value": "{color-light-warning-020}",
+			"type": "color"
+		},
+		"color-warning-030": {
+			"value": "{color-light-warning-030}",
+			"type": "color"
+		},
+		"color-warning-040": {
+			"value": "{color-light-warning-040}",
+			"type": "color"
+		},
+		"color-warning-050": {
+			"value": "{color-light-warning-050}",
+			"type": "color"
+		},
+		"color-warning-060": {
+			"value": "{color-light-warning-060}",
+			"type": "color"
+		},
+		"color-warning-070": {
+			"value": "{color-light-warning-070}",
+			"type": "color"
+		},
+		"color-warning-080": {
+			"value": "{color-light-warning-080}",
+			"type": "color"
+		},
+		"color-warning-090": {
+			"value": "{color-light-warning-090}",
+			"type": "color"
+		},
 		"color-error-005": {
 			"value": "{color-light-error-005}",
+			"type": "color"
+		},
+		"color-error-010": {
+			"value": "{color-light-error-010}",
+			"type": "color"
+		},
+		"color-error-020": {
+			"value": "{color-light-error-020}",
+			"type": "color"
+		},
+		"color-error-030": {
+			"value": "{color-light-error-030}",
+			"type": "color"
+		},
+		"color-error-040": {
+			"value": "{color-light-error-040}",
+			"type": "color"
+		},
+		"color-error-050": {
+			"value": "{color-light-error-050}",
+			"type": "color"
+		},
+		"color-error-060": {
+			"value": "{color-light-error-060}",
+			"type": "color"
+		},
+		"color-error-070": {
+			"value": "{color-light-error-070}",
+			"type": "color"
+		},
+		"color-error-080": {
+			"value": "{color-light-error-080}",
+			"type": "color"
+		},
+		"color-error-090": {
+			"value": "{color-light-error-090}",
 			"type": "color"
 		},
 		"color-secondary-1": {
@@ -758,6 +1226,18 @@
 			"value": "{color-dark-primary-060}",
 			"type": "color"
 		},
+		"color-primary-070": {
+			"value": "{color-dark-primary-070}",
+			"type": "color"
+		},
+		"color-primary-080": {
+			"value": "{color-dark-primary-080}",
+			"type": "color"
+		},
+		"color-primary-090": {
+			"value": "{color-dark-primary-090}",
+			"type": "color"
+		},
 		"color-info": {
 			"value": "{color-dark-info}",
 			"type": "color"
@@ -778,16 +1258,160 @@
 			"value": "{color-dark-info-005}",
 			"type": "color"
 		},
+		"color-info-010": {
+			"value": "{color-dark-info-010}",
+			"type": "color"
+		},
+		"color-info-020": {
+			"value": "{color-dark-info-020}",
+			"type": "color"
+		},
+		"color-info-030": {
+			"value": "{color-dark-info-030}",
+			"type": "color"
+		},
+		"color-info-040": {
+			"value": "{color-dark-info-040}",
+			"type": "color"
+		},
+		"color-info-050": {
+			"value": "{color-dark-info-050}",
+			"type": "color"
+		},
+		"color-info-060": {
+			"value": "{color-dark-info-060}",
+			"type": "color"
+		},
+		"color-info-070": {
+			"value": "{color-dark-info-070}",
+			"type": "color"
+		},
+		"color-info-080": {
+			"value": "{color-dark-info-080}",
+			"type": "color"
+		},
+		"color-info-090": {
+			"value": "{color-dark-info-090}",
+			"type": "color"
+		},
 		"color-success-005": {
 			"value": "{color-dark-success-005}",
+			"type": "color"
+		},
+		"color-success-010": {
+			"value": "{color-dark-success-010}",
+			"type": "color"
+		},
+		"color-success-020": {
+			"value": "{color-dark-success-020}",
+			"type": "color"
+		},
+		"color-success-030": {
+			"value": "{color-dark-success-030}",
+			"type": "color"
+		},
+		"color-success-040": {
+			"value": "{color-dark-success-040}",
+			"type": "color"
+		},
+		"color-success-050": {
+			"value": "{color-dark-success-050}",
+			"type": "color"
+		},
+		"color-success-060": {
+			"value": "{color-dark-success-060}",
+			"type": "color"
+		},
+		"color-success-070": {
+			"value": "{color-dark-success-070}",
+			"type": "color"
+		},
+		"color-success-080": {
+			"value": "{color-dark-success-080}",
+			"type": "color"
+		},
+		"color-success-090": {
+			"value": "{color-dark-success-090}",
 			"type": "color"
 		},
 		"color-warning-005": {
 			"value": "{color-dark-warning-005}",
 			"type": "color"
 		},
+		"color-warning-010": {
+			"value": "{color-dark-warning-010}",
+			"type": "color"
+		},
+		"color-warning-020": {
+			"value": "{color-dark-warning-020}",
+			"type": "color"
+		},
+		"color-warning-030": {
+			"value": "{color-dark-warning-030}",
+			"type": "color"
+		},
+		"color-warning-040": {
+			"value": "{color-dark-warning-040}",
+			"type": "color"
+		},
+		"color-warning-050": {
+			"value": "{color-dark-warning-050}",
+			"type": "color"
+		},
+		"color-warning-060": {
+			"value": "{color-dark-warning-060}",
+			"type": "color"
+		},
+		"color-warning-070": {
+			"value": "{color-dark-warning-070}",
+			"type": "color"
+		},
+		"color-warning-080": {
+			"value": "{color-dark-warning-080}",
+			"type": "color"
+		},
+		"color-warning-090": {
+			"value": "{color-dark-warning-090}",
+			"type": "color"
+		},
 		"color-error-005": {
 			"value": "{color-dark-error-005}",
+			"type": "color"
+		},
+		"color-error-010": {
+			"value": "{color-dark-error-010}",
+			"type": "color"
+		},
+		"color-error-020": {
+			"value": "{color-dark-error-020}",
+			"type": "color"
+		},
+		"color-error-030": {
+			"value": "{color-dark-error-030}",
+			"type": "color"
+		},
+		"color-error-040": {
+			"value": "{color-dark-error-040}",
+			"type": "color"
+		},
+		"color-error-050": {
+			"value": "{color-dark-error-050}",
+			"type": "color"
+		},
+		"color-error-060": {
+			"value": "{color-dark-error-060}",
+			"type": "color"
+		},
+		"color-error-070": {
+			"value": "{color-dark-error-070}",
+			"type": "color"
+		},
+		"color-error-080": {
+			"value": "{color-dark-error-080}",
+			"type": "color"
+		},
+		"color-error-090": {
+			"value": "{color-dark-error-090}",
 			"type": "color"
 		},
 		"color-secondary-1": {

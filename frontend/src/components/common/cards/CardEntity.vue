@@ -2,7 +2,11 @@
 	<n-card
 		class="card-entity"
 		content-class="!p-0"
-		:class="[`card-size-${size}`, { embedded, highlighted, clickable, hoverable, disabled }]"
+		:class="[
+			`card-size-${size}`,
+			`card-status-${status}`,
+			{ embedded, highlighted, clickable, hoverable, disabled }
+		]"
 	>
 		<n-spin :show="loading">
 			<div class="card-entity-wrapper flex flex-col">
@@ -55,8 +59,9 @@
 <script setup lang="ts">
 import { NCard, NSpin } from "naive-ui"
 
-const { size, embedded, highlighted, clickable, hoverable, disabled, loading } = defineProps<{
+const { size, status, embedded, highlighted, clickable, hoverable, disabled, loading } = defineProps<{
 	size?: "medium" | "small" | "large"
+	status?: "success" | "warning" | "error"
 	embedded?: boolean
 	highlighted?: boolean
 	clickable?: boolean
@@ -153,6 +158,21 @@ const { size, embedded, highlighted, clickable, hoverable, disabled, loading } =
 		.footer-box {
 			background-color: var(--bg-body);
 		}
+	}
+
+	&.card-status-success {
+		background-color: var(--success-005-color);
+		border-color: var(--success-030-color);
+	}
+
+	&.card-status-warning {
+		background-color: var(--warning-005-color);
+		border-color: var(--warning-030-color);
+	}
+
+	&.card-status-error {
+		background-color: var(--error-005-color);
+		border-color: var(--error-030-color);
 	}
 
 	&.hoverable {

@@ -1,4 +1,4 @@
-import type { CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts"
+import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts.d"
 
 export const collectResult: CollectResult[] = [
 	{
@@ -935,5 +935,20 @@ export const quarantineResult: QuarantineResult[] = [
 	{
 		Time: "2023-11-14T21:03:05Z",
 		Result: "VelociraptorQuarantine connection test successful."
+	}
+]
+
+export const artifact_list: Artifact[] = [
+	{
+		description: "This artifact contains the initial data collected from the user session.",
+		name: "session_data_artifact"
+	},
+	{
+		description: "This artifact stores the processed results after the data flow execution.",
+		name: "processed_results_artifact"
+	},
+	{
+		description: "This artifact includes the logs generated during the data collection process.",
+		name: "logs_artifact"
 	}
 ]

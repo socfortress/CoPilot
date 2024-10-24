@@ -28,6 +28,15 @@ export default {
 			colors: {
 				primary: "var(--primary-color)"
 			},
+			animation: {
+				fade: "fade 0.3s forwards"
+			},
+			keyframes: {
+				fade: {
+					from: { opacity: 0 },
+					to: { opacity: 1 }
+				}
+			},
 			backgroundColor: {
 				default: "var(--bg-color)",
 				secondary: "var(--bg-secondary-color)"

@@ -1,106 +1,117 @@
 <template>
-	<n-spin :id="`customer-${customer.customer_code}`" :show="loading" :class="{ highlight }" class="customer-item">
-		<div class="flex flex-col gap-2 px-4 py-3">
-			<div class="header-box flex items-center justify-between">
-				<div class="id">#{{ customer.customer_code }}</div>
-				<div v-if="!hideCardActions" class="actions">
-					<n-button size="small" @click.stop="showDetails = true">
-						<template #icon>
-							<Icon :name="DetailsIcon"></Icon>
-						</template>
-						Details
-					</n-button>
-				</div>
-			</div>
-			<div class="main-box flex items-center gap-3">
-				<n-avatar
-					:src="customerInfo?.logo_file || fallbackAvatar"
-					:fallback-src="fallbackAvatar"
-					round
-					:size="40"
-				/>
-
-				<div class="content flex grow flex-col gap-1">
-					<div class="title">
-						{{ customerInfo?.customer_name }}
-					</div>
-					<div class="description">
-						{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
-					</div>
-				</div>
-			</div>
-
-			<div class="badges-box mt-2 flex flex-wrap items-center gap-3">
-				<Badge type="splitted" color="primary">
-					<template #iconLeft>
-						<Icon :name="UserTypeIcon" :size="14"></Icon>
-					</template>
-					<template #label>Type</template>
-					<template #value>
-						{{ customerInfo?.customer_type || "-" }}
-					</template>
-				</Badge>
-
-				<n-popover trigger="hover" :disabled="addressLabel === '-'">
-					<template #trigger>
-						<Badge type="splitted" color="primary" :class="{ 'cursor-help': addressLabel !== '-' }">
-							<template #iconLeft>
-								<Icon :name="LocationIcon" :size="13"></Icon>
-							</template>
-							<template #value>
-								{{ addressLabel }}
-							</template>
-						</Badge>
-					</template>
+	<div :id="`customer-${customer.customer_code}`">
+		<CardEntity :loading :highlighted="!!highlight">
+			<template #default>
+				<div class="flex items-start gap-4">
+					<n-avatar
+						:src="customerInfo?.logo_file || fallbackAvatar"
+						:fallback-src="fallbackAvatar"
+						round
+						:size="40"
+					/>
 
 					<div class="flex flex-col gap-1">
-						<div v-if="customerInfo?.address_line1" class="box">
-							address_line1:
-							<code>{{ customerInfo.address_line1 }}</code>
+						<div class="flex flex-wrap gap-2">
+							{{ customerInfo?.customer_name }}
+							<span class="text-secondary">#{{ customer.customer_code }}</span>
 						</div>
-						<div v-if="customerInfo?.address_line2" class="box">
-							address_line2:
-							<code>{{ customerInfo.address_line2 }}</code>
-						</div>
-						<div v-if="customerInfo?.postal_code" class="box">
-							postal_code:
-							<code>{{ customerInfo.postal_code }}</code>
-						</div>
-						<div v-if="customerInfo?.city" class="box">
-							city:
-							<code>{{ customerInfo.city }}</code>
-						</div>
-						<div v-if="customerInfo?.state" class="box">
-							state:
-							<code>{{ customerInfo.state }}</code>
-						</div>
-						<div v-if="customerInfo?.country" class="box">
-							country:
-							<code>{{ customerInfo.country }}</code>
-						</div>
+						<p class="text-sm">
+							{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
+						</p>
 					</div>
-				</n-popover>
+				</div>
+			</template>
 
-				<Badge type="splitted" color="primary">
-					<template #iconLeft>
-						<Icon :name="PhoneIcon" :size="13"></Icon>
-					</template>
-					<template #value>
-						{{ customerInfo?.phone || "-" }}
-					</template>
-				</Badge>
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="UserTypeIcon" :size="14"></Icon>
+						</template>
+						<template #label>Type</template>
+						<template #value>
+							{{ customerInfo?.customer_type || "-" }}
+						</template>
+					</Badge>
 
-				<Badge v-if="customerInfo?.parent_customer_code" type="splitted" color="primary">
-					<template #iconLeft>
-						<Icon :name="ParentIcon" :size="13"></Icon>
+					<n-popover trigger="hover" :disabled="addressLabel === '-'">
+						<template #trigger>
+							<Badge type="splitted" color="primary" :class="{ 'cursor-help': addressLabel !== '-' }">
+								<template #iconLeft>
+									<Icon :name="LocationIcon" :size="13"></Icon>
+								</template>
+								<template #value>
+									<div class="flex flex-wrap items-center gap-2">
+										{{ addressLabel }}
+										<Icon
+											v-if="addressLabel !== '-'"
+											:name="InfoIcon"
+											:size="13"
+											class="!opacity-80"
+										></Icon>
+									</div>
+								</template>
+							</Badge>
+						</template>
+
+						<div class="flex flex-col gap-1">
+							<div v-if="customerInfo?.address_line1" class="box">
+								address_line1:
+								<code>{{ customerInfo.address_line1 }}</code>
+							</div>
+							<div v-if="customerInfo?.address_line2" class="box">
+								address_line2:
+								<code>{{ customerInfo.address_line2 }}</code>
+							</div>
+							<div v-if="customerInfo?.postal_code" class="box">
+								postal_code:
+								<code>{{ customerInfo.postal_code }}</code>
+							</div>
+							<div v-if="customerInfo?.city" class="box">
+								city:
+								<code>{{ customerInfo.city }}</code>
+							</div>
+							<div v-if="customerInfo?.state" class="box">
+								state:
+								<code>{{ customerInfo.state }}</code>
+							</div>
+							<div v-if="customerInfo?.country" class="box">
+								country:
+								<code>{{ customerInfo.country }}</code>
+							</div>
+						</div>
+					</n-popover>
+
+					<Badge type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="PhoneIcon" :size="13"></Icon>
+						</template>
+						<template #value>
+							{{ customerInfo?.phone || "-" }}
+						</template>
+					</Badge>
+
+					<Badge v-if="customerInfo?.parent_customer_code" type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="ParentIcon" :size="13"></Icon>
+						</template>
+						<template #label>Parent</template>
+						<template #value>
+							{{ customerInfo?.parent_customer_code }}
+						</template>
+					</Badge>
+				</div>
+			</template>
+
+			<template v-if="!hideCardActions" #footerExtra>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="DetailsIcon"></Icon>
 					</template>
-					<template #label>Parent</template>
-					<template #value>
-						{{ customerInfo?.parent_customer_code }}
-					</template>
-				</Badge>
-			</div>
-		</div>
+					Details
+				</n-button>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -200,13 +211,14 @@
 				</n-tabs>
 			</Transition>
 		</n-modal>
-	</n-spin>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"
@@ -238,6 +250,7 @@ const { customer, highlight, hideCardActions } = toRefs(props)
 const DetailsIcon = "carbon:settings-adjust"
 const UserTypeIcon = "solar:shield-user-linear"
 const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
+const InfoIcon = "carbon:information"
 const ArrowIcon = "carbon:arrow-left"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
@@ -316,41 +329,6 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.header-box {
-		font-size: 13px;
-		.id {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&.highlight,
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-}
-</style>
 
 <style>
 .slide-tabs-right-enter-active,

@@ -37,7 +37,7 @@
 		<n-spin :show="loading">
 			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
@@ -68,10 +68,6 @@
 </template>
 
 <script setup lang="ts">
-// MOCK
-// import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts.d"
-
 import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import type { SocAlertField } from "./type.d"
@@ -82,6 +78,7 @@ import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSpin, useMessage }
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, provide, ref } from "vue"
 import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
+import { alerts_summary } from "./mock"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
@@ -167,7 +164,9 @@ provide<SocAlertField>("soc-alert-creation-field", "alert_id")
 onBeforeMount(() => {
 	nextTick(() => {
 		// MOCK
-		// alertsSummaryList.value = alerts_summary as AlertsSummary[]
+		/*
+		alertsSummaryList.value = alerts_summary
+		*/
 		startSearch()
 	})
 })
@@ -184,12 +183,3 @@ onBeforeUnmount(() => {
 	cancelSearch()
 })
 </script>
-
-<style lang="scss" scoped>
-.alerts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

@@ -19,10 +19,10 @@
 						<div>
 							{{ connector.connector_name }}
 						</div>
-						<div v-if="connector.connector_description" class="description">
+						<div v-if="connector.connector_description">
 							{{ connector.connector_description }}
 						</div>
-						<p v-if="connector.connector_extra_data" class="extra-data">
+						<p v-if="connector.connector_extra_data">
 							{{ connector.connector_extra_data }}
 						</p>
 					</div>

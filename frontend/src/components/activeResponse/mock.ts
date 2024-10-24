@@ -1,4 +1,4 @@
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 
 export const supported_active_response: SupportedActiveResponse[] = [
 	{

@@ -1,4 +1,4 @@
-import type { AlertsEventElement } from "@/types/graylog/alerts"
+import type { AlertsEventElement } from "@/types/graylog/alerts.d"
 
 export const alerts_event_element: AlertsEventElement[] = [
 	{
