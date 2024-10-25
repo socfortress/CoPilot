@@ -21,7 +21,7 @@
 				</div>
 
 				<n-spin :show="loading">
-					<div class="list p-7 pt-4">
+					<div class="min-h-52 p-7 pt-4">
 						<template v-if="list.length">
 							<CustomerNetworkConnectorItem
 								v-for="networkConnector of list"
@@ -110,11 +110,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .customer-network-connectors {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-
 	.form-fade-enter-active,
 	.form-fade-leave-active {
 		transition:

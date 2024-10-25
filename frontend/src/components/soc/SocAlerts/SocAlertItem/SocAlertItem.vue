@@ -53,7 +53,7 @@
 							</span>
 						</div>
 						<n-collapse-transition :show="!showBadgesToggle || showBadges">
-							<SocAlertItemBadges v-if="alert" class="badges-box" :alert :users @updated="updateAlert" />
+							<SocAlertItemBadges v-if="alert" :alert :users @updated="updateAlert" />
 						</n-collapse-transition>
 					</div>
 

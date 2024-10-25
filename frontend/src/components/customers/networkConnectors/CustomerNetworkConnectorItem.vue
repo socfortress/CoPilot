@@ -1,49 +1,39 @@
 <template>
-	<div class="network-connector-item" :class="{ embedded }">
-		<div class="flex flex-col gap-3 px-4 py-3">
-			<div class="header-box flex items-center justify-between">
-				<div class="id">#{{ networkConnector.id }}</div>
-				<div class="actions flex gap-3">
-					<Badge v-if="networkConnector.deployed" type="active">
-						<template #iconLeft>
-							<Icon :name="DeployIcon" :size="13"></Icon>
-						</template>
-						<template #value>Deployed</template>
-					</Badge>
+	<div>
+		<CardEntity hoverable :embedded>
+			<template #default>
+				{{ serviceName }}
+			</template>
+
+			<template v-if="networkConnector.deployed" #footerMain>
+				<Badge type="active">
+					<template #iconLeft>
+						<Icon :name="DeployIcon" :size="13"></Icon>
+					</template>
+					<template #value>Deployed</template>
+				</Badge>
+			</template>
+			<template #footerExtra>
+				<div class="flex flex-wrap gap-3">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
 							<Icon :name="InfoIcon"></Icon>
 						</template>
+						Details
 					</n-button>
+
+					<CustomerNetworkConnectorActions
+						class="flex flex-wrap gap-3"
+						:network-connector
+						hide-delete-button
+						size="small"
+						@deployed="emit('deployed')"
+						@deleted="emit('deleted')"
+						@decommissioned="emit('decommissioned')"
+					/>
 				</div>
-			</div>
-			<div class="main-box flex items-center gap-3">
-				<div class="content flex grow flex-col gap-1">
-					<div class="title">
-						{{ serviceName }}
-					</div>
-				</div>
-				<CustomerNetworkConnectorActions
-					class="actions-box"
-					:network-connector="networkConnector"
-					hide-delete-button
-					@deployed="emit('deployed')"
-					@deleted="emit('deleted')"
-					@decommissioned="emit('decommissioned')"
-				/>
-			</div>
-			<div class="footer-box flex items-center justify-between gap-4">
-				<CustomerNetworkConnectorActions
-					class="actions-box"
-					:network-connector="networkConnector"
-					hide-delete-button
-					size="small"
-					@deployed="emit('deployed')"
-					@deleted="emit('deleted')"
-					@decommissioned="emit('decommissioned')"
-				/>
-			</div>
-		</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -70,6 +60,7 @@
 <script setup lang="ts">
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
@@ -109,53 +100,3 @@ const authKeys = computed(() => {
 	return _uniqBy(keys, "key")
 })
 </script>
-
-<style lang="scss" scoped>
-.network-connector-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-
-	.header-box {
-		font-size: 13px;
-		.id {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	.footer-box {
-		display: none;
-		font-size: 13px;
-		margin-top: 10px;
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-
-	@container (max-width: 450px) {
-		.main-box {
-			.actions-box {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>

@@ -1,14 +1,8 @@
 <template>
-	<div class="alert-timeline-item" :class="{ embedded }">
-		<div class="flex cursor-pointer flex-col" @click="showDetails = true">
-			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex grow flex-col gap-1">
-					<div class="title">
-						{{ timelineData._source.rule_description }}
-					</div>
-				</div>
-			</div>
-		</div>
+	<div>
+		<CardEntity :embedded hoverable clickable @click="showDetails = true">
+			{{ timelineData._source.rule_description }}
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -55,6 +49,7 @@
 
 <script setup lang="ts">
 import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -74,26 +69,3 @@ const showDetails = ref(false)
 const timelineDetailsInfo = computed(() => _omit(timelineData.value, ["_source"]))
 const timelineDetailsSource = computed(() => timelineData.value?._source)
 </script>
-
-<style lang="scss" scoped>
-.alert-timeline-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
-
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-}
-</style>

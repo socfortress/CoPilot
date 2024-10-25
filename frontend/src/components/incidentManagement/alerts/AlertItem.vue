@@ -52,7 +52,7 @@
 			</template>
 
 			<template v-if="alert" #mainExtra>
-				<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
+				<div v-if="compact" class="flex flex-wrap items-center gap-3">
 					<Badge
 						type="splitted"
 						class="cursor-pointer"
@@ -89,7 +89,7 @@
 						</template>
 					</Badge>
 				</div>
-				<div v-else class="badges-box flex flex-wrap items-center gap-3">
+				<div v-else class="flex flex-wrap items-center gap-3">
 					<AlertStatusSwitch v-slot="{ loading: loadingStatus }" :alert @updated="updateAlert($event)">
 						<Badge
 							type="splitted"

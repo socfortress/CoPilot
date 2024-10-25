@@ -1,19 +1,15 @@
 <template>
-	<div class="alert-asset-item" :class="{ embedded, badge }">
-		<code v-if="badge" @click="showDetails = true">
-			<span>{{ asset.asset_name }}</span>
-			<Icon :name="ViewIcon" :size="14" />
-		</code>
-
-		<div v-else class="flex cursor-pointer flex-col" @click="showDetails = true">
-			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex grow flex-col gap-1">
-					<div class="title">
-						{{ asset.asset_name }}
-					</div>
-				</div>
-
-				<div class="badges-box flex flex-wrap items-center gap-3">
+	<div>
+		<div v-if="badge" class="alert-assets-badge" @click="showDetails = true">
+			<code>
+				<span>{{ asset.asset_name }}</span>
+				<Icon :name="ViewIcon" :size="14" />
+			</code>
+		</div>
+		<CardEntity v-else :embedded hoverable clickable @click="showDetails = true">
+			<template #default>{{ asset.asset_name }}</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted">
 						<template #label>Index</template>
 						<template #value>
@@ -44,8 +40,8 @@
 						</template>
 					</Badge>
 				</div>
-			</div>
-		</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -140,6 +136,7 @@
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
@@ -196,40 +193,16 @@ function getAlertContext(alertContextId: number) {
 </script>
 
 <style lang="scss" scoped>
-.alert-asset-item {
-	&:not(.badge) {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-color);
-		transition: all 0.2s var(--bezier-ease);
-		border: var(--border-small-050);
-		overflow: hidden;
+.alert-assets-badge {
+	color: var(--primary-color);
+	line-height: 1;
+	cursor: pointer;
 
-		&:hover {
-			box-shadow: 0px 0px 0px 1px var(--primary-color);
-		}
-
-		.main-box {
-			.content {
-				word-break: break-word;
-			}
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&.badge {
-		color: var(--primary-color);
-		line-height: 1;
-		cursor: pointer;
-
-		code {
-			display: flex;
-			align-items: center;
-			gap: 7px;
-			padding: 2px 5px;
-		}
+	code {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		padding: 2px 5px;
 	}
 }
 </style>

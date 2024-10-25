@@ -27,7 +27,7 @@
 			</template>
 
 			<template v-if="caseEntity" #mainExtra>
-				<div v-if="compact" class="badges-box flex flex-wrap items-center gap-3">
+				<div v-if="compact" class="flex flex-wrap items-center gap-3">
 					<Badge
 						type="splitted"
 						class="cursor-pointer"
@@ -71,7 +71,7 @@
 					</Badge>
 				</div>
 
-				<div v-else class="badges-box flex flex-wrap items-center gap-3">
+				<div v-else class="flex flex-wrap items-center gap-3">
 					<CaseStatusSwitch
 						v-slot="{ loading: loadingStatus }"
 						:case-data="caseEntity"

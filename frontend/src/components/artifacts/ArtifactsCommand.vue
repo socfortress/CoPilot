@@ -51,7 +51,7 @@
 					/>
 				</div>
 				<div class="flex grow flex-wrap-reverse items-center justify-end gap-2">
-					<div class="badges-box flex grow flex-wrap gap-2">
+					<div class="flex grow flex-wrap gap-2">
 						<n-tooltip v-if="commandTime" trigger="hover">
 							<template #trigger>
 								<Badge type="splitted" color="primary" hint-cursor>
