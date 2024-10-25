@@ -57,7 +57,7 @@
 										<template #trigger>
 											<span class="cursor-help underline">...</span>
 										</template>
-										<div class="flex flex-col py-2 px-1">
+										<div class="flex flex-col px-1 py-2">
 											{{ item.description }}
 										</div>
 									</n-popover>
@@ -81,7 +81,7 @@
 				</tbody>
 			</n-table>
 		</n-scrollbar>
-		<n-empty v-if="!loading && !scaList.length" description="No items found" class="justify-center h-48" />
+		<n-empty v-if="!loading && !scaList.length" description="No items found" class="h-48 justify-center" />
 
 		<n-modal
 			v-model:show="showDetails"

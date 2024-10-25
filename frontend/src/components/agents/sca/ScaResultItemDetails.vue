@@ -2,17 +2,17 @@
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color" class="overflow-hidden">
-					<div class="flex justify-between gap-8 flex-wrap">
+				<n-card content-class="bg-secondary" class="overflow-hidden">
+					<div class="flex flex-wrap justify-between gap-8">
 						<n-statistic label="Result" tabular-nums>
 							<span
 								class="uppercase"
 								:class="
 									data.result === 'failed'
-										? 'text-error-color'
+										? 'text-error'
 										: data.result === 'not applicable'
-											? 'text-warning-color'
-											: 'text-success-color'
+											? 'text-warning'
+											: 'text-success'
 								"
 							>
 								{{ data.result }}
@@ -28,25 +28,25 @@
 			</div>
 
 			<div class="px-7">
-				<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+				<n-card content-class="bg-secondary !p-0" class="overflow-hidden">
 					<div
 						v-shiki="{ lang: 'shell', decode: true }"
-						class="scrollbar-styled overflow-hidden code-bg-transparent"
+						class="scrollbar-styled code-bg-transparent overflow-hidden"
 					>
 						<pre v-html="data.command"></pre>
 					</div>
 				</n-card>
 			</div>
 
-			<div v-if="properties" class="grid gap-2 grid-auto-fit-200 px-7">
-				<KVCard v-for="(value, key) of properties" :key="key">
+			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
+				<CardKV v-for="(value, key) of properties" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						{{ value ?? "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Description" tab="Description" display-directive="show:lazy">
@@ -110,11 +110,11 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
-			<div class="p-7 pt-4 flex flex-col gap-1">
+			<div class="flex flex-col gap-1 p-7 pt-4">
 				<n-card
 					v-for="item of data.compliance"
 					:key="item.key"
-					content-class="bg-secondary-color flex flex-col gap-2"
+					content-class="bg-secondary flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
 				>
@@ -124,11 +124,11 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Rules" tab="Rules" display-directive="show:lazy">
-			<div class="p-7 pt-4 flex flex-col gap-1">
+			<div class="flex flex-col gap-1 p-7 pt-4">
 				<n-card
 					v-for="item of data.rules"
 					:key="item.type + item.rule"
-					content-class="bg-secondary-color flex flex-col gap-2"
+					content-class="bg-secondary flex flex-col gap-2"
 					class="overflow-hidden"
 					size="small"
 				>
@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents.d"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"

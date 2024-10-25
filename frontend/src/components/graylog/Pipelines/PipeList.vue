@@ -1,14 +1,15 @@
 <template>
 	<div class="pipe-list">
-		<n-card>
-			<n-spin :show="loading">
-				<n-collapse
-					v-if="pipelines.length"
-					v-model:expanded-names="selectedPipeline"
-					accordion
-					:style="minHeight ? `min-height: ${minHeight}` : ''"
-				>
-					<n-collapse-item v-for="pipe of pipelines" :key="pipe.id" :title="pipe.title" :name="pipe.id">
+		<n-card content-class="!px-0">
+			<n-spin :show="loading" content-class="min-h-7">
+				<n-collapse v-if="pipelines.length" v-model:expanded-names="selectedPipeline" accordion>
+					<n-collapse-item
+						v-for="pipe of pipelines"
+						:key="pipe.id"
+						:title="pipe.title"
+						:name="pipe.id"
+						class="px-5"
+					>
 						<template #header>
 							<PipeTitle :pipeline="pipe" />
 						</template>
@@ -25,7 +26,7 @@
 					</n-collapse-item>
 				</n-collapse>
 				<template v-else>
-					<n-empty v-if="!loading" description="No pipelines found" class="justify-center h-32" />
+					<n-empty v-if="!loading" description="No pipelines found" class="h-32 justify-center" />
 				</template>
 			</n-spin>
 		</n-card>
@@ -52,16 +53,11 @@ import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs, watch } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 
-const props = defineProps<{
-	minHeight?: string
-}>()
 const emit = defineEmits<{
 	(e: "openRule", value: string): void
 }>()
-
-const { minHeight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 
@@ -114,5 +110,9 @@ watch(showRulesDrawer, val => {
 
 onBeforeMount(() => {
 	getPipelines()
+	// MOCK
+	/*
+	pipelines.value = pipeline_full
+	*/
 })
 </script>

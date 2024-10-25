@@ -1,21 +1,21 @@
 <template>
 	<n-spin :show="loading" content-class="min-h-32">
 		<div class="mb-4">
-			<KVCard>
+			<CardKV>
 				<template #key>cve</template>
 				<template #value>
 					{{ cve }}
 				</template>
-			</KVCard>
+			</CardKV>
 		</div>
 		<div v-if="epssList.length" class="flex flex-col gap-3">
 			<n-card
 				v-for="item of epssList"
 				:key="item.___id"
-				content-class="bg-secondary-color"
-				class="overflow-hidden item-appear item-appear-bottom item-appear-005"
+				content-class="bg-secondary"
+				class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 			>
-				<div class="flex justify-between gap-8 xs:!flex-row flex-col">
+				<div class="xs:!flex-row flex flex-col justify-between gap-8">
 					<n-statistic class="grow" label="Date">
 						<span class="stats-value whitespace-nowrap">
 							{{ formatDate(item.date, dFormats.date) }}
@@ -39,7 +39,7 @@
 			</p>
 		</div>
 		<template v-else>
-			<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+			<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 		</template>
 	</n-spin>
 </template>
@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import type { EpssScore } from "@/types/threatIntel.d"
 import Api from "@/api"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"

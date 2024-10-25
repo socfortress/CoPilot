@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
 		<n-tabs
 			v-if="alert"
 			type="line"
@@ -8,7 +8,7 @@
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
-			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
+			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 				<div class="pt-1">
 					<AlertOverview :alert @updated="updateAlert($event)" @deleted="emit('deleted')" />
 				</div>

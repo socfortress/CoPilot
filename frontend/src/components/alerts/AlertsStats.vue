@@ -18,7 +18,7 @@
 							<n-empty
 								v-if="!loadingCountByHost"
 								description="No items found"
-								class="justify-center h-48"
+								class="h-48 justify-center"
 							/>
 						</template>
 					</div>
@@ -41,7 +41,7 @@
 							<n-empty
 								v-if="!loadingCountByRule"
 								description="No items found"
-								class="justify-center h-48"
+								class="h-48 justify-center"
 							/>
 						</template>
 					</div>
@@ -64,7 +64,7 @@
 							<n-empty
 								v-if="!loadingCountByRuleHost"
 								description="No items found"
-								class="justify-center h-48"
+								class="h-48 justify-center"
 							/>
 						</template>
 					</div>

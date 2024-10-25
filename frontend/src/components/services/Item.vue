@@ -1,41 +1,39 @@
 <template>
-	<div class="service-item" :class="{ embedded, selectable, disabled }">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
-				<div class="flex items-center gap-2 cursor-pointer">
+	<div>
+		<CardEntity :embedded :clickable="selectable" :disabled hoverable>
+			<template #default>
+				<div class="flex items-center gap-3">
 					<div v-if="selectable" class="check-box mr-2">
 						<n-radio v-model:checked="checked" size="large" />
 					</div>
-					<div class="id">#{{ data.id }}</div>
-				</div>
-				<div class="actions">
-					<n-button size="small" @click.stop="showDetails = true">
-						<template #icon>
-							<Icon :name="InfoIcon"></Icon>
-						</template>
-					</n-button>
-				</div>
-			</div>
-			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
-					<div class="title">
+					<div class="flex flex-col gap-1">
 						{{ data.name }}
-					</div>
-					<div class="description">
-						{{ data.description }}
+						<p>
+							{{ data.description }}
+						</p>
 					</div>
 				</div>
-			</div>
+			</template>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<code class="py-1">Auth Keys:</code>
-				<Badge v-for="authKey of data.keys" :key="authKey.auth_key_name">
-					<template #value>
-						{{ authKey.auth_key_name }}
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
+					<code class="py-1">Auth Keys:</code>
+					<Badge v-for="authKey of data.keys" :key="authKey.auth_key_name">
+						<template #value>
+							{{ authKey.auth_key_name }}
+						</template>
+					</Badge>
+				</div>
+			</template>
+			<template #footerExtra>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="InfoIcon"></Icon>
 					</template>
-				</Badge>
-			</div>
-		</div>
+					Details
+				</n-button>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -55,6 +53,7 @@
 <script setup lang="ts">
 import type { ServiceItemData, ServiceItemType } from "./types"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal, NRadio } from "naive-ui"
 import { defineAsyncComponent, ref, toRefs } from "vue"
@@ -76,55 +75,3 @@ const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
 </script>
-
-<style lang="scss" scoped>
-.service-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-
-	.header-box {
-		font-size: 13px;
-		.id {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&.selectable {
-		cursor: pointer;
-	}
-
-	&.disabled {
-		cursor: not-allowed;
-
-		& > div {
-			opacity: 0.5;
-		}
-	}
-
-	&:not(.disabled) {
-		&:hover {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-		}
-	}
-}
-</style>

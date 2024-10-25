@@ -1,9 +1,9 @@
 <template>
 	<n-card class="cluster-health" segmented>
 		<template #header>
-			<div class="flex align-center justify-between">
+			<div class="align-center flex justify-between">
 				<span>Nodes Allocation</span>
-				<span v-if="indicesAllocation.length" class="text-secondary-color font-mono">
+				<span v-if="indicesAllocation.length" class="text-secondary font-mono">
 					{{ indicesAllocation.length }}
 				</span>
 			</div>
@@ -46,7 +46,7 @@
 									<div class="label">disk_available</div>
 								</div>
 							</div>
-							<div v-if="node.disk_percent" class="group disk-percent">
+							<div v-if="node.disk_percent" class="disk-percent group">
 								<div class="box w-full">
 									<n-progress
 										type="line"
@@ -62,7 +62,7 @@
 					</n-scrollbar>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No allocations found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No allocations found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -138,7 +138,7 @@ onBeforeMount(() => {
 			overflow: hidden;
 
 			.group {
-				@apply py-3 px-4;
+				@apply px-4 py-3;
 				@apply gap-6;
 				display: flex;
 				justify-content: space-between;

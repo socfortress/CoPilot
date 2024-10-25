@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading" class="source-configuration-wizard">
 		<div class="wrapper flex flex-col">
-			<div class="grow flex flex-col">
+			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
 						<n-steps :current="current" size="small" :status="currentStatus">
@@ -11,9 +11,9 @@
 					</div>
 				</n-scrollbar>
 
-				<div class="mt-4 grow flex flex-col">
+				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="px-7 flex flex-col gap-4">
+						<div v-if="current === 1" class="flex flex-col gap-4 px-7">
 							<n-select
 								v-model:value="selectedIndex"
 								placeholder="Indices list"
@@ -25,7 +25,7 @@
 								@update:value="setSourceConfiguration(selectedIndex)"
 							></n-select>
 
-							<div class="flex gap-4 justify-end">
+							<div class="flex justify-end gap-4">
 								<n-button
 									v-if="isNextStepEnabled"
 									icon-placement="right"
@@ -40,7 +40,7 @@
 							</div>
 						</div>
 
-						<div v-else-if="current === 2" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
+						<div v-else-if="current === 2" class="flex grow flex-col px-7 pb-7" style="min-height: 401px">
 							<SourceConfigurationForm
 								v-if="sourceConfigurationModel"
 								:source-configuration-model

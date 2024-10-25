@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<div class="header flex flex-wrap justify-between items-center gap-4">
+		<div class="header flex flex-wrap items-center justify-between gap-4">
 			<div class="info flex items-center gap-3">
 				<n-button size="small" type="primary" secondary :loading="loading" @click="getData()">
 					<template #icon>

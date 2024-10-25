@@ -1,6 +1,6 @@
 <template>
 	<div class="flex items-center gap-2">
-		<code v-if="!editing" class="cursor-pointer text-primary-color" @click="edit()">
+		<code v-if="!editing" class="text-primary cursor-pointer" @click="edit()">
 			{{ velociraptorId }}
 			<Icon :name="loading ? LoadingIcon : EditIcon" :size="13" class="relative top-0.5" />
 		</code>

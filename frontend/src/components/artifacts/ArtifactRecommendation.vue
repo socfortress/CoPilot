@@ -16,7 +16,7 @@
 			display-directive="show"
 			segmented
 		>
-			<div class="flex gap-3 items-center flex-wrap mb-4">
+			<div class="mb-4 flex flex-wrap items-center gap-3">
 				<div>Get Recommendations for OS:</div>
 				<n-select
 					v-model:value="selectedOs"
@@ -45,11 +45,11 @@
 					<n-card
 						v-for="recommendation of recommendations"
 						:key="recommendation.name"
-						content-class="bg-secondary-color flex flex-col gap-2 !p-0"
-						class="overflow-hidden item-appear item-appear-bottom item-appear-005"
+						content-class="bg-secondary flex flex-col gap-2 !p-0"
+						class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 						size="small"
 					>
-						<strong class="recommendation-name font-mono px-4 pt-3 pb-1">{{ recommendation.name }}</strong>
+						<strong class="recommendation-name px-4 pb-1 pt-3 font-mono">{{ recommendation.name }}</strong>
 						<n-divider class="!m-0" />
 						<div class="recommendation-description px-4 pt-1">
 							{{ recommendation.description }}
@@ -62,7 +62,7 @@
 				<n-empty
 					v-if="!loading && !recommendations.length"
 					description="Recommendations not found"
-					class="justify-center h-48"
+					class="h-48 justify-center"
 				/>
 			</n-spin>
 		</n-modal>

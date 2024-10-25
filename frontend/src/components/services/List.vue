@@ -1,13 +1,13 @@
 <template>
 	<div class="services-list">
-		<div v-if="!hideTotals" class="header mb-4 flex gap-2 justify-between items-center">
+		<div v-if="!hideTotals" class="header mb-4 flex items-center justify-between gap-2">
 			<div>
 				Total:
 				<strong class="font-mono">{{ total }}</strong>
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="list.length">
 					<ServiceItem
 						v-for="item of list"
@@ -23,7 +23,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -67,12 +67,3 @@ function setItem(item: ServiceItemData) {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.services-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

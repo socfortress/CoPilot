@@ -1,5 +1,5 @@
 import tokens from "@/design-tokens.json"
-import { Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
+import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import { hex2rgb } from "@/utils/theme"
 import { type ThemeCommonVars, useOsTheme } from "naive-ui"
 
@@ -22,7 +22,7 @@ const osTheme = useOsTheme()
 export function getDefaultState() {
 	return {
 		layout: Layout.HorizontalNav, // Type of layout, with vertical or horizontal navigation
-		themeName: osTheme.value || ThemeEnum.Light, // Theme name (Dark, Light), with fallback to the light theme
+		themeName: osTheme.value === "dark" ? ThemeNameEnum.Dark : ThemeNameEnum.Light, // Theme name (Dark, Light), with fallback to the light theme
 		routerTransition: RouterTransition.FadeUp, // Type of transition for the router
 		routerTransitionDuration: 0.3, // Duration of the router transition in seconds
 		rtl: false, // RTL (right to left) mode toggle
@@ -91,7 +91,48 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 	const warningColorRGB = hex2rgb(warningColor).join(", ")
 	const infoColorRGB = hex2rgb(infoColor).join(", ")
 
-	const { success005, warning005, error005, info005 } = state.colors[state.themeName]
+	const {
+		success005,
+		warning005,
+		error005,
+		info005,
+		success010,
+		warning010,
+		error010,
+		info010,
+		success020,
+		warning020,
+		error020,
+		info020,
+		success030,
+		warning030,
+		error030,
+		info030,
+		success040,
+		warning040,
+		error040,
+		info040,
+		success050,
+		warning050,
+		error050,
+		info050,
+		success060,
+		warning060,
+		error060,
+		info060,
+		success070,
+		warning070,
+		error070,
+		info070,
+		success080,
+		warning080,
+		error080,
+		info080,
+		success090,
+		warning090,
+		error090,
+		info090
+	} = state.colors[state.themeName]
 
 	const modalColor = naive.modalColor
 	const modalColorRGB = hex2rgb(modalColor).join(", ")
@@ -180,9 +221,11 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"view-padding": `${viewPadding}px`,
 		"border-radius": `${borderRadius}`,
 		"border-radius-small": `${borderRadiusSmall}`,
+
 		"font-family": `${fontFamily}`,
 		"font-family-display": `${fontFamilyDisplay}`,
 		"font-family-mono": `${fontFamilyMono}`,
+
 		"code-color": `${codeColor}`,
 		"primary-color": `${primaryColor}`,
 		"tab-color": `${tabColor}`,
@@ -221,6 +264,52 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"error-005-color": `${error005}`,
 		"warning-005-color": `${warning005}`,
 		"info-005-color": `${info005}`,
+
+		"success-010-color": `${success010}`,
+		"error-010-color": `${error010}`,
+		"warning-010-color": `${warning010}`,
+		"info-010-color": `${info010}`,
+
+		"success-020-color": `${success020}`,
+		"error-020-color": `${error020}`,
+		"warning-020-color": `${warning020}`,
+		"info-020-color": `${info020}`,
+
+		"success-030-color": `${success030}`,
+		"error-030-color": `${error030}`,
+		"warning-030-color": `${warning030}`,
+		"info-030-color": `${info030}`,
+
+		"success-040-color": `${success040}`,
+		"error-040-color": `${error040}`,
+		"warning-040-color": `${warning040}`,
+		"info-040-color": `${info040}`,
+
+		"success-050-color": `${success050}`,
+		"error-050-color": `${error050}`,
+		"warning-050-color": `${warning050}`,
+		"info-050-color": `${info050}`,
+
+		"success-060-color": `${success060}`,
+		"error-060-color": `${error060}`,
+		"warning-060-color": `${warning060}`,
+		"info-060-color": `${info060}`,
+
+		"success-070-color": `${success070}`,
+		"error-070-color": `${error070}`,
+		"warning-070-color": `${warning070}`,
+		"info-070-color": `${info070}`,
+
+		"success-080-color": `${success080}`,
+		"error-080-color": `${error080}`,
+		"warning-080-color": `${warning080}`,
+		"info-080-color": `${info080}`,
+
+		"success-090-color": `${success090}`,
+		"error-090-color": `${error090}`,
+		"warning-090-color": `${warning090}`,
+		"info-090-color": `${info090}`,
+
 		"success-color-rgb": `${successColorRGB}`,
 		"error-color-rgb": `${errorColorRGB}`,
 		"warning-color-rgb": `${warningColorRGB}`,
@@ -250,6 +339,9 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"secondary4-opacity-005-color": `${secondary4Opacity005}`,
 		"secondary4-opacity-010-color": `${secondary4Opacity010}`,
 		"secondary4-opacity-020-color": `${secondary4Opacity020}`,
-		"secondary4-opacity-030-color": `${secondary4Opacity030}`
+		"secondary4-opacity-030-color": `${secondary4Opacity030}`,
+
+		"border-small-050": `1px solid ${borderColor}`,
+		"border-small-100": `1px solid ${divider010}`
 	}
 }

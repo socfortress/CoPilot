@@ -1,71 +1,73 @@
 <template>
-	<div class="customer-healthcheck-item" :class="[{ 'bg-secondary': bgSecondary }, type]">
-		<div class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between items-center">
-				<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
-					<span>#{{ healthData.id }} - {{ healthData.label }}</span>
-					<Icon :name="InfoIcon" :size="16"></Icon>
-				</div>
-				<div v-if="cardDate" class="time">
-					{{ cardDate }}
-				</div>
-			</div>
-
-			<div class="main-box">
-				<div class="content flex flex-col gap-1 grow">
-					<div class="title">
-						<Icon :name="iconFromOs(healthData.os)" :size="16" class="mr-1 relative top-0.5"></Icon>
+	<div>
+		<CardEntity
+			:embedded
+			hoverable
+			clickable
+			:status="type === 'healthy' ? 'success' : type === 'unhealthy' ? 'warning' : undefined"
+			@click="showDetails = true"
+		>
+			<template #headerMain>#{{ healthData.id }} - {{ healthData.label }}</template>
+			<template v-if="cardDate" #headerExtra>{{ cardDate }}</template>
+			<template #default>
+				<div class="flex grow flex-col gap-1">
+					<div class="flex flex-wrap items-center gap-2">
+						<Icon :name="iconFromOs(healthData.os)" :size="16"></Icon>
 						{{ healthData.os }}
 					</div>
-					<div class="description">
+					<p>
 						{{ healthData.ip_address }}
-					</div>
+					</p>
 				</div>
-			</div>
+			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge v-if="agentVersion" type="splitted">
+						<template #label>Agent version</template>
+						<template #value>
+							{{ agentVersion }}
+						</template>
+					</Badge>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<Badge v-if="agentVersion" type="splitted" color="primary">
-					<template #label>Agent version</template>
-					<template #value>
-						{{ agentVersion }}
-					</template>
-				</Badge>
+					<Badge v-if="source === 'velociraptor'" type="splitted">
+						<template #label>Velociraptor Id</template>
+						<template #value>
+							{{ healthData.velociraptor_id }}
+						</template>
+					</Badge>
 
-				<Badge v-if="source === 'velociraptor'" type="splitted" color="primary">
-					<template #label>Velociraptor Id</template>
-					<template #value>
-						{{ healthData.velociraptor_id }}
-					</template>
-				</Badge>
-
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<Badge type="splitted" color="primary" hint-cursor>
-							<template #iconLeft>
-								<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
-							</template>
-							<template #label>Agent</template>
-							<template #value>
-								{{ healthData.hostname }}
-							</template>
-						</Badge>
-					</template>
-					<div class="flex flex-col gap-1">
-						<div class="box">
-							agent_id:
-							<code class="cursor-pointer text-primary-color" @click="gotoAgent(healthData.agent_id)">
-								{{ healthData.agent_id }}
-								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-							</code>
+					<n-popover overlap placement="bottom-start">
+						<template #trigger>
+							<Badge type="splitted" hint-cursor>
+								<template #iconLeft>
+									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
+								</template>
+								<template #label>Agent</template>
+								<template #value>
+									<div class="flex items-center gap-2">
+										{{ healthData.hostname }}
+										<Icon :name="InfoIcon" :size="14"></Icon>
+									</div>
+								</template>
+							</Badge>
+						</template>
+						<div class="flex flex-col gap-1">
+							<div class="box">
+								agent_id:
+								<code class="text-primary cursor-pointer" @click="gotoAgent(healthData.agent_id)">
+									{{ healthData.agent_id }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
+							</div>
+							<div class="box">
+								hostname:
+								<code>{{ healthData.hostname }}</code>
+							</div>
 						</div>
-						<div class="box">
-							hostname:
-							<code>{{ healthData.hostname }}</code>
-						</div>
-					</div>
-				</n-popover>
-			</div>
-		</div>
+					</n-popover>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -76,15 +78,15 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-fit-200 px-7 py-6">
-				<KVCard v-for="(value, key) of healthData" :key="key">
+			<div class="grid-auto-fit-200 grid gap-2 px-7 py-6">
+				<CardKV v-for="(value, key) of healthData" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						{{ value || "-" }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-modal>
 	</div>
@@ -93,8 +95,9 @@
 <script setup lang="ts">
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"
@@ -102,11 +105,11 @@ import dayjs from "@/utils/dayjs"
 import { NModal, NPopover } from "naive-ui"
 import { computed, ref } from "vue"
 
-const { healthData, source, bgSecondary, type } = defineProps<{
+const { healthData, source, embedded, type } = defineProps<{
 	healthData: CustomerAgentHealth
 	source: CustomerHealthcheckSource
 	type?: "healthy" | "unhealthy"
-	bgSecondary?: boolean
+	embedded?: boolean
 }>()
 
 const InfoIcon = "carbon:information"
@@ -151,74 +154,3 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
 }
 </script>
-
-<style lang="scss" scoped>
-.customer-healthcheck-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	&.bg-secondary {
-		background-color: var(--bg-secondary-color);
-	}
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-
-		.id {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-
-		.time {
-			color: var(--fg-secondary-color);
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&.healthy {
-		border-color: var(--success-color);
-	}
-	&.unhealthy {
-		border-color: var(--warning-color);
-
-		.header-box {
-			.id {
-				&:hover {
-					color: var(--warning-color);
-				}
-			}
-		}
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-
-		&.healthy {
-			background-color: var(--success-005-color);
-			box-shadow: none;
-		}
-		&.unhealthy {
-			background-color: var(--secondary3-opacity-005-color);
-			box-shadow: none;
-		}
-	}
-}
-</style>

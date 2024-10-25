@@ -1,16 +1,17 @@
 <template>
-	<div class="quarantine-item flex flex-col gap-1 px-5 py-3">
-		<div class="time text-secondary-color">
+	<CardEntity embedded>
+		<template #header>
 			{{ formatDate(quarantine.Time, dFormats.datetimesec) }}
-		</div>
-		<div class="result">
+		</template>
+		<template #default>
 			{{ quarantine.Result }}
-		</div>
-	</div>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { QuarantineResult } from "@/types/artifacts.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
@@ -18,11 +19,3 @@ const { quarantine } = defineProps<{ quarantine: QuarantineResult }>()
 
 const dFormats = useSettingsStore().dateFormat
 </script>
-
-<style lang="scss" scoped>
-.quarantine-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-}
-</style>

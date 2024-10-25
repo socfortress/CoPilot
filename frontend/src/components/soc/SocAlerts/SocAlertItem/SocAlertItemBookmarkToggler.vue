@@ -4,7 +4,7 @@
 		:size="16"
 		class="toggler-bookmark"
 		:class="{ active: isBookmark }"
-		@click="toggleBookmark()"
+		@click.stop="toggleBookmark()"
 	></Icon>
 </template>
 

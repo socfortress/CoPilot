@@ -1,53 +1,55 @@
 <template>
-	<div class="command-item flex flex-col">
-		<div class="header-box flex justify-between">
-			<div class="status">
-				Complete:
-				<strong class="font-mono" :class="{ success: `${command.Complete}` === 'true' }">
-					{{ command.Complete }}
-				</strong>
+	<CardEntity>
+		<template #headerMain>
+			Complete:
+			<strong class="font-mono" :class="{ 'text-success': `${command.Complete}` === 'true' }">
+				{{ command.Complete }}
+			</strong>
+		</template>
+		<template #headerExtra>
+			Code:
+			<strong class="font-mono">{{ command.ReturnCode }}</strong>
+		</template>
+
+		<template #mainExtra>
+			<div class="flex flex-col gap-4">
+				<div v-if="command.Stdout" class="flex flex-col gap-2">
+					<label>Stdout</label>
+					<n-input
+						:value="command.Stdout"
+						type="textarea"
+						readonly
+						placeholder="Empty"
+						size="large"
+						:autosize="{
+							minRows: 3
+						}"
+					/>
+				</div>
+				<div v-if="command.Stderr" class="flex flex-col gap-2">
+					<label class="text-error flex items-center gap-2 leading-none">
+						<Icon :name="DangerIcon" />
+						<span>Stderr</span>
+					</label>
+					<n-input
+						:value="command.Stderr"
+						type="textarea"
+						readonly
+						placeholder="Empty"
+						size="large"
+						:autosize="{
+							minRows: 3
+						}"
+					/>
+				</div>
 			</div>
-			<div class="code">
-				Code:
-				<strong class="font-mono">{{ command.ReturnCode }}</strong>
-			</div>
-		</div>
-		<div class="main-box">
-			<div v-if="command.Stdout" class="output stdout">
-				<label>Stdout</label>
-				<n-input
-					:value="command.Stdout"
-					type="textarea"
-					readonly
-					placeholder="Empty"
-					size="large"
-					:autosize="{
-						minRows: 3
-					}"
-				/>
-			</div>
-			<div v-if="command.Stderr" class="output stderr">
-				<label class="flex items-center">
-					<Icon :name="DangerIcon" class="mr-1"></Icon>
-					Stderr
-				</label>
-				<n-input
-					:value="command.Stderr"
-					type="textarea"
-					readonly
-					placeholder="Empty"
-					size="large"
-					:autosize="{
-						minRows: 3
-					}"
-				/>
-			</div>
-		</div>
-	</div>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { CommandResult } from "@/types/artifacts.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { NInput } from "naive-ui"
 
@@ -55,59 +57,3 @@ const { command } = defineProps<{ command: CommandResult }>()
 
 const DangerIcon = "majesticons:exclamation-line"
 </script>
-
-<style lang="scss" scoped>
-.command-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	max-width: 100%;
-	overflow: hidden;
-
-	.header-box {
-		padding: 16px 20px;
-		font-family: var(--font-family-mono);
-		font-size: 14px;
-		border-bottom: var(--border-small-100);
-		.status {
-			strong {
-				color: var(--warning-color);
-				&.success {
-					color: var(--primary-color);
-				}
-			}
-		}
-	}
-	.main-box {
-		.output {
-			margin-top: 20px;
-
-			label {
-				padding: 0px 20px;
-				line-height: 1;
-			}
-
-			.n-input {
-				margin-top: 8px;
-				border-radius: 0;
-
-				background-color: var(--n-color) !important;
-
-				:deep() {
-					.n-input__border,
-					.n-input__state-border {
-						display: none;
-					}
-				}
-			}
-
-			&.stderr {
-				label {
-					color: var(--warning-color);
-				}
-			}
-		}
-	}
-}
-</style>

@@ -1,8 +1,8 @@
 <template>
 	<div class="artifacts-command">
 		<div class="header flex items-start gap-2">
-			<div class="flex flex-col gap-2 w-full">
-				<div class="grow flex items-center gap-2 flex-wrap">
+			<div class="flex w-full flex-col gap-2">
+				<div class="flex grow flex-wrap items-center gap-2">
 					<div v-if="!hideHostnameField" class="grow basis-56">
 						<n-select
 							v-model:value="filters.hostname"
@@ -37,7 +37,7 @@
 						/>
 					</div>
 				</div>
-				<div class="grow flex items-center gap-2 flex-wrap">
+				<div class="flex grow flex-wrap items-center gap-2">
 					<n-input
 						v-model:value="filters.command"
 						placeholder="Command"
@@ -50,8 +50,8 @@
 						}"
 					/>
 				</div>
-				<div class="grow flex items-center justify-end gap-2 flex-wrap-reverse">
-					<div class="badges-box flex gap-2 flex-wrap grow">
+				<div class="flex grow flex-wrap-reverse items-center justify-end gap-2">
+					<div class="flex grow flex-wrap gap-2">
 						<n-tooltip v-if="commandTime" trigger="hover">
 							<template #trigger>
 								<Badge type="splitted" color="primary" hint-cursor>
@@ -95,7 +95,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-3 my-7">
+			<div class="my-7 flex min-h-52 flex-col gap-3">
 				<template v-if="commandList.length">
 					<CommandItem
 						v-for="command of commandList"
@@ -105,7 +105,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -133,8 +133,6 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
-
-// import { commandResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -287,15 +285,8 @@ onBeforeMount(() => {
 	})
 
 	// MOCK
-	// commandList.value = commandResult as CommandResult[]
+	/*
+	commandList.value = commandResult
+	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-command {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

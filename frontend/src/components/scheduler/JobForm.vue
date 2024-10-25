@@ -12,7 +12,7 @@
 					/>
 				</n-form-item>
 
-				<div class="flex gap-3 justify-end items-center">
+				<div class="flex items-center justify-end gap-3">
 					<n-button :disabled="loading" @click="reset()">Reset</n-button>
 					<n-button
 						type="primary"

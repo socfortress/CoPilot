@@ -20,7 +20,7 @@
 				class="!w-12"
 			/>
 		</span>
-		<span v-if="icon && icon === 'arrow'" class="flex items-center percentage-icon">
+		<span v-if="icon && icon === 'arrow'" class="percentage-icon flex items-center">
 			<Icon v-if="direction === 'up'" :name="ChevronUp" />
 			<Icon v-if="direction === 'down'" :name="ChevronDown" />
 		</span>

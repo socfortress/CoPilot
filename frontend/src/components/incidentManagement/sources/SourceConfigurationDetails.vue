@@ -2,7 +2,7 @@
 	<n-spin :show="loading || submitting" class="min-h-20">
 		<SourceConfigurationViewer v-if="sourceConfiguration" v-show="!editing" :source-configuration />
 
-		<div v-if="!editing && !loading" class="flex gap-2 justify-end items-center mt-4">
+		<div v-if="!editing && !loading" class="mt-4 flex items-center justify-end gap-2">
 			<n-button @click="setEditMode()">
 				<template #icon>
 					<Icon :name="EditIcon" :size="16"></Icon>

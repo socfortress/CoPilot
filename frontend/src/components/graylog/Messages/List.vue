@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="loading">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -22,12 +22,12 @@
 			</div>
 			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="messages.length">
 				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
@@ -94,10 +94,3 @@ onBeforeMount(() => {
 	getData(currentPage.value)
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

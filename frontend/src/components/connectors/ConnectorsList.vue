@@ -1,14 +1,14 @@
 <template>
 	<div class="connectors-list">
-		<div class="header mb-4 flex gap-5 justify-between items-center">
+		<div class="header mb-4 flex items-center justify-between gap-5">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
-			<div class="text-secondary-color text-right">Configure connections to your toolset</div>
+			<div class="text-secondary text-right">Configure connections to your toolset</div>
 		</div>
 		<n-spin :show="loadingConnectors">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="connectorsList.length">
 					<ConnectorItem
 						v-for="connector of connectorsList"
@@ -20,7 +20,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingConnectors" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingConnectors" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -66,12 +66,3 @@ onBeforeMount(() => {
 	getConnectors()
 })
 </script>
-
-<style lang="scss" scoped>
-.connectors-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

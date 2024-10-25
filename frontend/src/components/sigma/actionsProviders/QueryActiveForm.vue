@@ -4,13 +4,13 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-4 justify-center min-w-52">
-			<div class="flex gap-2 items-center justify-center py-3">
+		<div class="flex min-w-52 flex-col justify-center gap-4 py-1">
+			<div class="flex items-center justify-center gap-2 py-3">
 				<span>Active</span>
 				<n-switch v-model:value="model.active" :disabled="loading" />
 			</div>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :disabled="!dirty" :loading type="primary" size="small" @click="updateActive()">
 					Save

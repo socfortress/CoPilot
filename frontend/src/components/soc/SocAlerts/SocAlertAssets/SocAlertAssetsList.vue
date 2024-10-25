@@ -1,11 +1,11 @@
 <template>
 	<div class="soc-assets-list">
 		<n-spin :show="loadingAssets" style="min-height: 50px">
-			<div v-if="assetsList?.length" class="p-7 flex flex-col gap-2">
+			<div v-if="assetsList?.length" class="flex flex-col gap-2 p-7">
 				<SocAlertAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
 			</div>
 			<template v-else>
-				<n-empty v-if="!loadingAssets" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loadingAssets" description="No items found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
 	</div>

@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="loading">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -19,15 +19,15 @@
 						</div>
 						<div class="box">
 							Passed:
-							<code class="text-success-color">{{ totalPassed }}</code>
+							<code class="text-success">{{ totalPassed }}</code>
 						</div>
 						<div class="box">
 							Not applicable:
-							<code class="text-warning-color">{{ totalNA }}</code>
+							<code class="text-warning">{{ totalNA }}</code>
 						</div>
 						<div class="box">
 							Failed:
-							<code class="text-error-color">{{ totalFailed }}</code>
+							<code class="text-error">{{ totalFailed }}</code>
 						</div>
 					</div>
 				</n-popover>
@@ -43,7 +43,7 @@
 			/>
 			<n-popover overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-button size="small">
 							<template #icon>
 								<Icon :name="FilterIcon"></Icon>
@@ -53,7 +53,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Result:</div>
+						<div class="text-secondary mb-1 text-sm">Result:</div>
 						<n-select
 							v-model:value="resultFilter"
 							size="small"
@@ -66,12 +66,12 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="itemsPaginated.length">
 				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded />
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
@@ -174,10 +174,3 @@ onBeforeMount(() => {
 	if (agent?.agent_id && sca?.policy_id) getSCAResults(agent.agent_id, sca.policy_id)
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

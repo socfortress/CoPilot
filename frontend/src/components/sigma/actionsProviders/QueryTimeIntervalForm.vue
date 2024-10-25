@@ -4,8 +4,8 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-4">
-			<div class="flex gap-2 items-center">
+		<div class="flex flex-col gap-4 py-1">
+			<div class="flex items-center gap-2">
 				<n-input-group>
 					<n-select
 						v-model:value="model.unit"
@@ -25,7 +25,7 @@
 				</n-input-group>
 			</div>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button
 					:disabled="!dirty || !isValid"

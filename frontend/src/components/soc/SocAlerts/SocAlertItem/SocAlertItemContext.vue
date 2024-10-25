@@ -6,8 +6,8 @@
 			</template>
 		</n-input>
 
-		<div class="grid gap-2 grid-auto-fit-200">
-			<KVCard v-for="{ value, key } of contextFiltered" :key="key">
+		<div class="grid-auto-fit-200 grid gap-2">
+			<CardKV v-for="{ value, key } of contextFiltered" :key="key">
 				<template #key>
 					{{ key }}
 				</template>
@@ -28,15 +28,15 @@
 						<ExpandableText :text="value.toString() ?? '-'" :max-length="100" />
 					</template>
 				</template>
-			</KVCard>
+			</CardKV>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import _compact from "lodash/compact"
 import _split from "lodash/split"
 import _uniq from "lodash/uniq"

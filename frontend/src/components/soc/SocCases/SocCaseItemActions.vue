@@ -1,25 +1,25 @@
 <template>
-	<div class="soc-case-actions flex flex-col gap-2 justify-center">
+	<div class="contents">
 		<n-button
 			v-if="isCaseClosed"
 			:loading="loadingCaseReopen"
 			:size="size"
 			type="warning"
 			secondary
-			@click="reopenCase()"
+			@click.stop="reopenCase()"
 		>
 			<template #icon>
 				<Icon :name="OpenIcon"></Icon>
 			</template>
 			Reopen
 		</n-button>
-		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size="size" @click="closeCase()">
+		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size="size" @click.stop="closeCase()">
 			<template #icon>
 				<Icon :name="CloseIcon"></Icon>
 			</template>
 			Close
 		</n-button>
-		<n-button :loading="loadingCaseDelete" :size="size" type="error" secondary @click="handleDelete()">
+		<n-button :loading="loadingCaseDelete" :size="size" type="error" secondary @click.stop="handleDelete()">
 			<template #icon>
 				<Icon :name="DeleteIcon"></Icon>
 			</template>

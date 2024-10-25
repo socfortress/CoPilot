@@ -40,7 +40,8 @@
 		"@fontsource/jetbrains-mono": "^5.1.1",
 		"@fontsource/lexend": "^5.1.1",
 		"@fontsource/public-sans": "^5.1.1",
-		"@shikijs/markdown-it": "^1.22.0",
+		"@shikijs/markdown-it": "^1.22.1",
+		"@tailwindcss/container-queries": "^0.1.1",
 		"@vueuse/core": "^11.1.0",
 		"axios": "^1.7.7",
 		"bytes": "^3.1.2",
@@ -50,7 +51,7 @@
 		"echarts": "^5.5.1",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.5.2",
-		"jose": "^5.9.4",
+		"jose": "^5.9.6",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
@@ -58,9 +59,9 @@
 		"nanoid": "^5.0.7",
 		"password-validator": "^5.3.0",
 		"pinia": "^2.2.4",
-		"pinia-plugin-persistedstate": "^4.1.1",
+		"pinia-plugin-persistedstate": "^4.1.2",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.22.0",
+		"shiki": "^1.22.1",
 		"validator": "^13.12.0",
 		"vue": "^3.5.12",
 		"vue-advanced-cropper": "^2.8.9",
@@ -76,7 +77,7 @@
 		"@rollup/rollup-linux-x64-gnu": "^4.24.0"
 	},
 	"devDependencies": {
-		"@antfu/eslint-config": "^3.7.3",
+		"@antfu/eslint-config": "^3.8.0",
 		"@clack/prompts": "^0.7.0",
 		"@iconify/vue": "^4.1.2",
 		"@tsconfig/node20": "^20.1.4",
@@ -84,53 +85,55 @@
 		"@types/file-saver": "^2.0.7",
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
-		"@types/lodash": "^4.17.10",
-		"@types/node": "^22.7.5",
+		"@types/lodash": "^4.17.12",
+		"@types/node": "^22.8.0",
 		"@types/validator": "^13.12.2",
 		"@vitejs/plugin-vue": "^5.1.4",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.20",
-		"cypress": "^13.15.0",
+		"cypress": "^13.15.1",
 		"depcheck": "^1.4.7",
-		"eslint": "^9.12.0",
+		"eslint": "^9.13.0",
 		"flourite": "^1.3.0",
 		"fs-extra": "^11.2.0",
 		"jsdom": "^25.0.1",
-		"npm-run-all2": "^6.2.3",
+		"npm-run-all2": "^7.0.1",
 		"postcss": "^8.4.47",
 		"prettier": "^3.3.3",
-		"sass": "^1.79.5",
+		"prettier-plugin-tailwindcss": "^0.6.8",
+		"sass": "^1.80.4",
 		"start-server-and-test": "^2.0.8",
 		"tailwind-config-viewer": "^2.0.4",
-		"tailwindcss": "^3.4.13",
+		"tailwindcss": "^3.4.14",
 		"taze": "^0.17.2",
 		"type-fest": "^4.26.1",
-		"typescript": "~5.5.4",
+		"typescript": "~5.6.3",
 		"unplugin-vue-components": "^0.27.4",
-		"vite": "^5.4.9",
+		"vite": "^5.4.10",
 		"vite-bundle-visualizer": "^1.2.1",
-		"vite-plugin-vue-devtools": "^7.4.6",
+		"vite-plugin-vue-devtools": "^7.5.4",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^2.1.3",
 		"vue-tsc": "^2.1.6"
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.9.0",
+			"@typescript-eslint/eslint-plugin": "^8.11.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.9.0",
+			"@typescript-eslint/parser": "^8.11.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}
 	},
 	"overrides": {
 		"@typescript-eslint/eslint-plugin": {
-			"eslint": "^9.12.0"
+			"eslint": "^9.13.0"
 		},
 		"@typescript-eslint/parser": {
-			"eslint": "^9.12.0"
-		}
+			"eslint": "^9.13.0"
+		},
+		"@typescript-eslint/typescript-estree": "^8.11.0"
 	}
 }

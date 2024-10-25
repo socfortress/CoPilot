@@ -1,266 +1,242 @@
 <template>
-	<n-spin
-		:show="loadingDetails || loadingDelete"
-		:description="loadingDelete ? 'Deleting Soc Case' : 'Loading Soc Case'"
-	>
-		<div class="soc-case-item" :class="{ embedded }">
-			<div v-if="baseInfo" class="flex flex-col gap-2 px-5 py-3">
-				<div class="header-box flex justify-between">
-					<div class="flex items-center gap-2">
-						<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
-							<span>{{ baseInfo.case_uuid }}</span>
-							<Icon :name="InfoIcon" :size="16"></Icon>
+	<div>
+		<CardEntity
+			:loading="loadingDetails || loadingDelete"
+			:loading-description="loadingDelete ? 'Deleting Soc Case' : 'Loading Soc Case'"
+			:embedded
+			hoverable
+			clickable
+			@click.stop="showDetails = true"
+		>
+			<template #headerMain>{{ baseInfo?.case_uuid }}</template>
+			<template v-if="caseOpenDate" #headerExtra>
+				<n-popover overlap placement="top-end">
+					<template #trigger>
+						<div class="hover:text-primary flex cursor-help items-center gap-2">
+							<span>
+								{{ formatDate(caseOpenDate) }}
+							</span>
+							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
+					</template>
+					<div class="flex flex-col px-1 py-2">
+						<n-timeline>
+							<n-timeline-item
+								type="success"
+								:title="`Open ${openedBy ? `[${openedBy}]` : ''}`"
+								:time="formatDate(caseOpenDate)"
+							/>
+							<n-timeline-item
+								v-if="caseCloseDate"
+								title="Close date"
+								:time="formatDate(caseCloseDate)"
+							/>
+						</n-timeline>
 					</div>
-					<div v-if="caseOpenDate" class="time">
-						<n-popover overlap placement="top-end">
-							<template #trigger>
-								<div class="flex items-center gap-2 cursor-help">
-									<span>
-										{{ formatDate(caseOpenDate) }}
-									</span>
-									<Icon :name="TimeIcon" :size="16"></Icon>
+				</n-popover>
+			</template>
+			<template #default>
+				<div class="flex flex-col gap-1">
+					<div v-html="baseInfo?.case_name"></div>
+					<p v-if="baseInfo?.case_description">
+						{{ excerpt }}
+					</p>
+				</div>
+			</template>
+			<template v-if="baseInfo" #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge type="splitted" :color="baseInfo.state_name === StateName.Open ? 'warning' : 'primary'">
+						<template #iconLeft>
+							<Icon :name="StatusIcon" :size="14"></Icon>
+						</template>
+						<template #label>State</template>
+						<template #value>
+							{{ baseInfo.state_name }}
+						</template>
+					</Badge>
+					<Badge type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="OwnerIcon" :size="16"></Icon>
+						</template>
+						<template #label>Owner</template>
+						<template #value>
+							{{ baseInfo.owner }}
+						</template>
+					</Badge>
+					<Badge type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="CustomerIcon" :size="13"></Icon>
+						</template>
+						<template #label>Client</template>
+						<template #value>
+							{{ clientName || "-" }}
+						</template>
+					</Badge>
+					<Badge
+						v-if="baseInfo.case_soc_id && !hideSocAlertLink"
+						type="active"
+						class="cursor-pointer"
+						@click.stop="openSocAlert()"
+					>
+						<template #iconRight>
+							<Icon :name="LinkIcon" :size="14"></Icon>
+						</template>
+						<template #label>Alert #{{ baseInfo.case_soc_id }}</template>
+					</Badge>
+				</div>
+			</template>
+			<template #footerExtra>
+				<SocCaseItemActions
+					v-if="!hideSocCaseAction"
+					class="flex flex-col justify-center gap-2"
+					:case-data="baseInfo"
+					size="small"
+					@closed="setClosed()"
+					@reopened="setReopened()"
+					@deleted="deleteCase()"
+					@start-deleting="loadingDelete = true"
+				/>
+			</template>
+		</CardEntity>
+
+		<n-modal
+			v-model:show="showSocAlertDetails"
+			preset="card"
+			content-class="!p-0"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
+			:title="`SOC Alert: #${baseInfo?.case_soc_id}`"
+			:bordered="false"
+			segmented
+		>
+			<div class="flex h-full w-full items-center justify-center">
+				<SocAlertItem
+					v-if="baseInfo?.case_soc_id"
+					:alert-id="baseInfo.case_soc_id"
+					embedded
+					hide-bookmark-action
+					hide-soc-case-action
+					class="w-full"
+				/>
+			</div>
+		</n-modal>
+
+		<n-modal
+			v-model:show="showDetails"
+			preset="card"
+			content-class="!p-0"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
+			:title="`SOC Case: ${baseInfo?.case_uuid}`"
+			:bordered="false"
+			segmented
+		>
+			<n-tabs type="line" animated :tabs-padding="24">
+				<n-tab-pane name="Info" tab="Info" display-directive="show">
+					<n-spin :show="loadingDetails">
+						<div v-if="extendedInfo" class="px-7 py-4">
+							<div v-if="tags.length" class="mb-2 flex gap-2">
+								<code v-for="tag of tags" :key="tag">{{ tag }}</code>
+							</div>
+							<div>{{ extendedInfo.case_name }}</div>
+						</div>
+						<div v-if="extendedInfo" class="flex flex-col gap-2 px-7 py-4">
+							<div v-if="baseInfo && !hideSocAlertLink" class="box">
+								soc id:
+								<code class="text-primary cursor-pointer" @click.stop="openSocAlert()">
+									#{{ baseInfo.case_soc_id }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
+							</div>
+							<div v-if="extendedInfo?.protagonists && extendedInfo?.protagonists.length" class="box">
+								protagonists:
+								<code v-for="protagonist of extendedInfo.protagonists" :key="protagonist" class="mr-2">
+									{{ protagonist }}
+								</code>
+							</div>
+						</div>
+						<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+							<CardKV v-for="(value, key) of properties" :key="key">
+								<template #key>
+									{{ key }}
+								</template>
+								<template #value>
+									<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
+										<code
+											class="text-primary cursor-pointer"
+											@click.stop="gotoCustomer({ code: value })"
+										>
+											#{{ value }}
+											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+										</code>
+									</template>
+									<template v-else>
+										{{ value || "-" }}
+									</template>
+								</template>
+							</CardKV>
+						</div>
+					</n-spin>
+				</n-tab-pane>
+				<n-tab-pane name="Description" tab="Description" display-directive="show">
+					<div v-if="baseInfo" class="p-7 pt-4">
+						<n-input
+							:value="baseInfo.case_description"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							size="large"
+							:autosize="{
+								minRows: 3
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
+					<n-spin :show="loadingDetails">
+						<div class="p-7 pt-4">
+							<SocCaseTimeline v-if="extendedInfo" :case-data="extendedInfo" />
+						</div>
+					</n-spin>
+				</n-tab-pane>
+				<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
+					<SocCaseAssetsList v-if="baseInfo" :case-id="baseInfo.case_id" />
+				</n-tab-pane>
+				<n-tab-pane name="Notes" tab="Notes" display-directive="show:lazy">
+					<div class="px-4">
+						<n-collapse v-model:expanded-names="noteFormVisible" display-directive="show">
+							<template #arrow>
+								<div class="mx-4 flex">
+									<Icon :name="AddIcon"></Icon>
 								</div>
 							</template>
-							<div class="flex flex-col py-2 px-1">
-								<n-timeline>
-									<n-timeline-item
-										type="success"
-										:title="`Open ${openedBy ? `[${openedBy}]` : ''}`"
-										:time="formatDate(caseOpenDate)"
+							<n-collapse-item name="1">
+								<template #header>
+									<div class="-ml-2 py-3">New note</div>
+								</template>
+								<div class="-mt-2 p-3 pt-0">
+									<SocCaseNoteForm
+										v-if="baseInfo"
+										:case-id="baseInfo.case_id"
+										@close="noteFormVisible = []"
+										@added="updateNotes = true"
 									/>
-									<n-timeline-item
-										v-if="caseCloseDate"
-										title="Close date"
-										:time="formatDate(caseCloseDate)"
-									/>
-								</n-timeline>
-							</div>
-						</n-popover>
-					</div>
-				</div>
-				<div class="main-box flex items-center justify-between gap-4">
-					<div class="content">
-						<div class="title" v-html="baseInfo.case_name"></div>
-						<div v-if="baseInfo.case_description" class="description mt-2">
-							{{ excerpt }}
-						</div>
-
-						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-							<Badge
-								type="splitted"
-								:color="baseInfo.state_name === StateName.Open ? 'warning' : 'primary'"
-							>
-								<template #iconLeft>
-									<Icon :name="StatusIcon" :size="14"></Icon>
-								</template>
-								<template #label>State</template>
-								<template #value>
-									{{ baseInfo.state_name }}
-								</template>
-							</Badge>
-							<Badge type="splitted" color="primary">
-								<template #iconLeft>
-									<Icon :name="OwnerIcon" :size="16"></Icon>
-								</template>
-								<template #label>Owner</template>
-								<template #value>
-									{{ baseInfo.owner }}
-								</template>
-							</Badge>
-							<Badge type="splitted" color="primary">
-								<template #iconLeft>
-									<Icon :name="CustomerIcon" :size="13"></Icon>
-								</template>
-								<template #label>Client</template>
-								<template #value>
-									{{ clientName || "-" }}
-								</template>
-							</Badge>
-							<Badge
-								v-if="baseInfo.case_soc_id && !hideSocAlertLink"
-								type="active"
-								class="cursor-pointer"
-								@click="openSocAlert()"
-							>
-								<template #iconRight>
-									<Icon :name="LinkIcon" :size="14"></Icon>
-								</template>
-								<template #label>Alert #{{ baseInfo.case_soc_id }}</template>
-							</Badge>
-						</div>
-					</div>
-					<SocCaseItemActions
-						v-if="!hideSocCaseAction"
-						class="actions-box"
-						:case-data="baseInfo"
-						@closed="setClosed()"
-						@reopened="setReopened()"
-						@deleted="deleteCase()"
-						@start-deleting="loadingDelete = true"
-					/>
-				</div>
-				<div class="footer-box flex justify-between items-center gap-3">
-					<SocCaseItemActions
-						v-if="!hideSocCaseAction"
-						class="actions-box !flex-row"
-						:case-data="baseInfo"
-						size="small"
-						@closed="setClosed()"
-						@reopened="setReopened()"
-						@deleted="deleteCase()"
-						@start-deleting="loadingDelete = true"
-					/>
-					<div v-if="caseOpenDate" class="time">
-						{{ formatDate(caseOpenDate) }}
-					</div>
-				</div>
-			</div>
-
-			<n-modal
-				v-model:show="showSocAlertDetails"
-				preset="card"
-				content-class="!p-0"
-				:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
-				:title="`SOC Alert: #${baseInfo?.case_soc_id}`"
-				:bordered="false"
-				segmented
-			>
-				<div class="h-full w-full flex items-center justify-center">
-					<SocAlertItem
-						v-if="baseInfo?.case_soc_id"
-						:alert-id="baseInfo.case_soc_id"
-						embedded
-						hide-bookmark-action
-						hide-soc-case-action
-						class="w-full"
-					/>
-				</div>
-			</n-modal>
-
-			<n-modal
-				v-model:show="showDetails"
-				preset="card"
-				content-class="!p-0"
-				:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-				:title="`SOC Case: ${baseInfo?.case_uuid}`"
-				:bordered="false"
-				segmented
-			>
-				<n-tabs type="line" animated :tabs-padding="24">
-					<n-tab-pane name="Info" tab="Info" display-directive="show">
-						<n-spin :show="loadingDetails">
-							<div v-if="extendedInfo" class="px-7 py-4">
-								<div v-if="tags.length" class="flex gap-2 mb-2">
-									<code v-for="tag of tags" :key="tag">{{ tag }}</code>
 								</div>
-								<div>{{ extendedInfo.case_name }}</div>
-							</div>
-							<div v-if="extendedInfo" class="flex flex-col gap-2 px-7 py-4">
-								<div v-if="baseInfo && !hideSocAlertLink" class="box">
-									soc id:
-									<code class="cursor-pointer text-primary-color" @click="openSocAlert()">
-										#{{ baseInfo.case_soc_id }}
-										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-									</code>
-								</div>
-								<div v-if="extendedInfo?.protagonists && extendedInfo?.protagonists.length" class="box">
-									protagonists:
-									<code
-										v-for="protagonist of extendedInfo.protagonists"
-										:key="protagonist"
-										class="mr-2"
-									>
-										{{ protagonist }}
-									</code>
-								</div>
-							</div>
-							<div v-if="properties" class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-								<KVCard v-for="(value, key) of properties" :key="key">
-									<template #key>
-										{{ key }}
-									</template>
-									<template #value>
-										<template
-											v-if="key === 'customer_code' && value && value !== 'Customer Not Found'"
-										>
-											<code
-												class="cursor-pointer text-primary-color"
-												@click="gotoCustomer({ code: value })"
-											>
-												#{{ value }}
-												<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-											</code>
-										</template>
-										<template v-else>
-											{{ value || "-" }}
-										</template>
-									</template>
-								</KVCard>
-							</div>
-						</n-spin>
-					</n-tab-pane>
-					<n-tab-pane name="Description" tab="Description" display-directive="show">
-						<div v-if="baseInfo" class="p-7 pt-4">
-							<n-input
-								:value="baseInfo.case_description"
-								type="textarea"
-								readonly
-								placeholder="Empty"
-								size="large"
-								:autosize="{
-									minRows: 3
-								}"
-							/>
-						</div>
-					</n-tab-pane>
-					<n-tab-pane name="History" tab="History" display-directive="show:lazy">
-						<n-spin :show="loadingDetails">
-							<div class="p-7 pt-4">
-								<SocCaseTimeline v-if="extendedInfo" :case-data="extendedInfo" />
-							</div>
-						</n-spin>
-					</n-tab-pane>
-					<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-						<SocCaseAssetsList v-if="baseInfo" :case-id="baseInfo.case_id" />
-					</n-tab-pane>
-					<n-tab-pane name="Notes" tab="Notes" display-directive="show:lazy">
-						<div class="px-4">
-							<n-collapse v-model:expanded-names="noteFormVisible" display-directive="show">
-								<template #arrow>
-									<div class="mx-4 flex">
-										<Icon :name="AddIcon"></Icon>
-									</div>
-								</template>
-								<n-collapse-item name="1">
-									<template #header>
-										<div class="py-3 -ml-2">New note</div>
-									</template>
-									<div class="p-3 pt-0 -mt-2">
-										<SocCaseNoteForm
-											v-if="baseInfo"
-											:case-id="baseInfo.case_id"
-											@close="noteFormVisible = []"
-											@added="updateNotes = true"
-										/>
-									</div>
-								</n-collapse-item>
-							</n-collapse>
-						</div>
-						<n-divider class="!my-2" />
-						<SocCaseNotesList v-if="baseInfo" v-model:requested="updateNotes" :case-id="baseInfo.case_id" />
-					</n-tab-pane>
-				</n-tabs>
-			</n-modal>
-		</div>
-	</n-spin>
+							</n-collapse-item>
+						</n-collapse>
+					</div>
+					<n-divider class="!my-2" />
+					<SocCaseNotesList v-if="baseInfo" v-model:requested="updateNotes" :case-id="baseInfo.case_id" />
+				</n-tab-pane>
+			</n-tabs>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"
@@ -301,7 +277,6 @@ const SocCaseItemActions = defineAsyncComponent(() => import("./SocCaseItemActio
 const SocAlertItem = defineAsyncComponent(() => import("../SocAlerts/SocAlertItem/SocAlertItem.vue"))
 
 const TimeIcon = "carbon:time"
-const InfoIcon = "carbon:information"
 const CustomerIcon = "carbon:user"
 const LinkIcon = "carbon:launch"
 const OwnerIcon = "carbon:user-military"
@@ -458,90 +433,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.soc-case-item {
-	border-top: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-	min-height: 100px;
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		.id {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-
-		.toggler-bookmark {
-			&.active {
-				color: var(--primary-color);
-			}
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-		.time {
-			color: var(--fg-secondary-color);
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-
-	.main-box {
-		word-break: break-word;
-
-		.description {
-			color: var(--fg-secondary-color);
-			font-size: 13px;
-		}
-	}
-
-	.footer-box {
-		font-size: 13px;
-		margin-top: 10px;
-		display: none;
-
-		.time {
-			text-align: right;
-			font-family: var(--font-family-mono);
-			color: var(--fg-secondary-color);
-		}
-	}
-
-	&:not(.embedded) {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-color);
-		border: var(--border-small-050);
-
-		&:hover {
-			border-color: var(--primary-color);
-		}
-	}
-
-	@container (max-width: 650px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-
-		.main-box {
-			.actions-box {
-				display: none;
-			}
-		}
-
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>

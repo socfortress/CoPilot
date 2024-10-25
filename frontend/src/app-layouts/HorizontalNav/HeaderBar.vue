@@ -19,7 +19,7 @@ const isDark = computed<boolean>(() => themeStore.isThemeDark)
 </script>
 
 <style lang="scss" scoped>
-@import "./variables";
+@import "variables";
 
 .header-bar {
 	padding-left: var(--view-padding);

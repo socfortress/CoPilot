@@ -9,17 +9,14 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-				<KVCard v-for="(value, key) of alert.customer" :key="key">
+			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+				<CardKV v-for="(value, key) of alert.customer" :key="key">
 					<template #key>
 						{{ key }}
 					</template>
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-							<code
-								class="cursor-pointer text-primary-color"
-								@click="gotoCustomer({ code: value.toString() })"
-							>
+							<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: value.toString() })">
 								#{{ value }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -28,7 +25,7 @@
 							{{ value || "-" }}
 						</template>
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
@@ -40,8 +37,8 @@
 					<template #label>Go to users page</template>
 				</Badge>
 			</div>
-			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-				<KVCard>
+			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+				<CardKV>
 					<template #key>user_login</template>
 					<template #value>
 						<SocAssignUser
@@ -50,7 +47,7 @@
 							:users="users"
 							@updated="emit('updated', $event)"
 						>
-							<div class="flex items-center gap-2 cursor-pointer text-primary-color">
+							<div class="text-primary flex cursor-pointer items-center gap-2">
 								<n-spin :size="16" :show="loading">
 									<Icon :name="EditIcon" :size="16"></Icon>
 								</n-spin>
@@ -58,20 +55,20 @@
 							</div>
 						</SocAssignUser>
 					</template>
-				</KVCard>
-				<KVCard v-if="alert.owner">
+				</CardKV>
+				<CardKV v-if="alert.owner">
 					<template #key>user_name</template>
 					<template #value>
 						<span>#{{ alert.owner.id }}</span>
 						{{ alert.owner.user_name }}
 					</template>
-				</KVCard>
-				<KVCard v-if="alert.owner">
+				</CardKV>
+				<CardKV v-if="alert.owner">
 					<template #key>user_email</template>
 					<template #value>
 						{{ alert.owner.user_email }}
 					</template>
-				</KVCard>
+				</CardKV>
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="History" tab="History" display-directive="show:lazy">
@@ -94,13 +91,13 @@
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import Badge from "@/components/common/Badge.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { alert } = defineProps<{
 	alert: SocAlert

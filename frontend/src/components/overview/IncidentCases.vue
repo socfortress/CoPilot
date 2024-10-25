@@ -3,7 +3,7 @@
 		<CardStatsBars
 			title="Cases"
 			hovered
-			class="cursor-pointer h-full"
+			class="h-full cursor-pointer"
 			:values
 			@click="gotoIncidentManagementCases()"
 		>
@@ -17,8 +17,8 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases"
 import Api from "@/api"
-import CardStatsBars, { type ItemProps } from "@/components/common/CardStatsBars.vue"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
+import CardStatsBars, { type ItemProps } from "@/components/common/cards/CardStatsBars.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

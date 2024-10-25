@@ -17,10 +17,10 @@
 	>
 		<n-spin
 			:show="loadingCases"
-			class="grow overflow-hidden flex flex-col"
+			class="flex grow flex-col overflow-hidden"
 			content-class="grow overflow-hidden flex flex-col"
 		>
-			<n-scrollbar class="grow flex flex-col" content-class="grow" trigger="none">
+			<n-scrollbar class="flex grow flex-col" content-class="grow" trigger="none">
 				<div class="flex flex-col gap-2 px-5 py-2">
 					<template v-if="linkableCases.length">
 						<CaseItem
@@ -29,12 +29,12 @@
 							:case-data="item"
 							compact
 							embedded
-							:class="{ active: selectedCase?.id === item.id }"
+							:highlight="selectedCase?.id === item.id"
 							@click="toggleSelectedCase(item)"
 						/>
 					</template>
 					<template v-else>
-						<n-empty v-if="!loadingCases" description="No items found" class="justify-center h-48" />
+						<n-empty v-if="!loadingCases" description="No items found" class="h-48 justify-center" />
 					</template>
 				</div>
 			</n-scrollbar>

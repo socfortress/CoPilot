@@ -2,11 +2,11 @@
 	<code
 		v-for="linkedCase of linkedCases"
 		:key="linkedCase.id"
-		class="cursor-pointer text-primary-color"
+		class="text-primary cursor-pointer"
 		@click="gotoIncidentManagementCases(linkedCase.id)"
 	>
 		#{{ linkedCase.id }}
-		<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+		<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 	</code>
 </template>
 

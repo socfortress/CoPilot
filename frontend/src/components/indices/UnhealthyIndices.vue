@@ -1,9 +1,9 @@
 <template>
 	<n-card class="unhealthy-indices" segmented>
 		<template #header>
-			<div class="flex align-center justify-between">
+			<div class="align-center flex justify-between">
 				<span>Unhealthy Indices</span>
-				<span class="text-secondary-color font-mono">{{ unhealthyIndices.length }}</span>
+				<span class="text-secondary font-mono">{{ unhealthyIndices.length }}</span>
 			</div>
 		</template>
 		<n-spin :show="loading">

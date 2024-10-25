@@ -1,6 +1,6 @@
 <template>
 	<n-card class="agent-toolbar" content-style="padding:0">
-		<div class="wrapper flex flex-col gap-6 py-3 px-4">
+		<div class="wrapper flex flex-col gap-6 px-4 py-3">
 			<div class="flex flex-col gap-2">
 				<div class="agent-search flex gap-3">
 					<n-input v-model:value="textFilter" placeholder="Search for an agent" clearable>
@@ -23,7 +23,7 @@
 					<div v-if="agentsCritical?.length" class="agents-critical-list">
 						<div class="title">
 							Critical Assets
-							<small class="text-secondary-color font-mono">({{ agentsCritical.length }})</small>
+							<small class="text-secondary font-mono">({{ agentsCritical.length }})</small>
 						</div>
 						<div class="list">
 							<div
@@ -39,7 +39,7 @@
 					<div v-if="agentsOnline?.length" class="agents-online-list">
 						<div class="title">
 							Online Agents
-							<small class="text-secondary-color font-mono">({{ agentsOnline.length }})</small>
+							<small class="text-secondary font-mono">({{ agentsOnline.length }})</small>
 						</div>
 						<div class="list">
 							<div
@@ -115,7 +115,7 @@ const textFilter = computed<string>({
 			.list {
 				.item {
 					border: 2px solid transparent;
-					@apply py-2 px-3;
+					@apply px-3 py-2;
 					font-size: 14px;
 					font-weight: bold;
 					cursor: pointer;
@@ -123,6 +123,10 @@ const textFilter = computed<string>({
 
 					&:not(:last-child) {
 						@apply mb-2;
+					}
+
+					&:hover {
+						background-color: var(--bg-secondary-color);
 					}
 				}
 			}

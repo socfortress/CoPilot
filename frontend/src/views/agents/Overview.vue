@@ -7,52 +7,53 @@
 			</div>
 			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
 		</div>
-		<n-spin
-			class="agent-header py-5 px-7 my-4"
-			content-class="flex justify-between gap-y-1 gap-x-6 flex-wrap items-start"
+		<CardEntity
+			class="agent-header my-4"
 			:class="{ critical: agent?.critical_asset, online: isOnline }"
-			:show="loadingAgent"
+			:loading="loadingAgent"
 		>
-			<div class="info grow">
-				<div class="title">
-					<div v-if="agent" class="critical" :class="{ active: agent?.critical_asset }">
-						<n-tooltip>
-							Toggle Critical Assets
-							<template #trigger>
-								<n-button
-									text
-									:type="agent?.critical_asset ? 'warning' : 'default'"
-									circle
-									@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-								>
-									<template #icon>
-										<Icon :name="StarIcon"></Icon>
-									</template>
-								</n-button>
-							</template>
-						</n-tooltip>
+			<div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-1">
+				<div class="info grow">
+					<div class="title">
+						<div v-if="agent" class="critical" :class="{ active: agent?.critical_asset }">
+							<n-tooltip>
+								Toggle Critical Assets
+								<template #trigger>
+									<n-button
+										text
+										:type="agent?.critical_asset ? 'warning' : 'default'"
+										circle
+										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+									>
+										<template #icon>
+											<Icon :name="StarIcon"></Icon>
+										</template>
+									</n-button>
+								</template>
+							</n-tooltip>
+						</div>
+
+						<h1 v-if="agent?.hostname">
+							{{ agent?.hostname }}
+						</h1>
+
+						<span v-if="isOnline" class="online-badge">ONLINE</span>
+
+						<span v-if="isQuarantined" class="quarantined-badge flex items-center gap-1">
+							<Icon :name="QuarantinedIcon" :size="15"></Icon>
+							<span>QUARANTINED</span>
+						</span>
 					</div>
-
-					<h1 v-if="agent?.hostname">
-						{{ agent?.hostname }}
-					</h1>
-
-					<span v-if="isOnline" class="online-badge">ONLINE</span>
-
-					<span v-if="isQuarantined" class="quarantined-badge flex items-center gap-1">
-						<Icon :name="QuarantinedIcon" :size="15"></Icon>
-						<span>QUARANTINED</span>
-					</span>
+					<div class="label text-secondary mt-2">Agent #{{ agent?.agent_id }}</div>
 				</div>
-				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
+				<div class="actions flex grow items-center justify-end">
+					<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
+						Upgrade Wazuh Agent
+					</n-button>
+				</div>
 			</div>
-			<div class="actions flex items-center justify-end grow">
-				<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
-					Upgrade Wazuh Agent
-				</n-button>
-			</div>
-		</n-spin>
-		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
+		</CardEntity>
+		<n-card class="px-4 py-1 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
 				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
@@ -142,6 +143,7 @@
 import type { Artifact } from "@/types/artifacts.d"
 import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { type Agent, AgentStatus } from "@/types/agents.d"
@@ -316,10 +318,6 @@ onBeforeMount(() => {
 	}
 
 	.agent-header {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-color);
-		border: var(--border-small-050);
-
 		.title {
 			display: flex;
 			align-items: center;
@@ -342,7 +340,7 @@ onBeforeMount(() => {
 				color: var(--success-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
-				@apply text-xs py-1 px-2;
+				@apply px-2 py-1 text-xs;
 			}
 
 			.quarantined-badge {

@@ -1,30 +1,24 @@
 <template>
-	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ default: stream.is_default }">
-		<div class="header-box flex items-center gap-3">
-			<div class="info flex items-center gap-2 grow">
-				<div class="user flex items-center gap-2">
+	<div>
+		<CardEntity hoverable :highlighted="stream.is_default">
+			<template #headerMain>
+				<div class="flex items-center gap-2">
 					<Icon :name="UserIcon" :size="14"></Icon>
 					{{ stream.creator_user_id }}
 				</div>
-			</div>
-			<div class="time">
-				{{ formatDate(stream.created_at, dFormats.datetimesec) }}
-			</div>
-			<n-button size="small" @click.stop="showDetails = true">
-				<template #icon>
-					<Icon :name="InfoIcon"></Icon>
-				</template>
-			</n-button>
-		</div>
-		<div class="main-box flex justify-between">
-			<div class="content">
-				<div class="title">
+			</template>
+			<template #headerExtra>{{ formatDate(stream.created_at, dFormats.datetimesec) }}</template>
+			<template #default>
+				<div class="flex flex-col gap-1">
 					{{ stream.title }}
+
+					<p v-if="stream.description && stream.description !== stream.title">
+						{{ stream.description }}
+					</p>
 				</div>
-				<div class="description mb-2">
-					{{ stream.description }}
-				</div>
-				<div class="badges-box flex flex-wrap items-center gap-3">
+			</template>
+			<template #footerMain>
+				<div class="flex flex-wrap items-center gap-3">
 					<Badge :type="stream.disabled ? 'muted' : 'active'">
 						<template #iconRight>
 							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
@@ -44,41 +38,44 @@
 						<template #label>Editable</template>
 					</Badge>
 				</div>
-			</div>
-			<div v-if="stream.is_editable" class="actions-box flex flex-col justify-end">
-				<n-button v-if="!stream.disabled" :loading="loading" @click="stop()">
-					<template #icon>
-						<Icon :name="StopIcon"></Icon>
-					</template>
-					Stop stream
-				</n-button>
-				<n-button v-else :loading="loading" type="primary" @click="start()">
-					<template #icon>
-						<Icon :name="StartIcon"></Icon>
-					</template>
-					Start stream
-				</n-button>
-			</div>
-		</div>
-		<div class="footer-box flex justify-between items-center">
-			<div v-if="stream.is_editable" class="actions-box flex flex-col justify-end">
-				<n-button v-if="!stream.disabled" :loading="loading" size="small" @click="stop()">
-					<template #icon>
-						<Icon :name="StopIcon"></Icon>
-					</template>
-					Stop
-				</n-button>
-				<n-button v-else :loading="loading" type="primary" size="small" @click="start()">
-					<template #icon>
-						<Icon :name="StartIcon"></Icon>
-					</template>
-					Start
-				</n-button>
-			</div>
-			<div class="time">
-				{{ formatDate(stream.created_at, dFormats.datetimesec) }}
-			</div>
-		</div>
+			</template>
+			<template #footerExtra>
+				<div class="flex flex-wrap items-center justify-end gap-3">
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="InfoIcon"></Icon>
+						</template>
+						Details
+					</n-button>
+					<n-button
+						v-if="stream.is_editable && !stream.disabled"
+						:loading="loading"
+						type="warning"
+						secondary
+						size="small"
+						@click="stop()"
+					>
+						<template #icon>
+							<Icon :name="StopIcon"></Icon>
+						</template>
+						Stop stream
+					</n-button>
+					<n-button
+						v-if="stream.is_editable && stream.disabled"
+						:loading="loading"
+						type="success"
+						secondary
+						size="small"
+						@click="start()"
+					>
+						<template #icon>
+							<Icon :name="StartIcon"></Icon>
+						</template>
+						Start stream
+					</n-button>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -106,13 +103,14 @@
 import type { Stream } from "@/types/graylog/stream.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const props = defineProps<{ stream: Stream }>()
 const { stream } = toRefs(props)
@@ -171,69 +169,3 @@ function start() {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		.user {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-		}
-		.time {
-			color: var(--fg-secondary-color);
-		}
-	}
-	.main-box {
-		word-break: break-word;
-
-		.description {
-			color: var(--fg-secondary-color);
-			font-size: 13px;
-		}
-	}
-
-	.footer-box {
-		display: none;
-		text-align: right;
-		font-size: 13px;
-		margin-top: 10px;
-
-		.time {
-			font-family: var(--font-family-mono);
-			color: var(--fg-secondary-color);
-			width: 100%;
-		}
-	}
-
-	&.default {
-		background-color: var(--primary-005-color);
-		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
-	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-
-	@container (max-width: 650px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.main-box {
-			.actions-box {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
-		}
-	}
-}
-</style>

@@ -1,5 +1,5 @@
 import App from "@/App.vue"
-import { getI18NConf, type Locales, type MessageSchema } from "@/lang/config"
+import { getI18NConf, type Locale, type MessageSchema } from "@/lang/config"
 import router from "@/router"
 import { createPinia } from "pinia"
 import { createPersistedState } from "pinia-plugin-persistedstate"
@@ -17,7 +17,7 @@ pinia.use(
 	})
 )
 
-const i18n = createI18n<MessageSchema, Locales>(getI18NConf())
+const i18n = createI18n<MessageSchema, Locale>(getI18NConf())
 
 const app = createApp(App)
 app.use(pinia)

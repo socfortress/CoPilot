@@ -1,9 +1,9 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
-		<div class="flex flex-col gap-4 grow justify-between">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:!flex-row flex-col gap-4">
-					<KVCard
+				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
+					<CardKV
 						:color="
 							caseData.case_status === 'OPEN'
 								? 'danger'
@@ -14,10 +14,10 @@
 										: undefined
 						"
 						size="lg"
-						class="grow w-full"
+						class="w-full grow"
 					>
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<StatusIcon :status="caseData.case_status" />
 								<span>Status</span>
 							</div>
@@ -30,7 +30,7 @@
 									@updated="updateCase($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingStatus,
 											'cursor-pointer': !loadingStatus
@@ -48,11 +48,11 @@
 								</CaseStatusSwitch>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
+					<CardKV :color="caseData.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<AssigneeIcon :assignee="caseData.assigned_to" />
 								<span>Assigned to</span>
 							</div>
@@ -65,7 +65,7 @@
 									@updated="updateCase($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingAssignee,
 											'cursor-pointer': !loadingAssignee
@@ -83,27 +83,27 @@
 								</CaseAssignUser>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>description</template>
 						<template #value>
 							<span class="whitespace-pre-wrap">
 								{{ caseData.case_description ?? "-" }}
 							</span>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
-					<KVCard>
+				<div class="grid-auto-fit-250 grid gap-2 px-7">
+					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ caseData.id }}</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>creation time</template>
 						<template #value>
 							{{
@@ -112,14 +112,14 @@
 									: "-"
 							}}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>customer code</template>
 						<template #value>
 							<code
 								v-if="caseData.customer_code"
-								class="cursor-pointer text-primary-color"
+								class="text-primary cursor-pointer"
 								@click="gotoCustomer({ code: caseData.customer_code })"
 							>
 								{{ caseData.customer_code }}
@@ -127,11 +127,11 @@
 							</code>
 							<span v-else>-</span>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 gap-3 flex justify-end">
+			<div class="footer-box flex justify-end gap-3 px-7 py-4">
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />
@@ -146,8 +146,8 @@
 
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases.d"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"

@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-wrap items-center gap-3 mt-3">
+	<div class="@container flex flex-wrap items-center gap-3">
 		<n-tooltip placement="top-start" trigger="hover">
 			<template #trigger>
 				<Badge type="splitted" color="primary" hint-cursor>
@@ -23,7 +23,7 @@
 				{{ alert.severity?.severity_name || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
@@ -32,7 +32,7 @@
 				{{ alert.alert_source || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13"></Icon>
 			</template>
@@ -40,7 +40,7 @@
 			<template #value>
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
-						class="cursor-pointer text-primary-color"
+						class="text-primary cursor-pointer"
 						@click="gotoCustomer({ code: alert.customer.customer_code })"
 					>
 						{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}

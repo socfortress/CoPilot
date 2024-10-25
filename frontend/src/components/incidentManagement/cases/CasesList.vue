@@ -1,10 +1,10 @@
 <template>
 	<div class="cases-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="left">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -17,19 +17,19 @@
 							Total :
 							<code>{{ total }}</code>
 						</div>
-						<div class="box text-error-color">
+						<div class="box text-error">
 							Open :
 							<code>{{ statusOpenTotal }}</code>
 						</div>
-						<div class="box text-warning-color">
+						<div class="box text-warning">
 							In Progress :
 							<code>{{ statusInProgressTotal }}</code>
 						</div>
-						<div class="box text-success-color">
+						<div class="box text-success">
 							Close :
 							<code>{{ statusCloseTotal }}</code>
 						</div>
-						<div class="box text-secondary-color">
+						<div class="box text-secondary">
 							N/D :
 							<code>{{ statusUndefinedTotal }}</code>
 						</div>
@@ -38,7 +38,7 @@
 
 				<n-popover v-if="showMobileMenu" overlap placement="left" display-directive="show">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-pointer">
 								<template #icon>
 									<Icon :name="MenuIcon"></Icon>
@@ -72,7 +72,7 @@
 			/>
 			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
@@ -82,7 +82,7 @@
 						</n-badge>
 					</div>
 				</template>
-				<div class="py-1 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
 						<n-input-group>
 							<n-select
@@ -132,7 +132,7 @@
 							/>
 						</n-input-group>
 					</div>
-					<div class="px-3 flex justify-between gap-2">
+					<div class="flex justify-between gap-2 px-3">
 						<div class="flex justify-start gap-2">
 							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
 						</div>
@@ -147,7 +147,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="casesList.length">
 					<CaseItem
 						v-for="item of itemsPaginated"
@@ -162,7 +162,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -430,12 +430,3 @@ onBeforeMount(() => {
 	getCustomers()
 })
 </script>
-
-<style lang="scss" scoped>
-.cases-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

@@ -15,7 +15,7 @@
 			<div v-else>
 				<n-spin :show="loading" class="min-h-48">
 					<template v-if="list.length">
-						<div class="list p-7 pt-4">
+						<div class="min-h-52 p-7 pt-4">
 							<CustomerNotificationsWorkflowsItem
 								v-for="item of list"
 								:key="item.id"
@@ -27,7 +27,7 @@
 						</div>
 					</template>
 					<template v-else>
-						<n-empty v-if="!loading" class="justify-center h-48">
+						<n-empty v-if="!loading" class="h-48 justify-center">
 							<div class="flex flex-col items-center gap-4">
 								<p>No Notification found</p>
 
@@ -111,11 +111,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .customer-notifications-workflows {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-
 	.form-fade-enter-active,
 	.form-fade-leave-active {
 		transition:

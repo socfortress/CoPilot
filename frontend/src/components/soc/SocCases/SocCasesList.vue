@@ -1,10 +1,10 @@
 <template>
 	<div class="soc-cases-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -30,7 +30,7 @@
 				>
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Purge</span>
+						<span class="xs:block hidden">Purge</span>
 					</div>
 				</n-button>
 			</div>
@@ -45,7 +45,7 @@
 			/>
 			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
@@ -55,7 +55,7 @@
 						</n-badge>
 					</div>
 				</template>
-				<div class="py-1 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
 						<small>Cases older then:</small>
 					</div>
@@ -76,7 +76,7 @@
 							/>
 						</n-input-group>
 					</div>
-					<div class="px-3 flex justify-end gap-2">
+					<div class="flex justify-end gap-2 px-3">
 						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
 						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
@@ -84,7 +84,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="casesList.length">
 					<SocCaseItem
 						v-for="caseData of itemsPaginated"
@@ -95,7 +95,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -267,12 +267,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.soc-cases-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

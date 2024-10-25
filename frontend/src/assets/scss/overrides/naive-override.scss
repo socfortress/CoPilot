@@ -99,6 +99,24 @@
 	}
 }
 
+.n-spin-container .n-spin-body {
+	inset: 0 !important;
+	transform: none !important;
+
+	.n-base-loading {
+		position: sticky;
+		top: 0;
+		bottom: 0;
+		height: min(450px, 100%);
+
+		.n-base-loading__transition-wrapper {
+			transform: translateY(-50%);
+			height: fit-content;
+			top: 50%;
+		}
+	}
+}
+
 .direction-rtl {
 	.v-binder-follower-container {
 		direction: ltr;

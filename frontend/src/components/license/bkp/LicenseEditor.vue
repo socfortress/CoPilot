@@ -1,13 +1,13 @@
 <template>
 	<n-spin :show="loading">
 		<div class="license-box" :class="{ loading: loadingLicense && !licenseKey }">
-			<p v-if="loadingLicense || licenseKey" class="flex gap-4 items-center">
+			<p v-if="loadingLicense || licenseKey" class="flex items-center gap-4">
 				<span>your license:</span>
 				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
 			</p>
 			<div v-if="!loadingLicense && !licenseKey">
-				<p v-if="!creationEnabled" class="flex gap-4 items-center">no license found</p>
-				<div class="flex items-center gap-4 mt-2">
+				<p v-if="!creationEnabled" class="flex items-center gap-4">no license found</p>
+				<div class="mt-2 flex items-center gap-4">
 					<div class="actions-box flex gap-2">
 						<n-button
 							v-if="!creationEnabled"
@@ -24,7 +24,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="!replaceEnabled && licenseKey" class="flex items-center gap-4 mt-1">
+			<div v-if="!replaceEnabled && licenseKey" class="mt-1 flex items-center gap-4">
 				<h3>{{ licenseKey }}</h3>
 				<div class="actions-box flex gap-2">
 					<n-button secondary :disabled="replaceEnabled" size="small" @click="enableReplace()">
@@ -50,7 +50,7 @@
 		</div>
 
 		<div v-if="replaceEnabled" class="replace-box mt-2 flex gap-2">
-			<n-input v-model:value="licenseKeyModel" class="grow !max-w-72" clearable />
+			<n-input v-model:value="licenseKeyModel" class="!max-w-72 grow" clearable />
 			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">Reset</n-button>
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKeyModel" @click="replaceLicense()">
 				<template #icon>
@@ -61,7 +61,7 @@
 		</div>
 
 		<div v-if="extendEnabled" class="extend-box mt-5 flex gap-2">
-			<n-input-number v-model:value="period" class="grow !max-w-44" :min="1">
+			<n-input-number v-model:value="period" class="!max-w-44 grow" :min="1">
 				<template #prefix>
 					<div class="min-w-12">Day{{ period === 1 ? "" : "s" }}</div>
 				</template>
@@ -77,7 +77,7 @@
 
 		<div v-if="creationEnabled" class="create-box flex flex-col gap-2">
 			<n-form ref="formRef" :label-width="80" :model="creationForm" :rules="rules">
-				<div class="grid gap-2 grid-auto-fit-200">
+				<div class="grid-auto-fit-200 grid gap-2">
 					<n-form-item label="Name" path="name">
 						<n-input v-model:value.trim="creationForm.name" placeholder="Input name..." clearable />
 					</n-form-item>
@@ -93,7 +93,7 @@
 					</n-form-item>
 				</div>
 			</n-form>
-			<div class="flex gap-2 justify-end">
+			<div class="flex justify-end gap-2">
 				<n-button secondary :disabled="loadingCreation" @click="resetCreation()">Reset</n-button>
 				<n-button
 					type="success"

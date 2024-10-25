@@ -1,10 +1,10 @@
 <template>
 	<div class="artifacts-collect">
-		<div class="header flex justify-end items-start gap-2">
+		<div class="header flex items-start justify-end gap-2">
 			<div v-if="isDirty" class="info flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -20,7 +20,7 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="grow flex items-center justify-end gap-2 flex-wrap">
+			<div class="flex grow flex-wrap items-center justify-end gap-2">
 				<div v-if="!hideHostnameField" class="grow basis-56">
 					<n-select
 						v-model:value="filters.hostname"
@@ -69,17 +69,18 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list grid gap-3 my-7">
+			<div class="my-7 flex min-h-52 flex-col gap-3">
 				<template v-if="collectList.length">
 					<CollectItem
 						v-for="collect of collectList"
-						:key="collect.___id"
+						:key="`${collect.___id}`"
+						embedded
 						:collect="collect"
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -106,8 +107,6 @@ const props = defineProps<{
 	hideHostnameField?: boolean
 	hideVelociraptorIdField?: boolean
 }>()
-
-// import { collectResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -259,28 +258,9 @@ onBeforeMount(() => {
 	// MOCK
 	/*
 	collectList.value = collectResult.map(o => {
-		// @ts-ignore
 		o.___id = nanoid()
 		return o
-	}) as CollectResultExt[]
+	})
 	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-collect {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-		grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
-		grid-auto-flow: row dense;
-	}
-
-	@media (max-width: 490px) {
-		.list {
-			display: flex;
-			flex-direction: column;
-		}
-	}
-}
-</style>

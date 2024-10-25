@@ -8,7 +8,7 @@
 				<transition :name="`router-${routerTransition}`" mode="out-in" appear>
 					<component
 						:is="RouterComponent"
-						:key="forceRefresh"
+						:key="(route?.name?.toString() || '') + forceRefresh"
 						:class="[`theme-${themeName}`, `layout-${layoutComponentName}`, themeName]"
 					/>
 				</transition>
@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Layout, RouterTransition, ThemeName } from "@/types/theme.d"
+import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import Blank from "@/app-layouts/Blank/index.vue"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
@@ -35,6 +35,7 @@ import { type RouteLocationNormalized, useRoute, useRouter } from "vue-router"
 import "@/assets/scss/index.scss"
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(true)
 
 const layoutComponents = {
@@ -52,7 +53,7 @@ const layout = computed<Layout>(() => themeStore.layout)
 const layoutComponentName = computed<Layout>(() => forceLayout.value || layout.value)
 const layoutComponent = computed<Component>(() => layoutComponents[layoutComponentName.value])
 const routerTransition = computed<RouterTransition>(() => themeStore.routerTransition)
-const themeName = computed<ThemeName>(() => themeStore.themeName)
+const themeName = computed<ThemeNameEnum>(() => themeStore.themeName)
 const isLogged = computed(() => authStore.isLogged)
 
 function checkForcedLayout(route: RouteLocationNormalized) {

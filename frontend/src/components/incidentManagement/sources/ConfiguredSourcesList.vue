@@ -1,10 +1,10 @@
 <template>
 	<div class="configured-sources-list">
-		<div class="header flex items-center justify-end gap-2 mb-3">
-			<div class="info grow flex gap-5">
+		<div class="header mb-3 flex items-center justify-end gap-2">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -20,7 +20,7 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="actions flex gap-2 items-center">
+			<div class="actions flex items-center gap-2">
 				<n-button size="small" type="primary" @click="showWizard = true">
 					<template #icon>
 						<Icon :name="NewSourceConfigurationIcon" :size="15"></Icon>
@@ -30,7 +30,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading" class="min-h-32">
-			<div v-if="configuredSourcesList.length" class="list gap-4 grid grid-auto-fill-250">
+			<div v-if="configuredSourcesList.length" class="list grid-auto-fill-250 grid gap-4">
 				<ConfiguredSourceItem
 					v-for="source of configuredSourcesList"
 					:key="source"
@@ -40,7 +40,7 @@
 				/>
 			</div>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
 

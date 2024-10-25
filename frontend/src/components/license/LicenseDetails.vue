@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" content-class=" grow flex flex-col" class="flex flex-col overflow-hidden">
 		<div v-if="license" class="flex flex-col gap-4">
-			<KVCard v-if="!hideKey">
+			<CardKV v-if="!hideKey">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="KeyIcon" :size="14"></Icon>
 						<span>Key</span>
 					</span>
@@ -11,43 +11,43 @@
 				<template #value>
 					{{ license.key }}
 				</template>
-			</KVCard>
-			<KVCard v-if="!hideFeatures">
+			</CardKV>
+			<CardKV v-if="!hideFeatures">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="FeaturesIcon" :size="14"></Icon>
 						<span>Features</span>
 					</span>
 				</template>
 				<template #value>
-					<div v-if="features.length" class="grid gap-2 grid-auto-fit-200">
-						<KVCard v-for="feature of features" :key="feature">
+					<div v-if="features.length" class="grid-auto-fit-200 grid gap-2">
+						<CardKV v-for="feature of features" :key="feature">
 							<template #value>
-								<span class="flex gap-3 items-center">
-									<Icon :name="CheckIcon" :size="14" class="text-primary-color"></Icon>
+								<span class="flex items-center gap-3">
+									<Icon :name="CheckIcon" :size="14" class="text-primary"></Icon>
 									<span>{{ feature }}</span>
 								</span>
 							</template>
-						</KVCard>
+						</CardKV>
 					</div>
 					<template v-else>No feature enabled</template>
 				</template>
-			</KVCard>
-			<KVCard>
+			</CardKV>
+			<CardKV>
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="ExpiresIcon" :size="14"></Icon>
 						<span>Expires</span>
 					</span>
 				</template>
 				<template #value>
 					{{ expiresText }}
-					<span class="text-secondary-color">({{ periodText }})</span>
+					<span class="text-secondary">({{ periodText }})</span>
 				</template>
-			</KVCard>
-			<KVCard>
+			</CardKV>
+			<CardKV>
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="CustomerIcon" :size="14"></Icon>
 						<span>Customer</span>
 					</span>
@@ -75,10 +75,10 @@
 						</Badge>
 					</div>
 				</template>
-			</KVCard>
-			<KVCard v-if="dockerCompose">
+			</CardKV>
+			<CardKV v-if="dockerCompose">
 				<template #key>
-					<span class="flex gap-3 items-center">
+					<span class="flex items-center gap-3">
 						<Icon :name="ConfigIcon" :size="14"></Icon>
 						<span>Docker Configuration</span>
 					</span>
@@ -88,7 +88,7 @@
 						<Markdown :source="dockerCompose" code-bg-transparent />
 					</Suspense>
 				</template>
-			</KVCard>
+			</CardKV>
 		</div>
 	</n-spin>
 </template>
@@ -97,8 +97,8 @@
 import type { License, LicenseFeatures } from "@/types/license.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _startCase from "lodash/startCase"

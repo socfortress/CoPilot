@@ -3,6 +3,8 @@
 		:rtl="rtlOptions"
 		:theme="theme"
 		:theme-overrides="themeOverrides"
+		:locale="providerLocale"
+		:date-locale="providerDateLocale"
 		preflight-style-disabled
 		inline-theme-disabled
 	>
@@ -22,11 +24,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { ThemeName } from "@/types/theme.d"
 import type { RtlItem } from "naive-ui/es/config-provider/src/internal-interface"
 import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
+import { useLocalesStore } from "@/stores/i18n"
 import { useThemeStore } from "@/stores/theme"
-import { useWindowSize } from "@vueuse/core"
 import {
 	type GlobalThemeOverrides,
 	NConfigProvider,
@@ -36,63 +37,19 @@ import {
 	NMessageProvider,
 	NNotificationProvider
 } from "naive-ui"
-import { computed, onBeforeMount, watch } from "vue"
+import { computed, onBeforeMount } from "vue"
 import { rtlStyles } from "./rtlProvider"
 
-const { width } = useWindowSize()
+const localesStore = useLocalesStore()
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.naiveTheme)
-const themeName = computed<ThemeName>(() => themeStore.themeName)
 const themeOverrides = computed<GlobalThemeOverrides>(() => themeStore.themeOverrides)
-const style = computed(() => themeStore.style)
 const isRTL = computed(() => themeStore.isRTL)
 const rtlOptions = computed<RtlItem[] | undefined>(() => (isRTL.value ? rtlStyles : undefined))
-
-watch([isRTL, style], () => {
-	setGlobalVars()
-})
-
-watch(themeName, (val, old) => {
-	setThemeName(val, old)
-})
-
-watch(width, () => {
-	themeStore.updateVars()
-})
-
-// This function allows you to utilize the values in the style object as variables within your CSS/SCSS code like: var(-–bg-color)
-function setGlobalVars() {
-	if (document) {
-		const html = document.children[0] as HTMLElement
-		const body = document.getElementsByTagName("body")?.[0]
-		if (isRTL.value && body) {
-			body.classList.add("direction-rtl")
-			body.classList.remove("direction-ltr")
-		} else {
-			body.classList.remove("direction-rtl")
-			body.classList.add("direction-ltr")
-		}
-		// html.dir = isRTL.value ? "rtl" : "ltr"
-		const { style: htmlStyle } = html
-		for (const key in style.value) {
-			htmlStyle.setProperty(`--${key}`, style.value[key])
-		}
-	}
-}
-
-function setThemeName(val: ThemeName, old?: ThemeName) {
-	if (document) {
-		const html = document.children[0] as HTMLElement
-		if (old) {
-			html.classList.remove(`theme-${old}`)
-		}
-		html.classList.add(`theme-${val}`)
-	}
-}
+const providerLocale = computed(() => localesStore.naiveuiLocale)
+const providerDateLocale = computed(() => localesStore.naiveuiDateLocale)
 
 onBeforeMount(() => {
-	themeStore.updateVars()
-	setGlobalVars()
-	setThemeName(themeName.value)
+	themeStore.initTheme()
 })
 </script>

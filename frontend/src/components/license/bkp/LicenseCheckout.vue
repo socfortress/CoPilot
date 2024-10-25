@@ -1,7 +1,7 @@
 <template>
-	<div class="license-box flex gap-1 items-center justify-between">
+	<div class="license-box flex items-center justify-between gap-1">
 		<div class="flex flex-col gap-1">
-			<p class="flex gap-4 items-center">
+			<p class="flex items-center gap-4">
 				<span>license</span>
 				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
 			</p>
@@ -11,7 +11,7 @@
 			</h3>
 		</div>
 
-		<div v-if="!loadingLicense" class="actions-box flex gap-2 mr-2">
+		<div v-if="!loadingLicense" class="actions-box mr-2 flex gap-2">
 			<n-button type="primary" @click="openCheckout()">
 				<template #icon>
 					<Icon :name="licenseKey ? ExtendIcon : LicenseIcon"></Icon>

@@ -11,14 +11,10 @@ export enum RouterTransition {
 	FadeRight = "fade-right"
 }
 
-export enum ThemeEnum {
+export enum ThemeNameEnum {
 	Dark = "dark",
 	Light = "light"
 }
-
-export type Theme = "light" | "dark"
-
-export type ThemeName = ThemeEnum | Theme
 
 export type ColorType = "primary" | "info" | "success" | "warning" | "error"
 export type ColorScene = "" | "Suppl" | "Hover" | "Pressed"

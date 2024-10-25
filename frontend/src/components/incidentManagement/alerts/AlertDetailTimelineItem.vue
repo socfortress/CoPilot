@@ -1,14 +1,8 @@
 <template>
-	<div class="alert-timeline-item" :class="{ embedded }">
-		<div class="flex flex-col cursor-pointer" @click="showDetails = true">
-			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex flex-col gap-1 grow">
-					<div class="title">
-						{{ timelineData._source.rule_description }}
-					</div>
-				</div>
-			</div>
-		</div>
+	<div>
+		<CardEntity :embedded hoverable clickable @click="showDetails = true">
+			{{ timelineData._source.rule_description }}
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -21,26 +15,26 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-						<KVCard v-for="(value, key) of timelineDetailsInfo" :key="key">
+					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+						<CardKV v-for="(value, key) of timelineDetailsInfo" :key="key">
 							<template #key>
 								{{ key }}
 							</template>
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="cursor-pointer text-primary-color"
+										class="text-primary cursor-pointer"
 										@click.stop="gotoIndex(timelineDetailsInfo._index)"
 									>
 										{{ timelineDetailsInfo._index }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 								<div v-else>
 									{{ value === "" ? "-" : (value ?? "-") }}
 								</div>
 							</template>
-						</KVCard>
+						</CardKV>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
@@ -55,8 +49,9 @@
 
 <script setup lang="ts">
 import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
 import { NModal, NTabPane, NTabs } from "naive-ui"
@@ -74,26 +69,3 @@ const showDetails = ref(false)
 const timelineDetailsInfo = computed(() => _omit(timelineData.value, ["_source"]))
 const timelineDetailsSource = computed(() => timelineData.value?._source)
 </script>
-
-<style lang="scss" scoped>
-.alert-timeline-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
-
-	.main-box {
-		.content {
-			word-break: break-word;
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
-	}
-}
-</style>

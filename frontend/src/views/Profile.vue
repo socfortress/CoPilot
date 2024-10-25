@@ -14,7 +14,7 @@
 						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()" />
 					</ImageCropper>
 				</div>
-				<div class="info grow flex flex-col justify-center">
+				<div class="info flex grow flex-col justify-center">
 					<div class="name">
 						<h1>{{ userName }}</h1>
 					</div>
@@ -157,9 +157,6 @@ function setCroppedImage(result: ImageCropperResult) {
 					.edit {
 						display: flex;
 					}
-				}
-				.actions {
-					// display: none;
 				}
 			}
 		}

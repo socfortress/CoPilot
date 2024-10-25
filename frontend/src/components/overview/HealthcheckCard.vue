@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsMulti title="Healthcheck" hovered class="cursor-pointer h-full" :values @click="gotoHealthcheck()">
+		<CardStatsMulti title="Healthcheck" hovered class="h-full cursor-pointer" :values @click="gotoHealthcheck()">
 			<template #icon>
 				<CardStatsIcon
 					:icon-name="HealthcheckIcon"
@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 import Api from "@/api"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
-import CardStatsMulti, { type ItemProps } from "@/components/common/CardStatsMulti.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
+import CardStatsMulti, { type ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
 import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"

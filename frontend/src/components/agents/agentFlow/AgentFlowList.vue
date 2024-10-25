@@ -1,14 +1,14 @@
 <template>
 	<n-spin :show="loading">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<div class="box">
 					Total:
 					<code>{{ flowList.length }}</code>
 				</div>
 			</div>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="flowList.length">
 				<AgentFlowItem
 					v-for="item of flowList"
@@ -19,7 +19,7 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 	</n-spin>
@@ -64,6 +64,11 @@ function getData() {
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+
+			// MOCK
+			/*
+			flowList.value = flow_results
+			*/
 		})
 		.finally(() => {
 			loading.value = false
@@ -74,10 +79,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

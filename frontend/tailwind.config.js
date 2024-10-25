@@ -18,7 +18,40 @@ export default {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
 	darkMode: ["class"],
 	theme: {
+		fontFamily: {
+			sans: ["var(--font-family)", "sans-serif"],
+			serif: ["var(--font-family-display)", "serif"],
+			display: ["var(--font-family-display)", "serif"],
+			mono: ["var(--font-family-mono)", "monospace"]
+		},
 		extend: {
+			colors: {
+				primary: "var(--primary-color)"
+			},
+			animation: {
+				fade: "fade 0.3s forwards"
+			},
+			keyframes: {
+				fade: {
+					from: { opacity: 0 },
+					to: { opacity: 1 }
+				}
+			},
+			backgroundColor: {
+				default: "var(--bg-color)",
+				secondary: "var(--bg-secondary-color)"
+			},
+			textColor: {
+				default: "var(--fg-color)",
+				secondary: "var(--fg-secondary-color)",
+				warning: "var(--warning-color)",
+				error: "var(--error-color)",
+				success: "var(--success-color)"
+			},
+			borderRadius: {
+				default: "var(--border-radius)",
+				small: "var(--border-radius-small)"
+			},
 			screens: {
 				xs: "460px"
 			},
@@ -37,6 +70,7 @@ export default {
 			},
 			maxHeight: {
 				"50vh": "50vh",
+				106: "26.5rem",
 				150: "37.5rem"
 			},
 			maxWidth: {
@@ -63,6 +97,7 @@ export default {
 		"basis-1/5"
 	],
 	plugins: [
+		require("@tailwindcss/container-queries"),
 		plugin(({ addBase, theme }) => {
 			addBase({
 				h1: {

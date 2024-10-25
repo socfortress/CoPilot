@@ -1,12 +1,12 @@
 <template>
-	<div class="alert-actions flex gap-4 justify-end">
+	<div class="contents">
 		<n-button
 			v-if="networkConnector.deployed"
 			:loading="loadingDecommission"
 			type="error"
 			:size="size"
 			secondary
-			@click="decommissionNetworkConnector()"
+			@click.stop="decommissionNetworkConnector()"
 		>
 			<template #icon>
 				<Icon :name="DecommissionIcon"></Icon>
@@ -20,7 +20,7 @@
 			type="success"
 			:size="size"
 			secondary
-			@click="showFortinetForm = true"
+			@click.stop="showFortinetForm = true"
 		>
 			<template #icon>
 				<Icon :name="DeployIcon"></Icon>
@@ -34,7 +34,7 @@
 			type="error"
 			ghost
 			:loading="loadingDelete"
-			@click="handleDelete"
+			@click.stop="handleDelete"
 		>
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -62,7 +62,7 @@
 						type="success"
 						secondary
 						:disabled="!isFortinetFormValid"
-						@click="fortinetProvision()"
+						@click.stop="fortinetProvision()"
 					>
 						<template #icon>
 							<Icon :name="DeployIcon"></Icon>

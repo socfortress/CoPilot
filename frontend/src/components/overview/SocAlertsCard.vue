@@ -5,7 +5,7 @@
 			:value="total"
 			:vertical="vertical"
 			hovered
-			class="cursor-pointer h-full"
+			class="h-full cursor-pointer"
 			@click="gotoSocAlerts()"
 		>
 			<template #icon>
@@ -18,8 +18,8 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import Api from "@/api"
-import CardStats from "@/components/common/CardStats.vue"
-import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
+import CardStats from "@/components/common/cards/CardStats.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs } from "vue"

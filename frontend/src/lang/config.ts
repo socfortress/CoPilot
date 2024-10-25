@@ -1,7 +1,7 @@
 import * as locales from "."
 
-export type Locales = keyof typeof locales
-export type MessageSchema = (typeof locales)[Locales]
+export type Locale = keyof typeof locales
+export type MessageSchema = (typeof locales)[Locale]
 
 export function getI18NConf() {
 	// @ts-expect-error "locales" don't match with  [key: string]: { default: MessageSchema } }
@@ -13,7 +13,7 @@ export function getI18NConf() {
 			return acc
 		},
 		{}
-	) as { [key in Locales]: MessageSchema }
+	) as { [key in Locale]: MessageSchema }
 
 	return {
 		legacy: false,

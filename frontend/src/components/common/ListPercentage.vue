@@ -1,9 +1,9 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<n-empty v-if="!list.length" description="No items found" class="justify-center h-48" />
+		<n-empty v-if="!list.length" description="No items found" class="h-48 justify-center" />
 
-		<div class="flex gap-4 justify-between items-center list-header font-mono text-secondary-color text-sm">
-			<div class="basis-2/3 truncate borde">
+		<div class="list-header text-secondary flex items-center justify-between gap-4 font-mono text-sm">
+			<div class="borde basis-2/3 truncate">
 				{{ labelKey }}
 			</div>
 			<div class="grow">
@@ -13,7 +13,7 @@
 		<div
 			v-for="item of list"
 			:key="item[labelKey as keyof typeof item]"
-			class="flex gap-4 justify-between items-center"
+			class="flex items-center justify-between gap-4"
 		>
 			<div class="basis-2/3 truncate font-mono">
 				{{ item[labelKey as keyof typeof item] }}

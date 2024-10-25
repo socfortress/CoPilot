@@ -1,10 +1,10 @@
 <template>
 	<div class="alerts-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2 lg:!hidden">
+			<div class="info flex grow gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -17,22 +17,22 @@
 							Total :
 							<code>{{ total }}</code>
 						</div>
-						<div class="box text-error-color">
+						<div class="box text-error">
 							Open :
 							<code>{{ statusOpenTotal }}</code>
 						</div>
-						<div class="box text-warning-color">
+						<div class="box text-warning">
 							In Progress :
 							<code>{{ statusInProgressTotal }}</code>
 						</div>
-						<div class="box text-success-color">
+						<div class="box text-success">
 							Close :
 							<code>{{ statusCloseTotal }}</code>
 						</div>
 					</div>
 				</n-popover>
 			</div>
-			<div class="info grow lg:flex gap-1 hidden text-sm items-center">
+			<div class="info hidden grow items-center gap-1 text-sm lg:flex">
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
 					<div class="flex items-center gap-2">
 						<span>Total</span>
@@ -43,7 +43,7 @@
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
 					<div class="flex items-center gap-2">
 						<span>Open</span>
-						<code class="py-1 text-error-color">{{ statusOpenTotal }}</code>
+						<code class="text-error py-1">{{ statusOpenTotal }}</code>
 					</div>
 				</n-button>
 				<span>/</span>
@@ -54,14 +54,14 @@
 				>
 					<div class="flex items-center gap-2">
 						<span>In Progress</span>
-						<code class="py-1 text-warning-color">{{ statusInProgressTotal }}</code>
+						<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
 					</div>
 				</n-button>
 				<span>/</span>
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
 					<div class="flex items-center gap-2">
 						<span>Close</span>
-						<code class="py-1 text-success-color">{{ statusCloseTotal }}</code>
+						<code class="text-success py-1">{{ statusCloseTotal }}</code>
 					</div>
 				</n-button>
 			</div>
@@ -104,7 +104,7 @@
 		</div>
 
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsList.length">
 					<AlertItem
 						v-for="alert of alertsList"
@@ -119,7 +119,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -339,11 +339,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .alerts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-
 	.filters-box {
 		overflow: hidden;
 		display: grid;

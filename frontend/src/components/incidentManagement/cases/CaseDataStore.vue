@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow min-h-48" content-class="flex flex-col grow gap-4">
+	<n-spin :show="loading" class="flex min-h-48 grow flex-col" content-class="flex flex-col grow gap-4">
 		<div>
 			<n-collapse-transition :show="!showUploadForm">
 				<n-button v-if="dataStore.length" :loading="uploading" type="primary" @click="openUploadForm()">

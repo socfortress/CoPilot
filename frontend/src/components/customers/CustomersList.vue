@@ -1,6 +1,6 @@
 <template>
 	<div class="customers-list">
-		<div class="header mb-4 flex gap-2 justify-between items-center">
+		<div class="header mb-4 flex items-center justify-between gap-2">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
@@ -10,7 +10,7 @@
 			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="customersList.length">
 					<CustomerItem
 						v-for="customer of customersList"
@@ -23,7 +23,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingCustomers" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingCustomers" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -116,12 +116,3 @@ onBeforeMount(() => {
 	getCustomers()
 })
 </script>
-
-<style lang="scss" scoped>
-.customers-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="loading">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -36,7 +36,7 @@
 			<n-select v-if="!compactMode" v-model:value="timerange" size="small" :options="timeOptions" class="!w-32" />
 			<n-popover v-if="compactMode" overlap placement="right">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-button size="small">
 							<template #icon>
 								<Icon :name="FilterIcon"></Icon>
@@ -45,12 +45,12 @@
 					</div>
 				</template>
 				<div class="mb-2">
-					<div class="text-secondary-color text-sm my-1">Time range:</div>
-					<n-select v-model:value="timerange" size="small" :options="timeOptions" class="!w-32 mb-1" />
+					<div class="text-secondary my-1 text-sm">Time range:</div>
+					<n-select v-model:value="timerange" size="small" :options="timeOptions" class="mb-1 !w-32" />
 				</div>
 			</n-popover>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="my-3 flex min-h-28 flex-col gap-2">
 			<template v-if="alertsEvents.length">
 				<AlertsEventItem
 					v-for="alertsEvent of alertsEvents"
@@ -60,7 +60,7 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
@@ -207,12 +207,9 @@ watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
 
 onBeforeMount(() => {
 	getData(currentPage.value, pageSize.value, timerange.value)
+	// MOCK
+	/*
+	alertsEvents.value = alerts_event_element
+	*/
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

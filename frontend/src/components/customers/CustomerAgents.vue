@@ -5,13 +5,13 @@
 				v-for="agent in list"
 				:key="agent.agent_id"
 				:agent="agent"
-				bg-secondary
+				embedded
 				show-actions
 				class="item-appear item-appear-bottom item-appear-005"
 				@delete="getAgents()"
 				@click="gotoAgent(agent.agent_id)"
 			/>
-			<n-empty v-if="!list.length" description="No Agents found" class="justify-center h-48" />
+			<n-empty v-if="!list.length" description="No Agents found" class="h-48 justify-center" />
 		</div>
 	</n-spin>
 </template>

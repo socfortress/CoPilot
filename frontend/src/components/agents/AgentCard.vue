@@ -1,98 +1,94 @@
 <template>
-	<n-card
-		class="agent-card py-3 px-4"
-		:class="{ critical: agent.critical_asset, 'bg-secondary': bgSecondary }"
-		content-style="padding:0"
-		bordered
-	>
-		<n-spin :show="loading">
-			<div class="wrapper">
-				<div class="agent-header">
-					<div class="title">
+	<CardEntity class="agent-card" :loading :embedded :hoverable :clickable :class="{ critical: agent.critical_asset }">
+		<div class="wrapper">
+			<div class="agent-header">
+				<div class="title">
+					<n-tooltip>
+						{{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
+						<template #trigger>
+							<div class="hostname" :class="{ online: isOnline }">
+								{{ agent.hostname }}
+							</div>
+						</template>
+					</n-tooltip>
+					<div class="critical" :class="{ active: agent.critical_asset }">
 						<n-tooltip>
-							{{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
+							Toggle Critical Assets
 							<template #trigger>
-								<div class="hostname" :class="{ online: isOnline }">
-									{{ agent.hostname }}
-								</div>
-							</template>
-						</n-tooltip>
-						<div class="critical" :class="{ active: agent.critical_asset }">
-							<n-tooltip>
-								Toggle Critical Assets
-								<template #trigger>
-									<n-button
-										quaternary
-										circle
-										:type="agent.critical_asset ? 'warning' : 'default'"
-										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-									>
-										<template #icon>
-											<Icon :name="StarIcon"></Icon>
-										</template>
-									</n-button>
-								</template>
-							</n-tooltip>
-						</div>
-						<div v-show="agent.quarantined" class="quarantined">
-							<n-tooltip>
-								Quarantined
-								<template #trigger>
-									<Icon :name="QuarantinedIcon" :size="18"></Icon>
-								</template>
-							</n-tooltip>
-						</div>
-					</div>
-					<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
-				</div>
-				<div class="agent-info">
-					<div class="os" :title="agent.os">
-						{{ agent.os }}
-					</div>
-					<div class="ip-address" :title="agent.ip_address">
-						{{ agent.ip_address }}
-					</div>
-				</div>
-
-				<div v-if="showActions" class="agent-actions">
-					<div class="box">
-						<n-tooltip>
-							Delete
-							<template #trigger>
-								<n-button quaternary circle type="error" @click.stop="handleDelete">
+								<n-button
+									quaternary
+									circle
+									:type="agent.critical_asset ? 'warning' : 'default'"
+									@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+								>
 									<template #icon>
-										<Icon :name="DeleteIcon"></Icon>
+										<Icon :name="StarIcon"></Icon>
 									</template>
 								</n-button>
 							</template>
 						</n-tooltip>
 					</div>
+					<div v-show="agent.quarantined" class="quarantined">
+						<n-tooltip>
+							Quarantined
+							<template #trigger>
+								<Icon :name="QuarantinedIcon" :size="18"></Icon>
+							</template>
+						</n-tooltip>
+					</div>
+				</div>
+				<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
+			</div>
+			<div class="agent-info">
+				<div class="os" :title="agent.os">
+					{{ agent.os }}
+				</div>
+				<div class="ip-address" :title="agent.ip_address">
+					{{ agent.ip_address }}
 				</div>
 			</div>
-		</n-spin>
-	</n-card>
+
+			<div v-if="showActions" class="agent-actions">
+				<div class="box">
+					<n-tooltip>
+						Delete
+						<template #trigger>
+							<n-button quaternary circle type="error" @click.stop="handleDelete">
+								<template #icon>
+									<Icon :name="DeleteIcon"></Icon>
+								</template>
+							</n-button>
+						</template>
+					</n-tooltip>
+				</div>
+			</div>
+		</div>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { type Agent, AgentStatus } from "@/types/agents.d"
 import dayjs from "@/utils/dayjs"
-import { NButton, NCard, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import { handleDeleteAgent, toggleAgentCritical } from "./utils"
 
 const props = defineProps<{
 	agent: Agent
 	showActions?: boolean
-	bgSecondary?: boolean
+	embedded?: boolean
+	hoverable?: boolean
+	clickable?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: "delete"): void
 }>()
 
-const { agent, showActions, bgSecondary } = toRefs(props)
+const { agent, showActions, embedded, hoverable, clickable } = toRefs(props)
 
 const QuarantinedIcon = "ph:seal-warning-light"
 const StarIcon = "carbon:star"
@@ -149,15 +145,6 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 <style lang="scss" scoped>
 .agent-card {
 	container-type: inline-size;
-	overflow: hidden;
-	max-width: 100%;
-	box-sizing: border-box;
-	cursor: pointer;
-	transition: all 0.3s;
-
-	&.bg-secondary {
-		background-color: var(--bg-secondary-color);
-	}
 
 	.wrapper {
 		display: flex;
@@ -240,10 +227,6 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 		.agent-actions {
 			display: flex;
 		}
-	}
-
-	&:hover {
-		border-color: var(--primary-color);
 	}
 
 	&.critical {

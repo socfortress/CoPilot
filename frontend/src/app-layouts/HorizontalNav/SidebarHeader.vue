@@ -54,7 +54,7 @@ const isLight = computed(() => themeStore.isThemeLight)
 </script>
 
 <style lang="scss" scoped>
-@import "./variables";
+@import "variables";
 
 .sidebar-header {
 	height: var(--toolbar-height);

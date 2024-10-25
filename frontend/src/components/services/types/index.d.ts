@@ -1,4 +1,5 @@
 export type ServiceItemType = "integration" | "network-connector"
+
 export interface ServiceItemData {
 	id: number
 	name: string

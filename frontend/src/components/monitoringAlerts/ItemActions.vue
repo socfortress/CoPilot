@@ -1,12 +1,12 @@
 <template>
-	<div class="alert-actions flex flex-col gap-3 justify-center" :class="{ '!flex-row': inline }">
-		<n-button :loading="loadingInvoke" type="success" secondary :size="size" @click="invoke()">
+	<div class="contents">
+		<n-button :loading="loadingInvoke" type="success" secondary :size="size" @click.stop="invoke()">
 			<template #icon>
 				<Icon :name="InvokeIcon"></Icon>
 			</template>
 			Invoke
 		</n-button>
-		<n-button :loading="loadingDelete" :size="size" type="error" secondary @click="handleDelete()">
+		<n-button :loading="loadingDelete" :size="size" type="error" secondary @click.stop="handleDelete()">
 			<template #icon>
 				<Icon :name="DeleteIcon"></Icon>
 			</template>
@@ -23,10 +23,9 @@ import Icon from "@/components/common/Icon.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 
-const { alert, size, inline } = defineProps<{
+const { alert, size } = defineProps<{
 	alert: MonitoringAlert
 	size?: Size
-	inline?: boolean
 }>()
 
 const emit = defineEmits<{

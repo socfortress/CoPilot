@@ -1,24 +1,29 @@
 <template>
-	<div class="collect-item flex flex-wrap gap-2 p-2" :class="{ embedded }">
-		<KVCard v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
-			<template #key>
-				{{ prop.key }}
-			</template>
-			<template #value>
-				{{ prop.value }}
-			</template>
-		</KVCard>
-		<KVCard class="more" @click="showDetails = true">
-			<template #value>
-				<div class="h-full w-full flex items-center text-center justify-center">view more...</div>
-			</template>
-		</KVCard>
+	<div>
+		<CardEntity :embedded hoverable size="small">
+			<div class="collect-item grid-auto-fit-200 grid gap-2">
+				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
+					<template #key>
+						{{ prop.key }}
+					</template>
+					<template #value>
+						{{ prop.value }}
+					</template>
+				</CardKV>
+				<CardKV class="hover:!border-primary cursor-pointer" @click="showDetails = true">
+					<template #value>
+						<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
+					</template>
+				</CardKV>
+			</div>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			:bordered="false"
+			title="Collected Item"
 		>
 			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initial-expanded-depth="2" />
 		</n-modal>
@@ -27,7 +32,8 @@
 
 <script setup lang="ts">
 import type { CollectResult } from "@/types/artifacts.d"
-import KVCard from "@/components/common/KVCard.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
@@ -36,7 +42,7 @@ import _isString from "lodash/isString"
 import { NModal } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
-import "@/assets/scss/vuesjv-override.scss"
+import "@/assets/scss/overrides/vuesjv-override.scss"
 
 interface Prop {
 	key: string
@@ -68,15 +74,17 @@ onBeforeMount(() => {
 		}
 
 		if (prop.value && typeof prop.value === "string") {
-			prop.value = dayjs(value).isValid() ? formatDate(value, dFormats.datetimesec).toString() : value.toString()
+			prop.value = dayjs(prop.value).isValid()
+				? formatDate(prop.value, dFormats.datetimesec).toString()
+				: prop.value
 		}
 
 		if (prop.value && typeof prop.value === "number") {
 			const numText = prop.value.toString()
 
 			if (numText.length === 10 || numText.length === 13) {
-				if (dayjs(value).isValid()) {
-					prop.value = formatDate(value, dFormats.datetimesec).toString()
+				if (dayjs(prop.value).isValid()) {
+					prop.value = formatDate(prop.value, dFormats.datetimesec).toString()
 				}
 			}
 		}
@@ -97,34 +105,8 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .collect-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-	min-height: 160px;
-	max-width: 100%;
-	overflow: hidden;
-
-	.kv-card {
-		&.more {
-			cursor: pointer;
-			transition: all 0.2s;
-
-			&:hover {
-				border-color: var(--primary-color);
-			}
-		}
-	}
-
-	&:hover {
-		border-color: var(--primary-color);
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
 	@container (max-width: 500px) {
+		display: flex;
 		flex-direction: column;
 
 		.hide-mobile {

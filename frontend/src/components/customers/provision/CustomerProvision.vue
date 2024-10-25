@@ -30,15 +30,15 @@
 					</n-button>
 				</div>
 
-				<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-					<KVCard v-for="(value, key) of customerMeta" :key="key">
+				<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<CardKV v-for="(value, key) of customerMeta" :key="key">
 						<template #key>
 							{{ key }}
 						</template>
 						<template #value>
 							{{ value || "-" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 		</transition>
@@ -48,8 +48,8 @@
 <script setup lang="ts">
 import type { CustomerMeta } from "@/types/customers.d"
 import Api from "@/api"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"

@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading" class="active-response-wizard">
 		<div class="wrapper flex flex-col">
-			<div class="grow flex flex-col">
+			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
 						<n-steps :current="current" size="small" :status="currentStatus">
@@ -12,48 +12,54 @@
 					</div>
 				</n-scrollbar>
 
-				<div class="mt-4 grow flex flex-col">
+				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="px-7 flex flex-col gap-2">
-							<div class="os-button" @click="setOs('linux')">
-								<Icon :size="18" :name="iconFromOs('linux')"></Icon>
-								<span>LINUX</span>
-							</div>
-							<div class="os-button" @click="setOs('windows')">
-								<Icon :size="18" :name="iconFromOs('windows')"></Icon>
-								<span>WINDOWS</span>
-							</div>
-							<div class="os-button" @click="setOs('macos')">
-								<Icon :size="18" :name="iconFromOs('macos')"></Icon>
-								<span>MACOS</span>
-							</div>
+						<div v-if="current === 1" class="flex flex-col gap-2 px-7">
+							<CardEntity embedded hoverable clickable @click.stop="setOs('linux')">
+								<div class="flex items-center gap-3">
+									<Icon :size="18" :name="iconFromOs('linux')"></Icon>
+									<span>LINUX</span>
+								</div>
+							</CardEntity>
+							<CardEntity embedded hoverable clickable @click.stop="setOs('windows')">
+								<div class="flex items-center gap-3">
+									<Icon :size="18" :name="iconFromOs('windows')"></Icon>
+									<span>WINDOWS</span>
+								</div>
+							</CardEntity>
+							<CardEntity embedded hoverable clickable @click.stop="setOs('macos')">
+								<div class="flex items-center gap-3">
+									<Icon :size="18" :name="iconFromOs('macos')"></Icon>
+									<span>MACOS</span>
+								</div>
+							</CardEntity>
 						</div>
 
 						<div v-else-if="current === 2" class="px-7">
 							<n-spin :show="loadingActiveResponse">
-								<div class="list">
+								<div class="flex flex-col gap-2">
 									<template v-if="activeResponseFiltered.length">
 										<ActiveResponseItem
 											v-for="activeResponse of activeResponseFiltered"
 											:key="activeResponse.name"
 											:active-response="activeResponse"
 											embedded
+											clickable
 											hide-actions
-											class="mb-2 cursor-pointer"
-											@click="setActiveResponse(activeResponse)"
+											@click.stop="setActiveResponse(activeResponse)"
 										/>
 									</template>
 									<template v-else>
 										<n-empty
 											v-if="!loadingActiveResponse"
 											description="No items found"
-											class="justify-center h-48"
+											class="h-48 justify-center"
 										/>
 									</template>
 								</div>
 							</n-spin>
 						</div>
-						<div v-else-if="current === 3" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
+						<div v-else-if="current === 3" class="flex grow flex-col px-7 pb-7" style="min-height: 401px">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
 								:active-response="selectedActiveResponse"
@@ -63,7 +69,7 @@
 								@stop-loading="loadingActiveResponseInvoke = false"
 							>
 								<template #additionalActions>
-									<n-button :disabled="loadingActiveResponseInvoke" @click="prev()">
+									<n-button :disabled="loadingActiveResponseInvoke" @click.stop="prev()">
 										<template #icon>
 											<Icon :name="ArrowLeftIcon"></Icon>
 										</template>
@@ -78,15 +84,15 @@
 
 			<div v-if="current !== 3" class="flex justify-between gap-4 p-7 pt-4">
 				<div class="flex gap-4">
-					<slot name="additionalActions"></slot>
-				</div>
-				<div class="flex gap-4">
-					<n-button v-if="isPrevStepEnabled" @click="prev()">
+					<n-button v-if="isPrevStepEnabled" @click.stop="prev()">
 						<template #icon>
 							<Icon :name="ArrowLeftIcon"></Icon>
 						</template>
 						Prev
 					</n-button>
+				</div>
+				<div class="flex gap-4">
+					<slot name="additionalActions"></slot>
 				</div>
 			</div>
 		</div>
@@ -97,6 +103,7 @@
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { OsTypesLower } from "@/types/common.d"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
 import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
@@ -209,20 +216,6 @@ onMounted(() => {
 .active-response-wizard {
 	.wrapper {
 		min-height: 480px;
-	}
-
-	.os-button {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-secondary-color);
-		border: var(--border-small-050);
-		transition: all 0.2s var(--bezier-ease);
-		cursor: pointer;
-		line-height: 1;
-		@apply p-4 flex gap-3 items-center;
-
-		&:hover {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-		}
 	}
 
 	.slide-form-right-enter-active,

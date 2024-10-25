@@ -23,7 +23,7 @@
 				<div class="description">
 					{{ item.description }}
 				</div>
-				<div class="footer flex justify-between items-center">
+				<div class="footer flex items-center justify-between">
 					<div class="date">
 						{{ formatDatetime(item.date) }}
 					</div>
@@ -37,7 +37,7 @@
 			</div>
 		</div>
 		<slot name="last" />
-		<n-empty v-if="!list.length" description="There is no notification" class="justify-center h-48" />
+		<n-empty v-if="!list.length" description="There is no notification" class="h-48 justify-center" />
 	</n-scrollbar>
 </template>
 

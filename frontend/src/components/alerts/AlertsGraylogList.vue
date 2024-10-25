@@ -1,10 +1,10 @@
 <template>
 	<div class="alerts-list">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -24,7 +24,7 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="actions flex gap-2 items-center">
+			<div class="actions flex items-center gap-2">
 				<n-button size="small" @click="showFiltersDrawer = true">
 					<template #icon>
 						<Icon :name="FilterIcon" :size="15"></Icon>
@@ -37,7 +37,7 @@
 		<n-spin :show="loading">
 			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
@@ -47,7 +47,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -68,10 +68,6 @@
 </template>
 
 <script setup lang="ts">
-// MOCK
-// import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts.d"
-
 import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import type { SocAlertField } from "./type.d"
@@ -167,7 +163,9 @@ provide<SocAlertField>("soc-alert-creation-field", "alert_id")
 onBeforeMount(() => {
 	nextTick(() => {
 		// MOCK
-		// alertsSummaryList.value = alerts_summary as AlertsSummary[]
+		/*
+		alertsSummaryList.value = alerts_summary
+		*/
 		startSearch()
 	})
 })
@@ -184,12 +182,3 @@ onBeforeUnmount(() => {
 	cancelSearch()
 })
 </script>
-
-<style lang="scss" scoped>
-.alerts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

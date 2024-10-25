@@ -1,12 +1,12 @@
 <template>
 	<div v-if="sourceConfiguration" class="flex flex-col gap-3">
-		<KVCard v-if="showSource">
+		<CardKV v-if="showSource">
 			<template #key>Source</template>
 			<template #value>
 				{{ sourceConfiguration.source }}
 			</template>
-		</KVCard>
-		<KVCard>
+		</CardKV>
+		<CardKV>
 			<template #key>Field names</template>
 			<template #value>
 				<div class="flex flex-wrap gap-2">
@@ -17,32 +17,32 @@
 					</Badge>
 				</div>
 			</template>
-		</KVCard>
-		<KVCard>
+		</CardKV>
+		<CardKV>
 			<template #key>Asset name</template>
 			<template #value>
 				{{ sourceConfiguration.asset_name }}
 			</template>
-		</KVCard>
-		<KVCard>
+		</CardKV>
+		<CardKV>
 			<template #key>Timefield name</template>
 			<template #value>
 				{{ sourceConfiguration.timefield_name }}
 			</template>
-		</KVCard>
-		<KVCard>
+		</CardKV>
+		<CardKV>
 			<template #key>Alert title name</template>
 			<template #value>
 				{{ sourceConfiguration.alert_title_name }}
 			</template>
-		</KVCard>
+		</CardKV>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { SourceConfiguration } from "@/types/incidentManagement/sources.d"
 import Badge from "@/components/common/Badge.vue"
-import KVCard from "@/components/common/KVCard.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 
 const { sourceConfiguration, showSource } = defineProps<{
 	sourceConfiguration: SourceConfiguration

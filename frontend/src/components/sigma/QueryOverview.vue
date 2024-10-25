@@ -1,11 +1,11 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
-		<div class="flex flex-col gap-4 grow justify-between">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="px-7 flex sm:!flex-row flex-col gap-4">
-					<KVCard :color="query.active ? 'success' : undefined" size="lg" class="grow w-full">
+				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
+					<CardKV :color="query.active ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<Icon :name="query.active ? EnabledIcon : DisabledIcon" />
 								<span>Status</span>
 							</div>
@@ -18,7 +18,7 @@
 									@updated="updateQuery($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingActive,
 											'cursor-pointer': !loadingActive
@@ -37,11 +37,11 @@
 								</QueryActiveForm>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard size="lg" class="grow w-full">
+					<CardKV size="lg" class="w-full grow">
 						<template #key>
-							<div class="flex gap-2 items-center">
+							<div class="flex items-center gap-2">
 								<Icon :name="TimeIntervalIcon" />
 								<span>Time Interval</span>
 							</div>
@@ -54,7 +54,7 @@
 									@updated="updateQuery($event)"
 								>
 									<div
-										class="flex gap-3 items-center"
+										class="flex items-center gap-3"
 										:class="{
 											'cursor-not-allowed': loadingTimeInterval,
 											'cursor-pointer': !loadingTimeInterval
@@ -73,20 +73,20 @@
 								</QueryTimeIntervalForm>
 							</div>
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
 				<div class="px-7">
-					<KVCard>
+					<CardKV>
 						<template #key>name</template>
 						<template #value>
 							{{ query.rule_name ?? "-" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
-					<KVCard>
+				<div class="grid-auto-fit-250 grid gap-2 px-7">
+					<CardKV>
 						<template #key>last execution time</template>
 						<template #value>
 							{{
@@ -95,18 +95,18 @@
 									: "n/d"
 							}}
 						</template>
-					</KVCard>
+					</CardKV>
 
-					<KVCard>
+					<CardKV>
 						<template #key>last updated</template>
 						<template #value>
 							{{ query.last_updated ? formatDate(query.last_updated, dFormats.datetimesec) : "n/d" }}
 						</template>
-					</KVCard>
+					</CardKV>
 				</div>
 			</div>
 
-			<div class="footer-box px-7 py-4 flex items-center gap-2">
+			<div class="footer-box flex items-center gap-2 px-7 py-4">
 				<div class="grow"></div>
 
 				<QueryDeleteOne
@@ -128,8 +128,8 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { NButton, NSpin } from "naive-ui"

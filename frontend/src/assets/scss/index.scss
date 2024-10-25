@@ -1,13 +1,13 @@
+@use "sass:meta";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import "_variables";
-@import "common";
-@import "helpers";
-@import "fonts";
-@import "router-animations";
-@import "naive-override";
+@include meta.load-css("fonts");
+@include meta.load-css("common");
+@include meta.load-css("common-animations");
+@include meta.load-css("router-animations");
+@include meta.load-css("overrides/naive-override");
 
 html,
 body {
@@ -26,9 +26,9 @@ body {
 	box-sizing: border-box;
 
 	width: 100vw;
-	width: 100svw;
+	width: 100dvw;
 	height: 100vh;
-	height: 100svh;
+	height: 100dvh;
 	overflow: hidden;
 
 	&:focus {

@@ -1,10 +1,10 @@
 <template>
 	<n-spin :show="loading">
 		<div class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-5">
+			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -29,7 +29,7 @@
 				style="width: 110px"
 			/>
 		</div>
-		<div class="list flex flex-col gap-2 my-3">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="itemsPaginated.length">
 				<EventItem
 					v-for="event of itemsPaginated"
@@ -39,7 +39,7 @@
 				/>
 			</template>
 			<template v-else>
-				<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
 	</n-spin>
@@ -141,10 +141,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

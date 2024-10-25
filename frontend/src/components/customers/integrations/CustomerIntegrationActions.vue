@@ -1,20 +1,13 @@
 <template>
-	<div class="alert-actions flex gap-4 justify-end">
-		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size="size" secondary @click="provision()">
+	<div class="contents">
+		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size secondary @click.stop="provision()">
 			<template #icon>
 				<Icon :name="DeployIcon"></Icon>
 			</template>
 			Deploy
 		</n-button>
 
-		<n-button
-			v-if="!hideDeleteButton"
-			:size="size"
-			type="error"
-			ghost
-			:loading="loadingDelete"
-			@click="handleDelete"
-		>
+		<n-button v-if="!hideDeleteButton" :size type="error" ghost :loading="loadingDelete" @click.stop="handleDelete">
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15"></Icon>
 			</template>

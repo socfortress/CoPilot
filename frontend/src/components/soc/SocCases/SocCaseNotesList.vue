@@ -3,12 +3,12 @@
 		<div class="px-7 pt-4">
 			<n-input v-model:value="notesFilter" placeholder="Search notes..." clearable />
 		</div>
-		<n-spin :show="loadingNotes" style="min-height: 100px">
-			<div v-if="notesList?.length" class="p-7 pt-3 flex flex-col gap-2" style="container-type: inline-size">
+		<n-spin :show="loadingNotes" class="min-h-28">
+			<div v-if="notesList?.length" class="flex flex-col gap-2 p-7 pt-3" style="container-type: inline-size">
 				<SocCaseNote v-for="note of notesList" :key="note.note_id" :note="note" />
 			</div>
 			<template v-else>
-				<n-empty v-if="!loadingNotes" description="No items found" class="justify-center h-48" />
+				<n-empty v-if="!loadingNotes" description="No items found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
 	</div>

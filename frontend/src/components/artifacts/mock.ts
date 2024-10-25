@@ -1,4 +1,6 @@
-const collectResult = [
+import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts.d"
+
+export const collectResult: CollectResult[] = [
 	{
 		Pid: 928,
 		Name: "svchost.exe",
@@ -872,7 +874,7 @@ const collectResult = [
 	}
 ]
 
-const commandResult = [
+export const commandResult: CommandResult[] = [
 	{
 		Stdout: "\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\Administrator\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-500\r\nFullName    : \r\nName        : Administrator\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\DefaultAccount\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-503\r\nFullName    : \r\nName        : DefaultAccount\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\Guest\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-501\r\nFullName    : \r\nName        : Guest\r\n\r\nAccountType : 512\r\nCaption     : WIN-HFOU106TD7K\\WDAGUtilityAccount\r\nDomain      : WIN-HFOU106TD7K\r\nSID         : S-1-5-21-1287727892-3649796646-2502983199-504\r\nFullName    : \r\nName        : WDAGUtilityAccount\r\n\r\n\r\n\r\n",
 		Stderr: '#< CLIXML\r\n<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>',
@@ -881,7 +883,7 @@ const commandResult = [
 	}
 ]
 
-const quarantineResult = [
+export const quarantineResult: QuarantineResult[] = [
 	{
 		Time: "2023-11-14T21:03:03Z",
 		Result: "VelociraptorQuarantine IPSec policy removed."
@@ -936,4 +938,17 @@ const quarantineResult = [
 	}
 ]
 
-export { collectResult, commandResult, quarantineResult }
+export const artifact_list: Artifact[] = [
+	{
+		description: "This artifact contains the initial data collected from the user session.",
+		name: "session_data_artifact"
+	},
+	{
+		description: "This artifact stores the processed results after the data flow execution.",
+		name: "processed_results_artifact"
+	},
+	{
+		description: "This artifact includes the logs generated during the data collection process.",
+		name: "logs_artifact"
+	}
+]

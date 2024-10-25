@@ -1,10 +1,10 @@
 <template>
 	<div class="artifacts-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -31,7 +31,7 @@
 			/>
 			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge
 							:show="!!lastFilters.hostname || !!lastFilters.os"
 							dot
@@ -46,7 +46,7 @@
 						</n-badge>
 					</div>
 				</template>
-				<div class="py-1 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
 						<n-input-group class="artifacts-list-filter-combo" :class="{ 'filters-active': filterType }">
 							<n-select
@@ -90,7 +90,7 @@
 							/>
 						</n-input-group>
 					</div>
-					<div class="px-3 flex justify-end gap-2">
+					<div class="flex justify-end gap-2 px-3">
 						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
 						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
@@ -98,7 +98,7 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="artifactsList.length">
 					<ArtifactItem
 						v-for="artifact of itemsPaginated"
@@ -108,7 +108,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -224,6 +224,11 @@ function getData(cb?: (artifacts: Artifact[]) => void) {
 		.catch(err => {
 			artifactsList.value = []
 
+			// MOCK
+			/*
+			artifactsList.value = artifact_list
+			*/
+
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
@@ -290,15 +295,6 @@ onBeforeMount(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.artifacts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>
 
 <style lang="scss">
 .artifacts-list-filter-combo {

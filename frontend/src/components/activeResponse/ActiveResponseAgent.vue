@@ -1,7 +1,7 @@
 <template>
 	<div class="active-response-list">
 		<n-spin :show="loadingActiveResponse">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="activeResponseList.length">
 					<ActiveResponseItem
 						v-for="activeResponse of activeResponseList"
@@ -13,7 +13,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loadingActiveResponse" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loadingActiveResponse" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>
@@ -48,6 +48,10 @@ function getAvailableIntegrations() {
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
+			// MOCK
+			/*
+			activeResponseList.value = supported_active_response
+			*/
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
@@ -61,12 +65,3 @@ onBeforeMount(() => {
 	getAvailableIntegrations()
 })
 </script>
-
-<style lang="scss" scoped>
-.active-response-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

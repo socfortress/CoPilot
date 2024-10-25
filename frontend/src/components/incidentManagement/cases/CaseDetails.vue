@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
 		<n-tabs
 			v-if="caseEntity"
 			type="line"
@@ -8,13 +8,13 @@
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
-			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
+			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 				<div class="pt-1">
 					<CaseOverview :case-data="caseEntity" @updated="updateCase($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
-				<div class="p-7 pt-4 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 p-7 pt-4">
 					<template v-if="caseEntity.alerts.length">
 						<AlertItem
 							v-for="alert of caseEntity.alerts"
@@ -26,7 +26,7 @@
 						/>
 					</template>
 					<template v-else>
-						<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+						<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 					</template>
 				</div>
 			</n-tab-pane>

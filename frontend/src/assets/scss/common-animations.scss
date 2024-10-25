@@ -1,0 +1,45 @@
+.item-appear {
+	&.item-appear-bottom {
+		animation: item-fade-bottom 0.3s forwards;
+		opacity: 0;
+	}
+	&.item-appear-up {
+		animation: item-fade-up 0.3s forwards;
+		opacity: 0;
+	}
+
+	&.item-appear-005 {
+		@for $i from 0 through 40 {
+			&:nth-child(#{$i}) {
+				animation-delay: $i * 0.05s;
+			}
+		}
+	}
+	&.item-appear-010 {
+		@for $i from 0 through 40 {
+			&:nth-child(#{$i}) {
+				animation-delay: $i * 0.1s;
+			}
+		}
+	}
+}
+
+@keyframes item-fade-bottom {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes item-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+	}
+}

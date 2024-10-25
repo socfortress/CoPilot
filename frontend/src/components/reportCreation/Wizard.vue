@@ -2,7 +2,7 @@
 	<div class="report-wizard">
 		<n-spin v-model:show="loading">
 			<n-form :label-width="80" class="flex flex-col gap-5" :show-feedback="false">
-				<div class="flex gap-5 flex-col sm:flex-row">
+				<div class="flex flex-col gap-5 sm:flex-row">
 					<n-form-item label="Time Range" class="sm:max-w-56">
 						<n-input-group>
 							<n-select

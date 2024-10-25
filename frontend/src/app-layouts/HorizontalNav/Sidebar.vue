@@ -4,7 +4,7 @@
 		class="sidebar flex flex-col"
 		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
 	>
-		<div ref="sidebar" class="sidebar-wrap grow flex flex-col">
+		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
 			<SidebarHeader :logo-mini="sidebarClosed" />
 			<n-scrollbar>
 				<Navbar :collapsed="sidebarClosed" />
@@ -62,7 +62,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "./variables";
+@import "variables";
 
 .sidebar {
 	position: fixed;
@@ -74,7 +74,7 @@ onMounted(() => {
 	//padding-right: 1px;
 	width: var(--sidebar-open-width);
 	height: 100vh;
-	height: 100svh;
+	height: 100dvh;
 	overflow-x: hidden;
 	overflow-y: auto;
 	background-color: var(--bg-sidebar);

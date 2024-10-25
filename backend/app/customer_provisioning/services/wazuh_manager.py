@@ -181,7 +181,7 @@ async def get_agent_ids(group_code: str) -> List[str]:
     """
     try:
         response = await send_wazuh_get_request(
-            endpoint="agents",
+            endpoint="/agents",
             params={"group": group_code},
         )
         logger.info(f"Response for {group_code}: {response}")

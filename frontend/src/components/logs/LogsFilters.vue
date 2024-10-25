@@ -1,6 +1,6 @@
 <template>
-	<div class="py-1 flex flex-col gap-2">
-		<div class="px-3 flex items-center justify-between gap-4">
+	<div class="flex flex-col gap-2 py-1">
+		<div class="flex items-center justify-between gap-4 px-3">
 			<small>Filter by:</small>
 			<n-select
 				v-model:value="filterType"
@@ -11,7 +11,7 @@
 				class="!w-24"
 			/>
 		</div>
-		<div class="px-3 !w-72">
+		<div class="!w-72 px-3">
 			<div v-if="filterType === 'userId'" class="flex grow">
 				<n-select
 					v-if="userIdOptions.length"
@@ -48,7 +48,7 @@
 				<n-input-number v-model:value="filterTimeRange.time" :min="1" placeholder="Time" class="grow" />
 			</n-input-group>
 		</div>
-		<div class="px-3 flex justify-end gap-2">
+		<div class="flex justify-end gap-2 px-3">
 			<n-button size="small" secondary @click="close()">Close</n-button>
 			<n-button size="small" type="primary" secondary @click="submit()">Submit</n-button>
 		</div>

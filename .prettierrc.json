@@ -5,5 +5,8 @@
 	"printWidth": 120,
 	"trailingComma": "none",
 	"arrowParens": "avoid",
-	"htmlWhitespaceSensitivity": "ignore"
+	"htmlWhitespaceSensitivity": "ignore",
+	"plugins": [
+		"prettier-plugin-tailwindcss"
+	]
 }

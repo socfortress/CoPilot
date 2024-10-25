@@ -32,7 +32,7 @@ import dayjs from "@/utils/dayjs"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
-import "@/assets/scss/apexchart-override.scss"
+import "@/assets/scss/overrides/apexchart-override.scss"
 
 const props = defineProps<{
 	value: number

@@ -4,7 +4,7 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="py-1 flex flex-col gap-2 max-w-80">
+		<div class="flex max-w-80 flex-col gap-2 py-1">
 			<n-upload
 				v-model:file-list="fileList"
 				:max="1"
@@ -20,7 +20,7 @@
 				</n-upload-dragger>
 			</n-upload>
 
-			<div class="flex gap-2 justify-between">
+			<div class="flex justify-between gap-2">
 				<n-button quaternary size="small" @click="closePopup()">Close</n-button>
 				<n-button :disabled="!isValid" :loading type="primary" size="small" @click="uploadQueries()">
 					Upload

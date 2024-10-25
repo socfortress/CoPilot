@@ -1,10 +1,10 @@
 <template>
 	<div class="sigma-queries-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info grow flex gap-2">
+			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-color border-radius">
+						<div class="bg-default rounded-default">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -18,12 +18,12 @@
 							<code>{{ total }}</code>
 						</div>
 						<div class="box">
-							<span class="text-success-color">Active</span>
+							<span class="text-success">Active</span>
 							:
 							<code>{{ activeTotal }}</code>
 						</div>
 						<div class="box">
-							<span class="text-secondary-color">Inactive</span>
+							<span class="text-secondary">Inactive</span>
 							:
 							<code>{{ inactiveTotal }}</code>
 						</div>
@@ -33,9 +33,9 @@
 				<n-button size="small" type="primary" secondary strong @click="showActionsView = !showActionsView">
 					<div class="flex items-center gap-2">
 						<Icon :name="ToolsIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Actions</span>
+						<span class="xs:block hidden">Actions</span>
 						<Icon
-							class="!hidden xs:!block transition-transform"
+							class="xs:!block !hidden transition-transform"
 							:class="{ '!rotate-90': showActionsView }"
 							:name="ChevronIcon"
 							:size="16"
@@ -54,7 +54,7 @@
 			/>
 			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-color border-radius">
+					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
@@ -64,7 +64,7 @@
 						</n-badge>
 					</div>
 				</template>
-				<div class="py-1 flex flex-col gap-2">
+				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
 						<small>Status:</small>
 					</div>
@@ -77,7 +77,7 @@
 							class="!w-56"
 						/>
 					</div>
-					<div class="px-3 flex justify-between gap-2">
+					<div class="flex justify-between gap-2 px-3">
 						<div class="flex justify-start gap-2">
 							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
 						</div>
@@ -93,13 +93,13 @@
 		</div>
 
 		<div class="actions-box" :class="{ open: showActionsView }">
-			<n-card size="small" content-class="bg-secondary-color" class="overflow-hidden" :bordered="false">
+			<n-card size="small" content-class="bg-secondary" class="overflow-hidden" :bordered="false">
 				<QueriesActions @updated="getData()" />
 			</n-card>
 		</div>
 
 		<n-spin :show="loading">
-			<div class="list flex flex-col gap-2 my-3">
+			<div class="list my-3 flex flex-col gap-2">
 				<template v-if="queriesList.length">
 					<QueryItem
 						v-for="query of itemsPaginated"
@@ -111,7 +111,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty v-if="!loading" description="No items found" class="justify-center h-48" />
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 				</template>
 			</div>
 		</n-spin>

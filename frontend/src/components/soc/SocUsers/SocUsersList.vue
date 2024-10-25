@@ -19,7 +19,7 @@
 							:class="{ highlight: highlight === user.user_id.toString() }"
 						>
 							<td>
-								<div class="flex gap-3 items-center">
+								<div class="flex items-center gap-3">
 									<span>#{{ user.user_id }}</span>
 									<n-tooltip trigger="hover">
 										<template #trigger>

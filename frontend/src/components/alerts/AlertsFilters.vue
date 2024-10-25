@@ -25,7 +25,7 @@
 						<template #empty>
 							<n-empty
 								description="Empty Field history"
-								class="text-center justify-center h-48"
+								class="h-48 justify-center text-center"
 							></n-empty>
 						</template>
 					</n-select>

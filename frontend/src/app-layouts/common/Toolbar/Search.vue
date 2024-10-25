@@ -1,12 +1,12 @@
 <template>
-	<div class="flex items-center search-btn" @click="openBox">
+	<button class="search-btn flex items-center" @click="openBox">
 		<Icon :name="SearchIcon" :size="16" class="search-btn-icon" />
 		<span>Search</span>
 		<n-text code class="search-command">
 			<span :class="{ win: commandIcon === 'CTRL' }">{{ commandIcon }}</span>
 			K
 		</n-text>
-	</div>
+	</button>
 </template>
 
 <script lang="ts" setup>

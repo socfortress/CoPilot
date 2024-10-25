@@ -1,43 +1,40 @@
 <template>
-	<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-		<KVCard v-for="(value, key) of asset" :key="key">
+	<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+		<CardKV v-for="(value, key) of asset" :key="key">
 			<template #key>
 				{{ key }}
 			</template>
 			<template #value>
 				<div v-if="key === 'id'">#{{ value }}</div>
 				<div v-else-if="key === 'customer_code'">
-					<code
-						class="cursor-pointer text-primary-color"
-						@click.stop="gotoCustomer({ code: asset.customer_code })"
-					>
+					<code class="text-primary cursor-pointer" @click.stop="gotoCustomer({ code: asset.customer_code })">
 						#{{ asset.customer_code }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'agent_id'">
-					<code class="cursor-pointer text-primary-color" @click.stop="gotoAgent(asset.agent_id)">
+					<code class="text-primary cursor-pointer" @click.stop="gotoAgent(asset.agent_id)">
 						{{ asset.agent_id }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_name'">
-					<code class="cursor-pointer text-primary-color" @click.stop="gotoIndex(asset.index_name)">
+					<code class="text-primary cursor-pointer" @click.stop="gotoIndex(asset.index_name)">
 						{{ asset.index_name }}
-						<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_id'">
-					<code class="cursor-pointer text-primary-color" @click.stop="openAlertDetails()">
+					<code class="text-primary cursor-pointer" @click.stop="openAlertDetails()">
 						{{ asset.index_id }}
-						<Icon :name="ViewIcon" :size="14" class="top-0.5 relative" />
+						<Icon :name="ViewIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else>
 					{{ value === "" ? "-" : (value ?? "-") }}
 				</div>
 			</template>
-		</KVCard>
+		</CardKV>
 	</div>
 
 	<n-modal
@@ -52,26 +49,26 @@
 		<n-spin :show="loading" class="min-h-40">
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-						<KVCard v-for="(value, key) of alertDetailsInfo" :key="key">
+					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+						<CardKV v-for="(value, key) of alertDetailsInfo" :key="key">
 							<template #key>
 								{{ key }}
 							</template>
 							<template #value>
 								<div v-if="key === '_index'">
 									<code
-										class="cursor-pointer text-primary-color"
+										class="text-primary cursor-pointer"
 										@click.stop="gotoIndex(alertDetailsInfo._index)"
 									>
 										{{ alertDetailsInfo._index }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 									</code>
 								</div>
 								<div v-else>
 									{{ value === "" ? "-" : (value ?? "-") }}
 								</div>
 							</template>
-						</KVCard>
+						</CardKV>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
@@ -87,8 +84,8 @@
 <script setup lang="ts">
 import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
 import _omit from "lodash/omit"
 import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"

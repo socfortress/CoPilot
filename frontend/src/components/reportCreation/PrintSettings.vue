@@ -1,9 +1,9 @@
 <template>
 	<div class="flex flex-col gap-8">
-		<div class="flex gap-6 mb-2">
+		<div class="mb-2 flex gap-6">
 			<n-avatar :size="110" :src="logo" />
 
-			<div class="flex flex-col justify-between grow">
+			<div class="flex grow flex-col justify-between">
 				<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
 					<n-button @click="openCropper()">
 						<template #icon>
