@@ -14,9 +14,9 @@
 		</div>
 	</div>
 	<n-spin :show="loading">
-		<div class="customer-healthcheck-list flex flex-col gap-6">
-			<div v-if="healthyList.length" class="list flex flex-col gap-2">
-				<div class="title healthy flex items-center gap-2">
+		<div class="flex min-h-52 flex-col gap-6">
+			<div v-if="healthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
+				<div class="text-primary mb-2 flex items-center gap-2">
 					<Icon :name="CheckIcon" :size="16"></Icon>
 					Healthy
 					<code>{{ healthyList.length }}</code>
@@ -27,12 +27,12 @@
 					:health-data="item"
 					:source="source"
 					type="healthy"
-					bg-secondary
+					embedded
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
-			<div v-if="unhealthyList.length" class="list flex flex-col gap-2">
-				<div class="title unhealthy flex items-center gap-2">
+			<div v-if="unhealthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
+				<div class="text-warning mb-2 flex items-center gap-2">
 					<Icon :name="AlertIcon" :size="16"></Icon>
 					Unhealthy
 					<code>{{ unhealthyList.length }}</code>
@@ -43,7 +43,7 @@
 					:health-data="item"
 					:source="source"
 					type="unhealthy"
-					bg-secondary
+					embedded
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
@@ -155,26 +155,3 @@ onBeforeMount(() => {
 	getList()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-healthcheck-list {
-	min-height: 200px;
-
-	.list {
-		.title {
-			margin-bottom: 10px;
-
-			&.healthy {
-				color: var(--primary-color);
-			}
-			&.unhealthy {
-				color: var(--warning-color);
-			}
-		}
-
-		&:not(:last-child) {
-			margin-bottom: 20px;
-		}
-	}
-}
-</style>

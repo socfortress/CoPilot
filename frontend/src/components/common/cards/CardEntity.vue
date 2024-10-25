@@ -8,7 +8,7 @@
 			{ embedded, highlighted, clickable, hoverable, disabled }
 		]"
 	>
-		<n-spin :show="loading">
+		<n-spin :show="loading" :description="loadingDescription">
 			<div class="card-entity-wrapper flex flex-col">
 				<div class="main-box flex flex-col">
 					<div v-if="$slots.header" class="header-box">
@@ -59,16 +59,18 @@
 <script setup lang="ts">
 import { NCard, NSpin } from "naive-ui"
 
-const { size, status, embedded, highlighted, clickable, hoverable, disabled, loading } = defineProps<{
-	size?: "medium" | "small" | "large"
-	status?: "success" | "warning" | "error"
-	embedded?: boolean
-	highlighted?: boolean
-	clickable?: boolean
-	hoverable?: boolean
-	disabled?: boolean
-	loading?: boolean
-}>()
+const { size, status, embedded, highlighted, clickable, hoverable, disabled, loading, loadingDescription } =
+	defineProps<{
+		size?: "medium" | "small" | "large"
+		status?: "success" | "warning" | "error"
+		embedded?: boolean
+		highlighted?: boolean
+		clickable?: boolean
+		hoverable?: boolean
+		disabled?: boolean
+		loading?: boolean
+		loadingDescription?: string
+	}>()
 </script>
 
 <style lang="scss" scoped>

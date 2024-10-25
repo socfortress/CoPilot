@@ -46,7 +46,10 @@
 							</template>
 							<template #label>Agent</template>
 							<template #value>
-								{{ healthData.hostname }}
+								<div class="flex items-center gap-2">
+									{{ healthData.hostname }}
+									<Icon :name="InfoIcon" :size="14"></Icon>
+								</div>
 							</template>
 						</Badge>
 					</template>

@@ -1,6 +1,6 @@
 <template>
 	<div class="soc-alerts-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+		<div ref="header" class="flex h-14 items-center justify-end gap-2">
 			<slot name="header"></slot>
 			<div class="grow">
 				<n-input v-model:value="alertTitle" size="small" placeholder="Search by title..." clearable />
@@ -62,7 +62,7 @@
 		</div>
 
 		<n-spin :show="loadingAlerts || loadingPurge">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="alertsList.length">
 					<SocAlertItem
 						v-for="alert of alertsList"
@@ -393,15 +393,3 @@ onBeforeUnmount(() => {
 	abortController?.abort()
 })
 </script>
-
-<style lang="scss" scoped>
-.soc-alerts-list {
-	.header {
-		height: 50px;
-	}
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

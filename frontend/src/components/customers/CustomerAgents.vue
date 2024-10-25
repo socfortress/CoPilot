@@ -5,7 +5,7 @@
 				v-for="agent in list"
 				:key="agent.agent_id"
 				:agent="agent"
-				bg-secondary
+				embedded
 				show-actions
 				class="item-appear item-appear-bottom item-appear-005"
 				@delete="getAgents()"

@@ -3,7 +3,7 @@
 		<div class="px-7 pt-4">
 			<n-input v-model:value="notesFilter" placeholder="Search notes..." clearable />
 		</div>
-		<n-spin :show="loadingNotes" style="min-height: 100px">
+		<n-spin :show="loadingNotes" class="min-h-28">
 			<div v-if="notesList?.length" class="flex flex-col gap-2 p-7 pt-3" style="container-type: inline-size">
 				<SocCaseNote v-for="note of notesList" :key="note.note_id" :note="note" />
 			</div>

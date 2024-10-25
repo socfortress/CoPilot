@@ -1,20 +1,12 @@
 <template>
-	<div class="soc-asset-item">
-		<div class="flex flex-col gap-2 px-5 py-4">
-			<div class="header-box flex justify-between">
-				<div class="flex items-center gap-2">
-					<div class="id flex cursor-pointer items-center gap-2" @click="showDetails = true">
-						<span>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</span>
-						<Icon :name="InfoIcon" :size="16"></Icon>
-					</div>
-				</div>
-			</div>
-			<div class="main-box flex justify-between gap-4">
-				<div class="content">
-					<div class="title">
-						{{ asset.asset_name }}
-					</div>
-					<div v-if="asset.asset_description" class="description mt-2">
+	<div>
+		<CardEntity hoverable clickable @click.stop="showDetails = true">
+			<template #headerMain>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</template>
+			<template #default>
+				<div class="flex flex-col gap-1">
+					{{ asset.asset_name }}
+
+					<p v-if="asset.asset_description" class="text-sm">
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
@@ -34,37 +26,38 @@
 						<template v-else>
 							{{ excerpt }}
 						</template>
-					</div>
-
-					<div class="badges-box mt-4 flex flex-wrap items-center gap-3">
-						<Badge v-if="asset.date_added" type="splitted" color="primary">
-							<template #iconLeft>
-								<Icon :name="ClockIcon" :size="14"></Icon>
-							</template>
-							<template #label>Added</template>
-							<template #value>
-								{{ formatDate(asset.date_added) }}
-							</template>
-						</Badge>
-						<Badge v-if="asset.date_update" type="splitted" color="primary">
-							<template #iconLeft>
-								<Icon :name="ClockIcon" :size="14"></Icon>
-							</template>
-							<template #label>Updated</template>
-							<template #value>
-								{{ formatDate(asset.date_update) }}
-							</template>
-						</Badge>
-						<Badge type="active" class="cursor-pointer" @click="gotoAgent(asset.asset_tags)">
-							<template #iconRight>
-								<Icon :name="LinkIcon" :size="14"></Icon>
-							</template>
-							<template #label>Agent: {{ asset.asset_tags }}</template>
-						</Badge>
-					</div>
+					</p>
 				</div>
-			</div>
-		</div>
+			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center gap-3">
+					<Badge v-if="asset.date_added" type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="ClockIcon" :size="14"></Icon>
+						</template>
+						<template #label>Added</template>
+						<template #value>
+							{{ formatDate(asset.date_added) }}
+						</template>
+					</Badge>
+					<Badge v-if="asset.date_update" type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="ClockIcon" :size="14"></Icon>
+						</template>
+						<template #label>Updated</template>
+						<template #value>
+							{{ formatDate(asset.date_update) }}
+						</template>
+					</Badge>
+					<Badge type="active" class="cursor-pointer" @click.stop="gotoAgent(asset.asset_tags)">
+						<template #iconRight>
+							<Icon :name="LinkIcon" :size="14"></Icon>
+						</template>
+						<template #label>Agent: {{ asset.asset_tags }}</template>
+					</Badge>
+				</div>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -87,7 +80,7 @@
 									<code
 										v-if="value && value !== '-'"
 										class="text-primary cursor-pointer"
-										@click="gotoAgent(value)"
+										@click.stop="gotoAgent(value)"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -150,6 +143,7 @@
 <script setup lang="ts">
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -164,7 +158,6 @@ const { asset } = defineProps<{ asset: SocAlertAsset }>()
 
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 
-const InfoIcon = "carbon:information"
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const { gotoAgent } = useGoto()
@@ -209,74 +202,20 @@ function formatDate(date: string, useSec = false) {
 </script>
 
 <style lang="scss" scoped>
-.soc-asset-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-secondary-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
+.asset-url {
+	display: block;
 
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		.id {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
+	code {
+		padding: 8px 12px;
+		display: flex;
+		gap: 10px;
 
-			&:hover {
-				color: var(--primary-color);
-			}
+		span {
+			white-space: nowrap;
+			flex-grow: 1;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
-
-		.toggler-bookmark {
-			&.active {
-				color: var(--primary-color);
-			}
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-		.time {
-			color: var(--fg-secondary-color);
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-
-	.main-box {
-		word-break: break-word;
-
-		.content {
-			max-width: 100%;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-
-				.asset-url {
-					display: block;
-
-					code {
-						padding: 8px 12px;
-						display: flex;
-						gap: 10px;
-
-						span {
-							white-space: nowrap;
-							flex-grow: 1;
-							overflow: hidden;
-							text-overflow: ellipsis;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
 }
 </style>

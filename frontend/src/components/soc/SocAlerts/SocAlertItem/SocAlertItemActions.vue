@@ -1,6 +1,6 @@
 <template>
-	<div class="soc-alert-actions flex flex-col justify-center gap-2">
-		<n-button v-if="existCase" type="success" secondary :size="size" @click="openSocCase()">
+	<div class="contents">
+		<n-button v-if="existCase" type="success" secondary :size="size" @click.stop="openSocCase()">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>
 			</template>
@@ -12,7 +12,7 @@
 			type="warning"
 			secondary
 			:size="size"
-			@click="createCase()"
+			@click.stop="createCase()"
 		>
 			<template #icon>
 				<Icon :name="DangerIcon"></Icon>
@@ -25,7 +25,7 @@
 			:size="size"
 			type="error"
 			secondary
-			@click="handleDelete()"
+			@click.stop="handleDelete()"
 		>
 			<template #icon>
 				<Icon :name="DeleteIcon"></Icon>

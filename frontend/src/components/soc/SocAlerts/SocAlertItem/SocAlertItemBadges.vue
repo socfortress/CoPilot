@@ -1,5 +1,5 @@
 <template>
-	<div class="mt-3 flex flex-wrap items-center gap-3">
+	<div class="@container flex flex-wrap items-center gap-3">
 		<n-tooltip placement="top-start" trigger="hover">
 			<template #trigger>
 				<Badge type="splitted" color="primary" hint-cursor>
@@ -23,7 +23,7 @@
 				{{ alert.severity?.severity_name || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
@@ -32,7 +32,7 @@
 				{{ alert.alert_source || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13"></Icon>
 			</template>
