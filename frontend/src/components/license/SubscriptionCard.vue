@@ -1,45 +1,49 @@
 <template>
-	<div
-		class="license-subscription-feature-box"
-		:class="{ embedded, disabled }"
-		@click="selectable ? () => {} : (showDetails = true)"
-	>
-		<n-spin :show="canceling" content-class="px-4 py-3 flex flex-col gap-2">
-			<div class="header-box flex items-center justify-between">
-				<div class="flex cursor-pointer items-center gap-2">
-					<span>{{ subscription.name }}</span>
-					<span v-if="selectable" class="info-btn pt-0.5" @click.stop="showDetails = true">
-						<Icon :name="InfoIcon" :size="14"></Icon>
-					</span>
-				</div>
-				<div class="price">
+	<div>
+		<CardEntity
+			hoverable
+			:embedded
+			:disabled
+			:clickable="!selectable"
+			:loading="canceling"
+			@click="selectable ? () => {} : (showDetails = true)"
+		>
+			<template #headerMain>{{ subscription.name }}</template>
+			<template #headerExtra>
+				<div class="text-primary">
 					{{ price(subscription.price) }}
 				</div>
-			</div>
-			<div v-if="!hideDetails" class="main-box flex items-center gap-3">
-				<div class="content flex grow flex-col gap-2">
-					<div class="title">
-						{{ subscription.info }}
-					</div>
-					<div class="description">
+			</template>
+			<template v-if="!hideDetails" #default>
+				<div class="flex flex-col gap-1">
+					{{ subscription.info }}
+					<p class="text-sm">
 						{{ subscription.short_description }}
-					</div>
-					<div v-if="showDeleteOnCard && licenseData" class="flex items-center justify-end">
-						<n-popconfirm @positive-click="cancelSubscription()">
-							<template #trigger>
-								<n-button text size="small" class="opacity-50">
-									<template #icon>
-										<Icon :name="DeleteIcon" :size="16"></Icon>
-									</template>
-									Unsubscribe
-								</n-button>
-							</template>
-							{{ deleteMessage }}
-						</n-popconfirm>
-					</div>
+					</p>
 				</div>
-			</div>
-		</n-spin>
+			</template>
+			<template v-if="showDeleteOnCard && licenseData" #footerMain>
+				<n-popconfirm @positive-click="cancelSubscription()">
+					<template #trigger>
+						<n-button text size="small">
+							<template #icon>
+								<Icon :name="DeleteIcon" :size="16" />
+							</template>
+							Unsubscribe
+						</n-button>
+					</template>
+					{{ deleteMessage }}
+				</n-popconfirm>
+			</template>
+			<template v-if="selectable" #footerExtra>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="InfoIcon"></Icon>
+					</template>
+					Details
+				</n-button>
+			</template>
+		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -82,6 +86,7 @@
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 import type { License, SubscriptionFeature } from "@/types/license.d"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { price } from "@/utils"
 import { NButton, NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
@@ -138,58 +143,3 @@ function cancelSubscription() {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.license-subscription-feature-box {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	border: var(--border-small-050);
-	transition: all 0.2s var(--bezier-ease);
-	cursor: pointer;
-
-	.header-box {
-		font-size: 13px;
-		line-height: 1.25;
-		.price {
-			font-size: 15px;
-			font-family: var(--font-family-mono);
-			color: var(--primary-color);
-		}
-
-		.info-btn {
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-
-	.main-box {
-		.content {
-			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
-		}
-	}
-
-	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-
-	&.disabled {
-		cursor: not-allowed;
-
-		& > div {
-			opacity: 0.5;
-		}
-	}
-
-	&:not(.disabled) {
-		&:hover {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-		}
-	}
-}
-</style>

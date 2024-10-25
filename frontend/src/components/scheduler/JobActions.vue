@@ -1,8 +1,8 @@
 <template>
-	<div class="job-actions flex flex-col gap-3" :class="{ '!flex-row': inline }">
+	<div class="contents gap-3">
 		<div class="flex items-center gap-3">
 			<n-button
-				:size="size"
+				:size
 				:type="job.enabled ? 'warning' : 'success'"
 				secondary
 				:loading="loadingAction"
@@ -14,23 +14,19 @@
 				</template>
 				{{ job.enabled ? "Pause" : "Start" }}
 			</n-button>
-
-			<NextTooltip v-if="job.enabled && !inline" :job-id="job.id" />
 		</div>
 		<div class="flex items-center gap-3">
-			<n-button :size="size" type="success" secondary :loading="loadingRun" @click="run()">
+			<n-button :size type="success" secondary :loading="loadingRun" @click="run()">
 				<template #icon>
 					<Icon :name="RunIcon"></Icon>
 				</template>
 				Run once
 			</n-button>
-			<n-button :size="size" secondary :loading="loadingUpdate" @click="showForm = true">
+			<n-button :size secondary :loading="loadingUpdate" @click="showForm = true">
 				<template #icon>
 					<Icon :name="UpdatedIcon"></Icon>
 				</template>
 			</n-button>
-
-			<NextTooltip v-if="job.enabled && inline" :job-id="job.id" />
 		</div>
 	</div>
 
@@ -56,10 +52,9 @@ import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import JobForm from "./JobForm.vue"
-import NextTooltip from "./NextTooltip.vue"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
-const { job, size, inline } = toRefs(props)
+const { job, size } = toRefs(props)
 
 const StartIcon = "material-symbols:autoplay"
 const PauseIcon = "carbon:pause-filled"

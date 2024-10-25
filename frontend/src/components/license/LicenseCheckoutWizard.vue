@@ -14,7 +14,7 @@
 						:subscription="subscription"
 						selectable
 						embedded
-						class="item-appear item-appear-bottom item-appear-005"
+						class="item-appear item-appear-bottom item-appear-005 cursor-pointer"
 						@click="selectedSubscription = subscription"
 					/>
 				</div>

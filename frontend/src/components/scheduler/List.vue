@@ -1,7 +1,7 @@
 <template>
 	<div class="scheduler-list">
 		<n-spin :show="loading" class="min-h-48">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="jobs.length">
 					<JobCard v-for="job of jobs" :key="job.id" :job="job" class="mb-2" />
 				</template>
@@ -49,10 +49,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

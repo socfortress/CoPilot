@@ -10,7 +10,7 @@
 			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="customersList.length">
 					<CustomerItem
 						v-for="customer of customersList"
@@ -116,12 +116,3 @@ onBeforeMount(() => {
 	getCustomers()
 })
 </script>
-
-<style lang="scss" scoped>
-.customers-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

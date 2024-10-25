@@ -7,7 +7,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="list.length">
 					<ServiceItem
 						v-for="item of list"
@@ -67,12 +67,3 @@ function setItem(item: ServiceItemData) {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.services-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

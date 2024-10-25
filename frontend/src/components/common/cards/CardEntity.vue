@@ -176,8 +176,10 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 	}
 
 	&.hoverable {
-		&:hover {
-			border-color: var(--primary-040-color);
+		&:not(.disabled) {
+			&:hover {
+				border-color: var(--primary-040-color);
+			}
 		}
 	}
 
@@ -185,8 +187,18 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 		background-color: var(--primary-005-color);
 		border-color: var(--primary-030-color);
 
-		&:hover {
-			box-shadow: 0px 0px 0px 1px var(--primary-color);
+		&:not(.disabled) {
+			&:hover {
+				box-shadow: 0px 0px 0px 1px var(--primary-color);
+			}
+		}
+	}
+
+	&.disabled {
+		@apply cursor-not-allowed;
+
+		.card-entity-wrapper {
+			@apply opacity-70;
 		}
 	}
 }
