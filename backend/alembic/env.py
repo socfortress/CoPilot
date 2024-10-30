@@ -37,6 +37,7 @@ from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
 from app.incidents.models import Notification
+from app.incidents.models import IoC, AlertToIoC
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
