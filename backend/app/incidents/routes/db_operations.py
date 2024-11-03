@@ -668,6 +668,7 @@ async def list_alerts_multiple_filters_endpoint(
     - asset_name (str, optional): Filter by asset name.
     - status (str, optional): Filter by status.
     - tags (List[str], optional): Filter by tags.
+    - ioc_value (str, optional): Filter by IoC value.
     - page (int, default=1): Page number.
     - page_size (int, default=25): Number of alerts per page.
     - order (str, default='desc'): Sorting order ('asc' or 'desc').
