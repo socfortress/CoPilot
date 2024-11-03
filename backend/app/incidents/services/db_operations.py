@@ -40,12 +40,12 @@ from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
-from app.incidents.models import Notification
+from app.incidents.models import Notification, IoC, AlertToIoC
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
-from app.incidents.schema.db_operations import AlertTagBase
+from app.incidents.schema.db_operations import AlertTagBase, AlertIoCResponse, AlertIoCCreate
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
@@ -729,6 +729,27 @@ async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Asset already exists")
     return db_asset
+
+async def create_alert_ioc(alert_ioc: AlertIoCCreate, db: AsyncSession) -> AlertToIoC:
+    # Create the IoC instance
+    db_alert_ioc = IoC(
+        value=alert_ioc.ioc_value,
+        type=alert_ioc.ioc_type,
+        description=alert_ioc.ioc_description,
+    )
+    db.add(db_alert_ioc)
+    await db.flush()
+
+    # Create the AlertToIoC instance
+    db_alert_to_ioc = AlertToIoC(alert_id=alert_ioc.alert_id, ioc_id=db_alert_ioc.id)
+    db.add(db_alert_to_ioc)
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Alert IoC already exists")
+    return AlertToIoC(alert_id=db_alert_to_ioc.alert_id, ioc_id=db_alert_to_ioc.ioc_id)
 
 
 async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:

@@ -32,8 +32,8 @@ from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOutResponse
-from app.incidents.schema.db_operations import AlertResponse
-from app.incidents.schema.db_operations import AlertStatus
+from app.incidents.schema.db_operations import AlertResponse, AlertIoCResponse
+from app.incidents.schema.db_operations import AlertStatus, AlertIoCCreate
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AlertTagDelete
 from app.incidents.schema.db_operations import AlertTagResponse
@@ -80,7 +80,7 @@ from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
-from app.incidents.services.db_operations import alerts_closed_by_assigned_to
+from app.incidents.services.db_operations import alerts_closed_by_assigned_to, create_alert_ioc
 from app.incidents.services.db_operations import alerts_closed_by_customer_code
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
@@ -406,6 +406,10 @@ async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSessi
 async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(get_db)):
     return AssetResponse(asset=await create_asset(asset, db), success=True, message="Asset created successfully")
 
+
+@incidents_db_operations_router.post("/alert/ioc", response_model=AlertIoCResponse)
+async def create_alert_ioc_endpoint(ioc: AlertIoCCreate, db: AsyncSession = Depends(get_db)):
+    return AlertIoCResponse(alert_ioc=await create_alert_ioc(ioc, db), success=True, message="Alert IoC created successfully")
 
 @incidents_db_operations_router.post("/alert/tag", response_model=AlertTagResponse)
 async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
