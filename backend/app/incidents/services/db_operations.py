@@ -905,6 +905,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
             selectinload(Alert.assets),
             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
         .order_by(order_by)
         .offset(offset)
@@ -917,6 +918,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         alert_out = AlertOut(
             id=alert.id,
@@ -931,6 +933,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
             comments=comments,
             assets=assets,
             tags=tags,
+            iocs=iocs,
             linked_cases=linked_cases,
         )
         alerts_out.append(alert_out)
