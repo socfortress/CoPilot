@@ -281,6 +281,10 @@ class AlertTagDelete(BaseModel):
     alert_id: int
     tag_id: int
 
+class AlertIoCDelete(BaseModel):
+    alert_id: int
+    ioc_id: int
+
 
 class CommentBase(BaseModel):
     user_name: str
@@ -301,6 +305,12 @@ class AssetBase(BaseModel):
     velociraptor_id: Optional[str] = None
     index_name: str
 
+class IoCBase(BaseModel):
+    value: str
+    type: AlertIocValue
+    description: Optional[str] = None
+    id: int
+
 
 class AlertOut(BaseModel):
     id: int
@@ -316,6 +326,7 @@ class AlertOut(BaseModel):
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
     linked_cases: List[LinkedCaseCreate] = []
+    iocs: List[IoCBase] = []
 
 
 class AlertOutResponse(BaseModel):

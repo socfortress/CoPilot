@@ -50,8 +50,8 @@ from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
-from app.incidents.schema.db_operations import CaseCreate
-from app.incidents.schema.db_operations import CaseOut
+from app.incidents.schema.db_operations import CaseCreate, AlertIoCDelete
+from app.incidents.schema.db_operations import CaseOut, IoCBase
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
@@ -358,6 +358,34 @@ async def alerts_open_multiple_filters(
     result = await db.execute(query)
     open_count = result.scalar_one()
     return open_count
+
+async def alerts_total_by_ioc(db: AsyncSession, ioc_value: str) -> int:
+    result = await db.execute(select(Alert)
+        .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
+        .join(IoC, AlertToIoC.ioc_id == IoC.id)
+        .where(IoC.value == ioc_value))
+    return len(result.scalars().all())
+
+async def alerts_closed_by_ioc(db: AsyncSession, ioc_value: str) -> int:
+    result = await db.execute(select(Alert)
+        .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
+        .join(IoC, AlertToIoC.ioc_id == IoC.id)
+        .where((Alert.status == "CLOSED") & (IoC.value == ioc_value)))
+    return len(result.scalars().all())
+
+async def alerts_in_progress_by_ioc(db: AsyncSession, ioc_value: str) -> int:
+    result = await db.execute(select(Alert)
+        .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
+        .join(IoC, AlertToIoC.ioc_id == IoC.id)
+        .where((Alert.status == "IN_PROGRESS") & (IoC.value == ioc_value)))
+    return len(result.scalars().all())
+
+async def alerts_open_by_ioc(db: AsyncSession, ioc_value: str) -> int:
+    result = await db.execute(select(Alert)
+        .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
+        .join(IoC, AlertToIoC.ioc_id == IoC.id)
+        .where((Alert.status == "OPEN") & (IoC.value == ioc_value)))
+    return len(result.scalars().all())
 
 
 async def alerts_total_by_tag(db: AsyncSession, tag: str) -> int:
@@ -751,6 +779,25 @@ async def create_alert_ioc(alert_ioc: AlertIoCCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert IoC already exists")
     return AlertToIoC(alert_id=db_alert_to_ioc.alert_id, ioc_id=db_alert_to_ioc.ioc_id)
 
+
+async def delete_alert_ioc(ioc: AlertIoCDelete, db: AsyncSession) -> AlertToIoC:
+    result = await db.execute(select(AlertToIoC).where((AlertToIoC.alert_id == ioc.alert_id) & (AlertToIoC.ioc_id == ioc.ioc_id)))
+    alert_ioc = result.scalars().first()
+    if not alert_ioc:
+        raise HTTPException(status_code=404, detail="Alert IoC not found")
+
+    await db.execute(delete(AlertToIoC).where((AlertToIoC.alert_id == ioc.alert_id) & (AlertToIoC.ioc_id == ioc.ioc_id)))
+
+    # Delete the IoC from the IoC table
+    await db.execute(delete(IoC).where(IoC.id == ioc.ioc_id))
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error deleting alert IoC")
+
+    return alert_ioc
 
 async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:
     # Create the AlertTag instance
@@ -1240,6 +1287,53 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     if not alert_context:
         raise HTTPException(status_code=404, detail="Alert context not found")
     return alert_context
+
+async def list_alerts_by_ioc(ioc_value: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+    logger.info(f"Listing alerts by IoC {ioc_value}")
+
+    result = await db.execute(
+        select(Alert)
+        .join(AlertToIoC)
+        .join(IoC)
+        .where(IoC.value == ioc_value)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
+    )
+
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments: List[CommentBase] = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets: List[AssetBase] = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags: List[AlertTagBase] = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        iocs: List[IoCBase] = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+            iocs=iocs,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
 
 
 async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
