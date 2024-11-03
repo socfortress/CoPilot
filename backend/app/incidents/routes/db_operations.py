@@ -651,6 +651,7 @@ async def list_alerts_multiple_filters_endpoint(
     asset_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     tags: Optional[List[str]] = Query(None),
+    ioc_value: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
@@ -690,6 +691,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
             page=page,
             page_size=page_size,
@@ -703,6 +705,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         open=await alerts_open_multiple_filters(
@@ -713,6 +716,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         in_progress=await alerts_in_progress_multiple_filters(
@@ -723,6 +727,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         closed=await alerts_closed_multiple_filters(
@@ -733,6 +738,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         success=True,

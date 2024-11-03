@@ -206,6 +206,7 @@ async def alerts_total_multiple_filters(
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
 ) -> int:
     # Build dynamic filters
     filters = []
@@ -223,14 +224,18 @@ async def alerts_total_multiple_filters(
         filters.append(Alert.status == status)
     if tags:
         filters.append(AlertTag.tag.in_(tags))
+    if ioc_value:
+        filters.append(IoC.value == ioc_value)
 
-    # Build the query
+    # Build the query with dynamic filters
     query = (
         select(func.count(distinct(Alert.id)))
         .select_from(Alert)
-        .join(Asset, isouter=True)
-        .join(AlertToTag, isouter=True)
-        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .join(Asset, Asset.alert_linked == Alert.id, isouter=True)  # Join with Asset table
+        .join(AlertToTag, AlertToTag.alert_id == Alert.id, isouter=True)  # Join with AlertToTag table
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+        .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
+        .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
         .where(*filters)
     )
 
@@ -248,6 +253,7 @@ async def alerts_closed_multiple_filters(
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
 ) -> int:
     # Include the status filter
     filters = [Alert.status == "CLOSED"]
@@ -265,13 +271,18 @@ async def alerts_closed_multiple_filters(
         filters.append(Alert.status == status)
     if tags:
         filters.append(AlertTag.tag.in_(tags))
+    if ioc_value:
+        filters.append(IoC.value == ioc_value)
 
+    # Build the query with dynamic filters
     query = (
         select(func.count(distinct(Alert.id)))
         .select_from(Alert)
-        .join(Asset, isouter=True)
-        .join(AlertToTag, isouter=True)
-        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .join(Asset, Asset.alert_linked == Alert.id, isouter=True)  # Join with Asset table
+        .join(AlertToTag, AlertToTag.alert_id == Alert.id, isouter=True)  # Join with AlertToTag table
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+        .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
+        .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
         .where(*filters)
     )
 
@@ -289,6 +300,7 @@ async def alerts_in_progress_multiple_filters(
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
 ) -> int:
     filters = [Alert.status == "IN_PROGRESS"]
     if assigned_to:
@@ -305,13 +317,17 @@ async def alerts_in_progress_multiple_filters(
         filters.append(Alert.status == status)
     if tags:
         filters.append(AlertTag.tag.in_(tags))
+    if ioc_value:
+        filters.append(IoC.value == ioc_value)
 
     query = (
         select(func.count(distinct(Alert.id)))
         .select_from(Alert)
-        .join(Asset, isouter=True)
-        .join(AlertToTag, isouter=True)
-        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .join(Asset, Asset.alert_linked == Alert.id, isouter=True)  # Join with Asset table
+        .join(AlertToTag, AlertToTag.alert_id == Alert.id, isouter=True)  # Join with AlertToTag table
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+        .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
+        .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
         .where(*filters)
     )
 
@@ -329,6 +345,7 @@ async def alerts_open_multiple_filters(
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
 ) -> int:
     filters = [Alert.status == "OPEN"]
     if assigned_to:
@@ -345,13 +362,17 @@ async def alerts_open_multiple_filters(
         filters.append(Alert.status == status)
     if tags:
         filters.append(AlertTag.tag.in_(tags))
+    if ioc_value:
+        filters.append(IoC.value == ioc_value)
 
     query = (
         select(func.count(distinct(Alert.id)))
         .select_from(Alert)
-        .join(Asset, isouter=True)
-        .join(AlertToTag, isouter=True)
-        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)
+        .join(Asset, Asset.alert_linked == Alert.id, isouter=True)  # Join with Asset table
+        .join(AlertToTag, AlertToTag.alert_id == Alert.id, isouter=True)  # Join with AlertToTag table
+        .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+        .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
+        .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
         .where(*filters)
     )
 
@@ -1353,6 +1374,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
         .order_by(order_by)
         .offset(offset)
@@ -1364,6 +1386,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1377,6 +1400,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             comments=comments,
             assets=assets,
             tags=tags,
+            iocs=iocs,
         )
         alerts_out.append(alert_out)
     return alerts_out
@@ -1394,6 +1418,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
         .order_by(order_by)
         .offset(offset)
@@ -1406,6 +1431,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1419,6 +1445,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             comments=comments,
             assets=assets,
             tags=tags,
+            iocs=iocs,
         )
         alerts_out.append(alert_out)
     return alerts_out
@@ -1669,6 +1696,7 @@ async def list_alerts_multiple_filters(
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
@@ -1692,20 +1720,25 @@ async def list_alerts_multiple_filters(
         filters.append(Alert.status == status)
     if tags:
         filters.append(AlertTag.tag.in_(tags))
+    if ioc_value:
+        filters.append(IoC.value == ioc_value)
 
     # Build the query with dynamic filters
     query = (
         select(Alert)
         .distinct(Alert.id)
-        .join(Asset, isouter=True)  # Join with Asset table
-        .join(AlertToTag, isouter=True)  # Join with AlertToTag table
+        .join(Asset, Asset.alert_linked == Alert.id, isouter=True)  # Join with Asset table
+        .join(AlertToTag, AlertToTag.alert_id == Alert.id, isouter=True)  # Join with AlertToTag table
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
+        .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
+        .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
         .where(*filters)
         .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
         .order_by(order_by)
         .offset(offset)
@@ -1720,6 +1753,7 @@ async def list_alerts_multiple_filters(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1733,6 +1767,7 @@ async def list_alerts_multiple_filters(
             comments=comments,
             assets=assets,
             tags=tags,
+            iocs=iocs,
         )
         alerts_out.append(alert_out)
 
