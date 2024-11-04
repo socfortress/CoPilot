@@ -115,6 +115,18 @@
 					</template>
 				</n-button>
 			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'iocValue' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
 		</div>
 
 		<n-dropdown
@@ -194,7 +206,8 @@ const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Tag", value: "tag" },
 	{ label: "Title", value: "title" },
 	{ label: "Customer Code", value: "customerCode" },
-	{ label: "Source", value: "source" }
+	{ label: "Source", value: "source" },
+	{ label: "IoC", value: "iocValue" }
 ]
 
 const filters = ref<AlertsListFilter[]>([])

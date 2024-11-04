@@ -8,6 +8,8 @@ export type AlertsFilter =
 	| { title: string }
 	| { customerCode: string }
 	| { source: string }
+	| { source: string }
+	| { iocValue: string }
 
 export interface Alert {
 	id: number

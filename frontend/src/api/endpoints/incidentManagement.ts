@@ -159,6 +159,9 @@ export default {
 						case "assetName":
 							params.asset_name = filter.value
 							break
+						case "iocValue":
+							params.ioc_value = filter.value
+							break
 						case "status":
 							params.status = filter.value
 							break
