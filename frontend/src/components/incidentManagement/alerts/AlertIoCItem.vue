@@ -1,5 +1,5 @@
 <template>
-	<CardEntity :loading="canceling" :embedded hoverable>
+	<CardEntity :embedded hoverable>
 		<template #default>
 			<div class="flex flex-wrap gap-2">
 				<strong>{{ ioc.type }}</strong>
