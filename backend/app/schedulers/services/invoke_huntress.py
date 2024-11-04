@@ -34,7 +34,7 @@ async def invoke_huntress_integration_collect() -> InvokeHuntressResponse:
                 InvokeHuntressRequest(
                     customer_code=customer_code,
                     integration_name="Huntress",
-                    time_range=f"{(await get_scheduled_job_metadata('invoke_huntress_integration_collection')).time_interval}m",
+                    time_range=f"{(await get_scheduled_job_metadata('invoke_huntress_integration_collect')).time_interval}m",
                 ),
                 session,
             )
@@ -42,13 +42,13 @@ async def invoke_huntress_integration_collect() -> InvokeHuntressResponse:
     await session.close()
     with get_sync_db_session() as session:
         # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_huntress_integration_collection").one_or_none()
+        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_huntress_integration_collect").one_or_none()
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)
             session.commit()
         else:
             # Handle the case where job_metadata does not exist
-            print("JobMetadata for 'invoke_huntress_integration_collection' not found.")
+            print("JobMetadata for 'invoke_huntress_integration_collect' not found.")
 
     return InvokeHuntressResponse(success=True, message="Huntress integration invoked.")
