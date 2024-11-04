@@ -42,12 +42,12 @@ async def get_collect_huntress_data(huntress_request, session, auth_keys):
         integration="huntress",
         customer_code=huntress_request.customer_code,
         graylog_host=await get_connector_attribute(
-            connector_id=14,
+            connector_id=10,
             column_name="connector_url",
             session=session,
         ),
         graylog_port=await get_connector_attribute(
-            connector_id=14,
+            connector_id=10,
             column_name="connector_extra_data",
             session=session,
         ),
