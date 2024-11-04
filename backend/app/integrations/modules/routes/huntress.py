@@ -12,7 +12,6 @@ from app.integrations.modules.services.huntress import post_to_copilot_huntress_
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
-from app.middleware.license import get_license
 from app.utils import get_connector_attribute
 
 module_huntress_router = APIRouter()
@@ -94,9 +93,9 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         collect_huntress_data = await get_collect_huntress_data(huntress_request, session, auth_keys)
 
-        license = await get_license(session)
+        logger.info(f"Collecting Huntress Events for {huntress_request.customer_code}")
 
-        await post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
+        await post_to_copilot_huntress_module(data=collect_huntress_data)
 
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
