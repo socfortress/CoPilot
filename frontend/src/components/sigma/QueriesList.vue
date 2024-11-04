@@ -92,14 +92,12 @@
 			</n-popover>
 		</div>
 
-		<div class="actions-box" :class="{ open: showActionsView }">
-			<n-card size="small" content-class="bg-secondary" class="overflow-hidden" :bordered="false">
-				<QueriesActions @updated="getData()" />
-			</n-card>
-		</div>
+		<CollapseKeepAlive :show="showActionsView" embedded arrow="top-left" arrow-offset="54px">
+			<QueriesActions class="p-3" @updated="getData()" />
+		</CollapseKeepAlive>
 
 		<n-spin :show="loading">
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="queriesList.length">
 					<QueryItem
 						v-for="query of itemsPaginated"
@@ -131,6 +129,7 @@
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
 import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
@@ -256,53 +255,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.sigma-queries-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-
-	.actions-box {
-		overflow: hidden;
-		display: grid;
-		grid-template-rows: 0fr;
-		padding-top: 0px;
-		opacity: 0;
-		position: relative;
-		transition:
-			opacity var(--router-transition-duration) ease-out,
-			grid-template-rows var(--router-transition-duration) ease-out,
-			padding-top var(--router-transition-duration) ease-out;
-
-		&::after {
-			--size: 10px;
-			content: "";
-			width: 0;
-			height: 0;
-			border-left: var(--size) solid transparent;
-			border-right: var(--size) solid transparent;
-			border-bottom: var(--size) solid var(--bg-secondary-color);
-			position: absolute;
-			top: 2px;
-			left: 54px;
-			transform: rotateX(90deg);
-			transform-origin: top center;
-			transition:
-				opacity var(--router-transition-duration) ease-out,
-				transform var(--router-transition-duration) ease-out;
-		}
-
-		&.open {
-			grid-template-rows: 1fr;
-			opacity: 1;
-			@apply pt-3;
-
-			&::after {
-				transform: rotateX(0deg);
-			}
-		}
-	}
-}
-</style>

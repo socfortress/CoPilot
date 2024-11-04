@@ -92,16 +92,15 @@
 			</n-badge>
 		</div>
 
-		<div v-if="showFilters" class="filters-box" :class="{ open: showFiltersView }">
-			<n-card size="small" :bordered="false">
-				<AlertsFilters
-					:use-query-string="!preset?.length"
-					:preset
-					@submit="applyFilters"
-					@mounted="filtersCTX = $event"
-				/>
-			</n-card>
-		</div>
+		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
+			<AlertsFilters
+				:use-query-string="!preset?.length"
+				:preset
+				class="p-3"
+				@submit="applyFilters"
+				@mounted="filtersCTX = $event"
+			/>
+		</CollapseKeepAlive>
 
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
@@ -141,6 +140,7 @@ import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import type { AlertsListFilter } from "./types.d"
 import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
@@ -336,53 +336,3 @@ onBeforeMount(() => {
 	getCases()
 })
 </script>
-
-<style lang="scss" scoped>
-.alerts-list {
-	.filters-box {
-		overflow: hidden;
-		display: grid;
-		grid-template-rows: 0fr;
-		padding-top: 0px;
-		opacity: 0;
-		position: relative;
-		transition:
-			opacity var(--router-transition-duration) ease-out,
-			grid-template-rows var(--router-transition-duration) ease-out,
-			padding-top var(--router-transition-duration) ease-out;
-
-		&::after {
-			--size: 10px;
-			content: "";
-			width: 0;
-			height: 0;
-			border-left: var(--size) solid transparent;
-			border-right: var(--size) solid transparent;
-			border-bottom: var(--size) solid var(--bg-secondary-color);
-			position: absolute;
-			top: 2px;
-			right: 8px;
-			transform: rotateX(90deg);
-			transform-origin: top center;
-			transition:
-				opacity var(--router-transition-duration) ease-out,
-				transform var(--router-transition-duration) ease-out;
-		}
-
-		& > * {
-			background-color: var(--bg-secondary-color);
-			overflow: hidden;
-		}
-
-		&.open {
-			grid-template-rows: 1fr;
-			opacity: 1;
-			@apply pt-3;
-
-			&::after {
-				transform: rotateX(0deg);
-			}
-		}
-	}
-}
-</style>
