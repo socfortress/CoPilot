@@ -102,12 +102,15 @@
 .n-spin-container .n-spin-body {
 	inset: 0 !important;
 	transform: none !important;
+	display: block;
 
 	.n-base-loading {
 		position: sticky;
 		top: 0;
 		bottom: 0;
-		height: min(450px, 100%);
+		left: 50%;
+		height: min(calc(100vh / 1.5), 100%);
+		transform: translateX(-50%);
 
 		.n-base-loading__transition-wrapper {
 			transform: translateY(-50%);

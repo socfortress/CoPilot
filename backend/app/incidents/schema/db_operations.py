@@ -4,12 +4,14 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import validator
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
+from app.incidents.models import AlertToIoC
 from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
@@ -136,6 +138,35 @@ class AlertTagResponse(BaseModel):
     message: str
 
 
+class AlertIocValue(str, Enum):
+    IP = "IP"
+    DOMAIN = "DOMAIN"
+    HASH = "HASH"
+    URL = "URL"
+
+
+class AlertIoCCreate(BaseModel):
+    alert_id: int
+    ioc_value: str
+    ioc_type: AlertIocValue
+    ioc_description: Optional[str] = None
+
+    @validator("ioc_type")
+    def validate_ioc_type(cls, v):
+        if v not in AlertIocValue:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid IoC type. Must be one of {', '.join([ioc.value for ioc in AlertIocValue])}",
+            )
+        return v
+
+
+class AlertIoCResponse(BaseModel):
+    alert_ioc: AlertToIoC
+    success: bool
+    message: str
+
+
 class CaseResponse(BaseModel):
     case: Case
     success: bool
@@ -258,6 +289,11 @@ class AlertTagDelete(BaseModel):
     tag_id: int
 
 
+class AlertIoCDelete(BaseModel):
+    alert_id: int
+    ioc_id: int
+
+
 class CommentBase(BaseModel):
     user_name: str
     alert_id: int
@@ -278,6 +314,13 @@ class AssetBase(BaseModel):
     index_name: str
 
 
+class IoCBase(BaseModel):
+    value: str
+    type: AlertIocValue
+    description: Optional[str] = None
+    id: int
+
+
 class AlertOut(BaseModel):
     id: int
     alert_creation_time: datetime
@@ -292,6 +335,7 @@ class AlertOut(BaseModel):
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
     linked_cases: List[LinkedCaseCreate] = []
+    iocs: List[IoCBase] = []
 
 
 class AlertOutResponse(BaseModel):

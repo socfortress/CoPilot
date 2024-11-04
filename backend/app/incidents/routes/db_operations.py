@@ -31,6 +31,9 @@ from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertIoCCreate
+from app.incidents.schema.db_operations import AlertIoCDelete
+from app.incidents.schema.db_operations import AlertIoCResponse
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
@@ -82,6 +85,7 @@ from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
 from app.incidents.services.db_operations import alerts_closed_by_customer_code
+from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
 from app.incidents.services.db_operations import alerts_closed_multiple_filters
@@ -90,6 +94,7 @@ from app.incidents.services.db_operations import alerts_in_progress_by_alert_tit
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
 from app.incidents.services.db_operations import alerts_in_progress_by_assigned_to
 from app.incidents.services.db_operations import alerts_in_progress_by_customer_code
+from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
 from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
@@ -98,16 +103,19 @@ from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
 from app.incidents.services.db_operations import alerts_open_by_customer_code
+from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
 from app.incidents.services.db_operations import alerts_open_multiple_filters
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
+from app.incidents.services.db_operations import alerts_total_by_ioc
 from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
+from app.incidents.services.db_operations import create_alert_ioc
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
@@ -115,6 +123,7 @@ from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
+from app.incidents.services.db_operations import delete_alert_ioc
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
@@ -140,6 +149,7 @@ from app.incidents.services.db_operations import list_alert_by_status
 from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_customer_code
+from app.incidents.services.db_operations import list_alerts_by_ioc
 from app.incidents.services.db_operations import list_alerts_by_source
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
@@ -407,6 +417,38 @@ async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(g
     return AssetResponse(asset=await create_asset(asset, db), success=True, message="Asset created successfully")
 
 
+@incidents_db_operations_router.post("/alert/ioc", response_model=AlertIoCResponse)
+async def create_alert_ioc_endpoint(ioc: AlertIoCCreate, db: AsyncSession = Depends(get_db)):
+    return AlertIoCResponse(alert_ioc=await create_alert_ioc(ioc, db), success=True, message="Alert IoC created successfully")
+
+
+@incidents_db_operations_router.get("/alert/ioc/{ioc_value}", response_model=AlertOutResponse)
+async def list_alerts_by_ioc_value_endpoint(
+    ioc_value: str,
+    db: AsyncSession = Depends(get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+):
+    return AlertOutResponse(
+        alerts=await list_alerts_by_ioc(ioc_value, db, page, page_size),
+        total=await alerts_total_by_ioc(db, ioc_value),
+        open=await alerts_open_by_ioc(db, ioc_value),
+        in_progress=await alerts_in_progress_by_ioc(db, ioc_value),
+        closed=await alerts_closed_by_ioc(db, ioc_value),
+        success=True,
+        message="Alerts retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.delete("/alert/ioc", response_model=AlertIoCResponse)
+async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depends(get_db)):
+    return AlertIoCResponse(
+        alert_ioc=await delete_alert_ioc(ioc=ioc, db=db),
+        success=True,
+        message="Alert IoC deleted successfully",
+    )
+
+
 @incidents_db_operations_router.post("/alert/tag", response_model=AlertTagResponse)
 async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
     return AlertTagResponse(alert_tag=await create_alert_tag(alert_tag, db), success=True, message="Alert tag created successfully")
@@ -620,6 +662,7 @@ async def list_alerts_multiple_filters_endpoint(
     asset_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     tags: Optional[List[str]] = Query(None),
+    ioc_value: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
@@ -636,6 +679,7 @@ async def list_alerts_multiple_filters_endpoint(
     - asset_name (str, optional): Filter by asset name.
     - status (str, optional): Filter by status.
     - tags (List[str], optional): Filter by tags.
+    - ioc_value (str, optional): Filter by IoC value.
     - page (int, default=1): Page number.
     - page_size (int, default=25): Number of alerts per page.
     - order (str, default='desc'): Sorting order ('asc' or 'desc').
@@ -659,6 +703,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
             page=page,
             page_size=page_size,
@@ -672,6 +717,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         open=await alerts_open_multiple_filters(
@@ -682,6 +728,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         in_progress=await alerts_in_progress_multiple_filters(
@@ -692,6 +739,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         closed=await alerts_closed_multiple_filters(
@@ -702,6 +750,7 @@ async def list_alerts_multiple_filters_endpoint(
             asset_name=asset_name,
             status=status,
             tags=tags,
+            ioc_value=ioc_value,
             db=db,
         ),
         success=True,

@@ -205,6 +205,20 @@
 						Comments
 					</n-tooltip>
 
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<Badge type="splitted" class="xs:!flex !hidden">
+								<template #iconLeft>
+									<Icon :name="IoCsIcon" :size="16" />
+								</template>
+								<template #value>
+									{{ alert.iocs?.length || 0 }}
+								</template>
+							</Badge>
+						</template>
+						IoC
+					</n-tooltip>
+
 					<span
 						v-for="tag of alert.tags"
 						:key="tag.tag"
@@ -286,6 +300,7 @@ const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
+const IoCsIcon = "carbon:ibm-watson-discovery"
 
 const { gotoCustomer } = useGoto()
 const dialog = useDialog()

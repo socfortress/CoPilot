@@ -32,12 +32,17 @@
 					/>
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="IoCs" tab="IoCs" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
+import type { Alert, AlertComment, AlertIOC } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
 import _clone from "lodash/cloneDeep"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -54,6 +59,7 @@ const emit = defineEmits<{
 const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
 const AlertAssetsList = defineAsyncComponent(() => import("./AlertAssetsList.vue"))
 const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList.vue"))
+const AlertIoCsList = defineAsyncComponent(() => import("./AlertIoCsList.vue"))
 const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
 
 const { alertData, alertId } = toRefs(props)
@@ -70,6 +76,12 @@ function updateAlert(updatedAlert: Alert) {
 function updateComments(comments: AlertComment[]) {
 	if (alert.value) {
 		alert.value.comments = comments
+		emit("updated", alert.value)
+	}
+}
+function updateIos(iocs: AlertIOC[]) {
+	if (alert.value) {
+		alert.value.iocs = iocs
 		emit("updated", alert.value)
 	}
 }

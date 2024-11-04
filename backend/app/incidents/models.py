@@ -12,6 +12,25 @@ from sqlmodel import SQLModel
 from sqlmodel import Text
 
 
+class IoC(SQLModel, table=True):
+    __tablename__ = "incident_management_ioc"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    value: str = Field(nullable=False)
+    type: str = Field(max_length=50, nullable=False)  # e.g., IP address, domain, URL, etc.
+    description: Optional[str] = Field(sa_column=Text, nullable=True)
+
+    alerts: List["AlertToIoC"] = Relationship(back_populates="ioc")
+
+
+class AlertToIoC(SQLModel, table=True):
+    __tablename__ = "incident_management_alert_to_ioc"
+    alert_id: int = Field(foreign_key="incident_management_alert.id", primary_key=True)
+    ioc_id: int = Field(foreign_key="incident_management_ioc.id", primary_key=True)
+
+    alert: "Alert" = Relationship(back_populates="iocs")
+    ioc: "IoC" = Relationship(back_populates="alerts")
+
+
 class Alert(SQLModel, table=True):
     __tablename__ = "incident_management_alert"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -28,6 +47,7 @@ class Alert(SQLModel, table=True):
     assets: List["Asset"] = Relationship(back_populates="alert")
     cases: List["CaseAlertLink"] = Relationship(back_populates="alert")
     tags: List["AlertToTag"] = Relationship(back_populates="alert")
+    iocs: List["AlertToIoC"] = Relationship(back_populates="alert")
 
 
 class AlertTag(SQLModel, table=True):

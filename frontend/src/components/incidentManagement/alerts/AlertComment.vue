@@ -42,7 +42,7 @@ onBeforeMount(() => {
 	width: 100%;
 
 	.user-pic {
-		padding-top: 4px;
+		padding-top: 2px;
 	}
 
 	.comment {
