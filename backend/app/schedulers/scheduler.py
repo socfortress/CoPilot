@@ -264,7 +264,7 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_brute_force_failed_logins": invoke_sap_siem_integration_brute_force_failed_logins,
         "invoke_sap_siem_integration_brute_force_failed_logins_same_ip": invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
         "invoke_sap_siem_integration_successful_login_after_multiple_failed_logins": invoke_sap_siem_integration_successful_login_after_multiple_failed_logins,
-        "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
+        "invoke_huntress_integration_collect": invoke_huntress_integration_collect,
         "invoke_duo_integration_collect": invoke_duo_integration_collect,
         "invoke_darktrace_integration_collect": invoke_darktrace_integration_collect,
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,

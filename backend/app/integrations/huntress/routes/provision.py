@@ -40,9 +40,9 @@ async def provision_huntress_route(
     await provision_huntress(provision_huntress_request, session)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
-            function_name="invoke_huntress_integration_collection",
+            function_name="invoke_huntress_integration_collect",
             time_interval=provision_huntress_request.time_interval,
-            job_id="invoke_huntress_integration_collection",
+            job_id="invoke_huntress_integration_collect",
         ),
     )
     return ProvisionHuntressResponse(
