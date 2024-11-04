@@ -202,6 +202,7 @@ async def schedule_enabled_jobs(scheduler):
             "invoke_office365_exchange_online_alert",
             "invoke_office365_threat_intel_alert",
             "wazuh_index_fields_resize",
+            "invoke_huntress_integration_collection",
         ]
 
         # Disable each job in the list
