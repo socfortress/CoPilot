@@ -23,6 +23,14 @@ export interface Alert {
 	assets: AlertAsset[]
 	tags: AlertTag[]
 	linked_cases: Omit<Case, "alerts">[]
+	iocs: AlertIOC[]
+}
+
+export interface AlertIOC {
+	id: number
+	description: string
+	type: string
+	value: string
 }
 
 export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS"
