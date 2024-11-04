@@ -11,6 +11,7 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 from sqlmodel import Text
 
+
 class IoC(SQLModel, table=True):
     __tablename__ = "incident_management_ioc"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -28,6 +29,7 @@ class AlertToIoC(SQLModel, table=True):
 
     alert: "Alert" = Relationship(back_populates="iocs")
     ioc: "IoC" = Relationship(back_populates="alerts")
+
 
 class Alert(SQLModel, table=True):
     __tablename__ = "incident_management_alert"

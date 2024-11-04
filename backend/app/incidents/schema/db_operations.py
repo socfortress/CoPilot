@@ -4,19 +4,20 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import validator
-from fastapi import HTTPException
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
+from app.incidents.models import AlertToIoC
 from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
-from app.incidents.models import Comment, IoC, AlertToIoC
+from app.incidents.models import Comment
 
 
 class SocfortressRecommendsWazuhFieldNames(Enum):
@@ -143,22 +144,28 @@ class AlertIocValue(str, Enum):
     HASH = "HASH"
     URL = "URL"
 
+
 class AlertIoCCreate(BaseModel):
     alert_id: int
     ioc_value: str
     ioc_type: AlertIocValue
     ioc_description: Optional[str] = None
 
-    @validator('ioc_type')
+    @validator("ioc_type")
     def validate_ioc_type(cls, v):
         if v not in AlertIocValue:
-            raise HTTPException(status_code=400, detail=f"Invalid IoC type. Must be one of {', '.join([ioc.value for ioc in AlertIocValue])}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid IoC type. Must be one of {', '.join([ioc.value for ioc in AlertIocValue])}",
+            )
         return v
+
 
 class AlertIoCResponse(BaseModel):
     alert_ioc: AlertToIoC
     success: bool
     message: str
+
 
 class CaseResponse(BaseModel):
     case: Case
@@ -281,6 +288,7 @@ class AlertTagDelete(BaseModel):
     alert_id: int
     tag_id: int
 
+
 class AlertIoCDelete(BaseModel):
     alert_id: int
     ioc_id: int
@@ -304,6 +312,7 @@ class AssetBase(BaseModel):
     alert_context_id: int
     velociraptor_id: Optional[str] = None
     index_name: str
+
 
 class IoCBase(BaseModel):
     value: str

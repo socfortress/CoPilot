@@ -30,6 +30,7 @@ from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
 from app.incidents.models import AlertTitleFieldName
+from app.incidents.models import AlertToIoC
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
@@ -40,21 +41,25 @@ from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
-from app.incidents.models import Notification, IoC, AlertToIoC
+from app.incidents.models import IoC
+from app.incidents.models import Notification
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertIoCCreate
+from app.incidents.schema.db_operations import AlertIoCDelete
 from app.incidents.schema.db_operations import AlertOut
-from app.incidents.schema.db_operations import AlertTagBase, AlertIoCResponse, AlertIoCCreate
+from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
-from app.incidents.schema.db_operations import CaseCreate, AlertIoCDelete
-from app.incidents.schema.db_operations import CaseOut, IoCBase
+from app.incidents.schema.db_operations import CaseCreate
+from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import IoCBase
 from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
@@ -380,32 +385,44 @@ async def alerts_open_multiple_filters(
     open_count = result.scalar_one()
     return open_count
 
+
 async def alerts_total_by_ioc(db: AsyncSession, ioc_value: str) -> int:
-    result = await db.execute(select(Alert)
+    result = await db.execute(
+        select(Alert)
         .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
         .join(IoC, AlertToIoC.ioc_id == IoC.id)
-        .where(IoC.value == ioc_value))
+        .where(IoC.value == ioc_value),
+    )
     return len(result.scalars().all())
+
 
 async def alerts_closed_by_ioc(db: AsyncSession, ioc_value: str) -> int:
-    result = await db.execute(select(Alert)
+    result = await db.execute(
+        select(Alert)
         .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
         .join(IoC, AlertToIoC.ioc_id == IoC.id)
-        .where((Alert.status == "CLOSED") & (IoC.value == ioc_value)))
+        .where((Alert.status == "CLOSED") & (IoC.value == ioc_value)),
+    )
     return len(result.scalars().all())
+
 
 async def alerts_in_progress_by_ioc(db: AsyncSession, ioc_value: str) -> int:
-    result = await db.execute(select(Alert)
+    result = await db.execute(
+        select(Alert)
         .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
         .join(IoC, AlertToIoC.ioc_id == IoC.id)
-        .where((Alert.status == "IN_PROGRESS") & (IoC.value == ioc_value)))
+        .where((Alert.status == "IN_PROGRESS") & (IoC.value == ioc_value)),
+    )
     return len(result.scalars().all())
 
+
 async def alerts_open_by_ioc(db: AsyncSession, ioc_value: str) -> int:
-    result = await db.execute(select(Alert)
+    result = await db.execute(
+        select(Alert)
         .join(AlertToIoC, Alert.id == AlertToIoC.alert_id)
         .join(IoC, AlertToIoC.ioc_id == IoC.id)
-        .where((Alert.status == "OPEN") & (IoC.value == ioc_value)))
+        .where((Alert.status == "OPEN") & (IoC.value == ioc_value)),
+    )
     return len(result.scalars().all())
 
 
@@ -779,6 +796,7 @@ async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
         raise HTTPException(status_code=400, detail="Asset already exists")
     return db_asset
 
+
 async def create_alert_ioc(alert_ioc: AlertIoCCreate, db: AsyncSession) -> AlertToIoC:
     # Create the IoC instance
     db_alert_ioc = IoC(
@@ -819,6 +837,7 @@ async def delete_alert_ioc(ioc: AlertIoCDelete, db: AsyncSession) -> AlertToIoC:
         raise HTTPException(status_code=400, detail="Error deleting alert IoC")
 
     return alert_ioc
+
 
 async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:
     # Create the AlertTag instance
@@ -1311,6 +1330,7 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     if not alert_context:
         raise HTTPException(status_code=404, detail="Alert context not found")
     return alert_context
+
 
 async def list_alerts_by_ioc(ioc_value: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[AlertOut]:
     offset = (page - 1) * page_size
