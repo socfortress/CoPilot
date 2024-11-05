@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="source-configuration-wizard">
-		<div class="wrapper flex flex-col">
+		<div class="flex min-h-48 flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
@@ -40,7 +40,7 @@
 							</div>
 						</div>
 
-						<div v-else-if="current === 2" class="flex grow flex-col px-7 pb-7" style="min-height: 401px">
+						<div v-else-if="current === 2" class="flex min-h-[401px] grow flex-col px-7 pb-7">
 							<SourceConfigurationForm
 								v-if="sourceConfigurationModel"
 								:source-configuration-model
@@ -210,10 +210,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .source-configuration-wizard {
-	.wrapper {
-		min-height: 180px;
-	}
-
 	.slide-form-right-enter-active,
 	.slide-form-right-leave-active,
 	.slide-form-left-enter-active,

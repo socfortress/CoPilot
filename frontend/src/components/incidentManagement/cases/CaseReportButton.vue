@@ -10,7 +10,7 @@
 		v-model:show="showForm"
 		display-directive="show"
 		preset="card"
-		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(270px, 90vh)', overflow: 'hidden' }"
+		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(240px, 90vh)', overflow: 'hidden' }"
 		title="Generate Report"
 		:bordered="false"
 		segmented
@@ -21,18 +21,20 @@
 					<n-form-item label="Template" path="template_name">
 						<CaseReportTemplateSelect v-model:value="form.template_name" />
 					</n-form-item>
-					<n-form-item label="Filename" path="file_name">
-						<n-input-group>
-							<n-input
-								v-model:value.trim="form.file_name"
-								placeholder="Please insert File Name"
-								clearable
-							/>
-							<n-input-group-label>.docx</n-input-group-label>
-						</n-input-group>
-					</n-form-item>
+					<n-collapse-transition :show="!!form.template_name">
+						<n-form-item label="Filename" path="file_name">
+							<n-input-group>
+								<n-input
+									v-model:value.trim="form.file_name"
+									placeholder="Please insert File Name"
+									clearable
+								/>
+								<n-input-group-label v-if="reportType">.{{ reportType }}</n-input-group-label>
+							</n-input-group>
+						</n-form-item>
+					</n-collapse-transition>
 
-					<div class="mt-8 flex justify-between gap-4">
+					<div class="mt-3 flex justify-between gap-4">
 						<n-button :disabled="exporting" @click="reset()">Reset</n-button>
 						<n-button
 							type="primary"
@@ -63,6 +65,7 @@ import {
 	type FormRules,
 	type FormValidationError,
 	NButton,
+	NCollapseTransition,
 	NForm,
 	NFormItem,
 	NInput,
@@ -84,6 +87,17 @@ const showForm = ref(false)
 const message = useMessage()
 const form = ref<DeepNullable<CaseReportPayload>>(getClearForm())
 const formRef = ref<FormInst | null>(null)
+const reportType = computed<"docx" | "pdf" | null>(() => {
+	const ext = form.value.template_name?.split(".").pop()?.toLowerCase() || null
+	switch (ext) {
+		case "docx":
+			return "docx"
+		case "html":
+			return "pdf"
+		default:
+			return null
+	}
+})
 
 const rules: FormRules = {
 	template_name: {
@@ -142,25 +156,34 @@ function resetForm() {
 }
 
 function exportCases() {
-	if (!form.value.file_name || !form.value.template_name) return
+	if (!form.value.file_name || !form.value.template_name || !reportType.value) return
 
 	exporting.value = true
 
+	const extension = reportType.value === "pdf" ? "pdf" : "docx"
+	const mimeType =
+		reportType.value === "pdf"
+			? "application/pdf"
+			: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
 	const fileName = form.value.file_name
-		? `${form.value.file_name}.docx`
-		: `case:${caseId}_report_${formatDate(new Date(), dFormats.datetimesec)}.docx`
+		? `${form.value.file_name}.${extension}`
+		: `case:${caseId}_report_${formatDate(new Date(), dFormats.datetimesec)}.${extension}`
 
 	Api.incidentManagement
-		.generateCaseReport({
-			case_id: caseId,
-			file_name: form.value.file_name,
-			template_name: form.value.template_name
-		})
+		.generateCaseReport(
+			{
+				case_id: caseId,
+				file_name: form.value.file_name,
+				template_name: form.value.template_name
+			},
+			reportType.value
+		)
 		.then(res => {
 			if (res.data) {
 				saveAs(
 					new Blob([res.data], {
-						type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+						type: mimeType
 					}),
 					fileName
 				)

@@ -43,7 +43,7 @@
 		<n-spin :show="loading">
 			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
@@ -355,12 +355,3 @@ onBeforeUnmount(() => {
 	cancelSearch()
 })
 </script>
-
-<style lang="scss" scoped>
-.alerts-list {
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
-	}
-}
-</style>

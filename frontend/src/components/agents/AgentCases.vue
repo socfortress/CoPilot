@@ -8,7 +8,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="list my-3 flex flex-col gap-2">
+		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="casesList.length">
 				<SocCaseItem
 					v-for="item of casesList"
@@ -75,10 +75,3 @@ onBeforeUnmount(() => {
 	abortController?.abort()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

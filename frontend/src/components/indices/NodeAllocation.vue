@@ -9,7 +9,7 @@
 			</div>
 		</template>
 		<n-spin :show="loading">
-			<div class="info">
+			<div class="info min-h-14">
 				<template v-if="indicesAllocation.length">
 					<n-scrollbar style="max-height: 500px" trigger="none">
 						<div
@@ -126,7 +126,6 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 .cluster-health {
 	.info {
-		min-height: 50px;
 		margin-left: -5px;
 		margin-right: -5px;
 

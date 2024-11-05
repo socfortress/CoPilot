@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Case Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .case-info { margin-bottom: 20px; }
+        .alert { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Case Report</h1>
+    <div class="case-info">
+        <p><strong>Name of Case:</strong> {{ case.name }}</p>
+        <p><strong>Description:</strong> {{ case.description }}</p>
+        <p><strong>Assigned To:</strong> {{ case.assigned_to }}</p>
+        <p><strong>Case Creation Time:</strong> {{ case.case_creation_time }}</p>
+        <p><strong>Case ID:</strong> {{ case.id }}</p>
+    </div>
+
+    <h2>Alerts:</h2>
+    {% for alert in case.alerts %}
+    <div class="alert">
+        <p><strong>Alert Name:</strong> {{ alert.alert_name }}</p>
+        <p><strong>Description:</strong> {{ alert.alert_description }}</p>
+        <p><strong>Status:</strong> {{ alert.status }}</p>
+        <p><strong>Tags:</strong> {{ alert.tags | join(', ') }}</p>
+
+        <h3>Assets:</h3>
+        {% for asset in alert.assets %}
+        <p>- <strong>Asset Name:</strong> {{ asset.asset_name }} | <strong>Agent ID:</strong> {{ asset.agent_id }}</p>
+        {% endfor %}
+
+        <h3>Comments:</h3>
+        {% for comment in alert.comments %}
+        <p>- "{{ comment.comment }}" by {{ comment.user_name }} at {{ comment.created_at }}</p>
+        {% endfor %}
+
+        <h3>Context:</h3>
+        <p><strong>Source:</strong> {{ alert.context.source }}</p>
+        <p><strong>Context Details:</strong> {{ alert.context.context }}</p>
+
+        <h3>IoCs:</h3>
+        {% for ioc in alert.iocs %}
+        <p>- <strong>IoC Value:</strong> {{ ioc.ioc_value }} | <strong>Type:</strong> {{ ioc.ioc_type }} | <strong>Description:</strong> {{ ioc.ioc_description }}</p>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</body>
+</html>

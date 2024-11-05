@@ -1,6 +1,6 @@
 <template>
 	<div class="soc-assets-list">
-		<n-spin :show="loadingAssets" style="min-height: 50px">
+		<n-spin :show="loadingAssets" class="min-h-14">
 			<div class="flex flex-col gap-2 px-7 py-4 pb-0">
 				<div v-if="assetsState" class="box">
 					State:

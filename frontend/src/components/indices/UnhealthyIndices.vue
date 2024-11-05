@@ -7,8 +7,8 @@
 			</div>
 		</template>
 		<n-spin :show="loading">
-			<div class="info">
-				<n-scrollbar style="max-height: 500px" trigger="none">
+			<div class="min-h-14">
+				<n-scrollbar class="max-h-125" trigger="none">
 					<template v-if="unhealthyIndices && unhealthyIndices.length">
 						<div
 							v-for="item of unhealthyIndices"
@@ -63,14 +63,11 @@ const unhealthyIndices = computed(() =>
 
 <style lang="scss" scoped>
 .unhealthy-indices {
-	.info {
-		min-height: 50px;
-		.item {
-			cursor: pointer;
+	.item {
+		cursor: pointer;
 
-			&:not(:last-child) {
-				@apply mb-3;
-			}
+		&:not(:last-child) {
+			@apply mb-3;
 		}
 	}
 }

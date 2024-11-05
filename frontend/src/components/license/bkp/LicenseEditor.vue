@@ -354,7 +354,9 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-.license-box.loading {
-	min-height: 100px;
+.license-box {
+	&.loading {
+		min-height: 100px;
+	}
 }
 </style>

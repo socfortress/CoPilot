@@ -8,7 +8,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="list my-3 flex flex-col gap-4">
+		<div class="my-3 flex min-h-52 flex-col gap-4">
 			<template v-if="collectList.length">
 				<CollectItem
 					v-for="item of collectList"
@@ -72,10 +72,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

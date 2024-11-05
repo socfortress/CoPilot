@@ -10,7 +10,7 @@
 		</div>
 
 		<n-spin :show="loadingBookmarks">
-			<div class="list">
+			<div class="min-h-52">
 				<template v-if="bookmarksList.length">
 					<SocAlertItem
 						v-for="alert of bookmarksList"
@@ -132,10 +132,6 @@ onBeforeUnmount(() => {
 .soc-alerts-bookmarks {
 	.header {
 		height: 50px;
-	}
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
 	}
 }
 </style>

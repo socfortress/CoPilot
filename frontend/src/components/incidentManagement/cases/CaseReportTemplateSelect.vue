@@ -7,6 +7,7 @@
 			clearable
 			:loading="loadingOptions"
 			class="overflow-hidden"
+			to="body"
 		/>
 		<n-button secondary @click="showManagerDialog = true">
 			<template #icon>

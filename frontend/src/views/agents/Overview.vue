@@ -355,8 +355,7 @@ onBeforeMount(() => {
 	}
 
 	.section {
-		min-height: 200px;
-		@apply mt-2;
+		@apply mt-2 min-h-52;
 	}
 }
 </style>

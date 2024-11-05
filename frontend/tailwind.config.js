@@ -60,6 +60,9 @@ export default {
 				150: "37.5rem",
 				"60vh": "60vh"
 			},
+			minHeight: {
+				120: "30rem"
+			},
 			width: {
 				5.5: "1.375rem",
 				150: "37.5rem"
@@ -71,6 +74,7 @@ export default {
 			maxHeight: {
 				"50vh": "50vh",
 				106: "26.5rem",
+				125: "31.25rem",
 				150: "37.5rem"
 			},
 			maxWidth: {

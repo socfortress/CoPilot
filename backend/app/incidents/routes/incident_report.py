@@ -29,6 +29,11 @@ from app.incidents.services.reports import create_file_response
 from app.incidents.services.reports import download_template
 from app.incidents.services.reports import render_document_with_context
 from app.incidents.services.reports import save_template_to_tempfile
+from app.incidents.services.reports_pdf import convert_html_to_pdf
+from app.incidents.services.reports_pdf import create_case_context_pdf
+from app.incidents.services.reports_pdf import create_file_response_pdf
+from app.incidents.services.reports_pdf import download_template_pdf
+from app.incidents.services.reports_pdf import render_html_template
 
 incidents_report_router = APIRouter()
 
@@ -199,6 +204,38 @@ async def get_cases_export_docx_route(
 
     # Clean up temporary files
     cleanup_temp_files([tmp_template_name])
+
+    return response
+
+
+@incidents_report_router.post(
+    "/generate-report-pdf",
+    description="Generate a PDF report for a case.",
+)
+async def get_cases_export_pdf_route(
+    request: CaseDownloadDocxRequest,
+    session: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    case = await fetch_case_by_id(session, request.case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="No cases found")
+
+    context = create_case_context_pdf(case)
+
+    # Download and save the template
+    tmp_template_name = await download_template_pdf(request.template_name)
+
+    # Render the HTML template with the context
+    rendered_html_file_name = render_html_template(tmp_template_name, context)
+
+    # Convert HTML to PDF using WeasyPrint
+    rendered_pdf_file_name = convert_html_to_pdf(rendered_html_file_name)
+
+    # Create the FileResponse for PDF
+    response = create_file_response_pdf(file_path=rendered_pdf_file_name, file_name=request.file_name.replace(".docx", ".pdf"))
+
+    # Clean up temporary files
+    cleanup_temp_files([tmp_template_name, rendered_html_file_name])
 
     return response
 

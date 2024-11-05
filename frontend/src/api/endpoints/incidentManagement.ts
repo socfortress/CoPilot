@@ -388,8 +388,9 @@ export default {
 			`/incidents/db_operations/case-report-template/do-default-template-exists`
 		)
 	},
-	generateCaseReport(payload: CaseReportPayload) {
-		return HttpClient.post<Blob>(`/incidents/report/generate-report-docx`, payload, {
+	generateCaseReport(payload: CaseReportPayload, type: "docx" | "pdf") {
+		const url = type === "docx" ? `/incidents/report/generate-report-docx` : `/incidents/report/generate-report-pdf`
+		return HttpClient.post<Blob>(url, payload, {
 			responseType: "blob"
 		})
 	},
