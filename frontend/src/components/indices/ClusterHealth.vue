@@ -7,7 +7,7 @@
 			</div>
 		</template>
 		<n-spin :show="loading">
-			<div v-if="cluster" class="info">
+			<div v-if="cluster" class="min-h-14">
 				<n-scrollbar style="max-height: 500px" trigger="none">
 					<div class="card-wrap">
 						<div v-for="prop of propsOrder" :key="prop" class="box">
@@ -106,27 +106,23 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .cluster-health {
-	.info {
-		min-height: 50px;
+	.card-wrap {
+		@apply gap-6 gap-x-6 px-4 py-3;
+		column-width: 12rem;
+		column-count: auto;
 
-		.card-wrap {
-			@apply gap-6 gap-x-6 px-4 py-3;
-			column-width: 12rem;
-			column-count: auto;
-
-			.box {
-				overflow: hidden;
-				@apply mb-6;
-				.value {
-					font-weight: bold;
-					margin-bottom: 2px;
-					white-space: nowrap;
-				}
-				.label {
-					@apply text-xs;
-					font-family: var(--font-family-mono);
-					opacity: 0.8;
-				}
+		.box {
+			overflow: hidden;
+			@apply mb-6;
+			.value {
+				font-weight: bold;
+				margin-bottom: 2px;
+				white-space: nowrap;
+			}
+			.label {
+				@apply text-xs;
+				font-family: var(--font-family-mono);
+				opacity: 0.8;
 			}
 		}
 	}

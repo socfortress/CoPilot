@@ -9,7 +9,7 @@
 			</n-button>
 		</div>
 
-		<PipeList min-height="100px" @open-rule="openRule($event)" />
+		<PipeList @open-rule="openRule($event)" />
 
 		<n-modal
 			v-model:show="showDetails"

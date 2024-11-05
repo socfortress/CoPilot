@@ -40,7 +40,7 @@
 					<template #header>
 						<div class="-ml-2 py-3">SOC Case details</div>
 					</template>
-					<div style="min-height: 50px">
+					<div class="min-h-14">
 						<n-spin :show="loadingCase">
 							<SocCaseItem
 								v-if="socCase"

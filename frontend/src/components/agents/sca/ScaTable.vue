@@ -1,6 +1,6 @@
 <template>
 	<n-spin class="sca-table" :show="loading">
-		<n-scrollbar x-scrollable style="width: 100%">
+		<n-scrollbar x-scrollable class="w-full">
 			<n-table :bordered="true" class="min-w-max">
 				<thead>
 					<tr>

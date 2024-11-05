@@ -134,7 +134,7 @@
 					<n-empty v-else description="No items found" class="h-48 justify-center" />
 				</n-tab-pane>
 				<n-tab-pane name="Query stats" tab="Query stats" display-directive="show:lazy">
-					<div class="p-7 pt-4" style="container-type: inline-size">
+					<div class="p-7 pt-4">
 						<template v-if="flow.query_stats.length">
 							<AgentFlowQueryStat
 								v-for="stat of flow.query_stats"

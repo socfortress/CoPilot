@@ -1,8 +1,8 @@
 <template>
-	<div>
+	<div class="@container">
 		<CardEntity :embedded hoverable size="small">
-			<div class="collect-item grid-auto-fit-200 grid gap-2">
-				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
+			<div class="grid-auto-fit-200 @lg:grid flex flex-col gap-2">
+				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ '@lg:flex hidden': prop.hideMobile }">
 					<template #key>
 						{{ prop.key }}
 					</template>
@@ -102,16 +102,3 @@ onBeforeMount(() => {
 	delete jsonData.value.___id
 })
 </script>
-
-<style lang="scss" scoped>
-.collect-item {
-	@container (max-width: 500px) {
-		display: flex;
-		flex-direction: column;
-
-		.hide-mobile {
-			display: none;
-		}
-	}
-}
-</style>

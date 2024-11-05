@@ -1,5 +1,5 @@
 <template>
-	<n-card class="agent-toolbar" content-style="padding:0">
+	<n-card class="agent-toolbar" content-class="!p-0">
 		<div class="wrapper flex flex-col gap-6 px-4 py-3">
 			<div class="flex flex-col gap-2">
 				<div class="agent-search flex gap-3">
