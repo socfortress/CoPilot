@@ -29,14 +29,20 @@
 						v-model:file-list="fileList"
 						:max="1"
 						:disabled="uploading"
-						accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document, .docx, .DOCX"
+						accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document, .docx, .DOCX, text/html, .html, .HTML"
 					>
 						<n-upload-dragger>
 							<div>
 								<Icon :name="UploadIcon" :size="28" :depth="3"></Icon>
 							</div>
 							<div class="font-semibold">Click or drag a file to this area to upload</div>
-							<p class="mt-2">Only .docx files are accepted</p>
+							<p class="mt-2">
+								Only
+								<strong>.docx</strong>
+								and
+								<strong>.html</strong>
+								files are accepted
+							</p>
 						</n-upload-dragger>
 					</n-upload>
 
