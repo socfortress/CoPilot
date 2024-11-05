@@ -17,9 +17,10 @@ from sqlmodel import select
 from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert
+from app.incidents.models import AlertToIoC
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
-from app.incidents.models import Case, AlertToIoC
+from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.schema.db_operations import CaseDownloadDocxRequest
 from app.incidents.services.reports import cleanup_temp_files
@@ -92,14 +93,13 @@ async def fetch_case_by_id(session: AsyncSession, case_id: int) -> Case:
             .selectinload(CaseAlertLink.alert)
             .options(
                 selectinload(Alert.assets).selectinload(Asset.alert_context),  # Load alert_context
-                selectinload(Alert.tags).selectinload(AlertToTag.tag),          # Load tags
-                selectinload(Alert.comments),                                   # Load comments
-                selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),          # Load IoCs
+                selectinload(Alert.tags).selectinload(AlertToTag.tag),  # Load tags
+                selectinload(Alert.comments),  # Load comments
+                selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),  # Load IoCs
             ),
         ),
     )
     return result.scalars().first()
-
 
 
 def serialize_case_alert_to_row(case: Case, alert: Alert) -> Dict[str, Any]:
