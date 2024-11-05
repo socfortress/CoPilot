@@ -86,7 +86,7 @@
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.13",
-		"@types/node": "^22.8.7",
+		"@types/node": "^22.9.0",
 		"@types/validator": "^13.12.2",
 		"@vitejs/plugin-vue": "^5.1.4",
 		"@vitejs/plugin-vue-jsx": "^4.0.1",
@@ -113,16 +113,16 @@
 		"unplugin-vue-components": "^0.27.4",
 		"vite": "^5.4.10",
 		"vite-bundle-visualizer": "^1.2.1",
-		"vite-plugin-vue-devtools": "^7.6.2",
+		"vite-plugin-vue-devtools": "^7.6.3",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^2.1.4",
 		"vue-tsc": "^2.1.10"
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.12.2",
+			"@typescript-eslint/eslint-plugin": "^8.13.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.12.2",
+			"@typescript-eslint/parser": "^8.13.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}
@@ -134,6 +134,6 @@
 		"@typescript-eslint/parser": {
 			"eslint": "^9.14.0"
 		},
-		"@typescript-eslint/typescript-estree": "^8.12.2"
+		"@typescript-eslint/typescript-estree": "^8.13.0"
 	}
 }
