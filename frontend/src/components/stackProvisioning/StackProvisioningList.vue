@@ -1,7 +1,7 @@
 <template>
 	<div class="stack-provisioning-list">
 		<n-spin :show="loading">
-			<div class="list my-3 flex flex-col gap-2">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="list.length">
 					<StackProvisioningItem v-for="item of list" :key="item.name" :content-pack="item" />
 				</template>
@@ -49,10 +49,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.list {
-	container-type: inline-size;
-	min-height: 200px;
-}
-</style>

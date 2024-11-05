@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="customer-agents flex flex-col gap-2">
+		<div class="flex min-h-28 flex-col gap-2">
 			<AgentCard
 				v-for="agent in list"
 				:key="agent.agent_id"
@@ -59,9 +59,3 @@ onBeforeMount(() => {
 	getAgents()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-agents {
-	min-height: 100px;
-}
-</style>

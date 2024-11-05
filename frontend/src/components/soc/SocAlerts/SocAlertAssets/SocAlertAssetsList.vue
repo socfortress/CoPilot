@@ -1,6 +1,6 @@
 <template>
 	<div class="soc-assets-list">
-		<n-spin :show="loadingAssets" style="min-height: 50px">
+		<n-spin :show="loadingAssets" class="min-h-14">
 			<div v-if="assetsList?.length" class="flex flex-col gap-2 p-7">
 				<SocAlertAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
 			</div>
