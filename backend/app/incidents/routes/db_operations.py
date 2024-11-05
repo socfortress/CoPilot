@@ -935,10 +935,7 @@ async def upload_case_report_template_endpoint(
 ):
     # Check if the file type is a .docx or .html
     mime_type, _ = mimetypes.guess_type(file.filename)
-    allowed_mime_types = [
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
-        "text/html"  # .html
-    ]
+    allowed_mime_types = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/html"]  # .docx  # .html
     if mime_type not in allowed_mime_types:
         raise HTTPException(status_code=400, detail="Invalid file type. Only .docx and .html files are allowed.")
 

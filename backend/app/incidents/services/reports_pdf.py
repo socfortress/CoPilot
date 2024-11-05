@@ -1,11 +1,16 @@
 import os
-import pdfkit
-from tempfile import NamedTemporaryFile
-from typing import Dict, Optional
-from jinja2 import Environment, FileSystemLoader
-from fastapi.responses import FileResponse
 import platform
+from tempfile import NamedTemporaryFile
+from typing import Dict
+from typing import Optional
+
+import pdfkit
+from fastapi.responses import FileResponse
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+
 from app.data_store.data_store_operations import download_data_store
+
 
 async def download_template_pdf(template_name: str) -> str:
     """Retrieve the template file content from the data store and save it to a temporary file."""
@@ -13,6 +18,7 @@ async def download_template_pdf(template_name: str) -> str:
     with NamedTemporaryFile(delete=False, suffix=".html") as tmp_template:
         tmp_template.write(template_content)
         return tmp_template.name
+
 
 def create_case_context_pdf(case) -> Dict[str, Dict[str, str]]:
     """Prepare the context for the Jinja template."""
@@ -68,6 +74,7 @@ def create_case_context_pdf(case) -> Dict[str, Dict[str, str]]:
         },
     }
 
+
 def render_html_template(template_path: str, context: Dict[str, Dict[str, str]]) -> str:
     """Render the Jinja HTML template with the provided context."""
     template_dir = os.path.dirname(template_path)
@@ -82,6 +89,7 @@ def render_html_template(template_path: str, context: Dict[str, Dict[str, str]])
         tmp.write(rendered_html.encode("utf-8"))
         return tmp.name
 
+
 def convert_html_to_pdf(html_path: str) -> str:
     """Convert the HTML file to a PDF using wkhtmltopdf via pdfkit, with dynamic path detection for different platforms."""
     pdf_path = html_path.replace(".html", ".pdf")
@@ -93,20 +101,14 @@ def convert_html_to_pdf(html_path: str) -> str:
             # Common installation paths for wkhtmltopdf on Windows
             wkhtmltopdf_paths = [
                 r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
-                r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe"
+                r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe",
             ]
         elif platform.system() == "Darwin":  # macOS
             # Common installation paths for wkhtmltopdf on macOS
-            wkhtmltopdf_paths = [
-                "/usr/local/bin/wkhtmltopdf",
-                "/opt/homebrew/bin/wkhtmltopdf"  # For macOS ARM (M1/M2) using Homebrew
-            ]
+            wkhtmltopdf_paths = ["/usr/local/bin/wkhtmltopdf", "/opt/homebrew/bin/wkhtmltopdf"]  # For macOS ARM (M1/M2) using Homebrew
         elif platform.system() == "Linux":
             # Common installation paths for wkhtmltopdf on Linux (Debian-based)
-            wkhtmltopdf_paths = [
-                "/usr/bin/wkhtmltopdf",
-                "/usr/local/bin/wkhtmltopdf"
-            ]
+            wkhtmltopdf_paths = ["/usr/bin/wkhtmltopdf", "/usr/local/bin/wkhtmltopdf"]
 
         # Try each path until a valid executable is found
         path_to_wkhtmltopdf = None
@@ -129,6 +131,7 @@ def convert_html_to_pdf(html_path: str) -> str:
         raise RuntimeError(f"Failed to convert HTML to PDF: {str(e)}")
 
     return pdf_path
+
 
 def create_file_response_pdf(file_path: str, file_name: Optional[str] = "case_report.pdf") -> FileResponse:
     """Create a FileResponse object for the rendered document."""

@@ -30,11 +30,10 @@ from app.incidents.services.reports import download_template
 from app.incidents.services.reports import render_document_with_context
 from app.incidents.services.reports import save_template_to_tempfile
 from app.incidents.services.reports_pdf import convert_html_to_pdf
+from app.incidents.services.reports_pdf import create_case_context_pdf
 from app.incidents.services.reports_pdf import create_file_response_pdf
 from app.incidents.services.reports_pdf import download_template_pdf
 from app.incidents.services.reports_pdf import render_html_template
-from app.incidents.services.reports_pdf import create_case_context_pdf
-
 
 incidents_report_router = APIRouter()
 
@@ -207,6 +206,7 @@ async def get_cases_export_docx_route(
     cleanup_temp_files([tmp_template_name])
 
     return response
+
 
 @incidents_report_router.post(
     "/generate-report-pdf",
