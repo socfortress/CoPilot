@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-network-connector-form flex flex-col gap-4">
+	<div class="customer-network-connector-form min-h-120 flex flex-col gap-4 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="px-7 pb-2 pt-4">
@@ -219,9 +219,6 @@ function prev() {
 
 <style lang="scss" scoped>
 .customer-network-connector-form {
-	min-height: 480px;
-	overflow: hidden;
-
 	.slide-form-right-enter-active,
 	.slide-form-right-leave-active,
 	.slide-form-left-enter-active,

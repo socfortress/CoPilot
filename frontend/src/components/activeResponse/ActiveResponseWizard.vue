@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="active-response-wizard">
-		<div class="wrapper flex flex-col">
+		<div class="min-h-120 flex flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
@@ -59,7 +59,7 @@
 								</div>
 							</n-spin>
 						</div>
-						<div v-else-if="current === 3" class="flex grow flex-col px-7 pb-7" style="min-height: 401px">
+						<div v-else-if="current === 3" class="flex min-h-[401px] grow flex-col px-7 pb-7">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
 								:active-response="selectedActiveResponse"
@@ -214,10 +214,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .active-response-wizard {
-	.wrapper {
-		min-height: 480px;
-	}
-
 	.slide-form-right-enter-active,
 	.slide-form-right-leave-active,
 	.slide-form-left-enter-active,

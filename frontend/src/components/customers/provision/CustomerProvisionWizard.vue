@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-provision-wizard">
-		<div class="wrapper flex flex-col">
+		<div class="min-h-120 flex flex-col">
 			<div class="grow">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
@@ -644,10 +644,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .customer-provision-wizard {
-	.wrapper {
-		min-height: 480px;
-	}
-
 	.slide-form-right-enter-active,
 	.slide-form-right-leave-active,
 	.slide-form-left-enter-active,
