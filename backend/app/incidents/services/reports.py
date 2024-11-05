@@ -54,6 +54,14 @@ def create_case_context(case) -> Dict[str, Dict[str, str]]:
                     }
                     if alert.alert.assets
                     else None,
+                    "iocs": [
+                        {
+                            "ioc_value": ioc.ioc.value,
+                            "ioc_type": ioc.ioc.type,
+                            "ioc_description": ioc.ioc.description,
+                        }
+                        for ioc in alert.alert.iocs
+                    ],
                 }
                 for alert in case.alerts
             ],
