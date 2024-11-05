@@ -137,9 +137,3 @@ def create_file_response_pdf(file_path: str, file_name: Optional[str] = "case_re
         filename=file_name,
         media_type="application/pdf",
     )
-
-def cleanup_temp_files(file_paths: list):
-    """Clean up the temporary files."""
-    for file_path in file_paths:
-        if os.path.exists(file_path):
-            os.remove(file_path)
