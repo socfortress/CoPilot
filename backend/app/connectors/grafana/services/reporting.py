@@ -135,15 +135,15 @@ async def get_dashboard_details(dashboard_uid: str) -> GrafanaDashboardDetails:
 async def login_to_page(page, session: AsyncSession):
     try:
         # Navigate to the login page
-        await page.goto(f'{await get_connector_attribute(connector_id=12, column_name="connector_url", session=session)}/login')
+        await page.goto(f'{await get_connector_attribute(connector_id=8, column_name="connector_url", session=session)}/login')
         # Enter the username and password
         await page.fill(
             'input[name="user"]',
-            f'{await get_connector_attribute(connector_id=12, column_name="connector_username", session=session)}',
+            f'{await get_connector_attribute(connector_id=8, column_name="connector_username", session=session)}',
         )
         await page.fill(
             'input[name="password"]',
-            f'{await get_connector_attribute(connector_id=12, column_name="connector_password", session=session)}',
+            f'{await get_connector_attribute(connector_id=8, column_name="connector_password", session=session)}',
         )
         # Click the login button
         await page.click('button[data-testid="data-testid Login button"]')
