@@ -94,8 +94,7 @@ import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import vShiki from "@/directives/v-shiki"
-import _uniqBy from "lodash/uniqBy"
-import { NButton, NCard, NDivider, NEmpty, NModal, NSelect, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 
 const { indexName, indexId, size } = defineProps<{
