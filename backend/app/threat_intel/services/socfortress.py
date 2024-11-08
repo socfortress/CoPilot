@@ -15,7 +15,7 @@ from app.threat_intel.schema.socfortress import (
 )
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest, SocfortressAiAlertRequest, SocfortressAiAlertResponse
 from app.utils import get_connector_attribute
 
 
@@ -173,6 +173,40 @@ async def invoke_socfortress_process_name_api(
         response = await client.get(url, headers=headers, params=params)
         return response.json()
 
+async def invoke_socfortress_ai_alert_api(
+    api_key: str,
+    url: str,
+    request: SocfortressAiAlertRequest,
+    timeout: int = 60,
+) -> dict:
+    """
+    Invokes the Socfortress AI Alert API with the provided API key, URL, and request parameters.
+
+    Args:
+        api_key (str): The API key for authentication.
+        url (str): The URL of the Socfortress Intel URL
+        request (SocfortressAiAlertRequest): The request object containing the Process Name
+
+    Returns:
+        dict: The JSON response from the AI Alert API.
+
+    Raises:
+        httpx.HTTPStatusError: If the API request fails with a non-successful status code.
+    """
+    headers = {"module-version": "1.0", "x-api-key": "123"}
+    query_params = {"license_key": api_key, "feature_name": "AI"}
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(url, params=query_params, json=request.dict(), headers=headers)
+            response.raise_for_status()  # Raise an exception for non-successful status codes
+            return response.json()
+    except Exception as e:
+        logger.error(f"Failed to invoke Socfortress AI Alert API: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to invoke Socfortress AI Alert API. Error: {e}",
+        )
+
 
 async def get_ioc_response(
     license_key: str,
@@ -198,6 +232,36 @@ async def get_ioc_response(
     message = response_data.get("message", "No message provided")
 
     return IoCResponse(data=IoCMapping(**data), success=success, message=message)
+
+
+async def get_ai_alert_response(
+    license_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiAlertResponse:
+    """
+    Retrieves IoC response from Socfortress Threat Intel API.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC data.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        SocfortressAiAlertResponse: The response object containing the IoC data and success status.
+    """
+    url = "https://ai.socfortress.co/analyze-alert"
+    #url = "http://10.255.255.28:5016/analyze-alert"
+    #url = "http://127.0.0.1:5001/analyze-alert"
+    response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
+
+    # If message is `Forbidden`, raise an HTTPException
+    if response_data.get("message") == "Forbidden":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden access to the Socfortress AI Alert API",
+        )
+
+
+    return SocfortressAiAlertResponse(**response_data)
 
 
 async def get_process_analysis_response(
@@ -274,4 +338,23 @@ async def socfortress_process_analysis_lookup(
         license_key=lincense_key,
         request=request,
         session=session,
+    )
+
+async def socfortress_ai_alert_lookup(
+    lincense_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiAlertResponse:
+    """
+    Performs a AI alert lookup using the Socfortress service.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC to lookup.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        IoCResponse: The response object containing the threat intelligence information.
+    """
+    return await get_ai_alert_response(
+        license_key=lincense_key,
+        request=request,
     )

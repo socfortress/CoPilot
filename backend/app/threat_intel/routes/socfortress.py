@@ -11,10 +11,10 @@ from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
-from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse, SocfortressAiAlertRequest, SocfortressAiAlertResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_ai_alert_lookup
 from app.utils import get_connector_attribute
 
 # App specific imports
@@ -116,4 +116,23 @@ async def process_name_intel_socfortress(
         request=request,
         session=session,
     )
+    return socfortress_lookup
+
+@threat_intel_socfortress_router.post(
+    "/ai/analyze-alert",
+    response_model=SocfortressAiAlertResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def ai_anaylze_alert_socfortress(
+    request: SocfortressAiAlertRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
+
+    socfortress_lookup = await socfortress_ai_alert_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
+    )
+    logger.info(socfortress_lookup)
     return socfortress_lookup
