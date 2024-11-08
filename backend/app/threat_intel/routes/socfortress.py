@@ -16,6 +16,11 @@ from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_ai_alert_lookup
 from app.utils import get_connector_attribute
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertRequestRoute
+from app.incidents.services.incident_alert import get_single_alert_details
+from app.incidents.schema.incident_alert import GenericAlertModel
+
 
 # App specific imports
 
@@ -125,14 +130,22 @@ async def process_name_intel_socfortress(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def ai_anaylze_alert_socfortress(
-    request: SocfortressAiAlertRequest,
+    request: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
 ):
-    logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
+    # Fetch alert details
+    alert_details = await get_single_alert_details(
+        CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
+    )
 
+    assert isinstance(alert_details, GenericAlertModel)
+
+    request = SocfortressAiAlertRequest(
+        integration="AI",
+        alert_payload=alert_details.dict()
+    )
     socfortress_lookup = await socfortress_ai_alert_lookup(
         lincense_key=(await get_license(session)).license_key,
         request=request,
     )
-    logger.info(socfortress_lookup)
     return socfortress_lookup

@@ -193,7 +193,7 @@ async def invoke_socfortress_ai_alert_api(
     Raises:
         httpx.HTTPStatusError: If the API request fails with a non-successful status code.
     """
-    headers = {"module-version": "1.0", "x-api-key": "123"}
+    headers = {"module-version": "1.0", "x-api-key": api_key}
     query_params = {"license_key": api_key, "feature_name": "AI"}
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -249,8 +249,6 @@ async def get_ai_alert_response(
         SocfortressAiAlertResponse: The response object containing the IoC data and success status.
     """
     url = "https://ai.socfortress.co/analyze-alert"
-    #url = "http://10.255.255.28:5016/analyze-alert"
-    #url = "http://127.0.0.1:5001/analyze-alert"
     response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
 
     # If message is `Forbidden`, raise an HTTPException
