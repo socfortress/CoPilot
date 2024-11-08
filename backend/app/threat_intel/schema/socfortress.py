@@ -90,7 +90,7 @@ class SocfortressAiAlertRequest(BaseModel):
 class SocfortressAiAlertResponse(BaseModel):
     message: str
     success: bool
-    analsysis: str = Field(description="The analysis of the alert.")
+    analysis: str = Field(description="The analysis of the alert.")
     base64_decoded: Optional[str] = None
     confidence_score: float = Field(
         description="Confidence score for the response.",
