@@ -1,5 +1,5 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { EpssScore, EvaluationData, ThreatIntelResponse } from "@/types/threatIntel.d"
+import type { AiAnalysisResponse, EpssScore, EvaluationData, ThreatIntelResponse } from "@/types/threatIntel.d"
 import { HttpClient } from "../httpClient"
 
 export default {
@@ -23,5 +23,11 @@ export default {
 			`/threat_intel/epss`,
 			body
 		)
+	},
+	aiAlertAnalysis({ indexId, indexName }: { indexId: string; indexName: string }) {
+		return HttpClient.post<FlaskBaseResponse & AiAnalysisResponse>(`/threat_intel/ai/analyze-alert`, {
+			index_name: indexName,
+			index_id: indexId
+		})
 	}
 }

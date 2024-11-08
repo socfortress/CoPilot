@@ -99,23 +99,33 @@
 	}
 }
 
-.n-spin-container .n-spin-body {
-	inset: 0 !important;
-	transform: none !important;
-	display: block;
+.n-spin-container {
+	.n-spin-body {
+		inset: 0 !important;
+		transform: none !important;
+		display: block;
 
-	.n-base-loading {
-		position: sticky;
-		top: 0;
-		bottom: 0;
-		left: 50%;
-		height: min(calc(100vh / 1.5), 100%);
-		transform: translateX(-50%);
-
-		.n-base-loading__transition-wrapper {
-			transform: translateY(-50%);
-			height: fit-content;
+		.n-base-loading {
+			position: sticky;
 			top: 50%;
+			margin-top: min(50%, 100px);
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			transform: translateY(-70px);
+
+			.n-base-loading__transition-wrapper {
+				width: 1em;
+				height: 1em;
+			}
+		}
+
+		.n-spin-description {
+			position: sticky;
+			top: calc(50% + 50px);
+			left: 50%;
+			transform: translateX(-50%) translateY(-40px);
+			margin-top: 0;
 		}
 	}
 }

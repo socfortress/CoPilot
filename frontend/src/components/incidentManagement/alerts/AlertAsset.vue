@@ -58,7 +58,7 @@
 			</template>
 			<template #header-extra>
 				<div class="min-h-8">
-					<ArtifactRecommendation v-if="alertContext" :context="alertContext.context" />
+					<AIAnalystButton :index-id="asset.index_id" :index-name="asset.index_name" />
 				</div>
 			</template>
 			<n-tabs type="line" animated :tabs-padding="24">
@@ -147,7 +147,8 @@ const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: b
 
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
-const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
+// const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
+const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
