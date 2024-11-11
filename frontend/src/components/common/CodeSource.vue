@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-2">
 		<n-card v-if="!showSource" content-class="bg-secondary !p-0" class="overflow-hidden">
 			<div v-shiki="{ lang, decode }" class="scrollbar-styled code-bg-transparent overflow-hidden">
-				<pre v-html="code"></pre>
+				<pre v-html="source"></pre>
 			</div>
 		</n-card>
 
@@ -43,5 +43,7 @@ const {
 }>()
 
 const showSource = ref(false)
-const source = computed(() => `${code}`)
+const source = computed(() =>
+	typeof code === "string" || typeof code === "number" ? `${code}` : JSON.stringify(code, null, "\t")
+)
 </script>
