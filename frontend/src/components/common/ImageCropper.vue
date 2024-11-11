@@ -36,7 +36,7 @@
 
 <script lang="ts" setup>
 import { NButton, NCard, NModal, NUpload, NUploadDragger, type UploadSettledFileInfo } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { computed, ref } from "vue"
 import { CircleStencil, Cropper, type CropperResult, RectangleStencil } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
 

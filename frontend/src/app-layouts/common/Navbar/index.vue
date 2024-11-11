@@ -25,7 +25,7 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import { useThemeStore } from "@/stores/theme"
 import _uniq from "lodash/uniq"
 import { type MenuInst, NMenu } from "naive-ui"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import { type RouteRecordNormalized, useRoute, useRouter } from "vue-router"
 import getItems from "./items"
 

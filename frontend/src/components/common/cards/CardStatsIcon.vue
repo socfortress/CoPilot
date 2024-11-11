@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
-import { computed, toRefs } from "vue"
+import { computed } from "vue"
 
 const {
 	boxSize = 40,

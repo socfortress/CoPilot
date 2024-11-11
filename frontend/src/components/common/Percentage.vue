@@ -44,7 +44,6 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { NProgress } from "naive-ui"
-import { toRefs } from "vue"
 
 export interface PercentageProps {
 	value: number

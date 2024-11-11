@@ -95,7 +95,6 @@ import type { AiAnalysisResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import vShiki from "@/directives/v-shiki"
 import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 

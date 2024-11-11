@@ -8,7 +8,7 @@
 import { useThemeStore } from "@/stores/theme"
 import { renderIcon } from "@/utils"
 import { NMenu } from "naive-ui"
-import { computed, h, ref, toRefs } from "vue"
+import { computed, h, ref } from "vue"
 
 const { collapsed = false } = defineProps<{
 	collapsed?: boolean
