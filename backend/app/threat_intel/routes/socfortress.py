@@ -153,9 +153,10 @@ async def ai_anaylze_alert_socfortress(
     "confidence_score": 0.9,
     "threat_indicators": "1. Use of PowerShell: The script uses PowerShell, which can be used for both legitimate administrative tasks and malicious activities.\n2. Accessing Web Configuration: The script accesses web configuration properties, which could be used to gather sensitive information or modify settings.\n3. Iterating Over Websites: The script iterates over all websites on a server, which could be used to perform reconnaissance or unauthorized changes across multiple sites.",
     "risk_evaluation": "medium",
-    "wazuh_exclusion_rule": None,
+    "wazuh_exclusion_rule": "<rule id=\"REPLACE_ME\" level=\"1\">\n    <if_sid>62123</if_sid>\n    <field name=\"win.system.eventID\" type=\"pcre2\">(?i)^1116$</field>\n    <field name=\"win.system.providerName\" type=\"pcre2\">(?i)^Microsoft-Windows-Windows Defender$</field>\n    <description>Generated Wazuh Exclusion rule for Windows Defender: Antimalware platform detected potentially unwanted software.</description>\n    <options>no_full_log</options>\n</rule>",
     "wazuh_exclusion_rule_justification": None
 }
+
     # ! Uncomment when ready for prod ! #
     socfortress_lookup = await socfortress_ai_alert_lookup(
         lincense_key=(await get_license(session)).license_key,
