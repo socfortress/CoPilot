@@ -249,6 +249,7 @@ async def get_ai_alert_response(
         SocfortressAiAlertResponse: The response object containing the IoC data and success status.
     """
     url = "https://ai.socfortress.co/analyze-alert"
+
     response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
 
     # If message is `Forbidden`, raise an HTTPException
