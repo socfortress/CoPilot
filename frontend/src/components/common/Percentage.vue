@@ -56,14 +56,15 @@ export interface PercentageProps {
 	direction?: "up" | "down"
 }
 
-const props = withDefaults(defineProps<PercentageProps>(), {
-	useColor: true,
-	useBackground: false,
-	useOpacity: false,
-	icon: "arrow",
-	progress: false
-})
-const { value, useColor, useBackground, useOpacity, icon, progress, direction } = toRefs(props)
+const {
+	value,
+	direction,
+	useColor = true,
+	useBackground = false,
+	useOpacity = false,
+	icon = "arrow",
+	progress = false
+} = defineProps<PercentageProps>()
 
 const ChevronUp = "tabler:chevron-up"
 const ChevronDown = "tabler:chevron-down"

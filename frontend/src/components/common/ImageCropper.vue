@@ -42,21 +42,16 @@ import "vue-advanced-cropper/dist/style.css"
 
 export type ImageCropperResult = CropperResult
 
-const props = withDefaults(
-	defineProps<{
-		placeholder?: string
-		shape?: "square" | "circle"
-	}>(),
-	{ placeholder: "Select an image", shape: "square" }
-)
+const { placeholder = "Select an image", shape = "square" } = defineProps<{
+	placeholder?: string
+	shape?: "square" | "circle"
+}>()
 
 const emit = defineEmits<{
 	(e: "crop", value: ImageCropperResult): void
 }>()
 
-const { placeholder, shape } = toRefs(props)
-
-const stencil = computed(() => (shape.value === "circle" ? CircleStencil : RectangleStencil))
+const stencil = computed(() => (shape === "circle" ? CircleStencil : RectangleStencil))
 const img = ref("")
 const showCropper = ref(false)
 const cropper = ref<typeof Cropper | null>(null)

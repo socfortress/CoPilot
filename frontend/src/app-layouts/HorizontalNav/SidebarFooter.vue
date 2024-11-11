@@ -10,14 +10,9 @@ import { renderIcon } from "@/utils"
 import { NMenu } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 
-const props = withDefaults(
-	defineProps<{
-		collapsed?: boolean
-	}>(),
-	{ collapsed: false }
-)
-const { collapsed } = toRefs(props)
-
+const { collapsed = false } = defineProps<{
+	collapsed?: boolean
+}>()
 const ContactIcon = "ic:outline-alternate-email"
 const menuOptions = ref([
 	{

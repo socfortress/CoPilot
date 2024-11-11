@@ -29,15 +29,10 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { type RouteRecordNormalized, useRoute, useRouter } from "vue-router"
 import getItems from "./items"
 
-const props = withDefaults(
-	defineProps<{
-		mode?: "vertical" | "horizontal"
-		collapsed?: boolean
-	}>(),
-	{ mode: "vertical", collapsed: false }
-)
-const { mode, collapsed } = toRefs(props)
-
+const { mode = "horizontal", collapsed = false } = defineProps<{
+	mode?: "vertical" | "horizontal"
+	collapsed?: boolean
+}>()
 const route = useRoute()
 const router = useRouter()
 const selectedKey = ref<string | null>(null)
