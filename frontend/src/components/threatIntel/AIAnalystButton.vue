@@ -11,13 +11,31 @@
 			v-model:show="showModal"
 			preset="card"
 			content-class="!p-0"
-			:style="{ maxWidth: 'min(700px, 90vw)', minHeight: 'min(500px, 90vh)' }"
+			:style="{ maxWidth: 'min(710px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:bordered="false"
 			segmented
 		>
-			<template #header>AI Analysis</template>
+			<template #header>
+				<div class="flex flex-wrap items-center gap-2">
+					<span>AI Analysis</span>
+					<code v-if="analysisResponse?.risk_evaluation" class="px-2 py-1">
+						RISK:
+						<strong
+							:class="{
+								'text-warning': analysisResponse?.risk_evaluation === 'medium',
+								'text-error': analysisResponse?.risk_evaluation === 'high'
+							}"
+						>
+							{{ analysisResponse.risk_evaluation }}
+						</strong>
+					</code>
+				</div>
+			</template>
 			<template v-if="analysisResponse" #header-extra>
-				<code class="px-2 py-1">CONFIDENCE SCORE: {{ analysisResponse.confidence_score * 100 }}%</code>
+				<code class="px-2 py-1">
+					CONFIDENCE SCORE:
+					<strong>{{ analysisResponse.confidence_score * 100 }}%</strong>
+				</code>
 			</template>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="analysisResponse?.analysis" name="Analysis" tab="Analysis" display-directive="show">
@@ -34,9 +52,7 @@
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
-						<div v-shiki="{ fallbackLang: 'bash', decode: true }" class="scrollbar-styled">
-							<pre>{{ analysisResponse.base64_decoded }}</pre>
-						</div>
+						<CodeSource :code="analysisResponse.base64_decoded" :decode="true" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -46,21 +62,9 @@
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
-						<div v-shiki="{ fallbackLang: 'bash', decode: true }" class="scrollbar-styled">
-							<pre>{{ analysisResponse.threat_indicators }}</pre>
-						</div>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="analysisResponse?.risk_evaluation"
-					name="RiskEvaluation"
-					tab="Risk Evaluation"
-					display-directive="show"
-				>
-					<div class="p-7 pt-4">
-						<div v-shiki="{ fallbackLang: 'bash', decode: true }" class="scrollbar-styled">
-							<pre>{{ analysisResponse.risk_evaluation }}</pre>
-						</div>
+						<Suspense>
+							<Markdown :source="analysisResponse.threat_indicators" />
+						</Suspense>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -73,9 +77,7 @@
 					class="flex flex-col gap-7 !p-7"
 				>
 					<div v-if="analysisResponse?.wazuh_exclusion_rule">
-						<div v-shiki="{ fallbackLang: 'bash', decode: true }" class="scrollbar-styled">
-							<pre>{{ analysisResponse.wazuh_exclusion_rule }}</pre>
-						</div>
+						<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
 					</div>
 					<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
 						<Suspense>
@@ -103,6 +105,8 @@ const { indexName, indexId, size } = defineProps<{
 	size?: Size
 }>()
 
+const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
+
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const AiIcon = "mage:stars-c"
@@ -123,6 +127,12 @@ function openAiAnalyst() {
 		.then(res => {
 			if (res.data.success) {
 				analysisResponse.value = res.data
+				if (res.data.wazuh_exclusion_rule) {
+					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
+						/\\\\/g,
+						"\\\\\\\\"
+					)
+				}
 
 				openAiAnalysis()
 			} else {

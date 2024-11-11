@@ -79,7 +79,7 @@ export interface AiAnalysisResponse {
 	base64_decoded: string
 	confidence_score: number
 	threat_indicators: string
-	risk_evaluation: string
+	risk_evaluation: "low" | "medium" | "high"
 	wazuh_exclusion_rule: string
 	wazuh_exclusion_rule_justification: string
 }
