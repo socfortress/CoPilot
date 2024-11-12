@@ -110,14 +110,6 @@ class SocfortressAiAlertResponse(BaseModel):
         default=None,
         description="A conclusion indicating whether the content is `low`, `medium`, or `high` risk.",
     )
-    wazuh_exclusion_rule: Optional[str] = Field(
-        default=None,
-        description="The rule that was excluded from the analysis in XML format.",
-    )
-    wazuh_exclusion_rule_justification: Optional[str] = Field(
-        default=None,
-        description="The justification for excluding the rule and the reason for selecting the field names that were selected to include within the exclusion rule.",
-    )
 
 class SocfortressAiWazuhExclusionRuleResponse(BaseModel):
     message: str
