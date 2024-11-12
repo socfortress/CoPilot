@@ -13,7 +13,7 @@ from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse, SocfortressAiAlertRequest, SocfortressAiAlertResponse, SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
+from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup, socfortress_wazuh_exclusion_rule_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_ai_alert_lookup
 from app.utils import get_connector_attribute
 from app.incidents.schema.incident_alert import CreateAlertRequest
@@ -195,7 +195,7 @@ async def ai_wazuh_exclusion_rule_socfortress(
 }
 
     # ! Uncomment when ready for prod ! #
-    socfortress_lookup = await socfortress_ai_alert_lookup(
+    socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
         lincense_key=(await get_license(session)).license_key,
         request=request,
     )
