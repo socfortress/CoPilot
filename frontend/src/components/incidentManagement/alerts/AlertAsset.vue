@@ -52,12 +52,13 @@
 			segmented
 		>
 			<template #header>
-				<div class="min-h-8">
+				<div class="min-h-8 whitespace-nowrap">
 					{{ assetNameTruncated }}
 				</div>
 			</template>
 			<template #header-extra>
-				<div class="min-h-8">
+				<div class="flex min-h-8 flex-wrap gap-3">
+					<AIWazuhExclusionRuleButton :index-id="asset.index_id" :index-name="asset.index_name" />
 					<AIAnalystButton :index-id="asset.index_id" :index-name="asset.index_name" />
 				</div>
 			</template>
@@ -149,6 +150,9 @@ const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue")
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
 // const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
+const AIWazuhExclusionRuleButton = defineAsyncComponent(
+	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
+)
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )

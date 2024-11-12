@@ -80,6 +80,9 @@ export interface AiAnalysisResponse {
 	confidence_score: number
 	threat_indicators: string
 	risk_evaluation: "low" | "medium" | "high"
+}
+
+export interface AiWazuhExclusionRuleResponse {
 	wazuh_exclusion_rule: string
 	wazuh_exclusion_rule_justification: string
 }

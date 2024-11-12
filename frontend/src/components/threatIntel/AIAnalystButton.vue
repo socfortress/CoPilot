@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<n-button :size="size || 'small'" ghost type="primary" :loading @click="openAiAnalyst()">
+		<n-button :size="size || 'small'" ghost type="primary" :loading @click="analysis()">
 			<template #icon>
 				<Icon :name="AiIcon" />
 			</template>
@@ -67,24 +67,6 @@
 						</Suspense>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane
-					v-if="
-						analysisResponse?.wazuh_exclusion_rule || analysisResponse?.wazuh_exclusion_rule_justification
-					"
-					name="WazuhExclusionRule"
-					tab="Wazuh Exclusion Rule"
-					display-directive="show"
-					class="flex flex-col gap-7 !p-7"
-				>
-					<div v-if="analysisResponse?.wazuh_exclusion_rule">
-						<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
-					</div>
-					<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
-						<Suspense>
-							<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />
-						</Suspense>
-					</div>
-				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
@@ -105,7 +87,6 @@ const { indexName, indexId, size } = defineProps<{
 }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
-
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const AiIcon = "mage:stars-c"
@@ -114,11 +95,11 @@ const loading = ref<boolean>(false)
 const message = useMessage()
 const analysisResponse = ref<AiAnalysisResponse | null>(null)
 
-function openAiAnalysis() {
+function openResponse() {
 	showModal.value = true
 }
 
-function openAiAnalyst() {
+function analysis() {
 	loading.value = true
 
 	Api.threatIntel
@@ -126,14 +107,7 @@ function openAiAnalyst() {
 		.then(res => {
 			if (res.data.success) {
 				analysisResponse.value = res.data
-				if (res.data.wazuh_exclusion_rule) {
-					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
-						/\\\\/g,
-						"\\\\\\\\"
-					)
-				}
-
-				openAiAnalysis()
+				openResponse()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

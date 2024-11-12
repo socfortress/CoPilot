@@ -1,5 +1,11 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AiAnalysisResponse, EpssScore, EvaluationData, ThreatIntelResponse } from "@/types/threatIntel.d"
+import type {
+	AiAnalysisResponse,
+	AiWazuhExclusionRuleResponse,
+	EpssScore,
+	EvaluationData,
+	ThreatIntelResponse
+} from "@/types/threatIntel.d"
 import { HttpClient } from "../httpClient"
 
 export default {
@@ -29,5 +35,14 @@ export default {
 			index_name: indexName,
 			index_id: indexId
 		})
+	},
+	aiWazuhExclusionRule({ indexId, indexName }: { indexId: string; indexName: string }) {
+		return HttpClient.post<FlaskBaseResponse & AiWazuhExclusionRuleResponse>(
+			`/threat_intel/ai/wazuh-exclusion-rule`,
+			{
+				index_name: indexName,
+				index_id: indexId
+			}
+		)
 	}
 }
