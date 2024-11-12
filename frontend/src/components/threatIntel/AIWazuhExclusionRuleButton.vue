@@ -35,11 +35,11 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalysisResponse, AiWazuhExclusionRuleResponse } from "@/types/threatIntel.d"
+import type { AiWazuhExclusionRuleResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NEmpty, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 
 const { indexName, indexId, size } = defineProps<{
