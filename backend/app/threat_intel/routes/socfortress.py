@@ -138,6 +138,12 @@ async def ai_anaylze_alert_socfortress(
         CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
     )
 
+    raise HTTPException(
+        status_code=500,
+        detail="This endpoint is not ready for production use.",
+    )
+
+
     assert isinstance(alert_details, GenericAlertModel)
 
     request = SocfortressAiAlertRequest(
@@ -180,6 +186,11 @@ async def ai_wazuh_exclusion_rule_socfortress(
         CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
     )
 
+    raise HTTPException(
+        status_code=500,
+        detail="This endpoint is not ready for production use.",
+    )
+
     assert isinstance(alert_details, GenericAlertModel)
 
     request = SocfortressAiAlertRequest(
@@ -187,12 +198,12 @@ async def ai_wazuh_exclusion_rule_socfortress(
         alert_payload=alert_details._source.dict(),
     )
 
-    return {
-    "message": "Alert analysis completed.",
-    "success": True,
-    "wazuh_exclusion_rule": "<rule id=\"REPLACE_ME\" level=\"1\">\n    <if_sid>92151</if_sid>\n    <field name=\"win.eventdata.originalFileName\" type=\"pcre2\">(?i)^System.Management.Automation.dll$</field>\n    <field name=\"win.eventdata.imageLoaded\" type=\"pcre2\">(?i)^C:\\\\Windows\\\\assembly\\\\NativeImages_v4.0.30319_64\\\\System.Manaa57fc8cc#\\\\12851896703db2724d8864c9bdefdd68\\\\System.Management.Automation.ni.dll$</field>\n    <description>Generated Wazuh Exclusion rule for Binary loaded PowerShell automation library - Possible unmanaged Powershell execution by suspicious process.</description>\n    <options>no_full_log</options>\n</rule>",
-    "wazuh_exclusion_rule_justification": "The alert is triggered by a specific PowerShell automation library being loaded, which is not necessarily indicative of a security threat. The fields 'data_win_eventdata_originalFileName' and 'data_win_eventdata_imageLoaded' are consistent across similar alerts and are used to create the exclusion rule. These fields are chosen because they represent the file name and path of the loaded library, which are common across similar alerts and not unique to a specific instance."
-}
+#     return {
+#     "message": "Alert analysis completed.",
+#     "success": True,
+#     "wazuh_exclusion_rule": "<rule id=\"REPLACE_ME\" level=\"1\">\n    <if_sid>92151</if_sid>\n    <field name=\"win.eventdata.originalFileName\" type=\"pcre2\">(?i)^System.Management.Automation.dll$</field>\n    <field name=\"win.eventdata.imageLoaded\" type=\"pcre2\">(?i)^C:\\\\Windows\\\\assembly\\\\NativeImages_v4.0.30319_64\\\\System.Manaa57fc8cc#\\\\12851896703db2724d8864c9bdefdd68\\\\System.Management.Automation.ni.dll$</field>\n    <description>Generated Wazuh Exclusion rule for Binary loaded PowerShell automation library - Possible unmanaged Powershell execution by suspicious process.</description>\n    <options>no_full_log</options>\n</rule>",
+#     "wazuh_exclusion_rule_justification": "The alert is triggered by a specific PowerShell automation library being loaded, which is not necessarily indicative of a security threat. The fields 'data_win_eventdata_originalFileName' and 'data_win_eventdata_imageLoaded' are consistent across similar alerts and are used to create the exclusion rule. These fields are chosen because they represent the file name and path of the loaded library, which are common across similar alerts and not unique to a specific instance."
+# }
 
     # ! Uncomment when ready for prod ! #
     socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
