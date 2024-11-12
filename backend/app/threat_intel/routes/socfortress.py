@@ -11,7 +11,7 @@ from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
-from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse, SocfortressAiAlertRequest, SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse, SocfortressAiAlertRequest, SocfortressAiAlertResponse, SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_ai_alert_lookup
@@ -142,7 +142,7 @@ async def ai_anaylze_alert_socfortress(
 
     request = SocfortressAiAlertRequest(
         integration="AI",
-        alert_payload=alert_details.dict()
+        alert_payload=alert_details._source.dict(),
     )
 
     return {
@@ -153,6 +153,43 @@ async def ai_anaylze_alert_socfortress(
     "confidence_score": 0.9,
     "threat_indicators": "1. Use of PowerShell: The script uses PowerShell, which can be used for both legitimate administrative tasks and malicious activities.\n2. Accessing Web Configuration: The script accesses web configuration properties, which could be used to gather sensitive information or modify settings.\n3. Iterating Over Websites: The script iterates over all websites on a server, which could be used to perform reconnaissance or unauthorized changes across multiple sites.",
     "risk_evaluation": "medium",
+    "wazuh_exclusion_rule": "<rule id=\"REPLACE_ME\" level=\"1\">\n    <if_sid>92151</if_sid>\n    <field name=\"win.eventdata.originalFileName\" type=\"pcre2\">(?i)^System.Management.Automation.dll$</field>\n    <field name=\"win.eventdata.imageLoaded\" type=\"pcre2\">(?i)^C:\\\\Windows\\\\assembly\\\\NativeImages_v4.0.30319_64\\\\System.Manaa57fc8cc#\\\\12851896703db2724d8864c9bdefdd68\\\\System.Management.Automation.ni.dll$</field>\n    <description>Generated Wazuh Exclusion rule for Binary loaded PowerShell automation library - Possible unmanaged Powershell execution by suspicious process.</description>\n    <options>no_full_log</options>\n</rule>",
+    "wazuh_exclusion_rule_justification": "The alert is triggered by a specific PowerShell automation library being loaded, which is not necessarily indicative of a security threat. The fields 'data_win_eventdata_originalFileName' and 'data_win_eventdata_imageLoaded' are consistent across similar alerts and are used to create the exclusion rule. These fields are chosen because they represent the file name and path of the loaded library, which are common across similar alerts and not unique to a specific instance."
+}
+
+    # ! Uncomment when ready for prod ! #
+    socfortress_lookup = await socfortress_ai_alert_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
+    )
+    return socfortress_lookup
+
+
+@threat_intel_socfortress_router.post(
+    "/ai/wazuh-exclusion-rule",
+    response_model=SocfortressAiWazuhExclusionRuleResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def ai_wazuh_exclusion_rule_socfortress(
+    request: CreateAlertRequestRoute,
+    session: AsyncSession = Depends(get_db),
+):
+    # Fetch alert details
+    alert_details = await get_single_alert_details(
+        CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
+    )
+
+    assert isinstance(alert_details, GenericAlertModel)
+
+    request = SocfortressAiAlertRequest(
+        integration="AI",
+        alert_payload=alert_details._source.dict(),
+    )
+
+    return {
+    "message": "Alert analysis completed.",
+    "success": True,
     "wazuh_exclusion_rule": "<rule id=\"REPLACE_ME\" level=\"1\">\n    <if_sid>92151</if_sid>\n    <field name=\"win.eventdata.originalFileName\" type=\"pcre2\">(?i)^System.Management.Automation.dll$</field>\n    <field name=\"win.eventdata.imageLoaded\" type=\"pcre2\">(?i)^C:\\\\Windows\\\\assembly\\\\NativeImages_v4.0.30319_64\\\\System.Manaa57fc8cc#\\\\12851896703db2724d8864c9bdefdd68\\\\System.Management.Automation.ni.dll$</field>\n    <description>Generated Wazuh Exclusion rule for Binary loaded PowerShell automation library - Possible unmanaged Powershell execution by suspicious process.</description>\n    <options>no_full_log</options>\n</rule>",
     "wazuh_exclusion_rule_justification": "The alert is triggered by a specific PowerShell automation library being loaded, which is not necessarily indicative of a security threat. The fields 'data_win_eventdata_originalFileName' and 'data_win_eventdata_imageLoaded' are consistent across similar alerts and are used to create the exclusion rule. These fields are chosen because they represent the file name and path of the loaded library, which are common across similar alerts and not unique to a specific instance."
 }

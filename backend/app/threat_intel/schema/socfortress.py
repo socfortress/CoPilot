@@ -85,6 +85,10 @@ class SocfortressAiAlertRequest(BaseModel):
                 status_code=400,
                 detail=f"Invalid syslog_type. Only {', '.join([e.value for e in SyslogType])} are supported.",
             )
+        # Remove 'message' and 'full_log' fields if they exist
+        v.pop("message", None)
+        v.pop("full_log", None)
+        v.pop("gl2_processing_error", None)
         return v
 
 class SocfortressAiAlertResponse(BaseModel):
@@ -106,6 +110,18 @@ class SocfortressAiAlertResponse(BaseModel):
         default=None,
         description="A conclusion indicating whether the content is `low`, `medium`, or `high` risk.",
     )
+    wazuh_exclusion_rule: Optional[str] = Field(
+        default=None,
+        description="The rule that was excluded from the analysis in XML format.",
+    )
+    wazuh_exclusion_rule_justification: Optional[str] = Field(
+        default=None,
+        description="The justification for excluding the rule and the reason for selecting the field names that were selected to include within the exclusion rule.",
+    )
+
+class SocfortressAiWazuhExclusionRuleResponse(BaseModel):
+    message: str
+    success: bool
     wazuh_exclusion_rule: Optional[str] = Field(
         default=None,
         description="The rule that was excluded from the analysis in XML format.",
