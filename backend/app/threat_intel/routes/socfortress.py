@@ -20,6 +20,7 @@ from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.schema.incident_alert import GenericAlertModel
+from app.middleware.license import is_feature_enabled
 
 
 # App specific imports
@@ -138,6 +139,8 @@ async def ai_anaylze_alert_socfortress(
         CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
     )
 
+    await is_feature_enabled("SOCFORTRESS AI", session=session)
+
     raise HTTPException(
         status_code=500,
         detail="This endpoint is not ready for production use.",
@@ -185,6 +188,8 @@ async def ai_wazuh_exclusion_rule_socfortress(
     alert_details = await get_single_alert_details(
         CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id)
     )
+
+    await is_feature_enabled("SOCFORTRESS AI", session=session)
 
     raise HTTPException(
         status_code=500,
