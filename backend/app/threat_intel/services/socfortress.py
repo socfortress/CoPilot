@@ -200,11 +200,30 @@ async def invoke_socfortress_ai_alert_api(
             response = await client.post(url, params=query_params, json=request.dict(), headers=headers)
             response.raise_for_status()  # Raise an exception for non-successful status codes
             return response.json()
-    except Exception as e:
-        logger.error(f"Failed to invoke Socfortress AI Alert API: {e}")
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            logger.error(f"Rate limit reached: {e.response.status_code} - {e.response.text}")
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit reached for the month. Please try again next month.",
+            )
+        else:
+            logger.error(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+            raise HTTPException(
+                status_code=e.response.status_code,
+                detail=f"HTTP error occurred: {e.response.status_code} - {e.response.text}",
+            )
+    except httpx.RequestError as e:
+        logger.error(f"Request error occurred: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to invoke Socfortress AI Alert API. Error: {e}",
+            detail=f"Request error occurred: {e}",
+        )
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {e}",
         )
 
 
