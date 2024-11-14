@@ -79,8 +79,8 @@ import type { LicenseFeatures } from "@/types/license.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NAlert, NButton, NCard, NModal, NTooltip } from "naive-ui"
-import { defineComponent, onBeforeMount, ref, watch } from "vue"
+import { NButton, NCard, NModal, NTooltip } from "naive-ui"
+import { onBeforeMount, ref, watch } from "vue"
 
 const { feature, feedback } = defineProps<{ feature: LicenseFeatures; feedback?: "overlay" | "alert" | "tooltip" }>()
 
