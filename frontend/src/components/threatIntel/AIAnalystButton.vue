@@ -1,11 +1,34 @@
 <template>
 	<div>
-		<n-button :size="size || 'small'" ghost type="primary" :loading @click="analysis()">
-			<template #icon>
-				<Icon :name="AiIcon" />
-			</template>
-			AI Analyst
-		</n-button>
+		<LicenseFeatureCheck
+			feature="SOCFORTRESS AI"
+			feedback="tooltip"
+			@response="
+				(() => {
+					licenseChecked = true
+					licenseResponse = $event
+				})()
+			"
+			@start-loading="licenseChecking = true"
+			@stop-loading="licenseChecking = false"
+		>
+			<n-button
+				:size="size || 'small'"
+				ghost
+				type="primary"
+				:loading="loading || licenseChecking"
+				:disabled="!licenseChecked || !licenseResponse"
+				@click="analysis()"
+			>
+				<template #icon>
+					<Icon :name="AiIcon" />
+				</template>
+				<div class="flex items-center gap-2">
+					<span>AI Analyst</span>
+					<Icon v-if="!licenseResponse && licenseChecked" :name="LockIcon" :size="14" />
+				</div>
+			</n-button>
+		</LicenseFeatureCheck>
 
 		<n-modal
 			v-model:show="showModal"
@@ -77,6 +100,7 @@ import type { AiAnalysisResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 
@@ -89,11 +113,15 @@ const { indexName, indexId, size } = defineProps<{
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
+const LockIcon = "carbon:locked"
 const AiIcon = "mage:stars-c"
 const showModal = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const message = useMessage()
 const analysisResponse = ref<AiAnalysisResponse | null>(null)
+const licenseChecking = ref(false)
+const licenseChecked = ref(false)
+const licenseResponse = ref(false)
 
 function openResponse() {
 	showModal.value = true
