@@ -435,6 +435,8 @@ onMounted(() => {
 	align-items: center;
 	justify-content: center;
 	text-align: center;
+	line-height: 1.3;
+	gap: 6px;
 }
 .report-panels {
 	overflow: hidden;
