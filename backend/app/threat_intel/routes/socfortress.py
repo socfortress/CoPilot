@@ -146,7 +146,7 @@ async def ai_anaylze_alert_socfortress(
     assert isinstance(alert_details, GenericAlertModel)
 
     request = SocfortressAiAlertRequest(
-        integration="AI",
+        integration="SOCFORTRESS AI",
         alert_payload=alert_details._source.dict(),
     )
 
@@ -173,9 +173,11 @@ async def ai_wazuh_exclusion_rule_socfortress(
     assert isinstance(alert_details, GenericAlertModel)
 
     request = SocfortressAiAlertRequest(
-        integration="AI",
+        integration="SOCFORTRESS AI",
         alert_payload=alert_details._source.dict(),
     )
+
+    logger.info(f"Sending request: {request}")
 
     socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
         lincense_key=(await get_license(session)).license_key,
