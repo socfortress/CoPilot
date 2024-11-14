@@ -1,5 +1,11 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { EpssScore, EvaluationData, ThreatIntelResponse } from "@/types/threatIntel.d"
+import type {
+	AiAnalysisResponse,
+	AiWazuhExclusionRuleResponse,
+	EpssScore,
+	EvaluationData,
+	ThreatIntelResponse
+} from "@/types/threatIntel.d"
 import { HttpClient } from "../httpClient"
 
 export default {
@@ -22,6 +28,21 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { data: EpssScore[]; the_epss_model: string }>(
 			`/threat_intel/epss`,
 			body
+		)
+	},
+	aiAlertAnalysis({ indexId, indexName }: { indexId: string; indexName: string }) {
+		return HttpClient.post<FlaskBaseResponse & AiAnalysisResponse>(`/threat_intel/ai/analyze-alert`, {
+			index_name: indexName,
+			index_id: indexId
+		})
+	},
+	aiWazuhExclusionRule({ indexId, indexName }: { indexId: string; indexName: string }) {
+		return HttpClient.post<FlaskBaseResponse & AiWazuhExclusionRuleResponse>(
+			`/threat_intel/ai/wazuh-exclusion-rule`,
+			{
+				index_name: indexName,
+				index_id: indexId
+			}
 		)
 	}
 }

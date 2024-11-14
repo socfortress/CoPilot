@@ -15,20 +15,15 @@
 
 <script lang="ts" setup>
 import { useThemeStore } from "@/stores/theme"
-import { computed, toRefs } from "vue"
+import { computed } from "vue"
 
-const props = withDefaults(
-	defineProps<{
-		mini: boolean
-		dark?: boolean
-	}>(),
-	{ dark: undefined }
-)
-const { mini, dark } = toRefs(props)
-
+const { mini, dark } = defineProps<{
+	mini: boolean
+	dark?: boolean
+}>()
 const themeStore = useThemeStore()
-const isDark = computed<boolean>(() => dark.value ?? themeStore.isThemeDark)
-const isLight = computed<boolean>(() => !dark.value || themeStore.isThemeLight)
+const isDark = computed<boolean>(() => dark ?? themeStore.isThemeDark)
+const isLight = computed<boolean>(() => !dark || themeStore.isThemeLight)
 </script>
 
 <style lang="scss" scoped>

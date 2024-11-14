@@ -1,7 +1,9 @@
 import re
+from enum import Enum
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
@@ -60,6 +62,77 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
     def extract_filename(cls, v):
         match = re.search(r"[^\\]+$", v)
         return match.group() if match else v
+
+
+class SyslogType(str, Enum):
+    WAZUH = "wazuh"
+    # Add other valid syslog types here if needed
+
+
+class SocfortressAiAlertRequest(BaseModel):
+    integration: str = Field(..., example="AI")
+    alert_payload: dict = Field(..., example={"alert": "test"})
+
+    @validator("integration")
+    def check_integration(cls, v):
+        if v != "AI":
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid integration. Only 'AI' is supported.",
+            )
+        return v
+
+    @validator("alert_payload")
+    def check_syslog_type(cls, v):
+        if v.get("syslog_type") not in SyslogType.__members__.values():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid syslog_type. Only {', '.join([e.value for e in SyslogType])} are supported.",
+            )
+        # Remove 'message' and 'full_log' fields if they exist
+        v.pop("message", None)
+        v.pop("full_log", None)
+        v.pop("gl2_processing_error", None)
+        v.pop("gl2_accounted_message_size", None)
+        v.pop("gl2_source_input", None)
+        v.pop("gl2_remote_ip", None)
+        v.pop("gl2_message_id", None)
+        v.pop("gl2_remote_port", None)
+        return v
+
+
+class SocfortressAiAlertResponse(BaseModel):
+    message: str
+    success: bool
+    analysis: str = Field(description="The analysis of the alert.")
+    base64_decoded: Optional[str] = None
+    confidence_score: float = Field(
+        description="Confidence score for the response.",
+        ge=0,
+        le=1,
+    )
+    threat_indicators: Optional[str] = Field(
+        default=None,
+        description="The threat indicators that make the decoded payload potentially malicious.",
+    )
+
+    risk_evaluation: Optional[str] = Field(
+        default=None,
+        description="A conclusion indicating whether the content is `low`, `medium`, or `high` risk.",
+    )
+
+
+class SocfortressAiWazuhExclusionRuleResponse(BaseModel):
+    message: str
+    success: bool
+    wazuh_exclusion_rule: Optional[str] = Field(
+        default=None,
+        description="The rule that was excluded from the analysis in XML format.",
+    )
+    wazuh_exclusion_rule_justification: Optional[str] = Field(
+        default=None,
+        description="The justification for excluding the rule and the reason for selecting the field names that were selected to include within the exclusion rule.",
+    )
 
 
 class Path(BaseModel):

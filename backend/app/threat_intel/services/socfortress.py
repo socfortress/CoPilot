@@ -10,6 +10,9 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
+from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import (
     SocfortressProcessNameAnalysisAPIResponse,
 )
@@ -174,6 +177,60 @@ async def invoke_socfortress_process_name_api(
         return response.json()
 
 
+async def invoke_socfortress_ai_alert_api(
+    api_key: str,
+    url: str,
+    request: SocfortressAiAlertRequest,
+    timeout: int = 60,
+) -> dict:
+    """
+    Invokes the Socfortress AI Alert API with the provided API key, URL, and request parameters.
+
+    Args:
+        api_key (str): The API key for authentication.
+        url (str): The URL of the Socfortress Intel URL
+        request (SocfortressAiAlertRequest): The request object containing the Process Name
+
+    Returns:
+        dict: The JSON response from the AI Alert API.
+
+    Raises:
+        httpx.HTTPStatusError: If the API request fails with a non-successful status code.
+    """
+    headers = {"module-version": "1.0", "x-api-key": api_key}
+    query_params = {"license_key": api_key, "feature_name": "AI"}
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(url, params=query_params, json=request.dict(), headers=headers)
+            response.raise_for_status()  # Raise an exception for non-successful status codes
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            logger.error(f"Rate limit reached: {e.response.status_code} - {e.response.text}")
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit reached for the month. Please try again next month.",
+            )
+        else:
+            logger.error(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+            raise HTTPException(
+                status_code=e.response.status_code,
+                detail=f"HTTP error occurred: {e.response.status_code} - {e.response.text}",
+            )
+    except httpx.RequestError as e:
+        logger.error(f"Request error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Request error occurred: {e}",
+        )
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {e}",
+        )
+
+
 async def get_ioc_response(
     license_key: str,
     request: SocfortressThreatIntelRequest,
@@ -198,6 +255,62 @@ async def get_ioc_response(
     message = response_data.get("message", "No message provided")
 
     return IoCResponse(data=IoCMapping(**data), success=success, message=message)
+
+
+async def get_ai_alert_response(
+    license_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiAlertResponse:
+    """
+    Retrieves IoC response from Socfortress Threat Intel API.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC data.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        SocfortressAiAlertResponse: The response object containing the IoC data and success status.
+    """
+    url = "https://ai.socfortress.co/analyze-alert"
+
+    response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
+
+    # If message is `Forbidden`, raise an HTTPException
+    if response_data.get("message") == "Forbidden":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden access to the Socfortress AI Alert API",
+        )
+
+    return SocfortressAiAlertResponse(**response_data)
+
+
+async def get_wazuh_exclusion_rule_response(
+    license_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiWazuhExclusionRuleResponse:
+    """
+    Retrieves IoC response from Socfortress Threat Intel API.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC data.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        SocfortressAiWazuhExclusionRuleResponse: The response object containing the IoC data and success status.
+    """
+    url = "https://ai.socfortress.co/wazuh-exclusion-rule"
+
+    response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
+
+    # If message is `Forbidden`, raise an HTTPException
+    if response_data.get("message") == "Forbidden":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden access to the Socfortress AI Alert API",
+        )
+
+    return SocfortressAiWazuhExclusionRuleResponse(**response_data)
 
 
 async def get_process_analysis_response(
@@ -274,4 +387,44 @@ async def socfortress_process_analysis_lookup(
         license_key=lincense_key,
         request=request,
         session=session,
+    )
+
+
+async def socfortress_ai_alert_lookup(
+    lincense_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiAlertResponse:
+    """
+    Performs a AI alert lookup using the Socfortress service.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC to lookup.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        IoCResponse: The response object containing the threat intelligence information.
+    """
+    return await get_ai_alert_response(
+        license_key=lincense_key,
+        request=request,
+    )
+
+
+async def socfortress_wazuh_exclusion_rule_lookup(
+    lincense_key: str,
+    request: SocfortressAiAlertRequest,
+) -> SocfortressAiWazuhExclusionRuleResponse:
+    """
+    Performs a AI alert lookup using the Socfortress service.
+
+    Args:
+        request (SocfortressAiAlertRequest): The request object containing the IoC to lookup.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        IoCResponse: The response object containing the threat intelligence information.
+    """
+    return await get_wazuh_exclusion_rule_response(
+        license_key=lincense_key,
+        request=request,
     )

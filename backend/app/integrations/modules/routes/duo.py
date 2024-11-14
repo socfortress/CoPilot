@@ -41,12 +41,12 @@ async def get_collect_duo_data(duo_request, session, auth_keys):
         integration="duo",
         customer_code=duo_request.customer_code,
         graylog_host=await get_connector_attribute(
-            connector_id=14,
+            connector_id=10,
             column_name="connector_url",
             session=session,
         ),
         graylog_port=await get_connector_attribute(
-            connector_id=14,
+            connector_id=10,
             column_name="connector_extra_data",
             session=session,
         ),

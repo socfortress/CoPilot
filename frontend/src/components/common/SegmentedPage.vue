@@ -76,7 +76,7 @@
 import Icon from "@/components/common/Icon.vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
-import { computed, onMounted, ref, toRefs, useSlots, watch } from "vue"
+import { computed, onMounted, ref, useSlots, watch } from "vue"
 
 type SidebarPosition = "left" | "right"
 
@@ -86,49 +86,44 @@ export interface CtxSegmentedPage {
 	openSidebar: () => void
 }
 
-const props = withDefaults(
-	defineProps<{
-		sidebarPosition?: SidebarPosition
-		hideMenuBtn?: boolean
-		useMainScroll?: boolean
-		mainContentStyle?: string
-		mainContentClass?: string
-		sidebarContentStyle?: string
-		sidebarContentClass?: string
-		enableResize?: boolean
-		disableContainerQuery?: boolean
-		defaultSplit?: number
-		maxSidebarWidth?: number
-		minSidebarWidth?: number
-	}>(),
-	{ sidebarPosition: "left", useMainScroll: true, defaultSplit: 0.3, maxSidebarWidth: 450, minSidebarWidth: 250 }
-)
-
-const emit = defineEmits<{
-	(e: "mounted", value: CtxSegmentedPage): void
-	(e: "sidebar", value: boolean): void
-}>()
-
 const {
-	sidebarPosition,
 	hideMenuBtn,
-	useMainScroll,
 	mainContentStyle,
 	mainContentClass,
 	sidebarContentStyle,
 	sidebarContentClass,
 	enableResize,
 	disableContainerQuery,
-	defaultSplit,
-	maxSidebarWidth,
-	minSidebarWidth
-} = toRefs(props)
+	sidebarPosition = "left",
+	useMainScroll = true,
+	defaultSplit = 0.3,
+	maxSidebarWidth = 450,
+	minSidebarWidth = 250
+} = defineProps<{
+	sidebarPosition?: SidebarPosition
+	hideMenuBtn?: boolean
+	useMainScroll?: boolean
+	mainContentStyle?: string
+	mainContentClass?: string
+	sidebarContentStyle?: string
+	sidebarContentClass?: string
+	enableResize?: boolean
+	disableContainerQuery?: boolean
+	defaultSplit?: number
+	maxSidebarWidth?: number
+	minSidebarWidth?: number
+}>()
+
+const emit = defineEmits<{
+	(e: "mounted", value: CtxSegmentedPage): void
+	(e: "sidebar", value: boolean): void
+}>()
 
 const MenuIcon = "ph:list-light"
 const SplitIcon = "carbon:draggable"
 
 const splitPane = ref()
-const sanitizedDefaultSplit = ref(defaultSplit.value)
+const sanitizedDefaultSplit = ref(defaultSplit)
 const splitDisabled = ref(false)
 
 const slots = useSlots()
@@ -139,12 +134,12 @@ const { width } = useWindowSize()
 const sidebarAvailable = computed(
 	() => !!slots["sidebar-header"] || !!slots["sidebar-content"] || !!slots["sidebar-footer"]
 )
-const isSidebarLeft = computed<boolean>(() => sidebarPosition.value === "left")
+const isSidebarLeft = computed<boolean>(() => sidebarPosition === "left")
 const tplNameMain = computed<1 | 2>(() => (isSidebarLeft.value ? 2 : 1))
 const tplNameSide = computed<1 | 2>(() => (isSidebarLeft.value ? 1 : 2))
 const pane1Style = computed(() => ({
-	maxWidth: isSidebarLeft.value ? `${maxSidebarWidth.value}px` : `calc(100% - ${minSidebarWidth.value}px)`,
-	minWidth: isSidebarLeft.value ? `${minSidebarWidth.value}px` : `calc(100% - ${maxSidebarWidth.value}px)`
+	maxWidth: isSidebarLeft.value ? `${maxSidebarWidth}px` : `calc(100% - ${minSidebarWidth}px)`,
+	minWidth: isSidebarLeft.value ? `${minSidebarWidth}px` : `calc(100% - ${maxSidebarWidth}px)`
 }))
 
 function closeSidebar() {
@@ -168,7 +163,7 @@ watch(
 watch(
 	width,
 	val => {
-		sanitizedDefaultSplit.value = val <= 700 ? 0 : isSidebarLeft.value ? defaultSplit.value : 1 - defaultSplit.value
+		sanitizedDefaultSplit.value = val <= 700 ? 0 : isSidebarLeft.value ? defaultSplit : 1 - defaultSplit
 		splitDisabled.value = val <= 700
 	},
 	{ immediate: true }

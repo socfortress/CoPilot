@@ -73,3 +73,16 @@ export interface EvaluationDataTruncated {
 	network: number
 	hashes: number
 }
+
+export interface AiAnalysisResponse {
+	analysis: string
+	base64_decoded: string
+	confidence_score: number
+	threat_indicators: string
+	risk_evaluation: "low" | "medium" | "high"
+}
+
+export interface AiWazuhExclusionRuleResponse {
+	wazuh_exclusion_rule: string
+	wazuh_exclusion_rule_justification: string
+}

@@ -3,6 +3,8 @@
 	"compilerOptions": {
 		"composite": true,
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+		"jsx": "preserve",
+		"jsxImportSource": "vue",
 		"baseUrl": ".",
 		"moduleResolution": "node",
 		"paths": {

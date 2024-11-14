@@ -51,8 +51,6 @@
 import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import AlertIoCItem from "./AlertIoCItem.vue"

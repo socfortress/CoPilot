@@ -65,7 +65,8 @@ export default {
 			},
 			width: {
 				5.5: "1.375rem",
-				150: "37.5rem"
+				150: "37.5rem",
+				"90vw": "90vw"
 			},
 			spacing: {
 				"20vh": "20vh",

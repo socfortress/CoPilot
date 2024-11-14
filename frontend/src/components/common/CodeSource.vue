@@ -6,10 +6,6 @@
 			</div>
 		</n-card>
 
-		<div class="flex justify-end">
-			<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
-		</div>
-
 		<n-input
 			v-if="showSource"
 			:value="source"
@@ -22,6 +18,10 @@
 				maxRows: 18
 			}"
 		/>
+
+		<div v-if="showToggleButton" class="flex justify-end">
+			<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
+		</div>
 	</div>
 </template>
 
@@ -30,12 +30,20 @@ import vShiki from "@/directives/v-shiki"
 import { NButton, NCard, NInput } from "naive-ui"
 import { computed, ref } from "vue"
 
-const { code, lang } = defineProps<{
+const {
+	code,
+	lang,
+	decode,
+	showToggleButton = true
+} = defineProps<{
 	code: string | object | number
 	lang?: string
 	decode?: boolean
+	showToggleButton?: boolean
 }>()
 
 const showSource = ref(false)
-const source = computed(() => JSON.stringify(code, null, "\t"))
+const source = computed(() =>
+	typeof code === "string" || typeof code === "number" ? `${code}` : JSON.stringify(code, null, "\t")
+)
 </script>

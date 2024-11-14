@@ -11,25 +11,27 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
-import { computed, toRefs } from "vue"
+import { computed } from "vue"
 
-const props = withDefaults(
-	defineProps<{
-		boxSize?: number
-		iconSize?: number
-		iconName?: string
-		boxed?: boolean
-		color?: string
-	}>(),
-	{ boxSize: 40, iconSize: 28, boxed: false }
-)
-const { boxed, boxSize, iconSize, iconName, color } = toRefs(props)
+const {
+	boxSize = 40,
+	iconSize = 28,
+	boxed = false,
+	iconName,
+	color
+} = defineProps<{
+	boxSize?: number
+	iconSize?: number
+	iconName?: string
+	boxed?: boolean
+	color?: string
+}>()
 
 const style = computed(() => useThemeStore().style)
 
-const iconColor = computed(() => color?.value || style.value["primary-color"])
-const iconBoxedSize = computed(() => (boxSize.value / 100) * 45)
-const iconFinalSize = computed(() => (boxed?.value ? iconBoxedSize.value : iconSize.value))
+const iconColor = computed(() => color || style.value["primary-color"])
+const iconBoxedSize = computed(() => (boxSize / 100) * 45)
+const iconFinalSize = computed(() => (boxed ? iconBoxedSize.value : iconSize))
 </script>
 
 <style scoped lang="scss">

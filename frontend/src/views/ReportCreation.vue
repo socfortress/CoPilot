@@ -1,14 +1,25 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col gap-5">
 		<ReportWizard
+			v-if="licenseResponse"
 			hide-panels-select
+			class="animate-fade"
 			@timerange="timerange = $event"
 			@organization="org = $event"
 			@dashboard="dashboard = $event"
 			@panels="panels = $event"
 		/>
-		<ReportPanels :timerange="timerange" :org="org" :dashboard="dashboard" :panels="panels" />
-		<div class="over-layer mobile-layer">
+
+		<ReportPanels
+			v-if="licenseResponse"
+			:timerange="timerange"
+			:org="org"
+			:dashboard="dashboard"
+			:panels="panels"
+			class="animate-fade"
+		/>
+
+		<div v-if="licenseResponse" class="over-layer mobile-layer">
 			<n-alert>
 				<template #icon>
 					<Icon :name="AlertIcon" :size="18"></Icon>
@@ -16,7 +27,16 @@
 				This function is available only for desktop devices
 			</n-alert>
 		</div>
-		<LicenseFeatureOverlay feature="REPORTING" />
+
+		<LicenseFeatureCheck
+			feature="REPORTING"
+			feedback="overlay"
+			@response="licenseResponse = $event"
+			@start-loading="licenseChecking = true"
+			@stop-loading="licenseChecking = false"
+		/>
+
+		<n-spin v-if="licenseChecking" class="min-h-52"></n-spin>
 	</div>
 </template>
 
@@ -24,18 +44,19 @@
 import type { ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import Icon from "@/components/common/Icon.vue"
-import LicenseFeatureOverlay from "@/components/license/LicenseFeatureOverlay.vue"
+import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
-import { NAlert } from "naive-ui"
+import { NAlert, NSpin } from "naive-ui"
 import { ref } from "vue"
 
 const AlertIcon = "mdi:alert-outline"
-
 const timerange = ref<ReportTimeRange | null>(null)
 const org = ref<Org | null>(null)
 const dashboard = ref<Dashboard | null>(null)
 const panels = ref<Panel[]>([])
+const licenseChecking = ref(false)
+const licenseResponse = ref(false)
 </script>
 
 <style lang="scss" scoped>

@@ -7,14 +7,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertRequestRoute
+from app.incidents.schema.incident_alert import GenericAlertModel
+from app.incidents.services.incident_alert import get_single_alert_details
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
+from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.threat_intel.services.socfortress import (
+    socfortress_wazuh_exclusion_rule_lookup,
+)
 from app.utils import get_connector_attribute
 
 # App specific imports
@@ -115,5 +126,59 @@ async def process_name_intel_socfortress(
         lincense_key=(await get_license(session)).license_key,
         request=request,
         session=session,
+    )
+    return socfortress_lookup
+
+
+@threat_intel_socfortress_router.post(
+    "/ai/analyze-alert",
+    response_model=SocfortressAiAlertResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def ai_anaylze_alert_socfortress(
+    request: CreateAlertRequestRoute,
+    session: AsyncSession = Depends(get_db),
+):
+    # Fetch alert details
+    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
+
+    assert isinstance(alert_details, GenericAlertModel)
+
+    request = SocfortressAiAlertRequest(
+        integration="AI",
+        alert_payload=alert_details._source.dict(),
+    )
+
+    socfortress_lookup = await socfortress_ai_alert_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
+    )
+    return socfortress_lookup
+
+
+@threat_intel_socfortress_router.post(
+    "/ai/wazuh-exclusion-rule",
+    response_model=SocfortressAiWazuhExclusionRuleResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def ai_wazuh_exclusion_rule_socfortress(
+    request: CreateAlertRequestRoute,
+    session: AsyncSession = Depends(get_db),
+):
+    # Fetch alert details
+    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
+
+    assert isinstance(alert_details, GenericAlertModel)
+
+    request = SocfortressAiAlertRequest(
+        integration="AI",
+        alert_payload=alert_details._source.dict(),
+    )
+
+    socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
     )
     return socfortress_lookup
