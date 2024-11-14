@@ -78,7 +78,7 @@ class SocfortressAiAlertRequest(BaseModel):
         if v != "SOCFORTRESS AI":
             raise HTTPException(
                 status_code=400,
-                detail="Invalid integration. Only 'AI' is supported.",
+                detail="Invalid integration. Only 'SOCFORTRESS AI' is supported.",
             )
         return v
 
