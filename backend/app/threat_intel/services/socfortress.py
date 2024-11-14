@@ -10,12 +10,15 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
+from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import (
     SocfortressProcessNameAnalysisAPIResponse,
 )
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
-from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse, SocfortressAiWazuhExclusionRuleResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest, SocfortressAiAlertRequest, SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.utils import get_connector_attribute
 
 
@@ -173,6 +176,7 @@ async def invoke_socfortress_process_name_api(
         response = await client.get(url, headers=headers, params=params)
         return response.json()
 
+
 async def invoke_socfortress_ai_alert_api(
     api_key: str,
     url: str,
@@ -278,7 +282,6 @@ async def get_ai_alert_response(
             detail="Forbidden access to the Socfortress AI Alert API",
         )
 
-
     return SocfortressAiAlertResponse(**response_data)
 
 
@@ -307,8 +310,8 @@ async def get_wazuh_exclusion_rule_response(
             detail="Forbidden access to the Socfortress AI Alert API",
         )
 
-
     return SocfortressAiWazuhExclusionRuleResponse(**response_data)
+
 
 async def get_process_analysis_response(
     license_key: str,
@@ -385,6 +388,7 @@ async def socfortress_process_analysis_lookup(
         request=request,
         session=session,
     )
+
 
 async def socfortress_ai_alert_lookup(
     lincense_key: str,

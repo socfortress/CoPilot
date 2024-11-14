@@ -1,10 +1,11 @@
 import re
+from enum import Enum
 from typing import List
 from typing import Optional
-from enum import Enum
+
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from fastapi import HTTPException
 from pydantic import validator
 
 
@@ -62,9 +63,11 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
         match = re.search(r"[^\\]+$", v)
         return match.group() if match else v
 
+
 class SyslogType(str, Enum):
     WAZUH = "wazuh"
     # Add other valid syslog types here if needed
+
 
 class SocfortressAiAlertRequest(BaseModel):
     integration: str = Field(..., example="AI")
@@ -78,6 +81,7 @@ class SocfortressAiAlertRequest(BaseModel):
                 detail="Invalid integration. Only 'AI' is supported.",
             )
         return v
+
     @validator("alert_payload")
     def check_syslog_type(cls, v):
         if v.get("syslog_type") not in SyslogType.__members__.values():
@@ -95,6 +99,7 @@ class SocfortressAiAlertRequest(BaseModel):
         v.pop("gl2_message_id", None)
         v.pop("gl2_remote_port", None)
         return v
+
 
 class SocfortressAiAlertResponse(BaseModel):
     message: str
@@ -116,6 +121,7 @@ class SocfortressAiAlertResponse(BaseModel):
         description="A conclusion indicating whether the content is `low`, `medium`, or `high` risk.",
     )
 
+
 class SocfortressAiWazuhExclusionRuleResponse(BaseModel):
     message: str
     success: bool
@@ -127,6 +133,7 @@ class SocfortressAiWazuhExclusionRuleResponse(BaseModel):
         default=None,
         description="The justification for excluding the rule and the reason for selecting the field names that were selected to include within the exclusion rule.",
     )
+
 
 class Path(BaseModel):
     directory: str
