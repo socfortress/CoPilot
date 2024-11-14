@@ -70,12 +70,12 @@ class SyslogType(str, Enum):
 
 
 class SocfortressAiAlertRequest(BaseModel):
-    integration: str = Field(..., example="AI")
+    integration: str = Field(..., example="SOCFORTRESS AI")
     alert_payload: dict = Field(..., example={"alert": "test"})
 
     @validator("integration")
     def check_integration(cls, v):
-        if v != "AI":
+        if v != "SOCFORTRESS AI":
             raise HTTPException(
                 status_code=400,
                 detail="Invalid integration. Only 'AI' is supported.",
