@@ -89,6 +89,11 @@ class SocfortressAiAlertRequest(BaseModel):
         v.pop("message", None)
         v.pop("full_log", None)
         v.pop("gl2_processing_error", None)
+        v.pop("gl2_accounted_message_size", None)
+        v.pop("gl2_source_input", None)
+        v.pop("gl2_remote_ip", None)
+        v.pop("gl2_message_id", None)
+        v.pop("gl2_remote_port", None)
         return v
 
 class SocfortressAiAlertResponse(BaseModel):
