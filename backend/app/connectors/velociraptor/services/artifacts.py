@@ -178,7 +178,7 @@ async def run_file_collection(
     Returns:
         RunAnalyzerResponse: A dictionary containing the success status and a message.
     """
-    #velociraptor_service = await UniversalService.create("Velociraptor")
+    # velociraptor_service = await UniversalService.create("Velociraptor")
     return CollectArtifactResponse(
         success=False,
         message="Not yet implemented",
