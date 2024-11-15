@@ -179,67 +179,73 @@ async def run_file_collection(
         RunAnalyzerResponse: A dictionary containing the success status and a message.
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
-    try:
-        # ! Can specify org_id with org_id='OL680' ! #
-        query = create_query(
-            (
-                f"SELECT collect_client("
-                f"org_id='{collect_artifact_body.velociraptor_org}', "
-                f"client_id='{collect_artifact_body.velociraptor_id}', "
-                f"artifacts=['{collect_artifact_body.artifact_name}'], "
-                f"specs=[{{"
-                f"    'artifact': '{collect_artifact_body.artifact_name}',"
-                f"    'parameters': {{"
-                f"        'env': ["
-                f"            {{'key': 'collectionSpec', 'value': '{collect_artifact_body.file}'}},"
-                f"            {{'key': 'Root', 'value': '{collect_artifact_body.root_disk}'}}"
-                f"        ]"
-                f"    }}"
-                f"}}
-            ]"
-                f") "
-                f"FROM scope()",
-        ),
-        )
-        logger.info(f"Query: {query}")
-        flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
-        logger.info(f"Successfully ran artifact collection on {flow}")
+    return CollectArtifactResponse(
+        success=False,
+        message="Not yet implemented",
+        results=[],
+    )
+    # ! NOT YET READY ! #
+    # try:
+    #     # ! Can specify org_id with org_id='OL680' ! #
+    #     query = create_query(
+    #         (
+    #             f"SELECT collect_client("
+    #             f"org_id='{collect_artifact_body.velociraptor_org}', "
+    #             f"client_id='{collect_artifact_body.velociraptor_id}', "
+    #             f"artifacts=['{collect_artifact_body.artifact_name}'], "
+    #             f"specs=[{{"
+    #             f"    'artifact': '{collect_artifact_body.artifact_name}',"
+    #             f"    'parameters': {{"
+    #             f"        'env': ["
+    #             f"            {{'key': 'collectionSpec', 'value': '{collect_artifact_body.file}'}},"
+    #             f"            {{'key': 'Root', 'value': '{collect_artifact_body.root_disk}'}}"
+    #             f"        ]"
+    #             f"    }}"
+    #             f"}}
+    #         ]"
+    #             f") "
+    #             f"FROM scope()",
+    #     ),
+    #     )
+    #     logger.info(f"Query: {query}")
+    #     flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
+    #     logger.info(f"Successfully ran artifact collection on {flow}")
 
-        artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
+    #     artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
 
-        flow_id = flow["results"][0][artifact_key]["flow_id"]
-        logger.info(f"Extracted flow_id: {flow_id}")
+    #     flow_id = flow["results"][0][artifact_key]["flow_id"]
+    #     logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
-        logger.info(f"Successfully watched flow completion on {completed}")
+    #     completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
+    #     logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = velociraptor_service.read_collection_results(
-            client_id=collect_artifact_body.velociraptor_id,
-            flow_id=flow_id,
-            org_id=collect_artifact_body.velociraptor_org,
-            artifact=collect_artifact_body.artifact_name,
-        )
+    #     results = velociraptor_service.read_collection_results(
+    #         client_id=collect_artifact_body.velociraptor_id,
+    #         flow_id=flow_id,
+    #         org_id=collect_artifact_body.velociraptor_org,
+    #         artifact=collect_artifact_body.artifact_name,
+    #     )
 
-        logger.info(f"Successfully read collection results on {results}")
+    #     logger.info(f"Successfully read collection results on {results}")
 
-        return CollectArtifactResponse(
-            success=results["success"],
-            message=results["message"],
-            results=results["results"],
-        )
-    except HTTPException as he:  # Catch HTTPException separately to propagate the original message
-        logger.error(
-            f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
-        )
-        raise he
-    except Exception as err:
-        logger.error(
-            f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-        )
+    #     return CollectArtifactResponse(
+    #         success=results["success"],
+    #         message=results["message"],
+    #         results=results["results"],
+    #     )
+    # except HTTPException as he:  # Catch HTTPException separately to propagate the original message
+    #     logger.error(
+    #         f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
+    #     )
+    #     raise he
+    # except Exception as err:
+    #     logger.error(
+    #         f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+    #     )
+    #     raise HTTPException(
+    #         status_code=500,
+    #         detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+    #     )
 
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
