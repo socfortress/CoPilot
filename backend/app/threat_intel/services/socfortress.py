@@ -198,7 +198,6 @@ async def invoke_socfortress_ai_alert_api(
         httpx.HTTPStatusError: If the API request fails with a non-successful status code.
     """
     headers = {"module-version": "1.0", "x-api-key": api_key}
-    #query_params = {"license_key": api_key, "feature_name": "SOCFORTRESS AI"}
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(url, json=request.dict(), headers=headers)

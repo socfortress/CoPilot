@@ -195,10 +195,11 @@ async def run_file_collection(
                 f"            {{'key': 'Root', 'value': '{collect_artifact_body.root_disk}'}}"
                 f"        ]"
                 f"    }}"
-                f"}}]"
+                f"}}
+            ]"
                 f") "
-                f"FROM scope()"
-            ),
+                f"FROM scope()",
+        ),
         )
         logger.info(f"Query: {query}")
         flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
