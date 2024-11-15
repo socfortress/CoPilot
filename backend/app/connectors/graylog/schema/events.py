@@ -8,8 +8,8 @@ from pydantic import Field
 
 
 class Provider(BaseModel):
-    require_values: bool
-    template: str
+    require_values: Optional[bool] = None
+    template: Optional[str] = None
     type: str
 
 
