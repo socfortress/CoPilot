@@ -221,9 +221,9 @@ async def provision_custom_monitoring_alert_route(
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionWazuhMonitoringAlertResponse:
     await check_if_event_definition_exists(request.alert_name.replace("_", " "))
-    customer_code = next((field.value for field in request.custom_fields if field.name == "CUSTOMER_CODE"), None)
-    await get_customer_meta(customer_code=customer_code, session=session)
-
+    # ! This is commented out because it is not used in the code. Will revisit later ! #
+    #customer_code = next((field.value for field in request.custom_fields if field.name == "CUSTOMER_CODE"), None)
+    #await get_customer_meta(customer_code=customer_code, session=session)
     # Look up the provision function based on request.alert_name
     provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
 
