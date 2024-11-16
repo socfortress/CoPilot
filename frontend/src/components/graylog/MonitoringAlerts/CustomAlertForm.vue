@@ -263,7 +263,7 @@ const rules: FormRules = {
 		trigger: ["input", "blur"]
 	},
 	custom_fields: {
-		required: true,
+		required: false,
 		// eslint-disable-next-line unused-imports/no-unused-vars
 		validator(rule: FormItemRule, value: string) {
 			if (!areAllCustomerFieldsFilled.value) {
@@ -358,6 +358,7 @@ function addCustomFiled() {
 
 function removeCustomFiled(key: number) {
 	form.value.custom_fields = form.value.custom_fields.filter(o => o.key !== key)
+	validate()
 }
 
 function getClearForm(): CustomProvisionForm {

@@ -237,8 +237,8 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
         description="The streams to use for the alert.",
         example=["5f3e4c3b3f37b70001f3d7b3"],
     )
-    custom_fields: List[CustomFields] = Field(
-        ...,
+    custom_fields: Optional[List[CustomFields]] = Field(
+        None,
         description="The custom fields to use for the alert.",
         example=[{"name": "source", "value": "Wazuh"}],
     )
