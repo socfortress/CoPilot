@@ -493,7 +493,7 @@ async def get_timefield_names(source: str, session: AsyncSession):
 
 async def get_ioc_names(source: str, session: AsyncSession):
     result = await session.execute(select(IoCFieldName.field_name).where(IoCFieldName.source == source).distinct())
-    return result.scalars().first()
+    return result.scalars().all()
 
 
 async def get_alert_title_names(source: str, session: AsyncSession):
