@@ -32,7 +32,7 @@ from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertIoCCreate
-from app.incidents.schema.db_operations import AlertIoCDelete
+from app.incidents.schema.db_operations import AlertIoCDelete, SocfortressRecommendsWazuhIoCFieldNames
 from app.incidents.schema.db_operations import AlertIoCResponse
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
@@ -102,7 +102,7 @@ from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
-from app.incidents.services.db_operations import alerts_open_by_customer_code
+from app.incidents.services.db_operations import alerts_open_by_customer_code, get_ioc_names
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
@@ -122,16 +122,16 @@ from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
-from app.incidents.services.db_operations import delete_alert
+from app.incidents.services.db_operations import delete_alert, add_ioc_name
 from app.incidents.services.db_operations import delete_alert_ioc
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
 from app.incidents.services.db_operations import delete_field_name
-from app.incidents.services.db_operations import delete_file_from_case
+from app.incidents.services.db_operations import delete_file_from_case, replace_ioc_name
 from app.incidents.services.db_operations import delete_report_template
-from app.incidents.services.db_operations import delete_timefield_name
+from app.incidents.services.db_operations import delete_timefield_name, delete_ioc_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import file_exists
@@ -228,6 +228,7 @@ async def get_socfortress_recommends_wazuh(session: AsyncSession = Depends(get_d
         asset_name=SocfortressRecommendsWazuhAssetName.agent_name.value,
         timefield_name=SocfortressRecommendsWazuhTimeFieldName.timestamp_utc.value,
         alert_title_name=SocfortressRecommendsWazuhAlertTitleName.rule_description.value,
+        ioc_field_names=[ioc.value for ioc in SocfortressRecommendsWazuhIoCFieldNames],
         source="wazuh",
         success=True,
         message="Field names and asset names retrieved successfully",
@@ -248,6 +249,7 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     asset_name = await get_asset_names(source, session)
     timefield_name = await get_timefield_names(source, session)
     alert_title_name = await get_alert_title_names(source, session)
+    ioc_names = await get_ioc_names(source, session)
 
     logger.info(
         f"Field names found: {field_names}, Asset name found: {asset_name}, Timefield name found: {timefield_name}, Alert title name found: {alert_title_name}",
@@ -261,6 +263,11 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     await delete_timefield_name(source, timefield_name, session)
 
     await delete_alert_title_name(source, alert_title_name, session)
+
+    if ioc_names:
+        for ioc_name in ioc_names:
+            await delete_ioc_name(ioc_value=ioc_name, source=source, session=session)
+
 
     logger.info(f"Field names and asset names deleted successfully for source {source}. Committing changes to the database")
 
@@ -283,6 +290,7 @@ async def get_source_fields_and_assets(source: str, session: AsyncSession = Depe
         asset_name=await get_asset_names(source, session),
         timefield_name=await get_timefield_names(source, session),
         alert_title_name=await get_alert_title_names(source, session),
+        ioc_field_names=await get_ioc_names(source, session),
         source=source,
         success=True,
         message="Field names and asset names retrieved successfully",
@@ -299,6 +307,10 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
     await add_timefield_name(names.source, names.timefield_name, session)
 
     await add_alert_title_name(names.source, names.alert_title_name, session)
+
+    if names.ioc_field_names:
+        for ioc_name in names.ioc_field_names:
+            await add_ioc_name(names.source, ioc_name, session)
 
     logger.info(f"Field names and asset names created successfully for source {names.source}")
 
@@ -317,6 +329,8 @@ async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSess
 
     await replace_alert_title_name(names.source, names.alert_title_name, session)
 
+    await replace_ioc_name(names.source, names.ioc_field_names, session)
+
     return {"message": "Field names and asset names created successfully", "success": True}
 
 
@@ -331,6 +345,11 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     await delete_alert_title_name(names.source, names.alert_title_name, session)
 
+    if names.ioc_field_names:
+        logger.info(f"Deleting IoC field names: {names.ioc_field_names}")
+        for ioc_name in names.ioc_field_names:
+            await delete_ioc_name(ioc_value=ioc_name, source=names.source, session=session)
+    logger.info(f"Field names and asset names deleted successfully for source {names.source}. Committing changes to the database")
     await session.commit()
 
     return {"message": "Field names and asset names deleted successfully", "success": True}
