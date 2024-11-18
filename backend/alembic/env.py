@@ -35,7 +35,7 @@ from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
-from app.incidents.models import CustomerCodeFieldName
+from app.incidents.models import CustomerCodeFieldName, IoCFieldName
 from app.incidents.models import FieldName
 from app.incidents.models import IoC
 from app.incidents.models import Notification
