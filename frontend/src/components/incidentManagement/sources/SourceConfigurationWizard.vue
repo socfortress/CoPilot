@@ -142,6 +142,7 @@ function setSourceConfiguration(indexName: string | null) {
 	if (indexName) {
 		sourceConfigurationModel.value = {
 			field_names: [],
+			ioc_field_names: [],
 			asset_name: null,
 			timefield_name: null,
 			alert_title_name: null,

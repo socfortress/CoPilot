@@ -67,6 +67,19 @@
 							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
+					<n-form-item label="IOC Field names" path="ioc_field_names">
+						<n-select
+							v-model:value="form.ioc_field_names"
+							:options="availableMappingsOptions"
+							placeholder="Select..."
+							clearable
+							filterable
+							multiple
+							to="body"
+							:disabled="!isFieldEnabled"
+							:loading="loadingAvailableMappings"
+						/>
+					</n-form-item>
 					<n-form-item label="Asset name" path="asset_name">
 						<n-select
 							v-model:value="form.asset_name"
@@ -292,6 +305,7 @@ function validate(cb?: () => void) {
 function getSourceConfigurationForm(): SourceConfigurationModel {
 	return {
 		field_names: sourceConfigurationModel.value?.field_names || [],
+		ioc_field_names: sourceConfigurationModel.value?.ioc_field_names || [],
 		asset_name: sourceConfigurationModel.value?.asset_name || null,
 		timefield_name: sourceConfigurationModel.value?.timefield_name || null,
 		alert_title_name: sourceConfigurationModel.value?.alert_title_name || null,
@@ -315,6 +329,7 @@ function sanitizeFields() {
 	const availableMappings = availableMappingsOptions.value.map(o => o.value)
 
 	form.value.field_names = _intersection(availableMappings, form.value.field_names)
+	form.value.ioc_field_names = _intersection(availableMappings, form.value.ioc_field_names)
 
 	if (form.value.asset_name && !availableMappings.includes(form.value.asset_name)) {
 		form.value.asset_name = null
@@ -330,6 +345,7 @@ function sanitizeFields() {
 function submit() {
 	const payload: SourceConfiguration = {
 		field_names: form.value?.field_names || [],
+		ioc_field_names: form.value?.ioc_field_names || [],
 		asset_name: form.value?.asset_name || "",
 		timefield_name: form.value?.timefield_name || "",
 		alert_title_name: form.value?.alert_title_name || "",
@@ -354,6 +370,7 @@ function resetSource() {
 
 function setSocfortressRecommendsWazuh() {
 	form.value.field_names = socfortressRecommendsWazuh.value?.field_names || []
+	form.value.ioc_field_names = socfortressRecommendsWazuh.value?.ioc_field_names || []
 	form.value.asset_name = socfortressRecommendsWazuh.value?.asset_name || null
 	form.value.timefield_name = socfortressRecommendsWazuh.value?.timefield_name || null
 	form.value.alert_title_name = socfortressRecommendsWazuh.value?.alert_title_name || null
@@ -374,6 +391,7 @@ function getSocfortressRecommendsWazuh() {
 			if (res.data.success) {
 				socfortressRecommendsWazuh.value = {
 					field_names: res.data.field_names,
+					ioc_field_names: res.data.ioc_field_names,
 					asset_name: res.data.asset_name,
 					timefield_name: res.data.timefield_name,
 					alert_title_name: res.data.alert_title_name,
