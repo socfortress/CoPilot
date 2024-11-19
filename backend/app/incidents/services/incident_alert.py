@@ -584,6 +584,74 @@ async def add_asset_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_i
     await session.commit()
     return asset_context
 
+async def does_ioc_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
+    """
+    Check if the IoC exists for the given alert payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        session (AsyncSession): The database session.
+
+    Returns:
+        bool: True if the IoC exists, None otherwise.
+    """
+    logger.info(f"Checking if an IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+    result = await session.execute(
+        select(IoC)
+        .join(AlertToIoC, AlertToIoC.ioc_id == IoC.id)
+        .where(
+            AlertToIoC.alert_id == alert_id,
+            IoC.value == alert_payload.ioc_payload['ioc_value']
+        ),
+    )
+    ioc = result.scalars().first()
+    if ioc:
+        logger.info(f"IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+        return True
+    logger.info(f"No IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+    return False
+
+
+async def add_ioc_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id: int, customer_code: str, session: AsyncSession) -> None:
+    """
+    Add the IoC to the alert in CoPilot.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+    """
+    if await does_ioc_exist(alert_payload, alert_id, session):
+        return None
+
+    ioc_payload = AlertIoCCreate(
+        ioc_value=alert_payload.ioc_payload['ioc_value'],
+        ioc_type=alert_payload.ioc_payload['ioc_type'],
+        ioc_description=alert_payload.ioc_payload['ioc_description']
+    )
+
+    ioc_context = IoC(
+        value=ioc_payload.ioc_value,
+        type=ioc_payload.ioc_type,
+        description=ioc_payload.ioc_description,
+    )
+    # Add the IoC context to the session
+    session.add(ioc_context)
+    await session.commit()
+    await session.refresh(ioc_context)
+
+    # Create the AlertToIoC relationship
+    alert_to_ioc = AlertToIoC(
+        alert_id=alert_id,
+        ioc_id=ioc_context.id,
+    )
+    # Add the AlertToIoC relationship to the session
+    session.add(alert_to_ioc)
+    await session.commit()
+    return ioc_context
+
 
 async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
     """
@@ -764,6 +832,7 @@ async def create_alert(
             existing_alert,
         )
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
+        await add_ioc_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
 
