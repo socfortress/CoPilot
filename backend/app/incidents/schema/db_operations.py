@@ -54,11 +54,16 @@ class SocfortressRecommendsWazuhAlertTitleName(Enum):
     rule_description = "rule_description"
 
 
+class SocfortressRecommendsWazuhIoCFieldNames(Enum):
+    threat_intel_value = "threat_intel_value"
+
+
 class SocfortressRecommendsWazuhResponse(BaseModel):
     field_names: List[str]
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    ioc_field_names: Optional[List[str]] = None
     source: str
     success: bool
     message: str
@@ -190,6 +195,7 @@ class FieldAndAssetNames(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    ioc_field_names: Optional[List[str]] = None
     source: str
 
 
@@ -198,6 +204,7 @@ class FieldAndAssetNamesResponse(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    ioc_field_names: Optional[List[str]] = None
     source: str
     success: bool
     message: str

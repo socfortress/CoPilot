@@ -42,6 +42,7 @@ from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
 from app.incidents.models import IoC
+from app.incidents.models import IoCFieldName
 from app.incidents.models import Notification
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
@@ -492,6 +493,11 @@ async def get_timefield_names(source: str, session: AsyncSession):
     return result.scalars().first()
 
 
+async def get_ioc_names(source: str, session: AsyncSession):
+    result = await session.execute(select(IoCFieldName.field_name).where(IoCFieldName.source == source).distinct())
+    return result.scalars().all()
+
+
 async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
     return result.scalars().first()
@@ -561,6 +567,16 @@ async def add_alert_title_name(source: str, alert_title_name: str, session: Asyn
         session.add(alert_title)
 
 
+async def add_ioc_name(source: str, ioc_name: str, session: AsyncSession):
+    result = await session.execute(
+        select(IoCFieldName).where((IoCFieldName.source == source) & (IoCFieldName.field_name == ioc_name)),
+    )
+    existing_ioc = result.scalars().first()
+    if existing_ioc is None:
+        ioc = IoCFieldName(source=source, field_name=ioc_name)
+        session.add(ioc)
+
+
 # ! NOT USING FOR NOW. GETTING THE CUSTOMER CODE FROM THE ALERTS SOURCE FIELD INSTEAD ! #
 async def add_customer_code_name(source: str, customer_code_name: str, session: AsyncSession):
     result = await session.execute(
@@ -586,6 +602,23 @@ async def replace_field_name(source: str, field_names: List[str], session: Async
     # Add the new field names
     for field_name in field_names:
         await add_field_name(source, field_name, session)
+
+    # Commit the changes
+    await session.commit()
+
+
+async def replace_ioc_name(source: str, ioc_names: List[str], session: AsyncSession):
+    # First delete all the ioc names for this source, then add the new ioc names
+    result = await session.execute(select(IoCFieldName).where(IoCFieldName.source == source))
+    iocs = result.scalars().all()
+
+    # Delete all the ioc names for this source
+    for ioc in iocs:
+        await session.delete(ioc)
+
+    # Add the new ioc names
+    for ioc_name in ioc_names:
+        await add_ioc_name(source, ioc_name, session)
 
     # Commit the changes
     await session.commit()
@@ -650,6 +683,16 @@ async def delete_field_name(source: str, field_name: str, session: AsyncSession)
     field = field.scalar_one_or_none()
     if field:
         await session.delete(field)
+
+
+async def delete_ioc_name(source: str, ioc_name: str, session: AsyncSession):
+    logger.info(f"Deleting ioc name {ioc_name} for source {source}")
+    ioc = await session.execute(
+        select(IoCFieldName).where((IoCFieldName.source == source) & (IoCFieldName.field_name == ioc_name)),
+    )
+    ioc = ioc.scalar_one_or_none()
+    if ioc:
+        await session.delete(ioc)
 
 
 async def delete_asset_name(source: str, asset_name: str, session: AsyncSession):
@@ -1820,6 +1863,15 @@ async def delete_tags(alert_id: int, db: AsyncSession):
         )
 
 
+async def delete_iocs(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(AlertToIoC).where(AlertToIoC.alert_id == alert_id))
+    alert_to_iocs = result.scalars().all()
+    for alert_to_ioc in alert_to_iocs:
+        await db.execute(
+            delete(AlertToIoC).where((AlertToIoC.alert_id == alert_to_ioc.alert_id) & (AlertToIoC.ioc_id == alert_to_ioc.ioc_id)),
+        )
+
+
 async def is_alert_linked_to_case(alert_id: int, db: AsyncSession) -> bool:
     result = await db.execute(select(CaseAlertLink).where(CaseAlertLink.alert_id == alert_id))
     linked_cases = result.scalars().all()
@@ -1844,7 +1896,12 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     logger.info(f"Deleting alert {alert_id}")
     result = await db.execute(
         select(Alert)
-        .options(selectinload(Alert.comments), selectinload(Alert.assets).selectinload(Asset.alert_context), selectinload(Alert.tags))
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets).selectinload(Asset.alert_context),
+            selectinload(Alert.tags),
+            selectinload(Alert.iocs),
+        )
         .where(Alert.id == alert_id),
     )
     alert = result.scalars().first()
@@ -1854,6 +1911,7 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     await delete_comments(alert_id, db)
     await delete_assets(alert_id, db)
     await delete_tags(alert_id, db)
+    await delete_iocs(alert_id, db)
 
     await db.execute(delete(Alert).where(Alert.id == alert.id))
 

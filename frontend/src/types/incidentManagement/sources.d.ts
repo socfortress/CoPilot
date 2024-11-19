@@ -6,6 +6,7 @@ export interface SourceConfiguration {
 	timefield_name: string
 	alert_title_name: string
 	source: string
+	ioc_field_names: string[]
 }
 
 export interface SourceConfigurationModel extends SourceConfiguration {

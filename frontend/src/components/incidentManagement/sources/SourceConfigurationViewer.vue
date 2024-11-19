@@ -19,6 +19,19 @@
 			</template>
 		</CardKV>
 		<CardKV>
+			<template #key>IOC Field names</template>
+			<template #value>
+				<div v-if="sourceConfiguration.ioc_field_names?.length" class="flex flex-wrap gap-2">
+					<Badge v-for="field of sourceConfiguration.ioc_field_names" :key="field" type="splitted" fluid>
+						<template #value>
+							{{ field }}
+						</template>
+					</Badge>
+				</div>
+				<span v-else>-</span>
+			</template>
+		</CardKV>
+		<CardKV>
 			<template #key>Asset name</template>
 			<template #value>
 				{{ sourceConfiguration.asset_name }}

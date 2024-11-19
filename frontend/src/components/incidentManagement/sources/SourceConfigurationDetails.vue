@@ -61,6 +61,7 @@ function getSourceConfiguration() {
 			if (res.data.success) {
 				sourceConfiguration.value = {
 					field_names: res.data.field_names || [],
+					ioc_field_names: res.data.ioc_field_names || [],
 					asset_name: res.data.asset_name || "",
 					timefield_name: res.data.timefield_name || "",
 					alert_title_name: res.data.alert_title_name || "",

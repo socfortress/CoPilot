@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -17,8 +18,12 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
+from app.incidents.models import AlertToIoC
 from app.incidents.models import Asset
+from app.incidents.models import IoC
 from app.incidents.routes.db_operations import get_configured_sources
+from app.incidents.schema.db_operations import AlertIoCCreate
+from app.incidents.schema.db_operations import AlertIocValue
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
@@ -30,6 +35,7 @@ from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
+from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -327,6 +333,7 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
         asset_name=await get_asset_names(syslog_type, session),
         timefield_name=await get_timefield_names(syslog_type, session),
         alert_title_name=await get_alert_title_names(syslog_type, session),
+        ioc_field_names=await get_ioc_names(syslog_type, session),
     )
 
 
@@ -363,6 +370,60 @@ async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> 
     return alert_context_payload
 
 
+def get_ioc_type(ioc_value: str) -> Optional[AlertIocValue]:
+    """
+    Determine the IOC type based on the value.
+
+    Args:
+        ioc_value (str): The IOC value.
+
+    Returns:
+        AlertIocValue: The IOC type (IP, DOMAIN, HASH, or URL), or None if the type cannot be determined.
+    """
+    # Regular expression patterns for IP, domain, and hash
+    ip_pattern = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+    domain_pattern = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
+    hash_pattern = re.compile(r"^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$")
+
+    if ip_pattern.match(ioc_value):
+        return AlertIocValue.IP
+    elif domain_pattern.match(ioc_value):
+        return AlertIocValue.DOMAIN
+    elif hash_pattern.match(ioc_value):
+        return AlertIocValue.HASH
+    else:
+        return None
+
+
+async def build_ioc_payload(alert_payload: dict, field_names: Any) -> Optional[Dict[str, Any]]:
+    """
+    Build the alert context payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        field_names (Any): The field names.
+
+    Returns:
+        Optional[dict]: The alert context payload or None if no ioc_value is found.
+    """
+    logger.info(f"Building IOC payload for alert {alert_payload}")
+    ioc_payload = {field: alert_payload[field] for field in field_names.ioc_field_names if field in alert_payload}
+
+    # Determine the IOC value
+    ioc_value = next(iter(ioc_payload.values()), None)
+    if not ioc_value:
+        logger.info("No IOC value found, returning None")
+        return None
+
+    # Determine the IOC type
+    ioc_payload["ioc_value"] = ioc_value
+    ioc_payload["ioc_type"] = get_ioc_type(ioc_value)
+
+    ioc_payload["ioc_description"] = "IOC Auto-Generated From SOCFortress CoPilot"
+    logger.info(f"IOC Payload: {ioc_payload}")
+    return ioc_payload
+
+
 async def build_alert_payload(
     syslog_type: str,
     index_name: str,
@@ -395,6 +456,7 @@ async def build_alert_payload(
         asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
         timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
         alert_title_payload=alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None,
+        ioc_payload=await build_ioc_payload(alert_payload, field_names),
         source=syslog_type,
         index_name=index_name,
         index_id=index_id,
@@ -446,6 +508,22 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             session=session,
         )
     ).id
+    if alert_payload.ioc_payload is not None:
+        ioc_id = (
+            await create_ioc_payload(
+                ioc_payload=AlertIoCCreate(
+                    alert_id=alert_id,
+                    ioc_value=alert_payload.ioc_payload["ioc_value"],
+                    ioc_type=alert_payload.ioc_payload["ioc_type"],
+                    ioc_description=alert_payload.ioc_payload["ioc_description"],
+                ),
+                alert_id=alert_id,
+                session=session,
+            )
+        ).id
+        logger.info(
+            f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}",
+        )
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
     await handle_customer_notifications(customer_code, alert_payload, session)
 
@@ -512,6 +590,73 @@ async def add_asset_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_i
     session.add(asset_context)
     await session.commit()
     return asset_context
+
+
+async def does_ioc_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
+    """
+    Check if the IoC exists for the given alert payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        session (AsyncSession): The database session.
+
+    Returns:
+        bool: True if the IoC exists, None otherwise.
+    """
+    logger.info(f"Checking if an IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+    result = await session.execute(
+        select(IoC)
+        .join(AlertToIoC, AlertToIoC.ioc_id == IoC.id)
+        .where(AlertToIoC.alert_id == alert_id, IoC.value == alert_payload.ioc_payload["ioc_value"]),
+    )
+    ioc = result.scalars().first()
+    if ioc:
+        logger.info(f"IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+        return True
+    logger.info(f"No IoC exists for alert ID {alert_id} with IoC value {alert_payload.ioc_payload['ioc_value']}")
+    return False
+
+
+async def add_ioc_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id: int, customer_code: str, session: AsyncSession) -> None:
+    """
+    Add the IoC to the alert in CoPilot.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+    """
+    if await does_ioc_exist(alert_payload, alert_id, session):
+        return None
+
+    ioc_payload = AlertIoCCreate(
+        alert_id=alert_id,
+        ioc_value=alert_payload.ioc_payload["ioc_value"],
+        ioc_type=alert_payload.ioc_payload["ioc_type"],
+        ioc_description=alert_payload.ioc_payload["ioc_description"],
+    )
+
+    ioc_context = IoC(
+        value=ioc_payload.ioc_value,
+        type=ioc_payload.ioc_type,
+        description=ioc_payload.ioc_description,
+    )
+    # Add the IoC context to the session
+    session.add(ioc_context)
+    await session.commit()
+    await session.refresh(ioc_context)
+
+    # Create the AlertToIoC relationship
+    alert_to_ioc = AlertToIoC(
+        alert_id=alert_id,
+        ioc_id=ioc_context.id,
+    )
+    # Add the AlertToIoC relationship to the session
+    session.add(alert_to_ioc)
+    await session.commit()
+    return ioc_context
 
 
 async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
@@ -591,6 +736,38 @@ async def create_asset_context_payload(
     return asset_context
 
 
+async def create_ioc_payload(
+    ioc_payload: AlertIoCCreate,
+    alert_id: int,
+    session: AsyncSession,
+) -> IoC:
+    """
+    Build the ioc context payload based on the valid field names and the ioc payload. Then
+    create the ioc context in the database.
+    """
+    logger.info(f"Creating IoC context for alert ID {alert_id} with payload {ioc_payload}")
+
+    ioc_context = IoC(
+        value=ioc_payload.ioc_value,
+        type=ioc_payload.ioc_type,
+        description=ioc_payload.ioc_description,
+    )
+    # Add the IoC context to the session
+    session.add(ioc_context)
+    await session.flush()
+
+    # Create the AlertToIoC relationship
+    alert_to_ioc = AlertToIoC(
+        alert_id=alert_id,
+        ioc_id=ioc_context.id,
+    )
+    # Add the AlertToIoC relationship to the session
+    session.add(alert_to_ioc)
+    await session.commit()
+
+    return ioc_context
+
+
 async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> bool:
     """
     Check if an open alert exists for the given alert payload.
@@ -663,6 +840,7 @@ async def create_alert(
             existing_alert,
         )
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
+        await add_ioc_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
 

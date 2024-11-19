@@ -51,6 +51,7 @@ class FieldNames(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
+    ioc_field_names: Optional[List[str]] = None
 
 
 class GenericSourceModel(BaseModel):
@@ -128,6 +129,7 @@ class CreatedAlertPayload(BaseModel):
     asset_payload: str
     timefield_payload: str
     alert_title_payload: str
+    ioc_payload: Optional[dict] = None
     source: str
     index_name: Optional[str] = None
     index_id: Optional[str] = None
