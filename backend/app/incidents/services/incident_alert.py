@@ -627,6 +627,7 @@ async def add_ioc_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id:
         return None
 
     ioc_payload = AlertIoCCreate(
+        alert_id=alert_id,
         ioc_value=alert_payload.ioc_payload['ioc_value'],
         ioc_type=alert_payload.ioc_payload['ioc_type'],
         ioc_description=alert_payload.ioc_payload['ioc_description']
