@@ -130,6 +130,7 @@ class AlertTitleFieldName(SQLModel, table=True):
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
 
+
 class IoCFieldName(SQLModel, table=True):
     __tablename__ = "incident_management_iocfieldname"
     id: Optional[int] = Field(default=None, primary_key=True)

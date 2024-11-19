@@ -53,6 +53,7 @@ class SocfortressRecommendsWazuhTimeFieldName(Enum):
 class SocfortressRecommendsWazuhAlertTitleName(Enum):
     rule_description = "rule_description"
 
+
 class SocfortressRecommendsWazuhIoCFieldNames(Enum):
     threat_intel_value = "threat_intel_value"
 

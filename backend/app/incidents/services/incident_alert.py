@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -8,7 +9,6 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
-import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -18,8 +18,12 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
-from app.incidents.models import Asset, IoC, AlertToIoC
+from app.incidents.models import AlertToIoC
+from app.incidents.models import Asset
+from app.incidents.models import IoC
 from app.incidents.routes.db_operations import get_configured_sources
+from app.incidents.schema.db_operations import AlertIoCCreate
+from app.incidents.schema.db_operations import AlertIocValue
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
@@ -30,8 +34,8 @@ from app.incidents.schema.incident_alert import GenericSourceModel
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_customer_notification
-from app.incidents.services.db_operations import get_field_names, get_ioc_names
-from app.incidents.schema.db_operations import AlertIocValue, AlertIoCCreate
+from app.incidents.services.db_operations import get_field_names
+from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -366,7 +370,6 @@ async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> 
     return alert_context_payload
 
 
-
 def get_ioc_type(ioc_value: str) -> Optional[AlertIocValue]:
     """
     Determine the IOC type based on the value.
@@ -390,6 +393,7 @@ def get_ioc_type(ioc_value: str) -> Optional[AlertIocValue]:
         return AlertIocValue.HASH
     else:
         return None
+
 
 async def build_ioc_payload(alert_payload: dict, field_names: Any) -> Optional[Dict[str, Any]]:
     """
@@ -509,15 +513,17 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             await create_ioc_payload(
                 ioc_payload=AlertIoCCreate(
                     alert_id=alert_id,
-                    ioc_value=alert_payload.ioc_payload['ioc_value'],
-                    ioc_type=alert_payload.ioc_payload['ioc_type'],
-                    ioc_description=alert_payload.ioc_payload['ioc_description']
+                    ioc_value=alert_payload.ioc_payload["ioc_value"],
+                    ioc_type=alert_payload.ioc_payload["ioc_type"],
+                    ioc_description=alert_payload.ioc_payload["ioc_description"],
                 ),
                 alert_id=alert_id,
                 session=session,
             )
         ).id
-        logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}")
+        logger.info(
+            f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}",
+        )
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
     await handle_customer_notifications(customer_code, alert_payload, session)
 
@@ -542,7 +548,8 @@ async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, se
     result = await session.execute(
         select(Asset).where(
             Asset.alert_linked == alert_id,
-            Asset.asset_name == alert_payload.asset_payload,        ),
+            Asset.asset_name == alert_payload.asset_payload,
+        ),
     )
     asset = result.scalars().first()
     if asset:
@@ -584,6 +591,7 @@ async def add_asset_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_i
     await session.commit()
     return asset_context
 
+
 async def does_ioc_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
     """
     Check if the IoC exists for the given alert payload.
@@ -600,10 +608,7 @@ async def does_ioc_exist(alert_payload: CreatedAlertPayload, alert_id: int, sess
     result = await session.execute(
         select(IoC)
         .join(AlertToIoC, AlertToIoC.ioc_id == IoC.id)
-        .where(
-            AlertToIoC.alert_id == alert_id,
-            IoC.value == alert_payload.ioc_payload['ioc_value']
-        ),
+        .where(AlertToIoC.alert_id == alert_id, IoC.value == alert_payload.ioc_payload["ioc_value"]),
     )
     ioc = result.scalars().first()
     if ioc:
@@ -628,9 +633,9 @@ async def add_ioc_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id:
 
     ioc_payload = AlertIoCCreate(
         alert_id=alert_id,
-        ioc_value=alert_payload.ioc_payload['ioc_value'],
-        ioc_type=alert_payload.ioc_payload['ioc_type'],
-        ioc_description=alert_payload.ioc_payload['ioc_description']
+        ioc_value=alert_payload.ioc_payload["ioc_value"],
+        ioc_type=alert_payload.ioc_payload["ioc_type"],
+        ioc_description=alert_payload.ioc_payload["ioc_description"],
     )
 
     ioc_context = IoC(
@@ -730,6 +735,7 @@ async def create_asset_context_payload(
     await session.commit()
     return asset_context
 
+
 async def create_ioc_payload(
     ioc_payload: AlertIoCCreate,
     alert_id: int,
@@ -760,6 +766,7 @@ async def create_ioc_payload(
     await session.commit()
 
     return ioc_context
+
 
 async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> bool:
     """

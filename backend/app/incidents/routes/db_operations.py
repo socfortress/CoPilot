@@ -32,7 +32,7 @@ from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertIoCCreate
-from app.incidents.schema.db_operations import AlertIoCDelete, SocfortressRecommendsWazuhIoCFieldNames
+from app.incidents.schema.db_operations import AlertIoCDelete
 from app.incidents.schema.db_operations import AlertIoCResponse
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
@@ -69,6 +69,7 @@ from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhFieldNames
+from app.incidents.schema.db_operations import SocfortressRecommendsWazuhIoCFieldNames
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
@@ -76,6 +77,7 @@ from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
+from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
@@ -102,7 +104,7 @@ from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
-from app.incidents.services.db_operations import alerts_open_by_customer_code, get_ioc_names
+from app.incidents.services.db_operations import alerts_open_by_customer_code
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
@@ -122,16 +124,17 @@ from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
-from app.incidents.services.db_operations import delete_alert, add_ioc_name
+from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_ioc
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
 from app.incidents.services.db_operations import delete_field_name
-from app.incidents.services.db_operations import delete_file_from_case, replace_ioc_name
+from app.incidents.services.db_operations import delete_file_from_case
+from app.incidents.services.db_operations import delete_ioc_name
 from app.incidents.services.db_operations import delete_report_template
-from app.incidents.services.db_operations import delete_timefield_name, delete_ioc_name
+from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import file_exists
@@ -142,6 +145,7 @@ from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
+from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
@@ -165,6 +169,7 @@ from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
 from app.incidents.services.db_operations import replace_field_name
+from app.incidents.services.db_operations import replace_ioc_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import report_template_exists
 from app.incidents.services.db_operations import update_alert_assigned_to
@@ -267,7 +272,6 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     if ioc_names:
         for ioc_name in ioc_names:
             await delete_ioc_name(ioc_value=ioc_name, source=source, session=session)
-
 
     logger.info(f"Field names and asset names deleted successfully for source {source}. Committing changes to the database")
 
