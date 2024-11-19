@@ -20,7 +20,9 @@
 		"test:e2e": "start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
 		"test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
 		"type-check": "vue-tsc --build --force",
+		"format": "prettier --write src/",
 		"lint": "eslint . --fix",
+		"lint-format": "run-s lint type-check format",
 		"tailwind-config-viewer": "tailwind-config-viewer -o",
 		"design-tokens": "node scripts/tokens-tool.js",
 		"start-server-old": "cd ../backend && uvicorn copilot:app --reload --port=5000",
@@ -31,8 +33,7 @@
 		"libs-check": "taze && depcheck",
 		"libs-reload": "rm -rf node_modules package-lock.json && npm install",
 		"open:swagger": "open http://127.0.0.1:5000/docs#/",
-		"open:redoc": "open http://127.0.0.1:5000/redoc",
-		"format": "prettier --write src/"
+		"open:redoc": "open http://127.0.0.1:5000/redoc"
 	},
 	"dependencies": {
 		"@ajoelp/json-to-formdata": "^1.5.0",
@@ -40,7 +41,7 @@
 		"@fontsource/jetbrains-mono": "^5.1.1",
 		"@fontsource/lexend": "^5.1.1",
 		"@fontsource/public-sans": "^5.1.1",
-		"@shikijs/markdown-it": "^1.23.0",
+		"@shikijs/markdown-it": "^1.23.1",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@vueuse/core": "^11.2.0",
 		"axios": "^1.7.7",
@@ -61,7 +62,7 @@
 		"pinia": "^2.2.6",
 		"pinia-plugin-persistedstate": "^4.1.3",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.23.0",
+		"shiki": "^1.23.1",
 		"validator": "^13.12.0",
 		"vue": "^3.5.13",
 		"vue-advanced-cropper": "^2.8.9",
@@ -74,10 +75,10 @@
 		"vuedraggable": "^4.1.0"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.27.2"
+		"@rollup/rollup-linux-x64-gnu": "^4.27.3"
 	},
 	"devDependencies": {
-		"@antfu/eslint-config": "^3.9.1",
+		"@antfu/eslint-config": "^3.9.2",
 		"@clack/prompts": "^0.8.1",
 		"@iconify/vue": "^4.1.2",
 		"@tsconfig/node20": "^20.1.4",
@@ -102,7 +103,7 @@
 		"npm-run-all2": "^7.0.1",
 		"postcss": "^8.4.49",
 		"prettier": "^3.3.3",
-		"prettier-plugin-tailwindcss": "^0.6.8",
+		"prettier-plugin-tailwindcss": "^0.6.9",
 		"sass": "^1.81.0",
 		"start-server-and-test": "^2.0.8",
 		"tailwind-config-viewer": "^2.0.4",
@@ -120,9 +121,9 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.14.0",
+			"@typescript-eslint/eslint-plugin": "^8.15.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.14.0",
+			"@typescript-eslint/parser": "^8.15.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}
@@ -134,6 +135,6 @@
 		"@typescript-eslint/parser": {
 			"eslint": "^9.15.0"
 		},
-		"@typescript-eslint/typescript-estree": "^8.14.0"
+		"@typescript-eslint/typescript-estree": "^8.15.0"
 	}
 }
