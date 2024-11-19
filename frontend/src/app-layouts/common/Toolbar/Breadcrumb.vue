@@ -7,8 +7,8 @@
 			<n-breadcrumb-item
 				v-for="(item, index) of items"
 				:key="item.key"
-				:clickable="false"
 				:class="`index-${index}`"
+				@click="goto({ path: item.path })"
 			>
 				{{ item.name }}
 			</n-breadcrumb-item>
@@ -20,8 +20,9 @@
 import type { RouteLocationNormalizedLoaded } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import _capitalize from "lodash/capitalize"
+import _compact from "lodash/compact"
+import _isEqual from "lodash/isEqual"
 import _split from "lodash/split"
-import _upperCase from "lodash/upperCase"
 import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -40,7 +41,6 @@ const items = ref<Page[]>([])
 function goto(page: Partial<Page>) {
 	if (page.name && page.name !== route.name) {
 		router.push({ name: page.name })
-		return
 	}
 	if (page.path && page.path !== route.path) {
 		router.push({ path: page.path })
@@ -49,22 +49,29 @@ function goto(page: Partial<Page>) {
 
 function checkRoute(route: RouteLocationNormalizedLoaded) {
 	const newItems: Page[] = []
-	const pathChunks = route?.path?.indexOf("/") !== -1 ? _split(route?.path || "", "/") : [route?.path]
-
-	for (const chunk of pathChunks) {
-		if (chunk) {
-			const name = _capitalize(_upperCase(chunk))
-			const path = chunk.toLowerCase()
-
-			newItems.push({
-				name,
-				path,
-				key: name + path
-			})
-		}
+	let pathChunks = _compact(_split(route?.path || "", "/"))
+	if (!pathChunks.length) {
+		pathChunks = _compact(_split(route?.matched?.[0]?.aliasOf?.path || "", "/"))
 	}
 
-	if (JSON.stringify(items.value) !== JSON.stringify(newItems)) {
+	let cumulativePath = ""
+
+	for (const chunk of pathChunks) {
+		const name = _capitalize(chunk)
+		cumulativePath += `/${chunk}`
+
+		newItems.push({
+			name,
+			path: cumulativePath,
+			key: name + cumulativePath
+		})
+	}
+
+	if (route.meta?.title && newItems.length) {
+		newItems[newItems.length - 1].name = route.meta.title
+	}
+
+	if (!_isEqual(items.value, newItems)) {
 		items.value = newItems
 	}
 }
