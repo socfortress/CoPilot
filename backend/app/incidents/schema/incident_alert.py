@@ -129,7 +129,7 @@ class CreatedAlertPayload(BaseModel):
     asset_payload: str
     timefield_payload: str
     alert_title_payload: str
-    ioc_payload: dict
+    ioc_payload: Optional[dict] = None
     source: str
     index_name: Optional[str] = None
     index_id: Optional[str] = None

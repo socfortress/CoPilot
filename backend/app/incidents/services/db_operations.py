@@ -1856,6 +1856,14 @@ async def delete_tags(alert_id: int, db: AsyncSession):
             delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)),
         )
 
+async def delete_iocs(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(AlertToIoC).where(AlertToIoC.alert_id == alert_id))
+    alert_to_iocs = result.scalars().all()
+    for alert_to_ioc in alert_to_iocs:
+        await db.execute(
+            delete(AlertToIoC).where((AlertToIoC.alert_id == alert_to_ioc.alert_id) & (AlertToIoC.ioc_id == alert_to_ioc.ioc_id)),
+        )
+
 
 async def is_alert_linked_to_case(alert_id: int, db: AsyncSession) -> bool:
     result = await db.execute(select(CaseAlertLink).where(CaseAlertLink.alert_id == alert_id))
@@ -1881,7 +1889,10 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     logger.info(f"Deleting alert {alert_id}")
     result = await db.execute(
         select(Alert)
-        .options(selectinload(Alert.comments), selectinload(Alert.assets).selectinload(Asset.alert_context), selectinload(Alert.tags))
+        .options(selectinload(Alert.comments),
+                 selectinload(Alert.assets).selectinload(Asset.alert_context),
+                 selectinload(Alert.tags),
+                selectinload(Alert.iocs))
         .where(Alert.id == alert_id),
     )
     alert = result.scalars().first()
@@ -1891,6 +1902,7 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     await delete_comments(alert_id, db)
     await delete_assets(alert_id, db)
     await delete_tags(alert_id, db)
+    await delete_iocs(alert_id, db)
 
     await db.execute(delete(Alert).where(Alert.id == alert.id))
 
