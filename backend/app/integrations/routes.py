@@ -14,8 +14,10 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.services.folders import delete_folder
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
+from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -32,6 +34,7 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
 from app.integrations.schema import AuthKey
+from app.connectors.graylog.services.management import delete_index
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -44,6 +47,7 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
+from app.connectors.graylog.services.streams import delete_stream
 
 integration_settings_router = APIRouter()
 
@@ -886,6 +890,28 @@ async def update_available_integrations(
         success=True,
     )
 
+async def fetch_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+    """
+    Fetches customer integrations metadata from the database.
+    """
+    stmt = select(CustomerIntegrationsMeta).where(
+        CustomerIntegrationsMeta.customer_code == customer_code,
+        CustomerIntegrationsMeta.integration_name == integration_name,
+    )
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+async def delete_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+    """
+    Deletes customer integrations metadata from the database.
+    """
+    await session.execute(
+        delete(CustomerIntegrationsMeta).where(
+            CustomerIntegrationsMeta.customer_code == customer_code,
+            CustomerIntegrationsMeta.integration_name == integration_name,
+        ),
+    )
+
 
 @integration_settings_router.delete(
     "/delete_integration",
@@ -924,11 +950,28 @@ async def delete_integration(
             detail="No subscriptions found for customer integration",
         )
 
+    stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
+    logger.info(f"stream_id: {stream_id}")
+
+    await delete_stream(stream_id=stream_id)
+
+    index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
+    logger.info(f"index_id: {index_id}")
+
+    await delete_index(DeletedIndexBody(index_name=index_id))
+
+    # Delete the folder in Grafana
+    grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
+    grafana_dashboard_folder_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_dashboard_folder_id
+
+    await delete_folder(grafana_org_id, grafana_dashboard_folder_id)
+
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
     await delete_configs(session, integration_service_id)
     await delete_integration_service(session, integration_service_id)
     await delete_customer_integration_record(session, customer_id)
+    await delete_customer_integration_meta(session, customer_code, integration_name)
 
     await session.commit()
 
@@ -938,34 +981,34 @@ async def delete_integration(
     )
 
 
-@integration_settings_router.delete(
-    "/delete_integration_meta",
-    response_model=CustomerIntegrationsMetaResponse,
-    description="Delete a customer integration metadata.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-)
-async def delete_integration_meta(
-    customer_integration_meta: CustomerIntegrationsMetaSchema,
-    session: AsyncSession = Depends(get_db),
-):
-    """
-    Endpoint to delete a customer integration metadata.
-    """
-    try:
-        stmt = delete(CustomerIntegrationsMeta).where(
-            CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
-            CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
-        )
-        await session.execute(stmt)
-        await session.commit()
-        return CustomerIntegrationsMetaResponse(
-            message="Customer integration metadata successfully deleted.",
-            success=True,
-        )
-    except Exception as e:
-        logger.error(f"Error while deleting customer integration metadata: {e}")
-        return CustomerIntegrationsMetaResponse(
-            customer_integrations_meta=None,
-            message="Error while deleting customer integration metadata.",
-            success=False,
-        )
+# @integration_settings_router.delete(
+#     "/delete_integration_meta",
+#     response_model=CustomerIntegrationsMetaResponse,
+#     description="Delete a customer integration metadata.",
+#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+# )
+# async def delete_integration_meta(
+#     customer_integration_meta: CustomerIntegrationsMetaSchema,
+#     session: AsyncSession = Depends(get_db),
+# ):
+#     """
+#     Endpoint to delete a customer integration metadata.
+#     """
+#     try:
+#         stmt = delete(CustomerIntegrationsMeta).where(
+#             CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
+#             CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
+#         )
+#         await session.execute(stmt)
+#         await session.commit()
+#         return CustomerIntegrationsMetaResponse(
+#             message="Customer integration metadata successfully deleted.",
+#             success=True,
+#         )
+#     except Exception as e:
+#         logger.error(f"Error while deleting customer integration metadata: {e}")
+#         return CustomerIntegrationsMetaResponse(
+#             customer_integrations_meta=None,
+#             message="Error while deleting customer integration metadata.",
+#             success=False,
+#         )

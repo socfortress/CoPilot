@@ -6,7 +6,7 @@ from loguru import logger
 from app.connectors.graylog.schema.streams import GraylogStreamsResponse
 from app.connectors.graylog.schema.streams import Stream
 from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_put_request
+from app.connectors.graylog.utils.universal import send_put_request, send_delete_request
 
 
 async def get_streams() -> GraylogStreamsResponse:
@@ -95,4 +95,27 @@ async def assign_stream_to_index(stream_id: str, index_id: str) -> bool:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to assign stream {stream_id} to index {index_id}",
+        )
+
+
+async def delete_stream(stream_id: str) -> bool:
+    """Delete a stream.
+
+    Args:
+        stream_id (str): The ID of the stream to delete.
+
+    Returns:
+        bool: True if the stream is successfully deleted, False if it is not.
+
+    Raises:
+        HTTPException: If there is an error deleting the stream.
+    """
+    logger.info(f"Deleting stream {stream_id}")
+    response = await send_delete_request(endpoint=f"/api/streams/{stream_id}")
+    if response["success"]:
+        return True
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete stream {stream_id}",
         )
