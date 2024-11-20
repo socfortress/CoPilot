@@ -820,6 +820,16 @@ async def update_integration(
 
     await session.commit()
 
+    if customer_integration_update.integration_name == "Office365":
+        return CustomerIntegrationCreateResponse(
+            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
+            success=True,
+            additional_info=(
+                "Make sure to update the Office365 integration block in the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
+                "Also make sure to update the Office365 Graylog stream rule for this customer with the new organization ID if this has changed."
+            ),
+        )
+
     return CustomerIntegrationCreateResponse(
         message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
         success=True,
