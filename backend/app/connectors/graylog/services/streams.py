@@ -5,8 +5,9 @@ from loguru import logger
 
 from app.connectors.graylog.schema.streams import GraylogStreamsResponse
 from app.connectors.graylog.schema.streams import Stream
+from app.connectors.graylog.utils.universal import send_delete_request
 from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_put_request, send_delete_request
+from app.connectors.graylog.utils.universal import send_put_request
 
 
 async def get_streams() -> GraylogStreamsResponse:

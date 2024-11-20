@@ -15,9 +15,10 @@ from sqlalchemy.orm import joinedload
 
 from app.auth.utils import AuthHandler
 from app.connectors.grafana.services.folders import delete_folder
+from app.connectors.graylog.services.management import delete_index_by_id
+from app.connectors.graylog.services.streams import delete_stream
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
-from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -34,7 +35,6 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
 from app.integrations.schema import AuthKey
-from app.connectors.graylog.services.management import delete_index_by_id
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -47,7 +47,6 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
-from app.connectors.graylog.services.streams import delete_stream
 
 integration_settings_router = APIRouter()
 
@@ -520,6 +519,7 @@ def process_customer_integrations(customer_integrations_data):
         processed_customer_integrations.append(customer_integration_obj)
     return processed_customer_integrations
 
+
 def generate_integration_response(customer_code: str, integration_name: str) -> CustomerIntegrationCreateResponse:
     additional_info_map = {
         "Office365": (
@@ -890,6 +890,7 @@ async def update_available_integrations(
         success=True,
     )
 
+
 async def fetch_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
     """
     Fetches customer integrations metadata from the database.
@@ -900,6 +901,7 @@ async def fetch_customer_integration_meta(session: AsyncSession, customer_code: 
     )
     result = await session.execute(stmt)
     return result.scalars().first()
+
 
 async def delete_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
     """
@@ -960,7 +962,9 @@ async def delete_integration(
 
     # Delete the folder in Grafana
     grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
-    grafana_dashboard_folder_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_dashboard_folder_id
+    grafana_dashboard_folder_id = (
+        await fetch_customer_integration_meta(session, customer_code, integration_name)
+    ).grafana_dashboard_folder_id
 
     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
 

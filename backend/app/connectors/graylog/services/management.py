@@ -54,6 +54,7 @@ async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:
             message=f"Successfully deleted index {index_name}",
         )
 
+
 async def delete_index_by_id(index_id: str) -> DeletedIndexResponse:
     """Delete an index from Graylog.
 
@@ -69,6 +70,7 @@ async def delete_index_by_id(index_id: str) -> DeletedIndexResponse:
         success=True,
         message=f"Successfully deleted index {index_id}",
     )
+
 
 async def stop_input(input_id: StopInputBody) -> StopInputResponse:
     """Stop an input in Graylog.
