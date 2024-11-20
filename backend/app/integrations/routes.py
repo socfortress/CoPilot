@@ -827,6 +827,17 @@ async def update_integration(
             additional_info=(
                 "Make sure to update the Office365 integration block in the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
                 "Also make sure to update the Office365 Graylog stream rule for this customer with the new organization ID if this has changed."
+                "YouTube video: https://youtu.be/ihj2F2rA6BQ?si=p4c8Xnk6PX8r29IB"
+            ),
+        )
+
+    if customer_integration_update.integration_name == "Crowdstrike":
+        return CustomerIntegrationCreateResponse(
+            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
+            success=True,
+            additional_info=(
+                "Make sure to update the Crowdstrike docker application with the new connection details and restart the docker container. "
+                "YouTube video: https://youtu.be/YOVUOpZDEzM?si=jzpHw8vcnqnfVPzt"
             ),
         )
 
