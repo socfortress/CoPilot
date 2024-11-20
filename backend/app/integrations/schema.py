@@ -108,6 +108,10 @@ class CustomerIntegrationDeleteResponse(BaseModel):
         ...,
         description="The success status.",
     )
+    additional_info: Optional[str] = Field(
+        None,
+        description="The additional information of manaul steps that need to be performed for the integration.",
+    )
 
 
 # class IntegrationConfig(BaseModel):

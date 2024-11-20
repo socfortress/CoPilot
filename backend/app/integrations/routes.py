@@ -546,6 +546,29 @@ def generate_integration_response(customer_code: str, integration_name: str) -> 
         additional_info=additional_info,
     )
 
+def generate_decommission_response(customer_code: str, integration_name: str) -> CustomerIntegrationDeleteResponse:
+    additional_info_map = {
+        "Office365": (
+            "Make sure to remove the Office365 integration block from the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
+        ),
+        "Crowdstrike": (
+            "Make sure to remove the Crowdstrike docker application."
+        ),
+        "BitDefender": (
+            "Make sure to remove the BitDefender docker application."
+        ),
+    }
+
+    additional_info = additional_info_map.get(integration_name, "")
+    if additional_info == "":
+        additional_info = None
+
+    return CustomerIntegrationDeleteResponse(
+        message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
+        success=True,
+        additional_info=additional_info,
+    )
+
 
 @integration_settings_router.get(
     "/available_integrations",
@@ -977,10 +1000,7 @@ async def delete_integration(
 
     await session.commit()
 
-    return CustomerIntegrationDeleteResponse(
-        message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
-        success=True,
-    )
+    return generate_decommission_response(customer_code, integration_name)
 
 
 # @integration_settings_router.delete(
