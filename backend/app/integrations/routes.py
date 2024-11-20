@@ -34,7 +34,7 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
 from app.integrations.schema import AuthKey
-from app.connectors.graylog.services.management import delete_index
+from app.connectors.graylog.services.management import delete_index_by_id
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -952,19 +952,17 @@ async def delete_integration(
 
     stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
     logger.info(f"stream_id: {stream_id}")
-
     await delete_stream(stream_id=stream_id)
 
     index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
     logger.info(f"index_id: {index_id}")
-
-    await delete_index(DeletedIndexBody(index_name=index_id))
+    await delete_index_by_id(index_id=index_id)
 
     # Delete the folder in Grafana
     grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
     grafana_dashboard_folder_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_dashboard_folder_id
 
-    await delete_folder(grafana_org_id, grafana_dashboard_folder_id)
+    await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
 
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
