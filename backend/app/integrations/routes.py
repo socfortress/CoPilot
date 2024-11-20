@@ -546,17 +546,14 @@ def generate_integration_response(customer_code: str, integration_name: str) -> 
         additional_info=additional_info,
     )
 
+
 def generate_decommission_response(customer_code: str, integration_name: str) -> CustomerIntegrationDeleteResponse:
     additional_info_map = {
         "Office365": (
             "Make sure to remove the Office365 integration block from the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
         ),
-        "Crowdstrike": (
-            "Make sure to remove the Crowdstrike docker application."
-        ),
-        "BitDefender": (
-            "Make sure to remove the BitDefender docker application."
-        ),
+        "Crowdstrike": ("Make sure to remove the Crowdstrike docker application."),
+        "BitDefender": ("Make sure to remove the BitDefender docker application."),
     }
 
     additional_info = additional_info_map.get(integration_name, "")
