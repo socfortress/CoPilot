@@ -516,6 +516,32 @@ def process_customer_integrations(customer_integrations_data):
         processed_customer_integrations.append(customer_integration_obj)
     return processed_customer_integrations
 
+def generate_integration_response(customer_code: str, integration_name: str) -> CustomerIntegrationCreateResponse:
+    additional_info_map = {
+        "Office365": (
+            "Make sure to update the Office365 integration block in the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
+            "Also make sure to update the Office365 Graylog stream rule for this customer with the new organization ID if this has changed. "
+            "YouTube video: https://youtu.be/ihj2F2rA6BQ?si=p4c8Xnk6PX8r29IB"
+        ),
+        "Crowdstrike": (
+            "Make sure to update the Crowdstrike docker application with the new connection details and restart the docker container. "
+            "YouTube video: https://youtu.be/YOVUOpZDEzM?si=jzpHw8vcnqnfVPzt"
+        ),
+        "BitDefender": (
+            "Make sure to update the BitDefender docker application with the new connection details and restart the docker container."
+        ),
+    }
+
+    additional_info = additional_info_map.get(integration_name, "")
+    if additional_info == "":
+        additional_info = None
+
+    return CustomerIntegrationCreateResponse(
+        message=f"Customer integration {customer_code} {integration_name} successfully updated.",
+        success=True,
+        additional_info=additional_info,
+    )
+
 
 @integration_settings_router.get(
     "/available_integrations",
@@ -820,40 +846,7 @@ async def update_integration(
 
     await session.commit()
 
-    if customer_integration_update.integration_name == "Office365":
-        return CustomerIntegrationCreateResponse(
-            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
-            success=True,
-            additional_info=(
-                "Make sure to update the Office365 integration block in the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
-                "Also make sure to update the Office365 Graylog stream rule for this customer with the new organization ID if this has changed."
-                "YouTube video: https://youtu.be/ihj2F2rA6BQ?si=p4c8Xnk6PX8r29IB"
-            ),
-        )
-
-    if customer_integration_update.integration_name == "Crowdstrike":
-        return CustomerIntegrationCreateResponse(
-            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
-            success=True,
-            additional_info=(
-                "Make sure to update the Crowdstrike docker application with the new connection details and restart the docker container. "
-                "YouTube video: https://youtu.be/YOVUOpZDEzM?si=jzpHw8vcnqnfVPzt"
-            ),
-        )
-
-    if customer_integration_update.integration_name == "BitDefender":
-        return CustomerIntegrationCreateResponse(
-            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
-            success=True,
-            additional_info=(
-                "Make sure to update the BitDefender docker application with the new connection details and restart the docker container. "
-            ),
-        )
-
-    return CustomerIntegrationCreateResponse(
-        message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
-        success=True,
-    )
+    return generate_integration_response(customer_code, customer_integration_update.integration_name)
 
 
 @integration_settings_router.put(
