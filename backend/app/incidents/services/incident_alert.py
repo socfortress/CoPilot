@@ -471,6 +471,7 @@ async def handle_customer_notifications(customer_code: str, alert_payload: Creat
             ExecuteWorkflowRequest(
                 workflow_id=customer_notifications[0].shuffle_workflow_id,
                 execution_arguments={
+                    "type": "alert",
                     "customer_code": customer_code,
                     "alert_context_payload": alert_payload.alert_context_payload,
                     "alert_title": alert_payload.alert_title_payload,
