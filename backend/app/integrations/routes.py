@@ -841,6 +841,15 @@ async def update_integration(
             ),
         )
 
+    if customer_integration_update.integration_name == "BitDefender":
+        return CustomerIntegrationCreateResponse(
+            message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
+            success=True,
+            additional_info=(
+                "Make sure to update the BitDefender docker application with the new connection details and restart the docker container. "
+            ),
+        )
+
     return CustomerIntegrationCreateResponse(
         message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
         success=True,
