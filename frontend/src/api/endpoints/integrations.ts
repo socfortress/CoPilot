@@ -20,6 +20,8 @@ export interface NewIntegrationPayload extends NewIntegration {
 	}
 }
 
+export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
+
 export default {
 	// #region Integrations
 	getAvailableIntegrations() {
@@ -42,6 +44,9 @@ export default {
 			}
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/integrations/create_integration`, payload)
+	},
+	updateIntegration(payload: UpdateIntegrationPayload) {
+		return HttpClient.put<FlaskBaseResponse>(`/integrations/update_integration/${payload.customer_code}`, payload)
 	},
 	deleteIntegration(customerCode: string, integrationName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
