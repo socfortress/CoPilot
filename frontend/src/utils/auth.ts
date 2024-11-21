@@ -29,14 +29,16 @@ export function authCheck(route: RouteLocationNormalized) {
 
 	if (route?.redirectedFrom?.name === "Logout") authStore.setLogout()
 
+	const loginPath = `/login${window.location.search}`
+
 	if (auth && !authStore.isLogged) {
-		window.location.href = `/login${window.location.search}`
-		return false
+		window.location.replace(loginPath)
+		return loginPath
 	}
 
 	if (auth && roles && !authStore.isRoleGranted(roles)) {
-		window.location.href = `/login${window.location.search}`
-		return false
+		window.location.replace(loginPath)
+		return loginPath
 	}
 
 	if (checkAuth && authStore.isLogged) {
