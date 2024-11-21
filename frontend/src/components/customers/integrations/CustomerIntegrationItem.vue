@@ -42,7 +42,7 @@
 			segmented
 			display-directive="show"
 		>
-			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" />
+			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="integration = $event" />
 		</n-modal>
 	</div>
 </template>
@@ -56,7 +56,7 @@ import { NButton, NModal } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
-const { integration, embedded } = defineProps<{
+const { integration: customerIntegration, embedded } = defineProps<{
 	integration: CustomerIntegration
 	embedded?: boolean
 }>()
@@ -70,7 +70,7 @@ const CustomerIntegrationDetails = defineAsyncComponent(() => import("./Customer
 
 const DeployIcon = "carbon:deploy"
 const DetailsIcon = "carbon:settings-adjust"
-
+const integration = ref(customerIntegration)
 const showDetails = ref(false)
-const serviceName = computed(() => integration.integration_service_name)
+const serviceName = computed(() => integration.value.integration_service_name)
 </script>

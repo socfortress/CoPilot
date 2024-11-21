@@ -51,12 +51,16 @@
 							Back
 						</n-button>
 
-						<n-button :loading="updating" type="success" @click="updateIntegration()">
-							<template #icon>
-								<Icon :name="UpdateIcon"></Icon>
-							</template>
-							Submit
-						</n-button>
+						<div class="flex items-center justify-end gap-3">
+							<n-button :disabled="updating" @click="reset()">Reset</n-button>
+
+							<n-button :loading="updating" type="success" :disabled="!isValid" @click="validate()">
+								<template #icon>
+									<Icon :name="UpdateIcon"></Icon>
+								</template>
+								Submit
+							</n-button>
+						</div>
 					</div>
 				</div>
 			</n-spin>
@@ -65,15 +69,18 @@
 </template>
 
 <script setup lang="ts">
-import type { UpdateIntegrationPayload } from "@/api/endpoints/integrations"
-import type { CustomerIntegration } from "@/types/integrations.d"
+import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
+import type { CustomerIntegration, IntegrationAuthKey } from "@/types/integrations.d"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import _get from "lodash/get"
+import _trim from "lodash/trim"
 import _uniqBy from "lodash/uniqBy"
 import {
 	type FormInst,
 	type FormRules,
+	type FormValidationError,
 	NButton,
 	NCollapseTransition,
 	NForm,
@@ -86,7 +93,7 @@ import {
 import { computed, ref } from "vue"
 import { handleDeleteIntegration } from "./utils"
 
-const { integration } = defineProps<{
+const props = defineProps<{
 	integration: CustomerIntegration
 }>()
 
@@ -99,14 +106,15 @@ const EditIcon = "uil:edit-alt"
 const BackIcon = "carbon:arrow-left"
 const DeleteIcon = "ph:trash"
 const UpdateIcon = "carbon:save"
+const integration = ref(props.integration)
 const dialog = useDialog()
 const message = useMessage()
 const form = ref<FormInst | null>(null)
-const model = ref<Record<string, string>>({})
+const model = ref<Record<string, string | null>>({})
 const mode = ref<"view" | "edit">("view")
 const deleting = ref<boolean>(false)
 const updating = ref<boolean>(false)
-const authKeys = ref(getAuthKeys(integration))
+const authKeys = ref(getAuthKeys(integration.value))
 
 const rules = computed(() =>
 	authKeys.value.reduce((acc, cur) => {
@@ -118,6 +126,31 @@ const rules = computed(() =>
 		return acc
 	}, {} as FormRules)
 )
+
+const isValid = computed(() => {
+	let valid = true
+
+	for (const field of Object.entries(model.value)) {
+		if (!field[1]) {
+			valid = false
+		}
+	}
+
+	return valid
+})
+
+function validate() {
+	if (!form.value) return
+
+	form.value.validate((errors?: Array<FormValidationError>) => {
+		if (!errors) {
+			updateIntegration()
+		} else {
+			message.warning("You must fill in the required fields correctly.")
+			return false
+		}
+	})
+}
 
 function getAuthKeys(integration: CustomerIntegration) {
 	const keys: { key: string; value: string }[] = []
@@ -134,6 +167,19 @@ function getAuthKeys(integration: CustomerIntegration) {
 	return _uniqBy(keys, "key")
 }
 
+function updateAuthKeys(integrationAuthKeys: IntegrationAuthKeyPairs[]) {
+	for (const subscriptions of integration.value.integration_subscriptions) {
+		for (const ak of subscriptions.integration_auth_keys) {
+			const ia = integrationAuthKeys.find(i => i.auth_key_name === ak.auth_key_name)
+			ak.auth_value = ia?.auth_value || ak.auth_value
+		}
+	}
+
+	authKeys.value = getAuthKeys(integration.value)
+
+	return integration.value
+}
+
 function switchMode(newMode: "view" | "edit") {
 	mode.value = newMode
 
@@ -148,9 +194,19 @@ function switchMode(newMode: "view" | "edit") {
 	}
 }
 
+function reset() {
+	model.value = authKeys.value.reduce(
+		(acc, cur) => {
+			acc[cur.key] = null
+			return acc
+		},
+		{} as Record<string, string | null>
+	)
+}
+
 function handleDelete() {
 	handleDeleteIntegration({
-		integration,
+		integration: integration.value,
 		cbBefore: () => {
 			deleting.value = true
 		},
@@ -169,20 +225,25 @@ function updateIntegration() {
 	updating.value = true
 
 	const payload: UpdateIntegrationPayload = {
-		customer_code: integration.customer_code,
-		integration_name: integration.integration_service_name,
+		customer_code: integration.value.customer_code,
+		integration_name: integration.value.integration_service_name,
 		integration_auth_keys: Object.entries(model.value).map(([key, val]) => ({
 			auth_key_name: key,
-			auth_value: val
+			auth_value: val || ""
 		}))
 	}
 
 	Api.integrations
 		.updateIntegration(payload)
 		.then(res => {
-			if (res.data.success) {
-				message.success(res.data?.message || "Active Response invoked successfully")
-				emit("updated", integration)
+			if (res.data?.success) {
+				message.success(res.data?.message || "Customer integration successfully updated")
+
+				if (res.data?.additional_info) {
+					message.info(res.data.additional_info, { duration: 0, closable: true })
+				}
+
+				emit("updated", updateAuthKeys(payload.integration_auth_keys))
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
