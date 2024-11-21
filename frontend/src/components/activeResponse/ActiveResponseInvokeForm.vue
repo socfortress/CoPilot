@@ -2,7 +2,7 @@
 	<div class="active-response-invoke-form flex grow flex-col justify-between">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
-				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules>
 					<div class="grid-auto-fit-200 grid gap-6">
 						<n-form-item label="Action" path="action">
 							<n-select v-model:value="form.action" :options="invokeActionOptions" />
