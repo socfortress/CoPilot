@@ -1,28 +1,24 @@
 <template>
 	<div class="form-wrap">
-		<Logo mini :dark="isDark" class="mb-4" />
-		<div class="title mb-4">
-			{{ title }}
-		</div>
-		<div class="text mb-12">Access the world of OpenSource security: Simplified, Streamlined, Accessible.</div>
-
-		<div class="form">
-			<transition name="form-fade" mode="out-in" appear>
-				<SignIn v-if="typeRef === 'signin'" key="signin" @goto-forgot-password="gotoForgotPassword()" />
-				<ForgotPassword v-else-if="typeRef === 'forgotpassword'" key="forgotpassword" />
-				<SignUp v-else-if="typeRef === 'signup'" key="signup" @goto-signin="gotoSignIn()" />
-			</transition>
+		<div>
+			<Logo mini :dark="isDark" class="mb-4" />
+			<div class="title mb-4">
+				{{ title }}
+			</div>
+			<div class="text">Access the world of OpenSource security: Simplified, Streamlined, Accessible.</div>
 		</div>
 
-		<div class="sign-text mt-10 text-center">
-			<div v-if="typeRef === 'signin'" class="sign-text">
+		<transition name="form-fade" mode="out-in" appear class="min-h-114 my-10">
+			<SignIn v-if="typeRef === 'signin'" key="signin" />
+			<SignUp v-else-if="typeRef === 'signup'" key="signup" />
+		</transition>
+
+		<div class="text-center">
+			<div v-if="typeRef === 'signin'">
 				Don't you have an account?
 				<n-button text type="primary" size="large" @click="gotoSignUp()">Sign up</n-button>
 			</div>
-			<div v-if="typeRef === 'forgotpassword'" class="sign-text">
-				<n-button text type="primary" size="large" @click="gotoSignIn()">Back to Sign in</n-button>
-			</div>
-			<div v-if="typeRef === 'signup'" class="sign-text">
+			<div v-if="typeRef === 'signup'">
 				Do you have an account?
 				<n-button text type="primary" size="large" @click="gotoSignIn()">Sign in</n-button>
 			</div>
@@ -36,8 +32,6 @@ import Logo from "@/app-layouts/common/Logo.vue"
 import { useThemeStore } from "@/stores/theme"
 import { NButton } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
-import { useRouter } from "vue-router"
-import ForgotPassword from "./ForgotPassword.vue"
 import SignIn from "./SignIn.vue"
 import SignUp from "./SignUp.vue"
 
@@ -47,7 +41,6 @@ const props = defineProps<{
 }>()
 
 const typeRef = ref<FormType>("signin")
-const router = useRouter()
 const themeStore = useThemeStore()
 const isDark = computed<boolean>(() => themeStore.isThemeDark)
 const title = computed<string>(() =>
@@ -59,24 +52,11 @@ const title = computed<string>(() =>
 )
 
 function gotoSignIn() {
-	if (!props.useOnlyRouter) {
-		typeRef.value = "signin"
-	}
-	router.replace({ name: "Login" })
+	typeRef.value = "signin"
 }
 
 function gotoSignUp() {
-	if (!props.useOnlyRouter) {
-		typeRef.value = "signup"
-	}
-	router.replace({ name: "Register" })
-}
-
-function gotoForgotPassword() {
-	if (!props.useOnlyRouter) {
-		typeRef.value = "forgotpassword"
-	}
-	router.replace({ name: "ForgotPassword" })
+	typeRef.value = "signup"
 }
 
 onBeforeMount(() => {
