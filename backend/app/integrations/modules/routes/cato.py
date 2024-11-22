@@ -37,7 +37,6 @@ async def get_cato_auth_keys(customer_integration) -> CatoAuthKeys:
 
 
 async def get_collect_cato_data(cato_request, session, auth_keys):
-    logger.info(f"Buidling CollectCato object.")
     return CollectCato(
         integration="cato",
         customer_code=cato_request.customer_code,
@@ -72,21 +71,15 @@ async def collect_cato_route(cato_request: InvokeCatoRequest, session: AsyncSess
             session,
         )
 
-        logger.info(f"Customer Integration Response: {customer_integration_response}")
-
         customer_integration = await find_customer_integration(
             cato_request.customer_code,
             cato_request.integration_name,
             customer_integration_response,
         )
 
-        logger.info(f"Customer Integration: {customer_integration}")
-
         auth_keys = await get_cato_auth_keys(customer_integration)
 
         collect_cato_data = await get_collect_cato_data(cato_request, session, auth_keys)
-
-        logger.info(f"Collecting Cato Events for {cato_request.customer_code}")
 
         await post_to_copilot_cato_module(data=collect_cato_data)
 
