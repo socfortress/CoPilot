@@ -806,7 +806,6 @@ async def create_integration_meta(
             success=False,
         )
 
-
 @integration_settings_router.put(
     "/update_integration/{customer_code}",
     response_model=CustomerIntegrationCreateResponse,
@@ -848,25 +847,26 @@ async def update_integration(
         session,
     )
 
-    subscription_id = get_subscription_id(
-        customer_integration,
-        customer_integration_update.integration_name,
-        customer_integration_update.integration_auth_keys[0].auth_key_name,
-    )
-
-    if not subscription_id:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Integration auth key {customer_integration_update.integration_auth_keys[0].auth_key_name} not found.",
+    for auth_key in customer_integration_update.integration_auth_keys:
+        subscription_id = get_subscription_id(
+            customer_integration,
+            customer_integration_update.integration_name,
+            auth_key.auth_key_name,
         )
 
-    await session.execute(
-        update(IntegrationAuthKeys)
-        .where(IntegrationAuthKeys.subscription_id == subscription_id)
-        .values(
-            auth_value=customer_integration_update.integration_auth_keys[0].auth_value,
-        ),
-    )
+        if not subscription_id:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Integration auth key {auth_key.auth_key_name} not found.",
+            )
+
+        await session.execute(
+            update(IntegrationAuthKeys)
+            .where(IntegrationAuthKeys.subscription_id == subscription_id)
+            .values(
+                auth_value=auth_key.auth_value,
+            ),
+        )
 
     await session.commit()
 
