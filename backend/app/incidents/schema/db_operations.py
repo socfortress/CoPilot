@@ -41,6 +41,11 @@ class SocfortressRecommendsWazuhFieldNames(Enum):
     process_id = "process_id"
     sha256 = "sha256"
 
+class DeleteAlertsResponse(BaseModel):
+    message: str
+    deleted_alert_ids: List[int]
+    not_deleted_alert_ids: List[int]
+    success: bool
 
 class SocfortressRecommendsWazuhAssetName(Enum):
     agent_name = "agent_name"
@@ -299,7 +304,6 @@ class AlertTagDelete(BaseModel):
 class AlertIoCDelete(BaseModel):
     alert_id: int
     ioc_id: int
-
 
 class CommentBase(BaseModel):
     user_name: str

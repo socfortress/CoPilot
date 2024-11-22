@@ -33,6 +33,7 @@ from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertIoCCreate
 from app.incidents.schema.db_operations import AlertIoCDelete
+from app.incidents.schema.db_operations import DeleteAlertsResponse
 from app.incidents.schema.db_operations import AlertIoCResponse
 from app.incidents.schema.db_operations import AlertOutResponse
 from app.incidents.schema.db_operations import AlertResponse
@@ -558,6 +559,46 @@ async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db
     await is_alert_linked_to_case(alert_id, db)
     await delete_alert(alert_id, db)
     return {"message": "Alert deleted successfully", "success": True}
+
+
+@incidents_db_operations_router.delete("/alerts", response_model=DeleteAlertsResponse)
+async def delete_alerts_endpoint(alert_ids: List[int], db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to delete alerts.
+
+    This endpoint deletes alerts based on the provided list of alert IDs. If an alert is linked to a case, it will not be deleted and will be skipped.
+
+    Args:
+        alert_ids (List[int]): List of alert IDs to be deleted.
+        db (AsyncSession, optional): Database session dependency.
+
+    Returns:
+        DeleteAlertsResponse: Response object containing the status of the deletion process, including lists of successfully deleted alert IDs and those that were not deleted.
+
+    Raises:
+        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case.
+    """
+    deleted_alert_ids = []
+    not_deleted_alert_ids = []
+    for alert_id in alert_ids:
+        try:
+            await is_alert_linked_to_case(alert_id, db)
+            await delete_alert(alert_id, db)
+            deleted_alert_ids.append(alert_id)
+        except HTTPException as e:
+            if e.status_code == 400:
+                logger.info(f"Alert {alert_id} is linked to a case and cannot be deleted. Skipping.")
+                not_deleted_alert_ids.append(alert_id)
+            else:
+                raise e
+    return DeleteAlertsResponse(
+        message="Alerts processed successfully",
+        deleted_alert_ids=deleted_alert_ids,
+        not_deleted_alert_ids=not_deleted_alert_ids,
+        success=True
+    )
+
+
 
 
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=AlertOutResponse)
