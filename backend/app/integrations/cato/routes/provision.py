@@ -10,10 +10,10 @@ from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
-integration_Cato_provision_scheduler_router = APIRouter()
+integration_cato_provision_scheduler_router = APIRouter()
 
 
-@integration_Cato_provision_scheduler_router.post(
+@integration_cato_provision_scheduler_router.post(
     "/provision",
     response_model=ProvisionCatoResponse,
     description="Provision a Cato integration.",

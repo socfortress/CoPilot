@@ -39,6 +39,7 @@ from app.routers import carbonblack
 from app.routers import connectors
 from app.routers import cortex
 from app.routers import crowdstrike
+from app.routers import cato
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import darktrace
@@ -118,6 +119,7 @@ app.add_exception_handler(ValueError, value_error_handler)
 api_router.include_router(connectors.router)
 api_router.include_router(wazuh_indexer.router)
 api_router.include_router(auth.router)
+api_router.include_router(cato.router)
 api_router.include_router(wazuh_manager.router)
 api_router.include_router(agents.router)
 api_router.include_router(graylog.router)

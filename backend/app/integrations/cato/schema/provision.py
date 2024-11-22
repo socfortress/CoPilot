@@ -17,7 +17,7 @@ class ProvisionCatoRequest(BaseModel):
     time_interval: int = Field(
         ...,
         description="The time interval for the scheduler.",
-        examples=[5],
+        examples=[15],
     )
     integration_name: str = Field(
         "Cato",
