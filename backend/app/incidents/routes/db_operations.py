@@ -40,7 +40,7 @@ from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AlertTagDelete
-from app.incidents.schema.db_operations import AlertTagResponse
+from app.incidents.schema.db_operations import AlertTagResponse, DeleteAlertsRequest
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
@@ -562,14 +562,14 @@ async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db
 
 
 @incidents_db_operations_router.delete("/alerts", response_model=DeleteAlertsResponse)
-async def delete_alerts_endpoint(alert_ids: List[int], db: AsyncSession = Depends(get_db)):
+async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
     """
     Endpoint to delete alerts.
 
     This endpoint deletes alerts based on the provided list of alert IDs. If an alert is linked to a case, it will not be deleted and will be skipped.
 
     Args:
-        alert_ids (List[int]): List of alert IDs to be deleted.
+        request (DeleteAlertsRequest): Request object containing the list of alert IDs to be deleted.
         db (AsyncSession, optional): Database session dependency.
 
     Returns:
@@ -580,7 +580,7 @@ async def delete_alerts_endpoint(alert_ids: List[int], db: AsyncSession = Depend
     """
     deleted_alert_ids = []
     not_deleted_alert_ids = []
-    for alert_id in alert_ids:
+    for alert_id in request.alert_ids:
         try:
             await is_alert_linked_to_case(alert_id, db)
             await delete_alert(alert_id, db)
