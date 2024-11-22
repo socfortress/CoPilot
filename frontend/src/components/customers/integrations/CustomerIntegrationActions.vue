@@ -23,7 +23,8 @@ import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
-import { computed, h, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
+import { handleDeleteIntegration } from "./utils"
 
 const { integration, hideDeleteButton, size } = defineProps<{
 	integration: CustomerIntegration
@@ -120,41 +121,19 @@ function provision() {
 }
 
 function handleDelete() {
-	dialog.warning({
-		title: "Confirm",
-		content: () =>
-			h("div", {
-				innerHTML: `Are you sure you want to delete the integration: <strong>${serviceName.value}</strong> ?`
-			}),
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			deleteIntegration()
+	handleDeleteIntegration({
+		integration,
+		cbBefore: () => {
+			loadingDelete.value = true
 		},
-		onNegativeClick: () => {
-			message.info("Delete canceled")
-		}
-	})
-}
-
-function deleteIntegration() {
-	loadingDelete.value = true
-
-	Api.integrations
-		.deleteIntegration(customerCode.value, serviceName.value)
-		.then(res => {
-			if (res.data.success) {
-				emit("deleted")
-				message.success(res.data?.message || "Customer integration successfully deleted.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
+		cbSuccess: () => {
+			emit("deleted")
+		},
+		cbAfter: () => {
 			loadingDelete.value = false
-		})
+		},
+		message,
+		dialog
+	})
 }
 </script>

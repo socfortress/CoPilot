@@ -93,6 +93,10 @@ class CustomerIntegrationCreateResponse(BaseModel):
         ...,
         description="The success status.",
     )
+    additional_info: Optional[str] = Field(
+        None,
+        description="The additional information of manaul steps that need to be performed for the integration.",
+    )
 
 
 class CustomerIntegrationDeleteResponse(BaseModel):
@@ -103,6 +107,10 @@ class CustomerIntegrationDeleteResponse(BaseModel):
     success: bool = Field(
         ...,
         description="The success status.",
+    )
+    additional_info: Optional[str] = Field(
+        None,
+        description="The additional information of manaul steps that need to be performed for the integration.",
     )
 
 

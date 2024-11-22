@@ -463,7 +463,12 @@ async def build_alert_payload(
     )
 
 
-async def handle_customer_notifications(customer_code: str, alert_payload: CreatedAlertPayload, session: AsyncSession):
+async def handle_customer_notifications(
+    customer_code: str,
+    alert_payload: CreatedAlertPayload,
+    session: AsyncSession,
+    type: str = "alert",
+) -> None:
     customer_notifications = await get_customer_notification(customer_code, session)
     if customer_notifications and customer_notifications[0].enabled:
         logger.info(f"Executing workflow for customer code {customer_code}")
@@ -471,6 +476,7 @@ async def handle_customer_notifications(customer_code: str, alert_payload: Creat
             ExecuteWorkflowRequest(
                 workflow_id=customer_notifications[0].shuffle_workflow_id,
                 execution_arguments={
+                    "type": type,
                     "customer_code": customer_code,
                     "alert_context_payload": alert_payload.alert_context_payload,
                     "alert_title": alert_payload.alert_title_payload,
@@ -525,7 +531,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}",
         )
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
-    await handle_customer_notifications(customer_code, alert_payload, session)
+    await handle_customer_notifications(customer_code=customer_code, alert_payload=alert_payload, session=session)
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 

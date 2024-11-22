@@ -14,6 +14,9 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.services.folders import delete_folder
+from app.connectors.graylog.services.management import delete_index_by_id
+from app.connectors.graylog.services.streams import delete_stream
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -517,6 +520,53 @@ def process_customer_integrations(customer_integrations_data):
     return processed_customer_integrations
 
 
+def generate_integration_response(customer_code: str, integration_name: str) -> CustomerIntegrationCreateResponse:
+    additional_info_map = {
+        "Office365": (
+            "Make sure to update the Office365 integration block in the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
+            "Also make sure to update the Office365 Graylog stream rule for this customer with the new organization ID if this has changed. "
+            "YouTube video: https://youtu.be/ihj2F2rA6BQ?si=p4c8Xnk6PX8r29IB"
+        ),
+        "Crowdstrike": (
+            "Make sure to update the Crowdstrike docker application with the new connection details and restart the docker container. "
+            "YouTube video: https://youtu.be/YOVUOpZDEzM?si=jzpHw8vcnqnfVPzt"
+        ),
+        "BitDefender": (
+            "Make sure to update the BitDefender docker application with the new connection details and restart the docker container."
+        ),
+    }
+
+    additional_info = additional_info_map.get(integration_name, "")
+    if additional_info == "":
+        additional_info = None
+
+    return CustomerIntegrationCreateResponse(
+        message=f"Customer integration {customer_code} {integration_name} successfully updated.",
+        success=True,
+        additional_info=additional_info,
+    )
+
+
+def generate_decommission_response(customer_code: str, integration_name: str) -> CustomerIntegrationDeleteResponse:
+    additional_info_map = {
+        "Office365": (
+            "Make sure to remove the Office365 integration block from the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
+        ),
+        "Crowdstrike": ("Make sure to remove the Crowdstrike docker application."),
+        "BitDefender": ("Make sure to remove the BitDefender docker application."),
+    }
+
+    additional_info = additional_info_map.get(integration_name, "")
+    if additional_info == "":
+        additional_info = None
+
+    return CustomerIntegrationDeleteResponse(
+        message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
+        success=True,
+        additional_info=additional_info,
+    )
+
+
 @integration_settings_router.get(
     "/available_integrations",
     response_model=AvailableIntegrationsResponse,
@@ -798,32 +848,30 @@ async def update_integration(
         session,
     )
 
-    subscription_id = get_subscription_id(
-        customer_integration,
-        customer_integration_update.integration_name,
-        customer_integration_update.integration_auth_keys[0].auth_key_name,
-    )
-
-    if not subscription_id:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Integration auth key {customer_integration_update.integration_auth_keys[0].auth_key_name} not found.",
+    for auth_key in customer_integration_update.integration_auth_keys:
+        subscription_id = get_subscription_id(
+            customer_integration,
+            customer_integration_update.integration_name,
+            auth_key.auth_key_name,
         )
 
-    await session.execute(
-        update(IntegrationAuthKeys)
-        .where(IntegrationAuthKeys.subscription_id == subscription_id)
-        .values(
-            auth_value=customer_integration_update.integration_auth_keys[0].auth_value,
-        ),
-    )
+        if not subscription_id:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Integration auth key {auth_key.auth_key_name} not found.",
+            )
+
+        await session.execute(
+            update(IntegrationAuthKeys)
+            .where(IntegrationAuthKeys.subscription_id == subscription_id)
+            .values(
+                auth_value=auth_key.auth_value,
+            ),
+        )
 
     await session.commit()
 
-    return CustomerIntegrationCreateResponse(
-        message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
-        success=True,
-    )
+    return generate_integration_response(customer_code, customer_integration_update.integration_name)
 
 
 @integration_settings_router.put(
@@ -864,6 +912,30 @@ async def update_available_integrations(
     )
 
 
+async def fetch_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+    """
+    Fetches customer integrations metadata from the database.
+    """
+    stmt = select(CustomerIntegrationsMeta).where(
+        CustomerIntegrationsMeta.customer_code == customer_code,
+        CustomerIntegrationsMeta.integration_name == integration_name,
+    )
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+
+async def delete_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+    """
+    Deletes customer integrations metadata from the database.
+    """
+    await session.execute(
+        delete(CustomerIntegrationsMeta).where(
+            CustomerIntegrationsMeta.customer_code == customer_code,
+            CustomerIntegrationsMeta.integration_name == integration_name,
+        ),
+    )
+
+
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -901,48 +973,62 @@ async def delete_integration(
             detail="No subscriptions found for customer integration",
         )
 
+    stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
+    logger.info(f"stream_id: {stream_id}")
+    await delete_stream(stream_id=stream_id)
+
+    index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
+    logger.info(f"index_id: {index_id}")
+    await delete_index_by_id(index_id=index_id)
+
+    # Delete the folder in Grafana
+    grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
+    grafana_dashboard_folder_id = (
+        await fetch_customer_integration_meta(session, customer_code, integration_name)
+    ).grafana_dashboard_folder_id
+
+    await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
+
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
     await delete_configs(session, integration_service_id)
     await delete_integration_service(session, integration_service_id)
     await delete_customer_integration_record(session, customer_id)
+    await delete_customer_integration_meta(session, customer_code, integration_name)
 
     await session.commit()
 
-    return CustomerIntegrationDeleteResponse(
-        message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
-        success=True,
-    )
+    return generate_decommission_response(customer_code, integration_name)
 
 
-@integration_settings_router.delete(
-    "/delete_integration_meta",
-    response_model=CustomerIntegrationsMetaResponse,
-    description="Delete a customer integration metadata.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-)
-async def delete_integration_meta(
-    customer_integration_meta: CustomerIntegrationsMetaSchema,
-    session: AsyncSession = Depends(get_db),
-):
-    """
-    Endpoint to delete a customer integration metadata.
-    """
-    try:
-        stmt = delete(CustomerIntegrationsMeta).where(
-            CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
-            CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
-        )
-        await session.execute(stmt)
-        await session.commit()
-        return CustomerIntegrationsMetaResponse(
-            message="Customer integration metadata successfully deleted.",
-            success=True,
-        )
-    except Exception as e:
-        logger.error(f"Error while deleting customer integration metadata: {e}")
-        return CustomerIntegrationsMetaResponse(
-            customer_integrations_meta=None,
-            message="Error while deleting customer integration metadata.",
-            success=False,
-        )
+# @integration_settings_router.delete(
+#     "/delete_integration_meta",
+#     response_model=CustomerIntegrationsMetaResponse,
+#     description="Delete a customer integration metadata.",
+#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+# )
+# async def delete_integration_meta(
+#     customer_integration_meta: CustomerIntegrationsMetaSchema,
+#     session: AsyncSession = Depends(get_db),
+# ):
+#     """
+#     Endpoint to delete a customer integration metadata.
+#     """
+#     try:
+#         stmt = delete(CustomerIntegrationsMeta).where(
+#             CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
+#             CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
+#         )
+#         await session.execute(stmt)
+#         await session.commit()
+#         return CustomerIntegrationsMetaResponse(
+#             message="Customer integration metadata successfully deleted.",
+#             success=True,
+#         )
+#     except Exception as e:
+#         logger.error(f"Error while deleting customer integration metadata: {e}")
+#         return CustomerIntegrationsMetaResponse(
+#             customer_integrations_meta=None,
+#             message="Error while deleting customer integration metadata.",
+#             success=False,
+#         )

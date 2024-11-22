@@ -2,14 +2,16 @@ import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { AvailableIntegration, CustomerIntegration } from "@/types/integrations.d"
 import { HttpClient } from "../httpClient"
 
+export interface IntegrationAuthKeyPairs {
+	auth_key_name: string
+	auth_value: string
+}
+
 export interface NewIntegration {
 	customer_code: string
 	customer_name: string
 	integration_name: string
-	integration_auth_keys: {
-		auth_key_name: string
-		auth_value: string
-	}[]
+	integration_auth_keys: IntegrationAuthKeyPairs[]
 }
 
 export interface NewIntegrationPayload extends NewIntegration {
@@ -19,6 +21,8 @@ export interface NewIntegrationPayload extends NewIntegration {
 		config_value: string
 	}
 }
+
+export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
 
 export default {
 	// #region Integrations
@@ -42,6 +46,12 @@ export default {
 			}
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/integrations/create_integration`, payload)
+	},
+	updateIntegration(payload: UpdateIntegrationPayload) {
+		return HttpClient.put<FlaskBaseResponse & { additional_info: string | null }>(
+			`/integrations/update_integration/${payload.customer_code}`,
+			payload
+		)
 	},
 	deleteIntegration(customerCode: string, integrationName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {

@@ -116,7 +116,7 @@ export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, mess
 		.deleteAgent(agent.agent_id)
 		.then(res => {
 			if (res.data.success) {
-				message.success("Agent was successfully deleted.")
+				message.success(res.data?.message || "Agent was successfully deleted.")
 
 				if (cbSuccess && typeof cbSuccess === "function") {
 					cbSuccess()

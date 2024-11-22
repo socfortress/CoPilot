@@ -61,6 +61,7 @@ export default {
 				"60vh": "60vh"
 			},
 			minHeight: {
+				114: "28.5rem",
 				120: "30rem"
 			},
 			width: {

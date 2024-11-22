@@ -21,13 +21,15 @@
 			/>
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
-			<!--
-				<div class="flex justify-end w-full">
-					<n-button text type="primary" @click="emit('goto-forgot-password')">Forgot Password?</n-button>
-				</div>
-			-->
 			<div class="w-full">
-				<n-button type="primary" class="!w-full" size="large" :loading="loading" @click="signIn">
+				<n-button
+					type="primary"
+					class="!w-full"
+					size="large"
+					:loading="loading"
+					:disabled="!isValid"
+					@click="signIn"
+				>
 					Sign in
 				</n-button>
 			</div>
@@ -48,27 +50,21 @@ import {
 	NInput,
 	useMessage
 } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 
 interface ModelType {
-	username: string
-	password: string
+	username: string | null
+	password: string | null
 }
-
-/*
-const emit = defineEmits<{
-	(e: "goto-forgot-password"): void
-}>()
-*/
 
 const loading = ref(false)
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const model = ref<ModelType>({
-	username: "",
-	password: ""
+	username: null,
+	password: null
 })
 const authStore = useAuthStore()
 
@@ -89,6 +85,10 @@ const rules: FormRules = {
 	]
 }
 
+const isValid = computed(() => {
+	return model.value.username && model.value.password
+})
+
 function signIn(e: Event) {
 	e.preventDefault()
 	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
@@ -96,8 +96,8 @@ function signIn(e: Event) {
 			loading.value = true
 
 			const payload: LoginPayload = {
-				username: model.value.username,
-				password: model.value.password
+				username: model.value.username || "",
+				password: model.value.password || ""
 			}
 
 			authStore
@@ -116,4 +116,10 @@ function signIn(e: Event) {
 		}
 	})
 }
+
+watch(isValid, val => {
+	if (val) {
+		formRef.value?.validate()
+	}
+})
 </script>
