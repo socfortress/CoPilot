@@ -806,6 +806,7 @@ async def create_integration_meta(
             success=False,
         )
 
+
 @integration_settings_router.put(
     "/update_integration/{customer_code}",
     response_model=CustomerIntegrationCreateResponse,

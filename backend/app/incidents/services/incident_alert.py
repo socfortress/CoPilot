@@ -463,7 +463,12 @@ async def build_alert_payload(
     )
 
 
-async def handle_customer_notifications(customer_code: str, alert_payload: CreatedAlertPayload, session: AsyncSession, type: str = "alert") -> None:
+async def handle_customer_notifications(
+    customer_code: str,
+    alert_payload: CreatedAlertPayload,
+    session: AsyncSession,
+    type: str = "alert",
+) -> None:
     customer_notifications = await get_customer_notification(customer_code, session)
     if customer_notifications and customer_notifications[0].enabled:
         logger.info(f"Executing workflow for customer code {customer_code}")
