@@ -10,10 +10,11 @@ class InvokeCatoRequest(BaseModel):
         description="The customer code.",
         examples=["00002"],
     )
+    # ! CASE SENSITIVE ! #
     integration_name: str = Field(
-        "cato",
+        "CATO",
         description="The integration name.",
-        examples=["cato"],
+        examples=["CATO"],
     )
 
 
@@ -58,11 +59,10 @@ class CollectCato(BaseModel):
     customer_code: str = Field(..., example="socfortress")
     graylog_host: str = Field(..., example="127.0.0.1")
     graylog_port: str = Field(..., example=12201)
-    wazuh_indexer_host: str = Field(..., example="127.0.0.1")
-    wazuh_indexer_username: str = Field(..., example="admin")
-    wazuh_indexer_password: str = Field(..., example="admin")
     api_key: str = Field(..., example="1234567890")
-    api_secret: str = Field(..., example="1234567890")
+    account_id: int = Field(..., example=123456)
+    event_types: str = Field(..., example="Security")
+    event_sub_types: str = Field(..., example="NG Anti Malware,Anti Malware,IPS")
 
     @validator("integration")
     def check_integration(cls, v):

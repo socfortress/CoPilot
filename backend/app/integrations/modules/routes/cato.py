@@ -37,8 +37,9 @@ async def get_cato_auth_keys(customer_integration) -> CatoAuthKeys:
 
 
 async def get_collect_cato_data(cato_request, session, auth_keys):
+    logger.info(f"Buidling CollectCato object.")
     return CollectCato(
-        integration="CATO",
+        integration="cato",
         customer_code=cato_request.customer_code,
         graylog_host=await get_connector_attribute(
             connector_id=10,
@@ -50,23 +51,8 @@ async def get_collect_cato_data(cato_request, session, auth_keys):
             column_name="connector_extra_data",
             session=session,
         ),
-        wazuh_indexer_host=await get_connector_attribute(
-            connector_id=1,
-            column_name="connector_url",
-            session=session,
-        ),
-        wazuh_indexer_username=await get_connector_attribute(
-            connector_id=1,
-            column_name="connector_username",
-            session=session,
-        ),
-        wazuh_indexer_password=await get_connector_attribute(
-            connector_id=1,
-            column_name="connector_password",
-            session=session,
-        ),
         api_key=auth_keys.API_KEY,
-        account_id=auth_keys.ACCOUNT_ID,
+        account_id=int(auth_keys.ACCOUNT_ID),
         event_types=auth_keys.EVENT_TYPES,
         event_sub_types=auth_keys.EVENT_SUB_TYPES,
     )
@@ -79,17 +65,22 @@ async def get_collect_cato_data(cato_request, session, auth_keys):
 )
 async def collect_cato_route(cato_request: InvokeCatoRequest, session: AsyncSession = Depends(get_db)):
     """Pull down cato Events."""
+    logger.info(f"Collecting Cato Events for {cato_request.customer_code}")
     try:
         customer_integration_response = await get_customer_integration_response(
             cato_request.customer_code,
             session,
         )
 
+        logger.info(f"Customer Integration Response: {customer_integration_response}")
+
         customer_integration = await find_customer_integration(
             cato_request.customer_code,
             cato_request.integration_name,
             customer_integration_response,
         )
+
+        logger.info(f"Customer Integration: {customer_integration}")
 
         auth_keys = await get_cato_auth_keys(customer_integration)
 
