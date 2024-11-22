@@ -4,6 +4,7 @@ from app.integrations.modules.routes.duo import module_duo_router
 from app.integrations.modules.routes.huntress import module_huntress_router
 from app.integrations.modules.routes.mimecast import module_mimecast_router
 from app.integrations.modules.routes.sap_siem import module_sap_siem_router
+from app.integrations.modules.routes.cato import module_cato_router
 
 router = APIRouter()
 
@@ -29,4 +30,10 @@ router.include_router(
     module_duo_router,
     prefix="/integrations/modules/duo",
     tags=["DUO"],
+)
+
+router.include_router(
+    module_cato_router,
+    prefix="/integrations/modules/cato",
+    tags=["Cato"],
 )
