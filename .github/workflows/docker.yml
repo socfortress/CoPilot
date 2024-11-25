@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [main]
+        branches: [delete-multiple-alerts]
 
 jobs:
     build-backend:
@@ -31,12 +31,12 @@ jobs:
                   build-args: |
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
-            - name: Notify Discord
-              uses: appleboy/discord-action@v1.0.0
-              with:
-                  webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
-                  webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-                  message: "Docker image for backend has been updated."
+            # - name: Notify Discord
+            #   uses: appleboy/discord-action@v1.0.0
+            #   with:
+            #       webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+            #       webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+            #       message: "Docker image for backend has been updated."
 
     build-frontend:
         runs-on: ubuntu-latest
@@ -62,9 +62,9 @@ jobs:
                   push: true
                   tags: ghcr.io/socfortress/copilot-frontend:latest
 
-            - name: Notify Discord
-              uses: appleboy/discord-action@v1.0.0
-              with:
-                  webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
-                  webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-                  message: "Docker image for frontend has been updated."
+            # - name: Notify Discord
+            #   uses: appleboy/discord-action@v1.0.0
+            #   with:
+            #       webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+            #       webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+            #       message: "Docker image for frontend has been updated."
