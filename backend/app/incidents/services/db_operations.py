@@ -1932,10 +1932,9 @@ async def delete_case(case_id: int, db: AsyncSession):
 
     Raises:
         HTTPException: If the case is not found or there is an error deleting the case.
-
     """
     result = await db.execute(
-        select(Case).options(selectinload(Case.alerts)).where(Case.id == case_id),
+        select(Case).options(selectinload(Case.alerts), selectinload(Case.data_store)).where(Case.id == case_id),
     )
     case = result.scalars().first()
     if not case:
@@ -1943,6 +1942,9 @@ async def delete_case(case_id: int, db: AsyncSession):
 
     # Delete entries from CaseAlertLink table
     await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
+
+    # Delete entries from CaseDataStore table
+    await db.execute(delete(CaseDataStore).where(CaseDataStore.case_id == case_id))
 
     # Delete the case
     await db.execute(delete(Case).where(Case.id == case.id))
