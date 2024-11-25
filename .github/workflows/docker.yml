@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [delete-multiple-alerts]
+        branches: [main]
 
 jobs:
     build-backend:
