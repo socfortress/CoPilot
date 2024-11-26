@@ -163,6 +163,7 @@
 										Delete Case
 									</n-button>
 									<CaseReportButton :case-id="caseEntity.id" size="tiny" />
+									<CaseNotificationButton :case-id="caseEntity.id" size="tiny" />
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">
@@ -232,6 +233,7 @@ import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseDetails from "./CaseDetails.vue"
+import CaseNotificationButton from "./CaseNotificationButton.vue"
 import CaseReportButton from "./CaseReportButton.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"

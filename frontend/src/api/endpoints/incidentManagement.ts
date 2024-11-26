@@ -394,6 +394,9 @@ export default {
 			responseType: "blob"
 		})
 	},
+	createCaseNotification(caseId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/notification`, { case_id: caseId })
+	},
 	// #endregion
 
 	// #region Notification
