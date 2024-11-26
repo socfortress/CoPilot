@@ -2,7 +2,7 @@
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
 			<div class="px-7">
-				<n-card content-class="bg-secondary" class="overflow-hidden">
+				<n-card embedded class="overflow-hidden">
 					<div class="flex flex-wrap justify-between gap-8">
 						<n-statistic label="Result" tabular-nums>
 							<span
@@ -28,7 +28,7 @@
 			</div>
 
 			<div class="px-7">
-				<n-card content-class="bg-secondary !p-0" class="overflow-hidden">
+				<n-card content-class="!p-0" embedded class="overflow-hidden">
 					<div
 						v-shiki="{ lang: 'shell', decode: true }"
 						class="scrollbar-styled code-bg-transparent overflow-hidden"
@@ -114,7 +114,8 @@
 				<n-card
 					v-for="item of data.compliance"
 					:key="item.key"
-					content-class="bg-secondary flex flex-col gap-2"
+					content-class="flex flex-col gap-2"
+					embedded
 					class="overflow-hidden"
 					size="small"
 				>
@@ -128,7 +129,8 @@
 				<n-card
 					v-for="item of data.rules"
 					:key="item.type + item.rule"
-					content-class="bg-secondary flex flex-col gap-2"
+					content-class="flex flex-col gap-2"
+					embedded
 					class="overflow-hidden"
 					size="small"
 				>

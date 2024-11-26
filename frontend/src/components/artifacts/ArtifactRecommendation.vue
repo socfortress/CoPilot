@@ -45,7 +45,8 @@
 					<n-card
 						v-for="recommendation of recommendations"
 						:key="recommendation.name"
-						content-class="bg-secondary flex flex-col gap-2 !p-0"
+						embedded
+						content-class="flex flex-col gap-2 !p-0"
 						class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 						size="small"
 					>

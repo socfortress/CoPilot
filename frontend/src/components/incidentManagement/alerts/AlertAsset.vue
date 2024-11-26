@@ -102,7 +102,7 @@
 							>
 								<n-card
 									size="small"
-									content-class="bg-secondary"
+									embedded
 									class="hover:border-primary cursor-pointer overflow-hidden"
 									@click="openEvaluation()"
 								>

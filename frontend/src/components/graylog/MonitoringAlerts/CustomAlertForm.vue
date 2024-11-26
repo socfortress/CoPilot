@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="custom-alert-form">
+	<n-spin :show="loading">
 		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4">
@@ -40,11 +40,11 @@
 						/>
 					</n-form-item>
 				</div>
-				<div class="custom-fields-editor">
+				<div class="w-full">
 					<n-form-item label="Custom fields" path="custom_fields">
-						<div class="custom-fields-list flex flex-col gap-1">
-							<n-card v-for="(cf, index) of form.custom_fields" :key="cf.key" size="small">
-								<div class="custom-field-box flex gap-2">
+						<div class="flex w-full flex-col gap-1">
+							<n-card v-for="(cf, index) of form.custom_fields" :key="cf.key" size="small" embedded>
+								<div class="flex w-full gap-2">
 									<n-form-item
 										label="Name"
 										class="grow"
@@ -428,23 +428,3 @@ onMounted(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.custom-alert-form {
-	.custom-fields-editor {
-		width: 100%;
-
-		.custom-fields-list {
-			width: 100%;
-
-			.n-card {
-				background-color: var(--bg-secondary-color);
-			}
-
-			.custom-field-box {
-				width: 100%;
-			}
-		}
-	}
-}
-</style>

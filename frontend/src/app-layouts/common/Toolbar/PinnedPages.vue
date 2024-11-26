@@ -164,7 +164,7 @@ router.afterEach(route => {
 
 			&.n-tag--closable {
 				&:hover {
-					background-color: var(--bg-sidebar);
+					background-color: var(--hover-color);
 
 					&.n-tag--round {
 						padding: 0 calc(var(--n-height) / 3.6) 0 calc(var(--n-height) / 3.6);
@@ -192,7 +192,7 @@ router.afterEach(route => {
 		border: none;
 
 		&:hover {
-			background-color: var(--bg-secondary-color);
+			background-color: var(--hover-color);
 		}
 	}
 

@@ -139,7 +139,7 @@
 				</div>
 			</div>
 
-			<div class="panels-sidebar h-full">
+			<div class="panels-sidebar bg-secondary h-full">
 				<n-scrollbar v-if="dashboard && panelsList.length" style="max-height: 100%" trigger="none">
 					<div class="p-3">
 						<draggable
@@ -599,7 +599,6 @@ onMounted(() => {
 
 	.panels-sidebar {
 		border-radius: var(--border-radius);
-		background-color: var(--bg-secondary-color);
 		border: var(--border-small-050);
 		width: 200px;
 
