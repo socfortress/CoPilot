@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-
+from datetime import datetime
 
 class ValidSyslogType(str, Enum):
     WAZUH = "wazuh"
@@ -133,6 +133,13 @@ class CreatedAlertPayload(BaseModel):
     source: str
     index_name: Optional[str] = None
     index_id: Optional[str] = None
+
+class CreatedCaseNotificationPayload(BaseModel):
+    case_name: str
+    case_description: str
+    case_creation_time: datetime
+    alerts: List[CreatedAlertPayload]
+
 
 
 class AlertTimelineResponse(BaseModel):

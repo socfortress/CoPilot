@@ -31,7 +31,11 @@ async def execute_workflow(request: ExecuteWorkflowRequest) -> dict:
     Returns:
         dict: The response containing the execution ID.
     """
-    logger.info(f"Executing workflow: {request}")
-    response = await send_post_request(f"/api/v1/workflows/{request.workflow_id}/execute", request.dict())
-    logger.info(f"Response: {response}")
-    return response
+    logger.info(f"Executing workflow: {request.dict()}")
+    try:
+        response = await send_post_request(f"/api/v1/workflows/{request.workflow_id}/execute", request.dict())
+        logger.info(f"Response: {response}")
+        return response
+    except Exception as e:
+        logger.error(f"Error executing workflow: {e}")
+        return {"error": str(e)}

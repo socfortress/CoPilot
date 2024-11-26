@@ -27,7 +27,7 @@ from app.incidents.schema.db_operations import AlertIocValue
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
-from app.incidents.schema.incident_alert import CreatedAlertPayload
+from app.incidents.schema.incident_alert import CreatedAlertPayload, CreatedCaseNotificationPayload
 from app.incidents.schema.incident_alert import FieldNames
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
@@ -484,6 +484,7 @@ async def handle_customer_notifications(
                 start="",
             ),
         )
+
 
 
 async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:

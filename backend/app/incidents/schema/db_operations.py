@@ -378,6 +378,12 @@ class CaseOutResponse(BaseModel):
     success: bool
     message: str
 
+class CaseNotificationCreate(BaseModel):
+    case_id: int
+
+class CaseNotificationResponse(BaseModel):
+    success: bool
+    message: str
 
 class Notification(BaseModel):
     id: int

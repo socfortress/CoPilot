@@ -47,7 +47,7 @@ from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
-from app.incidents.schema.db_operations import AvailableUsersResponse
+from app.incidents.schema.db_operations import AvailableUsersResponse, CaseNotificationResponse, CaseNotificationCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
@@ -75,6 +75,7 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhRespons
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.incidents.schema.incident_alert import CreatedAlertPayload, CreatedCaseNotificationPayload
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
@@ -182,6 +183,7 @@ from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import upload_report_template
 from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
+from app.incidents.services.incident_case import handle_customer_notifications_case
 
 incidents_db_operations_router = APIRouter()
 
@@ -932,6 +934,41 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+
+@incidents_db_operations_router.post("/case/notification", response_model=CaseNotificationResponse)
+async def create_case_notification_endpoint(request: CaseNotificationCreate, db: AsyncSession = Depends(get_db)):
+    """
+    This function collects the case details and then invokes the create_case_notification function to create a new case notification within the Shuffle Workflow.
+
+    Args:
+        request (CaseNotificationCreate): The request object containing the case details.
+        db (AsyncSession, optional): The database session dependency.
+
+    Returns:
+        CaseNotificationResponse: The response object containing the created case notification.
+    """
+    case_details = await get_case_by_id(request.case_id, db)
+    case_notification_payload = CreatedCaseNotificationPayload(
+        case_name=case_details.case_name,
+        case_description=case_details.case_description,
+        case_creation_time=case_details.case_creation_time,
+        alerts=[
+            CreatedAlertPayload(
+                alert_context_payload=(await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context if alert.assets else None,  # Populate with actual alert context data
+                asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
+                timefield_payload="",  # Populate with actual timefield data
+                alert_title_payload=alert.alert_name,  # Populate with actual alert title data
+                ioc_payload={ioc.value: ioc.type for ioc in alert.iocs} if alert.iocs else {},  # Populate with actual IoC data if available
+                source=alert.source,
+            )
+            for alert in case_details.alerts
+        ],
+    )
+
+    logger.info(f"Creating case notification for case {case_notification_payload}")
+    await handle_customer_notifications_case(customer_code=case_details.customer_code, case_payload=case_notification_payload, session=db)
+    return CaseNotificationResponse(success=True, message="Case notification created successfully")
+
 
 
 @incidents_db_operations_router.get("/case-report-template", response_model=CaseReportTemplateDataStoreListResponse)
