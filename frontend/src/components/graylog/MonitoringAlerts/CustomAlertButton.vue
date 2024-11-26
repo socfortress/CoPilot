@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" type="primary" secondary :loading="loading" @click="showForm = true">
+	<n-button size="small" type="primary" secondary :loading="loading" @click="(showForm = true)">
 		<div class="flex items-center gap-2">
 			<Icon :name="DangerIcon" :size="18"></Icon>
 			<span class="xs:block hidden">Custom Alert</span>
@@ -15,7 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomAlertForm v-model:loading="loading" @mounted="formCTX = $event" />
+		<CustomAlertForm v-model:loading="loading" @mounted="(formCTX = $event)" />
 	</n-modal>
 </template>
 

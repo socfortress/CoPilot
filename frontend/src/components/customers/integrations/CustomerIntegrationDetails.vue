@@ -70,12 +70,10 @@
 
 <script setup lang="ts">
 import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
-import type { CustomerIntegration, IntegrationAuthKey } from "@/types/integrations.d"
+import type { CustomerIntegration } from "@/types/integrations.d"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
 import _uniqBy from "lodash/uniqBy"
 import {
 	type FormInst,

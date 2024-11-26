@@ -1,12 +1,12 @@
 <template>
 	<div>
-		<div v-if="badge" class="alert-assets-badge" @click="showDetails = true">
+		<div v-if="badge" class="alert-assets-badge" @click="(showDetails = true)">
 			<code>
 				<span>{{ asset.asset_name }}</span>
 				<Icon :name="ViewIcon" :size="14" />
 			</code>
 		</div>
-		<CardEntity v-else :embedded hoverable clickable @click="showDetails = true">
+		<CardEntity v-else :embedded hoverable clickable @click="(showDetails = true)">
 			<template #default>{{ asset.asset_name }}</template>
 			<template #mainExtra>
 				<div class="flex flex-wrap items-center gap-3">

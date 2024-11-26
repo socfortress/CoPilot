@@ -1,5 +1,5 @@
 <template>
-	<n-button :size type="primary" :loading="loading" @click="showForm = true">
+	<n-button :size type="primary" :loading="loading" @click="(showForm = true)">
 		<template v-if="showIcon" #icon>
 			<Icon :name="NewCaseIcon" :size="14"></Icon>
 		</template>
@@ -17,7 +17,7 @@
 	>
 		<CaseCreationForm
 			v-model:loading="loading"
-			@mounted="formCTX = $event"
+			@mounted="(formCTX = $event)"
 			@submitted="emit('submitted', $event)"
 		/>
 	</n-modal>

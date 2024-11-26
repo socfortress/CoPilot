@@ -1,6 +1,6 @@
 <template>
 	<div :id="`event-${event.id}`">
-		<CardEntity :highlighted="!!highlight" hoverable clickable @click.stop="showDetails = true">
+		<CardEntity :highlighted="!!highlight" hoverable clickable @click.stop="(showDetails = true)">
 			<template #headerMain>
 				<div class="flex items-center gap-3">
 					<n-tooltip trigger="hover">

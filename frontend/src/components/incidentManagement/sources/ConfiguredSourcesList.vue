@@ -21,7 +21,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex items-center gap-2">
-				<n-button size="small" type="primary" @click="showWizard = true">
+				<n-button size="small" type="primary" @click="(showWizard = true)">
 					<template #icon>
 						<Icon :name="NewSourceConfigurationIcon" :size="15"></Icon>
 					</template>

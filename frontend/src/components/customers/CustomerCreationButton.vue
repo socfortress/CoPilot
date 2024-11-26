@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" type="primary" @click="showAddCustomer = true">
+	<n-button size="small" type="primary" @click="(showAddCustomer = true)">
 		<template #icon>
 			<Icon :name="AddUserIcon" :size="14"></Icon>
 		</template>
@@ -14,7 +14,11 @@
 		display-directive="show"
 	>
 		<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-			<CustomerForm :reset-on-submit="true" @mounted="customerFormCTX = $event" @submitted="emit('submitted')" />
+			<CustomerForm
+				:reset-on-submit="true"
+				@mounted="(customerFormCTX = $event)"
+				@submitted="emit('submitted')"
+			/>
 		</n-drawer-content>
 	</n-drawer>
 </template>

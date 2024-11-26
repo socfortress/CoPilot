@@ -8,7 +8,7 @@
 				<Alerts @click-event="gotoEventsPage($event)" />
 			</n-tab-pane>
 			<n-tab-pane name="events" tab="Events" display-directive="show:lazy">
-				<Events :highlight="highlightEvent" @loaded="events = $event" />
+				<Events :highlight="highlightEvent" @loaded="(events = $event)" />
 			</n-tab-pane>
 			<n-tab-pane name="streams" tab="Streams" display-directive="show:lazy">
 				<Streams />
@@ -17,7 +17,7 @@
 				<MonitoringAlerts :events-list="events" />
 			</n-tab-pane>
 			<template #suffix>
-				<n-button ghost type="primary" size="small" @click="showInputDrawer = true">Inputs</n-button>
+				<n-button ghost type="primary" size="small" @click="(showInputDrawer = true)">Inputs</n-button>
 			</template>
 		</n-tabs>
 

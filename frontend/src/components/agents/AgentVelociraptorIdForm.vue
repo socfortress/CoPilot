@@ -17,7 +17,7 @@
 						:name="CloseIcon"
 						:size="13"
 						class="cursor-pointer"
-						@click="editing = false"
+						@click="(editing = false)"
 					/>
 				</template>
 			</n-input>

@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity :embedded hoverable clickable @click.stop="showDetails = true">
+		<CardEntity :embedded hoverable clickable @click.stop="(showDetails = true)">
 			<template #headerMain>
 				<div class="flex grow flex-wrap gap-2">
 					<span>

@@ -8,10 +8,10 @@
 				v-model:show="showConfirm"
 				trigger="manual"
 				@positive-click="deleteScoutSuiteReport()"
-				@clickoutside="showConfirm = false"
+				@clickoutside="(showConfirm = false)"
 			>
 				<template #trigger>
-					<n-button quaternary size="tiny" @click.stop="showConfirm = true">delete</n-button>
+					<n-button quaternary size="tiny" @click.stop="(showConfirm = true)">delete</n-button>
 				</template>
 				Are you sure you want to delete the report?
 			</n-popconfirm>

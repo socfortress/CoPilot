@@ -1,5 +1,5 @@
 <template>
-	<n-button :size type="primary" :loading="exporting" secondary @click="showForm = true">
+	<n-button :size type="primary" :loading="exporting" secondary @click="(showForm = true)">
 		<template #icon>
 			<Icon :name="ReportIcon" />
 		</template>

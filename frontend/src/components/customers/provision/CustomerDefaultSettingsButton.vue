@@ -1,5 +1,5 @@
 <template>
-	<n-button size="small" secondary :loading="loading" @click="showForm = true">
+	<n-button size="small" secondary :loading="loading" @click="(showForm = true)">
 		<template #icon>
 			<Icon :name="SettingsIcon" :size="14"></Icon>
 		</template>
@@ -15,7 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomerDefaultSettingsForm v-model:loading="loading" @mounted="settingsFormCTX = $event" />
+		<CustomerDefaultSettingsForm v-model:loading="loading" @mounted="(settingsFormCTX = $event)" />
 	</n-modal>
 </template>
 

@@ -16,7 +16,7 @@
 			v-show="editing"
 			:source-configuration-model="sourceConfiguration"
 			show-index-name-field
-			@mounted="formCTX = $event"
+			@mounted="(formCTX = $event)"
 			@submitted="updateSourceConfiguration($event)"
 		>
 			<template #additionalActions>

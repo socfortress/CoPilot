@@ -23,23 +23,23 @@
 
 				<AwsTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.AWS"
-					@model="typeForm = $event"
-					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
+					@model="(typeForm = $event)"
+					@valid="(typeFormValid = $event)"
+					@mounted="(typeFormRef = $event)"
 				/>
 
 				<AzureTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.Azure"
-					@model="typeForm = $event"
-					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
+					@model="(typeForm = $event)"
+					@valid="(typeFormValid = $event)"
+					@mounted="(typeFormRef = $event)"
 				/>
 
 				<GcpTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.Gcp"
-					@model="typeForm = $event"
-					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
+					@model="(typeForm = $event)"
+					@valid="(typeFormValid = $event)"
+					@mounted="(typeFormRef = $event)"
 				/>
 
 				<div class="mt-8 flex justify-between gap-4">

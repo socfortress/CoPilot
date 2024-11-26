@@ -3,7 +3,7 @@
 		<CardEntity :embedded hoverable>
 			<template #headerMain>#{{ data.id }}</template>
 			<template #headerExtra>
-				<n-button size="small" @click.stop="showDetails = true">
+				<n-button size="small" @click.stop="(showDetails = true)">
 					<template #icon>
 						<Icon :name="DetailsIcon"></Icon>
 					</template>

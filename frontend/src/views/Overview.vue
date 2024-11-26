@@ -11,7 +11,7 @@
 				<ThreatIntelButton size="small" type="primary" />
 			</div>
 			<div class="mobile-box block lg:hidden">
-				<n-button size="small" type="primary" @click="showQuickActions = true">
+				<n-button size="small" type="primary" @click="(showQuickActions = true)">
 					<template #icon>
 						<Icon :name="QuickActionsIcon"></Icon>
 					</template>

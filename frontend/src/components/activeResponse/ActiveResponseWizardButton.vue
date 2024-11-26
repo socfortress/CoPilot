@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" :loading="loading" @click="showInvokeWizard = true">
+	<n-button :size="size" :type="type" :loading="loading" @click="(showInvokeWizard = true)">
 		<template #icon>
 			<Icon :name="InvokeIcon"></Icon>
 		</template>
@@ -16,7 +16,7 @@
 		content-class="flex flex-col !p-0"
 		segmented
 	>
-		<ActiveResponseWizard v-model:loading="loading" @mounted="activeResponseWizardCTX = $event" />
+		<ActiveResponseWizard v-model:loading="loading" @mounted="(activeResponseWizardCTX = $event)" />
 	</n-modal>
 </template>
 

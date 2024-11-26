@@ -14,7 +14,7 @@
 				<AlertIoCsForm
 					v-model:loading="submitting"
 					:alert-id
-					@mounted="formCTX = $event"
+					@mounted="(formCTX = $event)"
 					@submitted="addIoc($event)"
 				>
 					<template #additionalActions>

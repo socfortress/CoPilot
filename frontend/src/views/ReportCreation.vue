@@ -4,10 +4,10 @@
 			v-if="licenseResponse"
 			hide-panels-select
 			class="animate-fade"
-			@timerange="timerange = $event"
-			@organization="org = $event"
-			@dashboard="dashboard = $event"
-			@panels="panels = $event"
+			@timerange="(timerange = $event)"
+			@organization="(org = $event)"
+			@dashboard="(dashboard = $event)"
+			@panels="(panels = $event)"
 		/>
 
 		<ReportPanels
@@ -31,9 +31,9 @@
 		<LicenseFeatureCheck
 			feature="REPORTING"
 			feedback="overlay"
-			@response="licenseResponse = $event"
-			@start-loading="licenseChecking = true"
-			@stop-loading="licenseChecking = false"
+			@response="(licenseResponse = $event)"
+			@start-loading="(licenseChecking = true)"
+			@stop-loading="(licenseChecking = false)"
 		/>
 
 		<n-spin v-if="licenseChecking" class="min-h-52"></n-spin>

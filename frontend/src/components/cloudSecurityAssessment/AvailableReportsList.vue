@@ -21,7 +21,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex items-center gap-2">
-				<n-button size="small" type="primary" @click="showForm = true">
+				<n-button size="small" type="primary" @click="(showForm = true)">
 					<template #icon>
 						<Icon :name="NewReportIcon" :size="15"></Icon>
 					</template>
@@ -55,7 +55,7 @@
 			:bordered="false"
 			segmented
 		>
-			<CreationReportForm @submitted="getReports()" @mounted="formCTX = $event" />
+			<CreationReportForm @submitted="getReports()" @mounted="(formCTX = $event)" />
 		</n-modal>
 	</div>
 </template>

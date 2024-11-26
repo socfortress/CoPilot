@@ -9,8 +9,8 @@
 					licenseResponse = $event
 				})()
 			"
-			@start-loading="licenseChecking = true"
-			@stop-loading="licenseChecking = false"
+			@start-loading="(licenseChecking = true)"
+			@stop-loading="(licenseChecking = false)"
 		>
 			<n-button
 				:size="size || 'small'"

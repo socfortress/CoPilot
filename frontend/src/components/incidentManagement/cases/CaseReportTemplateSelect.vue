@@ -9,7 +9,7 @@
 			class="overflow-hidden"
 			to="body"
 		/>
-		<n-button secondary @click="showManagerDialog = true">
+		<n-button secondary @click="(showManagerDialog = true)">
 			<template #icon>
 				<Icon :name="SettingsIcon" />
 			</template>

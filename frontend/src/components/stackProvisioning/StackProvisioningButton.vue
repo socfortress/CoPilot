@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showForm = true">
+	<n-button :size="size" :type="type" @click="(showForm = true)">
 		<template #icon>
 			<Icon :name="PackIcon"></Icon>
 		</template>

@@ -10,7 +10,7 @@
 						{{ prop.value }}
 					</template>
 				</CardKV>
-				<CardKV class="hover:!border-primary cursor-pointer" @click="showDetails = true">
+				<CardKV class="hover:!border-primary cursor-pointer" @click="(showDetails = true)">
 					<template #value>
 						<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
 					</template>

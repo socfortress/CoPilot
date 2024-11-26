@@ -19,7 +19,7 @@
 			</template>
 			Create SOC Alert
 		</n-button>
-		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click.stop="showSocResponse = true">
+		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click.stop="(showSocResponse = true)">
 			<template #icon>
 				<Icon :name="ViewIcon"></Icon>
 			</template>

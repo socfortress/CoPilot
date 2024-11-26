@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<div class="mb-4">
-			<n-button secondary type="primary" @click="showRulesDrawer = true">
+			<n-button secondary type="primary" @click="(showRulesDrawer = true)">
 				<template #icon>
 					<Icon :name="RulesIcon" :size="22"></Icon>
 				</template>
@@ -35,7 +35,7 @@
 					<span>Rules list</span>
 					<span v-if="rulesTotal !== null" class="text-secondary ml-2 font-mono">{{ rulesTotal }}</span>
 				</template>
-				<RulesList :highlight="highlightRule" @loaded="rulesTotal = $event.total" />
+				<RulesList :highlight="highlightRule" @loaded="(rulesTotal = $event.total)" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

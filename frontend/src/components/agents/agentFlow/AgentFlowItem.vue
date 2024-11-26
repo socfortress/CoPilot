@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity :embedded hoverable clickable @click.stop="showDetails = true">
+		<CardEntity :embedded hoverable clickable @click.stop="(showDetails = true)">
 			<template #headerMain>
 				<div class="flex items-center gap-2">
 					{{ flow.session_id }}

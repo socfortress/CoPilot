@@ -21,22 +21,22 @@
 				<CredentialsType
 					v-if="connectorFormType === ConnectorFormType.CREDENTIALS"
 					:form="connectorForm"
-					@mounted="formRef = $event"
+					@mounted="(formRef = $event)"
 				/>
 				<FileType
 					v-if="connectorFormType === ConnectorFormType.FILE"
 					:form="connectorForm"
-					@mounted="formRef = $event"
+					@mounted="(formRef = $event)"
 				/>
 				<TokenType
 					v-if="connectorFormType === ConnectorFormType.TOKEN"
 					:form="connectorForm"
-					@mounted="formRef = $event"
+					@mounted="(formRef = $event)"
 				/>
 				<HostType
 					v-if="connectorFormType === ConnectorFormType.HOST"
 					:form="connectorForm"
-					@mounted="formRef = $event"
+					@mounted="(formRef = $event)"
 				/>
 			</div>
 			<div class="connector-form-options">

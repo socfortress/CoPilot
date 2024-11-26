@@ -20,7 +20,7 @@
 			type="success"
 			:size="size"
 			secondary
-			@click.stop="showFortinetForm = true"
+			@click.stop="(showFortinetForm = true)"
 		>
 			<template #icon>
 				<Icon :name="DeployIcon"></Icon>

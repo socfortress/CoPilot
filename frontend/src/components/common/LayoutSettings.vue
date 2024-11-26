@@ -1,7 +1,7 @@
 <template>
 	<div class="layout-settings flex items-center justify-center shadow-xl" :class="{ open }">
 		<Transition mode="out-in" name="anim">
-			<div v-if="!open" key="btn" class="open-btn flex items-center justify-center" @click="open = true">
+			<div v-if="!open" key="btn" class="open-btn flex items-center justify-center" @click="(open = true)">
 				<Icon :size="24" :name="SettingsIcon" />
 			</div>
 
@@ -9,7 +9,7 @@
 				<div class="ls-header flex items-center justify-between">
 					<div class="ls-title">Layout settings</div>
 					<div class="ls-icon flex items-center">
-						<Icon :size="20" :name="CloseIcon" @click="open = false" />
+						<Icon :size="20" :name="CloseIcon" @click="(open = false)" />
 					</div>
 				</div>
 				<n-scrollbar class="ls-main">
@@ -44,7 +44,7 @@
 								<n-button
 									class="!w-full"
 									:type="theme === ThemeNameEnum.Light ? 'primary' : 'default'"
-									@click="theme = ThemeNameEnum.Light"
+									@click="(theme = ThemeNameEnum.Light)"
 								>
 									<template #icon>
 										<Icon v-if="theme === ThemeNameEnum.Light" :name="LightIcon" />
@@ -57,7 +57,7 @@
 								<n-button
 									class="!w-full"
 									:type="theme === ThemeNameEnum.Dark ? 'primary' : 'default'"
-									@click="theme = ThemeNameEnum.Dark"
+									@click="(theme = ThemeNameEnum.Dark)"
 								>
 									<template #icon>
 										<Icon v-if="theme === ThemeNameEnum.Dark" :name="DarkIcon" />
@@ -92,7 +92,7 @@
 									class="!w-full"
 									:type="layout === Layout.HorizontalNav ? 'primary' : 'default'"
 									:disabled="isMobileView"
-									@click="layout = Layout.HorizontalNav"
+									@click="(layout = Layout.HorizontalNav)"
 								>
 									Horizontal
 								</n-button>

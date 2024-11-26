@@ -35,10 +35,10 @@
 				size="small"
 				@deleted="emit('deleted')"
 				@invoked="emit('invoked')"
-				@start-deleting="loadingDelete = true"
-				@stop-deleting="loadingDelete = false"
-				@start-invoking="loadingInvoke = true"
-				@stop-invoking="loadingInvoke = false"
+				@start-deleting="(loadingDelete = true)"
+				@stop-deleting="(loadingDelete = false)"
+				@start-invoking="(loadingInvoke = true)"
+				@stop-invoking="(loadingInvoke = false)"
 			/>
 		</template>
 	</CardEntity>

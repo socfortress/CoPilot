@@ -84,7 +84,7 @@
 			/>
 
 			<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
-				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+				<n-button size="small" secondary @click="(showFiltersView = !showFiltersView)">
 					<template #icon>
 						<Icon :name="FilterIcon"></Icon>
 					</template>
@@ -98,7 +98,7 @@
 				:preset
 				class="p-3"
 				@submit="applyFilters"
-				@mounted="filtersCTX = $event"
+				@mounted="(filtersCTX = $event)"
 			/>
 		</CollapseKeepAlive>
 
@@ -112,7 +112,7 @@
 						:highlight="highlight === alert.id.toString()"
 						:details-on-mounted="highlight === alert.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
-						@opened="highlightedItemOpened = true"
+						@opened="(highlightedItemOpened = true)"
 						@deleted="getData()"
 						@updated="updateAlert($event)"
 					/>

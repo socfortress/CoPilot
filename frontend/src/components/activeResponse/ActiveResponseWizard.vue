@@ -63,10 +63,10 @@
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
 								:active-response="selectedActiveResponse"
-								@mounted="activeResponseInvokeFormCTX = $event"
+								@mounted="(activeResponseInvokeFormCTX = $event)"
 								@submitted="reset()"
-								@start-loading="loadingActiveResponseInvoke = true"
-								@stop-loading="loadingActiveResponseInvoke = false"
+								@start-loading="(loadingActiveResponseInvoke = true)"
+								@stop-loading="(loadingActiveResponseInvoke = false)"
 							>
 								<template #additionalActions>
 									<n-button :disabled="loadingActiveResponseInvoke" @click.stop="prev()">

@@ -108,7 +108,7 @@
 							:hostname="agent.hostname"
 							:artifacts
 							hide-hostname-field
-							@loaded-artifacts="artifacts = $event"
+							@loaded-artifacts="(artifacts = $event)"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
@@ -117,7 +117,7 @@
 							:hostname="agent.hostname"
 							:artifacts
 							hide-hostname-field
-							@loaded-artifacts="artifacts = $event"
+							@loaded-artifacts="(artifacts = $event)"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
@@ -127,7 +127,7 @@
 							:artifacts
 							hide-hostname-field
 							@action-performed="getAgent()"
-							@loaded-artifacts="artifacts = $event"
+							@loaded-artifacts="(artifacts = $event)"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">

@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
+	<n-button :size="size" :type="type" @click="(showThreatIntelDrawer = true)">
 		<template #icon>
 			<Icon :name="ThreatIcon"></Icon>
 		</template>
@@ -14,7 +14,7 @@
 		display-directive="show"
 	>
 		<n-drawer-content title="SOCFortress Threat Intel" closable :native-scrollbar="false">
-			<ThreatIntelForm @mounted="threatIntelCTX = $event" />
+			<ThreatIntelForm @mounted="(threatIntelCTX = $event)" />
 		</n-drawer-content>
 	</n-drawer>
 </template>

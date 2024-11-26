@@ -189,7 +189,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Report Settings" closable :native-scrollbar="false">
-				<PrintSettings @update="printSettings = $event" />
+				<PrintSettings @update="(printSettings = $event)" />
 			</n-drawer-content>
 		</n-drawer>
 	</n-spin>

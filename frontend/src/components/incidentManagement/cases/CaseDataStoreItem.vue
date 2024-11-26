@@ -44,10 +44,10 @@
 					trigger="manual"
 					to="body"
 					@positive-click="deleteDataStoreFile()"
-					@clickoutside="showDeleteConfirm = false"
+					@clickoutside="(showDeleteConfirm = false)"
 				>
 					<template #trigger>
-						<n-button quaternary size="tiny" :loading="canceling" @click.stop="showDeleteConfirm = true">
+						<n-button quaternary size="tiny" :loading="canceling" @click.stop="(showDeleteConfirm = true)">
 							Delete
 						</n-button>
 					</template>

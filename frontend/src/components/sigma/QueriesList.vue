@@ -30,7 +30,7 @@
 					</div>
 				</n-popover>
 
-				<n-button size="small" type="primary" secondary strong @click="showActionsView = !showActionsView">
+				<n-button size="small" type="primary" secondary strong @click="(showActionsView = !showActionsView)">
 					<div class="flex items-center gap-2">
 						<Icon :name="ToolsIcon" :size="16"></Icon>
 						<span class="xs:block hidden">Actions</span>
@@ -56,7 +56,7 @@
 				<template #trigger>
 					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="showFilters = true">
+							<n-button size="small" @click="(showFilters = true)">
 								<template #icon>
 									<Icon :name="FilterIcon"></Icon>
 								</template>
@@ -79,7 +79,7 @@
 					</div>
 					<div class="flex justify-between gap-2 px-3">
 						<div class="flex justify-start gap-2">
-							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
+							<n-button size="small" quaternary @click="(showFilters = false)">Close</n-button>
 						</div>
 						<div class="flex justify-end gap-2">
 							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
