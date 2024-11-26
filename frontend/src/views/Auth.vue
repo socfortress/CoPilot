@@ -48,12 +48,29 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "./main.scss";
-
 .page-auth {
+	min-height: 100svh;
+
 	.wrapper {
+		min-height: 100svh;
+
 		.image-box {
+			position: relative;
 			background-color: v-bind(activeColor);
+
+			/*
+			&::after {
+				content: "";
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				background-image: url(@/assets/images/pattern-onboard.png);
+				background-size: 500px;
+				background-position: center center;
+			}
+			*/
 
 			video {
 				position: absolute;
@@ -63,6 +80,41 @@ onBeforeMount(() => {
 				height: 100%;
 				object-fit: cover;
 				object-position: center;
+			}
+		}
+
+		.form-box {
+			padding: 50px;
+
+			&.centered {
+				flex-basis: 100%;
+				.form-wrap {
+					padding: 60px;
+					width: 100%;
+					max-width: 500px;
+					background-color: var(--bg-color);
+					border-radius: 20px;
+					@apply shadow-xl;
+				}
+
+				@media (max-width: 600px) {
+					padding: 4%;
+					.form-wrap {
+						padding: 8%;
+					}
+				}
+			}
+		}
+	}
+
+	@media (max-width: 800px) {
+		.wrapper {
+			.image-box {
+				display: none;
+			}
+
+			.form-box {
+				flex-basis: 100%;
 			}
 		}
 	}

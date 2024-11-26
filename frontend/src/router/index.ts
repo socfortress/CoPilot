@@ -2,8 +2,8 @@ import type { FormType } from "@/components/auth/types.d"
 import { RouteRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
-import Login from "@/views/auth/Login.vue"
-import Overview from "@/views/Overview.vue"
+import AuthPage from "@/views/Auth.vue"
+import OverviewPage from "@/views/Overview.vue"
 import { createRouter, createWebHistory } from "vue-router"
 
 const router = createRouter({
@@ -16,7 +16,7 @@ const router = createRouter({
 		{
 			path: "/overview",
 			name: "Overview",
-			component: Overview,
+			component: OverviewPage,
 			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
@@ -269,13 +269,14 @@ const router = createRouter({
 		{
 			path: "/login",
 			name: "Login",
-			component: Login,
+			component: AuthPage,
+			props: { formType: "signin" as FormType },
 			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
 		{
 			path: "/register",
 			name: "Register",
-			component: Login,
+			component: AuthPage,
 			props: { formType: "signup" as FormType },
 			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
