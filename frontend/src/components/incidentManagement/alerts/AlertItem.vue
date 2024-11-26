@@ -10,13 +10,18 @@
 			@click="compact ? openDetails() : undefined"
 		>
 			<template v-if="alert" #headerMain>
-				<div
-					class="flex cursor-pointer items-center gap-2"
-					:class="{ 'hover:text-primary cursor-pointer': !compact }"
-					@click="compact ? undefined : openDetails()"
-				>
-					<span>#{{ alert.id }} - {{ alert.source }}</span>
-					<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
+				<div class="flex items-center gap-4">
+					<div v-if="selectable">
+						<n-checkbox :checked="checked" @click.stop="emit('check', !checked)" />
+					</div>
+					<div
+						class="flex cursor-pointer items-center gap-2"
+						:class="{ 'hover:text-primary cursor-pointer': !compact }"
+						@click="compact ? undefined : openDetails()"
+					>
+						<span>#{{ alert.id }} - {{ alert.source }}</span>
+						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
+					</div>
 				</div>
 			</template>
 			<template v-if="alert?.alert_creation_time" #headerExtra>
@@ -265,7 +270,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
-import { NButton, NCard, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import { NButton, NCard, NCheckbox, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
@@ -282,9 +287,12 @@ const props = defineProps<{
 	embedded?: boolean
 	detailsOnMounted?: boolean
 	highlight?: boolean
+	selectable?: boolean
+	checked?: boolean
 }>()
 
 const emit = defineEmits<{
+	(e: "check", value: boolean): void
 	(e: "opened"): void
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
@@ -292,7 +300,7 @@ const emit = defineEmits<{
 
 const AlertAssetItem = defineAsyncComponent(() => import("./AlertAsset.vue"))
 
-const { alertData, alertId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
+const { alertData, alertId, compact, embedded, detailsOnMounted, highlight, selectable, checked } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
