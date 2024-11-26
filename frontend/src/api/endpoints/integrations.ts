@@ -102,6 +102,13 @@ export default {
 			hot_data_retention: 30,
 			index_replicas: 0
 		})
+	},
+	catoProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/cato/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName || "Cato",
+			time_interval: 15
+		})
 	}
 	// #endregion
 }

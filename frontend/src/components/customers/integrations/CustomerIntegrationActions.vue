@@ -56,6 +56,7 @@ const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
 const isDuo = computed(() => serviceName.value === "DUO")
 const isDarktrace = computed(() => serviceName.value === "Darktrace")
 const isBitdefender = computed(() => serviceName.value === "BitDefender")
+const isCato = computed(() => serviceName.value === "CATO")
 const isDeployEnabled = computed(
 	() =>
 		(isOffice365.value ||
@@ -63,7 +64,8 @@ const isDeployEnabled = computed(
 			isCrowdstrike.value ||
 			isDuo.value ||
 			isDarktrace.value ||
-			isBitdefender.value) &&
+			isBitdefender.value ||
+			isCato.value) &&
 		!integration.deployed
 )
 
@@ -95,6 +97,9 @@ function provision() {
 	}
 	if (isBitdefender.value) {
 		apiCall = Api.integrations.bitdefenderProvision(customerCode.value, serviceName.value)
+	}
+	if (isCato.value) {
+		apiCall = Api.integrations.catoProvision(customerCode.value, serviceName.value)
 	}
 
 	if (!apiCall) {
