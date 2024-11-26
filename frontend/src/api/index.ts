@@ -23,6 +23,7 @@ import sigma from "./endpoints/sigma"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import threatIntel from "./endpoints/threatIntel"
+import users from "./endpoints/users"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
 
 export default {
@@ -51,5 +52,6 @@ export default {
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,
-	sigma
+	sigma,
+	users
 }

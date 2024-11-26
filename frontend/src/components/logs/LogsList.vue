@@ -28,7 +28,7 @@
 					</div>
 				</n-popover>
 
-				<n-button size="small" type="error" ghost :loading="loadingPurge" @click="showPurgeConfirm = true">
+				<n-button size="small" type="error" ghost :loading="loadingPurge" @click="(showPurgeConfirm = true)">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
 						<span class="xs:block hidden">Purge</span>
@@ -48,7 +48,7 @@
 				<template #trigger>
 					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="showFilters = true">
+							<n-button size="small" @click="(showFilters = true)">
 								<template #icon>
 									<Icon :name="FilterIcon"></Icon>
 								</template>
@@ -63,7 +63,7 @@
 					:users="usersList"
 					:loading-users="loadingUsers"
 					@submit="getData()"
-					@close="showFilters = false"
+					@close="(showFilters = false)"
 				/>
 			</n-popover>
 		</div>
@@ -105,7 +105,7 @@
 			</div>
 			<template #action>
 				<div class="flex gap-3">
-					<n-button size="small" ghost @click="showPurgeConfirm = false">Cancel</n-button>
+					<n-button size="small" ghost @click="(showPurgeConfirm = false)">Cancel</n-button>
 					<n-button size="small" type="warning" :loading="loadingPurge" @click="purge()">
 						Yes I'm sure
 					</n-button>
@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthUser } from "@/types/auth.d"
+import type { User } from "@/types/user.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import {
@@ -147,7 +147,7 @@ const loadingUsers = ref(false)
 const loading = ref(false)
 const loadingPurge = ref(false)
 const showPurgeConfirm = ref(false)
-const usersList = ref<AuthUser[]>([])
+const usersList = ref<User[]>([])
 const logsList = ref<LogExt[]>([])
 const showFilters = ref(false)
 
@@ -252,7 +252,7 @@ function getData() {
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.auth
+	Api.users
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {

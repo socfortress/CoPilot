@@ -1,7 +1,15 @@
+import type { ApiError } from "@/types/common.d"
 import Api from "@/api"
-import { type LoginPayload, type User, UserRole } from "@/types/auth.d"
+import {
+	type AuthUser,
+	AuthUserRole,
+	type JWTPayload,
+	type LoginPayload,
+	type RouteMetaAuthRole,
+	RouteRole
+} from "@/types/auth.d"
 import { getAvatar, getNameInitials } from "@/utils"
-import { scopeToRole } from "@/utils/auth"
+import { jwtRoleToUserRole } from "@/utils/auth"
 import * as jose from "jose"
 import _castArray from "lodash/castArray"
 import _toLower from "lodash/toLower"
@@ -17,20 +25,20 @@ export const useAuthStore = defineStore("auth", {
 			access_token: "",
 			username: "",
 			email: "",
-			role: UserRole.Unknown
-		} as User,
+			role: AuthUserRole.Unknown
+		} as AuthUser,
 		tokenDebounceTime: _toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) as number // seconds
 	}),
 	actions: {
 		setLogged(token: string) {
-			const jwtPayload = jose.decodeJwt(token)
-			const scopes = jwtPayload.scopes as string[]
+			const jwtPayload = jose.decodeJwt<JWTPayload>(token)
+			const scopes = jwtPayload.scopes
 
 			this.user = {
 				access_token: token,
 				username: jwtPayload.sub || "",
 				email: "",
-				role: scopeToRole(scopes)
+				role: jwtRoleToUserRole(scopes)
 			}
 		},
 		setToken(token: string) {
@@ -41,29 +49,26 @@ export const useAuthStore = defineStore("auth", {
 				access_token: "",
 				username: "",
 				email: "",
-				role: UserRole.Unknown
+				role: AuthUserRole.Unknown
 			}
 		},
-		login(payload: LoginPayload) {
-			return new Promise((resolve, reject) => {
-				Api.auth
-					.login(payload)
-					.then(res => {
-						if (res.data.access_token) {
-							this.setLogged(res.data.access_token)
-							this.getEmail()
-							resolve(res.data)
-						} else {
-							reject(res.data)
-						}
-					})
-					.catch(err => {
-						reject(err.response?.data)
-					})
-			})
+		async login(payload: LoginPayload) {
+			try {
+				const response = await Api.auth.login(payload)
+
+				if (response.data.access_token) {
+					this.setLogged(response.data.access_token)
+					this.getEmail()
+				}
+
+				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				return error.response?.data
+			}
 		},
 		getEmail() {
-			Api.auth.getUsers().then(res => {
+			Api.users.getUsers().then(res => {
 				if (res.data.users) {
 					const user = res.data.users.find(o => o.username === this.userName)
 					this.user.email = user?.email || ""
@@ -101,11 +106,11 @@ export const useAuthStore = defineStore("auth", {
 		userEmail(state): string {
 			return state.user?.email
 		},
-		userRole(state): UserRole {
+		userRole(state): AuthUserRole {
 			return state.user?.role
 		},
 		userRoleName(state): string {
-			return UserRole[(state.user?.role || 0) as number]
+			return AuthUserRole[(state.user?.role || 0) as number]
 		},
 		userPic(): string {
 			const initial = getNameInitials(this.userName)
@@ -116,7 +121,7 @@ export const useAuthStore = defineStore("auth", {
 			return _toLower(this.userRoleName) === "admin"
 		},
 		isRoleGranted() {
-			return (roles?: UserRole | UserRole[]) => {
+			return (roles?: RouteMetaAuthRole | RouteMetaAuthRole[]) => {
 				if (!roles) {
 					return true
 				}
@@ -124,9 +129,9 @@ export const useAuthStore = defineStore("auth", {
 					return false
 				}
 
-				const arrRoles: UserRole[] = _castArray(roles)
+				const arrRoles: RouteMetaAuthRole[] = _castArray(roles)
 
-				if (arrRoles.includes(UserRole.All)) {
+				if (arrRoles.includes(RouteRole.All)) {
 					return true
 				}
 

@@ -1,5 +1,5 @@
 import type { FormType } from "@/components/auth/types.d"
-import { UserRole } from "@/types/auth.d"
+import { RouteRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
 import Login from "@/views/auth/Login.vue"
@@ -17,25 +17,25 @@ const router = createRouter({
 			path: "/overview",
 			name: "Overview",
 			component: Overview,
-			meta: { title: "Overview", auth: true, roles: UserRole.All }
+			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/indices",
 			name: "Indices",
 			component: () => import("@/views/Indices.vue"),
-			meta: { title: "Indices", auth: true, roles: UserRole.All }
+			meta: { title: "Indices", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/connectors",
 			name: "Connectors",
 			component: () => import("@/views/Connectors.vue"),
-			meta: { title: "Connectors", auth: true, roles: UserRole.All }
+			meta: { title: "Connectors", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/agents",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -57,7 +57,7 @@ const router = createRouter({
 			redirect: "/graylog/management",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -84,13 +84,13 @@ const router = createRouter({
 			path: "/alerts",
 			name: "Alerts",
 			component: () => import("@/views/AlertsGraylog.vue"),
-			meta: { title: "Alerts", auth: true, roles: UserRole.All }
+			meta: { title: "Alerts", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/artifacts",
 			name: "Artifacts",
 			component: () => import("@/views/Artifacts.vue"),
-			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
+			meta: { title: "Artifacts", auth: true, roles: RouteRole.All }
 		},
 		/*
 		{
@@ -98,7 +98,7 @@ const router = createRouter({
 			redirect: "/soc/alerts",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -133,7 +133,7 @@ const router = createRouter({
 			redirect: "/incident-management/alerts",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -166,32 +166,32 @@ const router = createRouter({
 			path: "/healthcheck",
 			name: "Healthcheck",
 			component: () => import("@/views/Healthcheck.vue"),
-			meta: { title: "Healthcheck", auth: true, roles: UserRole.All }
+			meta: { title: "Healthcheck", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/customers",
 			name: "Customers",
 			component: () => import("@/views/Customers.vue"),
-			meta: { title: "Customers", auth: true, roles: UserRole.All }
+			meta: { title: "Customers", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/logs",
 			name: "Logs",
 			component: () => import("@/views/Logs.vue"),
-			meta: { title: "Logs", auth: true, roles: UserRole.All }
+			meta: { title: "Logs", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/users",
 			name: "Users",
 			component: () => import("@/views/Users.vue"),
-			meta: { title: "Users", auth: true, roles: UserRole.All }
+			meta: { title: "Users", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/external-services",
 			redirect: "/external-services/third-party-integrations",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -212,31 +212,31 @@ const router = createRouter({
 			path: "/report-creation",
 			name: "ReportCreation",
 			component: () => import("@/views/ReportCreation.vue"),
-			meta: { title: "Report Creation", auth: true, roles: UserRole.All }
+			meta: { title: "Report Creation", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/scheduler",
 			name: "Scheduler",
 			component: () => import("@/views/Scheduler.vue"),
-			meta: { title: "Scheduler", auth: true, roles: UserRole.All }
+			meta: { title: "Scheduler", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/cloud-security-assessment",
 			name: "CloudSecurityAssessment",
 			component: () => import("@/views/CloudSecurityAssessment.vue"),
-			meta: { title: "Cloud Sec. Assess.", auth: true, roles: UserRole.All }
+			meta: { title: "Cloud Sec. Assess.", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/web-vulnerability-assessment",
 			name: "WebVulnerabilityAssessment",
 			component: () => import("@/views/WebVulnerabilityAssessment.vue"),
-			meta: { title: "Web Vuln. Assess.", auth: true, roles: UserRole.All }
+			meta: { title: "Web Vuln. Assess.", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/license",
 			meta: {
 				auth: true,
-				roles: UserRole.All
+				roles: RouteRole.All
 			},
 			children: [
 				{
@@ -264,7 +264,7 @@ const router = createRouter({
 			path: "/profile",
 			name: "Profile",
 			component: () => import("@/views/Profile.vue"),
-			meta: { title: "Profile", auth: true, roles: UserRole.All }
+			meta: { title: "Profile", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/login",

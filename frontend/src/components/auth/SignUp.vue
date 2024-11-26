@@ -39,7 +39,7 @@
 								size="large"
 								icon-placement="right"
 								:disabled="!accountStepValid"
-								@click="wizardCurrent = 2"
+								@click="(wizardCurrent = 2)"
 							>
 								<template #icon>
 									<Icon :name="ArrowRightIcon"></Icon>
@@ -114,7 +114,7 @@
 						-->
 
 						<div class="mt-3 flex items-center justify-between gap-3">
-							<n-button size="large" @click="wizardCurrent = 1">
+							<n-button size="large" @click="(wizardCurrent = 1)">
 								<template #icon>
 									<Icon :name="ArrowLeftIcon"></Icon>
 								</template>
@@ -159,10 +159,10 @@ import {
 	NSteps,
 	useMessage
 } from "naive-ui"
-import isEmail from "validator/es/lib/isEmail"
-import { computed, ref } from "vue"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import PasswordValidator from "password-validator"
+import isEmail from "validator/es/lib/isEmail"
+import { computed, ref } from "vue"
 
 interface ModelType {
 	email: string

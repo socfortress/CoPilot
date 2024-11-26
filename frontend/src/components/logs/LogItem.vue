@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthUser } from "@/types/auth.d"
+import type { User } from "@/types/user.d"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -71,7 +71,7 @@ import { type Log, LogEventType } from "@/types/logs.d"
 import dayjs from "@/utils/dayjs"
 import { computed } from "vue"
 
-const { log, users } = defineProps<{ log: Log; users?: AuthUser[] }>()
+const { log, users } = defineProps<{ log: Log; users?: User[] }>()
 
 const InfoIcon = "carbon:information"
 const UserIcon = "carbon:user"

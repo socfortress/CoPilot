@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthUser } from "@/types/auth.d"
+import type { User } from "@/types/user.d"
 import Api from "@/api"
 import {
 	LogEventType,
@@ -70,7 +70,7 @@ import _toSafeInteger from "lodash/toSafeInteger"
 import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 
-const props = defineProps<{ users?: AuthUser[]; fetchingUsers?: boolean }>()
+const props = defineProps<{ users?: User[]; fetchingUsers?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -157,7 +157,7 @@ function submit() {
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.auth
+	Api.users
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {
@@ -169,7 +169,7 @@ function getUsers() {
 		})
 }
 
-function setUsers(users: AuthUser[]) {
+function setUsers(users: User[]) {
 	userIdOptions.value = (users || []).map(o => ({
 		label: `#${o.id} - ${o.username}`,
 		value: `${o.id}`

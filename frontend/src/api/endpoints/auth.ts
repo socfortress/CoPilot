@@ -1,4 +1,4 @@
-import type { AuthUser, LoginPayload, RegisterPayload } from "@/types/auth.d"
+import type { LoginPayload, RegisterPayload } from "@/types/auth.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import jsonToFormData from "@ajoelp/json-to-formdata"
 import { HttpClient } from "../httpClient"
@@ -16,9 +16,6 @@ export default {
 	},
 	refresh() {
 		return HttpClient.get<FlaskBaseResponse & { access_token: string; token_type: string }>("/auth/refresh")
-	},
-	getUsers() {
-		return HttpClient.get<FlaskBaseResponse & { users: AuthUser[] }>("/auth/users")
 	},
 	/** need admin role */
 	resetPassword(username: string, password: string) {

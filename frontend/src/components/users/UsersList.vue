@@ -31,7 +31,7 @@
 										:options="options"
 										display-directive="show"
 										:keyboard="false"
-										@click="selectedUser = user.username"
+										@click="(selectedUser = user.username)"
 									>
 										<n-button text>
 											<template #icon>
@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthUser } from "@/types/auth.d"
+import type { User } from "@/types/user.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -64,7 +64,7 @@ const { highlight } = toRefs(props)
 const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
-const usersList = ref<AuthUser[]>([])
+const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
 const selectedUser = ref("")
 
@@ -79,7 +79,7 @@ const options = [
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.auth
+	Api.users
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {
