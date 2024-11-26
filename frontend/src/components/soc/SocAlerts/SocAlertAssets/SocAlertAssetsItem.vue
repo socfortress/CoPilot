@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity hoverable clickable @click.stop="(showDetails = true)">
+		<CardEntity hoverable clickable @click.stop="showDetails = true">
 			<template #headerMain>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</template>
 			<template #default>
 				<div class="flex flex-col gap-1">

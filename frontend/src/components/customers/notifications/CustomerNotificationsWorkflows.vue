@@ -4,7 +4,7 @@
 			<div v-if="showForm" class="p-7 pt-4">
 				<CustomerNotificationsWorkflowsForm
 					:customer-code
-					@mounted="(formCTX = $event)"
+					@mounted="formCTX = $event"
 					@submitted="refreshList()"
 				>
 					<template #additionalActions="{ loading: loadingForm }">

@@ -25,13 +25,13 @@
 				</n-popover>
 			</div>
 			<div class="actions flex items-center gap-2">
-				<n-button v-if="!isFilterPreselected" size="small" @click="(showStatsDrawer = true)">
+				<n-button v-if="!isFilterPreselected" size="small" @click="showStatsDrawer = true">
 					<template #icon>
 						<Icon :name="StatsIcon" :size="14"></Icon>
 					</template>
 					Stats
 				</n-button>
-				<n-button size="small" @click="(showFiltersDrawer = true)">
+				<n-button size="small" @click="showFiltersDrawer = true">
 					<template #icon>
 						<Icon :name="FilterIcon" :size="15"></Icon>
 					</template>
@@ -66,7 +66,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
-				<AlertsStats :filters="filters" @mounted="(alertsStatsCTX = $event)" />
+				<AlertsStats :filters="filters" @mounted="alertsStatsCTX = $event" />
 			</n-drawer-content>
 		</n-drawer>
 

@@ -1,13 +1,13 @@
 {
 	"borderRadius": {
-		"base": "6px",
-		"small": "3px"
+		"base": "8px",
+		"small": "4px"
 	},
 	"lineHeight": {
 		"base": "1.35"
 	},
 	"fontSize": {
-		"base": "15px",
+		"base": "16px",
 		"cardTitle": "18px"
 	},
 	"fontFamily": {

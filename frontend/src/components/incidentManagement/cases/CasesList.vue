@@ -74,7 +74,7 @@
 				<template #trigger>
 					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="(showFilters = true)">
+							<n-button size="small" @click="showFilters = true">
 								<template #icon>
 									<Icon :name="FilterIcon"></Icon>
 								</template>
@@ -134,7 +134,7 @@
 					</div>
 					<div class="flex justify-between gap-2 px-3">
 						<div class="flex justify-start gap-2">
-							<n-button size="small" quaternary @click="(showFilters = false)">Close</n-button>
+							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
 						</div>
 						<div class="flex justify-end gap-2">
 							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
@@ -156,7 +156,7 @@
 						:highlight="highlight === item.id.toString()"
 						:details-on-mounted="highlight === item.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
-						@opened="(highlightedItemOpened = true)"
+						@opened="highlightedItemOpened = true"
 						@deleted="getData()"
 						@updated="updateCase($event)"
 					/>

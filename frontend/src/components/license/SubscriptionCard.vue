@@ -36,7 +36,7 @@
 				</n-popconfirm>
 			</template>
 			<template v-if="selectable" #footerExtra>
-				<n-button size="small" @click.stop="(showDetails = true)">
+				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
 						<Icon :name="InfoIcon"></Icon>
 					</template>

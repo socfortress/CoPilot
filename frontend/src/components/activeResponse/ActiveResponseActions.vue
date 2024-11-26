@@ -1,6 +1,6 @@
 <template>
 	<div class="active-response-actions flex justify-end gap-2">
-		<n-button type="success" secondary :size :loading="loadingInvoke" @click="(showInvokeForm = true)">
+		<n-button type="success" secondary :size :loading="loadingInvoke" @click="showInvokeForm = true">
 			<template #icon>
 				<Icon :name="InvokeIcon"></Icon>
 			</template>
@@ -20,10 +20,10 @@
 			<ActiveResponseInvokeForm
 				:active-response="activeResponse"
 				:agent-id="agentId"
-				@mounted="(activeResponseInvokeFormCTX = $event)"
+				@mounted="activeResponseInvokeFormCTX = $event"
 				@submitted="close()"
-				@start-loading="(loadingInvoke = true)"
-				@stop-loading="(loadingInvoke = false)"
+				@start-loading="loadingInvoke = true"
+				@stop-loading="loadingInvoke = false"
 			>
 				<template #additionalActions>
 					<n-button secondary @click="close()">Close</n-button>

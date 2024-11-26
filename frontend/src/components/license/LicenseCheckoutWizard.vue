@@ -15,7 +15,7 @@
 						selectable
 						embedded
 						class="item-appear item-appear-bottom item-appear-005 cursor-pointer"
-						@click="(selectedSubscription = subscription)"
+						@click="selectedSubscription = subscription"
 					/>
 				</div>
 				<template v-else>
@@ -51,7 +51,7 @@
 									/>
 								</n-form-item>
 								<div class="flex justify-end gap-4">
-									<n-button quaternary @click="(selectedSubscription = null)">
+									<n-button quaternary @click="selectedSubscription = null">
 										<template #icon>
 											<Icon :name="ArrowLeftIcon"></Icon>
 										</template>

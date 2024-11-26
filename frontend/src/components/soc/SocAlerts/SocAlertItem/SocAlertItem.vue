@@ -9,7 +9,7 @@
 			:status="isBookmark ? 'success' : undefined"
 			:embedded
 			:highlighted="!!highlight"
-			@click.stop="(showDetails = true)"
+			@click.stop="showDetails = true"
 		>
 			<template #headerMain>
 				<div class="flex items-center gap-2">
@@ -45,7 +45,7 @@
 						<div
 							v-if="showBadgesToggle"
 							class="show-badges-toggle flex items-center gap-2"
-							@click.stop="(showBadges = !showBadges)"
+							@click.stop="showBadges = !showBadges"
 						>
 							{{ showBadges ? "Less info" : "More info" }}
 							<span class="flex items-center transition-transform" :class="{ 'rotate-90': showBadges }">
@@ -65,7 +65,7 @@
 						:alert-id="alert.alert_id"
 						@case-created="caseCreated($event)"
 						@deleted="deleted()"
-						@start-deleting="(loadingDelete = true)"
+						@start-deleting="loadingDelete = true"
 					/>
 				</div>
 			</template>

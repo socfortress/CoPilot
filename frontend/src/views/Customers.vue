@@ -1,8 +1,8 @@
 <template>
 	<div class="page">
-		<CustomersList :highlight="highlight" :reload="reload" @reloaded="(reload = false)">
+		<CustomersList :highlight="highlight" :reload="reload" @reloaded="reload = false">
 			<CustomerDefaultSettingsButton />
-			<CustomerCreationButton v-model:open-form="openForm" @submitted="(reload = true)" />
+			<CustomerCreationButton v-model:open-form="openForm" @submitted="reload = true" />
 		</CustomersList>
 	</div>
 </template>

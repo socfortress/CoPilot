@@ -104,7 +104,7 @@
 			</template>
 
 			<template v-if="!hideCardActions" #footerExtra>
-				<n-button size="small" @click.stop="(showDetails = true)">
+				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
 						<Icon :name="DetailsIcon"></Icon>
 					</template>
@@ -130,7 +130,7 @@
 							v-model:loading="loadingDelete"
 							:customer="customerInfo"
 							@delete="deletedItem()"
-							@submitted="(customerInfo = $event)"
+							@submitted="customerInfo = $event"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
@@ -138,8 +138,8 @@
 							:customer-meta="customerMeta"
 							:customer-code="customer.customer_code"
 							:customer-name="customer.customer_name"
-							@delete="(customerMeta = null)"
-							@submitted="(customerMeta = $event)"
+							@delete="customerMeta = null"
+							@submitted="customerMeta = $event"
 						/>
 					</n-tab-pane>
 					<n-tab-pane
@@ -166,7 +166,7 @@
 						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
 					<template #suffix>
-						<div class="hover:text-primary cursor-pointer pr-8" @click="(selectedTabsGroup = 'agents')">
+						<div class="hover:text-primary cursor-pointer pr-8" @click="selectedTabsGroup = 'agents'">
 							Agents
 						</div>
 					</template>
@@ -175,7 +175,7 @@
 					<template #prefix>
 						<div
 							class="hover:text-primary relative top-1 cursor-pointer pl-6"
-							@click="(selectedTabsGroup = 'customer')"
+							@click="selectedTabsGroup = 'customer'"
 						>
 							<Icon :name="ArrowIcon" :size="20"></Icon>
 						</div>

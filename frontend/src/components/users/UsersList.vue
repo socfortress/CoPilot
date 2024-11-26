@@ -31,7 +31,7 @@
 										:options="options"
 										display-directive="show"
 										:keyboard="false"
-										@click="(selectedUser = user.username)"
+										@click="selectedUser = user.username"
 									>
 										<n-button text>
 											<template #icon>

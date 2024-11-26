@@ -41,7 +41,7 @@
 			<div class="main flex flex-grow flex-col">
 				<div v-if="$slots['main-toolbar']" class="main-toolbar flex items-center">
 					<div v-if="sidebarAvailable && !hideMenuBtn" class="menu-btn flex justify-center opacity-50">
-						<n-button text @click="(sidebarOpen = true)">
+						<n-button text @click="sidebarOpen = true">
 							<Icon :size="24" :name="MenuIcon" />
 						</n-button>
 					</div>

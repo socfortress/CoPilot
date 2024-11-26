@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity :embedded hoverable clickable @click="(showDetails = true)">
+		<CardEntity :embedded hoverable clickable @click="showDetails = true">
 			{{ timelineData._source.rule_description }}
 		</CardEntity>
 

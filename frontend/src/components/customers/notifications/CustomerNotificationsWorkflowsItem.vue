@@ -33,7 +33,7 @@
 			<CustomerNotificationsWorkflowsForm
 				:incident-notification
 				:customer-code="incidentNotification.customer_code"
-				@mounted="(formCTX = $event)"
+				@mounted="formCTX = $event"
 				@submitted="emitUpdate"
 			/>
 		</n-modal>

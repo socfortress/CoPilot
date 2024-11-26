@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity hoverable clickable :embedded class="@container" @click.stop="(showDetails = true)">
+		<CardEntity hoverable clickable :embedded class="@container" @click.stop="showDetails = true">
 			<template #headerMain>#{{ alert._id || alert._source.id }}</template>
 			<template #headerExtra>
 				{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}
@@ -107,11 +107,11 @@
 					:alert
 					:soc-alert-field="socAlertCreationField"
 					size="small"
-					@start-loading="(loading = true)"
-					@stop-loading="(loading = false)"
-					@updated-url="(alert._source.alert_url = $event)"
-					@updated-id="(alert._source.alert_id = $event)"
-					@updated-ask-message="(alert._source.ask_socfortress_message = $event)"
+					@start-loading="loading = true"
+					@stop-loading="loading = false"
+					@updated-url="alert._source.alert_url = $event"
+					@updated-id="alert._source.alert_id = $event"
+					@updated-ask-message="alert._source.ask_socfortress_message = $event"
 				/>
 			</template>
 		</CardEntity>

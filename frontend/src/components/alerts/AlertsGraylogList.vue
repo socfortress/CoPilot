@@ -25,7 +25,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex items-center gap-2">
-				<n-button size="small" @click="(showFiltersDrawer = true)">
+				<n-button size="small" @click="showFiltersDrawer = true">
 					<template #icon>
 						<Icon :name="FilterIcon" :size="15"></Icon>
 					</template>

@@ -20,7 +20,7 @@
 		/>
 
 		<div v-if="showToggleButton" class="flex justify-end">
-			<n-button quaternary size="tiny" @click="(showSource = !showSource)">toggle source view</n-button>
+			<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
 		</div>
 	</div>
 </template>

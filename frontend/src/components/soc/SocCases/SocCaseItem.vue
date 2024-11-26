@@ -6,7 +6,7 @@
 			:embedded
 			hoverable
 			clickable
-			@click.stop="(showDetails = true)"
+			@click.stop="showDetails = true"
 		>
 			<template #headerMain>{{ baseInfo?.case_uuid }}</template>
 			<template v-if="caseOpenDate" #headerExtra>
@@ -94,7 +94,7 @@
 					@closed="setClosed()"
 					@reopened="setReopened()"
 					@deleted="deleteCase()"
-					@start-deleting="(loadingDelete = true)"
+					@start-deleting="loadingDelete = true"
 				/>
 			</template>
 		</CardEntity>
@@ -216,8 +216,8 @@
 									<SocCaseNoteForm
 										v-if="baseInfo"
 										:case-id="baseInfo.case_id"
-										@close="(noteFormVisible = [])"
-										@added="(updateNotes = true)"
+										@close="noteFormVisible = []"
+										@added="updateNotes = true"
 									/>
 								</div>
 							</n-collapse-item>

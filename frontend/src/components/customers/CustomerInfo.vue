@@ -3,13 +3,13 @@
 		<div v-if="editing" class="p-7 pt-4">
 			<CustomerForm :customer="customer" :lock-code="true" @submitted="submitted">
 				<template #additionalActions>
-					<n-button @click="(editing = false)">Close</n-button>
+					<n-button @click="editing = false">Close</n-button>
 				</template>
 			</CustomerForm>
 		</div>
 		<template v-else>
 			<div class="flex items-center justify-between gap-4 px-7 pt-2">
-				<n-button size="small" :disabled="loadingDelete" @click="(editing = true)">
+				<n-button size="small" :disabled="loadingDelete" @click="editing = true">
 					<template #icon>
 						<Icon :name="EditIcon" :size="14"></Icon>
 					</template>

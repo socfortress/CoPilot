@@ -3,7 +3,7 @@
 		<LicenseViewer
 			class="grow"
 			:class="{ 'overflow-hidden': licenseKey }"
-			@license-key-loaded="(licenseKey = $event)"
+			@license-key-loaded="licenseKey = $event"
 		/>
 	</div>
 </template>

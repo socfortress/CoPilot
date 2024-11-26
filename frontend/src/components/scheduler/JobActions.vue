@@ -22,7 +22,7 @@
 				</template>
 				Run once
 			</n-button>
-			<n-button :size secondary :loading="loadingUpdate" @click="(showForm = true)">
+			<n-button :size secondary :loading="loadingUpdate" @click="showForm = true">
 				<template #icon>
 					<Icon :name="UpdatedIcon"></Icon>
 				</template>

@@ -49,7 +49,7 @@
 								show-index-name-field
 								disable-index-name-field
 								:disabled-sources
-								@mounted="(formCTX = $event)"
+								@mounted="formCTX = $event"
 								@submitted="createSourceConfiguration($event)"
 							>
 								<template #additionalActions>

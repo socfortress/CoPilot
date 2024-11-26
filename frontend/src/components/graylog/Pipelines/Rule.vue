@@ -1,6 +1,6 @@
 <template>
 	<div :id="`rule-${rule.id}`">
-		<CardEntity :highlighted="!!highlight" :embedded hoverable clickable @click.stop="(showDetails = true)">
+		<CardEntity :highlighted="!!highlight" :embedded hoverable clickable @click.stop="showDetails = true">
 			<template #headerMain>#{{ rule.id }}</template>
 			<template #headerExtra>
 				<n-popover overlap placement="top-end">

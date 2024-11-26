@@ -15,7 +15,7 @@
 			</template>
 			<template #footerExtra>
 				<div class="flex flex-wrap gap-3">
-					<n-button size="small" @click.stop="(showDetails = true)">
+					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
 							<Icon :name="DetailsIcon"></Icon>
 						</template>
@@ -42,7 +42,7 @@
 			segmented
 			display-directive="show"
 		>
-			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="(integration = $event)" />
+			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="integration = $event" />
 		</n-modal>
 	</div>
 </template>

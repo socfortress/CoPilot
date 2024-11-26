@@ -15,7 +15,7 @@
 			</template>
 			<template #footerExtra>
 				<div class="flex flex-wrap gap-3">
-					<n-button size="small" @click.stop="(showDetails = true)">
+					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
 							<Icon :name="InfoIcon"></Icon>
 						</template>

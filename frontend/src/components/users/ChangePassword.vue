@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="(showFormDrawer = true)">
+	<n-button :size="size" :type="type" @click="showFormDrawer = true">
 		<template #icon>
 			<Icon :name="PasswordIcon" :size="14"></Icon>
 		</template>

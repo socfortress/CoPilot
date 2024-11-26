@@ -13,8 +13,8 @@
 					:users-list="usersList"
 					@bookmark="reloadAlerts()"
 					@deleted="itemDeleted($event)"
-					@loaded="(bookmarksList = $event)"
-					@mounted="(socAlertsBookmarksCTX = $event)"
+					@loaded="bookmarksList = $event"
+					@mounted="socAlertsBookmarksCTX = $event"
 				/>
 			</template>
 			<template #2>
@@ -24,7 +24,7 @@
 					:users-list="usersList"
 					@bookmark="reloadBookmarks()"
 					@deleted="reloadBookmarks()"
-					@mounted="(socAlertsCTX = $event)"
+					@mounted="socAlertsCTX = $event"
 				/>
 			</template>
 			<template #resize-trigger>
@@ -43,10 +43,10 @@
 				:users-list="usersList"
 				@bookmark="reloadBookmarks()"
 				@deleted="reloadBookmarks()"
-				@mounted="(socAlertsCTX = $event)"
+				@mounted="socAlertsCTX = $event"
 			>
 				<template #header>
-					<n-button size="small" @click="(showBookmarkedDrawer = true)">
+					<n-button size="small" @click="showBookmarkedDrawer = true">
 						<template #icon>
 							<Icon :name="StarIcon" :size="14"></Icon>
 						</template>
@@ -67,8 +67,8 @@
 						:users-list="usersList"
 						@bookmark="reloadAlerts()"
 						@deleted="itemDeleted($event)"
-						@loaded="(bookmarksList = $event)"
-						@mounted="(socAlertsBookmarksCTX = $event)"
+						@loaded="bookmarksList = $event"
+						@mounted="socAlertsBookmarksCTX = $event"
 					/>
 				</n-drawer-content>
 			</n-drawer>

@@ -17,7 +17,7 @@
 					v-if="alertsSummary.alerts.length > 3 && showAllAlerts"
 					class="animate-fade opacity-0"
 					size="tiny"
-					@click="(showAllAlerts = false)"
+					@click="showAllAlerts = false"
 				>
 					Show less
 				</n-button>
@@ -35,7 +35,7 @@
 					</div>
 				</n-scrollbar>
 
-				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="(showAllAlerts = true)">
+				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
 					<n-button size="small" text class="!w-full">
 						<template #icon>
 							<Icon :name="ExpandIcon"></Icon>

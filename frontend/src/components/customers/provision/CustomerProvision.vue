@@ -8,7 +8,7 @@
 					@submitted="submitted"
 				>
 					<template #additionalActions>
-						<n-button @click="(editing = false)">Close</n-button>
+						<n-button @click="editing = false">Close</n-button>
 					</template>
 				</CustomerProvisionWizard>
 			</div>
@@ -22,7 +22,7 @@
 					</n-button>
 				</div>
 				<div v-else class="flex items-center justify-between gap-4 px-7 pt-2">
-					<n-button size="small" type="primary" @click="(editing = true)">
+					<n-button size="small" type="primary" @click="editing = true">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14"></Icon>
 						</template>

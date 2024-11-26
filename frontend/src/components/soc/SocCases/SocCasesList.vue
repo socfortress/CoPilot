@@ -47,7 +47,7 @@
 				<template #trigger>
 					<div class="bg-default rounded-default">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="(showFilters = true)">
+							<n-button size="small" @click="showFilters = true">
 								<template #icon>
 									<Icon :name="FilterIcon"></Icon>
 								</template>
@@ -77,7 +77,7 @@
 						</n-input-group>
 					</div>
 					<div class="flex justify-end gap-2 px-3">
-						<n-button size="small" secondary @click="(showFilters = false)">Close</n-button>
+						<n-button size="small" secondary @click="showFilters = false">Close</n-button>
 						<n-button size="small" type="primary" secondary @click="getData()">Submit</n-button>
 					</div>
 				</div>

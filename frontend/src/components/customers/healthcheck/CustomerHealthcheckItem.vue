@@ -5,7 +5,7 @@
 			hoverable
 			clickable
 			:status="type === 'healthy' ? 'success' : type === 'unhealthy' ? 'warning' : undefined"
-			@click="(showDetails = true)"
+			@click="showDetails = true"
 		>
 			<template #headerMain>#{{ healthData.id }} - {{ healthData.label }}</template>
 			<template v-if="cardDate" #headerExtra>{{ cardDate }}</template>

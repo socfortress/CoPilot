@@ -52,14 +52,14 @@
 
 		<div v-if="!hideKey && !loading" class="footer mt-3">
 			<template v-if="license">
-				<span class="cursor-pointer" @click="(showLicenseDetails = true)">
+				<span class="cursor-pointer" @click="showLicenseDetails = true">
 					Your license:
 					<strong>{{ license }}</strong>
 					<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1"></Icon>
 				</span>
 			</template>
 			<template v-else>
-				<span class="cursor-pointer" @click="(showLicenseUpload = true)">
+				<span class="cursor-pointer" @click="showLicenseUpload = true">
 					If you possess a license, you may load it by clicking here
 				</span>
 			</template>

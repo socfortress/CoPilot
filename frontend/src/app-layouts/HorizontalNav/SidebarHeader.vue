@@ -10,7 +10,7 @@
 		</div>
 		<Transition name="fade" mode="out-in">
 			<div v-if="showPin" class="sidebar-pin flex items-center">
-				<Icon :size="20" @click="(sidebarCollapsed = !sidebarCollapsed)">
+				<Icon :size="20" @click="sidebarCollapsed = !sidebarCollapsed">
 					<span class="i-large">
 						<Iconify v-if="sidebarCollapsed" :icon="CircleRegular" />
 						<Iconify v-if="!sidebarCollapsed" :icon="DotCircleRegular" />

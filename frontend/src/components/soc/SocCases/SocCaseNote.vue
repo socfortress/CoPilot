@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity hoverable clickable @click.stop="(showDetails = true)">
+		<CardEntity hoverable clickable @click.stop="showDetails = true">
 			<template #headerMain>#{{ note.note_id }} - {{ note.note_details.note_uuid }}</template>
 			<template #headerExtra>
 				<n-popover overlap placement="top-end">

@@ -88,7 +88,7 @@
 				<ConfigForm
 					v-if="showConfigDialog"
 					:connector="connector"
-					@loading="(loadingConfiguration = $event)"
+					@loading="loadingConfiguration = $event"
 					@close="closeConfigDialog"
 				/>
 			</n-card>
