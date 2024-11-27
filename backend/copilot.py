@@ -36,10 +36,10 @@ from app.routers import alert_creation_settings
 from app.routers import auth
 from app.routers import bitdefender
 from app.routers import carbonblack
+from app.routers import cato
 from app.routers import connectors
 from app.routers import cortex
 from app.routers import crowdstrike
-from app.routers import cato
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import darktrace

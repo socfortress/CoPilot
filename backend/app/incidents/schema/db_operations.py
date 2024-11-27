@@ -19,8 +19,10 @@ from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 
+
 class DeleteAlertsRequest(BaseModel):
     alert_ids: List[int]
+
 
 class SocfortressRecommendsWazuhFieldNames(Enum):
     # ! Windows Events
@@ -49,6 +51,7 @@ class DeleteAlertsResponse(BaseModel):
     deleted_alert_ids: List[int]
     not_deleted_alert_ids: List[int]
     success: bool
+
 
 class SocfortressRecommendsWazuhAssetName(Enum):
     agent_name = "agent_name"
@@ -308,6 +311,7 @@ class AlertIoCDelete(BaseModel):
     alert_id: int
     ioc_id: int
 
+
 class CommentBase(BaseModel):
     user_name: str
     alert_id: int
@@ -378,12 +382,15 @@ class CaseOutResponse(BaseModel):
     success: bool
     message: str
 
+
 class CaseNotificationCreate(BaseModel):
     case_id: int
+
 
 class CaseNotificationResponse(BaseModel):
     success: bool
     message: str
+
 
 class Notification(BaseModel):
     id: int

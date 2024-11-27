@@ -1,13 +1,10 @@
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
-
 from app.incidents.services.db_operations import get_customer_notification
-
 
 
 async def handle_customer_notifications_case(

@@ -962,6 +962,7 @@ async def verify_alert_creation_provisioning_connection(connector_name: str) -> 
 
 ################## ! VIRUSTOTAL ! ##################
 
+
 async def verify_virustotal_healtcheck(
     attributes: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -1005,6 +1006,7 @@ async def verify_virustotal_healtcheck(
             "connectionSuccessful": False,
             "message": f"Connection to {attributes['connector_url']} failed with error.",
         }
+
 
 async def verify_virustotal_connection(connector_name: str) -> str:
     """

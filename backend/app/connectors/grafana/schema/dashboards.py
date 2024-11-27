@@ -109,8 +109,10 @@ class DarktraceDashboard(Enum):
 class BitdefenderDashboard(Enum):
     BITDEFENDER_SUMMARY = ("Bitdefender", "summary.json")
 
+
 class CatoDashboard(Enum):
     CATO_SUMMARY = ("Cato", "summary.json")
+
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(

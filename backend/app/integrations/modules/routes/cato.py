@@ -4,8 +4,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
-from app.integrations.modules.schema.cato import CollectCato
 from app.integrations.modules.schema.cato import CatoAuthKeys
+from app.integrations.modules.schema.cato import CollectCato
 from app.integrations.modules.schema.cato import InvokeCatoRequest
 from app.integrations.modules.schema.cato import InvokeCatoResponse
 from app.integrations.modules.services.cato import post_to_copilot_cato_module

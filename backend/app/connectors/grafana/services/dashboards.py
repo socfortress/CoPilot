@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.connectors.grafana.schema.dashboards import BitdefenderDashboard
 from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
+from app.connectors.grafana.schema.dashboards import CatoDashboard
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
 from app.connectors.grafana.schema.dashboards import DarktraceDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
@@ -17,7 +18,7 @@ from app.connectors.grafana.schema.dashboards import HuntressDashboard
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import SapSiemDashboard
-from app.connectors.grafana.schema.dashboards import WazuhDashboard, CatoDashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.connectors.grafana.utils.universal import create_grafana_client
 
 

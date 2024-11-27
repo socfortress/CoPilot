@@ -27,7 +27,8 @@ from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_co
 from app.integrations.utils.event_shipper import verify_event_shipper_connection
 from app.utils import verify_alert_creation_provisioning_connection
 from app.utils import verify_haproxy_provisioning_connection
-from app.utils import verify_wazuh_worker_provisioning_connection, verify_virustotal_connection
+from app.utils import verify_virustotal_connection
+from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "data"
 UPLOAD_FOLDER = os.path.join(
@@ -167,6 +168,7 @@ class AlertCreationService(ConnectorServiceInterface):
         return await verify_alert_creation_provisioning_connection(
             connector.connector_name,
         )
+
 
 # Virustotal Service
 class VirustotalService(ConnectorServiceInterface):
