@@ -231,6 +231,14 @@ export default {
 	deleteAlert(alertId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/alert/${alertId}`)
 	},
+	deleteAlerts(alertIds: number[]) {
+		return HttpClient.delete<FlaskBaseResponse & { deleted_alert_ids: number[]; not_deleted_alert_ids: [] }>(
+			`/incidents/db_operations/alerts`,
+			{
+				data: { alert_ids: alertIds }
+			}
+		)
+	},
 	getAlertContext(alertContextId: number) {
 		return HttpClient.get<FlaskBaseResponse & { alert_context: AlertContext }>(
 			`/incidents/db_operations/alert/context/${alertContextId}`
@@ -393,6 +401,9 @@ export default {
 		return HttpClient.post<Blob>(url, payload, {
 			responseType: "blob"
 		})
+	},
+	createCaseNotification(caseId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/notification`, { case_id: caseId })
 	},
 	// #endregion
 

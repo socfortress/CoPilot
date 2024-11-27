@@ -167,6 +167,7 @@ export const useThemeStore = defineStore("theme", {
 				error,
 				info,
 				background,
+				backgroundSecondary,
 				bodyBackground,
 				text,
 				textSecondary,
@@ -203,6 +204,7 @@ export const useThemeStore = defineStore("theme", {
 				},
 				Card: {
 					color: background,
+					colorEmbedded: backgroundSecondary,
 					titleFontSizeSmall: state.fontSize.cardTitle,
 					titleFontSizeMedium: state.fontSize.cardTitle,
 					titleFontSizeLarge: state.fontSize.cardTitle,

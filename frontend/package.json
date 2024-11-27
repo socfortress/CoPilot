@@ -43,8 +43,8 @@
 		"@fontsource/public-sans": "^5.1.1",
 		"@shikijs/markdown-it": "^1.23.1",
 		"@tailwindcss/container-queries": "^0.1.1",
-		"@vueuse/core": "^11.3.0",
-		"axios": "^1.7.7",
+		"@vueuse/core": "^12.0.0",
+		"axios": "^1.7.8",
 		"bytes": "^3.1.2",
 		"colord": "^2.9.3",
 		"dayjs": "^1.11.13",
@@ -56,10 +56,10 @@
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
-		"naive-ui": "^2.40.1",
-		"nanoid": "^5.0.8",
+		"naive-ui": "^2.40.2",
+		"nanoid": "^5.0.9",
 		"password-validator": "^5.3.0",
-		"pinia": "^2.2.6",
+		"pinia": "^2.2.7",
 		"pinia-plugin-persistedstate": "^4.1.3",
 		"secure-ls": "^2.0.0",
 		"shiki": "^1.23.1",
@@ -68,18 +68,18 @@
 		"vue-advanced-cropper": "^2.8.9",
 		"vue-highlight-words": "^3.0.1",
 		"vue-i18n": "^10.0.4",
-		"vue-router": "^4.4.5",
+		"vue-router": "^4.5.0",
 		"vue-sjv": "^0.0.6",
-		"vue3-apexcharts": "^1.7.0",
+		"vue3-apexcharts": "^1.8.0",
 		"vue3-marquee": "^4.2.2",
 		"vuedraggable": "^4.1.0"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.27.3"
+		"@rollup/rollup-linux-x64-gnu": "^4.27.4"
 	},
 	"devDependencies": {
-		"@antfu/eslint-config": "^3.9.2",
-		"@clack/prompts": "^0.8.1",
+		"@antfu/eslint-config": "^3.11.0",
+		"@clack/prompts": "^0.8.2",
 		"@iconify/vue": "^4.1.2",
 		"@tsconfig/node20": "^20.1.4",
 		"@types/bytes": "^3.1.4",
@@ -87,10 +87,10 @@
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.13",
-		"@types/node": "^22.9.1",
+		"@types/node": "^22.10.0",
 		"@types/validator": "^13.12.2",
-		"@vitejs/plugin-vue": "^5.2.0",
-		"@vitejs/plugin-vue-jsx": "^4.1.0",
+		"@vitejs/plugin-vue": "^5.2.1",
+		"@vitejs/plugin-vue-jsx": "^4.1.1",
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.6.0",
 		"autoprefixer": "^10.4.20",
@@ -102,28 +102,28 @@
 		"jsdom": "^25.0.1",
 		"npm-run-all2": "^7.0.1",
 		"postcss": "^8.4.49",
-		"prettier": "^3.3.3",
+		"prettier": "^3.4.1",
 		"prettier-plugin-tailwindcss": "^0.6.9",
 		"sass": "^1.81.0",
 		"start-server-and-test": "^2.0.8",
 		"tailwind-config-viewer": "^2.0.4",
 		"tailwindcss": "^3.4.15",
 		"taze": "^0.18.0",
-		"type-fest": "^4.27.0",
+		"type-fest": "^4.29.0",
 		"typescript": "~5.6.3",
-		"unplugin-vue-components": "^0.27.4",
+		"unplugin-vue-components": "^0.27.5",
 		"vite": "^5.4.11",
 		"vite-bundle-visualizer": "^1.2.1",
-		"vite-plugin-vue-devtools": "^7.6.4",
+		"vite-plugin-vue-devtools": "^7.6.5",
 		"vite-svg-loader": "^5.1.0",
-		"vitest": "^2.1.5",
+		"vitest": "^2.1.6",
 		"vue-tsc": "^2.1.10"
 	},
 	"pnpm": {
 		"overrides": {
-			"@typescript-eslint/eslint-plugin": "^8.15.0",
+			"@typescript-eslint/eslint-plugin": "^8.16.0",
 			"@typescript-eslint/eslint-plugin>eslint": "$eslint",
-			"@typescript-eslint/parser": "^8.15.0",
+			"@typescript-eslint/parser": "^8.16.0",
 			"@typescript-eslint/parser>eslint": "$eslint",
 			"eslint": "$eslint"
 		}
@@ -135,6 +135,6 @@
 		"@typescript-eslint/parser": {
 			"eslint": "^9.15.0"
 		},
-		"@typescript-eslint/typescript-estree": "^8.15.0"
+		"@typescript-eslint/typescript-estree": "^8.16.0"
 	}
 }

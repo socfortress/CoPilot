@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.connectors.grafana.schema.dashboards import BitdefenderDashboard
 from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
+from app.connectors.grafana.schema.dashboards import CatoDashboard
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
 from app.connectors.grafana.schema.dashboards import DarktraceDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
@@ -187,6 +188,7 @@ async def provision_dashboards(
         + list(DuoDashboard)
         + list(DarktraceDashboard)
         + list(BitdefenderDashboard)
+        + list(CatoDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

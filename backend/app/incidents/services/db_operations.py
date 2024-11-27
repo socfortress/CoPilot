@@ -1091,6 +1091,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         ),
     )
     case = result.scalars().first()
@@ -1103,6 +1104,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1117,6 +1119,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             assets=assets,
             tags=tags,
             linked_cases=linked_cases,
+            iocs=iocs,
         )
         alerts_out.append(alert_out)
     case_out = CaseOut(
@@ -1138,6 +1141,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         ),
     )
     cases = result.scalars().all()
@@ -1150,6 +1154,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
             linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+            iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
             alert_out = AlertOut(
                 id=alert.id,
                 alert_creation_time=alert.alert_creation_time,
@@ -1164,6 +1169,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 assets=assets,
                 tags=tags,
                 linked_cases=linked_cases,
+                iocs=iocs,
             )
             alerts_out.append(alert_out)
         case_out = CaseOut(
@@ -1188,6 +1194,8 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         ),
     )
     cases = result.scalars().all()
@@ -1199,6 +1207,8 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+            iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
             alert_out = AlertOut(
                 id=alert.id,
                 alert_creation_time=alert.alert_creation_time,
@@ -1212,6 +1222,8 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
                 comments=comments,
                 assets=assets,
                 tags=tags,
+                linked_cases=linked_cases,
+                iocs=iocs,
             )
             alerts_out.append(alert_out)
         case_out = CaseOut(
@@ -1932,10 +1944,9 @@ async def delete_case(case_id: int, db: AsyncSession):
 
     Raises:
         HTTPException: If the case is not found or there is an error deleting the case.
-
     """
     result = await db.execute(
-        select(Case).options(selectinload(Case.alerts)).where(Case.id == case_id),
+        select(Case).options(selectinload(Case.alerts), selectinload(Case.data_store)).where(Case.id == case_id),
     )
     case = result.scalars().first()
     if not case:
@@ -1943,6 +1954,9 @@ async def delete_case(case_id: int, db: AsyncSession):
 
     # Delete entries from CaseAlertLink table
     await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
+
+    # Delete entries from CaseDataStore table
+    await db.execute(delete(CaseDataStore).where(CaseDataStore.case_id == case_id))
 
     # Delete the case
     await db.execute(delete(Case).where(Case.id == case.id))

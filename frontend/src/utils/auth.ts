@@ -1,6 +1,6 @@
 import type { RouteLocationNormalized } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
-import { type RouteMetaAuth, UserRole } from "@/types/auth.d"
+import { AuthUserRole, type JWTRole, type RouteMetaAuth } from "@/types/auth.d"
 import { decodeJwt } from "jose"
 import _castArray from "lodash/castArray"
 import _toNumber from "lodash/toNumber"
@@ -46,7 +46,7 @@ export function authCheck(route: RouteLocationNormalized) {
 	}
 }
 
-export function scopeToRole(scope: string | string[]): UserRole {
-	const role = _castArray(scope)[0]?.toLowerCase()
-	return role === "admin" ? UserRole.Admin : role === "analyst" ? UserRole.Analyst : UserRole.Unknown
+export function jwtRoleToUserRole(scope: JWTRole | JWTRole[]): AuthUserRole {
+	const role = _castArray(scope)[0]?.toLowerCase() as JWTRole
+	return role === "admin" ? AuthUserRole.Admin : role === "analyst" ? AuthUserRole.Analyst : AuthUserRole.Unknown
 }

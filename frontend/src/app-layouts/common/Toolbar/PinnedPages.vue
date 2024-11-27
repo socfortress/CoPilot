@@ -26,7 +26,7 @@
 					<template #trigger>
 						<button class="shortcuts-btn flex items-center gap-2">
 							<span>Shortcuts</span>
-							<n-badge :value="pinned.length" :color="style['divider-030-color']" />
+							<n-badge :value="pinned.length" color="var(--divider-030-color)" />
 						</button>
 					</template>
 					<div class="flex flex-col">
@@ -59,7 +59,6 @@
 
 <script lang="ts" setup>
 import Icon from "@/components/common/Icon.vue"
-import { useThemeStore } from "@/stores/theme"
 import { type RemovableRef, useStorage } from "@vueuse/core"
 import _split from "lodash/split"
 import _takeRight from "lodash/takeRight"
@@ -77,8 +76,6 @@ interface Page {
 const PinnedIcon = "tabler:pinned"
 const CloseIcon = "carbon:close"
 const router = useRouter()
-const themeStore = useThemeStore()
-const style = computed(() => themeStore.style)
 const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
 const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 const latestSanitized: ComputedRef<Page[]> = computed(() => {
@@ -164,7 +161,7 @@ router.afterEach(route => {
 
 			&.n-tag--closable {
 				&:hover {
-					background-color: var(--bg-sidebar);
+					background-color: var(--hover-color);
 
 					&.n-tag--round {
 						padding: 0 calc(var(--n-height) / 3.6) 0 calc(var(--n-height) / 3.6);
@@ -192,7 +189,7 @@ router.afterEach(route => {
 		border: none;
 
 		&:hover {
-			background-color: var(--bg-secondary-color);
+			background-color: var(--hover-color);
 		}
 	}
 

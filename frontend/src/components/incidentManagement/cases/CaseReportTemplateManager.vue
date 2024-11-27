@@ -73,7 +73,8 @@
 					:key="templateName"
 					size="small"
 					class="overflow-hidden"
-					content-class="flex justify-between items-center bg-secondary flex-wrap gap-4"
+					embedded
+					content-class="flex justify-between items-center flex-wrap gap-4"
 				>
 					<div class="flex gap-3">
 						<n-tooltip to="body">

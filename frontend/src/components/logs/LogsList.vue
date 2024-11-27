@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthUser } from "@/types/auth.d"
+import type { User } from "@/types/user.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import {
@@ -147,7 +147,7 @@ const loadingUsers = ref(false)
 const loading = ref(false)
 const loadingPurge = ref(false)
 const showPurgeConfirm = ref(false)
-const usersList = ref<AuthUser[]>([])
+const usersList = ref<User[]>([])
 const logsList = ref<LogExt[]>([])
 const showFilters = ref(false)
 
@@ -252,7 +252,7 @@ function getData() {
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.auth
+	Api.users
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {

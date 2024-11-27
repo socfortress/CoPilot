@@ -958,3 +958,63 @@ async def verify_alert_creation_provisioning_connection(connector_name: str) -> 
         logger.error("No Alert Creation Provisioning connector found in the database")
         return None
     return await verify_alert_creation_provisioning_healtcheck(attributes)
+
+
+################## ! VIRUSTOTAL ! ##################
+
+
+async def verify_virustotal_healtcheck(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Verifies the connection to VirusTotal service.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status.
+    """
+    logger.info(
+        f"Verifying the VirusTotal connection to {attributes['connector_url']} and API key {attributes['connector_api_key']}",
+    )
+
+    try:
+        virustotal_healthcheck = requests.get(
+            f"{attributes['connector_url']}/files/99017f6eebbac24f351415dd410d522d",
+            verify=False,
+            headers={"x-apikey": attributes["connector_api_key"]},
+        )
+
+        if virustotal_healthcheck.status_code == 200:
+            return {
+                "connectionSuccessful": True,
+                "message": "VirusTotal healthcheck successful",
+            }
+        else:
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {virustotal_healthcheck.text}",
+            )
+
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed",
+            }
+    except Exception as e:
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error.",
+        }
+
+
+async def verify_virustotal_connection(connector_name: str) -> str:
+    """
+    Returns the status of the connection to VirusTotal service.
+    """
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No VirusTotal connector found in the database")
+        return None
+    return await verify_virustotal_healtcheck(attributes)

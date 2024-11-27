@@ -2,7 +2,32 @@ export interface RouteMetaAuth {
 	checkAuth?: boolean
 	authRedirect?: string
 	auth?: boolean
-	roles?: UserRole | UserRole[]
+	roles?: RouteMetaAuthRole | RouteMetaAuthRole[]
+}
+
+export enum RouteRole {
+	All = "all"
+}
+
+export enum AuthUserRole {
+	Unknown = 0,
+	Admin = 1,
+	Analyst = 2
+}
+
+export type RouteMetaAuthRole = AuthUserRole | RouteRole
+
+export interface JWTPayload extends jose.JWTPayload {
+	scopes: JWTRole[]
+}
+
+export type JWTRole = "admin" | "analyst"
+
+export interface AuthUser {
+	access_token: string
+	role: AuthUserRole
+	username: string
+	email: string
 }
 
 export interface LoginPayload {
@@ -23,24 +48,4 @@ export interface RegisterPayload {
 	imageFile: string
 	notifications: number
 	*/
-}
-
-export enum UserRole {
-	All = "all",
-	Unknown = 0,
-	Admin = 1,
-	Analyst = 2
-}
-
-export interface User {
-	access_token: string
-	role: UserRole
-	username: string
-	email: string
-}
-
-export interface AuthUser {
-	id: number
-	username: string
-	email: string
 }

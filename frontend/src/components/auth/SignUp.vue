@@ -159,10 +159,10 @@ import {
 	NSteps,
 	useMessage
 } from "naive-ui"
-import isEmail from "validator/es/lib/isEmail"
-import { computed, ref } from "vue"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import PasswordValidator from "password-validator"
+import isEmail from "validator/es/lib/isEmail"
+import { computed, ref } from "vue"
 
 interface ModelType {
 	email: string

@@ -102,18 +102,81 @@
 			/>
 		</CollapseKeepAlive>
 
+		<n-collapse-transition
+			:show="!!checkedAlerts.length"
+			style="position: sticky; top: calc(var(--toolbar-height) - 24px); z-index: 1"
+		>
+			<n-card content-class="flex flex-wrap items-center gap-3" size="small" class="mt-3 shadow-xl" embedded>
+				<n-popover content-class="!p-0">
+					<template #trigger>
+						<n-button secondary size="small">
+							<div class="flex min-w-8 items-center gap-2">
+								<span>Selected</span>
+								<n-badge
+									:value="checkedAlerts.length"
+									color="var(--divider-030-color)"
+									class="!font-mono"
+								/>
+							</div>
+						</n-button>
+					</template>
+					<template #default>
+						<div class="py-4">
+							<n-scrollbar trigger="none" class="max-h-150 px-3 [&_.n-scrollbar-container]:rounded-lg">
+								<div class="flex max-w-lg flex-col gap-2">
+									<AlertItem
+										v-for="alert of checkedAlerts"
+										:key="alert.id"
+										embedded
+										compact
+										selectable
+										checked
+										:alert-data="alert"
+										@check="toggleCheck(alert)"
+										@deleted="deleted(alert)"
+										@updated="updateAlert($event)"
+									/>
+								</div>
+							</n-scrollbar>
+						</div>
+					</template>
+					<template #footer>
+						<div class="flex justify-between">
+							<n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
+							<n-button size="small" secondary @click="resetChecked()">Uncheck all</n-button>
+						</div>
+					</template>
+				</n-popover>
+
+				<n-popconfirm to="body" @positive-click="deleteAlerts()">
+					<template #trigger>
+						<n-button size="small" type="error" secondary :loading="deleting">
+							<template #icon>
+								<Icon :name="TrashIcon" />
+							</template>
+							Delete
+						</n-button>
+					</template>
+					Are you sure you want to delete selected Alerts?
+				</n-popconfirm>
+			</n-card>
+		</n-collapse-transition>
+
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsList.length">
 					<AlertItem
 						v-for="alert of alertsList"
 						:key="alert.id"
+						selectable
+						:checked="isChecked(alert)"
 						:alert-data="alert"
 						:highlight="highlight === alert.id.toString()"
 						:details-on-mounted="highlight === alert.id.toString() && !highlightedItemOpened"
 						class="item-appear item-appear-bottom item-appear-005"
+						@check="toggleCheck(alert)"
 						@opened="highlightedItemOpened = true"
-						@deleted="getData()"
+						@deleted="deleted(alert)"
 						@updated="updateAlert($event)"
 					/>
 				</template>
@@ -145,7 +208,20 @@ import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _orderBy from "lodash/orderBy"
-import { NBadge, NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import {
+	NBadge,
+	NButton,
+	NCard,
+	NCollapseTransition,
+	NEmpty,
+	NPagination,
+	NPopconfirm,
+	NPopover,
+	NScrollbar,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
 import { computed, nextTick, onBeforeMount, provide, ref, watch } from "vue"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
@@ -161,10 +237,13 @@ const {
 }>()
 
 const FilterIcon = "carbon:filter-edit"
+const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 
+const checkedAlerts = ref<Alert[]>([])
 const message = useMessage()
 const loading = ref(false)
+const deleting = ref(false)
 const showFiltersView = useStorage<boolean>("incident-management-alerts-list-filters-view-state", false, localStorage)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
@@ -248,6 +327,45 @@ function updateAlert(updatedAlert: Alert) {
 	}
 }
 
+function isChecked(alert: Alert) {
+	return !!checkedAlerts.value.find(o => o.id === alert.id)
+}
+
+function toggleCheck(alert: Alert) {
+	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
+
+	if (checkedAlerts.value.find(o => o.id === alert.id)) {
+		checkedAlerts.value.splice(alertIndex, 1)
+	} else {
+		checkedAlerts.value.push(alert)
+	}
+}
+
+function resetChecked() {
+	checkedAlerts.value = []
+}
+
+function setALlChecked() {
+	for (const alert of alertsList.value) {
+		if (!isChecked(alert)) {
+			toggleCheck(alert)
+		}
+	}
+}
+
+function removeChecked(alert: Alert) {
+	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
+
+	if (checkedAlerts.value.find(o => o.id === alert.id)) {
+		checkedAlerts.value.splice(alertIndex, 1)
+	}
+}
+
+function deleted(alert: Alert) {
+	removeChecked(alert)
+	getData()
+}
+
 function getData() {
 	abortController?.abort()
 	abortController = new AbortController()
@@ -315,6 +433,40 @@ function getCases() {
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
+function deleteAlerts() {
+	deleting.value = true
+
+	Api.incidentManagement
+		.deleteAlerts(checkedAlerts.value.map(o => o.id))
+		.then(res => {
+			if (res.data.success) {
+				if (res.data.deleted_alert_ids.length) {
+					for (const id of res.data.deleted_alert_ids) {
+						toggleCheck({ id } as Alert)
+					}
+
+					if (res.data.not_deleted_alert_ids.length) {
+						message.warning("Some alerts could not be deleted.")
+					} else {
+						message.success(res.data?.message || "Alerts deleted successfully.")
+					}
+				} else {
+					message.warning("The selected alerts could not be deleted")
+				}
+
+				getData()
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			deleting.value = false
 		})
 }
 

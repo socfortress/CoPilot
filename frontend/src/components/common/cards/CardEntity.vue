@@ -107,7 +107,7 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 		.main-box,
 		.extra-box,
 		.footer-box {
-			@apply gap-3 px-5 py-3;
+			@apply gap-3 p-4;
 		}
 
 		.main-box {
@@ -122,7 +122,7 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 			.main-box,
 			.extra-box,
 			.footer-box {
-				@apply gap-2 px-3 py-2;
+				@apply gap-2 p-3;
 			}
 
 			.main-box {
@@ -138,7 +138,7 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 			.main-box,
 			.extra-box,
 			.footer-box {
-				@apply gap-6 px-8 py-6;
+				@apply gap-6 p-6;
 			}
 
 			.main-box {

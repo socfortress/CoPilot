@@ -22,14 +22,7 @@
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
 			<div class="w-full">
-				<n-button
-					type="primary"
-					class="!w-full"
-					size="large"
-					:loading="loading"
-					:disabled="!isValid"
-					@click="signIn"
-				>
+				<n-button type="primary" class="!w-full" size="large" :loading :disabled="!isValid" @click="signIn">
 					Sign in
 				</n-button>
 			</div>

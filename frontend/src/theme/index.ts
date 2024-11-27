@@ -80,6 +80,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 
 	const tabFgColorActive = naive.textColor2
 	const borderColor = naive.dividerColor
+	const hoverColor = naive.hoverColor
 	const primaryColor = naive.primaryColor
 
 	const successColor = naive.successColor
@@ -209,6 +210,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"bg-secondary-color": `${bgSecondaryColor}`,
 
 		"border-color": `${borderColor}`,
+		"hover-color": `${hoverColor}`,
 		"bezier-ease": `${bezierEase}`,
 		"router-transition-duration": `${routerTransitionDuration}s`,
 		"sidebar-anim-ease": `${sidebarAnimEase}`,

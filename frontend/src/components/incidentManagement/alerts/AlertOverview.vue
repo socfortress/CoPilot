@@ -138,7 +138,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box flex items-center gap-2 px-7 py-4">
+			<div class="footer-box bg-secondary flex items-center gap-2 px-7 py-4">
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
@@ -223,6 +223,5 @@ function handleDelete() {
 <style lang="scss" scoped>
 .footer-box {
 	border-top: var(--border-small-100);
-	background-color: var(--bg-secondary-color);
 }
 </style>

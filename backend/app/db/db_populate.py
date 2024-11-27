@@ -143,6 +143,12 @@ def get_connectors_list():
                 "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"
             ),
         ),
+        (
+            "VirusTotal",
+            "3",
+            "api_key",
+            "Connection to VirusTotal. Make sure you have created an API key.",
+        ),
         # ... Add more connectors as needed ...
     ]
 
@@ -323,6 +329,7 @@ def get_available_integrations_list():
         ("DUO", "Integrate DUO with SOCFortress."),
         ("Darktrace", "Integrate Darktrace with SOCFortress."),
         ("BitDefender", "Integrate BitDefender with SOCFortress."),
+        ("CATO", "Integrate CATO NETWORKS with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -457,6 +464,10 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("BitDefender", "WEBSERVER_PORT"),
         ("BitDefender", "GRAYLOG_PORT"),
         ("BitDefender", "API_KEY"),
+        ("CATO", "API_KEY"),
+        ("CATO", "ACCOUNT_ID"),
+        ("CATO", "EVENT_TYPES"),
+        ("CATO", "EVENT_SUB_TYPES"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

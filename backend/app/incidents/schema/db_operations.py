@@ -20,6 +20,10 @@ from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 
 
+class DeleteAlertsRequest(BaseModel):
+    alert_ids: List[int]
+
+
 class SocfortressRecommendsWazuhFieldNames(Enum):
     # ! Windows Events
     data_win_eventdata_commandLine = "data_win_eventdata_commandLine"
@@ -40,6 +44,13 @@ class SocfortressRecommendsWazuhFieldNames(Enum):
     # ! Extra Use for Within CoPilot
     process_id = "process_id"
     sha256 = "sha256"
+
+
+class DeleteAlertsResponse(BaseModel):
+    message: str
+    deleted_alert_ids: List[int]
+    not_deleted_alert_ids: List[int]
+    success: bool
 
 
 class SocfortressRecommendsWazuhAssetName(Enum):
@@ -368,6 +379,15 @@ class CaseOut(BaseModel):
 
 class CaseOutResponse(BaseModel):
     cases: List[CaseOut]
+    success: bool
+    message: str
+
+
+class CaseNotificationCreate(BaseModel):
+    case_id: int
+
+
+class CaseNotificationResponse(BaseModel):
     success: bool
     message: str
 

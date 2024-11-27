@@ -52,6 +52,8 @@ from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
+from app.incidents.schema.db_operations import CaseNotificationCreate
+from app.incidents.schema.db_operations import CaseNotificationResponse
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
@@ -60,6 +62,8 @@ from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
+from app.incidents.schema.db_operations import DeleteAlertsRequest
+from app.incidents.schema.db_operations import DeleteAlertsResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
@@ -74,6 +78,8 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhRespons
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.incidents.schema.incident_alert import CreatedAlertPayload
+from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
@@ -181,6 +187,7 @@ from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import upload_report_template
 from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
+from app.incidents.services.incident_case import handle_customer_notifications_case
 
 incidents_db_operations_router = APIRouter()
 
@@ -560,6 +567,44 @@ async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db
     return {"message": "Alert deleted successfully", "success": True}
 
 
+@incidents_db_operations_router.delete("/alerts", response_model=DeleteAlertsResponse)
+async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to delete alerts.
+
+    This endpoint deletes alerts based on the provided list of alert IDs. If an alert is linked to a case, it will not be deleted and will be skipped.
+
+    Args:
+        request (DeleteAlertsRequest): Request object containing the list of alert IDs to be deleted.
+        db (AsyncSession, optional): Database session dependency.
+
+    Returns:
+        DeleteAlertsResponse: Response object containing the status of the deletion process, including lists of successfully deleted alert IDs and those that were not deleted.
+
+    Raises:
+        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case.
+    """
+    deleted_alert_ids = []
+    not_deleted_alert_ids = []
+    for alert_id in request.alert_ids:
+        try:
+            await is_alert_linked_to_case(alert_id, db)
+            await delete_alert(alert_id, db)
+            deleted_alert_ids.append(alert_id)
+        except HTTPException as e:
+            if e.status_code == 400:
+                logger.info(f"Alert {alert_id} is linked to a case and cannot be deleted. Skipping.")
+                not_deleted_alert_ids.append(alert_id)
+            else:
+                raise e
+    return DeleteAlertsResponse(
+        message="Alerts processed successfully",
+        deleted_alert_ids=deleted_alert_ids,
+        not_deleted_alert_ids=not_deleted_alert_ids,
+        success=True,
+    )
+
+
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=AlertOutResponse)
 async def list_alerts_by_status_endpoint(
     status: AlertStatus,
@@ -891,6 +936,43 @@ async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db:
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
 async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+
+
+@incidents_db_operations_router.post("/case/notification", response_model=CaseNotificationResponse)
+async def create_case_notification_endpoint(request: CaseNotificationCreate, db: AsyncSession = Depends(get_db)):
+    """
+    This function collects the case details and then invokes the create_case_notification function to create a new case notification within the Shuffle Workflow.
+
+    Args:
+        request (CaseNotificationCreate): The request object containing the case details.
+        db (AsyncSession, optional): The database session dependency.
+
+    Returns:
+        CaseNotificationResponse: The response object containing the created case notification.
+    """
+    case_details = await get_case_by_id(request.case_id, db)
+    case_notification_payload = CreatedCaseNotificationPayload(
+        case_name=case_details.case_name,
+        case_description=case_details.case_description,
+        case_creation_time=case_details.case_creation_time,
+        alerts=[
+            CreatedAlertPayload(
+                alert_context_payload=(await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context
+                if alert.assets
+                else None,  # Populate with actual alert context data
+                asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
+                timefield_payload="",  # Populate with actual timefield data
+                alert_title_payload=alert.alert_name,  # Populate with actual alert title data
+                ioc_payload={ioc.value: ioc.type for ioc in alert.iocs} if alert.iocs else {},  # Populate with actual IoC data if available
+                source=alert.source,
+            )
+            for alert in case_details.alerts
+        ],
+    )
+
+    logger.info(f"Creating case notification for case {case_notification_payload}")
+    await handle_customer_notifications_case(customer_code=case_details.customer_code, case_payload=case_notification_payload, session=db)
+    return CaseNotificationResponse(success=True, message="Case notification created successfully")
 
 
 @incidents_db_operations_router.get("/case-report-template", response_model=CaseReportTemplateDataStoreListResponse)

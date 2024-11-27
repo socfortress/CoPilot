@@ -27,6 +27,7 @@ from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_co
 from app.integrations.utils.event_shipper import verify_event_shipper_connection
 from app.utils import verify_alert_creation_provisioning_connection
 from app.utils import verify_haproxy_provisioning_connection
+from app.utils import verify_virustotal_connection
 from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "data"
@@ -169,6 +170,15 @@ class AlertCreationService(ConnectorServiceInterface):
         )
 
 
+# Virustotal Service
+class VirustotalService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_virustotal_connection(connector.connector_name)
+
+
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
     """
@@ -194,6 +204,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "HAProxy Provisioning": HAProxyProvisioningService,
         "Event Shipper": EventShipperService,
         "Alert Creation Provisioning": AlertCreationService,
+        "VirusTotal": VirustotalService,
     }
     return service_map.get(connector_name, None)
 

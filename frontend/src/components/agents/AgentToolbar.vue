@@ -126,7 +126,7 @@ const textFilter = computed<string>({
 					}
 
 					&:hover {
-						background-color: var(--bg-secondary-color);
+						background-color: var(--hover-color);
 					}
 				}
 			}

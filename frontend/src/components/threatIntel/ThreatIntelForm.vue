@@ -8,7 +8,7 @@
 			<div class="flex justify-end">
 				<n-button type="primary" :disabled="!isValid" @click="create()">Submit</n-button>
 			</div>
-			<div v-if="error || !!response" class="response" :class="{ error }">
+			<div v-if="error || !!response" class="response bg-secondary" :class="{ error }">
 				<div v-if="error" class="message">
 					{{ error }}
 				</div>
@@ -146,7 +146,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .response {
-	background-color: var(--bg-secondary-color);
 	border-radius: var(--border-radius);
 	border: 1px solid var(--success-color);
 
