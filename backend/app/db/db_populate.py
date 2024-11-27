@@ -143,6 +143,12 @@ def get_connectors_list():
                 "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"
             ),
         ),
+        (
+            "VirusTotal",
+            "3",
+            "api_key",
+            "Connection to VirusTotal. Make sure you have created an API key.",
+        ),
         # ... Add more connectors as needed ...
     ]
 
