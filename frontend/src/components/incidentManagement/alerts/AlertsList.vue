@@ -112,7 +112,11 @@
 						<n-button secondary size="small">
 							<div class="flex min-w-8 items-center gap-2">
 								<span>Selected</span>
-								<NumberFlow :value="checkedAlerts.length" class="font-mono" />
+								<n-badge
+									:value="checkedAlerts.length"
+									color="var(--divider-030-color)"
+									class="!font-mono"
+								/>
 							</div>
 						</n-button>
 					</template>
@@ -137,7 +141,8 @@
 						</div>
 					</template>
 					<template #footer>
-						<div class="flex justify-end">
+						<div class="flex justify-between">
+							<n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
 							<n-button size="small" secondary @click="resetChecked()">Uncheck all</n-button>
 						</div>
 					</template>
@@ -200,7 +205,6 @@ import type { AlertsListFilter } from "./types.d"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
-import NumberFlow from "@number-flow/vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _orderBy from "lodash/orderBy"
@@ -339,6 +343,14 @@ function toggleCheck(alert: Alert) {
 
 function resetChecked() {
 	checkedAlerts.value = []
+}
+
+function setALlChecked() {
+	for (const alert of alertsList.value) {
+		if (!isChecked(alert)) {
+			toggleCheck(alert)
+		}
+	}
 }
 
 function removeChecked(alert: Alert) {
