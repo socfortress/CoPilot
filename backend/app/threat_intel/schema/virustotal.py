@@ -5,7 +5,7 @@ class AnalysisResult(BaseModel):
     method: str
     engine_name: str
     category: str
-    result: str
+    result: Optional[str] = Field(default=None)
 
     class Config:
         extra = Extra.allow
@@ -24,7 +24,7 @@ class TotalVotes(BaseModel):
 
 class Attributes(BaseModel):
     total_votes: TotalVotes
-    last_analysis_results: Dict[str, AnalysisResult]
+    last_analysis_results: Optional[Dict[str, AnalysisResult]] = Field(default=None)
     regional_internet_registry: Optional[str] = Field(default=None)
     continent: Optional[str] = Field(default=None)
     last_modification_date: Optional[int] = Field(default=None)
