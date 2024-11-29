@@ -120,23 +120,32 @@ async def threat_intel_virustotal(
     """
     logger.info("Running VirusTotal Threat Intel.")
 
-    virustotal_response = await invoke_virustotal_api(
-        url=await get_connector_attribute(
-            connector_name="VirusTotal",
-            column_name="connector_url",
-            session=session,
-        ),
-        api_key=await get_connector_attribute(
-            connector_name="VirusTotal",
-            column_name="connector_api_key",
-            session=session,
-        ),
-        request=request,
-    )
+    # Check if the connector is verified
+    if not await get_connector_attribute(
+        connector_name="VirusTotal",
+        column_name="connector_verified",
+        session=session,
+    ):
+        raise HTTPException(
+            status_code=500,
+            detail="VirusTotal connector is not verified.",
+        )
 
-    logger.info(f"VirusTotal Response: {virustotal_response}")
+
     return VirusTotalRouteResponse(
-        data=virustotal_response,
+        data=await invoke_virustotal_api(
+            url=await get_connector_attribute(
+                connector_name="VirusTotal",
+                column_name="connector_url",
+                session=session,
+            ),
+            api_key=await get_connector_attribute(
+                connector_name="VirusTotal",
+                column_name="connector_api_key",
+                session=session,
+            ),
+            request=request,
+        ),
         success=True,
         message="VirusTotal threat intelligence lookup was successful.",
     )
