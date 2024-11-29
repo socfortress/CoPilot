@@ -13,7 +13,7 @@ from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
-from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import IoCResponse, VirusTotalThreatIntelRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
 from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
@@ -27,7 +27,7 @@ from app.threat_intel.services.socfortress import (
     socfortress_wazuh_exclusion_rule_lookup,
 )
 from app.utils import get_connector_attribute
-
+from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
 # App specific imports
 
 threat_intel_socfortress_router = APIRouter()
@@ -97,12 +97,12 @@ async def threat_intel_socfortress(
 
 @threat_intel_socfortress_router.post(
     "/virustotal",
-    response_model=IoCResponse,
+    response_model=VirusTotalRouteResponse,
     description="VirusTotal Enrichment Threat Intel",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def threat_intel_virustotal(
-    request: SocfortressThreatIntelRequest,
+    request: VirusTotalThreatIntelRequest,
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -111,7 +111,7 @@ async def threat_intel_virustotal(
     This endpoint allows authorized users with 'admin' or 'analyst' scope to perform VirusTotal threat intelligence lookup.
 
     Parameters:
-    - request: SocfortressThreatIntelRequest - The request payload containing the necessary information for the lookup.
+    - request: VirusTotalThreatIntelRequest - The request payload containing the necessary information for the lookup.
     - session: AsyncSession (optional) - The database session to use for the lookup.
     - _key_exists: bool (optional) - A dependency to ensure the API key exists.
 
@@ -135,7 +135,11 @@ async def threat_intel_virustotal(
     )
 
     logger.info(f"VirusTotal Response: {virustotal_response}")
-    return None
+    return VirusTotalRouteResponse(
+        data=virustotal_response,
+        success=True,
+        message="VirusTotal threat intelligence lookup was successful.",
+    )
 
 
 

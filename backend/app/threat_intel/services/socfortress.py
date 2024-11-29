@@ -21,6 +21,7 @@ from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRe
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.utils import get_connector_attribute
+from app.threat_intel.schema.virustotal import VirusTotalResponse
 
 
 async def get_socfortress_threat_intel_attributes(
@@ -194,7 +195,7 @@ async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
     async with httpx.AsyncClient() as client:
         response = await client.get(full_url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        return VirusTotalResponse.parse_obj(response.json())
 
 async def invoke_virustotal_api(
     api_key: str,
