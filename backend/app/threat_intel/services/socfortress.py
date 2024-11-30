@@ -168,6 +168,7 @@ def determine_ioc_type(ioc_value: str) -> str:
     ip_pattern = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
     domain_pattern = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
     hash_pattern = re.compile(r"^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$")
+    url_pattern = re.compile(r"^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$")
 
     if ip_pattern.match(ioc_value):
         return f"/ip_addresses/{ioc_value}"
@@ -175,20 +176,28 @@ def determine_ioc_type(ioc_value: str) -> str:
         return f"/domains/{ioc_value}"
     elif hash_pattern.match(ioc_value):
         return f"/files/{ioc_value}"
+    elif url_pattern.match(ioc_value):
+        raise HTTPException(
+            status_code=400,
+            detail="URL scanning is currently not supported.",
+        )
+        return "/urls"
     else:
         raise HTTPException(
             status_code=400,
-            detail="Invalid IOC value provided. Only IP addresses, domains, and hashes are supported.",
+            detail="Invalid IOC value provided. Only IP addresses, domains, URLs, and hashes are supported.",
         )
 
 
-async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
+async def fetch_virustotal_data(api_key: str, full_url: str, ioc_value: str, is_url: bool) -> dict:
     """
     Fetch data from the VirusTotal API.
 
     Args:
         api_key (str): The API key for authentication.
         full_url (str): The full URL of the VirusTotal API endpoint.
+        ioc_value (str): The IOC value.
+        is_url (bool): Flag indicating if the IOC value is a URL.
 
     Returns:
         dict: The JSON response from the VirusTotal API.
@@ -198,7 +207,16 @@ async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
     """
     headers = {"x-apikey": api_key}
     async with httpx.AsyncClient() as client:
-        response = await client.get(full_url, headers=headers)
+        if is_url:
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+            data = {"url": ioc_value}
+            response = await client.post(full_url, headers=headers, data=data)
+            response.raise_for_status()
+            analysis_id = response.json()["data"]["id"]
+            url_report_url = f"https://www.virustotal.com/api/v3/urls/{analysis_id}"
+            response = await client.get(url_report_url, headers=headers)
+        else:
+            response = await client.get(full_url, headers=headers)
         response.raise_for_status()
         return VirusTotalResponse.parse_obj(response.json())
 
@@ -225,7 +243,8 @@ async def invoke_virustotal_api(
     ioc_value = request.ioc_value
     endpoint = determine_ioc_type(ioc_value)
     full_url = f"{url}{endpoint}"
-    return await fetch_virustotal_data(api_key, full_url)
+    is_url = endpoint == "/urls"
+    return await fetch_virustotal_data(api_key, full_url, ioc_value, is_url)
 
 
 async def invoke_socfortress_process_name_api(
