@@ -24,7 +24,7 @@
 				</div>
 				<div class="list flex flex-col">
 					<div
-						v-for="item of sanitizedValues"
+						v-for="item of listValues"
 						:key="JSON.stringify(item)"
 						class="item flex items-center gap-3"
 						:class="item.status"
@@ -49,7 +49,7 @@
 import Icon from "@/components/common/Icon.vue"
 import _round from "lodash/round"
 import { NCard } from "naive-ui"
-import { computed, toRefs } from "vue"
+import { computed } from "vue"
 
 export interface ItemProps {
 	value: number
@@ -62,19 +62,25 @@ interface ItemPropsExt extends ItemProps {
 	percentage: number
 }
 
-const props = defineProps<{
+const {
+	title,
+	values,
+	showTotal = true,
+	showZeroItems,
+	hovered
+} = defineProps<{
 	title: string
 	values: ItemProps[]
+	showTotal?: boolean
 	showZeroItems?: boolean
 	hovered?: boolean
 }>()
-const { title, values, showZeroItems, hovered } = toRefs(props)
 
 const ArrowRightIcon = "carbon:arrow-right"
 const totItem = computed(
 	() =>
-		values.value.find(item => item.isTotal) || {
-			value: values.value.reduce((acc, cur) => {
+		values.find(item => item.isTotal) || {
+			value: values.reduce((acc, cur) => {
 				return acc + cur.value
 			}, 0),
 			isTotal: true,
@@ -83,13 +89,17 @@ const totItem = computed(
 )
 
 const sanitizedValues = computed<ItemPropsExt[]>(() => {
-	const list: ItemPropsExt[] = values.value
+	const list: ItemPropsExt[] = values
 		.filter(o => !o.isTotal)
 		.map(o => ({ ...o, percentage: _round((o.value / totItem.value.value) * 100, 2) }))
-		.filter(o => o.value || (!o.value && showZeroItems.value))
+		.filter(o => o.value || (!o.value && showZeroItems))
 
 	return [{ ...totItem.value, percentage: 100 }, ...list]
 })
+
+const listValues = computed<ItemPropsExt[]>(() =>
+	sanitizedValues.value.filter(o => !o.isTotal || (showTotal && o.isTotal))
+)
 
 const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o => !o.isTotal && o.percentage))
 </script>

@@ -1,3 +1,4 @@
+import re
 from typing import Any
 from typing import Dict
 
@@ -19,6 +20,7 @@ from app.threat_intel.schema.socfortress import (
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.schema.virustotal import VirusTotalResponse
 from app.utils import get_connector_attribute
 
 
@@ -148,6 +150,82 @@ async def invoke_socfortress_threat_intel_api(
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
         return response.json()
+
+
+def determine_ioc_type(ioc_value: str) -> str:
+    """
+    Determine the type of the IOC value and return the appropriate endpoint.
+
+    Args:
+        ioc_value (str): The IOC value.
+
+    Returns:
+        str: The endpoint for the IOC value.
+
+    Raises:
+        ValueError: If the IOC value is invalid.
+    """
+    ip_pattern = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+    domain_pattern = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
+    hash_pattern = re.compile(r"^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$")
+
+    if ip_pattern.match(ioc_value):
+        return f"/ip_addresses/{ioc_value}"
+    elif domain_pattern.match(ioc_value):
+        return f"/domains/{ioc_value}"
+    elif hash_pattern.match(ioc_value):
+        return f"/files/{ioc_value}"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid IOC value provided. Only IP addresses, domains, and hashes are supported.",
+        )
+
+
+async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
+    """
+    Fetch data from the VirusTotal API.
+
+    Args:
+        api_key (str): The API key for authentication.
+        full_url (str): The full URL of the VirusTotal API endpoint.
+
+    Returns:
+        dict: The JSON response from the VirusTotal API.
+
+    Raises:
+        httpx.HTTPStatusError: If the API request fails with a non-successful status code.
+    """
+    headers = {"x-apikey": api_key}
+    async with httpx.AsyncClient() as client:
+        response = await client.get(full_url, headers=headers)
+        response.raise_for_status()
+        return VirusTotalResponse.parse_obj(response.json())
+
+
+async def invoke_virustotal_api(
+    api_key: str,
+    url: str,
+    request: SocfortressThreatIntelRequest,
+) -> dict:
+    """
+    Invokes the VirusTotal API with the provided API key, URL, and request parameters.
+
+    Args:
+        api_key (str): The API key for authentication.
+        url (str): The base URL of the VirusTotal API.
+        request (SocfortressThreatIntelRequest): The request object containing the IOC value and customer code.
+
+    Returns:
+        dict: The JSON response from the VirusTotal API.
+
+    Raises:
+        httpx.HTTPStatusError: If the API request fails with a non-successful status code.
+    """
+    ioc_value = request.ioc_value
+    endpoint = determine_ioc_type(ioc_value)
+    full_url = f"{url}{endpoint}"
+    return await fetch_virustotal_data(api_key, full_url)
 
 
 async def invoke_socfortress_process_name_api(

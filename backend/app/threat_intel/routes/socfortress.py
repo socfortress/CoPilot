@@ -20,6 +20,9 @@ from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleR
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.schema.socfortress import VirusTotalThreatIntelRequest
+from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
+from app.threat_intel.services.socfortress import invoke_virustotal_api
 from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
@@ -94,6 +97,61 @@ async def threat_intel_socfortress(
         session=session,
     )
     return socfortress_lookup
+
+
+@threat_intel_socfortress_router.post(
+    "/virustotal",
+    response_model=VirusTotalRouteResponse,
+    description="VirusTotal Enrichment Threat Intel",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def threat_intel_virustotal(
+    request: VirusTotalThreatIntelRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint for VirusTotal Threat Intel.
+
+    This endpoint allows authorized users with 'admin' or 'analyst' scope to perform VirusTotal threat intelligence lookup.
+
+    Parameters:
+    - request: VirusTotalThreatIntelRequest - The request payload containing the necessary information for the lookup.
+    - session: AsyncSession (optional) - The database session to use for the lookup.
+    - _key_exists: bool (optional) - A dependency to ensure the API key exists.
+
+    Returns:
+    - IoCResponse: The response model containing the results of the VirusTotal threat intelligence lookup.
+    """
+    logger.info("Running VirusTotal Threat Intel.")
+
+    # Check if the connector is verified
+    if not await get_connector_attribute(
+        connector_name="VirusTotal",
+        column_name="connector_verified",
+        session=session,
+    ):
+        raise HTTPException(
+            status_code=500,
+            detail="VirusTotal connector is not verified.",
+        )
+
+    return VirusTotalRouteResponse(
+        data=await invoke_virustotal_api(
+            url=await get_connector_attribute(
+                connector_name="VirusTotal",
+                column_name="connector_url",
+                session=session,
+            ),
+            api_key=await get_connector_attribute(
+                connector_name="VirusTotal",
+                column_name="connector_api_key",
+                session=session,
+            ),
+            request=request,
+        ),
+        success=True,
+        message="VirusTotal threat intelligence lookup was successful.",
+    )
 
 
 @threat_intel_socfortress_router.post(

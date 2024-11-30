@@ -12,6 +12,7 @@
 		"colord",
 		"commonmark",
 		"creationdate",
+		"crowdsourced",
 		"Crowdstrike",
 		"darktrace",
 		"datejs",
@@ -32,6 +33,7 @@
 		"iconoir",
 		"Indicies",
 		"iocs",
+		"jarm",
 		"lastupdate",
 		"linebreak",
 		"Logsource",
@@ -67,6 +69,7 @@
 		"virustotal",
 		"vuesjv",
 		"Wazuh",
+		"whois",
 		"xaxis",
 		"zondicons"
 	]

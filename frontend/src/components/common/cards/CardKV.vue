@@ -3,16 +3,17 @@
 		<div v-if="$slots.key" class="key">
 			<slot name="key"></slot>
 		</div>
-		<div v-if="$slots.value" class="value">
+		<div v-if="$slots.value" class="value" :class="valueClass">
 			<slot name="value"></slot>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-const { color } = defineProps<{
+const { color, size, valueClass } = defineProps<{
 	color?: "danger" | "warning" | "success" | "primary"
 	size?: "lg"
+	valueClass?: string
 }>()
 </script>
 
