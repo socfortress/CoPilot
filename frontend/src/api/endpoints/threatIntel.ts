@@ -4,7 +4,8 @@ import type {
 	AiWazuhExclusionRuleResponse,
 	EpssScore,
 	EvaluationData,
-	ThreatIntelResponse
+	ThreatIntelResponse,
+	VirusTotalResponse
 } from "@/types/threatIntel.d"
 import { HttpClient } from "../httpClient"
 
@@ -44,5 +45,10 @@ export default {
 				index_id: indexId
 			}
 		)
+	},
+	virusTotalEnrichment(iocValue: string) {
+		return HttpClient.post<FlaskBaseResponse & VirusTotalResponse>(`/threat_intel/virustotal`, {
+			ioc_value: iocValue
+		})
 	}
 }

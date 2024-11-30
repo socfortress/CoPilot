@@ -1,11 +1,11 @@
 {
 	"global": {
 		"border-radius-base": {
-			"value": "6px",
+			"value": "8px",
 			"type": "borderRadius"
 		},
 		"border-radius-small": {
-			"value": "3px",
+			"value": "4px",
 			"type": "borderRadius"
 		},
 		"line-heights-base": {
@@ -13,7 +13,7 @@
 			"type": "lineHeights"
 		},
 		"font-sizes-base": {
-			"value": "15px",
+			"value": "16px",
 			"type": "fontSizes"
 		},
 		"font-sizes-card-title": {
@@ -802,7 +802,7 @@
 			"value": {
 				"fontFamily": "{font-families-base}",
 				"fontSize": "{font-sizes-base}",
-				"lineHeight": "20"
+				"lineHeight": "22"
 			},
 			"type": "typography"
 		}

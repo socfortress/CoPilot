@@ -8,20 +8,24 @@
 			<p class="mt-2">{{ ioc.description }}</p>
 		</template>
 		<template #footerExtra>
-			<n-popconfirm
-				v-model:show="showDeleteConfirm"
-				trigger="manual"
-				to="body"
-				@positive-click="deleteIoc()"
-				@clickoutside="showDeleteConfirm = false"
-			>
-				<template #trigger>
-					<n-button quaternary size="tiny" :loading="canceling" @click.stop="showDeleteConfirm = true">
-						Delete
-					</n-button>
-				</template>
-				Are you sure you want to delete this IoC?
-			</n-popconfirm>
+			<div class="flex items-center justify-end gap-3">
+				<VirusTotalEnrichmentButton :ioc-value="ioc.value" />
+
+				<n-popconfirm
+					v-model:show="showDeleteConfirm"
+					trigger="manual"
+					to="body"
+					@positive-click="deleteIoc()"
+					@clickoutside="showDeleteConfirm = false"
+				>
+					<template #trigger>
+						<n-button quaternary size="tiny" :loading="canceling" @click.stop="showDeleteConfirm = true">
+							Delete
+						</n-button>
+					</template>
+					Are you sure you want to delete this IoC?
+				</n-popconfirm>
+			</div>
 		</template>
 	</CardEntity>
 </template>
@@ -30,6 +34,7 @@
 import type { AlertIOC } from "@/types/incidentManagement/alerts"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
 
