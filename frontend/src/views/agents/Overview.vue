@@ -37,12 +37,13 @@
 							{{ agent?.hostname }}
 						</h1>
 
-						<span v-if="isOnline" class="online-badge">ONLINE</span>
-
-						<span v-if="isQuarantined" class="quarantined-badge flex items-center gap-1">
-							<Icon :name="QuarantinedIcon" :size="15"></Icon>
+						<n-tag v-if="isOnline" type="success" round :bordered="false">ONLINE</n-tag>
+						<n-tag v-if="isQuarantined" type="warning" round :bordered="false">
+							<template #icon>
+								<Icon :name="QuarantinedIcon"></Icon>
+							</template>
 							<span>QUARANTINED</span>
-						</span>
+						</n-tag>
 					</div>
 					<div class="label text-secondary mt-2">Agent #{{ agent?.agent_id }}</div>
 				</div>
@@ -147,7 +148,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { type Agent, AgentStatus } from "@/types/agents.d"
-import { NButton, NCard, NSpin, NTabPane, NTabs, NTooltip, useDialog, useMessage } from "naive-ui"
+import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
@@ -333,19 +334,6 @@ onBeforeMount(() => {
 			.critical {
 				display: flex;
 				align-items: center;
-			}
-			.online-badge,
-			.quarantined-badge {
-				border: 2px solid var(--success-color);
-				color: var(--success-color);
-				font-weight: bold;
-				border-radius: var(--border-radius);
-				@apply px-2 py-1 text-xs;
-			}
-
-			.quarantined-badge {
-				border-color: var(--warning-color);
-				color: var(--warning-color);
 			}
 		}
 
