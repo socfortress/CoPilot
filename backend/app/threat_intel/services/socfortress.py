@@ -1,6 +1,6 @@
+import re
 from typing import Any
 from typing import Dict
-import re
 
 import httpx
 from fastapi import HTTPException
@@ -20,8 +20,8 @@ from app.threat_intel.schema.socfortress import (
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.utils import get_connector_attribute
 from app.threat_intel.schema.virustotal import VirusTotalResponse
+from app.utils import get_connector_attribute
 
 
 async def get_socfortress_threat_intel_attributes(
@@ -151,6 +151,7 @@ async def invoke_socfortress_threat_intel_api(
         response = await client.get(url, headers=headers, params=params)
         return response.json()
 
+
 def determine_ioc_type(ioc_value: str) -> str:
     """
     Determine the type of the IOC value and return the appropriate endpoint.
@@ -175,7 +176,11 @@ def determine_ioc_type(ioc_value: str) -> str:
     elif hash_pattern.match(ioc_value):
         return f"/files/{ioc_value}"
     else:
-        raise ValueError("Invalid IOC value")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid IOC value provided. Only IP addresses, domains, and hashes are supported.",
+        )
+
 
 async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
     """
@@ -196,6 +201,7 @@ async def fetch_virustotal_data(api_key: str, full_url: str) -> dict:
         response = await client.get(full_url, headers=headers)
         response.raise_for_status()
         return VirusTotalResponse.parse_obj(response.json())
+
 
 async def invoke_virustotal_api(
     api_key: str,
@@ -220,6 +226,7 @@ async def invoke_virustotal_api(
     endpoint = determine_ioc_type(ioc_value)
     full_url = f"{url}{endpoint}"
     return await fetch_virustotal_data(api_key, full_url)
+
 
 async def invoke_socfortress_process_name_api(
     api_key: str,
@@ -325,32 +332,6 @@ async def get_ioc_response(
     message = response_data.get("message", "No message provided")
 
     return IoCResponse(data=IoCMapping(**data), success=success, message=message)
-
-async def get_virustotal_response(
-    request: SocfortressThreatIntelRequest,
-    session: AsyncSession,
-) -> IoCResponse:
-    """
-    Retrieves IoC response from the VirusTotal API.
-
-    Args:
-        request (SocfortressThreatIntelRequest): The request object containing the IoC data.
-        session (AsyncSession): The async session object for making HTTP requests.
-
-    Returns:
-        IoCResponse: The response object containing the IoC data and success status.
-    """
-    url = await get_connector_attribute(
-        connector_name="VirusTotal",
-        column_name="connector_url",
-        session=session,
-    )
-    api_key = await get_connector_attribute(
-        connector_name="VirusTotal",
-        column_name="connector_api_key",
-        session=session,
-    )
-
 
 
 async def get_ai_alert_response(

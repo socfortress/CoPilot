@@ -1,5 +1,11 @@
-from pydantic import BaseModel, Field, Extra
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+
 
 class AnalysisResult(BaseModel):
     method: str
@@ -10,16 +16,13 @@ class AnalysisResult(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class TotalVotes(BaseModel):
     harmless: int
     malicious: int
 
     class Config:
         extra = Extra.allow
-
-
-
-
 
 
 class Attributes(BaseModel):
@@ -45,11 +48,13 @@ class Attributes(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class Links(BaseModel):
     self: str
 
     class Config:
         extra = Extra.allow
+
 
 class Data(BaseModel):
     id: str
@@ -60,11 +65,13 @@ class Data(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class VirusTotalResponse(BaseModel):
     data: Data
 
     class Config:
         extra = Extra.allow
+
 
 class VirusTotalRouteResponse(BaseModel):
     data: VirusTotalResponse

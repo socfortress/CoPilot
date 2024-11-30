@@ -16,6 +16,7 @@ class SocfortressThreatIntelRequest(BaseModel):
         description="The customer code for the customer",
     )
 
+
 class VirusTotalThreatIntelRequest(BaseModel):
     ioc_value: str
 

@@ -13,21 +13,24 @@ from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
-from app.threat_intel.schema.socfortress import IoCResponse, VirusTotalThreatIntelRequest
+from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
 from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup, invoke_virustotal_api
+from app.threat_intel.schema.socfortress import VirusTotalThreatIntelRequest
+from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
+from app.threat_intel.services.socfortress import invoke_virustotal_api
+from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
 from app.threat_intel.services.socfortress import (
     socfortress_wazuh_exclusion_rule_lookup,
 )
 from app.utils import get_connector_attribute
-from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
+
 # App specific imports
 
 threat_intel_socfortress_router = APIRouter()
@@ -95,6 +98,7 @@ async def threat_intel_socfortress(
     )
     return socfortress_lookup
 
+
 @threat_intel_socfortress_router.post(
     "/virustotal",
     response_model=VirusTotalRouteResponse,
@@ -131,7 +135,6 @@ async def threat_intel_virustotal(
             detail="VirusTotal connector is not verified.",
         )
 
-
     return VirusTotalRouteResponse(
         data=await invoke_virustotal_api(
             url=await get_connector_attribute(
@@ -149,8 +152,6 @@ async def threat_intel_virustotal(
         success=True,
         message="VirusTotal threat intelligence lookup was successful.",
     )
-
-
 
 
 @threat_intel_socfortress_router.post(
