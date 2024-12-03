@@ -846,7 +846,12 @@ async def create_alert(
             existing_alert,
         )
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
-        await add_ioc_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
+        # If the alert has an IoC, add it to the alert
+        if alert_payload.ioc_payload is not None:
+            logger.info(f"Adding IoC to alert {existing_alert}")
+            await add_ioc_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
+        else:
+            logger.info(f"No IoC found for alert {existing_alert}")
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
 
