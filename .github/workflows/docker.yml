@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [345-failed-to-invoke-alert-after-latest-upgrade]
+        branches: [main]
 
 jobs:
     build-backend:
@@ -27,7 +27,7 @@ jobs:
               with:
                   context: ./backend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-backend:lab
+                  tags: ghcr.io/socfortress/copilot-backend:latest
                   build-args: |
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
@@ -60,7 +60,7 @@ jobs:
               with:
                   context: ./frontend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-frontend:lab
+                  tags: ghcr.io/socfortress/copilot-frontend:latest
 
             - name: Notify Discord
               uses: appleboy/discord-action@v1.0.0
