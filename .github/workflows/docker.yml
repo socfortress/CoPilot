@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [345-failed-to-invoke-alert-after-latest-upgrade]
+        branches: [main]
 
 jobs:
     build-backend:
