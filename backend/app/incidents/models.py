@@ -154,6 +154,7 @@ class Case(SQLModel, table=True):
     case_status: str = Field(max_length=50, nullable=False)
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
     customer_code: Optional[str] = Field(max_length=50, nullable=True)
+    notification_invoked_number: Optional[int] = Field(default=0, nullable=True)
 
     alerts: List["CaseAlertLink"] = Relationship(back_populates="case")
     data_store: List["CaseDataStore"] = Relationship(back_populates="case")
