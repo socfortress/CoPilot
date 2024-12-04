@@ -426,12 +426,20 @@ async def get_velociraptor_artifact_recommendation_response(
 
     response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
 
+
+
     # If message is `Forbidden`, raise an HTTPException
     if response_data.get("message") == "Forbidden":
         raise HTTPException(
             status_code=403,
             detail="Forbidden access to the Socfortress AI Alert API",
         )
+    elif "429" in response_data.get("detail", ""):
+        raise HTTPException(
+            status_code=429,
+            detail="Message is too large. Please try again with a smaller message.",
+        )
+
 
     return VelociraptorArtifactRecommendationResponse(**response_data)
 
