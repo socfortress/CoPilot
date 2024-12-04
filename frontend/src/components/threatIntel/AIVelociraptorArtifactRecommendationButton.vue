@@ -24,7 +24,7 @@
 					<Icon :name="AiIcon" />
 				</template>
 				<div class="flex items-center gap-2">
-					<span>Generate Wazuh Exclusion Rule</span>
+					<span>Velociraptor Artifact Recommendation</span>
 					<Icon v-if="!licenseResponse && licenseChecked" :name="LockIcon" :size="14" />
 				</div>
 			</n-button>
@@ -36,51 +36,57 @@
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(710px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:bordered="false"
-			title="Wazuh Exclusion Rule"
+			title="Velociraptor Artifact Recommendation"
 			segmented
 		>
-			<div
-				v-if="analysisResponse?.wazuh_exclusion_rule || analysisResponse?.wazuh_exclusion_rule_justification"
-				class="flex flex-col gap-7 p-7"
-			>
-				<div v-if="analysisResponse?.wazuh_exclusion_rule">
-					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
-				</div>
-				<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
-					<Suspense>
-						<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />
-					</Suspense>
-				</div>
+			<div v-if="analysisResponse?.general_thoughts" class="p-6 pb-3">
+				{{ analysisResponse.general_thoughts }}
 			</div>
-			<n-empty v-else description="No rules found" class="h-48 justify-center" />
+			<div v-if="analysisResponse?.artifact_recommendations?.length" class="flex flex-col gap-3 p-6">
+				<CardEntity
+					v-for="recommendation of analysisResponse.artifact_recommendations"
+					:key="recommendation.name + recommendation.explanation + recommendation.description"
+					embedded
+				>
+					<template #header>
+						{{ recommendation.name }}
+					</template>
+					<template #default>
+						{{ recommendation.description }}
+					</template>
+					<template #footer>
+						{{ recommendation.explanation }}
+					</template>
+				</CardEntity>
+			</div>
+			<n-empty v-else description="No Recommendations found" class="h-48 justify-center" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AiWazuhExclusionRuleResponse } from "@/types/threatIntel.d"
+import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
+import { ref } from "vue"
 
-const { indexName, indexId, size } = defineProps<{
+const { indexName, indexId, agentId, size } = defineProps<{
 	indexName: string
 	indexId: string
+	agentId: string
 	size?: Size
 }>()
-
-const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const LockIcon = "carbon:locked"
 const AiIcon = "mage:stars-c"
 const showModal = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const message = useMessage()
-const analysisResponse = ref<AiWazuhExclusionRuleResponse | null>(null)
+const analysisResponse = ref<AiVelociraptorArtifactRecommendationResponse | null>(null)
 const licenseChecking = ref(false)
 const licenseChecked = ref(false)
 const licenseResponse = ref(false)
@@ -93,17 +99,10 @@ function analysis() {
 	loading.value = true
 
 	Api.threatIntel
-		.aiWazuhExclusionRule({ indexName, indexId })
+		.aiVelociraptorArtifactRecommendation({ indexName, indexId, agentId })
 		.then(res => {
 			if (res.data.success) {
 				analysisResponse.value = res.data
-
-				if (res.data.wazuh_exclusion_rule) {
-					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
-						/\\\\/g,
-						"\\\\\\\\"
-					)
-				}
 
 				openResponse()
 			} else {

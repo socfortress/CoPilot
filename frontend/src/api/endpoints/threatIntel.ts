@@ -1,6 +1,7 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
 	AiAnalysisResponse,
+	AiVelociraptorArtifactRecommendationResponse,
 	AiWazuhExclusionRuleResponse,
 	EpssScore,
 	EvaluationData,
@@ -43,6 +44,24 @@ export default {
 			{
 				index_name: indexName,
 				index_id: indexId
+			}
+		)
+	},
+	aiVelociraptorArtifactRecommendation({
+		indexId,
+		indexName,
+		agentId
+	}: {
+		indexId: string
+		indexName: string
+		agentId: string
+	}) {
+		return HttpClient.post<FlaskBaseResponse & AiVelociraptorArtifactRecommendationResponse>(
+			`/threat_intel/ai/velociraptor-artifact-recommendation`,
+			{
+				index_name: indexName,
+				index_id: indexId,
+				agent_id: agentId
 			}
 		)
 	},

@@ -7,5 +7,3 @@
 <script setup lang="ts">
 import AlertsList from "@/components/alerts/AlertsList.vue"
 </script>
-
-<style lang="scss" scoped></style>
