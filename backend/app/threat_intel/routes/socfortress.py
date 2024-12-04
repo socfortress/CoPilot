@@ -5,7 +5,9 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.services.status import get_agent_os_by_id
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.db.db_session import get_db
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
@@ -15,19 +17,26 @@ from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
-from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse, VelociraptorArtifactRecommendationRequest, VelociraptorArtifactRecommendationResponse
+from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
 from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.schema.socfortress import (
+    VelociraptorArtifactRecommendationRequest,
+)
+from app.threat_intel.schema.socfortress import (
+    VelociraptorArtifactRecommendationResponse,
+)
 from app.threat_intel.schema.socfortress import VirusTotalThreatIntelRequest
 from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
 from app.threat_intel.services.socfortress import invoke_virustotal_api
-from app.agents.services.status import get_agent_os_by_id
 from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
-from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_velociraptor_recommendation_lookup
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.threat_intel.services.socfortress import (
+    socfortress_velociraptor_recommendation_lookup,
+)
 from app.threat_intel.services.socfortress import (
     socfortress_wazuh_exclusion_rule_lookup,
 )
@@ -245,6 +254,7 @@ async def ai_wazuh_exclusion_rule_socfortress(
     )
     return socfortress_lookup
 
+
 async def fetch_agent_os(agent_id: str, session: AsyncSession) -> str:
     """
     Fetch the operating system of the agent.
@@ -281,14 +291,11 @@ async def fetch_agent_os(agent_id: str, session: AsyncSession) -> str:
             detail="Unsupported OS type.",
         )
 
+
 async def filter_artifacts_by_os(artifacts, os):
     # Only get the artifacts that start with `Windows.`, `Linux.`, `MacOS.`, or `Generic.`
     os_artifacts = ["Windows", "Linux", "MacOS", "Generic"]
-    os_artifacts = [
-        os_artifact
-        for os_artifact in os_artifacts
-        if os_artifact in os or os_artifact == "Generic"
-    ]
+    os_artifacts = [os_artifact for os_artifact in os_artifacts if os_artifact in os or os_artifact == "Generic"]
 
     # Artifacts to be stripped out
     excluded_artifacts = {
@@ -300,16 +307,14 @@ async def filter_artifacts_by_os(artifacts, os):
         "Windows.Remediation.QuarantineMonitor",
         "Windows.Custom.InstallHuntress",
         "Windows.Applications.TeamViewer.Incoming",
-
     }
 
     return [
         artifact
         for artifact in artifacts
-        if any(
-            artifact.name.startswith(os_artifact + ".") for os_artifact in os_artifacts
-        ) and artifact.name not in excluded_artifacts
+        if any(artifact.name.startswith(os_artifact + ".") for os_artifact in os_artifacts) and artifact.name not in excluded_artifacts
     ]
+
 
 async def fetch_artifacts(os: str) -> list:
     """

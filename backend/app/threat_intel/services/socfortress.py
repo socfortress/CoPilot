@@ -13,13 +13,19 @@ from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
-from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse, VelociraptorArtifactRecommendationResponse, VelociraptorArtifactRecommendationRequest
+from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import (
     SocfortressProcessNameAnalysisAPIResponse,
 )
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.schema.socfortress import (
+    VelociraptorArtifactRecommendationRequest,
+)
+from app.threat_intel.schema.socfortress import (
+    VelociraptorArtifactRecommendationResponse,
+)
 from app.threat_intel.schema.virustotal import VirusTotalResponse
 from app.utils import get_connector_attribute
 
@@ -408,6 +414,7 @@ async def get_wazuh_exclusion_rule_response(
 
     return SocfortressAiWazuhExclusionRuleResponse(**response_data)
 
+
 async def get_velociraptor_artifact_recommendation_response(
     license_key: str,
     request: VelociraptorArtifactRecommendationRequest,
@@ -426,8 +433,6 @@ async def get_velociraptor_artifact_recommendation_response(
 
     response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
 
-
-
     # If message is `Forbidden`, raise an HTTPException
     if response_data.get("message") == "Forbidden":
         raise HTTPException(
@@ -440,8 +445,8 @@ async def get_velociraptor_artifact_recommendation_response(
             detail="Message is too large. Please try again with a smaller message.",
         )
 
-
     return VelociraptorArtifactRecommendationResponse(**response_data)
+
 
 async def get_process_analysis_response(
     license_key: str,
@@ -558,6 +563,7 @@ async def socfortress_wazuh_exclusion_rule_lookup(
         license_key=lincense_key,
         request=request,
     )
+
 
 async def socfortress_velociraptor_recommendation_lookup(
     lincense_key: str,

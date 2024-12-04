@@ -199,14 +199,17 @@ class SocfortressProcessNameAnalysisResponse(BaseModel):
     def to_dict(self):
         return self.dict()
 
+
 class Artifacts(BaseModel):
     description: str = Field(..., description="Description of the artifact.")
     name: str = Field(..., description="Name of the artifact.")
+
 
 class OS(str, Enum):
     Windows = "Windows"
     Linux = "Linux"
     MacOS = "MacOS"
+
 
 class VelociraptorArtifactRecommendationRequest(BaseModel):
     integration: str = Field(..., example="SOCFORTRESS AI")
@@ -244,6 +247,7 @@ class VelociraptorArtifactRecommendationRequest(BaseModel):
         v.pop("gl2_remote_port", None)
         return v
 
+
 class VelociraptorArtifactRecommendation(BaseModel):
     name: str = Field(..., description="The name of the artifact.")
     description: str = Field(..., description="A description of the artifact.")
@@ -252,6 +256,7 @@ class VelociraptorArtifactRecommendation(BaseModel):
         description="A detailed explanation of the purpose and why the artifact was selected.",
     )
 
+
 class AiVelociraptorArtifactsRecommendationModel(BaseModel):
     artifact_recommendations: List[VelociraptorArtifactRecommendation] = Field(
         description="The recommended artifacts which detail the name, description, and explanation of why the artifact was selected.",
@@ -259,6 +264,7 @@ class AiVelociraptorArtifactsRecommendationModel(BaseModel):
     general_thoughts: str = Field(
         description="General thoughts on the artifacts and why they were selected.",
     )
+
 
 class VelociraptorArtifactRecommendationResponse(BaseModel):
     artifact_recommendations: List[VelociraptorArtifactRecommendation] = Field(

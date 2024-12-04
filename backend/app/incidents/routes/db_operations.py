@@ -87,7 +87,7 @@ from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
-from app.incidents.services.db_operations import alert_total_by_assest_name, increment_case_notification_count
+from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
@@ -153,6 +153,7 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.db_operations import increment_case_notification_count
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status

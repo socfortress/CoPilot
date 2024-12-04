@@ -31,6 +31,7 @@ def get_agent(agent_id: str) -> List[Agents]:
             detail=f"Failed to fetch agent with agent_id {agent_id}: {e}",
         )
 
+
 async def get_agent_os_by_id(agent_id: str, session: AsyncSession) -> str:
     """
     Retrieves the operating system of a specific agent from the database using its ID.
@@ -60,6 +61,7 @@ async def get_agent_os_by_id(agent_id: str, session: AsyncSession) -> str:
             status_code=500,
             detail=f"Failed to fetch agent with agent_id {agent_id}: {e}",
         )
+
 
 async def get_outdated_agents_wazuh(
     session: AsyncSession,

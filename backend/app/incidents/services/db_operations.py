@@ -801,6 +801,7 @@ async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSes
     await db.commit()
     return alert
 
+
 async def increment_case_notification_count(case_id: int, db: AsyncSession) -> Case:
     result = await db.execute(select(Case).where(Case.id == case_id))
     case = result.scalars().first()
