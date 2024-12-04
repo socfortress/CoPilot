@@ -48,5 +48,3 @@ const agents = ref<Agent[]>([])
 
 const activeTab = ref<string | undefined>(undefined)
 </script>
-
-<style lang="scss" scoped></style>

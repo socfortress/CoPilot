@@ -34,7 +34,7 @@ function getOptions() {
 	const data = _.chain(indices.value || [])
 		.map(i => {
 			if (typeof i.store_size === "string") {
-				i.store_size_value = bytes(i.store_size)
+				i.store_size_value = bytes(i.store_size) || undefined
 			} else {
 				i.store_size_value = i.store_size
 			}

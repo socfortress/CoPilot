@@ -375,6 +375,7 @@ class CaseOut(BaseModel):
     case_status: Optional[str] = None
     case_creation_time: Optional[datetime] = None
     customer_code: Optional[str] = None
+    notification_invoked_number: Optional[int] = 0
 
 
 class CaseOutResponse(BaseModel):

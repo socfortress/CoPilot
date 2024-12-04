@@ -87,6 +87,15 @@ export interface AiWazuhExclusionRuleResponse {
 	wazuh_exclusion_rule_justification: string
 }
 
+export interface AiVelociraptorArtifactRecommendationResponse {
+	artifact_recommendations: {
+		name: string
+		description: string
+		explanation: string
+	}[]
+	general_thoughts: string
+}
+
 export interface VirusTotalResponse {
 	data: VirusTotal
 }

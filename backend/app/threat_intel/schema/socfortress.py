@@ -198,3 +198,83 @@ class SocfortressProcessNameAnalysisResponse(BaseModel):
 
     def to_dict(self):
         return self.dict()
+
+
+class Artifacts(BaseModel):
+    description: str = Field(..., description="Description of the artifact.")
+    name: str = Field(..., description="Name of the artifact.")
+
+
+class OS(str, Enum):
+    Windows = "Windows"
+    Linux = "Linux"
+    MacOS = "MacOS"
+
+
+class VelociraptorArtifactRecommendationRequest(BaseModel):
+    integration: str = Field(..., example="SOCFORTRESS AI")
+    artifacts: Optional[List[Artifacts]] = Field(
+        None,
+        description="List of artifacts to recommend.",
+    )
+    os: OS = Field(..., description="The operating system of the endpoint.")
+    alert_payload: dict = Field(..., example={"alert": "test"})
+
+    @validator("integration")
+    def check_integration(cls, v):
+        if v != "SOCFORTRESS AI":
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid integration. Only 'SOCFORTRESS AI' is supported.",
+            )
+        return v
+
+    @validator("alert_payload")
+    def check_syslog_type(cls, v):
+        if v.get("syslog_type") != "wazuh":
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid syslog_type. Only 'wazuh' is supported.",
+            )
+        # Remove 'message' and 'full_log' fields if they exist
+        v.pop("message", None)
+        v.pop("full_log", None)
+        v.pop("gl2_processing_error", None)
+        v.pop("gl2_accounted_message_size", None)
+        v.pop("gl2_source_input", None)
+        v.pop("gl2_remote_ip", None)
+        v.pop("gl2_message_id", None)
+        v.pop("gl2_remote_port", None)
+        return v
+
+
+class VelociraptorArtifactRecommendation(BaseModel):
+    name: str = Field(..., description="The name of the artifact.")
+    description: str = Field(..., description="A description of the artifact.")
+    explanation: str = Field(
+        ...,
+        description="A detailed explanation of the purpose and why the artifact was selected.",
+    )
+
+
+class AiVelociraptorArtifactsRecommendationModel(BaseModel):
+    artifact_recommendations: List[VelociraptorArtifactRecommendation] = Field(
+        description="The recommended artifacts which detail the name, description, and explanation of why the artifact was selected.",
+    )
+    general_thoughts: str = Field(
+        description="General thoughts on the artifacts and why they were selected.",
+    )
+
+
+class VelociraptorArtifactRecommendationResponse(BaseModel):
+    artifact_recommendations: List[VelociraptorArtifactRecommendation] = Field(
+        description="The recommended artifacts which detail the name, description, and explanation of why the artifact was selected.",
+    )
+    success: bool = Field(..., description="Whether the request was successful.")
+    message: str = Field(
+        ...,
+        description="A message describing the result of the request.",
+    )
+    general_thoughts: str = Field(
+        description="General thoughts on the artifacts and why they were selected.",
+    )

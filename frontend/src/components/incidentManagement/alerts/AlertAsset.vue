@@ -49,19 +49,19 @@
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
 			:bordered="false"
+			:title="assetNameTruncated"
 			segmented
 		>
-			<template #header>
-				<div class="min-h-8 whitespace-nowrap">
-					{{ assetNameTruncated }}
-				</div>
-			</template>
-			<template #header-extra>
-				<div class="flex min-h-8 flex-wrap gap-3">
-					<AIWazuhExclusionRuleButton :index-id="asset.index_id" :index-name="asset.index_name" />
-					<AIAnalystButton :index-id="asset.index_id" :index-name="asset.index_name" />
-				</div>
-			</template>
+			<div class="flex flex-wrap justify-end gap-3 p-6">
+				<AIVelociraptorArtifactRecommendationButton
+					:index-id="asset.index_id"
+					:index-name="asset.index_name"
+					:agent-id="asset.agent_id"
+				/>
+				<AIWazuhExclusionRuleButton :index-id="asset.index_id" :index-name="asset.index_name" />
+				<AIAnalystButton :index-id="asset.index_id" :index-name="asset.index_name" />
+			</div>
+			<n-divider class="!my-0" />
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<AlertAssetInfo :asset />
@@ -141,7 +141,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import _truncate from "lodash/truncate"
-import { NCard, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NCard, NDivider, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 
 const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: boolean; badge?: boolean }>()
@@ -152,6 +152,9 @@ const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTime
 const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
 const AIWazuhExclusionRuleButton = defineAsyncComponent(
 	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
+)
+const AIVelociraptorArtifactRecommendationButton = defineAsyncComponent(
+	() => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
 )
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")

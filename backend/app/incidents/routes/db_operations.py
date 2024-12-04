@@ -153,6 +153,7 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.db_operations import increment_case_notification_count
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
@@ -972,6 +973,7 @@ async def create_case_notification_endpoint(request: CaseNotificationCreate, db:
 
     logger.info(f"Creating case notification for case {case_notification_payload}")
     await handle_customer_notifications_case(customer_code=case_details.customer_code, case_payload=case_notification_payload, session=db)
+    await increment_case_notification_count(request.case_id, db)
     return CaseNotificationResponse(success=True, message="Case notification created successfully")
 
 
