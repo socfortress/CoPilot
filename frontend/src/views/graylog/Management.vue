@@ -51,7 +51,7 @@ const Inputs = defineAsyncComponent(() => import("@/components/graylog/Inputs/Li
 const tabsList = ["messages", "alerts", "events", "streams", "provisioning"]
 const drawersList = ["inputs"]
 
-const activeTab = ref<string | undefined>(tabsList[0])
+const activeTab = ref<string>(tabsList[0])
 const highlightEvent = ref<string | undefined>(undefined)
 const showInputDrawer = ref(false)
 const events = ref<EventDefinition[]>([])
@@ -79,5 +79,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped></style>
