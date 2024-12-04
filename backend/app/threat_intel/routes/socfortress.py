@@ -15,7 +15,7 @@ from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
-from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
+from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse, VelociraptorArtifactRecommendationRequest, VelociraptorArtifactRecommendationResponse
 from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
@@ -23,9 +23,11 @@ from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.schema.socfortress import VirusTotalThreatIntelRequest
 from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
 from app.threat_intel.services.socfortress import invoke_virustotal_api
+from app.agents.services.status import get_agent_os_by_id
 from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
+from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_velociraptor_recommendation_lookup
 from app.threat_intel.services.socfortress import (
     socfortress_wazuh_exclusion_rule_lookup,
 )
@@ -238,6 +240,113 @@ async def ai_wazuh_exclusion_rule_socfortress(
     logger.info(f"Sending request: {request}")
 
     socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
+    )
+    return socfortress_lookup
+
+async def fetch_agent_os(agent_id: str, session: AsyncSession) -> str:
+    """
+    Fetch the operating system of the agent.
+
+    Args:
+        agent_id (str): The ID of the agent.
+        session (AsyncSession): The database session.
+
+    Returns:
+        str: The normalized operating system name.
+
+    Raises:
+        HTTPException: If the agent OS is not found or unsupported.
+    """
+    agent_os = await get_agent_os_by_id(agent_id=agent_id, session=session)
+
+    if agent_os is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Agent OS not found.",
+        )
+
+    # Normalize the OS name
+    agent_os_lower = agent_os.lower()
+    if "windows" in agent_os_lower:
+        return "Windows"
+    elif "linux" in agent_os_lower:
+        return "Linux"
+    elif "macos" in agent_os_lower or "mac" in agent_os_lower:
+        return "MacOS"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported OS type.",
+        )
+
+async def filter_artifacts_by_os(artifacts, os):
+    # Only get the artifacts that start with `Windows.`, `Linux.`, `MacOS.`, or `Generic.`
+    os_artifacts = ["Windows", "Linux", "MacOS", "Generic"]
+    os_artifacts = [
+        os_artifact
+        for os_artifact in os_artifacts
+        if os_artifact in os or os_artifact == "Generic"
+    ]
+
+    # Artifacts to be stripped out
+    excluded_artifacts = {
+        "Windows.Sysinternals.SysmonInstall",
+        "Windows.Sysinternals.SysmonLogForward",
+        "Windows.Sysinternals.Autoruns",
+        "Windows.Sigma.EventLogs",
+        "Windows.Remediation.Quarantine",
+        "Windows.Remediation.QuarantineMonitor",
+        "Windows.Custom.InstallHuntress",
+        "Windows.Applications.TeamViewer.Incoming",
+
+    }
+
+    return [
+        artifact
+        for artifact in artifacts
+        if any(
+            artifact.name.startswith(os_artifact + ".") for os_artifact in os_artifacts
+        ) and artifact.name not in excluded_artifacts
+    ]
+
+async def fetch_artifacts(os: str) -> list:
+    """
+    Fetch the artifacts.
+
+    Returns:
+        list: The list of artifacts.
+    """
+    artifacts = await get_artifacts()
+    return await filter_artifacts_by_os(artifacts.artifacts, os)
+
+
+@threat_intel_socfortress_router.post(
+    "/ai/velociraptor-artifact-recommendation",
+    response_model=VelociraptorArtifactRecommendationResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def ai_velociraptor_artifact_recommendation_socfortress(
+    request: CreateAlertRequestRoute,
+    session: AsyncSession = Depends(get_db),
+):
+    # Fetch alert details
+    alert_payload = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
+
+    assert isinstance(alert_payload, GenericAlertModel)
+
+    os = await fetch_agent_os(request.agent_id, session)
+
+    request = VelociraptorArtifactRecommendationRequest(
+        integration="SOCFORTRESS AI",
+        alert_payload=alert_payload._source.dict(),
+        os=os,
+        artifacts=await fetch_artifacts(os),
+    )
+
+    socfortress_lookup = await socfortress_velociraptor_recommendation_lookup(
         lincense_key=(await get_license(session)).license_key,
         request=request,
     )

@@ -28,6 +28,10 @@ class CreateAlertRequestRoute(BaseModel):
         description="The name of the index to search alerts for.",
     )
     index_id: str = Field(..., description="The index id.")
+    agent_id: Optional[str] = Field(
+        None,
+        description="The agent id.",
+    )
 
 
 class CreateAlertResponse(BaseModel):

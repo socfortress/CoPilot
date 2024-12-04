@@ -31,6 +31,35 @@ def get_agent(agent_id: str) -> List[Agents]:
             detail=f"Failed to fetch agent with agent_id {agent_id}: {e}",
         )
 
+async def get_agent_os_by_id(agent_id: str, session: AsyncSession) -> str:
+    """
+    Retrieves the operating system of a specific agent from the database using its ID.
+
+    Args:
+        agent_id (str): The ID of the agent to retrieve.
+        session (AsyncSession): The SQLAlchemy asynchronous session to use for the query.
+
+    Returns:
+        str: The operating system of the agent if found, otherwise None.
+    """
+    try:
+        agent_result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = agent_result.scalars().first()
+
+        if agent is None:
+            logger.error(f"Agent with agent_id {agent_id} not found.")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found.",
+            )
+
+        return agent.os
+    except Exception as e:
+        logger.error(f"Failed to fetch agent with agent_id {agent_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch agent with agent_id {agent_id}: {e}",
+        )
 
 async def get_outdated_agents_wazuh(
     session: AsyncSession,

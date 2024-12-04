@@ -13,7 +13,7 @@ from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
-from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
+from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse, VelociraptorArtifactRecommendationResponse, VelociraptorArtifactRecommendationRequest
 from app.threat_intel.schema.socfortress import (
     SocfortressProcessNameAnalysisAPIResponse,
 )
@@ -408,6 +408,32 @@ async def get_wazuh_exclusion_rule_response(
 
     return SocfortressAiWazuhExclusionRuleResponse(**response_data)
 
+async def get_velociraptor_artifact_recommendation_response(
+    license_key: str,
+    request: VelociraptorArtifactRecommendationRequest,
+) -> VelociraptorArtifactRecommendationResponse:
+    """
+    Retrieves Artifact recommendation response from Socfortress Threat Intel API.
+
+    Args:
+        request (VelociraptorArtifactRecommendationRequest): The request object containing the alert data.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        VelociraptorArtifactRecommendationResponse: The response object containing the artifact recommendation data and success status.
+    """
+    url = "https://ai.socfortress.co/velociraptor-artifact-recommendation"
+
+    response_data = await invoke_socfortress_ai_alert_api(license_key, url, request)
+
+    # If message is `Forbidden`, raise an HTTPException
+    if response_data.get("message") == "Forbidden":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden access to the Socfortress AI Alert API",
+        )
+
+    return VelociraptorArtifactRecommendationResponse(**response_data)
 
 async def get_process_analysis_response(
     license_key: str,
@@ -521,6 +547,25 @@ async def socfortress_wazuh_exclusion_rule_lookup(
         IoCResponse: The response object containing the threat intelligence information.
     """
     return await get_wazuh_exclusion_rule_response(
+        license_key=lincense_key,
+        request=request,
+    )
+
+async def socfortress_velociraptor_recommendation_lookup(
+    lincense_key: str,
+    request: VelociraptorArtifactRecommendationRequest,
+) -> VelociraptorArtifactRecommendationResponse:
+    """
+    Performs a AI alert lookup using the Socfortress service.
+
+    Args:
+        request (VelociraptorArtifactRecommendationRequest): The request object containing the IoC to lookup.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        IoCResponse: The response object containing the threat intelligence information.
+    """
+    return await get_velociraptor_artifact_recommendation_response(
         license_key=lincense_key,
         request=request,
     )
