@@ -801,6 +801,20 @@ async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSes
     await db.commit()
     return alert
 
+async def increment_case_notification_count(case_id: int, db: AsyncSession) -> Case:
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    # Initialize notification_invoked_number to 0 if it is None
+    if case.notification_invoked_number is None:
+        case.notification_invoked_number = 0
+
+    case.notification_invoked_number += 1
+    await db.commit()
+    return case
+
 
 async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     # Check if the alert exists
@@ -1130,6 +1144,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         alerts=alerts_out,
         case_creation_time=case.case_creation_time,
         customer_code=case.customer_code,
+        notification_invoked_number=case.notification_invoked_number or 0,
     )
     return case_out
 
@@ -1181,6 +1196,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             case_creation_time=case.case_creation_time,
             case_status=case.case_status,
             customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
         )
         cases_out.append(case_out)
     return cases_out
