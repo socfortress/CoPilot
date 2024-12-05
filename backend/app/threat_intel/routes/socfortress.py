@@ -293,9 +293,9 @@ async def fetch_agent_os(agent_id: str, session: AsyncSession) -> str:
 
 
 async def filter_artifacts_by_os(artifacts, os):
-    # Only get the artifacts that start with `Windows.`, `Linux.`, `MacOS.`, or `Generic.`
-    os_artifacts = ["Windows", "Linux", "MacOS", "Generic"]
-    os_artifacts = [os_artifact for os_artifact in os_artifacts if os_artifact in os or os_artifact == "Generic"]
+    # Only get the artifacts that start with `Windows.`, `Linux.`, or `MacOS.`
+    os_artifacts = ["Windows", "Linux", "MacOS"]
+    os_artifacts = [os_artifact for os_artifact in os_artifacts if os_artifact in os]
 
     # Artifacts to be stripped out
     excluded_artifacts = {
