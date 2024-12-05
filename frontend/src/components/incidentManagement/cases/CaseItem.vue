@@ -163,7 +163,12 @@
 										Delete Case
 									</n-button>
 									<CaseReportButton :case-id="caseEntity.id" size="tiny" />
-									<CaseNotificationButton :case-id="caseEntity.id" size="tiny" />
+									<CaseNotificationButton
+										:case-id="caseEntity.id"
+										:notification-invoked-number="caseEntity.notification_invoked_number || 0"
+										size="tiny"
+										@invoked="getCase(caseEntity.id)"
+									/>
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">
