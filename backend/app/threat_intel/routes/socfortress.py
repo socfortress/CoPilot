@@ -257,7 +257,7 @@ async def ai_wazuh_exclusion_rule_socfortress(
 
     assert isinstance(alert_details, GenericAlertModel)
 
-    request = SocfortressAiAlertRequest(
+    ai_request = SocfortressAiAlertRequest(
         integration="SOCFORTRESS AI",
         alert_payload=alert_details._source.dict(),
     )
@@ -266,7 +266,17 @@ async def ai_wazuh_exclusion_rule_socfortress(
 
     socfortress_lookup = await socfortress_wazuh_exclusion_rule_lookup(
         lincense_key=(await get_license(session)).license_key,
-        request=request,
+        request=ai_request,
+    )
+
+    await create_comment(
+        CommentCreate(
+            alert_id=request.alert_id,
+            comment=f"SOCFortress AI Analysis: {socfortress_lookup.wazuh_exclusion_rule}/n/n{socfortress_lookup.wazuh_exclusion_rule_justification}",
+            user_name="admin",
+            created_at=datetime.now(),
+        ),
+        db=session,
     )
     return socfortress_lookup
 
@@ -360,7 +370,7 @@ async def ai_velociraptor_artifact_recommendation_socfortress(
 
     os = await fetch_agent_os(request.agent_id, session)
 
-    request = VelociraptorArtifactRecommendationRequest(
+    ai_request = VelociraptorArtifactRecommendationRequest(
         integration="SOCFORTRESS AI",
         alert_payload=alert_payload._source.dict(),
         os=os,
@@ -369,6 +379,16 @@ async def ai_velociraptor_artifact_recommendation_socfortress(
 
     socfortress_lookup = await socfortress_velociraptor_recommendation_lookup(
         lincense_key=(await get_license(session)).license_key,
-        request=request,
+        request=ai_request,
+    )
+
+    await create_comment(
+        CommentCreate(
+            alert_id=request.alert_id,
+            comment=f"SOCFortress AI Analysis: {socfortress_lookup.artifact_recommendations}\n\n{socfortress_lookup.general_thoughts}",
+            user_name="admin",
+            created_at=datetime.now(),
+        ),
+        db=session,
     )
     return socfortress_lookup
