@@ -1,19 +1,21 @@
+from datetime import datetime
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
+
 from app.agents.services.status import get_agent_os_by_id
 from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.db.db_session import get_db
 from app.incidents.schema.db_operations import CommentCreate
-from app.incidents.services.db_operations import create_comment
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import GenericAlertModel
+from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
@@ -199,6 +201,7 @@ async def process_name_intel_socfortress(
         session=session,
     )
     return socfortress_lookup
+
 
 async def current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
