@@ -104,9 +104,10 @@ import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 
-const { indexName, indexId, size } = defineProps<{
+const { indexName, indexId, alertId, size } = defineProps<{
 	indexName: string
 	indexId: string
+	alertId: number
 	size?: Size
 }>()
 
@@ -131,7 +132,7 @@ function analysis() {
 	loading.value = true
 
 	Api.threatIntel
-		.aiAlertAnalysis({ indexName, indexId })
+		.aiAlertAnalysis({ indexName, indexId, alertId })
 		.then(res => {
 			if (res.data.success) {
 				analysisResponse.value = res.data

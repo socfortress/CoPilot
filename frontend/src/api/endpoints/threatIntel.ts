@@ -32,36 +32,41 @@ export default {
 			body
 		)
 	},
-	aiAlertAnalysis({ indexId, indexName }: { indexId: string; indexName: string }) {
+	aiAlertAnalysis({ indexId, indexName, alertId }: { indexId: string; indexName: string; alertId: number }) {
 		return HttpClient.post<FlaskBaseResponse & AiAnalysisResponse>(`/threat_intel/ai/analyze-alert`, {
 			index_name: indexName,
-			index_id: indexId
+			index_id: indexId,
+			alert_id: alertId
 		})
 	},
-	aiWazuhExclusionRule({ indexId, indexName }: { indexId: string; indexName: string }) {
+	aiWazuhExclusionRule({ indexId, indexName, alertId }: { indexId: string; indexName: string; alertId: number }) {
 		return HttpClient.post<FlaskBaseResponse & AiWazuhExclusionRuleResponse>(
 			`/threat_intel/ai/wazuh-exclusion-rule`,
 			{
 				index_name: indexName,
-				index_id: indexId
+				index_id: indexId,
+				alert_id: alertId
 			}
 		)
 	},
 	aiVelociraptorArtifactRecommendation({
 		indexId,
 		indexName,
-		agentId
+		agentId,
+		alertId
 	}: {
 		indexId: string
 		indexName: string
 		agentId: string
+		alertId: number
 	}) {
 		return HttpClient.post<FlaskBaseResponse & AiVelociraptorArtifactRecommendationResponse>(
 			`/threat_intel/ai/velociraptor-artifact-recommendation`,
 			{
 				index_name: indexName,
 				index_id: indexId,
-				agent_id: agentId
+				agent_id: agentId,
+				alert_id: alertId
 			}
 		)
 	},

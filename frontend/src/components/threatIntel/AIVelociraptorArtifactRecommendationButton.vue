@@ -74,10 +74,11 @@ import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { ref } from "vue"
 
-const { indexName, indexId, agentId, size } = defineProps<{
+const { indexName, indexId, agentId, alertId, size } = defineProps<{
 	indexName: string
 	indexId: string
 	agentId: string
+	alertId: number
 	size?: Size
 }>()
 
@@ -99,7 +100,7 @@ function analysis() {
 	loading.value = true
 
 	Api.threatIntel
-		.aiVelociraptorArtifactRecommendation({ indexName, indexId, agentId })
+		.aiVelociraptorArtifactRecommendation({ indexName, indexId, agentId, alertId })
 		.then(res => {
 			if (res.data.success) {
 				analysisResponse.value = res.data

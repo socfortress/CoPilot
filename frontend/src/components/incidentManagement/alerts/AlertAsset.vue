@@ -57,9 +57,18 @@
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
 					:agent-id="asset.agent_id"
+					:alert-id="asset.alert_linked"
 				/>
-				<AIWazuhExclusionRuleButton :index-id="asset.index_id" :index-name="asset.index_name" />
-				<AIAnalystButton :index-id="asset.index_id" :index-name="asset.index_name" />
+				<AIWazuhExclusionRuleButton
+					:index-id="asset.index_id"
+					:index-name="asset.index_name"
+					:alert-id="asset.alert_linked"
+				/>
+				<AIAnalystButton
+					:index-id="asset.index_id"
+					:index-name="asset.index_name"
+					:alert-id="asset.alert_linked"
+				/>
 			</div>
 			<n-divider class="!my-0" />
 			<n-tabs type="line" animated :tabs-padding="24">
