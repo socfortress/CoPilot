@@ -444,7 +444,7 @@ async def get_velociraptor_artifact_recommendation_response(
             status_code=429,
             detail="Message is too large. Please try again with a smaller message.",
         )
-    elif "too large" in response_data.get("message", ""):
+    elif "too large" in response_data.get("detail", ""):
         raise HTTPException(
             status_code=429,
             detail="Message is too large. Please try again with a smaller message.",
