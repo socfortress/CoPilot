@@ -32,6 +32,10 @@ class CreateAlertRequestRoute(BaseModel):
         None,
         description="The agent id.",
     )
+    alert_id: Optional[int] = Field(
+        None,
+        description="The alert id.",
+    )
 
 
 class CreateAlertResponse(BaseModel):
