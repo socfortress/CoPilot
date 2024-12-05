@@ -8,6 +8,7 @@ export interface Case {
 	assigned_to: null | string
 	case_status: null | CaseStatus
 	customer_code: null | string
+	notification_invoked_number?: number
 	alerts: Alert[]
 }
 
