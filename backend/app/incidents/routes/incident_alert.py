@@ -157,14 +157,22 @@ async def create_alert_auto_route(
     logger.info(f"Alerts to create in CoPilot: {alerts}")
     if len(alerts.alerts) == 0:
         return AutoCreateAlertResponse(success=False, message="No alerts to create in CoPilot")
+
+    created_alerts_count = 0
+
     for alert in alerts.alerts:
-        logger.info(f"Creating alert {alert} in CoPilot")
-        create_alert_request = CreateAlertRequest(
-            index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
-            alert_id=await get_original_alert_id(alert.source.origin_context),
-        )
-        logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
-        alert_id = await create_alert(create_alert_request, session)
-        # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
-        await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
-    return AutoCreateAlertResponse(success=True, message=f"{len(alerts.alerts)} alerts created in CoPilot")
+        try:
+            logger.info(f"Creating alert {alert} in CoPilot")
+            create_alert_request = CreateAlertRequest(
+                index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
+                alert_id=await get_original_alert_id(alert.source.origin_context),
+            )
+            logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
+            alert_id = await create_alert(create_alert_request, session)
+            # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
+            await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
+            created_alerts_count += 1
+        except Exception as e:
+            logger.error(f"Failed to create alert {alert} in CoPilot: {e}")
+
+    return AutoCreateAlertResponse(success=True, message=f"{created_alerts_count} alerts created in CoPilot")
