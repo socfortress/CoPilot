@@ -279,7 +279,7 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
 
     if ioc_names:
         for ioc_name in ioc_names:
-            await delete_ioc_name(ioc_value=ioc_name, source=source, session=session)
+            await delete_ioc_name(ioc_name=ioc_name, source=source, session=session)
 
     logger.info(f"Field names and asset names deleted successfully for source {source}. Committing changes to the database")
 
