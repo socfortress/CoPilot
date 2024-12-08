@@ -9,6 +9,7 @@ from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.utils import AuthHandler
+from app.middleware.license import is_feature_enabled
 
 # App specific imports
 from app.customers.schema.customers import AgentModel
@@ -71,6 +72,29 @@ async def verify_unique_customer_code(
             detail="Customer with this customer_code already exists",
         )
 
+async def mssp_license_check(session: AsyncSession):
+    """
+    Check if the current number of provisioned customers is greater than 0. If true, then check the license if the MSSP is allowed to provision more customers.
+    This check is based on the license type of the MSSP.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Raises:
+        HTTPException: If the MSSP is not allowed to provision more customers.
+    """
+    # Select all customers to check the number of provisioned customers
+    stmt = select(Customers)
+    result = await session.execute(stmt)
+    customers = result.scalars().all()
+    provisioned_customers = len(customers)
+    logger.info(f"Provisioned customers: {provisioned_customers}")
+
+    if provisioned_customers != 0:
+        # Check the license of the MSSP if there is at least one provisioned customer
+        await is_feature_enabled("mssp_license", session)
+
+
 
 @customers_router.post(
     "",
@@ -95,6 +119,8 @@ async def create_customer(
     Raises:
         None
     """
+    await mssp_license_check(session)
+    return None
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
     new_customer = Customers(**customer.dict())
