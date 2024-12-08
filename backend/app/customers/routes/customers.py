@@ -92,7 +92,7 @@ async def mssp_license_check(session: AsyncSession):
 
     if provisioned_customers != 0:
         # Check the license of the MSSP if there is at least one provisioned customer
-        await is_feature_enabled("mssp_license", session)
+        await is_feature_enabled("MSSP", session)
 
 
 
