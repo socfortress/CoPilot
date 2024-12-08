@@ -120,7 +120,6 @@ async def create_customer(
         None
     """
     await mssp_license_check(session)
-    return None
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
     new_customer = Customers(**customer.dict())
