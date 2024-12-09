@@ -74,7 +74,7 @@ async def verify_unique_customer_code(
 
 async def mssp_license_check(session: AsyncSession):
     """
-    Check if the current number of provisioned customers is greater than 0. If true, then check the license if the MSSP is allowed to provision more customers.
+    Check if the current number of provisioned customers is greater than 0 but less than or equal to 10. If true, then check the license if the MSSP is allowed to provision more customers.
     This check is based on the license type of the MSSP.
 
     Args:
@@ -90,9 +90,12 @@ async def mssp_license_check(session: AsyncSession):
     provisioned_customers = len(customers)
     logger.info(f"Provisioned customers: {provisioned_customers}")
 
-    if provisioned_customers != 0:
-        # Check the license of the MSSP if there is at least one provisioned customer
-        await is_feature_enabled("MSSP", session)
+    if 0 < provisioned_customers <= 5:
+        # Check the license of the MSSP if the number of provisioned customers is more than 0 but less than or equal to 5
+        await is_feature_enabled("MSSP 1-5", session, message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.")
+    elif 6 <= provisioned_customers <= 10:
+        # Check the license of the MSSP if the number of provisioned customers is between 6 and 10
+        await is_feature_enabled("MSSP 6-10", session, message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.")
 
 
 
