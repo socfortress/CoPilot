@@ -104,11 +104,7 @@ async def mssp_license_check(session: AsyncSession):
         # Check the license of the MSSP if the number of provisioned customers is between 6 and 10
         await is_feature_enabled("MSSP 10", session, message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.")
     elif provisioned_customers > 10:
-        # Raise an exception if the number of provisioned customers exceeds 10
-        raise HTTPException(
-            status_code=403,
-            detail="You have exceeded the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers."
-        )
+        await is_feature_enabled("MSSP Unlimited", session, message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.")
 
 
 @customers_router.post(
