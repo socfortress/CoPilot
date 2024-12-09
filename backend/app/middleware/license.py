@@ -372,7 +372,7 @@ async def get_license(session: AsyncSession) -> License:
     result = await session.execute(select(License))
     license = result.scalars().first()
     if license is None:
-        raise HTTPException(status_code=404, detail="No license found")
+        raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
     else:
         return license
 
