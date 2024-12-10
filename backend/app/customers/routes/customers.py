@@ -130,6 +130,7 @@ async def create_customer(
     Raises:
         None
     """
+    logger.info(f"Running license check for customer creation")
     await mssp_license_check(session)
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
