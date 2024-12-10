@@ -3,6 +3,8 @@
 		<LicenseFeatureCheck
 			feature="SOCFORTRESS AI"
 			feedback="tooltip"
+			:disabled="disabledLicenseCheck"
+			:force-show-feedback="disabledLicenseCheck && !licenseResponse"
 			@response="
 				(() => {
 					licenseChecked = true
@@ -72,13 +74,21 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
-import { ref } from "vue"
+import { ref, watchEffect } from "vue"
 
-const { indexName, indexId, agentId, alertId, size } = defineProps<{
+const {
+	indexName,
+	indexId,
+	agentId,
+	alertId,
+	forceLicenseResponse = undefined,
+	size
+} = defineProps<{
 	indexName: string
 	indexId: string
 	agentId: string
 	alertId: number
+	forceLicenseResponse?: boolean
 	size?: Size
 }>()
 
@@ -89,8 +99,9 @@ const loading = ref<boolean>(false)
 const message = useMessage()
 const analysisResponse = ref<AiVelociraptorArtifactRecommendationResponse | null>(null)
 const licenseChecking = ref(false)
-const licenseChecked = ref(false)
-const licenseResponse = ref(false)
+const licenseChecked = ref(forceLicenseResponse !== undefined)
+const licenseResponse = ref(forceLicenseResponse ?? false)
+const disabledLicenseCheck = ref(forceLicenseResponse !== undefined)
 
 function openResponse() {
 	showModal.value = true
@@ -117,4 +128,10 @@ function analysis() {
 			loading.value = false
 		})
 }
+
+watchEffect(() => {
+	licenseResponse.value = forceLicenseResponse ?? false
+	licenseChecked.value = forceLicenseResponse !== undefined
+	disabledLicenseCheck.value = forceLicenseResponse !== undefined
+})
 </script>

@@ -52,25 +52,39 @@
 			:title="assetNameTruncated"
 			segmented
 		>
-			<div class="flex flex-wrap justify-end gap-3 p-6">
+			<LicenseFeatureCheck
+				feature="SOCFORTRESS AI"
+				@response="
+					(() => {
+						licenseChecked = true
+						licenseResponse = $event
+					})()
+				"
+			/>
+			<n-spin :show="!licenseChecked" content-class="flex flex-wrap justify-end gap-3 p-6" :size="18">
 				<AIVelociraptorArtifactRecommendationButton
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
 					:agent-id="asset.agent_id"
 					:alert-id="asset.alert_linked"
+					:force-license-response="licenseResponse"
 				/>
 				<AIWazuhExclusionRuleButton
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
 					:alert-id="asset.alert_linked"
+					:force-license-response="licenseResponse"
 				/>
 				<AIAnalystButton
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
 					:alert-id="asset.alert_linked"
+					:force-license-response="licenseResponse"
 				/>
-			</div>
+			</n-spin>
+
 			<n-divider class="!my-0" />
+
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<AlertAssetInfo :asset />
@@ -170,6 +184,7 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
+const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
 
 const ViewIcon = "iconoir:eye-alt"
 const LinkIcon = "carbon:launch"
@@ -181,6 +196,9 @@ const assetNameTruncated = computed(() => _truncate(asset.asset_name, { length: 
 const alertContext = ref<AlertContext | null>(null)
 const processNameList = computed<string[]>(() => alertContext.value?.context?.process_name || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)
+
+const licenseChecked = ref(false)
+const licenseResponse = ref(false)
 
 watch(showDetails, val => {
 	if (val && !alertContext.value) {
