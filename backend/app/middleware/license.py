@@ -372,7 +372,7 @@ async def get_license(session: AsyncSession) -> License:
     result = await session.execute(select(License))
     license = result.scalars().first()
     if license is None:
-        raise HTTPException(status_code=404, detail="No license found")
+        raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
     else:
         return license
 
@@ -392,7 +392,7 @@ def is_license_expired(license: dict) -> bool:
     return dt.now() > expires
 
 
-async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
+async def is_feature_enabled(feature_name: str, session: AsyncSession, message: str = None) -> bool:
     """
     Check if a feature is enabled in a license.
 
@@ -409,6 +409,9 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
     for data_object in result["data"]["license"]["dataObjects"]:
         if data_object["name"] == feature_name and data_object["intValue"] == 1:
             return True
+
+    if message:
+        raise HTTPException(status_code=400, detail=message)
 
     raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
 

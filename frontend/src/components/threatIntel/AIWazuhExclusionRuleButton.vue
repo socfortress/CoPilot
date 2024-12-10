@@ -3,6 +3,8 @@
 		<LicenseFeatureCheck
 			feature="SOCFORTRESS AI"
 			feedback="tooltip"
+			:disabled="disabledLicenseCheck"
+			:force-show-feedback="disabledLicenseCheck && !licenseResponse"
 			@response="
 				(() => {
 					licenseChecked = true
@@ -64,12 +66,19 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
+import { defineAsyncComponent, ref, watchEffect } from "vue"
 
-const { indexName, indexId, alertId, size } = defineProps<{
+const {
+	indexName,
+	indexId,
+	alertId,
+	forceLicenseResponse = undefined,
+	size
+} = defineProps<{
 	indexName: string
 	indexId: string
 	alertId: number
+	forceLicenseResponse?: boolean
 	size?: Size
 }>()
 
@@ -83,8 +92,9 @@ const loading = ref<boolean>(false)
 const message = useMessage()
 const analysisResponse = ref<AiWazuhExclusionRuleResponse | null>(null)
 const licenseChecking = ref(false)
-const licenseChecked = ref(false)
-const licenseResponse = ref(false)
+const licenseChecked = ref(forceLicenseResponse !== undefined)
+const licenseResponse = ref(forceLicenseResponse ?? false)
+const disabledLicenseCheck = ref(forceLicenseResponse !== undefined)
 
 function openResponse() {
 	showModal.value = true
@@ -118,4 +128,10 @@ function analysis() {
 			loading.value = false
 		})
 }
+
+watchEffect(() => {
+	licenseResponse.value = forceLicenseResponse ?? false
+	licenseChecked.value = forceLicenseResponse !== undefined
+	disabledLicenseCheck.value = forceLicenseResponse !== undefined
+})
 </script>

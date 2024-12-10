@@ -1,8 +1,23 @@
 <template>
 	<div class="page">
-		<CustomersList :highlight="highlight" :reload="reload" @reloaded="reload = false">
+		<CustomersList
+			:highlight="highlight"
+			:reload
+			@loaded="
+				(() => {
+					customersCount = $event
+					reload = false
+					firstLoad = true
+				})()
+			"
+		>
 			<CustomerDefaultSettingsButton />
-			<CustomerCreationButton v-model:open-form="openForm" @submitted="reload = true" />
+			<CustomerCreationButton
+				v-model:open-form="openForm"
+				:customers-count
+				:disabled="!firstLoad"
+				@submitted="reload = true"
+			/>
 		</CustomersList>
 	</div>
 </template>
@@ -20,7 +35,9 @@ const router = useRouter()
 
 const highlight = ref<string | undefined>(undefined)
 const reload = ref(false)
+const firstLoad = ref(false)
 const openForm = ref(false)
+const customersCount = ref<undefined | number>(undefined)
 
 function setOpenForm() {
 	if (!openForm.value) {

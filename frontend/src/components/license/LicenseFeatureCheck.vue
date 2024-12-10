@@ -80,9 +80,14 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NButton, NCard, NModal, NTooltip } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { ref, watch, watchEffect } from "vue"
 
-const { feature, feedback } = defineProps<{ feature: LicenseFeatures; feedback?: "overlay" | "alert" | "tooltip" }>()
+const { feature, feedback, disabled, forceShowFeedback } = defineProps<{
+	feature: LicenseFeatures
+	feedback?: "overlay" | "alert" | "tooltip"
+	disabled?: boolean
+	forceShowFeedback?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "response", value: boolean): void
@@ -95,11 +100,12 @@ const LicenseIcon = "carbon:license"
 const AlertIcon = "mdi:alert-outline"
 const loading = ref(false)
 const { gotoLicense } = useGoto()
-const showFeedback = ref(false)
+const showFeedback = ref(forceShowFeedback ?? false)
 const showModal = ref(false)
 
 function checkFeature(feature: LicenseFeatures) {
 	loading.value = true
+
 	Api.license
 		.isFeatureEnabled(feature)
 		.then(res => {
@@ -133,7 +139,17 @@ watch(loading, val => {
 	}
 })
 
-onBeforeMount(() => {
-	checkFeature(feature)
+watch(
+	[() => disabled, () => feature],
+	values => {
+		if (!values[0]) {
+			checkFeature(values[1])
+		}
+	},
+	{ immediate: true }
+)
+
+watchEffect(() => {
+	showFeedback.value = forceShowFeedback ?? false
 })
 </script>

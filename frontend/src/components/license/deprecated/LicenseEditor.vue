@@ -112,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+/** @deprecated */
 import type { NewLicensePayload } from "@/api/endpoints/license"
 import type { LicenseKey } from "@/types/license.d"
 import Api from "@/api"
