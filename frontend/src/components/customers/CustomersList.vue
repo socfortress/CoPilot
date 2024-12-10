@@ -39,7 +39,7 @@ import CustomerItem from "./CustomerItem.vue"
 
 const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
 const emit = defineEmits<{
-	(e: "reloaded"): void
+	(e: "loaded", value: number): void
 }>()
 
 const { highlight, reload } = toRefs(props)
@@ -60,6 +60,7 @@ function getCustomers() {
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []
+				emit("loaded", customersList.value.length || 0)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -69,7 +70,6 @@ function getCustomers() {
 		})
 		.finally(() => {
 			loadingCustomers.value = false
-			emit("reloaded")
 		})
 }
 

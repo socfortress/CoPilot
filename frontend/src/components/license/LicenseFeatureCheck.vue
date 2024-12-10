@@ -80,7 +80,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NButton, NCard, NModal, NTooltip } from "naive-ui"
-import { onBeforeMount, ref, watch, watchEffect } from "vue"
+import { ref, watch, watchEffect } from "vue"
 
 const { feature, feedback, disabled, forceShowFeedback } = defineProps<{
 	feature: LicenseFeatures
@@ -140,10 +140,10 @@ watch(loading, val => {
 })
 
 watch(
-	() => disabled,
-	val => {
-		if (!val) {
-			checkFeature(feature)
+	[() => disabled, () => feature],
+	values => {
+		if (!values[0]) {
+			checkFeature(values[1])
 		}
 	},
 	{ immediate: true }
