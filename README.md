@@ -106,7 +106,7 @@ Copilot shall be available on the host interface, port 443, protocol HTTPS - `ht
 By default, an `admin` account is created. The password is printed in stdout the very first time Copilot is started. It won't be printed anymore after that.
 `Admin user password` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
 
-🚀 **YouTube Tutorial:** [INSTALLING COPILOT](https://youtu.be/7dUHSMWWTuY?si=lRbn4tBHnyKmiTka)
+🚀 **YouTube Playlist:** [VIEW THE COPILOT VIDEO SERIES](https://www.youtube.com/watch?v=qQbex2zAhWI&list=PLB6hQ_WpB6U0e5oSLXJMcxmSzz7n3zvD-)
 
 #### SSL
 
