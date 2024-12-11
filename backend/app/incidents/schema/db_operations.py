@@ -248,6 +248,13 @@ class CommentCreate(BaseModel):
     user_name: str
     created_at: datetime
 
+class CommentEdit(BaseModel):
+    alert_id: int
+    comment_id: int
+    comment: str
+    user_name: str
+    created_at: datetime
+
 
 class AlertContextCreate(BaseModel):
     source: str
