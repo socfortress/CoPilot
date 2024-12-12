@@ -60,7 +60,8 @@ from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
-from app.incidents.schema.db_operations import IoCBase, CommentEdit
+from app.incidents.schema.db_operations import CommentEdit
+from app.incidents.schema.db_operations import IoCBase
 from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
@@ -832,6 +833,7 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
         raise HTTPException(status_code=400, detail="Comment already exists")
     return db_comment
 
+
 async def edit_comment(comment: CommentEdit, db: AsyncSession) -> Comment:
     result = await db.execute(select(Comment).where(Comment.id == comment.comment_id))
     db_comment = result.scalars().first()
@@ -841,6 +843,7 @@ async def edit_comment(comment: CommentEdit, db: AsyncSession) -> Comment:
     db_comment.user_name = comment.user_name
     await db.commit()
     return db_comment
+
 
 async def delete_comment(comment_id: int, db: AsyncSession) -> Comment:
     result = await db.execute(select(Comment).where(Comment.id == comment_id))

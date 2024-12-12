@@ -109,12 +109,14 @@ async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severit
 def filter_vulnerabilities_indices(indices_list):
     return [index for index in indices_list if index.startswith("wazuh-states-vulnerabilities")]
 
+
 def filter_vulnerabilities_indices_sync(indices_list, customer_code):
     """
     Filter the indices list to only include the vulnerability indices which are relevant to the customer.
     Notice the missing `states` in the index name.
     """
     return [index for index in indices_list if index.startswith(f"wazuh-vulnerabilities-{customer_code}")]
+
 
 async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
     agent_vulnerabilities = []
@@ -170,7 +172,9 @@ async def collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, 
         else:
             query = {
                 "query": {
-                    "bool": {"must": [{"match": {"agent.name": agent_name}}, {"match": {"vulnerability.severity": vulnerability_severity}}]},
+                    "bool": {
+                        "must": [{"match": {"agent.name": agent_name}}, {"match": {"vulnerability.severity": vulnerability_severity}}],
+                    },
                 },
             }
 
@@ -224,6 +228,7 @@ def ensure_list(value):
         return [value]
     return value
 
+
 async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index_prefix):
     query = {
         "query": {
@@ -263,10 +268,15 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
     logger.info(f"Customer vulnerabilities indices: {customer_vulnerabilities_indices}")
 
     if customer_vulnerabilities_indices:
-        logger.info(f"Customer vulnerabilities index already exists")
+        logger.info("Customer vulnerabilities index already exists")
         # ! Check to see if the vulnerability exists in the customer's index and send to Graylog if it does not exist in the customer's index ! #
         for vulnerability in processed_vulnerabilities:
-            vulnerability_exists = await check_vulnerability_exists(es, vulnerability_cve=vulnerability.cve, agent_name=agent_name, index_prefix=f"wazuh-vulnerabilities-{customer_code}")
+            vulnerability_exists = await check_vulnerability_exists(
+                es,
+                vulnerability_cve=vulnerability.cve,
+                agent_name=agent_name,
+                index_prefix=f"wazuh-vulnerabilities-{customer_code}",
+            )
 
             if not vulnerability_exists:
                 await event_shipper(
@@ -275,11 +285,11 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
                         customer_code=customer_code,
                         agent_name=agent_name,
                         **vulnerability.dict(),
-                    )
+                    ),
                 )
         return True
 
-    logger.info(f"Customer vulnerabilities index does not exist")
+    logger.info("Customer vulnerabilities index does not exist")
     # ! Send all vulnerabilities to Graylog ! #
     for vulnerability in processed_vulnerabilities:
         await event_shipper(
@@ -288,7 +298,6 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
                 customer_code=customer_code,
                 agent_name=agent_name,
                 **vulnerability.dict(),
-            )
+            ),
         )
     return True
-

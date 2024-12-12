@@ -59,6 +59,7 @@ from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListRe
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
@@ -77,7 +78,7 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhIoCFiel
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
-from app.incidents.schema.db_operations import UpdateCaseStatus, CommentEdit
+from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.db_operations import add_alert_title_name
@@ -86,7 +87,7 @@ from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total
-from app.incidents.services.db_operations import alert_total_by_alert_title, edit_comment
+from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -108,7 +109,7 @@ from app.incidents.services.db_operations import alerts_in_progress_by_tag
 from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
-from app.incidents.services.db_operations import alerts_open_by_assest_name, delete_comment
+from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
 from app.incidents.services.db_operations import alerts_open_by_customer_code
 from app.incidents.services.db_operations import alerts_open_by_ioc
@@ -136,6 +137,7 @@ from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
+from app.incidents.services.db_operations import delete_comment
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
 from app.incidents.services.db_operations import delete_ioc_name
@@ -143,6 +145,7 @@ from app.incidents.services.db_operations import delete_report_template
 from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
+from app.incidents.services.db_operations import edit_comment
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
@@ -401,14 +404,17 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
+
 @incidents_db_operations_router.put("/alert/comment", response_model=CommentResponse)
 async def edit_comment_endpoint(comment: CommentEdit, db: AsyncSession = Depends(get_db)):
     return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
+
 
 @incidents_db_operations_router.delete("/alert/comment/{comment_id}")
 async def delete_comment_endpoint(comment_id: int, db: AsyncSession = Depends(get_db)):
     await delete_comment(comment_id, db)
     return {"message": "Comment deleted successfully", "success": True}
+
 
 @incidents_db_operations_router.get("/alert/available-users", response_model=AvailableUsersResponse)
 async def get_available_users(db: AsyncSession = Depends(get_db)):
