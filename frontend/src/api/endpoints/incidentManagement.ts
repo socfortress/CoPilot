@@ -46,6 +46,8 @@ export type CasesFilterTypes = KeysOfUnion<CasesFilter>
 
 export type AlertCommentPayload = Omit<AlertComment, "id">
 
+export type AlertCommentUpdatePayload = Omit<AlertComment, "id"> & { comment_id: number }
+
 export interface AlertIocPayload {
 	alert_id: number
 	ioc_value: string
@@ -249,6 +251,15 @@ export default {
 			`/incidents/db_operations/alert/comment`,
 			payload
 		)
+	},
+	updateAlertComment(payload: AlertCommentUpdatePayload) {
+		return HttpClient.put<FlaskBaseResponse & { comment: AlertComment }>(
+			`/incidents/db_operations/alert/comment`,
+			payload
+		)
+	},
+	deleteAlertComment(commentId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/alert/comment/${commentId}`)
 	},
 	newAlertTag(alertId: number, tag: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert_tag: AlertTag }>(`/incidents/db_operations/alert/tag`, {
