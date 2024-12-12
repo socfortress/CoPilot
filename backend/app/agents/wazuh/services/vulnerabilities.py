@@ -224,7 +224,7 @@ def ensure_list(value):
         return [value]
     return value
 
-async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index):
+async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index_prefix):
     query = {
         "query": {
             "bool": {
@@ -235,8 +235,8 @@ async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index):
             },
         },
     }
-
-    response = es.search(index=index, body=query)
+    index_pattern = f"{index_prefix}*"
+    response = es.search(index=index_pattern, body=query)
     return response["hits"]["total"]["value"] > 0
 
 
@@ -266,7 +266,7 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
         logger.info(f"Customer vulnerabilities index already exists")
         # ! Check to see if the vulnerability exists in the customer's index and send to Graylog if it does not exist in the customer's index ! #
         for vulnerability in processed_vulnerabilities:
-            vulnerability_exists = await check_vulnerability_exists(es, vulnerability_cve=vulnerability.cve, agent_name=agent_name, index=customer_vulnerabilities_indices[0])
+            vulnerability_exists = await check_vulnerability_exists(es, vulnerability_cve=vulnerability.cve, agent_name=agent_name, index_prefix=f"wazuh-vulnerabilities-{customer_code}")
 
             if not vulnerability_exists:
                 await event_shipper(
