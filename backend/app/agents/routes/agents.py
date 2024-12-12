@@ -828,6 +828,7 @@ async def sync_vulnerabilities_route(
 async def sync_vulnerabilities_customer_code_route(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 ):
     """
     Only applies to Wazuh Manager Version 4.8.1 or higher.
