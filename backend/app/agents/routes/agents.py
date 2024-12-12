@@ -795,6 +795,7 @@ async def delete_agent(
         message=f"Agent {agent_id} deleted successfully",
     )
 
+
 @agents_router.get(
     "/sync/vulnerabilities",
     description="Sync agent vulnerabilities",
@@ -837,6 +838,7 @@ async def sync_vulnerabilities_customer_code_route(
             continue
         await sync_agent_vulnerabilities(agent.hostname, customer_code)
     return {"success": True, "message": "Agent vulnerabilities synced successfully"}
+
 
 # ! TODO: CURRENTLY UPDATES IN THE DB BUT NEED TO UPDATE IN WAZUH # !
 # @agents_router.put(
