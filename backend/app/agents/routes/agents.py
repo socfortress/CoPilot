@@ -813,6 +813,9 @@ async def sync_vulnerabilities_route(
     logger.info("Syncing agent vulnerabilities")
     agents = await get_agents(session)
     for agent in agents.agents:
+        if agent.customer_code is None:
+            logger.info(f"Skipping agent {agent.hostname} due to missing customer code")
+            continue
         await sync_agent_vulnerabilities(agent.hostname, agent.customer_code)
     return {"success": True, "message": "Agent vulnerabilities synced successfully"}
 
