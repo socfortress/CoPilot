@@ -821,7 +821,7 @@ async def sync_vulnerabilities_route(
     return {"success": True, "message": "Agent vulnerabilities synced successfully"}
 
 
-@agents_router.get(
+@agents_router.post(
     "/sync/vulnerabilities/{customer_code}",
     description="Sync agent vulnerabilities",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
