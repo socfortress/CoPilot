@@ -32,6 +32,30 @@ def get_agent(agent_id: str) -> List[Agents]:
         )
 
 
+async def get_agents_by_customer_code(customer_code: str, session: AsyncSession) -> List[Agents]:
+    """
+    Retrieves all agents associated with a specific customer code from the database asynchronously.
+
+    Args:
+        customer_code (str): The customer code to filter agents by.
+        session (AsyncSession): The SQLAlchemy asynchronous session to use for the query.
+
+    Returns:
+        List[Agents]: A list of agents associated with the customer code.
+    """
+    try:
+        agents_result = await session.execute(select(Agents).filter(Agents.customer_code == customer_code))
+        agents = agents_result.scalars().all()
+
+        return agents
+    except Exception as e:
+        logger.error(f"Failed to fetch agents with customer_code {customer_code}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch agents with customer_code {customer_code}: {e}",
+        )
+
+
 async def get_agent_os_by_id(agent_id: str, session: AsyncSession) -> str:
     """
     Retrieves the operating system of a specific agent from the database using its ID.
