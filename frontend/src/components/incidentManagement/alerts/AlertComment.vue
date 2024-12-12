@@ -39,7 +39,7 @@
 						</template>
 						<span>Edit</span>
 					</n-button>
-					<n-popconfirm @positive-click="deleteAlertComment()">
+					<n-popconfirm to="body" @positive-click="deleteAlertComment()">
 						<template #trigger>
 							<n-button size="tiny" secondary type="error" :loading="canceling">
 								<template #icon>
