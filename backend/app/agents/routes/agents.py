@@ -35,7 +35,7 @@ from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
-from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new, sync_agent_vulnerabilities
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -793,6 +793,26 @@ async def delete_agent(
         message=f"Agent {agent_id} deleted successfully",
     )
 
+@agents_router.get(
+    "/sync/vulnerabilities",
+    description="Sync agent vulnerabilities",
+)
+async def sync_vulnerabilities_route(
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Only applies to Wazuh Manager Version 4.8.1 or higher.
+    1. Loops through all agents in the database to collect their agent_name and customer code.
+    2. Queries the `wazuh-states-vulnerabilities-*` index in Wazuh Indexer to get vulnerabilities based on the agent_name.
+    3. Checks the `wazuh-vulnerabilities-*customer_code*` index in Wazuh Indexer to get vulnerabilities based on the
+        agent_name and checks to see if a vulnerability_id already exists.
+    4. If the vulnerability_id does not exist, it is sent to the Graylog GELF Input.
+    """
+    logger.info("Syncing agent vulnerabilities")
+    agents = await get_agents(session)
+    for agent in agents.agents:
+        await sync_agent_vulnerabilities(agent.hostname, agent.customer_code)
+    return {"success": True, "message": "Agent vulnerabilities synced successfully"}
 
 # ! TODO: CURRENTLY UPDATES IN THE DB BUT NEED TO UPDATE IN WAZUH # !
 # @agents_router.put(

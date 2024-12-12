@@ -8,6 +8,8 @@ from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.integrations.utils.event_shipper import event_shipper
+from app.integrations.utils.schema import EventShipperPayload
 
 
 async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
@@ -107,6 +109,12 @@ async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severit
 def filter_vulnerabilities_indices(indices_list):
     return [index for index in indices_list if index.startswith("wazuh-states-vulnerabilities")]
 
+def filter_vulnerabilities_indices_sync(indices_list, customer_code):
+    """
+    Filter the indices list to only include the vulnerability indices which are relevant to the customer.
+    Notice the missing `states` in the index name.
+    """
+    return [index for index in indices_list if index.startswith(f"wazuh-vulnerabilities-{customer_code}")]
 
 async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
     agent_vulnerabilities = []
@@ -126,6 +134,43 @@ async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnera
             query = {
                 "query": {
                     "bool": {"must": [{"match": {"agent.id": agent_id}}, {"match": {"vulnerability.severity": vulnerability_severity}}]},
+                },
+            }
+
+        page = es.search(index=index, body=query, scroll="2m")
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
+
+        while scroll_size > 0:
+            for hit in page["hits"]["hits"]:
+                vulnerability = hit["_source"]
+                agent_vulnerabilities.append(vulnerability)
+
+            page = es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
+
+    return agent_vulnerabilities
+
+
+async def collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, vulnerability_severity="All"):
+    agent_vulnerabilities = []
+    for index in vulnerabilities_indices:
+        if vulnerability_severity == "All":
+            query = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"match": {"agent.name": agent_name}},
+                            {"terms": {"vulnerability.severity": ["Low", "Medium", "High", "Critical"]}},
+                        ],
+                    },
+                },
+            }
+        else:
+            query = {
+                "query": {
+                    "bool": {"must": [{"match": {"agent.name": agent_name}}, {"match": {"vulnerability.severity": vulnerability_severity}}]},
                 },
             }
 
@@ -178,3 +223,72 @@ def ensure_list(value):
     if not isinstance(value, list):
         return [value]
     return value
+
+async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index):
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"match": {"agent_name": agent_name}},
+                    {"match": {"cve": vulnerability_cve}},
+                ],
+            },
+        },
+    }
+
+    response = es.search(index=index, body=query)
+    return response["hits"]["total"]["value"] > 0
+
+
+async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
+    """
+    1. Loops through all agents in the database to collect their agent_name and customer code.
+    2. Queries the `wazuh-states-vulnerabilities-*` index in Wazuh Indexer to get vulnerabilities based on the agent_name.
+    3. Checks the `wazuh-vulnerabilities-*customer_code*` index in Wazuh Indexer to get vulnerabilities based on the
+        agent_name and checks to see if a vulnerability_id already exists.
+    4. If the vulnerability_id does not exist, it is sent to the Graylog GELF Input.
+    """
+    logger.info(f"Syncing agent {agent_name} with customer code {customer_code} vulnerabilities")
+
+    es = await create_wazuh_indexer_client("Wazuh-Indexer")
+    indices = await collect_indices(all_indices=True)
+
+    vulnerabilities_indices = filter_vulnerabilities_indices(indices.indices_list)
+
+    agent_vulnerabilities = await collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, vulnerability_severity="All")
+
+    processed_vulnerabilities = process_agent_vulnerabilities_new(agent_vulnerabilities)
+
+    customer_vulnerabilities_indices = filter_vulnerabilities_indices_sync(indices.indices_list, customer_code)
+    logger.info(f"Customer vulnerabilities indices: {customer_vulnerabilities_indices}")
+
+    if customer_vulnerabilities_indices:
+        logger.info(f"Customer vulnerabilities index already exists")
+        # ! Check to see if the vulnerability exists in the customer's index and send to Graylog if it does not exist in the customer's index ! #
+        for vulnerability in processed_vulnerabilities:
+            vulnerability_exists = await check_vulnerability_exists(es, vulnerability_cve=vulnerability.cve, agent_name=agent_name, index=customer_vulnerabilities_indices[0])
+
+            if not vulnerability_exists:
+                await event_shipper(
+                    EventShipperPayload(
+                        integration="vulnerabilities",
+                        customer_code=customer_code,
+                        agent_name=agent_name,
+                        **vulnerability.dict(),
+                    )
+                )
+        return True
+
+    logger.info(f"Customer vulnerabilities index does not exist")
+    # ! Send all vulnerabilities to Graylog ! #
+    for vulnerability in processed_vulnerabilities:
+        await event_shipper(
+            EventShipperPayload(
+                integration="vulnerabilities",
+                customer_code=customer_code,
+                agent_name=agent_name,
+                **vulnerability.dict(),
+            )
+        )
+    return True
+
