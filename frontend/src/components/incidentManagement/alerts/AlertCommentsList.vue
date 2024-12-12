@@ -1,7 +1,14 @@
 <template>
 	<div class="flex flex-col gap-6">
 		<template v-if="commentsList.length">
-			<AlertCommentItem v-for="comment of commentsList" :key="comment.id" :comment embedded />
+			<AlertCommentItem
+				v-for="comment of commentsList"
+				:key="comment.id"
+				:comment
+				embedded
+				@deleted="removeComment(comment)"
+				@updated="updateComment($event)"
+			/>
 		</template>
 		<template v-else>
 			<n-empty description="No comments found" class="h-48 justify-center" />
@@ -65,6 +72,21 @@ const trimmedValue = computed(() => _trim(commentMessage.value || ""))
 
 function reset() {
 	commentMessage.value = ""
+}
+
+function updateComment(newComment: AlertComment) {
+	const comment = commentsList.value.find(o => o.id === newComment.id)
+	if (comment) {
+		comment.created_at = newComment.created_at
+		comment.comment = newComment.comment
+	}
+}
+
+function removeComment(comment: AlertComment) {
+	commentsList.value.splice(
+		commentsList.value.findIndex(o => o.id === comment.id),
+		1
+	)
 }
 
 function submit() {

@@ -142,7 +142,6 @@
 
 <script lang="ts" setup>
 import type { RegisterPayload } from "@/types/auth.d"
-
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import {
