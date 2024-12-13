@@ -309,7 +309,6 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
     processed_vulnerabilities = process_agent_vulnerabilities_new(agent_vulnerabilities)
 
     customer_vulnerabilities_indices = filter_vulnerabilities_indices_sync(indices.indices_list, customer_code)
-    logger.info(f"Customer vulnerabilities indices: {customer_vulnerabilities_indices}")
 
     if customer_vulnerabilities_indices:
         logger.info("Customer vulnerabilities index already exists")
