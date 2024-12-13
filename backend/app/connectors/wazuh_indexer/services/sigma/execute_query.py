@@ -4,9 +4,10 @@ from typing import List
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
 
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.services.incident_alert import add_asset_to_copilot_alert
 from app.incidents.services.incident_alert import build_alert_context_payload
@@ -105,7 +106,7 @@ async def send_query_to_opensearch(
     session: AsyncSession = None,
 ) -> List[dict]:
     try:
-        response = es_client.search(index=index, body=query)
+        response = await es_client.search(index=index, body=query)
         logger.info(f"Response: {response}")
         hits = response["hits"]["hits"]
         return await process_hits(hits, rule_name, session)
@@ -148,7 +149,7 @@ async def process_hits(hits, rule_name, session: AsyncSession):
 
 
 async def execute_query(payload: RunActiveSigmaQueries, session: AsyncSession = None):
-    client = await create_wazuh_indexer_client()
+    client = await create_wazuh_indexer_client_async()
     formatted_query = await format_opensearch_query(payload.query, payload.time_interval, payload.last_execution_time)
     logger.info(f"Executing query: {formatted_query}")
     results = await send_query_to_opensearch(client, formatted_query, payload.rule_name, index=payload.index, session=session)

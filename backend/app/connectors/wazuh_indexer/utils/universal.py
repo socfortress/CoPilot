@@ -6,7 +6,7 @@ from typing import Dict
 from typing import Iterable
 from typing import Tuple
 
-from elasticsearch7 import Elasticsearch
+from elasticsearch7 import Elasticsearch, AsyncElasticsearch
 from fastapi import HTTPException
 from loguru import logger
 
@@ -96,6 +96,44 @@ async def create_wazuh_indexer_client(connector_name: str = "Wazuh-Indexer") -> 
         )
     try:
         return Elasticsearch(
+            [attributes["connector_url"]],
+            http_auth=(
+                attributes["connector_username"],
+                attributes["connector_password"],
+            ),
+            verify_certs=False,
+            timeout=15,
+            max_retries=10,
+            retry_on_timeout=False,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create Elasticsearch client: {e}",
+        )
+
+async def create_wazuh_indexer_client_async(connector_name: str = "Wazuh-Indexer") -> AsyncElasticsearch:
+    """
+    Returns an Elasticsearch client for the Wazuh Indexer service.
+
+    Returns:
+        Elasticsearch: Elasticsearch client for the Wazuh Indexer service.
+    """
+    # attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        raise HTTPException(
+            status_code=500,
+            detail=f"No {connector_name} connector found in the database",
+        )
+    if attributes["connector_url"] == "https://127.1.1.1:9200":
+        raise HTTPException(
+            status_code=500,
+            detail=f"Please update the {connector_name} connector URL",
+        )
+    try:
+        return AsyncElasticsearch(
             [attributes["connector_url"]],
             http_auth=(
                 attributes["connector_username"],
