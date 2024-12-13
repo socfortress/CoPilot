@@ -154,11 +154,13 @@
 					<n-collapse :trigger-areas="['main', 'arrow']">
 						<n-collapse-item name="alerts-list">
 							<template #header>
-								Alerts
-								<code class="ml-2">{{ caseEntity.alerts.length }}</code>
+								<span class="whitespace-nowrap">
+									Alerts
+									<code class="ml-2">{{ caseEntity.alerts.length }}</code>
+								</span>
 							</template>
 							<template #header-extra>
-								<div class="actions-box ml-2 flex items-center gap-2">
+								<div class="actions-box ml-2 flex flex-wrap items-center justify-end gap-2">
 									<n-button quaternary size="tiny" class="xs:!flex !hidden" @click="handleDelete()">
 										Delete Case
 									</n-button>

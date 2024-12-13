@@ -12,13 +12,15 @@
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import { useWindowSize } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NButton, NDropdown, useMessage } from "naive-ui"
-import { computed, inject, ref, type Ref } from "vue"
+import { computed, h, inject, ref, type Ref } from "vue"
 
 const { size, showIcon } = defineProps<{ size?: Size; showIcon?: boolean }>()
 
@@ -27,26 +29,47 @@ const loadingCustomersList = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const exporting = ref(false)
 const message = useMessage()
+const { width: winWidth } = useWindowSize()
 const customersList = inject<Ref<Customer[]>>("customers-list", ref([]))
 
 const customersOptions = computed(() => {
-	return [
+	const options: DropdownMixedOption[] = [
 		{
 			label: "Export All Cases",
 			key: "--all--"
-		},
-		{
+		}
+	]
+
+	if (winWidth.value > 550) {
+		options.push({
 			label: `Export by Customer${loadingCustomersList.value ? "..." : ""}`,
 			key: "customer",
 			disabled: loadingCustomersList.value,
 			children: loadingCustomersList.value
 				? undefined
-				: customersList.value.map(o => ({
-						label: `#${o.customer_code} - ${o.customer_name}`,
-						key: o.customer_code
-					}))
-		}
-	]
+				: [
+						{
+							label: () => h("div", { class: "pl-2" }, "Select a Customer"),
+							type: "group",
+							children: customersList.value.map(o => ({
+								label: `#${o.customer_code} - ${o.customer_name}`,
+								key: o.customer_code
+							}))
+						}
+					]
+		})
+	} else {
+		options.push({
+			label: () => h("div", { class: "pl-2" }, "Select a Customer"),
+			type: "group",
+			children: customersList.value.map(o => ({
+				label: `#${o.customer_code} - ${o.customer_name}`,
+				key: o.customer_code
+			}))
+		})
+	}
+
+	return options
 })
 
 function exportCases(key: string) {
