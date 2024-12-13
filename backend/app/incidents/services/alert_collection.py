@@ -1,7 +1,8 @@
 from loguru import logger
 
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.connectors.wazuh_indexer.utils.universal import (
     return_graylog_events_index_names,
 )

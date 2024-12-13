@@ -14,7 +14,10 @@ from sqlalchemy.future import select
 
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext

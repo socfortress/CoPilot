@@ -1,3 +1,4 @@
+import asyncio
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
@@ -5,16 +6,15 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
-import asyncio
 from typing import Type
 
-from elasticsearch7.exceptions import NotFoundError
 from elasticsearch7 import AsyncElasticsearch
+from elasticsearch7.exceptions import NotFoundError
 from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.wazuh_indexer.schema.alerts import Alert
+# from app.connectors.wazuh_indexer.schema.alerts import Alert
 from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
@@ -33,7 +33,10 @@ from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 
 
 async def collect_and_aggregate_alerts(
@@ -379,6 +382,7 @@ async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
     index_name, index_id = origin_context.split(":")[-2:]
     return index_name, index_id
 
+
 # ! THIS IS OLD WITH ASYNC OPERATIONS ! #
 # async def get_single_alert_details(
 #     index_name: str,
@@ -489,6 +493,7 @@ async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
 
 # ! ^^THIS IS OLD WITH ASYNC OPERATIONS^^ ! #
 
+
 async def get_single_alert_details(
     es_client: AsyncElasticsearch,
     index_name: str,
@@ -577,11 +582,7 @@ async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) ->
         alerts_dict[index_name]["alerts"].append(alert_details)
 
     alerts = [
-        {
-            "index_name": index_name,
-            "total_alerts": data["total_alerts"],
-            "alerts": data["alerts"]
-        }
+        {"index_name": index_name, "total_alerts": data["total_alerts"], "alerts": data["alerts"]}
         for index_name, data in alerts_dict.items()
     ]
 
