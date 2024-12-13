@@ -4,10 +4,11 @@ from typing import List
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-import asyncio
 
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.services.incident_alert import add_asset_to_copilot_alert
 from app.incidents.services.incident_alert import build_alert_context_payload

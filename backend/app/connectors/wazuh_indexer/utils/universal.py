@@ -6,7 +6,8 @@ from typing import Dict
 from typing import Iterable
 from typing import Tuple
 
-from elasticsearch7 import Elasticsearch, AsyncElasticsearch
+from elasticsearch7 import AsyncElasticsearch
+from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
 
@@ -111,6 +112,7 @@ async def create_wazuh_indexer_client(connector_name: str = "Wazuh-Indexer") -> 
             status_code=500,
             detail=f"Failed to create Elasticsearch client: {e}",
         )
+
 
 async def create_wazuh_indexer_client_async(connector_name: str = "Wazuh-Indexer") -> AsyncElasticsearch:
     """

@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import datetime
 
@@ -7,7 +8,6 @@ from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import UploadFile
-import asyncio
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -321,6 +321,7 @@ async def deactivate_all_sigma_queries_endpoint(
 #         message="Successfully ran the active Sigma queries.",
 #     )
 
+
 @wazuh_indexer_sigma_router.post("/run-active-queries", response_model=SigmaQueryOutResponse)
 async def run_active_sigma_queries_endpoint(
     index_name: str = Query(default="wazuh*"),
@@ -363,7 +364,7 @@ async def run_active_sigma_queries_endpoint(
             query.last_execution_time = current_time
 
     # Run all tasks concurrently
-    results = await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
 
     # Commit the changes to the database
     await db.commit()
