@@ -5,9 +5,11 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+import asyncio
 from typing import Type
 
 from elasticsearch7.exceptions import NotFoundError
+from elasticsearch7 import AsyncElasticsearch
 from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
@@ -31,7 +33,7 @@ from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
 
 
 async def collect_and_aggregate_alerts(
@@ -377,8 +379,118 @@ async def get_original_alert_id(origin_context: str) -> Tuple[str, str]:
     index_name, index_id = origin_context.split(":")[-2:]
     return index_name, index_id
 
+# ! THIS IS OLD WITH ASYNC OPERATIONS ! #
+# async def get_single_alert_details(
+#     index_name: str,
+#     index_id: str,
+# ) -> Dict:
+#     """
+#     Retrieves the details of a single alert based on the index name and id.
+
+#     Args:
+#         es_client: The Elasticsearch client.
+#         index_name (str): The name of the index to search for the alert.
+#         index_id (str): The id of the alert to retrieve.
+
+#     Returns:
+#         dict: The details of the alert.
+#     """
+#     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+#     try:
+#         alert = es_client.get(index=index_name, id=index_id)
+#         return alert
+#     except NotFoundError:
+#         logger.warning(f"Alert not found for index {index_name} and id {index_id}")
+#         return AlertNotFound(_index=index_name, _id=index_id, _source={"message": "alert not found"}).to_dict()
+
+
+# async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str) -> List[Dict]:
+#     """
+#     Fetches alerts from the Graylog Alert Index.
+
+#     Args:
+#         es_client: The Elasticsearch client.
+#         index_prefix (str): The prefix of the index to search for alerts.
+#         size (int): The number of alerts to retrieve.
+
+#     Returns:
+#         List[Dict]: A list of alerts.
+#     """
+#     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+#     es_query = {
+#         "size": size,
+#         "query": {
+#             "bool": {
+#                 "must": [
+#                     {
+#                         "range": {
+#                             "timestamp": {
+#                                 "gte": parse_timerange(timerange),
+#                                 "format": "strict_date_optional_time",
+#                             },
+#                         },
+#                     },
+#                 ],
+#             },
+#         },
+#     }
+#     response = await es_client.search(index=index_prefix, body=es_query)
+#     logger.info(f"Graylog alerts response: {response}")
+#     return response["hits"]["hits"]
+
+
+# async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
+#     """
+#     Processes the hits from the Graylog alert search response.
+
+#     Args:
+#         es_client: The Elasticsearch client.
+#         hits (List[Dict]): The hits from the search response.
+
+#     Returns:
+#         List[Dict]: A list of detailed alerts.
+#     """
+#     alerts_dict = defaultdict(lambda: {"total_alerts": 0, "alerts": []})
+
+#     for hit in hits:
+#         origin_context = hit["_source"]["origin_context"]
+#         index_name, index_id = await get_original_alert_id(origin_context)
+#         logger.info(f"Fetching alert details for index {index_name} and id {index_id}")
+#         alert_details = await get_single_alert_details(index_name, index_id)
+#         logger.info(f"Alert details: {alert_details}")
+
+#         alerts_dict[index_name]["total_alerts"] += 1
+#         alerts_dict[index_name]["alerts"].append(alert_details)
+
+#     alerts = [
+#         Alert(index_name=index_name, total_alerts=data["total_alerts"], alerts=data["alerts"]) for index_name, data in alerts_dict.items()
+#     ]
+
+#     return alerts
+
+
+# async def get_graylog_alerts(
+#     request: GraylogAlertsSearchBody,
+# ) -> AlertsSearchResponse:
+#     """
+#     Retrieves alerts from the Graylog Alert Index.
+#     Looks up the actual alert details via the origin_context field.
+#     Strips out the index name and id from the origin_context field.
+#     Example: urn:graylog:message:es:huntress_00002_0:b4d2c721-f690-11ee-ac73-8600007a2218
+#     Looks up each alert by the index name and id.
+#     Adds each alert to the response.
+#     """
+#     logger.info(f"Fetching Graylog alerts for request: {request}")
+
+#     hits = await fetch_alerts_from_graylog(request.index_prefix, request.size, request.timerange)
+#     alerts = await process_alert_hits(hits)
+
+#     return alerts
+
+# ! ^^THIS IS OLD WITH ASYNC OPERATIONS^^ ! #
 
 async def get_single_alert_details(
+    es_client: AsyncElasticsearch,
     index_name: str,
     index_id: str,
 ) -> Dict:
@@ -393,9 +505,8 @@ async def get_single_alert_details(
     Returns:
         dict: The details of the alert.
     """
-    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        alert = es_client.get(index=index_name, id=index_id)
+        alert = await es_client.get(index=index_name, id=index_id)
         return alert
     except NotFoundError:
         logger.warning(f"Alert not found for index {index_name} and id {index_id}")
@@ -414,7 +525,7 @@ async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str
     Returns:
         List[Dict]: A list of alerts.
     """
-    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     es_query = {
         "size": size,
         "query": {
@@ -432,12 +543,12 @@ async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str
             },
         },
     }
-    response = es_client.search(index=index_prefix, body=es_query)
+    response = await es_client.search(index=index_prefix, body=es_query)
     logger.info(f"Graylog alerts response: {response}")
     return response["hits"]["hits"]
 
 
-async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
+async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) -> List[Dict]:
     """
     Processes the hits from the Graylog alert search response.
 
@@ -450,19 +561,31 @@ async def process_alert_hits(hits: List[Dict]) -> List[Dict]:
     """
     alerts_dict = defaultdict(lambda: {"total_alerts": 0, "alerts": []})
 
+    tasks = []
     for hit in hits:
         origin_context = hit["_source"]["origin_context"]
         index_name, index_id = await get_original_alert_id(origin_context)
         logger.info(f"Fetching alert details for index {index_name} and id {index_id}")
-        alert_details = await get_single_alert_details(index_name, index_id)
-        logger.info(f"Alert details: {alert_details}")
+        task = get_single_alert_details(es_client, index_name, index_id)
+        tasks.append(task)
 
+    alert_details_list = await asyncio.gather(*tasks)
+
+    for alert_details in alert_details_list:
+        index_name = alert_details["_index"]
         alerts_dict[index_name]["total_alerts"] += 1
         alerts_dict[index_name]["alerts"].append(alert_details)
 
     alerts = [
-        Alert(index_name=index_name, total_alerts=data["total_alerts"], alerts=data["alerts"]) for index_name, data in alerts_dict.items()
+        {
+            "index_name": index_name,
+            "total_alerts": data["total_alerts"],
+            "alerts": data["alerts"]
+        }
+        for index_name, data in alerts_dict.items()
     ]
+
+    logger.info(f"Processed alerts: {alerts}")
 
     return alerts
 
@@ -481,6 +604,6 @@ async def get_graylog_alerts(
     logger.info(f"Fetching Graylog alerts for request: {request}")
 
     hits = await fetch_alerts_from_graylog(request.index_prefix, request.size, request.timerange)
-    alerts = await process_alert_hits(hits)
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-    return alerts
+    return await process_alert_hits(hits, es_client)
