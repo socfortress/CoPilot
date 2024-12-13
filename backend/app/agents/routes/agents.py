@@ -5,7 +5,7 @@ import io
 # from fastapi import BackgroundTasks
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from fastapi import Path
 from fastapi import Security
 from fastapi.responses import StreamingResponse
@@ -828,6 +828,7 @@ async def sync_vulnerabilities_route(
 )
 async def sync_vulnerabilities_customer_code_route(
     customer_code: str,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
     logger.info("Syncing agent vulnerabilities")
@@ -836,8 +837,8 @@ async def sync_vulnerabilities_customer_code_route(
         if agent.customer_code is None:
             logger.info(f"Skipping agent {agent.hostname} due to missing customer code")
             continue
-        await sync_agent_vulnerabilities(agent.hostname, customer_code)
-    return {"success": True, "message": "Agent vulnerabilities synced successfully"}
+        background_tasks.add_task(sync_agent_vulnerabilities, agent.hostname, customer_code)
+    return {"success": True, "message": "Agent vulnerabilities sync initiated successfully"}
 
 
 # ! TODO: CURRENTLY UPDATES IN THE DB BUT NEED TO UPDATE IN WAZUH # !

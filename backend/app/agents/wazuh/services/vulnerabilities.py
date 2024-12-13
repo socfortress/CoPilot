@@ -119,7 +119,8 @@ def filter_vulnerabilities_indices_sync(indices_list, customer_code):
     Filter the indices list to only include the vulnerability indices which are relevant to the customer.
     Notice the missing `states` in the index name.
     """
-    return [index for index in indices_list if index.startswith(f"wazuh-vulnerabilities-{customer_code}")]
+    # ! Make the customer code lowercase ! #
+    return [index for index in indices_list if index.startswith(f"wazuh-vulnerabilities-{customer_code.lower()}")]
 
 
 async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
@@ -308,7 +309,6 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
     processed_vulnerabilities = process_agent_vulnerabilities_new(agent_vulnerabilities)
 
     customer_vulnerabilities_indices = filter_vulnerabilities_indices_sync(indices.indices_list, customer_code)
-    logger.info(f"Customer vulnerabilities indices: {customer_vulnerabilities_indices}")
 
     if customer_vulnerabilities_indices:
         logger.info("Customer vulnerabilities index already exists")
