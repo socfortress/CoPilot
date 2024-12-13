@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from fastapi import HTTPException
@@ -7,6 +8,9 @@ from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilities
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
@@ -194,6 +198,45 @@ async def collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, 
     return agent_vulnerabilities
 
 
+async def collect_vulnerabilities_async(es, vulnerabilities_indices, agent_name, vulnerability_severity="All"):
+    agent_vulnerabilities = []
+    for index in vulnerabilities_indices:
+        if vulnerability_severity == "All":
+            query = {
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"match": {"agent.name": agent_name}},
+                            {"terms": {"vulnerability.severity": ["Low", "Medium", "High", "Critical"]}},
+                        ],
+                    },
+                },
+            }
+        else:
+            query = {
+                "query": {
+                    "bool": {
+                        "must": [{"match": {"agent.name": agent_name}}, {"match": {"vulnerability.severity": vulnerability_severity}}],
+                    },
+                },
+            }
+
+        page = await es.search(index=index, body=query, scroll="2m")
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
+
+        while scroll_size > 0:
+            for hit in page["hits"]["hits"]:
+                vulnerability = hit["_source"]
+                agent_vulnerabilities.append(vulnerability)
+
+            page = await es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
+
+    return agent_vulnerabilities
+
+
 def process_agent_vulnerabilities_new(agent_vulnerabilities: List[dict]) -> List[WazuhAgentVulnerabilities]:
     logger.info(f"Processing agent vulnerabilities: {agent_vulnerabilities}")
 
@@ -229,7 +272,7 @@ def ensure_list(value):
     return value
 
 
-async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index_prefix):
+async def check_vulnerability_exists_async(es, vulnerability_cve, agent_name, index_prefix):
     query = {
         "query": {
             "bool": {
@@ -241,7 +284,7 @@ async def check_vulnerability_exists(es, vulnerability_cve, agent_name, index_pr
         },
     }
     index_pattern = f"{index_prefix}*"
-    response = es.search(index=index_pattern, body=query)
+    response = await es.search(index=index_pattern, body=query)
     return response["hits"]["total"]["value"] > 0
 
 
@@ -255,12 +298,12 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
     """
     logger.info(f"Syncing agent {agent_name} with customer code {customer_code} vulnerabilities")
 
-    es = await create_wazuh_indexer_client("Wazuh-Indexer")
+    es = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     indices = await collect_indices(all_indices=True)
 
     vulnerabilities_indices = filter_vulnerabilities_indices(indices.indices_list)
 
-    agent_vulnerabilities = await collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, vulnerability_severity="All")
+    agent_vulnerabilities = await collect_vulnerabilities_async(es, vulnerabilities_indices, agent_name, vulnerability_severity="All")
 
     processed_vulnerabilities = process_agent_vulnerabilities_new(agent_vulnerabilities)
 
@@ -269,16 +312,26 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
 
     if customer_vulnerabilities_indices:
         logger.info("Customer vulnerabilities index already exists")
-        # ! Check to see if the vulnerability exists in the customer's index and send to Graylog if it does not exist in the customer's index ! #
-        for vulnerability in processed_vulnerabilities:
-            vulnerability_exists = await check_vulnerability_exists(
+        # Create a list of tasks for checking vulnerabilities
+        tasks = [
+            check_vulnerability_exists_async(
                 es,
                 vulnerability_cve=vulnerability.cve,
                 agent_name=agent_name,
                 index_prefix=f"wazuh-vulnerabilities-{customer_code}",
             )
+            for vulnerability in processed_vulnerabilities
+        ]
 
+        # Run all tasks concurrently
+        results = await asyncio.gather(*tasks)
+
+        # Process the results
+        for vulnerability, vulnerability_exists in zip(processed_vulnerabilities, results):
             if not vulnerability_exists:
+                logger.info(
+                    f"Vulnerability {vulnerability.cve} does not exist in customer index for agent {agent_name}, sending to Graylog",
+                )
                 await event_shipper(
                     EventShipperPayload(
                         integration="vulnerabilities",
