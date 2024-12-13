@@ -9,7 +9,7 @@
 					:agents-filtered-length="agentsFiltered.length"
 					:agents-critical="agentsCritical"
 					:agents-online="agentsOnline"
-					@sync="syncAgents()"
+					@run="runCommand($event)"
 					@click.stop="gotoAgent($event.agent_id)"
 				/>
 			</div>
@@ -61,6 +61,7 @@ import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import { useGoto } from "@/composables/useGoto"
 import { type Agent, AgentStatus } from "@/types/agents.d"
 import _debounce from "lodash/debounce"
+import _split from "lodash/split"
 import { NEmpty, NPagination, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 
@@ -107,6 +108,14 @@ const agentsOnline = computed(() => {
 	return agents.value.filter(({ wazuh_agent_status }) => wazuh_agent_status === AgentStatus.Active)
 })
 
+function runCommand(command: string) {
+	if (command === "sync-agents") {
+		syncAgents()
+	} else if (_split(command, ":").length) {
+		syncVulnerabilities(_split(command, ":")[1])
+	}
+}
+
 function getAgents() {
 	loadingAgents.value = true
 
@@ -135,6 +144,31 @@ function syncAgents() {
 		.then(res => {
 			if (res.data.success) {
 				message.success("Agents Synced Successfully")
+				getAgents()
+			} else {
+				message.error("An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response?.status === 401) {
+				message.error(err.response?.data?.message || "Sync returned Unauthorized.")
+			} else {
+				message.error(err.response?.data?.message || "Failed to Sync Agents")
+			}
+		})
+		.finally(() => {
+			loadingSync.value = false
+		})
+}
+
+function syncVulnerabilities(customerCode: string) {
+	loadingSync.value = true
+
+	Api.agents
+		.syncVulnerabilities(customerCode)
+		.then(res => {
+			if (res.data.success) {
+				message.success("Agent vulnerabilities synced successfully")
 				getAgents()
 			} else {
 				message.error("An error occurred. Please try again later.")

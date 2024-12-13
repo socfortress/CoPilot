@@ -31,6 +31,9 @@ export default {
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
+	syncVulnerabilities(customerCode: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/agents/sync/vulnerabilities/${customerCode}`)
+	},
 	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
 			`/agents/${agentId}/vulnerabilities/${severity}`,

@@ -8,7 +8,17 @@
 							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
-					<n-button :loading="syncing" @click="emit('sync')">Sync</n-button>
+
+					<n-dropdown
+						v-if="enableSyncVulnerabilitiesDropdown"
+						placement="bottom-start"
+						trigger="click"
+						:options="customersOptions"
+						@select="emit('run', $event)"
+					>
+						<n-button :loading="syncing" secondary @click="load()">Sync</n-button>
+					</n-dropdown>
+					<n-button v-else :loading="syncing" secondary @click="emit('run', 'sync-agents')">Sync</n-button>
 				</div>
 				<div class="search-info">
 					<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
@@ -60,13 +70,18 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { Customer } from "@/types/customers.d"
+import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NCard, NInput, NScrollbar } from "naive-ui"
-import { computed, toRefs } from "vue"
+import { useWindowSize } from "@vueuse/core"
+import { NButton, NCard, NDropdown, NInput, NScrollbar, useMessage } from "naive-ui"
+import { computed, h, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	modelValue: string
 	syncing?: boolean
+	enableSyncVulnerabilitiesDropdown?: boolean
 	agentsLength?: number
 	agentsFilteredLength?: number
 	agentsCritical?: Agent[]
@@ -74,15 +89,23 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "sync"): void
+	(e: "run", value: "sync-agents" | `sync-vulnerabilities:${string}`): void
 	(e: "update:modelValue", value: string): void
 	(e: "click", value: Agent): void
 }>()
 
+const {
+	modelValue,
+	syncing,
+	agentsLength,
+	agentsFilteredLength,
+	agentsCritical,
+	agentsOnline,
+	enableSyncVulnerabilitiesDropdown
+} = toRefs(props)
+
 const SearchIcon = "carbon:search"
-
-const { modelValue, syncing, agentsLength, agentsFilteredLength, agentsCritical, agentsOnline } = toRefs(props)
-
+const message = useMessage()
 const textFilter = computed<string>({
 	get() {
 		return modelValue.value
@@ -91,6 +114,75 @@ const textFilter = computed<string>({
 		emit("update:modelValue", value)
 	}
 })
+const loadingCustomersList = ref(false)
+const customersList = ref<Customer[]>([])
+const { width: winWidth } = useWindowSize()
+
+const customersOptions = computed(() => {
+	const options: DropdownMixedOption[] = [
+		{
+			label: "Sync Agents",
+			key: "sync-agents"
+		}
+	]
+
+	if (winWidth.value > 550) {
+		options.push({
+			label: `Sync Agent Vulnerabilities${loadingCustomersList.value ? "..." : ""}`,
+			key: "sync-vulnerabilities",
+			disabled: loadingCustomersList.value,
+			children: loadingCustomersList.value
+				? undefined
+				: [
+						{
+							label: () => h("div", { class: "pl-2" }, "Select a Customer"),
+							type: "group",
+							children: customersList.value.map(o => ({
+								label: `#${o.customer_code} - ${o.customer_name}`,
+								key: `sync-vulnerabilities:${o.customer_code}`
+							}))
+						}
+					]
+		})
+	} else {
+		options.push({
+			label: () => h("div", { class: "pl-2" }, "Select a Customer"),
+			type: "group",
+			children: customersList.value.map(o => ({
+				label: `#${o.customer_code} - ${o.customer_name}`,
+				key: `sync-vulnerabilities:${o.customer_code}`
+			}))
+		})
+	}
+
+	return options
+})
+
+function getCustomers() {
+	loadingCustomersList.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomersList.value = false
+		})
+}
+
+function load() {
+	if (!customersList.value.length) {
+		getCustomers()
+	}
+}
 </script>
 
 <style lang="scss" scoped>
