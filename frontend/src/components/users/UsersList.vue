@@ -28,7 +28,7 @@
 								<div v-if="isAdmin" class="flex justify-end">
 									<n-dropdown
 										trigger="hover"
-										:options="options"
+										:options
 										display-directive="show"
 										:keyboard="false"
 										@click="selectedUser = user.username"
