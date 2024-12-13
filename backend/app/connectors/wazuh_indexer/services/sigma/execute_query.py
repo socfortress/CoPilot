@@ -4,6 +4,7 @@ from typing import List
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
 
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
