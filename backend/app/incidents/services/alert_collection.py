@@ -45,7 +45,7 @@ async def fetch_alerts_for_index(es_client, index, query):
 
     # Keep fetching results while there are still results to fetch
     while len(response["hits"]["hits"]):
-        response = es_client.scroll(scroll_id=scroll_id, scroll="2m")  # Extend the scroll context for another 2 minutes
+        response = await es_client.scroll(scroll_id=scroll_id, scroll="2m")  # Extend the scroll context for another 2 minutes
         # Update the scroll ID in case it changes
         scroll_id = response["_scroll_id"]
         hits.extend(response["hits"]["hits"])

@@ -14,7 +14,7 @@ from sqlalchemy.future import select
 
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client, create_wazuh_indexer_client_async
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -112,9 +112,9 @@ async def get_single_alert_details(
     logger.info(
         f"Fetching alert details for alert {alert_details.alert_id} in index {alert_details.index_name}",
     )
-    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
-        alert = es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
+        alert = await es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
         source_model = GenericSourceModel(**alert["_source"])
         syslog_type = getattr(source_model, "syslog_type", None)
         if syslog_type is None:
@@ -236,9 +236,9 @@ async def add_alert_to_document(
     Returns:
     - True if the update is successful, False otherwise.
     """
-    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
-        es_client.update(
+        await es_client.update(
             index=alert.index_name,
             id=alert.alert_id,
             body={"doc": {"alert_id": soc_alert_id}},
@@ -253,7 +253,7 @@ async def add_alert_to_document(
         )
         # Attempt to remove read-only block
         try:
-            es_client.indices.put_settings(
+            await es_client.indices.put_settings(
                 index=alert.index_name,
                 body={"index.blocks.write": None},
             )
@@ -262,7 +262,7 @@ async def add_alert_to_document(
             )
 
             # Retry the update operation
-            es_client.update(
+            await es_client.update(
                 index=alert.index_name,
                 id=alert.alert_id,
                 body={"doc": {"alert_id": soc_alert_id}},
@@ -272,7 +272,7 @@ async def add_alert_to_document(
             )
 
             # Reenable the write block
-            es_client.indices.put_settings(
+            await es_client.indices.put_settings(
                 index=alert.index_name,
                 body={"index.blocks.write": True},
             )
