@@ -64,7 +64,7 @@ export const useAuthStore = defineStore("auth", {
 				return response.data
 			} catch (err) {
 				const error = err as ApiError
-				return error.response?.data
+				throw error.response?.data
 			}
 		},
 		getEmail() {
