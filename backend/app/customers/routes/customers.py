@@ -152,7 +152,7 @@ async def create_customer(
     logger.info(f"Creating new customer: {customer}")
     new_customer = Customers(**customer.dict())
     session.add(new_customer)
-    await session.commit()  # Use await to perform the commit operation asynchronously
+    await session.commit()
     return CustomerResponse(
         customer=customer,
         success=True,
