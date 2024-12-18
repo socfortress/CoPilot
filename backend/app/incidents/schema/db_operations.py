@@ -194,6 +194,10 @@ class CaseAlertLinkResponse(BaseModel):
     success: bool
     message: str
 
+class CaseAlertLinksResponse(BaseModel):
+    case_alert_links: List[CaseAlertLink]
+    success: bool
+    message: str
 
 class AvailableUsersResponse(BaseModel):
     available_users: List[str]
@@ -287,6 +291,10 @@ class CaseCreateFromAlert(BaseModel):
 class CaseAlertLinkCreate(BaseModel):
     case_id: int
     alert_id: int
+
+class CaseAlertLinksCreate(BaseModel):
+    case_id: int
+    alert_ids: List[int]
 
 
 class AssetCreate(BaseModel):

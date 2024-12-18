@@ -54,7 +54,7 @@ from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseAlertLinksCreate
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
@@ -1117,6 +1117,15 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Case alert link already exists")
     return db_case_alert_link
+
+async def create_case_alert_links_bulk(case_alert_links: CaseAlertLinksCreate, db: AsyncSession) -> List[CaseAlertLink]:
+    db_case_alert_links = [CaseAlertLink(case_id=case_alert_links.case_id, alert_id=alert_id) for alert_id in case_alert_links.alert_ids]
+    db.add_all(db_case_alert_links)
+    try:
+        await db.commit()
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Case alert links already exist")
+    return db_case_alert_links
 
 
 async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:

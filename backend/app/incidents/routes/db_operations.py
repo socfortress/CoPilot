@@ -68,7 +68,7 @@ from app.incidents.schema.db_operations import DeleteAlertsResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
-from app.incidents.schema.db_operations import MappingsResponse
+from app.incidents.schema.db_operations import MappingsResponse, CaseAlertLinksResponse, CaseAlertLinksCreate
 from app.incidents.schema.db_operations import NotificationResponse
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
@@ -142,7 +142,7 @@ from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
 from app.incidents.services.db_operations import delete_ioc_name
 from app.incidents.services.db_operations import delete_report_template
-from app.incidents.services.db_operations import delete_timefield_name
+from app.incidents.services.db_operations import delete_timefield_name, create_case_alert_links_bulk
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import edit_comment
@@ -539,6 +539,13 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
         message="Case alert link created successfully",
     )
 
+@incidents_db_operations_router.post("/case/alert-links", response_model=CaseAlertLinksResponse)
+async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreate, db: AsyncSession = Depends(get_db)):
+    return CaseAlertLinksResponse(
+        case_alert_links=await create_case_alert_links_bulk(case_alert_links, db),
+        success=True,
+        message="Case alert links created successfully",
+    )
 
 @incidents_db_operations_router.post("/case/from-alert", response_model=CaseAlertLinkResponse)
 async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: AsyncSession = Depends(get_db)):
