@@ -141,7 +141,7 @@
 			<div class="footer-box bg-secondary flex items-center gap-2 px-7 py-4">
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<AlertMergeCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
+				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
 
 				<div v-if="linkedCases.length" class="flex flex-wrap items-center gap-3">
 					<span>Linked Cases:</span>

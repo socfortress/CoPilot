@@ -313,11 +313,21 @@ export default {
 			}
 		)
 	},
+	/** @deprecated in favor of multiLinkCase */
 	linkCase(alertId: number, caseId: number) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
 			`/incidents/db_operations/case/alert-link`,
 			{
 				alert_id: alertId,
+				case_id: caseId
+			}
+		)
+	},
+	multiLinkCase(alertIds: number[], caseId: number) {
+		return HttpClient.post<FlaskBaseResponse & { case_alert_links: { case_id: number; alert_id: number }[] }>(
+			`/incidents/db_operations/case/alert-links`,
+			{
+				alert_ids: alertIds,
 				case_id: caseId
 			}
 		)

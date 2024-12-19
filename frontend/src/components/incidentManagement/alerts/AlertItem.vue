@@ -24,6 +24,7 @@
 					</div>
 				</div>
 			</template>
+
 			<template v-if="alert?.alert_creation_time" #headerExtra>
 				<div :class="{ 'hidden sm:block': !compact }">
 					<n-popover
@@ -168,6 +169,14 @@
 							</div>
 						</template>
 					</Badge>
+
+					<Badge type="splitted" class="!hidden sm:!flex">
+						<template #label>Linked Cases</template>
+						<template #value>
+							<AlertLinkedCases v-if="alert.linked_cases?.length" :alert />
+							<span v-else>n/d</span>
+						</template>
+					</Badge>
 				</div>
 			</template>
 
@@ -234,6 +243,7 @@
 					</span>
 				</div>
 			</template>
+
 			<template v-if="alert && !compact" #footerExtra>
 				<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
 			</template>
@@ -271,7 +281,7 @@ import { formatDate } from "@/utils"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
 import { NButton, NCard, NCheckbox, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
@@ -299,6 +309,7 @@ const emit = defineEmits<{
 }>()
 
 const AlertAssetItem = defineAsyncComponent(() => import("./AlertAsset.vue"))
+const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const { alertData, alertId, compact, embedded, detailsOnMounted, highlight, selectable, checked } = toRefs(props)
 
@@ -377,15 +388,19 @@ function closeDetails() {
 	showDetails.value = false
 }
 
-onBeforeMount(() => {
-	if (alertId.value) {
-		getAlert(alertId.value)
-	} else if (alertData.value?.id && alertData.value?.linked_cases === undefined) {
-		getAlert(alertData.value.id)
-	} else if (alertData.value) {
-		alert.value = _clone(alertData.value)
-	}
-})
+watch(
+	[alertId, alertData],
+	() => {
+		if (alertId.value) {
+			getAlert(alertId.value)
+		} else if (alertData.value?.id && alertData.value?.linked_cases === undefined) {
+			getAlert(alertData.value.id)
+		} else if (alertData.value) {
+			alert.value = _clone(alertData.value)
+		}
+	},
+	{ immediate: true }
+)
 
 onMounted(() => {
 	if (detailsOnMounted.value) {

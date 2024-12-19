@@ -1,5 +1,5 @@
 <template>
-	<n-button secondary :loading="merging" @click="openDialog()">
+	<n-button secondary :loading="merging" :size @click="openDialog()">
 		<template #icon>
 			<Icon :name="MergeIcon" />
 		</template>
@@ -10,9 +10,9 @@
 		v-model:show="showMergeBox"
 		display-directive="show"
 		preset="card"
-		title="Select the case you want to merge it with"
+		:title="`Select the case you want to merge ${alerts.length > 1 ? 'them' : 'it'} with :`"
 		:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', maxHeight: '80vh' }"
-		content-class="overflow-hidden flex flex-col !px-2"
+		content-class="overflow-hidden flex flex-col !px-2 !py-0"
 		segmented
 	>
 		<n-spin
@@ -21,7 +21,7 @@
 			content-class="grow overflow-hidden flex flex-col"
 		>
 			<n-scrollbar class="flex grow flex-col" content-class="grow" trigger="none">
-				<div class="flex flex-col gap-2 px-5 py-2">
+				<div class="flex flex-col gap-2 px-5 py-5">
 					<template v-if="linkableCases.length">
 						<CaseItem
 							v-for="item of linkableCases"
@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _orderBy from "lodash/orderBy"
@@ -63,15 +64,14 @@ import { NButton, NEmpty, NModal, NScrollbar, NSpin, useMessage } from "naive-ui
 import { inject, ref, type Ref, toRefs, watch } from "vue"
 import CaseItem from "../cases/CaseItem.vue"
 
-const props = defineProps<{ alert: Alert }>()
+const { alerts, size } = defineProps<{ alerts: Alert[]; size?: Size }>()
+
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void
+	(e: "merged"): void
 }>()
 
-const { alert } = toRefs(props)
-
 const MergeIcon = "carbon:ibm-cloud-direct-link-1-connect"
-
 const message = useMessage()
 const merging = ref(false)
 const showMergeBox = ref(false)
@@ -130,24 +130,33 @@ function linkCase() {
 		merging.value = true
 
 		Api.incidentManagement
-			.linkCase(alert.value.id, selectedCase.value.id)
+			.multiLinkCase(
+				alerts.map(o => o.id),
+				selectedCase.value.id
+			)
 			.then(res => {
 				if (res.data.success) {
 					closeDialog()
-					updateAlert({
-						...alert.value,
-						linked_cases: [
-							{
-								id: res.data.case_alert_link.case_id,
-								case_name: "",
-								case_description: "",
-								case_creation_time: new Date(),
-								assigned_to: null,
-								case_status: null,
-								customer_code: null
-							}
-						]
-					})
+
+					for (const alert of alerts) {
+						const case_id = res.data.case_alert_links.find(o => o.alert_id === alert.id)?.case_id || 0
+						updateAlert({
+							...alert,
+							linked_cases: [
+								{
+									id: case_id,
+									case_name: "",
+									case_description: "",
+									case_creation_time: new Date(),
+									assigned_to: null,
+									case_status: null,
+									customer_code: null
+								}
+							]
+						})
+					}
+
+					emit("merged")
 					message.success(res.data?.message || "Case linked successfully")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -162,9 +171,3 @@ function linkCase() {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.active {
-	box-shadow: 0px 0px 0px 2px var(--success-color) !important;
-}
-</style>

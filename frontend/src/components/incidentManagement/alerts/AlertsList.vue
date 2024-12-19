@@ -148,6 +148,14 @@
 					</template>
 				</n-popover>
 
+				<AlertMergeCaseButton
+					v-if="checkedNoLinkedAlerts.length"
+					:alerts="checkedNoLinkedAlerts"
+					size="small"
+					@updated="updateAlert"
+					@merged="resetChecked()"
+				/>
+
 				<n-popconfirm to="body" @positive-click="deleteAlerts()">
 					<template #trigger>
 						<n-button size="small" type="error" secondary :loading="deleting">
@@ -222,7 +230,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, nextTick, onBeforeMount, provide, ref, watch } from "vue"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, watch } from "vue"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
@@ -236,11 +244,14 @@ const {
 	showFilters?: boolean
 }>()
 
+const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
+
 const FilterIcon = "carbon:filter-edit"
 const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 
 const checkedAlerts = ref<Alert[]>([])
+const checkedNoLinkedAlerts = computed(() => checkedAlerts.value.filter(alert => !alert.linked_cases.length))
 const message = useMessage()
 const loading = ref(false)
 const deleting = ref(false)
