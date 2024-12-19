@@ -7,7 +7,7 @@
 		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
 			<SidebarHeader :logo-mini="sidebarClosed" />
 			<n-scrollbar>
-				<Navbar :collapsed="sidebarClosed" />
+				<Navbar :collapsed="sidebarClosed" mode="vertical" />
 			</n-scrollbar>
 			<SidebarFooter :collapsed="sidebarClosed" />
 		</div>
