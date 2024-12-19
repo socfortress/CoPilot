@@ -61,7 +61,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _orderBy from "lodash/orderBy"
 import { NButton, NEmpty, NModal, NScrollbar, NSpin, useMessage } from "naive-ui"
-import { inject, ref, type Ref, toRefs, watch } from "vue"
+import { inject, ref, type Ref, watch } from "vue"
 import CaseItem from "../cases/CaseItem.vue"
 
 const { alerts, size } = defineProps<{ alerts: Alert[]; size?: Size }>()
