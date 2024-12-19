@@ -55,6 +55,9 @@ from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinksCreate
+from app.incidents.schema.db_operations import CaseAlertUnLink
+from app.incidents.schema.db_operations import CaseAlertUnLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
@@ -1119,6 +1122,34 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
     return db_case_alert_link
 
 
+async def case_alert_unlink(case_alert_unlink: CaseAlertUnLink, db: AsyncSession) -> CaseAlertUnLinkResponse:
+    result = await db.execute(
+        select(CaseAlertLink).where(
+            (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
+        ),
+    )
+    case_alert_link = result.scalars().first()
+    if not case_alert_link:
+        raise HTTPException(status_code=404, detail="Case alert link not found")
+    await db.execute(
+        delete(CaseAlertLink).where(
+            (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
+        ),
+    )
+    await db.commit()
+    return CaseAlertUnLinkResponse(success=True, message="Case alert link deleted successfully")
+
+
+async def create_case_alert_links_bulk(case_alert_links: CaseAlertLinksCreate, db: AsyncSession) -> List[CaseAlertLink]:
+    db_case_alert_links = [CaseAlertLink(case_id=case_alert_links.case_id, alert_id=alert_id) for alert_id in case_alert_links.alert_ids]
+    db.add_all(db_case_alert_links)
+    try:
+        await db.commit()
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Case alert links already exist")
+    return db_case_alert_links
+
+
 async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
     result = await db.execute(
         select(Case)
@@ -1850,7 +1881,7 @@ async def list_alerts_multiple_filters(
         .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
-            selectinload(Alert.cases),
+            selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
@@ -1868,6 +1899,7 @@ async def list_alerts_multiple_filters(
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1882,6 +1914,7 @@ async def list_alerts_multiple_filters(
             assets=assets,
             tags=tags,
             iocs=iocs,
+            linked_cases=linked_cases,
         )
         alerts_out.append(alert_out)
 

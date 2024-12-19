@@ -49,6 +49,10 @@ from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
+from app.incidents.schema.db_operations import CaseAlertLinksCreate
+from app.incidents.schema.db_operations import CaseAlertLinksResponse
+from app.incidents.schema.db_operations import CaseAlertUnLink
+from app.incidents.schema.db_operations import CaseAlertUnLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
@@ -81,6 +85,10 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
+
+# from app.incidents.services.db_operations import alerts_open_multiple_filters
+# from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
+# from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
@@ -97,7 +105,6 @@ from app.incidents.services.db_operations import alerts_closed_by_customer_code
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
-from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
@@ -106,7 +113,6 @@ from app.incidents.services.db_operations import alerts_in_progress_by_customer_
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
-from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
@@ -115,13 +121,13 @@ from app.incidents.services.db_operations import alerts_open_by_customer_code
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
-from app.incidents.services.db_operations import alerts_open_multiple_filters
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
 from app.incidents.services.db_operations import alerts_total_by_ioc
 from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
+from app.incidents.services.db_operations import case_alert_unlink
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_ioc
@@ -129,6 +135,7 @@ from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
+from app.incidents.services.db_operations import create_case_alert_links_bulk
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
@@ -540,6 +547,20 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
     )
 
 
+@incidents_db_operations_router.post("/case/alert-links", response_model=CaseAlertLinksResponse)
+async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreate, db: AsyncSession = Depends(get_db)):
+    return CaseAlertLinksResponse(
+        case_alert_links=await create_case_alert_links_bulk(case_alert_links, db),
+        success=True,
+        message="Case alert links created successfully",
+    )
+
+
+@incidents_db_operations_router.post("/case/alert-unlink", response_model=CaseAlertUnLinkResponse)
+async def case_alert_unlink_endpoint(case_alert_link: CaseAlertUnLink, db: AsyncSession = Depends(get_db)):
+    return await case_alert_unlink(case_alert_link, db)
+
+
 @incidents_db_operations_router.post("/case/from-alert", response_model=CaseAlertLinkResponse)
 async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: AsyncSession = Depends(get_db)):
     case = await create_case_from_alert(alert_id.alert_id, db)
@@ -792,7 +813,7 @@ async def list_alerts_multiple_filters_endpoint(
             page_size=page_size,
             order=order,
         ),
-        total=await alerts_total_multiple_filters(
+        total_filtered=await alerts_total_multiple_filters(
             assigned_to=assigned_to,
             alert_title=alert_title,
             customer_code=customer_code,
@@ -803,39 +824,43 @@ async def list_alerts_multiple_filters_endpoint(
             ioc_value=ioc_value,
             db=db,
         ),
-        open=await alerts_open_multiple_filters(
-            assigned_to=assigned_to,
-            alert_title=alert_title,
-            customer_code=customer_code,
-            source=source,
-            asset_name=asset_name,
-            status=status,
-            tags=tags,
-            ioc_value=ioc_value,
-            db=db,
-        ),
-        in_progress=await alerts_in_progress_multiple_filters(
-            assigned_to=assigned_to,
-            alert_title=alert_title,
-            customer_code=customer_code,
-            source=source,
-            asset_name=asset_name,
-            status=status,
-            tags=tags,
-            ioc_value=ioc_value,
-            db=db,
-        ),
-        closed=await alerts_closed_multiple_filters(
-            assigned_to=assigned_to,
-            alert_title=alert_title,
-            customer_code=customer_code,
-            source=source,
-            asset_name=asset_name,
-            status=status,
-            tags=tags,
-            ioc_value=ioc_value,
-            db=db,
-        ),
+        # open=await alerts_open_multiple_filters(
+        #     assigned_to=assigned_to,
+        #     alert_title=alert_title,
+        #     customer_code=customer_code,
+        #     source=source,
+        #     asset_name=asset_name,
+        #     status=status,
+        #     tags=tags,
+        #     ioc_value=ioc_value,
+        #     db=db,
+        # ),
+        open=await alerts_open(db),
+        # in_progress=await alerts_in_progress_multiple_filters(
+        #     assigned_to=assigned_to,
+        #     alert_title=alert_title,
+        #     customer_code=customer_code,
+        #     source=source,
+        #     asset_name=asset_name,
+        #     status=status,
+        #     tags=tags,
+        #     ioc_value=ioc_value,
+        #     db=db,
+        # ),
+        in_progress=await alerts_in_progress(db),
+        # closed=await alerts_closed_multiple_filters(
+        #     assigned_to=assigned_to,
+        #     alert_title=alert_title,
+        #     customer_code=customer_code,
+        #     source=source,
+        #     asset_name=asset_name,
+        #     status=status,
+        #     tags=tags,
+        #     ioc_value=ioc_value,
+        #     db=db,
+        # ),
+        closed=await alerts_closed(db),
+        total=await alert_total(db),
         success=True,
         message="Alerts retrieved successfully",
     )

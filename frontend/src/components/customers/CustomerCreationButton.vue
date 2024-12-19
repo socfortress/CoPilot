@@ -43,7 +43,6 @@
 </template>
 
 <script setup lang="ts">
-import type { LicenseFeatures } from "@/types/license.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"

@@ -181,7 +181,14 @@ export default {
 		}
 
 		return HttpClient.get<
-			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
+			FlaskBaseResponse & {
+				alerts: Alert[]
+				closed: number
+				in_progress: number
+				open: number
+				total: number
+				total_filtered: number
+			}
 		>(url, {
 			params,
 			paramsSerializer: {
@@ -313,6 +320,7 @@ export default {
 			}
 		)
 	},
+	/** @deprecated in favor of multiLinkCase */
 	linkCase(alertId: number, caseId: number) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
 			`/incidents/db_operations/case/alert-link`,
@@ -321,6 +329,21 @@ export default {
 				case_id: caseId
 			}
 		)
+	},
+	multiLinkCase(alertIds: number[], caseId: number) {
+		return HttpClient.post<FlaskBaseResponse & { case_alert_links: { case_id: number; alert_id: number }[] }>(
+			`/incidents/db_operations/case/alert-links`,
+			{
+				alert_ids: alertIds,
+				case_id: caseId
+			}
+		)
+	},
+	unlinkCase(alertId: number, caseId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/alert-unlink`, {
+			alert_id: alertId,
+			case_id: caseId
+		})
 	},
 	updateCaseStatus(caseId: number, status: CaseStatus) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {

@@ -195,6 +195,17 @@ class CaseAlertLinkResponse(BaseModel):
     message: str
 
 
+class CaseAlertUnLinkResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class CaseAlertLinksResponse(BaseModel):
+    case_alert_links: List[CaseAlertLink]
+    success: bool
+    message: str
+
+
 class AvailableUsersResponse(BaseModel):
     available_users: List[str]
     success: bool
@@ -289,6 +300,16 @@ class CaseAlertLinkCreate(BaseModel):
     alert_id: int
 
 
+class CaseAlertLinksCreate(BaseModel):
+    case_id: int
+    alert_ids: List[int]
+
+
+class CaseAlertUnLink(BaseModel):
+    case_id: int
+    alert_id: int
+
+
 class AssetCreate(BaseModel):
     alert_linked: int
     asset_name: str
@@ -370,6 +391,7 @@ class AlertOutResponse(BaseModel):
     open: Optional[int] = None
     in_progress: Optional[int] = None
     closed: Optional[int] = None
+    total_filtered: Optional[int] = None
     success: bool
     message: str
 

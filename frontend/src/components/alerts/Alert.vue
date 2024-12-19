@@ -17,7 +17,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
+							<Icon :name="TargetIcon" :size="13" class="!opacity-80" />
 						</template>
 						<template #label>Fired times</template>
 						<template #value>
@@ -27,7 +27,7 @@
 
 					<Badge :type="alert._source.rule_mail ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="alert._source.rule_mail ? MailIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="alert._source.rule_mail ? MailIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>Rule mail</template>
 					</Badge>
@@ -36,13 +36,13 @@
 						<template #trigger>
 							<Badge type="splitted" color="primary" hint-cursor>
 								<template #iconLeft>
-									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
+									<Icon :name="AgentIcon" :size="13" class="!opacity-80" />
 								</template>
 								<template #label>Agent</template>
 								<template #value>
 									<div class="flex flex-wrap items-center gap-2">
 										{{ alert._source.agent_name }} / {{ alert._source.agent_labels_customer }}
-										<Icon :name="InfoIcon" :size="13" class="!opacity-80"></Icon>
+										<Icon :name="InfoIcon" :size="13" class="!opacity-80" />
 									</div>
 								</template>
 							</Badge>

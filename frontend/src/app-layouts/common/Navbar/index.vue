@@ -5,7 +5,7 @@
 			v-model:value="selectedKey"
 			:options="menuOptions"
 			:collapsed="collapsed"
-			:mode="mode"
+			:mode
 			:accordion="true"
 			:collapsed-width="collapsedWidth"
 			:dropdown-props="{
