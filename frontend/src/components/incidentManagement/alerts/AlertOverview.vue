@@ -145,7 +145,7 @@
 
 				<div v-if="linkedCases.length" class="flex flex-wrap items-center gap-3">
 					<span>Linked Cases:</span>
-					<AlertLinkedCases :alert />
+					<AlertLinkedCases :alert @updated="updateAlert($event)" />
 				</div>
 
 				<div class="grow"></div>

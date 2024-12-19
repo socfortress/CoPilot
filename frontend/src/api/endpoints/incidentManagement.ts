@@ -339,6 +339,12 @@ export default {
 			}
 		)
 	},
+	unlinkCase(alertId: number, caseId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/alert-unlink`, {
+			alert_id: alertId,
+			case_id: caseId
+		})
+	},
 	updateCaseStatus(caseId: number, status: CaseStatus) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
 			case_id: caseId,

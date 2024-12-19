@@ -139,18 +139,19 @@ function linkCase() {
 					closeDialog()
 
 					for (const alert of alerts) {
-						const case_id = res.data.case_alert_links.find(o => o.alert_id === alert.id)?.case_id || 0
+						const caseId = res.data.case_alert_links.find(o => o.alert_id === alert.id)?.case_id || 0
+						const caseData = linkableCases.value.find(o => o.id === caseId) || null
 						updateAlert({
 							...alert,
 							linked_cases: [
 								{
-									id: case_id,
-									case_name: "",
-									case_description: "",
-									case_creation_time: new Date(),
-									assigned_to: null,
-									case_status: null,
-									customer_code: null
+									id: caseId,
+									case_name: caseData?.case_name || "",
+									case_description: caseData?.case_description || "",
+									case_creation_time: caseData?.case_creation_time || new Date(),
+									assigned_to: caseData?.assigned_to || null,
+									case_status: caseData?.case_status || null,
+									customer_code: caseData?.customer_code || null
 								}
 							]
 						})

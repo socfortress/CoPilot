@@ -173,7 +173,7 @@
 					<Badge type="splitted" class="!hidden sm:!flex">
 						<template #label>Linked Cases</template>
 						<template #value>
-							<AlertLinkedCases v-if="alert.linked_cases?.length" :alert />
+							<AlertLinkedCases v-if="alert.linked_cases?.length" :alert @updated="updateAlert($event)" />
 							<span v-else>n/d</span>
 						</template>
 					</Badge>
