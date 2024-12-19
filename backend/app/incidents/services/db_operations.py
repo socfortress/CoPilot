@@ -52,9 +52,12 @@ from app.incidents.schema.db_operations import AlertIoCDelete
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
-from app.incidents.schema.db_operations import AssetBase, CaseAlertUnLink, CaseAlertUnLinkResponse
+from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseAlertLinksCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinksCreate
+from app.incidents.schema.db_operations import CaseAlertUnLink
+from app.incidents.schema.db_operations import CaseAlertUnLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
@@ -1118,14 +1121,24 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
         raise HTTPException(status_code=400, detail="Case alert link already exists")
     return db_case_alert_link
 
+
 async def case_alert_unlink(case_alert_unlink: CaseAlertUnLink, db: AsyncSession) -> CaseAlertUnLinkResponse:
-    result = await db.execute(select(CaseAlertLink).where((CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id)))
+    result = await db.execute(
+        select(CaseAlertLink).where(
+            (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
+        ),
+    )
     case_alert_link = result.scalars().first()
     if not case_alert_link:
         raise HTTPException(status_code=404, detail="Case alert link not found")
-    await db.execute(delete(CaseAlertLink).where((CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id)))
+    await db.execute(
+        delete(CaseAlertLink).where(
+            (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
+        ),
+    )
     await db.commit()
     return CaseAlertUnLinkResponse(success=True, message="Case alert link deleted successfully")
+
 
 async def create_case_alert_links_bulk(case_alert_links: CaseAlertLinksCreate, db: AsyncSession) -> List[CaseAlertLink]:
     db_case_alert_links = [CaseAlertLink(case_id=case_alert_links.case_id, alert_id=alert_id) for alert_id in case_alert_links.alert_ids]

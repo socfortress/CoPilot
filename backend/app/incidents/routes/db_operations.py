@@ -49,7 +49,11 @@ from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
-from app.incidents.schema.db_operations import CaseCreate, CaseAlertUnLink
+from app.incidents.schema.db_operations import CaseAlertLinksCreate
+from app.incidents.schema.db_operations import CaseAlertLinksResponse
+from app.incidents.schema.db_operations import CaseAlertUnLink
+from app.incidents.schema.db_operations import CaseAlertUnLinkResponse
+from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
 from app.incidents.schema.db_operations import CaseNotificationCreate
@@ -59,7 +63,7 @@ from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListRe
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentCreate
-from app.incidents.schema.db_operations import CommentEdit, CaseAlertUnLinkResponse
+from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
@@ -68,7 +72,7 @@ from app.incidents.schema.db_operations import DeleteAlertsResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
-from app.incidents.schema.db_operations import MappingsResponse, CaseAlertLinksResponse, CaseAlertLinksCreate
+from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
@@ -81,12 +85,16 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
+
+# from app.incidents.services.db_operations import alerts_open_multiple_filters
+# from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
+# from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import alert_total, case_alert_unlink
+from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alerts_closed
@@ -97,7 +105,6 @@ from app.incidents.services.db_operations import alerts_closed_by_customer_code
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
-from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
@@ -106,7 +113,6 @@ from app.incidents.services.db_operations import alerts_in_progress_by_customer_
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
-from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
@@ -115,13 +121,13 @@ from app.incidents.services.db_operations import alerts_open_by_customer_code
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
-from app.incidents.services.db_operations import alerts_open_multiple_filters
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
 from app.incidents.services.db_operations import alerts_total_by_ioc
 from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
+from app.incidents.services.db_operations import case_alert_unlink
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_ioc
@@ -129,6 +135,7 @@ from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
+from app.incidents.services.db_operations import create_case_alert_links_bulk
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
@@ -142,7 +149,7 @@ from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
 from app.incidents.services.db_operations import delete_ioc_name
 from app.incidents.services.db_operations import delete_report_template
-from app.incidents.services.db_operations import delete_timefield_name, create_case_alert_links_bulk
+from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import edit_comment
@@ -539,6 +546,7 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
         message="Case alert link created successfully",
     )
 
+
 @incidents_db_operations_router.post("/case/alert-links", response_model=CaseAlertLinksResponse)
 async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreate, db: AsyncSession = Depends(get_db)):
     return CaseAlertLinksResponse(
@@ -547,9 +555,11 @@ async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreat
         message="Case alert links created successfully",
     )
 
+
 @incidents_db_operations_router.post("/case/alert-unlink", response_model=CaseAlertUnLinkResponse)
 async def case_alert_unlink_endpoint(case_alert_link: CaseAlertUnLink, db: AsyncSession = Depends(get_db)):
     return await case_alert_unlink(case_alert_link, db)
+
 
 @incidents_db_operations_router.post("/case/from-alert", response_model=CaseAlertLinkResponse)
 async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: AsyncSession = Depends(get_db)):
