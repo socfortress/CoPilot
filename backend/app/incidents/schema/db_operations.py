@@ -194,6 +194,10 @@ class CaseAlertLinkResponse(BaseModel):
     success: bool
     message: str
 
+class CaseAlertUnLinkResponse(BaseModel):
+    success: bool
+    message: str
+
 class CaseAlertLinksResponse(BaseModel):
     case_alert_links: List[CaseAlertLink]
     success: bool
@@ -296,6 +300,9 @@ class CaseAlertLinksCreate(BaseModel):
     case_id: int
     alert_ids: List[int]
 
+class CaseAlertUnLink(BaseModel):
+    case_id: int
+    alert_id: int
 
 class AssetCreate(BaseModel):
     alert_linked: int
