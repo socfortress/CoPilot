@@ -167,6 +167,8 @@ def get_process_image(source_dict: dict) -> str:
         process_image = source_dict.get("data_win_eventdata_image")
     if not process_image:
         process_image = source_dict.get("data_event_Image")
+    if not process_image:
+        process_image = source_dict.get("data_win_eventdata_sourceImage")
     logger.info(f"Process image: {process_image}")
     return process_image
 
