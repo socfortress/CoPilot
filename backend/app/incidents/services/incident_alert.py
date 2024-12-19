@@ -483,6 +483,7 @@ async def handle_customer_notifications(
                     "customer_code": customer_code,
                     "alert_context_payload": alert_payload.alert_context_payload,
                     "alert_title": alert_payload.alert_title_payload,
+                    "alert_id": alert_payload.alert_id,
                 },
                 start="",
             ),
@@ -534,6 +535,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}",
         )
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
+    alert_payload.alert_id = alert_id
     await handle_customer_notifications(customer_code=customer_code, alert_payload=alert_payload, session=session)
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)

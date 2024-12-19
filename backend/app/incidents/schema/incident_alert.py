@@ -142,6 +142,7 @@ class CreatedAlertPayload(BaseModel):
     source: str
     index_name: Optional[str] = None
     index_id: Optional[str] = None
+    alert_id: Optional[int] = None
 
 
 class CreatedCaseNotificationPayload(BaseModel):
