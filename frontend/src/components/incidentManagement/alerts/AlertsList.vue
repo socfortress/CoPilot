@@ -15,7 +15,14 @@
 					<div class="flex flex-col gap-2">
 						<div class="box">
 							Total :
-							<code>{{ total }}</code>
+							<code>
+								<span v-if="totalFiltered === total">{{ total }}</span>
+								<span v-else>
+									<span>{{ totalFiltered }}</span>
+									<span class="opacity-50">/</span>
+									<span class="opacity-50">{{ total }}</span>
+								</span>
+							</code>
 						</div>
 						<div class="box text-error">
 							Open :
@@ -36,7 +43,14 @@
 				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
 					<div class="flex items-center gap-2">
 						<span>Total</span>
-						<code class="py-1">{{ total }}</code>
+						<code class="py-1">
+							<span v-if="totalFiltered === total">{{ total }}</span>
+							<span v-else class="flex gap-1">
+								<span>{{ totalFiltered }}</span>
+								<span class="opacity-50">/</span>
+								<span class="opacity-50">{{ total }}</span>
+							</span>
+						</code>
 					</div>
 				</n-button>
 				<span>/</span>
@@ -71,7 +85,7 @@
 				:page-slot="pageSlot"
 				:show-size-picker="showSizePicker"
 				:page-sizes="pageSizes"
-				:item-count="total"
+				:item-count="totalFiltered"
 				:simple="simpleMode"
 			/>
 			<n-select
@@ -198,7 +212,7 @@
 				v-if="alertsList.length > 3"
 				v-model:page="currentPage"
 				:page-size="pageSize"
-				:item-count="total"
+				:item-count="totalFiltered"
 				:page-slot="6"
 			/>
 		</div>
@@ -274,6 +288,7 @@ const sortOptions = [
 	{ label: "Asc", value: "asc" }
 ]
 
+const totalFiltered = ref(0)
 const total = ref(0)
 const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
@@ -307,7 +322,7 @@ watch(
 		if (
 			alertsList.value.length &&
 			!alertsList.value.find(o => o.id.toString() === highlight) &&
-			currentPage.value < total.value &&
+			currentPage.value < totalFiltered.value &&
 			!highlightedItemFound.value
 		) {
 			nextTick(() => {
@@ -399,6 +414,7 @@ function getData() {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []
 				total.value = res.data.total || 0
+				totalFiltered.value = res.data.total_filtered ?? total.value ?? 0
 				statusCloseTotal.value = res.data.closed || 0
 				statusInProgressTotal.value = res.data.in_progress || 0
 				statusOpenTotal.value = res.data.open || 0

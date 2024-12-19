@@ -181,7 +181,14 @@ export default {
 		}
 
 		return HttpClient.get<
-			FlaskBaseResponse & { alerts: Alert[]; closed: number; in_progress: number; open: number; total: number }
+			FlaskBaseResponse & {
+				alerts: Alert[]
+				closed: number
+				in_progress: number
+				open: number
+				total: number
+				total_filtered: number
+			}
 		>(url, {
 			params,
 			paramsSerializer: {

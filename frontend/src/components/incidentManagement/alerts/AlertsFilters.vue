@@ -231,6 +231,7 @@ function addFilter(key: AlertsFilterTypes) {
 
 function delFilter(key: AlertsFilterTypes) {
 	filters.value = filters.value.filter(o => o.type !== key)
+	submit()
 }
 
 function setFilter(newFilters: AlertsListFilter[]) {
