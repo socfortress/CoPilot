@@ -37,7 +37,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NButton, NPopover, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 
 const props = defineProps<{ alert: Alert }>()
 
