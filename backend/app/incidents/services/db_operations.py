@@ -1868,7 +1868,7 @@ async def list_alerts_multiple_filters(
         .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
-            selectinload(Alert.cases),
+            selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
         )
@@ -1886,6 +1886,7 @@ async def list_alerts_multiple_filters(
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         alert_out = AlertOut(
             id=alert.id,
             alert_creation_time=alert.alert_creation_time,
@@ -1900,6 +1901,7 @@ async def list_alerts_multiple_filters(
             assets=assets,
             tags=tags,
             iocs=iocs,
+            linked_cases=linked_cases,
         )
         alerts_out.append(alert_out)
 
