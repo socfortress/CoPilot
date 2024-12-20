@@ -101,12 +101,22 @@ async def mssp_license_check(session: AsyncSession):
             )
         except HTTPException as e:
             if e.status_code == 400:
-                # If MSSP 1-5 license check fails, check for MSSP 6-10 license
-                await is_feature_enabled(
-                    "MSSP 10",
-                    session,
-                    message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-                )
+                # If MSSP 1-5 license check fails, check for MSSP 6-10 or MSSP Unlimited license
+                try:
+                    await is_feature_enabled(
+                        "MSSP 10",
+                        session,
+                        message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+                    )
+                except HTTPException as e2:
+                    if e2.status_code == 400:
+                        await is_feature_enabled(
+                            "MSSP Unlimited",
+                            session,
+                            message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+                        )
+                    else:
+                        raise e2
             else:
                 raise e
     elif 6 <= provisioned_customers <= 10:
