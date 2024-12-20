@@ -576,6 +576,7 @@ async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
     """
     rule_creators = {
         "Office365 Timestamp - UTC": create_office365_utc_rule,
+        "Office365 Syslog Type": create_office365_syslog_type_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - INFO": create_wazuh_info_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING": create_wazuh_warning_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE": create_wazuh_notice_rule,
@@ -598,6 +599,27 @@ async def create_office365_utc_rule(rule_title: str) -> None:
         "then\n"
         "  let creation_time = $message.data_office365_CreationTime;\n"
         '  set_field("timestamp_utc", creation_time);\n'
+        "end"
+    )
+    await create_pipeline_rule(
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
+    )
+
+
+async def create_office365_syslog_type_rule(rule_title: str) -> None:
+    """
+    Creates the 'Office365 Syslog Type' pipeline rule.
+    """
+    rule_source = (
+        f'rule "{rule_title}"\n'
+        "when\n"
+        '  $message.rule_group1 == "office365"\n'
+        "then\n"
+        '  set_field("syslog_type", "office365");\n'
         "end"
     )
     await create_pipeline_rule(
