@@ -79,6 +79,7 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     response_model=UserResponse,
     status_code=201,
     description="Register new user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     """
