@@ -8,6 +8,7 @@ from app.auth.models.users import Password
 from app.auth.models.users import Role
 from app.auth.models.users import User
 from app.db.db_session import async_engine
+from fastapi import HTTPException
 
 passwords_in_memory = {}
 
@@ -195,3 +196,31 @@ def get_scheduler_password():
         str: The unhashed password of the scheduler user.
     """
     return passwords_in_memory.get("scheduler")
+
+async def delete_user(user_id: int, session: AsyncSession):
+    """
+    Delete a user from the database.
+
+    Args:
+        user_id (int): The ID of the user to delete.
+        session (AsyncSession): The database session to use for the operation.
+
+    Returns:
+        None
+    """
+    try:
+        statement = select(User).where(User.id == user_id)
+        result = await session.execute(statement)
+        user = result.scalars().first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        await session.delete(user)
+        await session.commit()
+        logger.info(f"User with ID {user_id} deleted.")
+    except Exception as e:
+        await session.rollback()
+        logger.error(f"Error deleting user {user_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error deleting user")
+    return

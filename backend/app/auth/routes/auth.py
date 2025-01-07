@@ -19,7 +19,7 @@ from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
 from app.auth.services.universal import find_user
-from app.auth.services.universal import select_all_users
+from app.auth.services.universal import select_all_users, delete_user
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
@@ -280,3 +280,27 @@ async def reset_password_me(
     session.add(user)
     await session.commit()
     return {"message": "Password reset successfully", "success": True}
+
+# ! Delete a user by user id ! #
+@auth_router.delete(
+    "/delete/{user_id}",
+    status_code=200,
+    description="Delete a user by user id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_user_by_username(
+    user_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Delete a user by user id.
+
+    Args:
+        user_id (int): The ID of the user to delete.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the message and success status.
+    """
+    await delete_user(user_id, session)
+    return {"message": "User deleted successfully", "success": True}
