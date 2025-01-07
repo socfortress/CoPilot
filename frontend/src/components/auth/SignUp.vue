@@ -33,7 +33,9 @@
 								@keydown.enter="signUp"
 							/>
 						</n-form-item>
-						<div class="mt-3 flex items-center justify-end">
+						<div class="mt-3 flex items-center justify-between gap-3">
+							<n-button secondary size="large" @click="reset(1)">Reset</n-button>
+
 							<n-button
 								type="primary"
 								size="large"
@@ -114,12 +116,15 @@
 						-->
 
 						<div class="mt-3 flex items-center justify-between gap-3">
-							<n-button size="large" @click="wizardCurrent = 1">
-								<template #icon>
-									<Icon :name="ArrowLeftIcon"></Icon>
-								</template>
-								Back
-							</n-button>
+							<div class="flex items-center justify-between gap-3">
+								<n-button size="large" @click="wizardCurrent = 1">
+									<template #icon>
+										<Icon :name="ArrowLeftIcon"></Icon>
+									</template>
+									Back
+								</n-button>
+								<n-button secondary size="large" @click="reset(2)">Reset</n-button>
+							</div>
 							<n-button
 								type="success"
 								size="large"
@@ -328,9 +333,21 @@ function getModel(): ModelType {
 	}
 }
 
-function reset() {
-	model.value = getModel()
-	wizardCurrent.value = 1
+function reset(step?: number) {
+	switch (step) {
+		case 1:
+			model.value.email = null
+			model.value.password = null
+			model.value.confirmPassword = null
+			break
+		case 2:
+			model.value.username = null
+			break
+		default:
+			model.value = getModel()
+			wizardCurrent.value = 1
+			break
+	}
 }
 
 function signUp(e: Event) {
