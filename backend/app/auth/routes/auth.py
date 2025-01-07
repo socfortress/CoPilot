@@ -93,6 +93,8 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
         dict: A dictionary containing the message and success status.
     """
     users = await select_all_users()
+    if any(x.email == user.email for x in users):
+        raise HTTPException(status_code=400, detail="Email is already registered")
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
     hashed_pwd = auth_handler.get_password_hash(user.password)
