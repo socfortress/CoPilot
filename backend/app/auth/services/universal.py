@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from loguru import logger
 
 # ! New with Async
@@ -8,7 +9,6 @@ from app.auth.models.users import Password
 from app.auth.models.users import Role
 from app.auth.models.users import User
 from app.db.db_session import async_engine
-from fastapi import HTTPException
 
 passwords_in_memory = {}
 
@@ -196,6 +196,7 @@ def get_scheduler_password():
         str: The unhashed password of the scheduler user.
     """
     return passwords_in_memory.get("scheduler")
+
 
 async def delete_user(user_id: int, session: AsyncSession):
     """

@@ -18,8 +18,9 @@ from app.auth.schema.auth import Token
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
+from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
-from app.auth.services.universal import select_all_users, delete_user
+from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
@@ -280,6 +281,7 @@ async def reset_password_me(
     session.add(user)
     await session.commit()
     return {"message": "Password reset successfully", "success": True}
+
 
 # ! Delete a user by user id ! #
 @auth_router.delete(
