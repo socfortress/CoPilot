@@ -4,7 +4,7 @@
 			<n-steps :current="wizardCurrent" vertical>
 				<n-step title="Account">
 					<div v-show="wizardCurrent === 1" class="pt-3">
-						<n-form-item path="email" label="Email">
+						<n-form-item path="email" label="Email" first>
 							<n-input
 								v-model:value="model.email"
 								size="large"
@@ -12,7 +12,7 @@
 								@keydown.enter="signUp"
 							/>
 						</n-form-item>
-						<n-form-item path="password" label="Password">
+						<n-form-item path="password" label="Password" first>
 							<n-input
 								v-model:value="model.password"
 								type="password"
@@ -51,7 +51,7 @@
 				</n-step>
 				<n-step title="Details">
 					<div v-show="wizardCurrent === 2" class="pt-3">
-						<n-form-item path="username" label="Username">
+						<n-form-item path="username" label="Username" first>
 							<n-input
 								v-model:value="model.username"
 								size="large"
@@ -159,10 +159,10 @@ import {
 	NSteps,
 	useMessage
 } from "naive-ui"
-// import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import PasswordValidator from "password-validator"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
+// import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {
 	email: string | null
@@ -177,14 +177,19 @@ interface ModelType {
 	*/
 }
 
+const { unavailableUsernameList, unavailableEmailList } = defineProps<{
+	unavailableUsernameList?: string[]
+	unavailableEmailList?: string[]
+}>()
+
 const emit = defineEmits<{
 	(e: "success"): void
 }>()
 
-const ArrowRightIcon = "carbon:arrow-right"
-const ArrowLeftIcon = "carbon:arrow-left"
 // const ImageIcon = "carbon:image"
 // const RemoveImageIcon = "carbon:no-image"
+const ArrowRightIcon = "carbon:arrow-right"
+const ArrowLeftIcon = "carbon:arrow-left"
 const UserAddIcon = "carbon:user-admin"
 
 const wizardCurrent = ref(1)
@@ -222,7 +227,7 @@ const rules: FormRules = {
 	email: [
 		{
 			required: true,
-			trigger: ["blur"],
+			trigger: ["blur", "input"],
 			message: "Email is required"
 		},
 		{
@@ -230,7 +235,14 @@ const rules: FormRules = {
 				return isEmail(value)
 			},
 			message: "The email is not formatted correctly",
-			trigger: ["blur"]
+			trigger: ["blur", "input"]
+		},
+		{
+			validator: (rule: FormItemRule, value: string): boolean => {
+				return !unavailableEmailList?.length || !unavailableEmailList.includes(value)
+			},
+			message: "The Email is already used",
+			trigger: ["blur", "input"]
 		}
 	],
 	password: [
@@ -259,14 +271,21 @@ const rules: FormRules = {
 				return value === model.value.password
 			},
 			message: "Password is not same as re-entered password",
-			trigger: ["blur", "input"]
+			trigger: ["blur"]
 		}
 	],
 	username: [
 		{
 			required: true,
-			trigger: ["blur"],
+			trigger: ["blur", "input"],
 			message: "Username is required"
+		},
+		{
+			validator: (rule: FormItemRule, value: string): boolean => {
+				return !unavailableUsernameList?.length || !unavailableUsernameList.includes(value)
+			},
+			message: "The Username is already used",
+			trigger: ["blur", "input"]
 		}
 	]
 	/*

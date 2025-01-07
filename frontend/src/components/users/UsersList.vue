@@ -15,7 +15,7 @@
 			</div>
 		</div>
 
-		<n-spin :show="loadingUsers">
+		<n-spin :show="loading" content-class="min-h-32">
 			<n-scrollbar x-scrollable style="width: 100%">
 				<n-table :bordered="false" class="min-w-max">
 					<thead>
@@ -42,11 +42,12 @@
 							<td style="max-width: 300px">
 								<div v-if="isAdmin" class="flex justify-end">
 									<n-dropdown
-										trigger="hover"
+										trigger="click"
 										:options
+										to="body"
 										display-directive="show"
 										:keyboard="false"
-										@click="selectedUser = user.username"
+										@click="selectedUser = user"
 									>
 										<n-button text>
 											<template #icon>
@@ -72,7 +73,11 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<SignUp @success="addUserSuccess()" />
+			<SignUp
+				:unavailable-username-list="usernameList"
+				:unavailable-email-list="emailList"
+				@success="addUserSuccess()"
+			/>
 		</n-modal>
 	</div>
 </template>
