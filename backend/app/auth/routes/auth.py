@@ -302,5 +302,4 @@ async def delete_user_by_username(
     Returns:
         dict: A dictionary containing the message and success status.
     """
-    await delete_user(user_id, session)
-    return {"message": "User deleted successfully", "success": True}
+    return await delete_user(user_id, session)

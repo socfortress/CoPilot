@@ -208,14 +208,19 @@ async def delete_user(user_id: int, session: AsyncSession):
     Returns:
         None
     """
+    # First check if user exists
+    statement = select(User).where(User.id == user_id)
+    result = await session.execute(statement)
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    if user.id == 1:
+        raise HTTPException(status_code=403, detail="Cannot delete admin user")
+
+    # Database operations in try block
     try:
-        statement = select(User).where(User.id == user_id)
-        result = await session.execute(statement)
-        user = result.scalars().first()
-
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
-
         await session.delete(user)
         await session.commit()
         logger.info(f"User with ID {user_id} deleted.")
@@ -223,4 +228,5 @@ async def delete_user(user_id: int, session: AsyncSession):
         await session.rollback()
         logger.error(f"Error deleting user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Error deleting user")
-    return
+
+    return {"message": "User deleted successfully.", "success": True}
