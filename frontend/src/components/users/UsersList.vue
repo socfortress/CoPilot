@@ -1,5 +1,20 @@
 <template>
 	<div class="users-list">
+		<div class="mb-4 flex items-center justify-between gap-5">
+			<div>
+				Total:
+				<strong class="font-mono">{{ usersList.length }}</strong>
+			</div>
+			<div>
+				<n-button size="small" type="primary" @click="showForm = true">
+					<template #icon>
+						<Icon :name="UserAddIcon"></Icon>
+					</template>
+					Add User
+				</n-button>
+			</div>
+		</div>
+
 		<n-spin :show="loadingUsers">
 			<n-scrollbar x-scrollable style="width: 100%">
 				<n-table :bordered="false" class="min-w-max">
@@ -46,6 +61,19 @@
 				</n-table>
 			</n-scrollbar>
 		</n-spin>
+
+		<n-modal
+			v-model:show="showForm"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Add a new User"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<SignUp @success="addUserSuccess()" />
+		</n-modal>
 	</div>
 </template>
 
@@ -54,16 +82,18 @@ import type { User } from "@/types/user.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
-import { NButton, NDropdown, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
-import { h, onBeforeMount, ref, toRefs } from "vue"
-import ChangePassword from "./ChangePassword.vue"
+import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
+import { defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 
-const props = defineProps<{ highlight: string | null | undefined }>()
-const { highlight } = toRefs(props)
+const { highlight } = defineProps<{ highlight: string | null | undefined }>()
+const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
+const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
+const UserAddIcon = "carbon:user-follow"
 const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
+const showForm = ref(false)
 const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
 const selectedUser = ref("")
@@ -75,6 +105,11 @@ const options = [
 		render: () => h(ChangePassword, { username: selectedUser.value })
 	}
 ]
+
+function addUserSuccess() {
+	getUsers()
+	showForm.value = false
+}
 
 function getUsers() {
 	loadingUsers.value = true

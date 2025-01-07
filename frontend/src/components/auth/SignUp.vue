@@ -121,7 +121,7 @@
 								Back
 							</n-button>
 							<n-button
-								type="primary"
+								type="success"
 								size="large"
 								:loading="loading"
 								:disabled="!accountStepValid || !detailsStepValid"
@@ -144,6 +144,7 @@
 import type { RegisterPayload } from "@/types/auth.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import _trim from "lodash/trim"
 import {
 	type FormInst,
 	type FormItemRule,
@@ -164,20 +165,20 @@ import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
 
 interface ModelType {
-	email: string
-	password: string
-	username: string
-	confirmPassword: string
+	email: string | null
+	password: string | null
+	username: string | null
+	confirmPassword: string | null
 	/*
-	customerCode: string
-	firstName: string
-	lastName: string
-	propic: string
+	customerCode: string | null
+	firstName: string | null
+	lastName: string | null
+	propic: string | null
 	*/
 }
 
 const emit = defineEmits<{
-	(e: "goto-signin"): void
+	(e: "success"): void
 }>()
 
 const ArrowRightIcon = "carbon:arrow-right"
@@ -190,21 +191,16 @@ const wizardCurrent = ref(1)
 const loading = ref(false)
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
-const model = ref<ModelType>({
-	email: "",
-	password: "",
-	confirmPassword: "",
-	username: ""
-	/*
-	customerCode: "",
-	firstName: "",
-	lastName: "",
-	propic: ""
-	*/
-})
+const model = ref<ModelType>(getModel())
 
-const accountStepValid = computed(() => !!model.value.email && !!model.value.password && !!model.value.confirmPassword)
-const detailsStepValid = computed(() => !!model.value.username)
+const accountStepValid = computed(
+	() =>
+		!!_trim(model.value.email || "") &&
+		!!model.value.password &&
+		!!model.value.confirmPassword &&
+		model.value.password === model.value.confirmPassword
+)
+const detailsStepValid = computed(() => !!_trim(model.value.username || ""))
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new PasswordValidator()
@@ -255,7 +251,7 @@ const rules: FormRules = {
 	confirmPassword: [
 		{
 			required: true,
-			trigger: ["blur"],
+			trigger: ["blur", "input"],
 			message: "Confirm Password is required"
 		},
 		{
@@ -263,14 +259,14 @@ const rules: FormRules = {
 				return value === model.value.password
 			},
 			message: "Password is not same as re-entered password",
-			trigger: ["blur", "password-input"]
+			trigger: ["blur", "input"]
 		}
 	],
 	username: [
 		{
 			required: true,
 			trigger: ["blur"],
-			message: "Username Code is required"
+			message: "Username is required"
 		}
 	]
 	/*
@@ -298,6 +294,26 @@ const rules: FormRules = {
 	*/
 }
 
+function getModel(): ModelType {
+	return {
+		email: null,
+		password: null,
+		confirmPassword: null,
+		username: null
+		/*
+		customerCode: null,
+		firstName: null,
+		lastName: null,
+		propic: null
+		*/
+	}
+}
+
+function reset() {
+	model.value = getModel()
+	wizardCurrent.value = 1
+}
+
 function signUp(e: Event) {
 	e.preventDefault()
 	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
@@ -305,9 +321,9 @@ function signUp(e: Event) {
 			loading.value = true
 
 			const payload: RegisterPayload = {
-				password: model.value.password,
-				email: model.value.email,
-				username: model.value.username,
+				password: model.value.password || "",
+				email: _trim(model.value.email || ""),
+				username: _trim(model.value.username || ""),
 				role_id: 1
 				/*
 				customerCode: model.value.customerCode,
@@ -324,8 +340,9 @@ function signUp(e: Event) {
 				.register(payload)
 				.then(res => {
 					if (res.data.success) {
-						message.success("User registered successfully. Please log in.")
-						emit("goto-signin")
+						message.success("User registered successfully.")
+						reset()
+						emit("success")
 					} else {
 						message.warning(res.data?.message || "An error occurred. Please try again later.")
 					}
