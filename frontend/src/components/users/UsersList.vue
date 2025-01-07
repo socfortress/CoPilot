@@ -83,28 +83,47 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
-import { defineAsyncComponent, h, onBeforeMount, ref } from "vue"
+import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
+const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
 const UserAddIcon = "carbon:user-follow"
 const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
+const loadingDelete = ref(false)
 const showForm = ref(false)
 const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
-const selectedUser = ref("")
+const selectedUser = ref<User | null>(null)
+const loading = computed(() => loadingUsers.value || loadingDelete.value)
+const usernameList = computed(() => usersList.value.map(user => user.username))
+const emailList = computed(() => usersList.value.map(user => user.email))
 
 const options = [
 	{
 		key: "ChangePassword",
 		type: "render",
-		render: () => h(ChangePassword, { username: selectedUser.value })
+		render: () => h(ChangePassword, { user: selectedUser.value || undefined })
+	},
+	{
+		key: "DeleteUser",
+		type: "render",
+		render: () =>
+			h(DeleteUser, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers,
+				onLoading: updateLoadingDelete
+			})
 	}
 ]
+
+function updateLoadingDelete(value: boolean) {
+	loadingDelete.value = value
+}
 
 function addUserSuccess() {
 	getUsers()

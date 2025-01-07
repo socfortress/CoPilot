@@ -14,6 +14,9 @@ export default {
 	register(payload: RegisterPayload) {
 		return HttpClient.post<FlaskBaseResponse>("/auth/register", payload)
 	},
+	delete(userId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/auth/delete/${userId}`)
+	},
 	refresh() {
 		return HttpClient.get<FlaskBaseResponse & { access_token: string; token_type: string }>("/auth/refresh")
 	},

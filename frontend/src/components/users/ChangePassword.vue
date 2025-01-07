@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showFormDrawer = true">
+	<n-button :size :type quaternary class="!w-full !justify-start" @click="showFormDrawer = true">
 		<template #icon>
 			<Icon :name="PasswordIcon" :size="14"></Icon>
 		</template>
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import type { User } from "@/types/user"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -74,8 +75,13 @@ import {
 import PasswordValidator from "password-validator"
 import { computed, ref, watch } from "vue"
 
-const { type, size, username } = defineProps<{
-	username: string
+interface ModelType {
+	password: string | null
+	confirmPassword: string | null
+}
+
+const { type, size, user } = defineProps<{
+	user?: User
 	size?: Size
 	type?: Type
 }>()
@@ -89,10 +95,11 @@ watch(showFormDrawer, () => {
 const PasswordIcon = "carbon:password"
 const message = useMessage()
 const loading = ref(false)
-const model = ref({
-	password: "",
-	confirmPassword: ""
+const model = ref<ModelType>({
+	password: null,
+	confirmPassword: null
 })
+const username = computed(() => user?.username || "")
 const formRef = ref<FormInst | null>(null)
 const storedUserName = useAuthStore().userName
 const passwordSchema = new PasswordValidator()
@@ -144,12 +151,12 @@ const rules: FormRules = {
 }
 
 const isValid = computed(() => {
-	return !!model.value.password && !!model.value.confirmPassword && !!username
+	return !!model.value.password && !!model.value.confirmPassword && !!username.value
 })
 
 function clear() {
-	model.value.password = ""
-	model.value.confirmPassword = ""
+	model.value.password = null
+	model.value.confirmPassword = null
 }
 
 function submit(e: Event) {
@@ -158,9 +165,9 @@ function submit(e: Event) {
 		if (!errors) {
 			loading.value = true
 
-			const method = username === storedUserName ? "resetOwnPassword" : "resetPassword"
+			const method = username.value === storedUserName ? "resetOwnPassword" : "resetPassword"
 
-			Api.auth[method](username, model.value.password)
+			Api.auth[method](username.value, model.value.password || "")
 				.then(res => {
 					if (res.data.success) {
 						clear()
