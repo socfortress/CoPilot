@@ -28,6 +28,7 @@ from app.connectors.grafana.services.reporting import get_dashboards
 from app.connectors.grafana.services.reporting import get_orgs
 from app.connectors.models import Connectors
 from app.db.db_session import get_db
+from app.middleware.license import is_feature_enabled
 
 # from app.middleware.license import is_feature_enabled
 
@@ -220,5 +221,5 @@ async def generate_grafana_iframe_links(
 )
 async def create_report(request: GenerateReportRequest, session: AsyncSession = Depends(get_db)) -> GenerateReportResponse:
     logger.info("Generating report")
-    # await is_feature_enabled("REPORTING", session)
+    await is_feature_enabled("REPORTING", session)
     return await generate_report(request, session)

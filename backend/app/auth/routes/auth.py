@@ -18,6 +18,7 @@ from app.auth.schema.auth import Token
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
+from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
@@ -79,6 +80,7 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     response_model=UserResponse,
     status_code=201,
     description="Register new user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     """
@@ -92,6 +94,8 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
         dict: A dictionary containing the message and success status.
     """
     users = await select_all_users()
+    if any(x.email == user.email for x in users):
+        raise HTTPException(status_code=400, detail="Email is already registered")
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
     hashed_pwd = auth_handler.get_password_hash(user.password)
@@ -277,3 +281,27 @@ async def reset_password_me(
     session.add(user)
     await session.commit()
     return {"message": "Password reset successfully", "success": True}
+
+
+# ! Delete a user by user id ! #
+@auth_router.delete(
+    "/delete/{user_id}",
+    status_code=200,
+    description="Delete a user by user id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_user_by_username(
+    user_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Delete a user by user id.
+
+    Args:
+        user_id (int): The ID of the user to delete.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the message and success status.
+    """
+    return await delete_user(user_id, session)

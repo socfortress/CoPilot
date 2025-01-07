@@ -4,7 +4,7 @@
 			<n-steps :current="wizardCurrent" vertical>
 				<n-step title="Account">
 					<div v-show="wizardCurrent === 1" class="pt-3">
-						<n-form-item path="email" label="Email">
+						<n-form-item path="email" label="Email" first>
 							<n-input
 								v-model:value="model.email"
 								size="large"
@@ -12,7 +12,7 @@
 								@keydown.enter="signUp"
 							/>
 						</n-form-item>
-						<n-form-item path="password" label="Password">
+						<n-form-item path="password" label="Password" first>
 							<n-input
 								v-model:value="model.password"
 								type="password"
@@ -33,7 +33,9 @@
 								@keydown.enter="signUp"
 							/>
 						</n-form-item>
-						<div class="mt-3 flex items-center justify-end">
+						<div class="mt-3 flex items-center justify-between gap-3">
+							<n-button secondary size="large" @click="reset(1)">Reset</n-button>
+
 							<n-button
 								type="primary"
 								size="large"
@@ -51,7 +53,7 @@
 				</n-step>
 				<n-step title="Details">
 					<div v-show="wizardCurrent === 2" class="pt-3">
-						<n-form-item path="username" label="Username">
+						<n-form-item path="username" label="Username" first>
 							<n-input
 								v-model:value="model.username"
 								size="large"
@@ -114,14 +116,17 @@
 						-->
 
 						<div class="mt-3 flex items-center justify-between gap-3">
-							<n-button size="large" @click="wizardCurrent = 1">
-								<template #icon>
-									<Icon :name="ArrowLeftIcon"></Icon>
-								</template>
-								Back
-							</n-button>
+							<div class="flex items-center justify-between gap-3">
+								<n-button size="large" @click="wizardCurrent = 1">
+									<template #icon>
+										<Icon :name="ArrowLeftIcon"></Icon>
+									</template>
+									Back
+								</n-button>
+								<n-button secondary size="large" @click="reset(2)">Reset</n-button>
+							</div>
 							<n-button
-								type="primary"
+								type="success"
 								size="large"
 								:loading="loading"
 								:disabled="!accountStepValid || !detailsStepValid"
@@ -144,6 +149,7 @@
 import type { RegisterPayload } from "@/types/auth.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import _trim from "lodash/trim"
 import {
 	type FormInst,
 	type FormItemRule,
@@ -158,53 +164,53 @@ import {
 	NSteps,
 	useMessage
 } from "naive-ui"
-// import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import PasswordValidator from "password-validator"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
+// import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {
-	email: string
-	password: string
-	username: string
-	confirmPassword: string
+	email: string | null
+	password: string | null
+	username: string | null
+	confirmPassword: string | null
 	/*
-	customerCode: string
-	firstName: string
-	lastName: string
-	propic: string
+	customerCode: string | null
+	firstName: string | null
+	lastName: string | null
+	propic: string | null
 	*/
 }
 
-const emit = defineEmits<{
-	(e: "goto-signin"): void
+const { unavailableUsernameList, unavailableEmailList } = defineProps<{
+	unavailableUsernameList?: string[]
+	unavailableEmailList?: string[]
 }>()
 
-const ArrowRightIcon = "carbon:arrow-right"
-const ArrowLeftIcon = "carbon:arrow-left"
+const emit = defineEmits<{
+	(e: "success"): void
+}>()
+
 // const ImageIcon = "carbon:image"
 // const RemoveImageIcon = "carbon:no-image"
+const ArrowRightIcon = "carbon:arrow-right"
+const ArrowLeftIcon = "carbon:arrow-left"
 const UserAddIcon = "carbon:user-admin"
 
 const wizardCurrent = ref(1)
 const loading = ref(false)
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
-const model = ref<ModelType>({
-	email: "",
-	password: "",
-	confirmPassword: "",
-	username: ""
-	/*
-	customerCode: "",
-	firstName: "",
-	lastName: "",
-	propic: ""
-	*/
-})
+const model = ref<ModelType>(getModel())
 
-const accountStepValid = computed(() => !!model.value.email && !!model.value.password && !!model.value.confirmPassword)
-const detailsStepValid = computed(() => !!model.value.username)
+const accountStepValid = computed(
+	() =>
+		!!_trim(model.value.email || "") &&
+		!!model.value.password &&
+		!!model.value.confirmPassword &&
+		model.value.password === model.value.confirmPassword
+)
+const detailsStepValid = computed(() => !!_trim(model.value.username || ""))
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new PasswordValidator()
@@ -226,7 +232,7 @@ const rules: FormRules = {
 	email: [
 		{
 			required: true,
-			trigger: ["blur"],
+			trigger: ["blur", "input"],
 			message: "Email is required"
 		},
 		{
@@ -234,7 +240,14 @@ const rules: FormRules = {
 				return isEmail(value)
 			},
 			message: "The email is not formatted correctly",
-			trigger: ["blur"]
+			trigger: ["blur", "input"]
+		},
+		{
+			validator: (rule: FormItemRule, value: string): boolean => {
+				return !unavailableEmailList?.length || !unavailableEmailList.includes(value)
+			},
+			message: "The Email is already used",
+			trigger: ["blur", "input"]
 		}
 	],
 	password: [
@@ -255,7 +268,7 @@ const rules: FormRules = {
 	confirmPassword: [
 		{
 			required: true,
-			trigger: ["blur"],
+			trigger: ["blur", "input"],
 			message: "Confirm Password is required"
 		},
 		{
@@ -263,14 +276,21 @@ const rules: FormRules = {
 				return value === model.value.password
 			},
 			message: "Password is not same as re-entered password",
-			trigger: ["blur", "password-input"]
+			trigger: ["blur"]
 		}
 	],
 	username: [
 		{
 			required: true,
-			trigger: ["blur"],
-			message: "Username Code is required"
+			trigger: ["blur", "input"],
+			message: "Username is required"
+		},
+		{
+			validator: (rule: FormItemRule, value: string): boolean => {
+				return !unavailableUsernameList?.length || !unavailableUsernameList.includes(value)
+			},
+			message: "The Username is already used",
+			trigger: ["blur", "input"]
 		}
 	]
 	/*
@@ -298,6 +318,38 @@ const rules: FormRules = {
 	*/
 }
 
+function getModel(): ModelType {
+	return {
+		email: null,
+		password: null,
+		confirmPassword: null,
+		username: null
+		/*
+		customerCode: null,
+		firstName: null,
+		lastName: null,
+		propic: null
+		*/
+	}
+}
+
+function reset(step?: number) {
+	switch (step) {
+		case 1:
+			model.value.email = null
+			model.value.password = null
+			model.value.confirmPassword = null
+			break
+		case 2:
+			model.value.username = null
+			break
+		default:
+			model.value = getModel()
+			wizardCurrent.value = 1
+			break
+	}
+}
+
 function signUp(e: Event) {
 	e.preventDefault()
 	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
@@ -305,9 +357,9 @@ function signUp(e: Event) {
 			loading.value = true
 
 			const payload: RegisterPayload = {
-				password: model.value.password,
-				email: model.value.email,
-				username: model.value.username,
+				password: model.value.password || "",
+				email: _trim(model.value.email || ""),
+				username: _trim(model.value.username || ""),
 				role_id: 1
 				/*
 				customerCode: model.value.customerCode,
@@ -324,8 +376,9 @@ function signUp(e: Event) {
 				.register(payload)
 				.then(res => {
 					if (res.data.success) {
-						message.success("User registered successfully. Please log in.")
-						emit("goto-signin")
+						message.success("User registered successfully.")
+						reset()
+						emit("success")
 					} else {
 						message.warning(res.data?.message || "An error occurred. Please try again later.")
 					}

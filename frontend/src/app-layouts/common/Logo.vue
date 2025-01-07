@@ -17,9 +17,14 @@
 import { useThemeStore } from "@/stores/theme"
 import { computed } from "vue"
 
-const { mini, dark } = defineProps<{
+const {
+	mini,
+	dark,
+	maxHeight = "32px"
+} = defineProps<{
 	mini: boolean
 	dark?: boolean
+	maxHeight?: string
 }>()
 const themeStore = useThemeStore()
 const isDark = computed<boolean>(() => dark ?? themeStore.isThemeDark)
@@ -33,7 +38,7 @@ const isLight = computed<boolean>(() => !dark || themeStore.isThemeLight)
 	align-items: center;
 
 	img {
-		max-height: 32px;
+		max-height: v-bind(maxHeight);
 		display: block;
 		height: 100%;
 	}

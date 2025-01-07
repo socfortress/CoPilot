@@ -1,6 +1,6 @@
 <template>
-	<div class="connectors-list">
-		<div class="header mb-4 flex items-center justify-between gap-5">
+	<div>
+		<div class="mb-4 flex items-center justify-between gap-5">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>

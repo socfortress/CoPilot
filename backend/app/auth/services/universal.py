@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from loguru import logger
 
 # ! New with Async
@@ -195,3 +196,38 @@ def get_scheduler_password():
         str: The unhashed password of the scheduler user.
     """
     return passwords_in_memory.get("scheduler")
+
+
+async def delete_user(user_id: int, session: AsyncSession):
+    """
+    Delete a user from the database.
+
+    Args:
+        user_id (int): The ID of the user to delete.
+        session (AsyncSession): The database session to use for the operation.
+
+    Returns:
+        None
+    """
+    # First check if user exists
+    statement = select(User).where(User.id == user_id)
+    result = await session.execute(statement)
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    if user.id == 1:
+        raise HTTPException(status_code=403, detail="Cannot delete admin user")
+
+    # Database operations in try block
+    try:
+        await session.delete(user)
+        await session.commit()
+        logger.info(f"User with ID {user_id} deleted.")
+    except Exception as e:
+        await session.rollback()
+        logger.error(f"Error deleting user {user_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error deleting user")
+
+    return {"message": "User deleted successfully.", "success": True}
