@@ -3,7 +3,6 @@ import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
-import Components from "unplugin-vue-components/vite"
 import { defineConfig, loadEnv } from "vite"
 import VueDevTools from "vite-plugin-vue-devtools"
 import svgLoader from "vite-svg-loader"
@@ -24,11 +23,7 @@ export default defineConfig(({ mode }) => {
 			}),
 			vueJsx(),
 			VueDevTools(),
-			svgLoader(),
-			Components({
-				dirs: ["src/components/cards"],
-				dts: "src/unplugin.components.d.ts"
-			})
+			svgLoader()
 			// uncomment to enable analyzer after build
 			// analyzer()
 		],

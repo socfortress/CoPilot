@@ -76,7 +76,7 @@
 import Icon from "@/components/common/Icon.vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
-import { computed, onMounted, ref, useSlots, watch } from "vue"
+import { computed, onMounted, ref, type SetupContext, useSlots, watch } from "vue"
 
 type SidebarPosition = "left" | "right"
 
@@ -126,12 +126,12 @@ const splitPane = ref()
 const sanitizedDefaultSplit = ref(defaultSplit)
 const splitDisabled = ref(false)
 
-const slots = useSlots()
+const slots: SetupContext["slots"] = useSlots()
 const sidebarOpen = ref(false)
 const sidebar = ref(null)
 const mainScrollbar = ref<typeof NScrollbar | null>(null)
 const { width } = useWindowSize()
-const sidebarAvailable = computed(
+const sidebarAvailable = computed<boolean>(
 	() => !!slots["sidebar-header"] || !!slots["sidebar-content"] || !!slots["sidebar-footer"]
 )
 const isSidebarLeft = computed<boolean>(() => sidebarPosition === "left")
