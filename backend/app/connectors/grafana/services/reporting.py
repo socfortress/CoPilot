@@ -26,13 +26,26 @@ from app.connectors.grafana.schema.reporting import RequestPanel
 from app.connectors.grafana.schema.reporting import TimeRange
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.models import Connectors
-from app.utils import get_connector_attribute
+
+# from app.utils import get_connector_attribute
 
 
 async def get_grafana_url(session: AsyncSession):
     connector = await session.execute(select(Connectors).where(Connectors.connector_name == "Grafana"))
     connector = connector.scalars().first()
     return connector.connector_url
+
+
+async def get_granfana_user(session: AsyncSession):
+    connector = await session.execute(select(Connectors).where(Connectors.connector_name == "Grafana"))
+    connector = connector.scalars().first()
+    return connector.connector_username
+
+
+async def get_granfana_password(session: AsyncSession):
+    connector = await session.execute(select(Connectors).where(Connectors.connector_name == "Grafana"))
+    connector = connector.scalars().first()
+    return connector.connector_password
 
 
 def calculate_unix_timestamps(time_range: TimeRange):
@@ -135,15 +148,24 @@ async def get_dashboard_details(dashboard_uid: str) -> GrafanaDashboardDetails:
 async def login_to_page(page, session: AsyncSession):
     try:
         # Navigate to the login page
-        await page.goto(f'{await get_connector_attribute(connector_id=8, column_name="connector_url", session=session)}/login')
+        # await page.goto(f'{await get_connector_attribute(connector_id=8, column_name="connector_url", session=session)}/login')
+        await page.goto(f"{await get_grafana_url(session)}/login")
         # Enter the username and password
+        # await page.fill(
+        #     'input[name="user"]',
+        #     f'{await get_connector_attribute(connector_id=8, column_name="connector_username", session=session)}',
+        # )
         await page.fill(
             'input[name="user"]',
-            f'{await get_connector_attribute(connector_id=8, column_name="connector_username", session=session)}',
+            f"{await get_granfana_user(session)}",
         )
+        # await page.fill(
+        #     'input[name="password"]',
+        #     f'{await get_connector_attribute(connector_id=8, column_name="connector_password", session=session)}',
+        # )
         await page.fill(
             'input[name="password"]',
-            f'{await get_connector_attribute(connector_id=8, column_name="connector_password", session=session)}',
+            f"{await get_granfana_password(session)}",
         )
         # Click the login button
         await page.click('button[data-testid="data-testid Login button"]')
