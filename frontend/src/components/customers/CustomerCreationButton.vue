@@ -1,9 +1,17 @@
 <template>
 	<div>
-		<LicenseFeatureCheck v-if="!licenseDisabled" feature="MSSP 5" @response="isMSSP5Enabled = $event" />
-		<LicenseFeatureCheck v-if="!licenseDisabled" feature="MSSP 10" @response="isMSSP10Enabled = $event" />
 		<LicenseFeatureCheck
-			v-if="!licenseDisabled"
+			v-if="!skipLicenseCheck && (customersCount || 0) < 5"
+			feature="MSSP 5"
+			@response="isMSSP5Enabled = $event"
+		/>
+		<LicenseFeatureCheck
+			v-if="!skipLicenseCheck && (customersCount || 0) < 10"
+			feature="MSSP 10"
+			@response="isMSSP10Enabled = $event"
+		/>
+		<LicenseFeatureCheck
+			v-if="!skipLicenseCheck"
 			feature="MSSP Unlimited"
 			@response="isMSSPUnlimitedEnabled = $event"
 		/>
@@ -11,7 +19,7 @@
 		<n-button
 			:size="size || 'small'"
 			type="primary"
-			:loading="licenseLoading && !licenseDisabled"
+			:loading="licenseLoading && !skipLicenseCheck"
 			:disabled="!licenseEnabled || disabled"
 			@click="showAddCustomer = true"
 		>
@@ -72,8 +80,12 @@ const isMSSPUnlimitedEnabled = ref<null | boolean>(null)
 const licenseLoading = computed<boolean>(
 	() => isMSSP5Enabled.value === null || isMSSP10Enabled.value === null || isMSSPUnlimitedEnabled.value === null
 )
-const licenseDisabled = computed<boolean>(() => !customersCount)
+const skipLicenseCheck = computed<boolean>(() => !customersCount)
 const licenseEnabled = computed<boolean>(() => {
+	if (skipLicenseCheck.value) {
+		return true
+	}
+
 	if (isMSSPUnlimitedEnabled.value) {
 		return true
 	}

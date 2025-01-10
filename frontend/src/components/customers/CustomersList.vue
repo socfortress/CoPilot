@@ -15,7 +15,7 @@
 					<CustomerItem
 						v-for="customer of customersList"
 						:key="customer.customer_code"
-						:customer="customer"
+						:customer
 						:highlight="customer.customer_code === highlight"
 						:hide-card-actions="loadingCustomers"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
