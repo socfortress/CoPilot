@@ -128,7 +128,7 @@
 }
 
 .over-layer {
-	background-color: rgba(var(--bg-body-color-rgb), 0.8);
+	background-color: rgba(var(--bg-body-color-rgb) / 0.8);
 	position: absolute;
 	top: 0;
 	left: 0;

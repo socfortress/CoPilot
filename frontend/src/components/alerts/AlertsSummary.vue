@@ -97,7 +97,7 @@ const { gotoIndex } = useGoto()
 		right: 0;
 		height: 100%;
 		width: 100%;
-		background: rgba(var(--bg-default-color-rgb), 0.6);
+		background: rgba(var(--bg-default-color-rgb) / 0.6);
 		background: linear-gradient(transparent 0%, var(--bg-default-color) 85%);
 		display: flex;
 		align-items: center;

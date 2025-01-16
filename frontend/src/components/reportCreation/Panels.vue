@@ -536,7 +536,7 @@ onMounted(() => {
 						top: 0px;
 						left: 0px;
 						right: 0;
-						background-color: rgba(var(--error-color-rgb), 0.1);
+						background-color: rgba(var(--error-color-rgb) / 0.1);
 						border-top-left-radius: var(--border-radius);
 						border-top-right-radius: var(--border-radius);
 						text-align: center;
