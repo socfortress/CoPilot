@@ -138,11 +138,11 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 				}
 			}
 			&.success {
-				border-color: rgba(var(--success-color-rgb), 0.3);
+				border-color: rgba(var(--success-color-rgb) / 0.3);
 
 				& > span {
 					&:first-child {
-						background-color: rgba(var(--success-color-rgb), 0.2);
+						background-color: rgba(var(--success-color-rgb) / 0.2);
 					}
 				}
 			}
