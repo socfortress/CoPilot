@@ -201,8 +201,8 @@ onBeforeMount(() => {
 
 		.comment-message {
 			border-radius: var(--border-radius);
-			background-color: var(--bg-color);
-			border: var(--border-small-050);
+			background-color: var(--bg-default-color);
+			border: 1px solid var(--border-color);
 			padding: 6px 10px;
 		}
 	}

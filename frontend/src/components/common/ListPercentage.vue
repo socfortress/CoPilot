@@ -23,9 +23,9 @@
 					type="line"
 					:percentage="parseInt(item[percentageKey as keyof typeof item], 10)"
 					indicator-placement="inside"
-					:indicator-text-color="style['bg-color']"
-					:color="style['fg-color']"
-					:rail-color="style['divider-020-color']"
+					:indicator-text-color="style['bg-default-color']"
+					:color="style['fg-default-color']"
+					:rail-color="style['border-color']"
 					class="font-mono font-bold"
 				/>
 			</div>
@@ -53,7 +53,7 @@ const style = computed(() => themeStore.style)
 <style scoped lang="scss">
 .list-header {
 	& > * {
-		border-bottom: var(--border-small-100);
+		border-bottom: 1px solid var(--border-color);
 		@apply pb-1;
 	}
 }

@@ -2,7 +2,7 @@
 	<div class="w-full min-w-64 max-w-96">
 		<div>
 			<Logo mini :dark="isDark" class="mb-4" max-height="40px" />
-			<div class="font-display mb-4 text-4xl font-bold">
+			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">
 				{{ title }}
 			</div>
 			<div class="text-secondary text-lg">
@@ -11,7 +11,7 @@
 		</div>
 
 		<transition name="form-fade" mode="out-in" appear class="my-10">
-			<SignIn v-if="typeRef === 'signin'" key="signin" />
+			<SignIn v-if="type === 'signin'" key="signin" />
 		</transition>
 	</div>
 </template>
@@ -27,20 +27,20 @@ const props = defineProps<{
 	type?: FormType
 }>()
 
-const typeRef = ref<FormType>("signin")
+const type = ref<FormType>("signin")
 const themeStore = useThemeStore()
 const isDark = computed<boolean>(() => themeStore.isThemeDark)
 const title = computed<string>(() =>
-	typeRef.value === "signin"
+	type.value === "signin"
 		? "SOCFortress CoPilot"
-		: typeRef.value === "signup"
+		: type.value === "signup"
 			? "SOCFortress CoPilot"
 			: "Forgot Password"
 )
 
 onBeforeMount(() => {
 	if (props.type) {
-		typeRef.value = props.type
+		type.value = props.type
 	}
 })
 </script>

@@ -14,9 +14,16 @@ function getValue(origin, val) {
 	return val
 }
 
+function remFromPX(px) {
+	return {
+		key: Number.parseFloat(_.toNumber(px / 4).toFixed(4)),
+		rem: `${Number.parseFloat(_.toNumber(px / 16).toFixed(4))}rem`
+	}
+}
+
 export default {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
-	darkMode: ["class"],
+	darkMode: ["selector", `.theme-dark`],
 	theme: {
 		fontFamily: {
 			sans: ["var(--font-family)", "sans-serif"],
@@ -26,7 +33,30 @@ export default {
 		},
 		extend: {
 			colors: {
-				primary: "var(--primary-color)"
+				primary: "rgb(var(--primary-color-rgb))",
+				success: "rgb(var(--success-color-rgb))",
+				error: "rgb(var(--error-color-rgb))",
+				warning: "rgb(var(--warning-color-rgb))",
+				info: "rgb(var(--info-color-rgb))",
+				border: "rgb(var(--border-color-rgb))",
+				hover: "rgb(var(--hover-color-rgb))",
+				extra: {
+					1: "rgb(var(--extra1-color-rgb))",
+					2: "rgb(var(--extra2-color-rgb))",
+					3: "rgb(var(--extra3-color-rgb))",
+					4: "rgb(var(--extra4-color-rgb))"
+				}
+			},
+			backgroundColor: {
+				default: "rgb(var(--bg-default-color-rgb))",
+				secondary: "rgb(var(--bg-secondary-color-rgb))",
+				body: "rgb(var(--bg-body-color-rgb))",
+				sidebar: "rgb(var(--bg-sidebar-color-rgb))"
+			},
+			textColor: {
+				default: "rgb(var(--fg-default-color-rgb))",
+				secondary: "rgb(var(--fg-secondary-color-rgb))",
+				tertiary: "rgb(var(--fg-tertiary-color-rgb))"
 			},
 			animation: {
 				fade: "fade 0.3s forwards"
@@ -37,55 +67,42 @@ export default {
 					to: { opacity: 1 }
 				}
 			},
-			backgroundColor: {
-				default: "var(--bg-color)",
-				secondary: "var(--bg-secondary-color)"
-			},
-			textColor: {
-				default: "var(--fg-color)",
-				secondary: "var(--fg-secondary-color)",
-				warning: "var(--warning-color)",
-				error: "var(--error-color)",
-				success: "var(--success-color)"
-			},
-			borderRadius: {
-				default: "var(--border-radius)",
-				small: "var(--border-radius-small)"
-			},
 			screens: {
 				xs: "460px"
 			},
 			height: {
-				0.75: "0.1875rem",
-				150: "37.5rem",
+				[remFromPX(3).key]: remFromPX(3).rem, // 0.75
+				[remFromPX(600).key]: remFromPX(600).rem, // 150
 				"60vh": "60vh"
 			},
 			minHeight: {
 				114: "28.5rem",
-				120: "30rem"
-			},
-			width: {
-				5.5: "1.375rem",
-				150: "37.5rem",
-				"90vw": "90vw"
-			},
-			spacing: {
-				"20vh": "20vh",
-				"50vw": "50vw"
+				120: "30rem",
+				[remFromPX(548).key]: remFromPX(548).rem // 137
 			},
 			maxHeight: {
 				"50vh": "50vh",
 				106: "26.5rem",
 				125: "31.25rem",
-				150: "37.5rem"
+				[remFromPX(600).key]: remFromPX(600).rem // 150
+			},
+			width: {
+				[remFromPX(22).key]: remFromPX(22).rem, // 5.5
+				[remFromPX(600).key]: remFromPX(600).rem, // 150
+				"90vw": "90vw"
 			},
 			maxWidth: {
 				"90vw": "90vw"
+			},
+			spacing: {
+				"20vh": "20vh",
+				"50vw": "50vw"
 			}
 		}
 	},
 	safelist: [
 		"p-4",
+		"py-4",
 		"!p-1",
 		"flex",
 		"flex-col",
@@ -99,6 +116,8 @@ export default {
 		"max-h-50vh",
 		"max-w-90vw",
 		"!h-0.75",
+		"text-primary",
+		"mx-1",
 		"basis-1/4",
 		"basis-1/5"
 	],

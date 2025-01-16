@@ -1,16 +1,32 @@
-@use "variables";
+@import "variables";
+@import "mixin";
 
-.page-wrapped {
-	@media (min-width: calc(variables.$sidebar-bp + 1px)) {
-		&.layout-HorizontalNav {
-			height: calc(100dvh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+.layout-HorizontalNav {
+	.page {
+		padding-bottom: var(--view-padding);
+	}
+	.page-wrapped {
+		padding-bottom: 0;
+		height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+	}
+	.page-min-wrapped {
+		padding-bottom: 0;
+		min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+	}
+	.page-mobile-full {
+		@media (max-width: $sidebar-bp) {
+			padding-bottom: 0;
+			@include page-full-view;
 		}
 	}
 }
-.page-min-wrapped {
-	@media (min-width: calc(variables.$sidebar-bp + 1px)) {
-		&.layout-HorizontalNav {
-			min-height: calc(100dvh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+.direction-rtl {
+	.layout-HorizontalNav {
+		.page-mobile-full {
+			@media (max-width: $sidebar-bp) {
+				right: calc(var(--view-padding) * -1);
+				left: unset;
+			}
 		}
 	}
 }

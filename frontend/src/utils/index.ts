@@ -16,6 +16,7 @@ export function file2Base64(blob: Blob): Promise<string> {
 		reader.onerror = error => reject(error)
 	})
 }
+
 export function isEnvDev() {
 	return process.env.NODE_ENV === "development"
 }

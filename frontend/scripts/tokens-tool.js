@@ -2,12 +2,14 @@ import os from "node:os"
 import path from "node:path"
 import process from "node:process"
 import { cancel, intro, isCancel, outro, select, spinner, text } from "@clack/prompts"
+import { colord } from "colord"
 import fs from "fs-extra"
 import _ from "lodash"
 
-const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-families"]
+const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-families", "font-weights"]
 const TYPO_KEYS = ["typo"]
-const SET_KEYS = ["color"]
+const COLOR_KEYS = ["color"]
+const COLOR_OPACITY_LIST = [] // [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90]
 const TOKENS_MAP = [
 	{
 		token: "colors",
@@ -16,6 +18,10 @@ const TOKENS_MAP = [
 	{
 		token: "fontFamily",
 		type: "fontFamilies"
+	},
+	{
+		token: "fontWeight",
+		type: "fontWeights"
 	},
 	{
 		token: "fontSize",
@@ -79,7 +85,7 @@ async function importTokens(tokensPath) {
 	const projectFile = {}
 
 	const globalTokens = tokens.global
-	const setTokens = [
+	const colorTokens = [
 		{ key: "light", value: tokens.light },
 		{ key: "dark", value: tokens.dark }
 	]
@@ -121,14 +127,15 @@ async function importTokens(tokensPath) {
 		}
 	}
 
-	for (const set of setTokens) {
+	for (const set of colorTokens) {
 		const setName = set.key
 		const group = set.value
 
 		for (const k in group) {
-			for (const sk of SET_KEYS) {
-				const kIndex = k.indexOf(sk)
-				if (kIndex !== -1) {
+			for (const sk of COLOR_KEYS) {
+				const regex = /-\d{3}$/
+				// exclude opacity variants
+				if (k.includes(sk) && !regex.test(k)) {
 					const skParsed = tokenNameSanitize(_.camelCase(sk), "type")
 					const name = _.camelCase(k.replace(`${sk}-`, ""))
 					let value = group[k].value
@@ -140,6 +147,8 @@ async function importTokens(tokensPath) {
 							value = token?.value
 						}
 					}
+
+					value = colord(value).toRgbString()
 
 					_.set(projectFile, `${skParsed}.${setName}.${name}`, value)
 				}
@@ -172,7 +181,7 @@ async function exportTokens() {
 	}
 
 	const globalTokens = groups.filter(o => !["colors", "typography"].includes(o.key))
-	const setsTokens = groups.filter(o => ["colors"].includes(o.key))
+	const colorTokens = groups.filter(o => ["colors"].includes(o.key))
 	const typoTokens = groups.filter(o => ["typography"].includes(o.key))
 
 	for (const group of globalTokens) {
@@ -188,7 +197,7 @@ async function exportTokens() {
 		}
 	}
 
-	for (const group of setsTokens) {
+	for (const group of colorTokens) {
 		const type = tokenNameSanitize(group.key, "token")
 		const set = group.value
 
@@ -197,14 +206,35 @@ async function exportTokens() {
 				const globalName = _.kebabCase(`${type}-${setName}-${name}`)
 				const tokenName = _.kebabCase(`${type}-${name}`)
 
+				const value = colord(set[setName][name]).toRgbString()
+
 				exportFile.global[globalName] = {
-					value: set[setName][name],
+					value,
 					type
 				}
 
 				exportFile[setName][tokenName] = {
 					value: `{${globalName}}`,
 					type
+				}
+
+				for (const opacity of COLOR_OPACITY_LIST) {
+					const opacityName = opacity.toString().padStart(3, "0")
+					const globalNameOpacity = _.kebabCase(`${type}-${setName}-${name}-${opacityName}`)
+					const tokenNameOpacity = _.kebabCase(`${type}-${name}-${opacityName}`)
+					const valueOpacity = colord(value)
+						.alpha(opacity / 100)
+						.toRgbString()
+
+					exportFile.global[globalNameOpacity] = {
+						value: valueOpacity,
+						type
+					}
+
+					exportFile[setName][tokenNameOpacity] = {
+						value: `{${globalNameOpacity}}`,
+						type
+					}
 				}
 			}
 		}
@@ -232,9 +262,9 @@ async function exportTokens() {
 			}
 
 			// sanitize lineHeight for figma
-			if (value.fontSize && tokens?.lineHeight?.base) {
+			if (value.fontSize && tokens?.lineHeight?.default) {
 				newValue.lineHeight = Math.round(
-					Number.parseInt(getValue(tokens, value.fontSize)) * Number.parseFloat(tokens.lineHeight.base)
+					Number.parseInt(getValue(tokens, value.fontSize)) * Number.parseFloat(tokens.lineHeight.default)
 				).toString()
 			}
 

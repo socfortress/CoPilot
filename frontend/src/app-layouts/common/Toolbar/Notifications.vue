@@ -43,12 +43,9 @@ import { NBadge, NButton, NDrawer, NDrawerContent, NPopover, NText } from "naive
 import { computed, onBeforeMount, ref } from "vue"
 
 const BellIcon = "ph:bell"
-
 const themeStore = useThemeStore()
-
-const primaryColor = computed(() => themeStore.primaryColor)
+const primaryColor = computed(() => themeStore.style["primary-color"])
 const hasUnread = useNotifications().hasUnread
-
 const showDrawer = ref(false)
 const list = useNotifications().list
 
@@ -61,6 +58,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .trigger-icon {
-	color: var(--fg-color);
+	color: var(--fg-default-color);
 }
 </style>

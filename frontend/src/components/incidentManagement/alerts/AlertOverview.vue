@@ -222,6 +222,6 @@ function handleDelete() {
 
 <style lang="scss" scoped>
 .footer-box {
-	border-top: var(--border-small-100);
+	border-top: 1px solid var(--border-color);
 }
 </style>

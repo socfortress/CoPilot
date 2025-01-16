@@ -24,9 +24,9 @@
 			<div v-if="pinned.length" class="flex items-center">
 				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="!p-1">
 					<template #trigger>
-						<button class="shortcuts-btn flex items-center gap-2">
+						<button class="shortcuts-btn flex items-center gap-2 text-sm">
 							<span>Shortcuts</span>
-							<n-badge :value="pinned.length" color="var(--divider-030-color)" />
+							<n-badge :value="pinned.length" />
 						</button>
 					</template>
 					<div class="flex flex-col">
@@ -161,7 +161,7 @@ router.afterEach(route => {
 
 			&.n-tag--closable {
 				&:hover {
-					background-color: var(--hover-color);
+					background-color: var(--bg-sidebar-color);
 
 					&.n-tag--round {
 						padding: 0 calc(var(--n-height) / 3.6) 0 calc(var(--n-height) / 3.6);
@@ -178,18 +178,36 @@ router.afterEach(route => {
 
 	.shortcuts-btn {
 		border-radius: 50px;
-		background-color: var(--bg-color);
+		background-color: var(--bg-sidebar-color);
 		gap: 10px;
 		height: 32px;
 		cursor: pointer;
-		padding: 0px 8px;
-		padding-left: 10px;
+		padding: 0px 6px;
+		padding-left: 12px;
 		outline: none;
 		transition: all 0.2s var(--bezier-ease);
-		border: none;
+		border: 1px solid var(--border-color);
 
 		&:hover {
 			background-color: var(--hover-color);
+		}
+
+		:deep() {
+			.n-badge {
+				.n-badge-sup {
+					--size: 22px;
+					background-color: var(--bg-body-color);
+					color: var(--fg-secondary-color);
+					font-weight: 700;
+					height: var(--size);
+					line-height: var(--size);
+					min-width: var(--size);
+					border-radius: var(--size);
+					font-variant-numeric: tabular-nums;
+					justify-content: center;
+					padding: 0;
+				}
+			}
 		}
 	}
 
@@ -246,8 +264,8 @@ router.afterEach(route => {
 .direction-rtl {
 	.pinned-pages {
 		.shortcuts-btn {
-			padding-right: 10px;
-			padding-left: 8px;
+			padding-right: 12px;
+			padding-left: 6px;
 		}
 	}
 }

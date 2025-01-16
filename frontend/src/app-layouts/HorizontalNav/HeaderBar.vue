@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
 import Logo from "@/app-layouts/common/Logo.vue"
-import Navbar from "@/app-layouts/common/Navbar/index.vue"
+import Navbar from "@/app-layouts/common/Navbar"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed } from "vue"
@@ -19,14 +19,14 @@ const isDark = computed<boolean>(() => themeStore.isThemeDark)
 </script>
 
 <style lang="scss" scoped>
-@import "variables";
+@import "./variables";
 
 .header-bar {
 	padding-left: var(--view-padding);
 	min-height: var(--header-bar-height);
 	height: var(--header-bar-height);
 	max-height: var(--header-bar-height);
-	background-color: var(--bg-sidebar);
+	background-color: var(--bg-sidebar-color);
 
 	:deep(.n-scrollbar-rail) {
 		opacity: 0.15;

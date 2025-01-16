@@ -35,7 +35,7 @@ const align = ref<Align>("left")
 const type = ref<FormType | undefined>(formType.value || undefined)
 
 const themeStore = useThemeStore()
-const activeColor = computed(() => themeStore.primaryColor)
+const activeColor = computed(() => themeStore.style["primary-color"])
 const authStore = useAuthStore()
 const isLogged = computed(() => authStore.isLogged)
 
@@ -92,7 +92,7 @@ onBeforeMount(() => {
 					padding: 60px;
 					width: 100%;
 					max-width: 500px;
-					background-color: var(--bg-color);
+					background-color: var(--bg-default-color);
 					border-radius: 20px;
 					@apply shadow-xl;
 				}

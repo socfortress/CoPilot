@@ -109,7 +109,7 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 	overflow: hidden;
 
 	.card-header {
-		border-bottom: var(--border-small-050);
+		border-bottom: 1px solid var(--border-color);
 		overflow: hidden;
 		padding: 10px 16px;
 
@@ -139,7 +139,7 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 
 				.fill {
 					border-radius: var(--border-radius-small);
-					background-color: var(--fg-color);
+					background-color: var(--fg-default-color);
 					height: 100%;
 					width: 100%;
 				}
@@ -185,12 +185,12 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 					width: 10px;
 					min-width: 10px;
 					border-radius: var(--border-radius-small);
-					background-color: var(--fg-color);
+					background-color: var(--fg-default-color);
 				}
 
 				.divider {
 					height: 1px;
-					background-color: var(--hover-010-color);
+					background-color: rgba(var(--hover-color-rgb) / 0.1);
 				}
 
 				&.success {

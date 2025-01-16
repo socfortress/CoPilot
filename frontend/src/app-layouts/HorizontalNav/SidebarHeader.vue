@@ -1,12 +1,7 @@
 <template>
-	<div class="sidebar-header flex items-center justify-between">
-		<div class="logo-box grow" :class="{ mini: logoMini }">
-			<Transition name="fade" mode="out-in">
-				<Logo v-if="isDark && !logoMini" :mini="false" :dark="true" class="anim-wrap" />
-				<Logo v-else-if="isLight && !logoMini" :mini="false" :dark="false" class="anim-wrap" />
-				<Logo v-else-if="isDark && logoMini" :mini="true" :dark="true" class="anim-wrap" />
-				<Logo v-else-if="isLight && logoMini" :mini="true" :dark="false" class="anim-wrap" />
-			</Transition>
+	<div class="sidebar-header flex items-center justify-between gap-4 px-4">
+		<div class="grow">
+			<Logo :mini="logoMini" :dark="isDark" />
 		</div>
 		<Transition name="fade" mode="out-in">
 			<div v-if="showPin" class="sidebar-pin flex items-center">
@@ -29,18 +24,17 @@ import Logo from "@/app-layouts/common/Logo.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
 import { Icon as Iconify } from "@iconify/vue"
-import { computed, toRefs } from "vue"
+import { computed } from "vue"
 
-const props = defineProps<{
+const { logoMini } = defineProps<{
 	logoMini?: boolean
 }>()
-const { logoMini } = toRefs(props)
 
 const CircleRegular = "fa6-regular:circle"
 const DotCircleRegular = "fa6-regular:circle-dot"
 const CloseOutline = "carbon:chevron-left"
 const themeStore = useThemeStore()
-const showPin = computed<boolean>(() => !logoMini.value)
+const showPin = computed<boolean>(() => !logoMini)
 const sidebarCollapsed = computed({
 	get(): boolean {
 		return themeStore.sidebar.collapsed
@@ -50,64 +44,16 @@ const sidebarCollapsed = computed({
 	}
 })
 const isDark = computed<boolean>(() => themeStore.isThemeDark)
-const isLight = computed(() => themeStore.isThemeLight)
 </script>
 
 <style lang="scss" scoped>
-@import "variables";
+@import "./variables";
 
 .sidebar-header {
 	height: var(--toolbar-height);
 	min-height: var(--toolbar-height);
 
-	:deep() {
-		.logo-box {
-			height: 100%;
-			width: 100%;
-			position: relative;
-
-			.anim-wrap {
-				padding: 16px 0px;
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				display: flex;
-				align-items: center;
-
-				img {
-					max-height: 32px;
-					display: block;
-					height: calc(var(--toolbar-height) - 32px);
-					transform: translateX(32px);
-					transition: transform var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-				}
-			}
-
-			&.fade-enter-active,
-			&.fade-leave-active {
-				transition: opacity var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-			}
-
-			&.fade-enter-from,
-			&.fade-leave-to {
-				opacity: 0;
-			}
-		}
-
-		&.mini {
-			width: 100%;
-			.anim-wrap {
-				img {
-					transform: translateX(22px);
-				}
-			}
-		}
-	}
-
 	.sidebar-pin {
-		padding-right: 16px;
 		height: 100%;
 
 		:deep() {

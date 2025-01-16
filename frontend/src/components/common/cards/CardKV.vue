@@ -19,7 +19,7 @@ const { color, size, valueClass } = defineProps<{
 
 <style lang="scss" scoped>
 .kv-card {
-	border: var(--border-small-100);
+	border: 1px solid var(--border-color);
 	background-color: var(--bg-secondary-color);
 	border-radius: var(--border-radius);
 	overflow: hidden;
@@ -27,14 +27,14 @@ const { color, size, valueClass } = defineProps<{
 	flex-direction: column;
 
 	.key {
-		border-bottom: var(--border-small-050);
+		border-bottom: 1px solid var(--border-color);
 		padding: 8px 12px;
 		font-size: 12px;
 	}
 	.value {
 		font-size: 14px;
 		padding: 8px 12px;
-		background-color: var(--bg-color);
+		background-color: var(--bg-default-color);
 		font-family: var(--font-family-mono);
 		height: 100%;
 		flex-grow: 1;
@@ -56,20 +56,20 @@ const { color, size, valueClass } = defineProps<{
 
 	&.kv-color- {
 		&danger {
-			border-color: var(--secondary4-opacity-030-color);
-			background-color: var(--secondary4-opacity-020-color);
+			border-color: rgba(var(--error-color-rgb) / 0.3);
+			background-color: rgba(var(--error-color-rgb) / 0.2);
 
 			.key {
-				border-color: var(--secondary4-opacity-030-color);
+				border-color: rgba(var(--error-color-rgb) / 0.3);
 			}
 		}
 
 		&warning {
-			border-color: var(--secondary3-opacity-030-color);
-			background-color: var(--secondary3-opacity-020-color);
+			border-color: rgba(var(--warning-color-rgb) / 0.3);
+			background-color: rgba(var(--warning-color-rgb) / 0.2);
 
 			.key {
-				border-color: var(--secondary3-opacity-030-color);
+				border-color: rgba(var(--warning-color-rgb) / 0.3);
 			}
 		}
 
@@ -83,11 +83,11 @@ const { color, size, valueClass } = defineProps<{
 		}
 
 		&primary {
-			border-color: var(--primary-030-color);
-			background-color: var(--primary-020-color);
+			border-color: rgba(var(--primary-color-rgb) / 0.3);
+			background-color: rgba(var(--primary-color-rgb) / 0.2);
 
 			.key {
-				border-color: var(--primary-030-color);
+				border-color: rgba(var(--primary-color-rgb) / 0.3);
 			}
 		}
 	}

@@ -62,7 +62,7 @@ const { indices } = toRefs(props)
 const list = ref(indices.value)
 const message = useMessage()
 const style = computed(() => useThemeStore().style)
-const gradientColor = computed(() => style.value["bg-color-rgb"].split(", "))
+const gradientColor = computed(() => style.value["bg-default-color-rgb"].split(", "))
 const loading = ref(false)
 
 function getIndices() {

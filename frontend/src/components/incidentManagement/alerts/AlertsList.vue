@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
-						<div class="bg-default rounded-default">
+						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -128,7 +128,7 @@
 								<span>Selected</span>
 								<n-badge
 									:value="checkedAlerts.length"
-									color="var(--divider-030-color)"
+									color="rgba(var(--border-color-rgb) / 0.3)"
 									class="!font-mono"
 								/>
 							</div>

@@ -2,7 +2,7 @@
 	img {
 		max-width: 100%;
 		width: 100%;
-		border: var(--border-small-100);
+		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius);
 	}
 
@@ -10,7 +10,7 @@
 		--cell-padding: 8px 12px;
 
 		width: 100%;
-		border: var(--border-small-100);
+		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius);
 		text-align: left;
 		font-variant-numeric: tabular-nums;
@@ -33,7 +33,7 @@
 			tr {
 				td {
 					padding: var(--cell-padding);
-					background-color: var(--bg-color);
+					background-color: var(--bg-default-color);
 					border-bottom: 1px solid var(--border-color);
 				}
 

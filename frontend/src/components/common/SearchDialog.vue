@@ -117,6 +117,7 @@ const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
 const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useGoto()
 
+// TODO: review the groups and items
 const groups = ref<Groups>([
 	{
 		name: "Applications",
@@ -348,7 +349,7 @@ onMounted(() => {
 							width: 28px;
 							height: 28px;
 							border-radius: 50%;
-							background-color: var(--primary-005-color);
+							background-color: rgba(var(--primary-color-rgb) / 0.15);
 							display: flex;
 							justify-content: center;
 							align-items: center;
@@ -362,7 +363,7 @@ onMounted(() => {
 						}
 
 						&.active {
-							background-color: var(--hover-005-color);
+							background-color: var(--hover-color);
 						}
 						&:hover {
 							box-shadow: 0px 0px 0px 1px var(--primary-color) inset;
@@ -378,7 +379,7 @@ onMounted(() => {
 			padding: 10px 0;
 
 			.icon {
-				background-color: var(--code-color);
+				background-color: rgba(255, 255, 255, 0.3);
 				width: 18px;
 				height: 18px;
 				padding-top: 1px;

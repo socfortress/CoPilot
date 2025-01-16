@@ -1,6 +1,6 @@
 <template>
 	<aside
-		id="sidebar"
+		id="app-sidebar"
 		class="sidebar flex flex-col"
 		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
 	>
@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/app-layouts/common/Navbar/index.vue"
+import Navbar from "@/app-layouts/common/Navbar"
 import { useThemeStore } from "@/stores/theme"
 import { isMobile } from "@/utils"
 import { onClickOutside, useElementHover } from "@vueuse/core"
@@ -62,22 +62,19 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "variables";
+@import "./variables";
 
 .sidebar {
 	position: fixed;
 	z-index: 4;
 	top: 0;
 	left: 0;
-	//bottom: 0;
-	//border-right:var(--border-small-100);
-	//padding-right: 1px;
 	width: var(--sidebar-open-width);
 	height: 100vh;
-	height: 100dvh;
+	height: 100svh;
 	overflow-x: hidden;
 	overflow-y: auto;
-	background-color: var(--bg-sidebar);
+	background-color: var(--bg-sidebar-color);
 	transition:
 		width var(--sidebar-anim-ease) var(--sidebar-anim-duration),
 		box-shadow var(--sidebar-anim-ease) var(--sidebar-anim-duration),

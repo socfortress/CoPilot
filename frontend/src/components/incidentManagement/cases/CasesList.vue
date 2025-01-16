@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="left">
 					<template #trigger>
-						<div class="bg-default rounded-default">
+						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -38,7 +38,7 @@
 
 				<n-popover v-if="showMobileMenu" overlap placement="left" display-directive="show">
 					<template #trigger>
-						<div class="bg-default rounded-default">
+						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-pointer">
 								<template #icon>
 									<Icon :name="MenuIcon"></Icon>
@@ -72,7 +72,7 @@
 			/>
 			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
-					<div class="bg-default rounded-default">
+					<div class="bg-default rounded-lg">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>

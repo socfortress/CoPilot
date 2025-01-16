@@ -63,10 +63,10 @@ function getOptions() {
 			left: "left",
 			type: "scroll",
 			textStyle: {
-				color: style.value["fg-color"]
+				color: style.value["fg-default-color"]
 			},
 			pageTextStyle: {
-				color: style.value["fg-color"]
+				color: style.value["fg-default-color"]
 			}
 		},
 		grid: {
@@ -86,7 +86,7 @@ function getOptions() {
 					show: false
 				},
 				itemStyle: {
-					borderColor: style.value["bg-color"],
+					borderColor: style.value["bg-default-color"],
 					borderWidth: 2
 				},
 				data: [
@@ -139,13 +139,13 @@ function getOptions() {
 					// alignTo: "edge",
 					rich: {
 						name: {
-							color: style.value["fg-color"],
+							color: style.value["fg-default-color"],
 							fontSize: window.innerWidth > 1000 ? 13 : 11
 						},
 						per: {
 							fontSize: window.innerWidth > 1000 ? 13 : 11,
 							fontWeight: "bold",
-							color: style.value["fg-color"]
+							color: style.value["fg-default-color"]
 						}
 					}
 				},
@@ -162,7 +162,7 @@ function getOptions() {
 					}
 				},
 				itemStyle: {
-					borderColor: style.value["bg-color"],
+					borderColor: style.value["bg-default-color"],
 					borderWidth: 1
 				},
 				data: sizeData

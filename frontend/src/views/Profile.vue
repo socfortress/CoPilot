@@ -3,7 +3,7 @@
 		<n-card class="header flex flex-col" content-class="!p-0">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
-					<n-avatar :size="100" :src="userPic" round />
+					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
@@ -104,7 +104,7 @@ function setCroppedImage(result: ImageCropperResult) {
 			gap: 30px;
 			padding: 30px;
 			padding-bottom: 20px;
-			border-block-end: var(--border-small-050);
+			border-block-end: 1px solid var(--border-color);
 			container-type: inline-size;
 
 			.propic {
@@ -116,14 +116,14 @@ function setCroppedImage(result: ImageCropperResult) {
 					align-items: center;
 					justify-content: center;
 					background-color: var(--primary-color);
-					color: var(--bg-color);
+					color: var(--bg-default-color);
 					position: absolute;
 					width: 26px;
 					height: 26px;
 					border-radius: 50%;
 					top: -1px;
 					right: -1px;
-					border: 1px solid var(--bg-color);
+					border: 1px solid var(--bg-default-color);
 					cursor: pointer;
 				}
 			}

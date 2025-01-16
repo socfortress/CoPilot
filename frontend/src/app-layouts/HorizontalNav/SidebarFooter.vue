@@ -37,7 +37,7 @@ const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth - 16
 <style lang="scss" scoped>
 .sidebar-footer {
 	margin: 8px;
-	background-color: var(--bg-body);
+	background-color: var(--bg-body-color);
 	border-radius: var(--border-radius);
 	padding: 3px 0;
 	transition: all 0.3s;
