@@ -190,7 +190,7 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 
 				.divider {
 					height: 1px;
-					background-color: rgba(var(--hover-color-rgb) / 0.1);
+					background-color: rgba(var(--border-color-rgb) / 0.1);
 				}
 
 				&.success {

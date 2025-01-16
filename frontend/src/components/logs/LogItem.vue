@@ -125,7 +125,7 @@ function formatDate(timestamp: string | number | Date, utc: boolean = true): str
 		color: var(--primary-color);
 	}
 	&-delete {
-		color: var(--extra4-color);
+		color: var(--error-color);
 	}
 }
 </style>
