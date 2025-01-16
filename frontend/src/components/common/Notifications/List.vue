@@ -8,7 +8,7 @@
 			@click="item.action ? preformAction(item.id, item.action) : () => {}"
 		>
 			<div class="icon-box">
-				<Icon v-if="item.category === 'alert'" :name="AlertIcon" :size="21"></Icon>
+				<Icon v-if="item.category === 'alert'" :name="AlertIcon" :size="21" />
 				<n-tooltip v-if="!item.read" trigger="hover" class="!p-0" content-class="!p-0" placement="right">
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
@@ -87,6 +87,7 @@ function formatDatetime(date: Date | string) {
 		position: relative;
 		padding: 14px 12px;
 		gap: 4px;
+		transition: background-color 0.2s linear;
 
 		.icon-box {
 			width: 45px;
@@ -149,7 +150,7 @@ function formatDatetime(date: Date | string) {
 		&.success {
 			.icon-box {
 				.n-icon {
-					background-color: var(--success-005-color);
+					background-color: rgba(var(--success-color-rgb) / 0.1);
 					color: var(--success-color);
 				}
 			}
@@ -160,7 +161,7 @@ function formatDatetime(date: Date | string) {
 		&.info {
 			.icon-box {
 				.n-icon {
-					background-color: var(--secondary1-opacity-010-color);
+					background-color: rgba(var(--info-color-rgb) / 0.1);
 					color: var(--info-color);
 				}
 			}
@@ -171,7 +172,7 @@ function formatDatetime(date: Date | string) {
 		&.warning {
 			.icon-box {
 				.n-icon {
-					background-color: var(--secondary3-opacity-010-color);
+					background-color: rgba(var(--warning-color-rgb) / 0.1);
 					color: var(--warning-color);
 				}
 			}
@@ -182,7 +183,7 @@ function formatDatetime(date: Date | string) {
 		&.error {
 			.icon-box {
 				.n-icon {
-					background-color: var(--secondary4-opacity-010-color);
+					background-color: rgba(var(--error-color-rgb) / 0.1);
 					color: var(--error-color);
 				}
 			}
@@ -196,11 +197,11 @@ function formatDatetime(date: Date | string) {
 		}
 
 		&:not(:last-child) {
-			border-bottom: var(--border-small-050);
+			border-bottom: 1px solid var(--border-color);
 		}
 
 		&:hover {
-			background-color: var(--hover-005-color);
+			background-color: var(--hover-color);
 
 			.delete-btn {
 				opacity: 0.5;

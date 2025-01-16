@@ -3,7 +3,7 @@
 		<n-form-item path="username" label="Username">
 			<n-input
 				v-model:value="model.username"
-				placeholder="Username..."
+				placeholder="Insert your Username"
 				size="large"
 				autocomplete="on"
 				@keydown.enter="signIn"
@@ -14,7 +14,7 @@
 				v-model:value="model.password"
 				type="password"
 				show-password-on="click"
-				placeholder="Password..."
+				placeholder="Insert your password"
 				autocomplete="on"
 				size="large"
 				@keydown.enter="signIn"

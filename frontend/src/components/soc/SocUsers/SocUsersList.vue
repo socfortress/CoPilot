@@ -137,15 +137,15 @@ onBeforeMount(() => {
 
 	tr:hover {
 		td {
-			background-color: var(--primary-005-color);
+			background-color: rgba(var(--primary-color-rgb) / 0.05);
 		}
 	}
 
 	.highlight {
 		td {
-			border-top: 1px solid var(--primary-030-color);
-			border-bottom: 1px solid var(--primary-030-color);
-			background-color: var(--primary-005-color);
+			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+			background-color: rgba(var(--primary-color-rgb) / 0.05);
 		}
 	}
 }

@@ -31,16 +31,16 @@ const { summary } = defineProps<{ summary: Partial<AlertsByHost & AlertsByRule &
 	border-radius: var(--border-radius);
 	overflow: hidden;
 	background-color: var(--bg-secondary-color);
-	border: var(--border-small-100);
+	border: 1px solid var(--border-color);
 
 	.info {
-		border-right: var(--border-small-100);
+		border-right: 1px solid var(--border-color);
 		padding: 16px 20px;
 	}
 
 	.count {
 		min-width: 50px;
-		background-color: var(--bg-color);
+		background-color: var(--bg-default-color);
 		font-weight: bold;
 	}
 }

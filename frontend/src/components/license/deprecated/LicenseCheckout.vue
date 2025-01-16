@@ -92,7 +92,7 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .license-box {
-	background-color: var(--bg-color);
+	background-color: var(--bg-default-color);
 	border-radius: var(--border-radius);
 	padding: 14px 18px;
 	.section {

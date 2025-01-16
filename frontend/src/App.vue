@@ -2,15 +2,17 @@
 	<Provider>
 		<component
 			:is="layoutComponent"
-			:class="[`theme-${themeName}`, `layout-${layoutComponentName}`, themeName, { 'opacity-0': loading }]"
+			id="app-layout"
+			:class="[
+				`theme-${themeName}`,
+				`layout-${layoutComponentName}`,
+				`route-${routeName}`,
+				{ 'opacity-0': loading }
+			]"
 		>
 			<RouterView v-slot="{ Component: RouterComponent }">
 				<transition :name="`router-${routerTransition}`" mode="out-in" appear>
-					<component
-						:is="RouterComponent"
-						:key="(route?.name?.toString() || '') + forceRefresh"
-						:class="[`theme-${themeName}`, `layout-${layoutComponentName}`, themeName]"
-					/>
+					<component :is="RouterComponent" id="app-page" :key="routeName + forceRefresh" />
 				</transition>
 			</RouterView>
 		</component>
@@ -22,10 +24,10 @@
 
 <script lang="ts" setup>
 import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
-import Blank from "@/app-layouts/Blank/index.vue"
+import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
-import HorizontalNav from "@/app-layouts/HorizontalNav/index.vue"
+import HorizontalNav from "@/app-layouts/HorizontalNav"
 import SearchDialog from "@/components/common/SearchDialog.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
@@ -47,6 +49,7 @@ const themeStore = useThemeStore()
 const mainStore = useMainStore()
 const authStore = useAuthStore()
 
+const routeName = computed<string>(() => route?.name?.toString() || "")
 const forceRefresh = computed<number>(() => mainStore.forceRefresh)
 const forceLayout = ref<Layout | null>(null)
 const layout = computed<Layout>(() => themeStore.layout)
@@ -56,9 +59,9 @@ const routerTransition = computed<RouterTransition>(() => themeStore.routerTrans
 const themeName = computed<ThemeNameEnum>(() => themeStore.themeName)
 const isLogged = computed(() => authStore.isLogged)
 
-function checkForcedLayout(route: RouteLocationNormalized) {
-	if (route.meta?.forceLayout) {
-		forceLayout.value = route.meta.forceLayout
+function checkThemeOverrides(currentRoute: RouteLocationNormalized) {
+	if (currentRoute.meta?.theme?.layout !== undefined) {
+		forceLayout.value = currentRoute.meta.theme.layout
 	} else {
 		forceLayout.value = null
 	}
@@ -68,12 +71,12 @@ watch(layoutComponentName, () => {
 	loading.value = false
 })
 
-router.afterEach(route => {
-	checkForcedLayout(route)
+router.afterEach(currentRoute => {
+	checkThemeOverrides(currentRoute)
 })
 
 onBeforeMount(() => {
-	checkForcedLayout(useRoute())
+	checkThemeOverrides(route)
 
 	setTimeout(() => {
 		loading.value = false

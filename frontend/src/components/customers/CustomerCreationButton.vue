@@ -117,4 +117,19 @@ watch(
 	},
 	{ immediate: true }
 )
+
+watch(
+	() => customersCount,
+	() => {
+		if (customersCount === undefined) {
+			return
+		}
+		if (customersCount >= 5) {
+			isMSSP5Enabled.value = true
+		}
+		if (customersCount >= 10) {
+			isMSSP10Enabled.value = true
+		}
+	}
+)
 </script>

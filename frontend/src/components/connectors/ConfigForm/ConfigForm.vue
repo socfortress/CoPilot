@@ -308,7 +308,7 @@ onMounted(() => {
 		@apply mb-7 gap-5;
 
 		.connector-image {
-			border: 2px solid var(--bg-body);
+			border: 2px solid var(--bg-body-color);
 		}
 	}
 }

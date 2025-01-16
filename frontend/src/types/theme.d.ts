@@ -16,7 +16,6 @@ export enum ThemeNameEnum {
 	Light = "light"
 }
 
-export type ColorType = "primary" | "info" | "success" | "warning" | "error"
 export type ColorScene = "" | "Suppl" | "Hover" | "Pressed"
 export type ColorKey = `${ColorType}Color${ColorScene}`
 export type ThemeColor = Partial<Record<ColorKey, string>>

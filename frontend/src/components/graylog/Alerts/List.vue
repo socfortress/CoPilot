@@ -4,7 +4,7 @@
 			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="bg-default rounded-default">
+						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
@@ -36,7 +36,7 @@
 			<n-select v-if="!compactMode" v-model:value="timerange" size="small" :options="timeOptions" class="!w-32" />
 			<n-popover v-if="compactMode" overlap placement="right">
 				<template #trigger>
-					<div class="bg-default rounded-default">
+					<div class="bg-default rounded-lg">
 						<n-button size="small">
 							<template #icon>
 								<Icon :name="FilterIcon"></Icon>

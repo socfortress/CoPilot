@@ -1,5 +1,5 @@
 .vuesjv-override {
-	color: var(--fg-color) !important;
+	color: var(--fg-default-color) !important;
 	font-family: var(--font-family-mono) !important;
 	line-height: 1.7 !important;
 
@@ -16,13 +16,13 @@
 	}
 
 	.bg-gray-200 {
-		background-color: var(--divider-010-color);
+		background-color: rgba(var(--border-color-rgb) / 0.1);
 	}
 	.c-gray-400 {
 		color: var(--fg-secondary-color);
 	}
 	.c-indigo-600 {
-		color: var(--secondary2-color);
+		color: var(--extra2-color);
 	}
 	.c-blue-600,
 	.c-purple-600,
@@ -41,7 +41,7 @@
 	}
 
 	.cursor-pointer {
-		color: var(--fg-color);
+		color: var(--fg-default-color);
 		background-color: transparent;
 		height: 18px;
 		border-radius: 0;

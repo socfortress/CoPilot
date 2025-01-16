@@ -113,19 +113,19 @@ function formatDate(timestamp: string | number | Date, utc: boolean = true): str
 
 .method {
 	&-get {
-		color: var(--secondary1-color);
+		color: var(--extra1-color);
 	}
 	&-option {
-		color: var(--secondary3-color);
+		color: var(--extra3-color);
 	}
 	&-put {
-		color: var(--secondary2-color);
+		color: var(--extra2-color);
 	}
 	&-post {
 		color: var(--primary-color);
 	}
 	&-delete {
-		color: var(--secondary4-color);
+		color: var(--error-color);
 	}
 }
 </style>

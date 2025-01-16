@@ -1,9 +1,9 @@
 <template>
-	<footer class="footer" :class="{ boxed }">
+	<footer class="footer py-4" :class="{ boxed }">
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
 				Made with
-				<Icon :size="22" :color="style['primary-color']" class="mx-1">
+				<Icon :size="22" class="text-primary mx-1">
 					<BrainIcon />
 				</Icon>
 				By
@@ -25,16 +25,12 @@
 <script lang="ts" setup>
 import BrainIcon from "@/assets/icons/brain-icon.svg"
 import Icon from "@/components/common/Icon.vue"
-import { useThemeStore } from "@/stores/theme"
-import { computed, ref, toRefs } from "vue"
+import { ref } from "vue"
 
-const props = defineProps<{
+const { boxed } = defineProps<{
 	boxed: boolean
 }>()
-const { boxed } = toRefs(props)
 
-const themeStore = useThemeStore()
-const style = computed(() => themeStore.style)
 const year = ref(new Date().getFullYear())
 </script>
 
@@ -42,8 +38,6 @@ const year = ref(new Date().getFullYear())
 .footer {
 	width: 100%;
 	max-width: 100%;
-	padding: var(--view-padding);
-	padding-top: 0;
 	overflow: hidden;
 	font-size: 13px;
 
@@ -51,6 +45,8 @@ const year = ref(new Date().getFullYear())
 		overflow: hidden;
 		width: 100%;
 		max-width: 100%;
+		margin: 0 auto;
+		padding: 0 var(--view-padding);
 
 		.copy {
 			line-height: 1.6;
@@ -69,12 +65,8 @@ const year = ref(new Date().getFullYear())
 	}
 
 	&.boxed {
-		padding: 0;
 		.wrap {
-			padding: var(--view-padding);
-			padding-top: 0;
 			max-width: var(--boxed-width);
-			margin: 0 auto;
 		}
 	}
 

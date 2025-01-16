@@ -4,9 +4,9 @@
 			ref="menu"
 			v-model:value="selectedKey"
 			:options="menuOptions"
-			:collapsed="collapsed"
+			:collapsed
 			:mode
-			:accordion="true"
+			accordion
 			:collapsed-width="collapsedWidth"
 			:dropdown-props="{
 				scrollable: true,
@@ -14,7 +14,7 @@
 					class: 'main-nav'
 				})
 			}"
-			:expanded-keys="expandedKeys"
+			:expanded-keys
 			@update:expanded-keys="handleUpdateExpandedKeys"
 		/>
 	</nav>
@@ -33,6 +33,7 @@ const { mode = "horizontal", collapsed = false } = defineProps<{
 	mode?: "vertical" | "horizontal"
 	collapsed?: boolean
 }>()
+
 const route = useRoute()
 const router = useRouter()
 const selectedKey = ref<string | null>(null)
@@ -116,8 +117,8 @@ function handleUpdateExpandedKeys(value: string[]) {
 				}
 
 				:nth-child(2) {
-					color: var(--fg-color);
-					background: var(--hover-005-color);
+					color: var(--fg-default-color);
+					background: var(--hover-color);
 					height: 22px;
 					line-height: 24px;
 					border-radius: 15px;
@@ -167,7 +168,7 @@ function handleUpdateExpandedKeys(value: string[]) {
 			&::before {
 				content: "";
 				display: block;
-				background-color: var(--divider-010-color);
+				background-color: var(--border-color);
 				width: var(--dash-height);
 				position: absolute;
 				top: 0px;
@@ -179,10 +180,11 @@ function handleUpdateExpandedKeys(value: string[]) {
 				&::after {
 					content: "";
 					display: block;
-					background-color: var(--divider-010-color);
+					background-color: var(--border-color);
 					width: var(--dash-width);
 					height: var(--dash-height);
 					position: absolute;
+					z-index: -1;
 					top: calc(50% - calc(ar(--dash-height) / 2));
 					left: calc(var(--dash-offset) + var(--dash-height));
 				}
@@ -203,8 +205,8 @@ function handleUpdateExpandedKeys(value: string[]) {
 						width: calc(var(--dash-width) * 3);
 						background: repeating-linear-gradient(
 							90deg,
-							var(--divider-010-color) 0px,
-							var(--divider-010-color) 5px,
+							var(--border-color) 0px,
+							var(--border-color) 5px,
 							transparent 5px,
 							transparent 8px
 						);
@@ -252,8 +254,8 @@ function handleUpdateExpandedKeys(value: string[]) {
 			}
 
 			:nth-child(2) {
-				color: var(--fg-color);
-				background: var(--hover-005-color);
+				color: var(--fg-default-color);
+				background: var(--hover-color);
 				font-weight: bold;
 				font-family: var(--font-family-mono);
 				font-size: 10px;
@@ -270,7 +272,7 @@ function handleUpdateExpandedKeys(value: string[]) {
 			.item-badge {
 				:nth-child(2) {
 					color: var(--n-item-text-color-active);
-					background: var(--primary-010-color);
+					background: rgba(var(--primary-color-rgb) / 0.1);
 				}
 			}
 		}

@@ -8,12 +8,10 @@
 
 <script lang="ts" setup>
 import { NSpin } from "naive-ui"
-import { toRefs } from "vue"
 
-const props = defineProps<{
+const { show } = defineProps<{
 	show: boolean
 }>()
-const { show } = toRefs(props)
 </script>
 
 <style scoped lang="scss">

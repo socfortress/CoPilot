@@ -42,7 +42,7 @@ const wazuh_rule = computed(() => data.value.wazuh_rule.replace(/\\\\/g, "\\\\\\
 		pre {
 			background-color: var(--bg-secondary-color) !important;
 			border-radius: var(--border-radius);
-			border: var(--border-small-050);
+			border: 1px solid var(--border-color);
 			overflow: hidden;
 		}
 		code {

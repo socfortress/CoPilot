@@ -27,8 +27,10 @@ export function authCheck(route: RouteLocationNormalized) {
 	const { checkAuth, authRedirect, auth, roles }: RouteMetaAuth = route.meta
 	const authStore = useAuthStore()
 
+	// Logout handling
 	if (route?.redirectedFrom?.name === "Logout") authStore.setLogout()
 
+	// Auth check: if not logged or role not granted
 	const loginPath = `/login${window.location.search}`
 
 	if (auth && !authStore.isLogged) {

@@ -85,8 +85,8 @@ const showDetails = ref(false)
 
 <style lang="scss" scoped>
 .priority {
-	background-color: var(--hover-005-color);
-	border: var(--border-small-100);
+	background-color: rgba(var(--hover-color-rgb) / 0.05);
+	border: 1px solid var(--border-color);
 	width: 20px;
 	height: 20px;
 	border-radius: 99999px;

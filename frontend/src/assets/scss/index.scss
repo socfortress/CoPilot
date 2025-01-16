@@ -18,7 +18,7 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
 	line-height: 1.35;
-	font-size: 16px;
+	font-size: var(--font-size);
 	text-wrap: pretty;
 
 	margin: 0;
@@ -53,7 +53,7 @@ body {
 }
 
 ::selection {
-	background-color: var(--primary-020-color);
+	background-color: rgba(var(--primary-color-rgb) / 0.2);
 }
 
 #app {
@@ -62,8 +62,8 @@ body {
 	overflow: auto;
 }
 
-* {
-	//user-select: none;
+svg {
+	touch-action: initial !important;
 }
 
 input {
@@ -84,7 +84,7 @@ pre {
 code {
 	padding: 1px 6px;
 	border-radius: var(--border-radius-small);
-	background-color: var(--hover-005-color);
+	background-color: rgba(var(--hover-color-rgb) / 0.4);
 	font-size: 13px;
 }
 pre {
@@ -148,8 +148,8 @@ ol {
 mark {
 	padding: 2px 0px;
 	border-radius: var(--border-radius-small);
-	background-color: var(--primary-030-color);
-	color: var(--fg-color);
+	background-color: rgba(var(--primary-color-rgb) / 0.3);
+	color: var(--fg-default-color);
 }
 
 @media print {

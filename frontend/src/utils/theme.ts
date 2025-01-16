@@ -1,8 +1,10 @@
-import type { ColorAction, ColorKey, ColorType, ThemeColor } from "@/types/theme.d"
+import type { ColorAction, ColorKey, ThemeColor } from "@/types/theme.d"
 import { colord } from "colord"
 import _get from "lodash/get"
 
-export type PrimaryShade = "005" | "010" | "015" | "020" | "030" | "040" | "050" | "060"
+export const COLOR_SHADES = ["005", "010", "015", "020", "030", "040", "050", "060", "070", "080", "090"] as const
+
+export type ColorShade = (typeof COLOR_SHADES)[number]
 
 export function toggleSidebarClass(
 	sidebarCollapsed: boolean,
@@ -17,37 +19,39 @@ export function toggleSidebarClass(
 	el.classList.toggle(classClose, sidebarCollapsed)
 }
 
-export function hex2rgb(hex: string): number[] {
-	const rgba = colord(hex).toRgb()
-	return [rgba.r, rgba.g, rgba.b]
-}
-export function hex2hsl(hex: string): number[] {
-	const hsl = colord(hex).toHsl()
-	return [hsl.h, hsl.s, hsl.l]
+export function colorToArray(color: string, output: "rgb" | "hsl"): number[] {
+	const colorObject = colord(color)
+
+	switch (output) {
+		case "rgb": {
+			const { r, g, b } = colorObject.toRgb()
+			return [r, g, b]
+		}
+		case "hsl": {
+			const { h, s, l } = colorObject.toHsl()
+			return [h, s, l]
+		}
+		default:
+			throw new Error("Invalid output type")
+	}
 }
 
 export function exposure(color: string, amount: number): string {
-	if (amount >= 0) {
-		return colord(color).lighten(amount).desaturate(amount).toHex()
-	}
 	return colord(color)
-		.lighten(amount)
-		.desaturate(amount * -1)
+		.lighten(amount) /* .desaturate(Math.abs(amount)) */
 		.toHex()
 }
 
-export function exportPrimaryShades(color: string): { [key: string]: string } {
-	const rgba = colord(color).toRgb()
-	return {
-		"005": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.05 }).toRgbString(),
-		"010": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.1 }).toRgbString(),
-		"015": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.15 }).toRgbString(),
-		"020": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.2 }).toRgbString(),
-		"030": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.3 }).toRgbString(),
-		"040": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.4 }).toRgbString(),
-		"050": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.5 }).toRgbString(),
-		"060": colord({ r: rgba.r, g: rgba.g, b: rgba.b, a: 0.6 }).toRgbString()
-	}
+export function getColorAlphaShades(color: string): { [key in ColorShade]: string } {
+	return COLOR_SHADES.reduce<{ [key in ColorShade]: string }>(
+		(acc, shade) => {
+			acc[shade] = colord(color)
+				.alpha(Number.parseInt(shade, 10) / 100)
+				.toRgbString()
+			return acc
+		},
+		{} as { [key in ColorShade]: string }
+	)
 }
 
 export function getTypeValue(origin: object, val: string) {
@@ -59,24 +63,46 @@ export function getTypeValue(origin: object, val: string) {
 	return val
 }
 
-export function getThemeColors(colors: Record<ColorType, string>) {
+export function getThemeColors(colors: Record<string, string>) {
 	const colorActions: ColorAction[] = [
 		{ scene: "", handler: color => color },
 		{ scene: "Suppl", handler: color => exposure(color, 0.1) },
-		{ scene: "Hover", handler: color => exposure(color, 0.05) },
-		{ scene: "Pressed", handler: color => exposure(color, -0.2) }
+		{ scene: "Hover", handler: color => exposure(color, 0.08) },
+		{ scene: "Pressed", handler: color => exposure(color, -0.05) }
 	]
 
 	const themeColor: ThemeColor = {}
 
-	for (const colorType in colors) {
-		const colorValue = colors[colorType as ColorType]
+	for (const colorName in colors) {
+		const colorValue = colors[colorName]
 
 		colorActions.forEach(action => {
-			const colorKey: ColorKey = `${colorType as ColorType}Color${action.scene}`
+			const colorKey: ColorKey = `${colorName}Color${action.scene}`
 			themeColor[colorKey] = action.handler(colorValue)
 		})
 	}
 
 	return themeColor
+}
+
+/**
+ * Generates an array of strings by expanding all values enclosed in parentheses
+ *
+ * @param input - The string to process, e.g. "brand-(seablue|green)-(10|20|50)"
+ * @returns An array of expanded strings, e.g.
+ *          ["brand-seablue-10", "brand-seablue-20", ..., "brand-green-50"]
+ */
+export function expandPattern(input: string): string[] {
+	const match = input.match(/\(([^)]+)\)/)
+	if (!match) {
+		// If there are no more parentheses, returns the input as an array
+		return [input]
+	}
+
+	// Expands the first group found
+	const [fullMatch, options] = match
+	const variants = options.split("|") // Splits the options by "|"
+
+	// Replaces the first group with each option and calls recursively
+	return variants.flatMap(option => expandPattern(input.replace(fullMatch, option)))
 }

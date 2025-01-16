@@ -229,7 +229,7 @@ onBeforeMount(() => {
 				position: absolute;
 				bottom: 0;
 				right: 0;
-				background-color: var(--bg-body);
+				background-color: var(--bg-body-color);
 				padding-left: var(--size);
 				padding-top: var(--size);
 				border-top-left-radius: var(--size);
@@ -247,7 +247,7 @@ onBeforeMount(() => {
 					background-image: radial-gradient(
 						circle at 0 0,
 						rgba(0, 0, 0, 0) calc(var(--size) - 1px),
-						var(--bg-body) calc(var(--size) + 0px)
+						var(--bg-body-color) calc(var(--size) + 0px)
 					);
 				}
 

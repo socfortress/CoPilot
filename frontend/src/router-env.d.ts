@@ -8,7 +8,11 @@ export {}
 declare module "vue-router" {
 	interface RouteMeta extends RouteMetaAuth {
 		title?: string
-		forceLayout?: Layout
+		theme?: {
+			layout?: Layout
+			boxed?: { enabled?: boolean }
+			padded?: { enabled?: boolean }
+		}
 		skipPin?: boolean
 	}
 }

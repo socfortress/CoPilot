@@ -260,9 +260,9 @@ onMounted(() => {
 	}
 
 	.license-features-box {
-		background-color: var(--bg-color);
+		background-color: var(--bg-default-color);
 		border-radius: var(--border-radius);
-		border: var(--border-small-100);
+		border: 1px solid var(--border-color);
 		padding: 18px;
 		flex-grow: 1;
 		overflow: hidden;

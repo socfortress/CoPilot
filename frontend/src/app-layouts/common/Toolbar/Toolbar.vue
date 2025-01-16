@@ -25,7 +25,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 import { useLoadingBar } from "naive-ui"
-import { onMounted, toRefs } from "vue"
+import { onMounted } from "vue"
 import { useRouter } from "vue-router"
 import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
@@ -36,10 +36,9 @@ import PinnedPages from "./PinnedPages.vue"
 import Search from "./Search.vue"
 import ThemeSwitch from "./ThemeSwitch.vue"
 
-const props = defineProps<{
+const { boxed } = defineProps<{
 	boxed: boolean
 }>()
-const { boxed } = toRefs(props)
 
 const router = useRouter()
 const themeStore = useThemeStore()
@@ -97,9 +96,9 @@ onMounted(() => {
 		z-index: 0;
 
 		.bubble {
-			background-color: var(--bg-sidebar);
-			border: var(--border-small-050);
-			color: var(--fg-color);
+			background-color: var(--bg-sidebar-color);
+			border: 1px solid var(--border-color);
+			color: var(--fg-default-color);
 			border-radius: 50px;
 			padding: 6px;
 			transition: all 0.3s;
@@ -139,25 +138,25 @@ onMounted(() => {
 			top: 0;
 			left: 0;
 			z-index: -1;
-			background-color: var(--bg-sidebar);
+			background-color: var(--bg-sidebar-color);
 			background: linear-gradient(
 				to bottom,
-				rgba(var(--bg-sidebar-rgb), 1) 0%,
-				rgba(var(--bg-sidebar-rgb), 0.945) 8.6%,
-				rgba(var(--bg-sidebar-rgb), 0.888) 16.2%,
-				rgba(var(--bg-sidebar-rgb), 0.83) 22.9%,
-				rgba(var(--bg-sidebar-rgb), 0.769) 28.9%,
-				rgba(var(--bg-sidebar-rgb), 0.707) 34.4%,
-				rgba(var(--bg-sidebar-rgb), 0.644) 39.5%,
-				rgba(var(--bg-sidebar-rgb), 0.578) 44.5%,
-				rgba(var(--bg-sidebar-rgb), 0.511) 49.5%,
-				rgba(var(--bg-sidebar-rgb), 0.443) 54.7%,
-				rgba(var(--bg-sidebar-rgb), 0.373) 60.3%,
-				rgba(var(--bg-sidebar-rgb), 0.301) 66.4%,
-				rgba(var(--bg-sidebar-rgb), 0.228) 73.3%,
-				rgba(var(--bg-sidebar-rgb), 0.153) 81%,
-				rgba(var(--bg-sidebar-rgb), 0.077) 89.9%,
-				rgba(var(--bg-sidebar-rgb), 0) 100%
+				rgba(var(--bg-sidebar-color-rgb) / 1) 0%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.945) 8.6%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.888) 16.2%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.83) 22.9%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.769) 28.9%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.707) 34.4%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.644) 39.5%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.578) 44.5%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.511) 49.5%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.443) 54.7%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.373) 60.3%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.301) 66.4%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.228) 73.3%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.153) 81%,
+				rgba(var(--bg-sidebar-color-rgb) / 0.077) 89.9%,
+				rgba(var(--bg-sidebar-color-rgb) / 0) 100%
 			);
 		}
 	}
@@ -171,22 +170,22 @@ onMounted(() => {
 			top: 0;
 			left: 0;
 			z-index: -1;
-			background-color: var(--bg-body);
+			background-color: var(--bg-body-color);
 			background: linear-gradient(
 				to bottom,
-				rgba(var(--bg-body-rgb), 1) 0%,
-				rgba(var(--bg-body-rgb), 0.738) 19%,
-				rgba(var(--bg-body-rgb), 0.541) 34%,
-				rgba(var(--bg-body-rgb), 0.382) 47%,
-				rgba(var(--bg-body-rgb), 0.278) 56.5%,
-				rgba(var(--bg-body-rgb), 0.194) 65%,
-				rgba(var(--bg-body-rgb), 0.126) 73%,
-				rgba(var(--bg-body-rgb), 0.075) 80.2%,
-				rgba(var(--bg-body-rgb), 0.042) 86.1%,
-				rgba(var(--bg-body-rgb), 0.021) 91%,
-				rgba(var(--bg-body-rgb), 0.008) 95.2%,
-				rgba(var(--bg-body-rgb), 0.002) 98.2%,
-				rgba(var(--bg-body-rgb), 0) 100%
+				rgba(var(--bg-body-color-rgb) / 1) 0%,
+				rgba(var(--bg-body-color-rgb) / 0.738) 19%,
+				rgba(var(--bg-body-color-rgb) / 0.541) 34%,
+				rgba(var(--bg-body-color-rgb) / 0.382) 47%,
+				rgba(var(--bg-body-color-rgb) / 0.278) 56.5%,
+				rgba(var(--bg-body-color-rgb) / 0.194) 65%,
+				rgba(var(--bg-body-color-rgb) / 0.126) 73%,
+				rgba(var(--bg-body-color-rgb) / 0.075) 80.2%,
+				rgba(var(--bg-body-color-rgb) / 0.042) 86.1%,
+				rgba(var(--bg-body-color-rgb) / 0.021) 91%,
+				rgba(var(--bg-body-color-rgb) / 0.008) 95.2%,
+				rgba(var(--bg-body-color-rgb) / 0.002) 98.2%,
+				rgba(var(--bg-body-color-rgb) / 0) 100%
 			);
 		}
 	}

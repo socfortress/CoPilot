@@ -95,11 +95,11 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 		}
 
 		.extra-box {
-			border-top: var(--border-small-050);
+			border-top: 1px solid var(--border-color);
 		}
 
 		.footer-box {
-			border-top: var(--border-small-050);
+			border-top: 1px solid var(--border-color);
 			font-size: 13px;
 			background-color: var(--bg-secondary-color);
 		}
@@ -155,39 +155,39 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 
 	&.embedded {
 		background-color: var(--bg-secondary-color);
-		border: var(--border-small-100);
+		border: 1px solid var(--border-color);
 
 		.footer-box {
-			background-color: var(--bg-body);
+			background-color: var(--bg-body-color);
 		}
 	}
 
 	&.card-status-success {
-		background-color: var(--success-005-color);
-		border-color: var(--success-030-color);
+		background-color: rgba(var(--success-color-rgb) / 0.05);
+		border-color: rgba(var(--success-color-rgb) / 0.3);
 	}
 
 	&.card-status-warning {
-		background-color: var(--warning-005-color);
-		border-color: var(--warning-030-color);
+		background-color: rgba(var(--warning-color-rgb) / 0.05);
+		border-color: rgba(var(--warning-color-rgb) / 0.3);
 	}
 
 	&.card-status-error {
-		background-color: var(--error-005-color);
-		border-color: var(--error-030-color);
+		background-color: rgba(var(--error-color-rgb) / 0.05);
+		border-color: rgba(var(--error-color-rgb) / 0.3);
 	}
 
 	&.hoverable {
 		&:not(.disabled) {
 			&:hover {
-				border-color: var(--primary-040-color);
+				border-color: rgba(var(--primary-color-rgb) / 0.4);
 			}
 		}
 	}
 
 	&.highlighted {
-		background-color: var(--primary-005-color);
-		border-color: var(--primary-030-color);
+		background-color: rgba(var(--primary-color-rgb) / 0.05);
+		border-color: rgba(var(--primary-color-rgb) / 0.3);
 
 		&:not(.disabled) {
 			&:hover {

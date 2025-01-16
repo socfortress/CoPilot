@@ -137,10 +137,10 @@ watch(isThemeDark, () => {
 	width: 100%;
 
 	.uncommitted-entries {
-		background-color: var(--bg-color);
+		background-color: var(--bg-default-color);
 		display: flex;
 		border-radius: var(--border-radius);
-		border: var(--border-small-050);
+		border: 1px solid var(--border-color);
 
 		.label {
 			padding: 18px 22px;
@@ -149,7 +149,7 @@ watch(isThemeDark, () => {
 			font-weight: 700;
 
 			i {
-				color: var(--secondary3-color);
+				color: var(--warning-color);
 			}
 		}
 		.value {
@@ -163,8 +163,8 @@ watch(isThemeDark, () => {
 			border-bottom-right-radius: var(--border-radius);
 
 			&.warning {
-				color: var(--secondary3-color);
-				background-color: var(--secondary3-opacity-005-color);
+				color: var(--warning-color);
+				background-color: rgba(var(--warning-color-rgb) / 0.05);
 			}
 		}
 	}

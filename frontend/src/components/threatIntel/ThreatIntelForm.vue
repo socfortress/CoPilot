@@ -165,7 +165,7 @@ onMounted(() => {
 			}
 
 			&:not(:last-child) {
-				border-bottom: var(--border-small-100);
+				border-bottom: 1px solid var(--border-color);
 			}
 		}
 	}

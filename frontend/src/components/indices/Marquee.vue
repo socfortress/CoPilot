@@ -6,10 +6,10 @@
 					v-if="list?.length"
 					class="marquee-wrap"
 					:duration="(list?.length || 0) * 1"
-					:pause-on-hover="true"
+					pause-on-hover
 					:clone="false"
-					:gradient="true"
-					:gradient-color="gradientColor"
+					gradient
+					:gradient-color
 					gradient-length="10%"
 				>
 					<span
@@ -61,8 +61,8 @@ const emit = defineEmits<{
 const { indices } = toRefs(props)
 const list = ref(indices.value)
 const message = useMessage()
-const style = computed(() => useThemeStore().style)
-const gradientColor = computed(() => style.value["bg-color-rgb"].split(", "))
+const themeStore = useThemeStore()
+const gradientColor = computed(() => themeStore.style["bg-default-color-rgb"].split(" "))
 const loading = ref(false)
 
 function getIndices() {

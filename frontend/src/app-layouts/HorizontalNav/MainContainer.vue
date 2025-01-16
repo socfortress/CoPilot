@@ -1,34 +1,73 @@
 <template>
-	<div id="main" class="main" :class="{ 'sidebar-collapsed': sidebarCollapsed, 'sidebar-opened': !sidebarCollapsed }">
-		<n-scrollbar ref="scrollbar">
+	<div
+		id="app-main"
+		class="main"
+		:class="{ 'sidebar-collapsed': sidebarCollapsed, 'sidebar-opened': !sidebarCollapsed }"
+	>
+		<n-scrollbar
+			ref="scrollbar"
+			trigger="none"
+			:y-placement="isRTL ? 'left' : 'right'"
+			content-class="min-h-full flex flex-col"
+			:theme-overrides="{
+				railInsetVerticalRight: `${toolbarHeight}px 4px 4px auto`,
+				railInsetVerticalLeft: `${toolbarHeight}px auto 4px 4px`
+			}"
+		>
 			<Toolbar :boxed="toolbarBoxed" class="gradient-bg-sidebar" />
-			<div class="view" :class="[{ boxed }, `route-${routeName}`]">
+			<div
+				id="app-view"
+				class="view"
+				:class="{ boxed, 'view-padded': overridePadded === true, 'view-no-padded': overridePadded === false }"
+			>
 				<slot />
 			</div>
-			<MainFooter v-if="footerShown" :boxed="boxed" />
+			<MainFooter v-if="footerShown" :boxed />
 		</n-scrollbar>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import MainFooter from "@/app-layouts/common/MainFooter.vue"
-import Toolbar from "@/app-layouts/common/Toolbar/index.vue"
+import Toolbar from "@/app-layouts/common/Toolbar"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { type RouteLocationNormalizedGeneric, useRoute, useRouter } from "vue-router"
 
 const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
-const routeName = computed<string>(() => route.name?.toString() || "")
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 const footerShown = computed(() => themeStore.isFooterShown)
-const boxed = computed<boolean>(() => themeStore.isBoxed)
+const themeBoxed = computed<boolean>(() => themeStore.isBoxed)
+const overrideBoxed = ref<boolean | undefined>(undefined)
+const overridePadded = ref<boolean | undefined>(undefined)
+const boxed = computed<boolean>(() => (overrideBoxed.value !== undefined ? overrideBoxed.value : themeBoxed.value))
+const isRTL = computed<boolean>(() => themeStore.isRTL)
 const toolbarBoxed = computed(() => themeStore.isToolbarBoxed)
+const toolbarHeight = computed(() => themeStore.toolbarHeight)
 const scrollbar = ref()
 
+function checkThemeOverrides(currentRoute: RouteLocationNormalizedGeneric) {
+	if (currentRoute.meta?.theme?.boxed?.enabled !== undefined) {
+		overrideBoxed.value = currentRoute.meta.theme.boxed.enabled
+	} else {
+		overrideBoxed.value = undefined
+	}
+
+	if (currentRoute.meta?.theme?.padded?.enabled !== undefined) {
+		overridePadded.value = currentRoute.meta.theme.padded.enabled
+	} else {
+		overridePadded.value = undefined
+	}
+}
+
+router.beforeEach(checkThemeOverrides)
+
 onMounted(() => {
+	checkThemeOverrides(route)
+
 	router.afterEach(() => {
 		if (scrollbar?.value?.scrollTo) {
 			scrollbar?.value.scrollTo({ top: 0, behavior: "smooth" })
@@ -38,57 +77,36 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "variables";
+@import "./variables";
 
 .main {
 	width: 100%;
-	height: 100%;
 	overflow: hidden;
-	position: relative;
-	transition: padding var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-	background-color: var(--bg-body);
-
-	:deep() {
-		& > .n-scrollbar {
-			& > .n-scrollbar-rail {
-				top: calc(var(--toolbar-height) + 2px);
-			}
-
-			& > .n-scrollbar-container {
-				& > .n-scrollbar-content {
-					min-height: 100%;
-					display: flex;
-					flex-direction: column;
-				}
-			}
-		}
-	}
+	background-color: var(--bg-body-color);
+	transition: all var(--sidebar-anim-ease) var(--sidebar-anim-duration);
 
 	.view {
-		padding: var(--view-padding);
-		padding-top: 0;
+		padding: 0 var(--view-padding);
 		flex-grow: 1;
 		width: 100%;
-		display: flex;
-		flex-direction: column;
+		margin: 0 auto;
 
 		&.boxed {
 			max-width: var(--boxed-width);
-			margin: 0 auto;
+		}
+		&.view-no-padded {
+			padding: 0;
 		}
 	}
 
 	@media (max-width: $sidebar-bp) {
-		transition: all var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-
-		.view {
-			padding-top: calc(var(--view-padding) / 2);
-		}
-
 		&.sidebar-opened {
-			//transform: scale(0.8) translateX(100%) rotateY(35deg);
-			//transform-origin: center left;
-			//border-radius: 16px;
+			/*
+			transform: scale(0.8) translateX(100%) rotateY(35deg);
+			transform-origin: center left;
+			border-radius: 16px;
+			*/
+
 			overflow: hidden;
 			opacity: 0.5;
 		}

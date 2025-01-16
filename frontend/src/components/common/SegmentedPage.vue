@@ -186,7 +186,7 @@ onMounted(() => {
 	overflow: hidden;
 	border-radius: var(--border-radius);
 	border: 1px solid var(--border-color);
-	background-color: var(--bg-color);
+	background-color: var(--bg-default-color);
 	direction: ltr;
 
 	.split-trigger {
@@ -213,10 +213,10 @@ onMounted(() => {
 		}
 
 		&:hover {
-			background-color: var(--primary-010-color);
+			background-color: rgba(var(--primary-color-rgb) / 0.1);
 
 			.split-trigger-icon {
-				background-color: var(--primary-010-color);
+				background-color: rgba(var(--primary-color-rgb) / 0.1);
 			}
 		}
 	}
@@ -228,7 +228,7 @@ onMounted(() => {
 		border-right: 1px solid var(--border-color);
 
 		.sidebar-header {
-			border-block-end: var(--border-small-050);
+			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
 			padding: 0 30px;
@@ -243,14 +243,14 @@ onMounted(() => {
 		}
 
 		.sidebar-footer {
-			border-block-start: var(--border-small-050);
+			border-block-start: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			padding: 0 30px;
 		}
 	}
 
 	.main {
-		background-color: var(--bg-color);
+		background-color: var(--bg-default-color);
 		position: relative;
 		height: 100%;
 
@@ -264,7 +264,7 @@ onMounted(() => {
 		}
 
 		.main-toolbar {
-			border-block-end: var(--border-small-050);
+			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
 			padding: 0 30px;
@@ -290,7 +290,7 @@ onMounted(() => {
 
 		.main-footer {
 			container-type: inline-size;
-			border-block-start: var(--border-small-050);
+			border-block-start: 1px solid var(--border-color);
 			padding: 0 30px;
 
 			.wrap {
@@ -299,6 +299,13 @@ onMounted(() => {
 				display: flex;
 				align-items: center;
 			}
+		}
+	}
+
+	&.sidebar-position-right {
+		.sidebar {
+			border-right: none;
+			border-left: 1px solid var(--border-color);
 		}
 	}
 
@@ -313,7 +320,7 @@ onMounted(() => {
 			content: "";
 			width: 100vw;
 			display: block;
-			background-color: var(--bg-body);
+			background-color: var(--bg-body-color);
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -342,7 +349,7 @@ onMounted(() => {
 				width: 100%;
 				height: 100%;
 				display: block;
-				background-color: var(--bg-color);
+				background-color: var(--bg-default-color);
 				z-index: -1;
 				position: absolute;
 			}

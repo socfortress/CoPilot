@@ -55,7 +55,7 @@ const ArrowRightIcon = "carbon:arrow-right"
 	overflow: hidden;
 
 	.card-header {
-		border-bottom: var(--border-small-050);
+		border-bottom: 1px solid var(--border-color);
 		overflow: hidden;
 		padding: 10px 16px;
 
@@ -73,7 +73,7 @@ const ArrowRightIcon = "carbon:arrow-right"
 			overflow: hidden;
 
 			&:not(:last-child) {
-				border-right: var(--border-small-050);
+				border-right: 1px solid var(--border-color);
 			}
 
 			.value {
@@ -92,7 +92,7 @@ const ArrowRightIcon = "carbon:arrow-right"
 
 			.label {
 				font-family: var(--font-family-mono);
-				border-top: var(--border-small-050);
+				border-top: 1px solid var(--border-color);
 				color: var(--fg-secondary-color);
 				font-size: 13px;
 				padding: 6px;

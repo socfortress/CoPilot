@@ -271,15 +271,27 @@ const router = createRouter({
 			name: "Login",
 			component: AuthPage,
 			props: { formType: "signin" as FormType },
-			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
+			meta: {
+				title: "Login",
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				checkAuth: true,
+				skipPin: true
+			}
 		},
+		/*
 		{
 			path: "/register",
 			name: "Register",
 			component: AuthPage,
 			props: { formType: "signup" as FormType },
-			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
+			meta: {
+				title: "Register",
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				checkAuth: true,
+				skipPin: true
+			}
 		},
+		*/
 		{
 			path: "/logout",
 			name: "Logout",
@@ -289,7 +301,10 @@ const router = createRouter({
 			path: "/:pathMatch(.*)*",
 			name: "NotFound",
 			component: () => import("@/views/NotFound.vue"),
-			meta: { forceLayout: Layout.Blank, skipPin: true }
+			meta: {
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				skipPin: true
+			}
 		}
 	]
 })

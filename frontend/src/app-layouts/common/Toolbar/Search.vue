@@ -32,7 +32,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .search-btn {
 	border-radius: 50px;
-	background-color: var(--bg-body);
+	background-color: var(--bg-body-color);
 	gap: 10px;
 	height: 32px;
 	cursor: pointer;
@@ -72,7 +72,7 @@ onMounted(() => {
 
 	:deep() {
 		& > code {
-			background-color: var(--hover-005-color);
+			background-color: var(--bg-sidebar-color);
 			border-top-right-radius: 10px;
 			border-bottom-right-radius: 10px;
 			padding-right: 10px;

@@ -447,8 +447,8 @@ onMounted(() => {
 
 		.content {
 			border-radius: var(--border-radius);
-			background-color: var(--bg-color);
-			border: var(--border-small-050);
+			background-color: var(--bg-default-color);
+			border: 1px solid var(--border-color);
 			overflow: hidden;
 			display: flex;
 			align-items: center;
@@ -464,13 +464,13 @@ onMounted(() => {
 
 		&:hover {
 			.content {
-				border-color: var(--primary-040-color);
+				border-color: rgba(var(--primary-color-rgb) / 0.4);
 			}
 		}
 
 		&.ghost-panel {
 			.content {
-				border: 2px dashed var(--primary-040-color) !important;
+				border: 2px dashed rgba(var(--primary-color-rgb) / 0.4) !important;
 			}
 		}
 	}
@@ -490,7 +490,7 @@ onMounted(() => {
 			.row {
 				border-radius: var(--border-radius);
 				background-color: var(--bg-secondary-color);
-				border: var(--border-small-050);
+				border: 1px solid var(--border-color);
 				height: 155px;
 				position: relative;
 				transition: border-color 0.2s;
@@ -519,7 +519,7 @@ onMounted(() => {
 					left: -32px;
 					bottom: 0;
 					width: 25px;
-					border: var(--border-small-050);
+					border: 1px solid var(--border-color);
 					background-color: var(--bg-secondary-color);
 					border-radius: var(--border-radius);
 
@@ -536,7 +536,7 @@ onMounted(() => {
 						top: 0px;
 						left: 0px;
 						right: 0;
-						background-color: rgba(var(--secondary4-color-rgb), 0.1);
+						background-color: rgba(var(--error-color-rgb), 0.1);
 						border-top-left-radius: var(--border-radius);
 						border-top-right-radius: var(--border-radius);
 						text-align: center;
@@ -548,7 +548,7 @@ onMounted(() => {
 						bottom: 0px;
 						left: 0px;
 						right: 0;
-						background-color: var(--hover-005-color);
+						background-color: rgba(var(--hover-color-rgb) / 0.05);
 						border-bottom-left-radius: var(--border-radius);
 						border-bottom-right-radius: var(--border-radius);
 						text-align: center;
@@ -556,7 +556,7 @@ onMounted(() => {
 					}
 
 					&:hover {
-						border-color: var(--primary-020-color);
+						border-color: rgba(var(--primary-color-rgb) / 0.2);
 					}
 				}
 
@@ -587,11 +587,11 @@ onMounted(() => {
 				}
 
 				&:hover {
-					border-color: var(--primary-020-color);
+					border-color: rgba(var(--primary-color-rgb) / 0.2);
 				}
 
 				&.ghost-row {
-					border: 2px dashed var(--primary-040-color) !important;
+					border: 2px dashed rgba(var(--primary-color-rgb) / 0.4) !important;
 				}
 			}
 		}
@@ -599,7 +599,7 @@ onMounted(() => {
 
 	.panels-sidebar {
 		border-radius: var(--border-radius);
-		border: var(--border-small-050);
+		border: 1px solid var(--border-color);
 		width: 200px;
 
 		:deep() {

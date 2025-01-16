@@ -32,7 +32,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 <style lang="scss" scoped>
 .badge {
 	border-radius: var(--border-radius);
-	border: var(--border-small-100);
+	border: 1px solid var(--border-color);
 	display: flex;
 	align-items: center;
 	font-size: 14px;
@@ -51,7 +51,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 
 	&.active {
 		color: var(--success-color);
-		background-color: var(--success-005-color);
+		background-color: rgba(var(--success-color-rgb) / 0.05);
 		border-color: var(--success-color);
 	}
 
@@ -65,7 +65,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	}
 
 	span:not(:last-child) {
-		border-right: var(--border-small-100);
+		border-right: 1px solid var(--border-color);
 		padding-right: 8px;
 	}
 
@@ -80,7 +80,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 			line-height: 24px;
 
 			&:first-child {
-				background-color: var(--divider-005-color);
+				background-color: rgba(var(--border-color-rgb) / 0.05);
 				white-space: nowrap;
 			}
 			&:last-child {
@@ -92,48 +92,48 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 		&.danger {
 			& > span {
 				&:first-child {
-					background-color: var(--secondary4-opacity-010-color);
+					background-color: rgba(var(--error-color-rgb) / 0.1);
 				}
 			}
 		}
 		&.warning {
 			& > span {
 				&:first-child {
-					background-color: var(--secondary3-opacity-010-color);
+					background-color: rgba(var(--warning-color-rgb) / 0.1);
 				}
 			}
 		}
 		&.success {
 			& > span {
 				&:first-child {
-					background-color: var(--success-005-color);
+					background-color: rgba(var(--success-color-rgb) / 0.1);
 				}
 			}
 		}
 		&.primary {
 			& > span {
 				&:first-child {
-					background-color: var(--primary-005-color);
+					background-color: rgba(var(--primary-color-rgb) / 0.1);
 				}
 			}
 		}
 
 		&.bright {
 			&.danger {
-				border-color: var(--secondary4-opacity-030-color);
+				border-color: rgba(var(--error-color-rgb) / 0.3);
 
 				& > span {
 					&:first-child {
-						background-color: var(--secondary4-opacity-020-color);
+						background-color: rgba(var(--error-color-rgb) / 0.2);
 					}
 				}
 			}
 			&.warning {
-				border-color: var(--secondary3-opacity-030-color);
+				border-color: rgba(var(--warning-color-rgb) / 0.3);
 
 				& > span {
 					&:first-child {
-						background-color: var(--secondary3-opacity-020-color);
+						background-color: rgba(var(--warning-color-rgb) / 0.2);
 					}
 				}
 			}
@@ -147,11 +147,11 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 				}
 			}
 			&.primary {
-				border-color: var(--primary-030-color);
+				border-color: rgba(var(--primary-color-rgb) / 0.3);
 
 				& > span {
 					&:first-child {
-						background-color: var(--primary-020-color);
+						background-color: rgba(var(--primary-color-rgb) / 0.2);
 					}
 				}
 			}
