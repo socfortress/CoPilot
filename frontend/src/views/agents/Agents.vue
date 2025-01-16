@@ -10,7 +10,7 @@
 					:agents-critical="agentsCritical"
 					:agents-online="agentsOnline"
 					@run="runCommand($event)"
-					@click.stop="gotoAgent($event.agent_id)"
+					@click="gotoAgent($event.agent_id)"
 				/>
 			</div>
 			<div class="main flex grow flex-col overflow-hidden">
