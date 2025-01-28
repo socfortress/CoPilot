@@ -126,6 +126,7 @@ def build_event_stream_config(
     Returns:
         WazuhEventStream: The configured Wazuh event stream.
     """
+    sanitized_name = request.customer_name.replace(" ", "_")
     return WazuhEventStream(
         title=f"{request.customer_name} - Wazuh EDR EVENTS",
         description=f"{request.customer_name} - Wazuh EDR EVENTS",
@@ -137,7 +138,7 @@ def build_event_stream_config(
                 "inverted": False,
                 "value": request.customer_code,
             },
-            {"field": "cluster_node", "type": 1, "inverted": False, "value": f"wazuh.worker.{request.customer_name}"},
+            {"field": "cluster_node", "type": 1, "inverted": False, "value": f"wazuh.worker.{sanitized_name}"},
         ],
         matching_type="OR",
         remove_matches_from_default_stream=True,
