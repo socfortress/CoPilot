@@ -1,11 +1,11 @@
-import { getHighlighterCore } from "shiki/core"
-import getWasm from "shiki/wasm"
+import { createHighlighter } from "shiki"
+import { createOnigurumaEngine } from "shiki/engine/oniguruma"
 
 const THEME_LIGHT = "slack-ochin"
 const THEME_DARK = "aurora-x"
 
 export async function getHighlighter() {
-	return await getHighlighterCore({
+	return await createHighlighter({
 		themes: [import("shiki/themes/slack-ochin.mjs"), import("shiki/themes/aurora-x.mjs")],
 		langs: [
 			import("shiki/langs/javascript.mjs"),
@@ -24,7 +24,7 @@ export async function getHighlighter() {
 			import("shiki/langs/lua.mjs"),
 			import("shiki/langs/php.mjs")
 		],
-		loadWasm: getWasm
+		engine: createOnigurumaEngine(() => import("shiki/wasm"))
 	})
 }
 
