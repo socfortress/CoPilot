@@ -55,11 +55,12 @@
 </template>
 
 <script setup lang="ts">
+import type { Agent } from "@/types/agents.d"
 import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import { useGoto } from "@/composables/useGoto"
-import { type Agent, AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents.d"
 import _debounce from "lodash/debounce"
 import _split from "lodash/split"
 import { NEmpty, NPagination, NScrollbar, NSpin, useMessage } from "naive-ui"

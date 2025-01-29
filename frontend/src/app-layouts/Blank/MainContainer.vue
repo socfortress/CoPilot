@@ -13,10 +13,11 @@
 </template>
 
 <script lang="ts" setup>
+import type { RouteLocationNormalizedGeneric } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
-import { type RouteLocationNormalizedGeneric, useRoute, useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 const themeStore = useThemeStore()
 const router = useRouter()

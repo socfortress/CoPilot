@@ -24,6 +24,8 @@
 
 <script lang="ts" setup>
 import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
+import type { Component } from "vue"
+import type { RouteLocationNormalized } from "vue-router"
 import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
@@ -32,8 +34,8 @@ import SearchDialog from "@/components/common/SearchDialog.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
-import { type Component, computed, onBeforeMount, ref, watch } from "vue"
-import { type RouteLocationNormalized, useRoute, useRouter } from "vue-router"
+import { computed, onBeforeMount, ref, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import "@/assets/scss/index.scss"
 
 const router = useRouter()

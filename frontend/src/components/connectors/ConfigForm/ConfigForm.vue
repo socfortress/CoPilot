@@ -66,28 +66,18 @@
 </template>
 
 <script setup lang="ts">
-import Api from "@/api"
-import {
-	type Connector,
-	type ConnectorForm,
-	type ConnectorFormOptionKeys,
-	type ConnectorFormOptions,
-	ConnectorFormType,
-	type ConnectorRequestPayload
+import type {
+	Connector,
+	ConnectorForm,
+	ConnectorFormOptionKeys,
+	ConnectorFormOptions,
+	ConnectorRequestPayload
 } from "@/types/connectors.d"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
+import Api from "@/api"
+import { ConnectorFormType } from "@/types/connectors.d"
 import _pick from "lodash/pick"
-import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
-	NAvatar,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NAvatar, NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"

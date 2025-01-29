@@ -80,19 +80,10 @@
 
 <script setup lang="ts">
 import type { CheckoutPayload, License, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
+import type { FormItemRule, FormRules } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import {
-	type FormItemRule,
-	type FormRules,
-	NButton,
-	NEmpty,
-	NForm,
-	NFormItem,
-	NInput,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NEmpty, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import SubscriptionCard from "./SubscriptionCard.vue"

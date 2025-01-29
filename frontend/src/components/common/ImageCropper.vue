@@ -35,9 +35,11 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NCard, NModal, NUpload, NUploadDragger, type UploadSettledFileInfo } from "naive-ui"
+import type { UploadSettledFileInfo } from "naive-ui"
+import type { CropperResult } from "vue-advanced-cropper"
+import { NButton, NCard, NModal, NUpload, NUploadDragger } from "naive-ui"
 import { computed, ref } from "vue"
-import { CircleStencil, Cropper, type CropperResult, RectangleStencil } from "vue-advanced-cropper"
+import { CircleStencil, Cropper, RectangleStencil } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
 
 export type ImageCropperResult = CropperResult

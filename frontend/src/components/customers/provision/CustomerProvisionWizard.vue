@@ -4,7 +4,7 @@
 			<div class="grow">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
-						<n-steps :current="current" size="small" :status="currentStatus">
+						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Provisioning" />
 							<n-step title="Graylog" />
 							<n-step title="Subscription" />
@@ -13,7 +13,7 @@
 									<Icon v-if="!isInfrastructureEnabled" :name="SkipIcon"></Icon>
 								</template>
 							</n-step>
-							<n-step title="Wazuh Worker">
+							<n-step title="Wazuh Worker" :status="!isWazuhStepEnabled ? 'wait' : undefined">
 								<template #icon>
 									<Icon v-if="!isWazuhStepEnabled" :name="SkipIcon"></Icon>
 								</template>
@@ -150,68 +150,90 @@
 
 						<div v-else-if="current === 4" class="flex gap-3 px-7">
 							<n-card class="grow">
-								<n-form-item label="Deploy HA Proxy" path="provision_ha_proxy">
-									<n-switch v-model:value="form.provision_ha_proxy" clearable />
-								</n-form-item>
-							</n-card>
-							<n-card class="grow">
 								<n-form-item label="Deploy Wazuh Worker" path="provision_wazuh_worker">
 									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
 								</n-form-item>
 							</n-card>
+							<n-card class="grow">
+								<n-form-item label="Deploy HA Proxy" path="provision_ha_proxy">
+									<n-switch
+										v-model:value="form.provision_ha_proxy"
+										clearable
+										:disabled="!form.provision_wazuh_worker"
+									/>
+								</n-form-item>
+							</n-card>
 						</div>
 
-						<div v-else-if="current === 5" class="flex flex-wrap gap-3 px-7">
-							<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
+						<div v-else-if="current === 5" class="flex flex-col gap-3 px-7">
+							<div class="flex flex-wrap gap-3">
+								<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
+									<n-input
+										v-model:value="form.wazuh_auth_password"
+										placeholder="Auth Password..."
+										clearable
+									/>
+								</n-form-item>
+								<n-form-item label="Registration Port" path="wazuh_registration_port" class="grow">
+									<n-input
+										v-model:value="form.wazuh_registration_port"
+										placeholder="Registration Port..."
+										clearable
+										@blur="validate()"
+									/>
+								</n-form-item>
+								<n-form-item label="Logs Port" path="wazuh_logs_port" class="grow">
+									<n-input
+										v-model:value="form.wazuh_logs_port"
+										placeholder="Logs Port..."
+										clearable
+										@blur="validate()"
+									/>
+								</n-form-item>
+								<n-form-item label="Api Port" path="wazuh_api_port" class="grow">
+									<n-input
+										v-model:value="form.wazuh_api_port"
+										placeholder="Api Port..."
+										clearable
+										@blur="validate()"
+									/>
+								</n-form-item>
+								<n-form-item label="Cluster Name" path="wazuh_cluster_name" class="grow">
+									<n-input
+										v-model:value="form.wazuh_cluster_name"
+										placeholder="Cluster Name..."
+										clearable
+									/>
+								</n-form-item>
+								<n-form-item label="Cluster Key" path="wazuh_cluster_key" class="grow">
+									<n-input
+										v-model:value="form.wazuh_cluster_key"
+										placeholder="Cluster Key..."
+										clearable
+									/>
+								</n-form-item>
+								<n-form-item label="Master IP" path="wazuh_master_ip" class="grow">
+									<n-input
+										v-model:value="form.wazuh_master_ip"
+										placeholder="Master IP..."
+										clearable
+									/>
+								</n-form-item>
+								<n-form-item label="Grafana Url" path="grafana_url" class="grow">
+									<n-input v-model:value="form.grafana_url" placeholder="Grafana Url..." clearable />
+								</n-form-item>
+							</div>
+							<n-form-item
+								v-if="form.provision_ha_proxy"
+								label="Worker Hostname"
+								path="wazuh_worker_hostname"
+								class="grow"
+							>
 								<n-input
-									v-model:value="form.wazuh_auth_password"
-									placeholder="Auth Password..."
+									v-model:value="form.wazuh_worker_hostname"
+									placeholder="Worker Hostname..."
 									clearable
 								/>
-							</n-form-item>
-							<n-form-item label="Registration Port" path="wazuh_registration_port" class="grow">
-								<n-input
-									v-model:value="form.wazuh_registration_port"
-									placeholder="Registration Port..."
-									clearable
-									@blur="validate()"
-								/>
-							</n-form-item>
-							<n-form-item label="Logs Port" path="wazuh_logs_port" class="grow">
-								<n-input
-									v-model:value="form.wazuh_logs_port"
-									placeholder="Logs Port..."
-									clearable
-									@blur="validate()"
-								/>
-							</n-form-item>
-							<n-form-item label="Api Port" path="wazuh_api_port" class="grow">
-								<n-input
-									v-model:value="form.wazuh_api_port"
-									placeholder="Api Port..."
-									clearable
-									@blur="validate()"
-								/>
-							</n-form-item>
-							<n-form-item label="Cluster Name" path="wazuh_cluster_name" class="grow">
-								<n-input
-									v-model:value="form.wazuh_cluster_name"
-									placeholder="Cluster Name..."
-									clearable
-								/>
-							</n-form-item>
-							<n-form-item label="Cluster Key" path="wazuh_cluster_key" class="grow">
-								<n-input
-									v-model:value="form.wazuh_cluster_key"
-									placeholder="Cluster Key..."
-									clearable
-								/>
-							</n-form-item>
-							<n-form-item label="Master IP" path="wazuh_master_ip" class="grow">
-								<n-input v-model:value="form.wazuh_master_ip" placeholder="Master IP..." clearable />
-							</n-form-item>
-							<n-form-item label="Grafana Url" path="grafana_url" class="grow">
-								<n-input v-model:value="form.grafana_url" placeholder="Grafana Url..." clearable />
 							</n-form-item>
 							<div>* Registration Port, Logs Port, and Api Port must all be unique.</div>
 						</div>
@@ -247,14 +269,11 @@
 
 <script setup lang="ts">
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
 import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
 	NButton,
 	NCard,
 	NForm,
@@ -267,7 +286,6 @@ import {
 	NStep,
 	NSteps,
 	NSwitch,
-	type StepsProps,
 	useMessage
 } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
@@ -401,6 +419,11 @@ const rules: FormRules = {
 		required: true,
 		validator: validateUrl,
 		trigger: ["blur"]
+	},
+	wazuh_worker_hostname: {
+		required: true,
+		message: "Please input the Wazuh Worker Hostname",
+		trigger: ["input", "blur"]
 	}
 }
 
@@ -447,16 +470,16 @@ function validateAtLeastOne(rule: FormItemRule, value: string[]) {
 function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerProvision {
 	return {
 		// step1
-		customer_name: customerName.value,
 		customer_code: customerCode.value,
+		customer_name: customerName.value,
 		customer_grafana_org_name: "",
 		dfir_iris_username: "",
 
 		// step 2
 		customer_index_name: "",
-		hot_data_retention: 0,
 		index_replicas: 0,
 		index_shards: 1,
+		hot_data_retention: 0,
 
 		// step 3
 		customer_subscription: ["Wazuh"],
@@ -468,6 +491,10 @@ function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerP
 		},
 
 		// step 4
+		provision_ha_proxy: false,
+		provision_wazuh_worker: false,
+
+		// step 5
 		wazuh_auth_password: "",
 		wazuh_registration_port: "",
 		wazuh_logs_port: "",
@@ -476,8 +503,7 @@ function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerP
 		wazuh_cluster_key: settings?.cluster_key || "",
 		wazuh_master_ip: settings?.master_ip || "",
 		grafana_url: settings?.grafana_url || "",
-		provision_wazuh_worker: false,
-		provision_ha_proxy: false
+		wazuh_worker_hostname: settings?.wazuh_worker_hostname || ""
 	}
 }
 
@@ -630,6 +656,15 @@ function formPreset(step: number) {
 			break
 	}
 }
+
+watch(
+	() => form.value.provision_wazuh_worker,
+	val => {
+		if (!val) {
+			form.value.provision_ha_proxy = false
+		}
+	}
+)
 
 watch(current, val => {
 	formPreset(val)

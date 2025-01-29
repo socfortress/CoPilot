@@ -32,21 +32,12 @@
 
 <script setup lang="ts">
 import type { CustomerMeta } from "@/types/customers.d"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"
-import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 
 interface CustomerMetaExt extends Omit<CustomerMeta, "id" | "customer_meta_iris_customer_id"> {

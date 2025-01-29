@@ -10,8 +10,9 @@
 
 <script setup lang="ts">
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
+import type { ScrollbarInst } from "naive-ui"
 import Api from "@/api"
-import { NScrollbar, NSpin, type ScrollbarInst, useMessage } from "naive-ui"
+import { NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Rule from "./Rule.vue"
 

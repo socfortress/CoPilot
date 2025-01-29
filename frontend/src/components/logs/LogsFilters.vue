@@ -56,15 +56,10 @@
 </template>
 
 <script setup lang="ts">
+import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import Api from "@/api"
-import {
-	LogEventType,
-	type LogsQueryEventType,
-	type LogsQueryTimeRange,
-	type LogsQueryTypes,
-	type LogsQueryValues
-} from "@/types/logs.d"
+import { LogEventType } from "@/types/logs.d"
 import _cloneDeep from "lodash/cloneDeep"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"

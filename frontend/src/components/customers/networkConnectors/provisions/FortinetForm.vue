@@ -27,7 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { type FormItemRule, type FormRules, NForm, NFormItem, NInputNumber, NSelect } from "naive-ui"
+import type { FormItemRule, FormRules } from "naive-ui"
+import { NForm, NFormItem, NInputNumber, NSelect } from "naive-ui"
 
 export interface FortinetModel {
 	protocol: "tcp" | "udp"

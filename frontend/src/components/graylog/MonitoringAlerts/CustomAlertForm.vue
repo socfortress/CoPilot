@@ -144,28 +144,14 @@
 
 <script setup lang="ts">
 import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
+import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	type MessageReactive,
-	NButton,
-	NCard,
-	NForm,
-	NFormItem,
-	NInput,
-	NInputNumber,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 
 interface CustomProvisionForm {

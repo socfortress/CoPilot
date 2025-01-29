@@ -9,11 +9,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
+import type { Agent } from "@/types/agents.d"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
-import CardStatsMulti, { type ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
+import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
-import { type Agent, AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents.d"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 

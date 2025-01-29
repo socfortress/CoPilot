@@ -1,5 +1,6 @@
+import type { Locale, MessageSchema } from "@/lang/config"
 import App from "@/App.vue"
-import { getI18NConf, type Locale, type MessageSchema } from "@/lang/config"
+import { getI18NConf } from "@/lang/config"
 import router from "@/router"
 import { createPinia } from "pinia"
 import { createPersistedState } from "pinia-plugin-persistedstate"

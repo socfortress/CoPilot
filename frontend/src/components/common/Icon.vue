@@ -10,7 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { Icon, type IconifyIcon, loadIcon } from "@iconify/vue"
+import type { IconifyIcon } from "@iconify/vue"
+import { Icon, loadIcon } from "@iconify/vue"
 import { NIcon, NIconWrapper } from "naive-ui"
 import { computed, ref, watchEffect } from "vue"
 

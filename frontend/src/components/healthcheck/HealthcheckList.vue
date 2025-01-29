@@ -62,9 +62,10 @@
 </template>
 
 <script setup lang="ts">
+import type { InfluxDBAlert } from "@/types/healthchecks.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"

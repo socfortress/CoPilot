@@ -37,8 +37,9 @@
 </template>
 
 <script setup lang="ts">
+import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import Icon from "@/components/common/Icon.vue"
-import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
+import ImageCropper from "@/components/common/ImageCropper.vue"
 import { useStorage } from "@vueuse/core"
 import { NAvatar, NButton, NFormItem, NInput, NRadioButton, NRadioGroup, NSwitch } from "naive-ui"
 import { onMounted, watch } from "vue"

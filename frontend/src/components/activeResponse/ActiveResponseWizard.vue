@@ -102,11 +102,12 @@
 <script setup lang="ts">
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { OsTypesLower } from "@/types/common.d"
+import type { StepsProps } from "naive-ui"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
-import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
+import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 import ActiveResponseItem from "./ActiveResponseItem.vue"

@@ -69,8 +69,9 @@
 </template>
 
 <script lang="ts" setup>
+import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import Icon from "@/components/common/Icon.vue"
-import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
+import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import ChangePassword from "@/components/users/ChangePassword.vue"
 import { useAuthStore } from "@/stores/auth"

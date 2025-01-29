@@ -54,6 +54,7 @@
 <script setup lang="ts">
 import type { CaseReportPayload } from "@/api/endpoints/incidentManagement"
 import type { DeepNullable } from "@/types/common"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -61,9 +62,6 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import { saveAs } from "file-saver"
 import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
 	NButton,
 	NCollapseTransition,
 	NForm,

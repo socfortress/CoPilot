@@ -7,7 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import { type FormInst, type FormItemRule, type FormRules, NForm, NFormItem, NInput } from "naive-ui"
+import type { FormInst, FormItemRule, FormRules } from "naive-ui"
+import { NForm, NFormItem, NInput } from "naive-ui"
 import isURL from "validator/es/lib/isURL"
 import { onMounted, ref, toRefs } from "vue"
 

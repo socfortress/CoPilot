@@ -198,6 +198,7 @@
 <script setup lang="ts">
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import type { PrintSettingsData } from "./PrintSettings.vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -209,7 +210,7 @@ import { NButton, NDrawer, NDrawerContent, NPopover, NScrollbar, NSpin, NSwitch,
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import draggable from "vuedraggable"
 import * as defaultSettings from "./defaultSettings"
-import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
+import PrintSettings from "./PrintSettings.vue"
 
 const props = defineProps<{
 	timerange: ReportTimeRange | null

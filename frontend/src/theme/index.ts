@@ -1,7 +1,8 @@
+import type { GlobalThemeOverrides, ThemeCommonVars } from "naive-ui"
 import tokens from "@/design-tokens.json"
 import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import { colorToArray, expandPattern, getThemeColors, getTypeValue } from "@/utils/theme"
-import { type GlobalThemeOverrides, type ThemeCommonVars, useOsTheme } from "naive-ui"
+import { useOsTheme } from "naive-ui"
 
 type ThemeState = ReturnType<typeof getDefaultState>
 
@@ -121,6 +122,9 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 		},
 		LoadingBar: {
 			colorLoading: primary
+		},
+		Tag: {
+			colorBordered: "rgba(0, 0, 0, 0.1)"
 		},
 		Typography: {
 			headerFontSize1: getTypeValue(state, state.typography.h1.fontSize),

@@ -1,11 +1,12 @@
 import type { Layout, RouterTransition } from "@/types/theme.d"
+import type { GlobalThemeOverrides, ThemeCommonVars } from "naive-ui"
 import type { BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
 import { getCssVars, getDefaultState, getThemeOverrides } from "@/theme"
 import { ThemeNameEnum } from "@/types/theme.d"
 import { useWindowSize } from "@vueuse/core"
 import _get from "lodash/get"
 import _set from "lodash/set"
-import { darkTheme, type GlobalThemeOverrides, lightTheme, type ThemeCommonVars } from "naive-ui"
+import { darkTheme, lightTheme } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import { watch } from "vue"
 

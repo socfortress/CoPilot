@@ -7,8 +7,9 @@
 </template>
 
 <script setup lang="ts">
+import type { IndexStats } from "@/types/indices.d"
 import Icon from "@/components/common/Icon.vue"
-import { IndexHealth, type IndexStats } from "@/types/indices.d"
+import { IndexHealth } from "@/types/indices.d"
 import { toRefs } from "vue"
 
 const props = defineProps<{

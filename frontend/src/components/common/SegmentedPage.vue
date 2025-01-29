@@ -73,10 +73,11 @@
 </template>
 
 <script setup lang="ts">
+import type { SetupContext } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
-import { computed, onMounted, ref, type SetupContext, useSlots, watch } from "vue"
+import { computed, onMounted, ref, useSlots, watch } from "vue"
 
 type SidebarPosition = "left" | "right"
 

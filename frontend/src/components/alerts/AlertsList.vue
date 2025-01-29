@@ -137,14 +137,16 @@
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { Agent } from "@/types/agents.d"
 import type { IndexStats } from "@/types/indices.d"
+import type { AlertsStatsCTX } from "./AlertsStats.vue"
+import type { AlertsSummaryExt } from "./AlertsSummary.vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import axios from "axios"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
 import AlertsFilters from "./AlertsFilters.vue"
-import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
-import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
+import AlertsStats from "./AlertsStats.vue"
+import AlertsSummaryItem from "./AlertsSummary.vue"
 
 const props = defineProps<{ agentHostname?: string; indexName?: string }>()
 

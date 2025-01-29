@@ -13,6 +13,7 @@
 import type { Customer } from "@/types/customers.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
+import type { Ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -20,7 +21,7 @@ import { formatDate } from "@/utils"
 import { useWindowSize } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NButton, NDropdown, useMessage } from "naive-ui"
-import { computed, h, inject, ref, type Ref } from "vue"
+import { computed, h, inject, ref } from "vue"
 
 const { size, showIcon } = defineProps<{ size?: Size; showIcon?: boolean }>()
 

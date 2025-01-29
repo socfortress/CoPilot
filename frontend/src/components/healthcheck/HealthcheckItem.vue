@@ -22,10 +22,11 @@
 </template>
 
 <script setup lang="ts">
+import type { InfluxDBAlert } from "@/types/healthchecks.d"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import dayjs from "@/utils/dayjs"
 import { computed } from "vue"
 

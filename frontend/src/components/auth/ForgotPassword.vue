@@ -19,17 +19,8 @@
 </template>
 
 <script lang="ts" setup>
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	useMessage
-} from "naive-ui"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref, watch } from "vue"
 

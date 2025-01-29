@@ -1,13 +1,7 @@
+import type { AuthUser, JWTPayload, LoginPayload, RouteMetaAuthRole } from "@/types/auth.d"
 import type { ApiError } from "@/types/common.d"
 import Api from "@/api"
-import {
-	type AuthUser,
-	AuthUserRole,
-	type JWTPayload,
-	type LoginPayload,
-	type RouteMetaAuthRole,
-	RouteRole
-} from "@/types/auth.d"
+import { AuthUserRole, RouteRole } from "@/types/auth.d"
 import { getAvatar, getNameInitials } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
 import * as jose from "jose"

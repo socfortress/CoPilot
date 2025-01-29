@@ -30,20 +30,9 @@
 <script setup lang="ts">
 import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import { computed, onMounted, ref, watch } from "vue"
 
