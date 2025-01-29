@@ -1,7 +1,8 @@
+import type { GlobalThemeOverrides, ThemeCommonVars } from "naive-ui"
 import tokens from "@/design-tokens.json"
 import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
 import { colorToArray, expandPattern, getThemeColors, getTypeValue } from "@/utils/theme"
-import { type GlobalThemeOverrides, type ThemeCommonVars, useOsTheme } from "naive-ui"
+import { useOsTheme } from "naive-ui"
 
 type ThemeState = ReturnType<typeof getDefaultState>
 

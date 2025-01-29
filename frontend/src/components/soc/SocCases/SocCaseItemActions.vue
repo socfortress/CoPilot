@@ -29,10 +29,11 @@
 </template>
 
 <script setup lang="ts">
+import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"
+import { StateName } from "@/types/soc/case.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 

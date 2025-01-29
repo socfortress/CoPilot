@@ -22,17 +22,9 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	NForm,
-	NFormItem,
-	NUpload,
-	NUploadDragger,
-	type UploadFileInfo
-} from "naive-ui"
+import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
 import { onMounted, ref, toRefs } from "vue"
 
 export interface IFileForm {

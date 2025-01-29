@@ -57,22 +57,11 @@
 import type { AlertIocPayload } from "@/api/endpoints/incidentManagement"
 import type { DeepNullable } from "@/types/common"
 import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
 import { computed, onMounted, ref, toRefs, watch } from "vue"

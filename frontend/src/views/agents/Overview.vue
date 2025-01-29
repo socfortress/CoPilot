@@ -141,13 +141,14 @@
 </template>
 
 <script setup lang="ts">
+import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
 import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { type Agent, AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents.d"
 import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"

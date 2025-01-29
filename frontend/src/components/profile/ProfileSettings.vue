@@ -26,21 +26,10 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormValidationError } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import {
-	type FormInst,
-	type FormValidationError,
-	NButton,
-	NCard,
-	NForm,
-	NFormItem,
-	NRadio,
-	NRadioGroup,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NCard, NForm, NFormItem, NRadio, NRadioGroup, NSelect, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 
 const settingsStore = useSettingsStore()

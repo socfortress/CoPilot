@@ -140,23 +140,10 @@
 
 <script setup lang="ts">
 import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import Api from "@/api"
 import _intersection from "lodash/intersection"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	type MessageReactive,
-	NAlert,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NAlert, NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{

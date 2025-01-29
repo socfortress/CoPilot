@@ -82,10 +82,11 @@
 <script setup lang="ts">
 import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
 import type { ServiceItemData } from "@/components/services/types"
+import type { StepsProps } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import NetworkConnectorsList from "@/components/networkConnectors/NetworkConnectorsList.vue"
-import { NButton, NFormItem, NInput, NScrollbar, NSelect, NStep, NSteps, type StepsProps, useMessage } from "naive-ui"
+import { NButton, NFormItem, NInput, NScrollbar, NSelect, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 
 interface AuthKeysInput {

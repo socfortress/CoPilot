@@ -34,9 +34,10 @@
 </template>
 
 <script setup lang="ts">
+import type { IndexStats } from "@/types/indices.d"
 import Icon from "@/components/common/Icon.vue"
 import IndexCard from "@/components/indices/IndexCard.vue"
-import { IndexHealth, type IndexStats } from "@/types/indices.d"
+import { IndexHealth } from "@/types/indices.d"
 import { NCard, NEmpty, NScrollbar, NSpin } from "naive-ui"
 import { computed, toRefs } from "vue"
 

@@ -15,8 +15,9 @@
 </template>
 
 <script setup lang="ts">
+import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import Api from "@/api"
-import CardStatsBars, { type ItemProps } from "@/components/common/cards/CardStatsBars.vue"
+import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { NSpin, useMessage } from "naive-ui"

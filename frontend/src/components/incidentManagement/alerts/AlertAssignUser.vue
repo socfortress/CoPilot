@@ -14,9 +14,10 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Ref } from "vue"
 import Api from "@/api"
 import { NPopselect, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, ref, type Ref, toRefs, watch } from "vue"
+import { computed, inject, onBeforeMount, ref, toRefs, watch } from "vue"
 
 const props = defineProps<{
 	alert: Alert

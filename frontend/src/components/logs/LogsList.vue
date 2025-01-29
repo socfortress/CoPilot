@@ -116,17 +116,11 @@
 </template>
 
 <script setup lang="ts">
+import type { Log, LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import {
-	type Log,
-	LogEventType,
-	type LogsQuery,
-	type LogsQueryTimeRange,
-	type LogsQueryTypes,
-	type LogsQueryValues
-} from "@/types/logs.d"
+import { LogEventType } from "@/types/logs.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"
 import { NBadge, NButton, NEmpty, NModal, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

@@ -115,21 +115,10 @@
 /** @deprecated */
 import type { NewLicensePayload } from "@/api/endpoints/license"
 import type { LicenseKey } from "@/types/license.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NInputNumber,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, NInputNumber, NSpin, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, onBeforeMount, ref } from "vue"
 

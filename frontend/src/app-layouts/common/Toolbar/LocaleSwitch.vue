@@ -5,10 +5,12 @@
 </template>
 
 <script lang="ts" setup>
+import type { SelectOption } from "naive-ui"
+import type { VNodeChild } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useLocalesStore } from "@/stores/i18n"
-import { NPopselect, type SelectOption } from "naive-ui"
-import { computed, h, type VNodeChild } from "vue"
+import { NPopselect } from "naive-ui"
+import { computed, h } from "vue"
 
 const MultiLanguageIcon = "ion:language-outline"
 

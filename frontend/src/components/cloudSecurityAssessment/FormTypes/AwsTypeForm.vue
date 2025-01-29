@@ -19,7 +19,8 @@
 
 <script setup lang="ts">
 import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment.d"
-import { type FormInst, type FormRules, NForm, NFormItem, NInput } from "naive-ui"
+import type { FormInst, FormRules } from "naive-ui"
+import { NForm, NFormItem, NInput } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{

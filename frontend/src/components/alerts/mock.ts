@@ -1,3 +1,4 @@
+import type { AlertsSummary } from "@/types/alerts.d"
 import {
 	AlertSourceDataGroup,
 	AlertSourceDataKind,
@@ -9,8 +10,7 @@ import {
 	AlertSourceDataWinSystemSeverityValue,
 	AlertSourceDecoderName,
 	AlertSourceSyslogLevel,
-	AlertSourceSyslogType,
-	type AlertsSummary
+	AlertSourceSyslogType
 } from "@/types/alerts.d"
 
 export const alerts_summary: AlertsSummary[] = [

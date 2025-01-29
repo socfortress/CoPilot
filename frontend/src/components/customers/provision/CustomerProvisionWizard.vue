@@ -269,14 +269,11 @@
 
 <script setup lang="ts">
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
+import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
 import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
 	NButton,
 	NCard,
 	NForm,
@@ -289,7 +286,6 @@ import {
 	NStep,
 	NSteps,
 	NSwitch,
-	type StepsProps,
 	useMessage
 } from "naive-ui"
 import isIP from "validator/es/lib/isIP"

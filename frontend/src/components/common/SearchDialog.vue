@@ -70,6 +70,7 @@
 </template>
 
 <script lang="ts" setup>
+import type { ScrollbarInst } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useGoto } from "@/composables/useGoto"
@@ -78,7 +79,7 @@ import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { emitter } from "@/emitter"
 import { getOS } from "@/utils"
 import { useMagicKeys, whenever } from "@vueuse/core"
-import { NAvatar, NCard, NDivider, NModal, NScrollbar, NText, type ScrollbarInst } from "naive-ui"
+import { NAvatar, NCard, NDivider, NModal, NScrollbar, NText } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Highlighter from "vue-highlight-words"
 

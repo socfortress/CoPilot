@@ -54,24 +54,12 @@
 
 <script setup lang="ts">
 import type { User } from "@/types/user"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
-import {
-	type FormInst,
-	type FormItemRule,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NDrawer,
-	NDrawerContent,
-	NForm,
-	NFormItem,
-	NInput,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NDrawer, NDrawerContent, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import PasswordValidator from "password-validator"
 import { computed, ref, watch } from "vue"
 

@@ -14,12 +14,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
+import type { InfluxDBAlert } from "@/types/healthchecks.d"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
-import CardStatsMulti, { type ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
+import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
-import { type InfluxDBAlert, InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 

@@ -71,23 +71,12 @@
 <script setup lang="ts">
 import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
 import type { CustomerIntegration } from "@/types/integrations.d"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
-import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NCollapseTransition,
-	NForm,
-	NFormItem,
-	NInput,
-	NSpin,
-	useDialog,
-	useMessage
-} from "naive-ui"
+import { NButton, NCollapseTransition, NForm, NFormItem, NInput, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import { handleDeleteIntegration } from "./utils"
 

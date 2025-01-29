@@ -232,6 +232,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -239,7 +240,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
-import { type SocCase, type SocCaseExt, StateName } from "@/types/soc/case.d"
+import { StateName } from "@/types/soc/case.d"
 import dayjs from "@/utils/dayjs"
 import _omit from "lodash/omit"
 import _split from "lodash/split"

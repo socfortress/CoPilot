@@ -59,28 +59,17 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiCommonResponse, ApiError } from "@/types/common.d"
-import Api from "@/api"
-import {
-	type ScoutSuiteAwsReportPayload,
-	type ScoutSuiteAzureReportPayload,
-	type ScoutSuiteGcpReportPayload,
-	type ScoutSuiteReportPayload,
-	ScoutSuiteReportType
+import type {
+	ScoutSuiteAwsReportPayload,
+	ScoutSuiteAzureReportPayload,
+	ScoutSuiteGcpReportPayload,
+	ScoutSuiteReportPayload
 } from "@/types/cloudSecurityAssessment.d"
-import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
-	type MessageReactive,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import type { ApiCommonResponse, ApiError } from "@/types/common.d"
+import type { FormInst, FormRules, FormValidationError, MessageReactive } from "naive-ui"
+import Api from "@/api"
+import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment.d"
+import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"

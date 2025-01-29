@@ -1,5 +1,7 @@
 import type { Locale } from "@/lang/config"
+import type { NDateLocale, NLocale } from "naive-ui"
 import type { WritableComputedRef } from "vue"
+import type { ComposerTranslation } from "vue-i18n"
 import {
 	dateDeDE,
 	dateEnUS,
@@ -12,12 +14,10 @@ import {
 	esAR,
 	frFR,
 	itIT,
-	jaJP,
-	type NDateLocale,
-	type NLocale
+	jaJP
 } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
-import { type ComposerTranslation, useI18n } from "vue-i18n"
+import { useI18n } from "vue-i18n"
 
 export type I18nLangCode = Locale
 

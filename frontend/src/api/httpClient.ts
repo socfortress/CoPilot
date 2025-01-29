@@ -1,6 +1,7 @@
+import type { AxiosRequestHeaders } from "axios"
 import { useAuthStore } from "@/stores/auth"
 import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
-import axios, { type AxiosRequestHeaders } from "axios"
+import axios from "axios"
 // import { useGlobalActions } from "@/composables/useGlobalActions"
 
 const HttpClient = axios.create({

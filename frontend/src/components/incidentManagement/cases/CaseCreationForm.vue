@@ -72,22 +72,13 @@
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
 import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
+import type { Ref } from "vue"
 import Api from "@/api"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import {
-	type FormInst,
-	type FormRules,
-	type FormValidationError,
-	NButton,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
-import { computed, inject, onBeforeMount, onMounted, ref, type Ref, watch } from "vue"
+import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, inject, onBeforeMount, onMounted, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

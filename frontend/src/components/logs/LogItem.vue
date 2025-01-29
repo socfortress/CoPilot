@@ -62,12 +62,13 @@
 </template>
 
 <script setup lang="ts">
+import type { Log } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { type Log, LogEventType } from "@/types/logs.d"
+import { LogEventType } from "@/types/logs.d"
 import dayjs from "@/utils/dayjs"
 import { computed } from "vue"
 

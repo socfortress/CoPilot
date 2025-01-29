@@ -134,6 +134,7 @@
 </template>
 
 <script setup lang="ts">
+import type { UploadFileInfo } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useCaseReportTemplateStore } from "@/stores/caseReportTemplate"
@@ -148,7 +149,6 @@ import {
 	NTooltip,
 	NUpload,
 	NUploadDragger,
-	type UploadFileInfo,
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

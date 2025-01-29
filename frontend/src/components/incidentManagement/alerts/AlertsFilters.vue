@@ -157,13 +157,14 @@ import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/i
 import type { Customer } from "@/types/customers.d"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
+import type { Ref } from "vue"
 import type { AlertsListFilter } from "./types.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, onMounted, ref, type Ref } from "vue"
+import { computed, inject, onBeforeMount, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
