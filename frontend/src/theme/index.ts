@@ -122,6 +122,9 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 		LoadingBar: {
 			colorLoading: primary
 		},
+		Tag: {
+			colorBordered: "rgba(0, 0, 0, 0.1)"
+		},
 		Typography: {
 			headerFontSize1: getTypeValue(state, state.typography.h1.fontSize),
 			headerFontSize2: getTypeValue(state, state.typography.h2.fontSize),

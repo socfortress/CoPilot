@@ -84,6 +84,7 @@ export interface CustomerProvision {
 	provision_wazuh_worker: boolean
 	provision_ha_proxy: boolean
 	dfir_iris_username: string
+	wazuh_worker_hostname: string
 }
 
 export interface CustomerDecommissionedData {
