@@ -353,7 +353,7 @@ async def restart_wazuh_manager() -> None:
     Restarts the Wazuh manager service.
     """
     logger.info("Restarting Wazuh manager service.")
-    await send_put_request(endpoint="manager/restart", data=None)
+    await send_put_request(endpoint="/manager/restart", data=None)
 
 
 ################## ! GRAYLOG ! ##################
