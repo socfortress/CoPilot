@@ -133,6 +133,7 @@ async def verify_unique_customer_code(
 #             message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
 #         )
 
+
 async def mssp_license_check(session: AsyncSession):
     """
     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
@@ -173,6 +174,7 @@ async def mssp_license_check(session: AsyncSession):
     if provisioned_customers <= 5:
         await is_feature_enabled("MSSP 5", session, message=error_message)
         return  # License check passed
+
 
 @customers_router.post(
     "",
