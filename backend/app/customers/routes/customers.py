@@ -73,10 +73,70 @@ async def verify_unique_customer_code(
         )
 
 
+# async def mssp_license_check(session: AsyncSession):
+#     """
+#     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
+#     Customer 0 is free, 1-5 customers require an "MSSP 1-5" license, and 6-10 customers require an "MSSP 6-10" license.
+
+#     Args:
+#         session (AsyncSession): The database session.
+
+#     Raises:
+#         HTTPException: If the MSSP is not allowed to provision more customers.
+#     """
+#     # Select all customers to check the number of provisioned customers
+#     stmt = select(Customers)
+#     result = await session.execute(stmt)
+#     customers = result.scalars().all()
+#     provisioned_customers = len(customers)
+#     logger.info(f"Provisioned customers: {provisioned_customers}")
+
+#     if 1 <= provisioned_customers <= 5:
+#         # Check the license of the MSSP if the number of provisioned customers is between 1 and 5
+#         try:
+#             await is_feature_enabled(
+#                 "MSSP 5",
+#                 session,
+#                 message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+#             )
+#         except HTTPException as e:
+#             if e.status_code == 400:
+#                 # If MSSP 1-5 license check fails, check for MSSP 6-10 or MSSP Unlimited license
+#                 try:
+#                     await is_feature_enabled(
+#                         "MSSP 10",
+#                         session,
+#                         message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+#                     )
+#                 except HTTPException as e2:
+#                     if e2.status_code == 400:
+#                         await is_feature_enabled(
+#                             "MSSP Unlimited",
+#                             session,
+#                             message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+#                         )
+#                     else:
+#                         raise e2
+#             else:
+#                 raise e
+#     elif 6 <= provisioned_customers <= 10:
+#         # Check the license of the MSSP if the number of provisioned customers is between 6 and 10
+#         await is_feature_enabled(
+#             "MSSP 10",
+#             session,
+#             message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+#         )
+#     elif provisioned_customers > 10:
+#         await is_feature_enabled(
+#             "MSSP Unlimited",
+#             session,
+#             message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
+#         )
+
 async def mssp_license_check(session: AsyncSession):
     """
     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
-    Customer 0 is free, 1-5 customers require an "MSSP 1-5" license, and 6-10 customers require an "MSSP 6-10" license.
+    Checks licenses in order of most permissive to least permissive.
 
     Args:
         session (AsyncSession): The database session.
@@ -84,55 +144,35 @@ async def mssp_license_check(session: AsyncSession):
     Raises:
         HTTPException: If the MSSP is not allowed to provision more customers.
     """
-    # Select all customers to check the number of provisioned customers
     stmt = select(Customers)
     result = await session.execute(stmt)
     customers = result.scalars().all()
     provisioned_customers = len(customers)
     logger.info(f"Provisioned customers: {provisioned_customers}")
 
-    if 1 <= provisioned_customers <= 5:
-        # Check the license of the MSSP if the number of provisioned customers is between 1 and 5
-        try:
-            await is_feature_enabled(
-                "MSSP 5",
-                session,
-                message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-            )
-        except HTTPException as e:
-            if e.status_code == 400:
-                # If MSSP 1-5 license check fails, check for MSSP 6-10 or MSSP Unlimited license
-                try:
-                    await is_feature_enabled(
-                        "MSSP 10",
-                        session,
-                        message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-                    )
-                except HTTPException as e2:
-                    if e2.status_code == 400:
-                        await is_feature_enabled(
-                            "MSSP Unlimited",
-                            session,
-                            message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-                        )
-                    else:
-                        raise e2
-            else:
-                raise e
-    elif 6 <= provisioned_customers <= 10:
-        # Check the license of the MSSP if the number of provisioned customers is between 6 and 10
-        await is_feature_enabled(
-            "MSSP 10",
-            session,
-            message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-        )
-    elif provisioned_customers > 10:
-        await is_feature_enabled(
-            "MSSP Unlimited",
-            session,
-            message="You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers.",
-        )
+    error_message = "You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers."
 
+    # Try most permissive license first
+    try:
+        await is_feature_enabled("MSSP Unlimited", session, message=error_message)
+        return  # License check passed
+    except HTTPException as e:
+        if e.status_code != 400:
+            raise e
+
+    # If unlimited failed and customers <= 10, try MSSP 10
+    if provisioned_customers <= 10:
+        try:
+            await is_feature_enabled("MSSP 10", session, message=error_message)
+            return  # License check passed
+        except HTTPException as e:
+            if e.status_code != 400:
+                raise e
+
+    # If MSSP 10 failed and customers <= 5, try MSSP 5
+    if provisioned_customers <= 5:
+        await is_feature_enabled("MSSP 5", session, message=error_message)
+        return  # License check passed
 
 @customers_router.post(
     "",
