@@ -137,13 +137,9 @@ async def verify_unique_customer_code(
 async def mssp_license_check(session: AsyncSession):
     """
     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
-    Checks licenses in order of most permissive to least permissive.
-
-    Args:
-        session (AsyncSession): The database session.
-
-    Raises:
-        HTTPException: If the MSSP is not allowed to provision more customers.
+    - MSSP Unlimited: No limit
+    - MSSP 10: Up to 10 customers (0-9 current customers)
+    - MSSP 5: Up to 5 customers (0-4 current customers)
     """
     stmt = select(Customers)
     result = await session.execute(stmt)
@@ -161,8 +157,8 @@ async def mssp_license_check(session: AsyncSession):
         if e.status_code != 400:
             raise e
 
-    # If unlimited failed and customers <= 10, try MSSP 10
-    if provisioned_customers <= 10:
+    # Check MSSP 10 license - adding new customer must not exceed 10
+    if provisioned_customers < 10:
         try:
             await is_feature_enabled("MSSP 10", session, message=error_message)
             return  # License check passed
@@ -170,10 +166,19 @@ async def mssp_license_check(session: AsyncSession):
             if e.status_code != 400:
                 raise e
 
-    # If MSSP 10 failed and customers <= 5, try MSSP 5
-    if provisioned_customers <= 5:
-        await is_feature_enabled("MSSP 5", session, message=error_message)
-        return  # License check passed
+    # Check MSSP 5 license - adding new customer must not exceed 5
+    if provisioned_customers < 5:
+        try:
+            await is_feature_enabled("MSSP 5", session, message=error_message)
+            return  # License check passed
+        except HTTPException as e:
+            if e.status_code != 400:
+                raise e
+
+    raise HTTPException(
+        status_code=400,
+        detail=error_message
+    )
 
 
 @customers_router.post(
