@@ -175,10 +175,7 @@ async def mssp_license_check(session: AsyncSession):
             if e.status_code != 400:
                 raise e
 
-    raise HTTPException(
-        status_code=400,
-        detail=error_message
-    )
+    raise HTTPException(status_code=400, detail=error_message)
 
 
 @customers_router.post(
