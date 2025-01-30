@@ -137,6 +137,7 @@ async def verify_unique_customer_code(
 async def mssp_license_check(session: AsyncSession):
     """
     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
+    - First customer is free (no license check)
     - MSSP Unlimited: No limit
     - MSSP 10: Up to 10 customers (0-9 current customers)
     - MSSP 5: Up to 5 customers (0-4 current customers)
@@ -146,6 +147,10 @@ async def mssp_license_check(session: AsyncSession):
     customers = result.scalars().all()
     provisioned_customers = len(customers)
     logger.info(f"Provisioned customers: {provisioned_customers}")
+
+    # Skip license check for first customer
+    if provisioned_customers == 0:
+        return
 
     error_message = "You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers."
 
