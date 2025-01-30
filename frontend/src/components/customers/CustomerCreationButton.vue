@@ -16,21 +16,28 @@
 			@response="isMSSPUnlimitedEnabled = $event"
 		/>
 
-		<n-button
-			:size="size || 'small'"
-			type="primary"
-			:loading="licenseLoading && !skipLicenseCheck"
-			:disabled="!licenseEnabled || disabled"
-			@click="showAddCustomer = true"
+		<LicenseFeatureCheck
+			feature="MSSP 5"
+			disabled
+			feedback="tooltip"
+			:force-show-feedback="!licenseEnabled && !licenseLoading"
 		>
-			<template #icon>
-				<Icon :name="AddUserIcon" :size="14"></Icon>
-			</template>
-			<div class="flex items-center gap-2">
-				<span>Add Customer</span>
-				<Icon v-if="!licenseEnabled && !licenseLoading" :name="LockIcon" :size="14" />
-			</div>
-		</n-button>
+			<n-button
+				:size="size || 'small'"
+				type="primary"
+				:loading="licenseLoading && !skipLicenseCheck"
+				:disabled="!licenseEnabled || disabled"
+				@click="showAddCustomer = true"
+			>
+				<template #icon>
+					<Icon :name="AddUserIcon" :size="14"></Icon>
+				</template>
+				<div class="flex items-center gap-2">
+					<span>Add Customer</span>
+					<Icon v-if="!licenseEnabled && !licenseLoading" :name="LockIcon" :size="14" />
+				</div>
+			</n-button>
+		</LicenseFeatureCheck>
 
 		<n-drawer
 			v-model:show="showAddCustomer"
@@ -130,6 +137,7 @@ watch(
 		if (customersCount >= 10) {
 			isMSSP10Enabled.value = true
 		}
-	}
+	},
+	{ immediate: true }
 )
 </script>
