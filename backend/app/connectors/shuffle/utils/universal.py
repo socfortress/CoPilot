@@ -144,6 +144,7 @@ async def send_post_request(
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
+        logger.info(f"Sending POST request to {attributes['connector_url']}{endpoint}")
         response = requests.post(
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,

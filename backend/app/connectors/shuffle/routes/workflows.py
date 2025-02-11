@@ -28,6 +28,7 @@ async def validate_execution_id(workflow_id: str) -> bool:
     """
     workflows = await get_workflows()
     for workflow in workflows.workflows:
+        logger.info(f"Workflow ID: {workflow['id']}")
         if workflow["id"] == workflow_id:
             logger.info("Workflow validation successful")
             return True
