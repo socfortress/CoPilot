@@ -90,6 +90,7 @@ async def send_get_request(
     if attributes is None:
         logger.error("No Shuffle connector found in the database")
         return None
+    logger.info(f"Attributes: {attributes}")
     try:
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
@@ -100,6 +101,7 @@ async def send_get_request(
             params=params,
             verify=False,
         )
+        logger.info(f"Response from Shuffle API: {response.json()}")
         return {
             "data": response.json(),
             "success": True,
@@ -151,7 +153,6 @@ async def send_post_request(
             json=data,
             verify=False,
         )
-        logger.info(f"Response from Shuffle API: {response.json()}")
 
         if response.status_code == 204:
             return {
