@@ -9,12 +9,28 @@ from urllib.parse import urljoin
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
+
+async def get_endpoint_id() -> int:
+    """
+    Returns the ID of the endpoint.
+    """
+    logger.info("Getting endpoint ID")
+    list_endpoints = await send_get_request("/api/endpoints")
+    logger.info(f"List of endpoints: {list_endpoints}")
+
+    for endpoint in list_endpoints["data"]:
+        if endpoint["Name"] == "local":
+            # Convert the ID to an integer
+            return int(endpoint["Id"])
+    return None
+
+
 async def get_portainer_jwt() -> str:
     """Get JWT token from Portainer API."""
-    attributes = get_connector_info_from_db("Portainer")
-    if attributes is None:
-        logger.error("No portainer connector found in the database")
-        return None
+    logger.info("Getting portainer authentication token")
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db('Portainer', session)
+    logger.info(f"Attributes: {attributes}")
     try:
         auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
 
@@ -131,7 +147,7 @@ async def verify_portainer_connection(connector_name: str) -> str:
 async def send_get_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
-    connector_name: str = "portainer",
+    connector_name: str = "Portainer",
 ) -> Dict[str, Any]:
     """
     Sends a GET request to the portainer service.
@@ -151,9 +167,12 @@ async def send_get_request(
         logger.error("No portainer connector found in the database")
         return None
     logger.info(f"Attributes: {attributes}")
+    jwt_token = await get_portainer_jwt()
+    logger.info(f"JWT token: {jwt_token}")
     try:
         HEADERS = {
-            "Authorization": f"Bearer {attributes['connector_api_key']}",
+            "Authorization": f"Bearer {jwt_token}",
+            "Content-Type": "application/json",
         }
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",

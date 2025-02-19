@@ -62,6 +62,7 @@ from app.routers import network_connectors
 from app.routers import nuclei
 from app.routers import office365
 from app.routers import sap_siem
+from app.routers import portainer
 from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
@@ -158,6 +159,7 @@ api_router.include_router(bitdefender.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
+api_router.include_router(portainer.router)
 api_router.include_router(incidents.router)
 api_router.include_router(darktrace.router)
 
