@@ -23,5 +23,5 @@ async def node_details_route():
     Returns:
         list: The list of IP addresses.
     """
-    logger.info("Getting swarm node IPs")
+    logger.info("Getting swarm node details")
     return await get_node_details()
