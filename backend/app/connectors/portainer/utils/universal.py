@@ -17,7 +17,6 @@ async def get_endpoint_id() -> int:
     """
     logger.info("Getting endpoint ID")
     list_endpoints = await send_get_request("/api/endpoints")
-    logger.info(f"List of endpoints: {list_endpoints}")
 
     for endpoint in list_endpoints["data"]:
         if endpoint["Name"] == "local":
@@ -34,7 +33,6 @@ async def get_swarm_id() -> int:
     endpoint_id = await get_endpoint_id()
     logger.info(f"Endpoint ID: {endpoint_id}")
     swarm_id = await send_get_request(f"/api/endpoints/{endpoint_id}/docker/swarm")
-    logger.info(f"Swarm ID: {swarm_id}")
     return swarm_id["data"]["ID"]
 
 
@@ -43,7 +41,6 @@ async def get_portainer_jwt() -> str:
     logger.info("Getting portainer authentication token")
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db("Portainer", session)
-    logger.info(f"Attributes: {attributes}")
     try:
         auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
 
@@ -54,7 +51,7 @@ async def get_portainer_jwt() -> str:
         response.raise_for_status()
         # The JWT token is in response.json()["jwt"]
         jwt_token = response.json()["jwt"]
-        logger.info(f"Authenticated with Portainer, obtained JWT: {jwt_token}")
+        logger.info(f"Authenticated with Portainer. JWT token: {jwt_token}")
         return jwt_token
 
     except requests.exceptions.RequestException as e:
@@ -155,9 +152,7 @@ async def send_get_request(
     if attributes is None:
         logger.error("No portainer connector found in the database")
         return None
-    logger.info(f"Attributes: {attributes}")
     jwt_token = await get_portainer_jwt()
-    logger.info(f"JWT token: {jwt_token}")
     try:
         HEADERS = {
             "Authorization": f"Bearer {jwt_token}",
@@ -169,7 +164,6 @@ async def send_get_request(
             params=params,
             verify=False,
         )
-        logger.info(f"Response from portainer API: {response.json()}")
         return {
             "data": response.json(),
             "success": True,
@@ -209,9 +203,7 @@ async def send_post_request(
     if attributes is None:
         logger.error("No portainer connector found in the database")
         return None
-    logger.info(f"Attributes: {attributes}")
     jwt_token = await get_portainer_jwt()
-    logger.info(f"JWT token: {jwt_token}")
 
     try:
         HEADERS = {
