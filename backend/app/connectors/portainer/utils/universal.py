@@ -158,6 +158,7 @@ async def send_get_request(
             "Authorization": f"Bearer {jwt_token}",
             "Content-Type": "application/json",
         }
+        logger.info(f"Sending GET request to {attributes['connector_url']}{endpoint}")
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,

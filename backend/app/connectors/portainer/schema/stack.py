@@ -45,3 +45,8 @@ class StackResponse(BaseModel):
     data: StackData
     success: bool
     message: str
+
+class StacksResponse(BaseModel):
+    data: List[StackData]
+    success: bool
+    message: str

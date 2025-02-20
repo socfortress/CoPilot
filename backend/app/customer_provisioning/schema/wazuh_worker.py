@@ -50,6 +50,11 @@ class ProvisionWorkerRequest(BaseModel):
         example="worker1",
         description="The hostname of the Wazuh worker",
     )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        example=True,
+        description="Whether deployment of Portainer is occurring",
+    )
 
 
 class ProvisionWorkerResponse(BaseModel):

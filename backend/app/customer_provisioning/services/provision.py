@@ -11,12 +11,15 @@ from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import verify_graylog_connection
+from app.customer_provisioning.services.portainer import list_node_ips
+from app.connectors.portainer.services.stack import create_wazuh_customer_stack
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import ProvisionHaProxyRequest
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.grafana import create_grafana_datasource
@@ -277,29 +280,53 @@ async def provision_wazuh_worker(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning Wazuh worker {request}")
-    api_endpoint = await get_connector_attribute(
-        connector_name="Wazuh Worker Provisioning",
-        column_name="connector_url",
-        session=session,
-    )
-    logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
-    # Send the POST request to the Wazuh worker
-    response = requests.post(
-        url=f"{api_endpoint}/provision_worker",
-        json=request.dict(),
-    )
-    logger.info(f"Status code from Wazuh Worker: {response.status_code}")
-    # Check the response status code
-    if response.status_code != 200:
-        return ProvisionWorkerResponse(
-            success=False,
-            message=f"Failed to provision Wazuh worker: {response.text}",
+    if await is_connector_verified(connector_name="Portainer", db=session) is False:
+        api_endpoint = await get_connector_attribute(
+            connector_name="Wazuh Worker Provisioning",
+            column_name="connector_url",
+            session=session,
         )
-    # Return the response
-    return ProvisionWorkerResponse(
-        success=True,
-        message="Wazuh worker provisioned successfully",
-    )
+        logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
+        # Send the POST request to the Wazuh worker
+        request.portainer_deployment = False
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker",
+            json=request.dict(),
+        )
+        logger.info(f"Status code from Wazuh Worker: {response.status_code}")
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision Wazuh worker: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="Wazuh worker provisioned successfully",
+        )
+    else:
+        request.portainer_deployment = True
+        swarm_node_ips = await list_node_ips()
+        logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {swarm_node_ips}")
+        for ip in swarm_node_ips:
+            logger.info(f"Provisioning Wazuh worker on IP: {ip}")
+            response = requests.post(
+                url=f"http://{ip}:5003/provision_worker",
+                json=request.dict(),
+            )
+            logger.info(f"Status code from Wazuh Worker: {response.status_code}")
+            if response.status_code != 200:
+                return ProvisionWorkerResponse(
+                    success=False,
+                    message=f"Failed to provision Wazuh worker: {response.text}",
+                )
+        await create_wazuh_customer_stack(request)
+        return ProvisionWorkerResponse(
+            success=True,
+            message="Wazuh worker provisioned successfully via Portainer",
+        )
+
 
 
 ######### ! Provision HAProxy ! ############

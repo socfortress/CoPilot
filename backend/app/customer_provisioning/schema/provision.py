@@ -102,6 +102,10 @@ class ProvisionNewCustomer(BaseModel):
         False,
         description="Whether to provision an HAProxy for the customer",
     )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        description="Whether deployment of Portainer is occurring",
+    )
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
