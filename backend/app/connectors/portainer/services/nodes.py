@@ -1,8 +1,8 @@
 from loguru import logger
 
 from app.connectors.portainer.schema.nodes import NodesResponse
-
-from app.connectors.portainer.utils.universal import send_get_request, get_endpoint_id
+from app.connectors.portainer.utils.universal import get_endpoint_id
+from app.connectors.portainer.utils.universal import send_get_request
 
 
 async def get_node_details() -> NodesResponse:

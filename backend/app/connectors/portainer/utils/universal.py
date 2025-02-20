@@ -1,11 +1,12 @@
 from typing import Any
 from typing import Dict
 from typing import Optional
+from urllib.parse import urljoin
 
 import requests
 from fastapi import HTTPException
 from loguru import logger
-from urllib.parse import urljoin
+
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -24,6 +25,7 @@ async def get_endpoint_id() -> int:
             return int(endpoint["Id"])
     return None
 
+
 async def get_swarm_id() -> int:
     """
     Returns the ID of the swarm.
@@ -40,21 +42,14 @@ async def get_portainer_jwt() -> str:
     """Get JWT token from Portainer API."""
     logger.info("Getting portainer authentication token")
     async with get_db_session() as session:  # This will correctly enter the context manager
-        attributes = await get_connector_info_from_db('Portainer', session)
+        attributes = await get_connector_info_from_db("Portainer", session)
     logger.info(f"Attributes: {attributes}")
     try:
         auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
 
-        auth_payload = {
-            "username": attributes["connector_username"],
-            "password": attributes["connector_password"]
-        }
+        auth_payload = {"username": attributes["connector_username"], "password": attributes["connector_password"]}
 
-        response = requests.post(
-            auth_endpoint,
-            json=auth_payload,
-            verify=False  # If using self-signed cert
-        )
+        response = requests.post(auth_endpoint, json=auth_payload, verify=False)  # If using self-signed cert
 
         response.raise_for_status()
         # The JWT token is in response.json()["jwt"]
@@ -92,16 +87,9 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
         # If API key auth fails, try JWT authentication
         if portainer_apps.status_code != 200:
             auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
-            auth_payload = {
-                "username": attributes["connector_username"],
-                "password": attributes["connector_password"]
-            }
+            auth_payload = {"username": attributes["connector_username"], "password": attributes["connector_password"]}
 
-            jwt_response = requests.post(
-                auth_endpoint,
-                json=auth_payload,
-                verify=False
-            )
+            jwt_response = requests.post(auth_endpoint, json=auth_payload, verify=False)
 
             if jwt_response.status_code == 200:
                 jwt_token = jwt_response.json()["jwt"]
@@ -110,26 +98,16 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
                     "connectionSuccessful": True,
                     "message": "Portainer connection successful via JWT",
                     "authMethod": "jwt",
-                    "jwt": jwt_token
+                    "jwt": jwt_token,
                 }
             else:
-                logger.error(
-                    f"Both API key and JWT authentication failed. JWT error: {jwt_response.text}"
-                )
-                return {
-                    "connectionSuccessful": False,
-                    "message": "Both API key and JWT authentication failed",
-                    "authMethod": None
-                }
+                logger.error(f"Both API key and JWT authentication failed. JWT error: {jwt_response.text}")
+                return {"connectionSuccessful": False, "message": "Both API key and JWT authentication failed", "authMethod": None}
 
         logger.info(
             f"Connection to {attributes['connector_url']} successful via API key",
         )
-        return {
-            "connectionSuccessful": True,
-            "message": "Portainer connection successful via API key",
-            "authMethod": "api_key"
-        }
+        return {"connectionSuccessful": True, "message": "Portainer connection successful via API key", "authMethod": "api_key"}
 
     except Exception as e:
         logger.error(
@@ -138,7 +116,7 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
         return {
             "connectionSuccessful": False,
             "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
-            "authMethod": None
+            "authMethod": None,
         }
 
 

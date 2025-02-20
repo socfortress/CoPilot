@@ -1,9 +1,13 @@
-from loguru import logger
 from pathlib import Path
-from app.connectors.portainer.utils.universal import send_post_request, get_endpoint_id, get_swarm_id
+
+from loguru import logger
+
 from app.agents.routes.agents import get_wazuh_manager_version
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.connectors.portainer.schema.stack import StackResponse
+from app.connectors.portainer.utils.universal import get_endpoint_id
+from app.connectors.portainer.utils.universal import get_swarm_id
+from app.connectors.portainer.utils.universal import send_post_request
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 
 
 async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackResponse:
@@ -22,9 +26,9 @@ async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
     # Replace the placeholders in the template with the actual values
     template = template.replace("{{ wazuh_worker_customer_code }}", formatted_customer_name)
     template = template.replace("{{ wazuh_manager_version }}", wazuh_manager_version)
-    template = template.replace('REPLACE_LOG', request.wazuh_logs_port)
-    template = template.replace('REPLACE_REGISTRATION', request.wazuh_registration_port)
-    template = template.replace('REPLACE_API', request.wazuh_api_port)
+    template = template.replace("REPLACE_LOG", request.wazuh_logs_port)
+    template = template.replace("REPLACE_REGISTRATION", request.wazuh_registration_port)
+    template = template.replace("REPLACE_API", request.wazuh_api_port)
     logger.info(f"Template: {template}")
 
     endpoint_id = await get_endpoint_id()
@@ -42,5 +46,3 @@ async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
     response = await send_post_request(endpoint=create_stack_url, data=payload)
     logger.info(f"Response: {response}")
     return StackResponse(**response)
-
-

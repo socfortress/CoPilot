@@ -3,12 +3,13 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-#from app.connectors.portainer.schema.integrations import ExecuteWorkflowRequest
+
+# from app.connectors.portainer.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.portainer.schema.nodes import NodesResponse
+from app.connectors.portainer.schema.stack import StackResponse
 from app.connectors.portainer.services.nodes import get_node_details
 from app.connectors.portainer.services.stack import create_wazuh_customer_stack
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.connectors.portainer.schema.stack import StackResponse
 
 portainer_integrations_router = APIRouter()
 

@@ -17,8 +17,8 @@ from app.connectors.cortex.utils.universal import verify_cortex_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
 from app.connectors.influxdb.utils.universal import verify_influxdb_connection
-from app.connectors.portainer.utils.universal import verify_portainer_connection
 from app.connectors.models import Connectors
+from app.connectors.portainer.utils.universal import verify_portainer_connection
 from app.connectors.schema import ConnectorResponse
 from app.connectors.shuffle.utils.universal import verify_shuffle_connection
 from app.connectors.sublime.utils.universal import verify_sublime_connection
@@ -178,6 +178,7 @@ class VirustotalService(ConnectorServiceInterface):
         connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_virustotal_connection(connector.connector_name)
+
 
 # Portainer Service
 class PortainerService(ConnectorServiceInterface):
