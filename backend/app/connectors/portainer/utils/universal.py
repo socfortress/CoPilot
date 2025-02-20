@@ -24,6 +24,17 @@ async def get_endpoint_id() -> int:
             return int(endpoint["Id"])
     return None
 
+async def get_swarm_id() -> int:
+    """
+    Returns the ID of the swarm.
+    """
+    logger.info("Getting swarm ID")
+    endpoint_id = await get_endpoint_id()
+    logger.info(f"Endpoint ID: {endpoint_id}")
+    swarm_id = await send_get_request(f"/api/endpoints/{endpoint_id}/docker/swarm")
+    logger.info(f"Swarm ID: {swarm_id}")
+    return swarm_id["data"]["ID"]
+
 
 async def get_portainer_jwt() -> str:
     """Get JWT token from Portainer API."""
@@ -201,7 +212,7 @@ async def send_get_request(
 async def send_post_request(
     endpoint: str,
     data: Dict[str, Any] = None,
-    connector_name: str = "portainer",
+    connector_name: str = "Portainer",
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the portainer service.
@@ -220,10 +231,14 @@ async def send_post_request(
     if attributes is None:
         logger.error("No portainer connector found in the database")
         return None
+    logger.info(f"Attributes: {attributes}")
+    jwt_token = await get_portainer_jwt()
+    logger.info(f"JWT token: {jwt_token}")
 
     try:
         HEADERS = {
-            "Authorization": f"Bearer {attributes['connector_api_key']}",
+            "Authorization": f"Bearer {jwt_token}",
+            "Content-Type": "application/json",
         }
         logger.info(f"Sending POST request to {attributes['connector_url']}{endpoint}")
         response = requests.post(
