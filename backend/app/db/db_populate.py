@@ -116,6 +116,7 @@ def get_connectors_list():
         #     "Connection to Cortex. Make sure you have created an API key.",
         # ),
         ("Grafana", "3", "username_password", "Connection to Grafana."),
+        # ! TODO - LOOK TO REMOVE WAZUH WORKER PROVISIONING FROM CONNECTORS LIST ! #
         (
             "Wazuh Worker Provisioning",
             "3",
@@ -149,6 +150,7 @@ def get_connectors_list():
             "api_key",
             "Connection to VirusTotal. Make sure you have created an API key.",
         ),
+        ("Portainer", "3", "username_password", "Connection to Portainer.", "PORTAINER_ENDPOINT_ID"),
         # ... Add more connectors as needed ...
     ]
 

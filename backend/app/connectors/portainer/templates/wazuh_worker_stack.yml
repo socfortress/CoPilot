@@ -1,0 +1,61 @@
+# SOCFortress Copyright (C) 2025, SOCFortress LLC. (License GPLv2)
+services:
+  wazuh-worker-{{ wazuh_worker_customer_code }}:
+    image: ghcr.io/socfortress/wazuh-manager:{{ wazuh_manager_version }}
+    hostname: wazuh-worker-{{ wazuh_worker_customer_code }}
+    restart: always
+    # Docker Swarm deployment configuration
+    deploy:
+      replicas: 1
+      # If you want to let Swarm auto-balance, omit constraints:
+      # placement:
+      #   preferences:
+      #     - spread: node.id
+
+    ports:
+      - "REPLACE_LOG:1514"
+      - "REPLACE_REGISTRATION:1515"
+      - "REPLACE_API:55000"
+    volumes:
+      # common
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-api-configuration:/var/ossec/api/configuration
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-etc:/var/ossec/etc
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-logs:/var/ossec/logs
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-queue:/var/ossec/queue
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-var-multigroups:/var/ossec/var/multigroups
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-integrations:/var/ossec/integrations
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-active-response:/var/ossec/active-response/bin
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-agentless:/var/ossec/agentless
+      - worker-wazuh-{{ wazuh_worker_customer_code }}-wodles:/var/ossec/wodles
+      - /wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/wazuh_worker.conf:/wazuh-config-mount/etc/ossec.conf
+      - /wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/authd.pass:/wazuh-config-mount/etc/authd.pass
+      - /wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/manager.pem:/wazuh-config-mount/etc/manager.pem
+      - /wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/manager-key.pem:/wazuh-config-mount/etc/manager-key.pem
+      - /wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/root-ca.pem:/wazuh-config-mount/etc/root-ca.pem
+      # client specific
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bash",
+          "-c",
+          "/var/ossec/bin/wazuh-control status | grep -q 'wazuh-apid is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-clusterd is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-modulesd is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-monitord is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-logcollector is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-remoted is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-syscheckd is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-analysisd is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-execd is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-db is running' && /var/ossec/bin/wazuh-control status | grep -q 'wazuh-authd is running' || /bin/true",
+        ]
+      interval: 30s
+      retries: 3
+
+volumes:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-api-configuration:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-etc:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-logs:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/wazuh-workers/client/data/{{ wazuh_worker_customer_code }}/logs"
+  worker-wazuh-{{ wazuh_worker_customer_code }}-queue:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-var-multigroups:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-integrations:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-active-response:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-agentless:
+  worker-wazuh-{{ wazuh_worker_customer_code }}-wodles:
