@@ -63,6 +63,7 @@ class CustomersMeta(SQLModel, table=True):
     customer_meta_wazuh_auth_password: Optional[str] = Field(max_length=1024)
     customer_meta_iris_customer_id: Optional[int] = Field()
     customer_meta_office365_organization_id: Optional[str] = Field(max_length=1024)
+    customer_meta_portainer_stack_id: Optional[int] = Field()
 
     # Link back to Customers
     customer: Optional["Customers"] = Relationship(back_populates="meta")
@@ -83,6 +84,7 @@ class CustomersMeta(SQLModel, table=True):
         self.customer_meta_wazuh_auth_password = customer_meta.customer_meta_wazuh_auth_password
         self.customer_meta_iris_customer_id = customer_meta.customer_meta_iris_customer_id
         self.customer_meta_office365_organization_id = customer_meta.customer_meta_office365_organization_id
+        self.customer_meta_portainer_stack_id = customer_meta.customer_meta_portainer_stack_id
 
 
 class Agents(SQLModel, table=True):

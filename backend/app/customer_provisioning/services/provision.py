@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.routes.agents import check_wazuh_manager_version
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
+from sqlalchemy import update
+from sqlalchemy.future import select
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import verify_graylog_connection
@@ -227,6 +229,43 @@ async def update_customer_meta_table(
     await session.commit()
     return customer_meta
 
+async def update_customer_portainer_stack_id(
+    customer_name: str,
+    stack_id: int,
+    session: AsyncSession,
+) -> None:
+    """
+    Update the customer's Portainer stack ID in the CustomersMeta table.
+
+    Args:
+        customer_name (str): The name of the customer
+        stack_id (int): The Portainer stack ID
+        session (AsyncSession): The database session
+    """
+    logger.info(f"Updating Portainer stack ID {stack_id} for customer {customer_name}")
+
+    # Find the customer record
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer = result.scalar_one_or_none()
+
+    if customer:
+        # Update the customer's Portainer stack ID
+        stmt = (
+            update(CustomersMeta)
+            .where(CustomersMeta.customer_name == customer_name)
+            .values(customer_meta_portainer_stack_id=stack_id)
+        )
+        await session.execute(stmt)
+        await session.commit()
+        logger.info(f"Successfully updated Portainer stack ID for customer {customer_name}")
+    else:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer {customer_name} not found in database"
+        )
+
 
 ######### ! Update Customer Alert Settings Table ! ############
 async def update_customer_alert_settings_table(
@@ -321,7 +360,16 @@ async def provision_wazuh_worker(
                     success=False,
                     message=f"Failed to provision Wazuh worker: {response.text}",
                 )
-        await create_wazuh_customer_stack(request)
+        # Create the stack and get the response
+        stack_response = await create_wazuh_customer_stack(request)
+
+        # Update the customer's Portainer stack ID
+        await update_customer_portainer_stack_id(
+            customer_name=request.customer_name,
+            stack_id=stack_response.data.Id,
+            session=session
+        )
+
         return ProvisionWorkerResponse(
             success=True,
             message="Wazuh worker provisioned successfully via Portainer",
