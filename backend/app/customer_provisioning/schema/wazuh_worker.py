@@ -60,6 +60,11 @@ class ProvisionWorkerRequest(BaseModel):
         example=["127.0.0.1"],
         description="The IP addresses of the swarm nodes",
     )
+    wazuh_manager_version: Optional[str] = Field(
+        None,
+        example="4.10.1",
+        description="The version of the Wazuh manager",
+    )
 
 
 class ProvisionWorkerResponse(BaseModel):

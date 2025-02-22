@@ -9,6 +9,7 @@ from app.agents.routes.agents import check_wazuh_manager_version
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from sqlalchemy import update
+from app.agents.routes.agents import get_wazuh_manager_version
 from sqlalchemy.future import select
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
@@ -329,6 +330,7 @@ async def provision_wazuh_worker(
         logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
         # Send the POST request to the Wazuh worker
         request.portainer_deployment = False
+        request.wazuh_manager_version = await get_wazuh_manager_version()
         response = requests.post(
             url=f"{api_endpoint}/provision_worker",
             json=request.dict(),
@@ -394,7 +396,7 @@ async def provision_haproxy(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning HAProxy {request}")
-    if await is_connector_verified(connector_name="HAProxy Provisioning", db=session) is False:
+    if await is_connector_verified(connector_name="Portainer", db=session) is False:
         api_endpoint = await get_connector_attribute(
             connector_name="HAProxy Provisioning",
             column_name="connector_url",
