@@ -5,11 +5,13 @@ from typing import Any
 from typing import Dict
 
 from app.agents.routes.agents import get_wazuh_manager_version
-from app.connectors.portainer.schema.stack import StackResponse, StacksResponse
+from app.connectors.portainer.schema.stack import StackResponse, StacksResponse, DeleteStackResponse
 from app.connectors.portainer.utils.universal import get_endpoint_id
 from app.connectors.portainer.utils.universal import get_swarm_id
-from app.connectors.portainer.utils.universal import send_post_request, send_get_request
+from app.connectors.portainer.utils.universal import send_post_request, send_get_request, send_delete_request
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.connectors.portainer.schema.stack import StackStatus
+from fastapi import HTTPException
 
 async def get_stacks() -> StackResponse:
     """
@@ -134,7 +136,85 @@ async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
 
     return StackResponse(**response)
 
-async def delete_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackResponse:
+async def start_wazuh_customer_stack(stack_id: int) -> StackResponse:
+    """
+    Start a Wazuh stack for a customer.
+
+    Args:
+        stack_id (int): The ID of the stack to start
+
+    Returns:
+        StackResponse: The response from Portainer stack start
+
+    Raises:
+        HTTPException: If the stack is already active or in an unexpected state
+    """
+    logger.info(f"Checking status of stack {stack_id} before starting")
+
+    # Get current stack status
+    stack_details = await get_stack_details(stack_id)
+
+    # Check if stack is already active
+    if stack_details.data.Status == StackStatus.ACTIVE:
+        logger.info(f"Stack {stack_id} is already active")
+        return stack_details
+
+    # If stack is stopped, proceed with starting it
+    if stack_details.data.Status == StackStatus.DOWN:
+        logger.info(f"Starting stopped stack {stack_id}")
+        endpoint_id = await get_endpoint_id()
+
+        # Create and send request
+        start_stack_url = f"/api/stacks/{stack_id}/start?endpointId={endpoint_id}"
+        response = await send_post_request(endpoint=start_stack_url)
+        logger.info(f"Stack start response received: {response}")
+
+        return StackResponse(**response)
+
+    # If stack is in any other state
+    logger.warning(f"Stack {stack_id} is in an unexpected state: {stack_details.data.Status}")
+    raise HTTPException(status_code=400, detail=f'Unexpected stack status: {stack_details.data.Status}')
+
+async def stop_wazuh_customer_stack(stack_id: int) -> StackResponse:
+    """
+    Stop a Wazuh stack for a customer.
+
+    Args:
+        stack_id (int): The ID of the stack to stop
+
+    Returns:
+        StackResponse: The response from Portainer stack stop
+
+    Raises:
+        HTTPException: If the stack is already stopped
+    """
+    logger.info(f"Checking status of stack {stack_id} before stopping")
+
+    # Get current stack status
+    stack_details = await get_stack_details(stack_id)
+
+    # Check if stack is already stopped
+    if stack_details.data.Status == StackStatus.DOWN:
+        logger.info(f"Stack {stack_id} is already stopped")
+        return stack_details
+
+    # If stack is active, proceed with stopping it
+    if stack_details.data.Status == StackStatus.ACTIVE:
+        logger.info(f"Stopping active stack {stack_id}")
+        endpoint_id = await get_endpoint_id()
+
+        # Create and send request
+        stop_stack_url = f"/api/stacks/{stack_id}/stop?endpointId={endpoint_id}"
+        response = await send_post_request(endpoint=stop_stack_url)
+        logger.info(f"Stack stop response received: {response}")
+
+        return StackResponse(**response)
+
+    # If stack is in any other state
+    logger.warning(f"Stack {stack_id} is in an unexpected state: {stack_details.data.Status}")
+    raise HTTPException(status_code=400, detail=f'Unexpected stack status: {stack_details.data.Status}')
+
+async def delete_wazuh_customer_stack(stack_id: int) -> DeleteStackResponse:
     """
     Delete a Wazuh stack for a customer.
 
@@ -142,18 +222,20 @@ async def delete_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
         request (ProvisionNewCustomer): The customer provisioning request
 
     Returns:
-        StackResponse: The response from Portainer stack deletion
+        DeleteStackResponse: The response from Portainer stack deletion
     """
-    logger.info(f"Deleting Wazuh stack for customer {request.customer_name}")
+    logger.info(f"Deleting Wazuh stack for stack id {stack_id}")
 
     # Get required IDs
     endpoint_id = await get_endpoint_id()
-    swarm_id = await get_swarm_id()
-    logger.info(f"Retrieved endpoint ID: {endpoint_id} and swarm ID: {swarm_id}")
+    logger.info(f"Retrieved endpoint ID: {endpoint_id} and stack ID: {stack_id}")
+
+    # Stop the stack first
+    await stop_wazuh_customer_stack(stack_id)
 
     # Create and send request
-    delete_stack_url = f"/api/stacks/{swarm_id}/services"
-    response = await send_post_request(endpoint=delete_stack_url, data={})
+    delete_stack_url = f"/api/stacks/{stack_id}"
+    response = await send_delete_request(endpoint=delete_stack_url, params={"endpointId": endpoint_id})
     logger.info(f"Stack deletion response received: {response}")
 
-    return StackResponse(**response)
+    return DeleteStackResponse(**response)

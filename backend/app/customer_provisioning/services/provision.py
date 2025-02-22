@@ -310,6 +310,7 @@ async def provision_wazuh_worker(
 ) -> ProvisionWorkerResponse:
     """
     Provisions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
+    This can be done either by directly invoking the worker or by invoking the worker via Portainer.
 
     Args:
         request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
