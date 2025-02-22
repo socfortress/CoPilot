@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -55,6 +55,11 @@ class ProvisionWorkerRequest(BaseModel):
         example=True,
         description="Whether deployment of Portainer is occurring",
     )
+    swarm_nodes: Optional[List[str]] = Field(
+        None,
+        example=["127.0.0.1"],
+        description="The IP addresses of the swarm nodes",
+    )
 
 
 class ProvisionWorkerResponse(BaseModel):
@@ -75,6 +80,11 @@ class DecommissionWorkerRequest(BaseModel):
         ...,
         example="SOCFortress",
         description="The name of the customer",
+    )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        example=True,
+        description="Whether deployment of Portainer is occurring",
     )
 
 

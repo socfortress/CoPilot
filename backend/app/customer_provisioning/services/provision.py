@@ -394,25 +394,53 @@ async def provision_haproxy(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning HAProxy {request}")
-    api_endpoint = await get_connector_attribute(
-        connector_name="HAProxy Provisioning",
-        column_name="connector_url",
-        session=session,
-    )
-    logger.info(f"HAProxy API endpoint: {api_endpoint}")
-    # Send the POST request to the Wazuh worker
-    response = requests.post(
-        url=f"{api_endpoint}/provision_worker/haproxy",
-        json=request.dict(),
-    )
-    # Check the response status code
-    if response.status_code != 200:
-        return ProvisionWorkerResponse(
-            success=False,
-            message=f"Failed to provision HAProxy: {response.text}",
+    if await is_connector_verified(connector_name="HAProxy Provisioning", db=session) is False:
+        api_endpoint = await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_url",
+            session=session,
         )
-    # Return the response
-    return ProvisionWorkerResponse(
-        success=True,
-        message="HAProxy provisioned successfully",
-    )
+        logger.info(f"HAProxy API endpoint: {api_endpoint}")
+        request.portainer_deployment = False
+        # Send the POST request to the Wazuh worker
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker/haproxy",
+            json=request.dict(),
+        )
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision HAProxy: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="HAProxy provisioned successfully",
+        )
+    else:
+        request.portainer_deployment = True
+        request.swarm_nodes = await list_node_ips()
+        api_endpoint = await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_url",
+            session=session,
+        )
+        logger.info(f"HAProxy API endpoint: {api_endpoint}")
+        logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {request.swarm_nodes}")
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker/haproxy",
+            json=request.dict(),
+        )
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision HAProxy: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="HAProxy provisioned successfully via Portainer",
+        )
+

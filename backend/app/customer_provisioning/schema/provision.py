@@ -203,6 +203,17 @@ class ProvisionHaProxyRequest(BaseModel):
         example="worker1",
         description="The hostname of the Wazuh worker",
     )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        example=True,
+        description="Whether deployment of Portainer is occurring",
+    )
+    swarm_nodes: Optional[List[str]] = Field(
+        None,
+        example=["127.0.0.1"],
+        description="The IP addresses of the swarm nodes",
+    )
+
 
 
 class ProvisionDashboardRequest(BaseModel):

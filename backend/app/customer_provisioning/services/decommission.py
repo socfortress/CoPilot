@@ -1,19 +1,104 @@
 import requests
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import update
+from sqlalchemy.future import select
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
 from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.services.graylog import delete_index_set
+from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.services.graylog import delete_stream
+from app.customer_provisioning.services.portainer import list_node_ips
+from app.connectors.portainer.services.stack import delete_wazuh_customer_stack
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
 from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
+from fastapi import HTTPException
 
+
+async def get_customer_portainer_stack_id(
+    customer_name: str,
+    session: AsyncSession,
+) -> int:
+    """
+    Get the customer's Portainer stack ID from the CustomersMeta table.
+
+    Args:
+        customer_name (str): The name of the customer
+        session (AsyncSession): The database session
+
+    Returns:
+        int: The Portainer stack ID for the customer
+
+    Raises:
+        HTTPException: If the customer is not found or has no stack ID
+    """
+    logger.info(f"Getting Portainer stack ID for customer {customer_name}")
+
+    # Find the customer record
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer = result.scalar_one_or_none()
+
+    if not customer:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer {customer_name} not found in database"
+        )
+
+    if not customer.customer_meta_portainer_stack_id:
+        logger.error(f"No Portainer stack ID found for customer {customer_name}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No Portainer stack ID found for customer {customer_name}"
+        )
+
+    logger.info(f"Found Portainer stack ID {customer.customer_meta_portainer_stack_id} for customer {customer_name}")
+    return customer.customer_meta_portainer_stack_id
+
+async def clear_customer_portainer_stack_id(
+    customer_name: str,
+    session: AsyncSession,
+) -> None:
+    """
+    Clear the customer's Portainer stack ID in the CustomersMeta table by setting it to None.
+
+    Args:
+        customer_name (str): The name of the customer
+        session (AsyncSession): The database session
+
+    Raises:
+        HTTPException: If the customer is not found in the database
+    """
+    logger.info(f"Clearing Portainer stack ID for customer {customer_name}")
+
+    # Find the customer record
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer = result.scalar_one_or_none()
+
+    if not customer:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer {customer_name} not found in database"
+        )
+
+    # Update the customer's Portainer stack ID to None
+    stmt = (
+        update(CustomersMeta)
+        .where(CustomersMeta.customer_name == customer_name)
+        .values(customer_meta_portainer_stack_id=None)
+    )
+    await session.execute(stmt)
+    await session.commit()
+
+    logger.info(f"Successfully cleared Portainer stack ID for customer {customer_name}")
 
 async def decomission_wazuh_customer(
     customer_meta: CustomersMeta,
@@ -104,42 +189,71 @@ async def decommission_wazuh_worker(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
+    if await is_connector_verified(connector_name="Portainer", db=session) is False:
     # Check if the connector is verified
-    if (
-        await get_connector_attribute(
+        if (
+            await get_connector_attribute(
+                connector_name="Wazuh Worker Provisioning",
+                column_name="connector_verified",
+                session=session,
+            )
+            is False
+        ):
+            logger.info("Wazuh Worker Provisioning connector is not verified, skipping ...")
+            return DecommissionWorkerResponse(
+                success=False,
+                message="Wazuh Worker Provisioning connector is not verified",
+            )
+        api_endpoint = await get_connector_attribute(
             connector_name="Wazuh Worker Provisioning",
-            column_name="connector_verified",
+            column_name="connector_url",
             session=session,
         )
-        is False
-    ):
-        logger.info("Wazuh Worker Provisioning connector is not verified, skipping ...")
-        return DecommissionWorkerResponse(
-            success=False,
-            message="Wazuh Worker Provisioning connector is not verified",
+        # Send the POST request to the Wazuh worker
+        request.portainer_deployment = False
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker/decommission",
+            json=request.dict(),
         )
-    api_endpoint = await get_connector_attribute(
-        connector_name="Wazuh Worker Provisioning",
-        column_name="connector_url",
-        session=session,
-    )
-    # Send the POST request to the Wazuh worker
-    response = requests.post(
-        url=f"{api_endpoint}/provision_worker/decommission",
-        json=request.dict(),
-    )
-    # Check the response status code
-    if response.status_code != 200:
+        # Check the response status code
+        if response.status_code != 200:
+            return DecommissionWorkerResponse(
+                success=False,
+                message=f"Failed to provision Wazuh worker: {response.text}",
+            )
+        # Return the response
         return DecommissionWorkerResponse(
-            success=False,
-            message=f"Failed to provision Wazuh worker: {response.text}",
+            success=True,
+            message="Wazuh worker provisioned successfully",
         )
-    # Return the response
-    return DecommissionWorkerResponse(
-        success=True,
-        message="Wazuh worker provisioned successfully",
-    )
+    else:
+        request.portainer_deployment = True
+        # ! Delete the stack via Portainer first then clean up the file system on the worker node ! #
+        # Delete the stack and get the response
+        await delete_wazuh_customer_stack(stack_id=await get_customer_portainer_stack_id(request.customer_name, session))
 
+        # Clear the stack ID from the database
+        await clear_customer_portainer_stack_id(request.customer_name, session)
+
+        swarm_node_ips = await list_node_ips()
+        logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {swarm_node_ips}")
+        for ip in swarm_node_ips:
+            logger.info(f"Provisioning Wazuh worker on IP: {ip}")
+            response = requests.post(
+                url=f"http://{ip}:5003/provision_worker/decommission",
+                json=request.dict(),
+            )
+            logger.info(f"Status code from Wazuh Worker: {response.status_code}")
+            if response.status_code != 200:
+                return DecommissionWorkerResponse(
+                    success=False,
+                    message=f"Failed to provision Wazuh worker: {response.text}",
+                )
+
+        return DecommissionWorkerResponse(
+            success=True,
+            message="Wazuh worker decommissioned successfully",
+        )
 
 ######### ! Decommission HAProxy ! ############
 async def decommission_haproxy(
