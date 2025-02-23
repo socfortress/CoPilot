@@ -50,12 +50,12 @@ async def get_collect_carbonblack_data(carbonblack_request, session, auth_keys):
         integration="carbonblack",
         customer_code=carbonblack_request.customer_code,
         graylog_host=await get_connector_attribute(
-            connector_id=14,
+            connector_name="Event Shipper",
             column_name="connector_url",
             session=session,
         ),
         graylog_port=await get_connector_attribute(
-            connector_id=14,
+            connector_name="Event Shipper",
             column_name="connector_extra_data",
             session=session,
         ),
