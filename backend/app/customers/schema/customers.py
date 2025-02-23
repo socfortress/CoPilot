@@ -93,6 +93,10 @@ class CustomerMetaRequestBody(BaseModel):
         ...,
         description="Wazuh auth password for the customer",
     )
+    customer_meta_portainer_stack_id: Optional[int] = Field(
+        None,
+        description="Portainer stack ID for the customer",
+    )
 
     class Config:
         orm_mode = True

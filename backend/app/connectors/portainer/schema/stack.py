@@ -72,3 +72,8 @@ class DeleteStackResponse(BaseModel):
     success: bool
     message: str
 
+class StackIDResponse(BaseModel):
+    stack_id: int
+    success: bool
+    message: str
+

@@ -6,7 +6,10 @@ from urllib.parse import urljoin
 import requests
 from fastapi import HTTPException
 from loguru import logger
-
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -244,56 +247,6 @@ async def send_post_request(
         }
 
 
-# async def send_delete_request(
-#     endpoint: str,
-#     params: Optional[Dict[str, Any]] = None,
-#     connector_name: str = "Portainer",
-# ) -> Dict[str, Any]:
-#     """
-#     Sends a DELETE request to the Portainer service.
-
-#     Args:
-#         endpoint (str): The endpoint to send the DELETE request to.
-#         params (Optional[Dict[str, Any]], optional): The parameters to send with the DELETE request. Defaults to None.
-#         connector_name (str, optional): The name of the connector to use. Defaults to "Portainer".
-
-#     Returns:
-#         Dict[str, Any]: The response from the DELETE request.
-#     """
-#     logger.info(f"Sending DELETE request to {endpoint}")
-#     async with get_db_session() as session:  # This will correctly enter the context manager
-#         attributes = await get_connector_info_from_db(connector_name, session)
-#     if attributes is None:
-#         logger.error("No portainer connector found in the database")
-#         return None
-#     jwt_token = await get_portainer_jwt()
-#     try:
-#         HEADERS = {
-#             "Authorization": f"Bearer {jwt_token}",
-#             "Content-Type": "application/json",
-#         }
-#         response = requests.delete(
-#             f"{attributes['connector_url']}{endpoint}",
-#             headers=HEADERS,
-#             params=params,
-#             verify=False,
-#         )
-#         return {
-#             "data": response.json(),
-#             "success": True,
-#             "message": "Successfully retrieved data",
-#         }
-#     except Exception as e:
-#         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Failed to send DELETE request to {endpoint} with error: {e}",
-#         )
-#         return {
-#             "success": False,
-#             "message": f"Failed to send DELETE request to {endpoint} with error: {e}",
-#         }
-
 async def send_delete_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
@@ -406,3 +359,42 @@ def send_put_request(
             status_code=500,
             detail=f"Failed to send PUT request to {endpoint} with error: {e}",
         )
+
+
+async def get_customer_portainer_stack_id(customer_name: str, session: AsyncSession) -> int:
+    """
+    Get the Portainer stack ID for a customer.
+
+    Args:
+        customer_name (str): The name of the customer.
+        session (AsyncSession): The database session.
+
+    Returns:
+        int: The Portainer stack ID.
+
+    Raises:
+        HTTPException: If the customer is not found or has no stack ID
+    """
+    logger.info(f"Getting Portainer stack ID for customer {customer_name}")
+
+    # Get customer metadata
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer_meta = result.scalar_one_or_none()
+
+    if customer_meta is None:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer {customer_name} not found in database"
+        )
+
+    if not customer_meta.customer_meta_portainer_stack_id:
+        logger.error(f"No Portainer stack ID found for customer {customer_name}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No Portainer stack ID found for customer {customer_name}"
+        )
+
+    logger.info(f"Found Portainer stack ID {customer_meta.customer_meta_portainer_stack_id} for customer {customer_name}")
+    return customer_meta.customer_meta_portainer_stack_id
