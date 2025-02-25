@@ -62,7 +62,7 @@
 								<template #icon>
 									<Icon :name="StopIcon"></Icon>
 								</template>
-								Stop stream
+								Stop Worker
 							</n-button>
 							<n-button
 								v-if="portainerStack.Status === PortainerStackStatus.Offline"
@@ -75,7 +75,7 @@
 								<template #icon>
 									<Icon :name="StartIcon"></Icon>
 								</template>
-								Start stream
+								Start Worker
 							</n-button>
 						</div>
 					</template>
