@@ -1,17 +1,22 @@
 from pathlib import Path
-
-from loguru import logger
 from typing import Any
 from typing import Dict
 
+from fastapi import HTTPException
+from loguru import logger
+
 from app.agents.routes.agents import get_wazuh_manager_version
-from app.connectors.portainer.schema.stack import StackResponse, StacksResponse, DeleteStackResponse
+from app.connectors.portainer.schema.stack import DeleteStackResponse
+from app.connectors.portainer.schema.stack import StackResponse
+from app.connectors.portainer.schema.stack import StacksResponse
+from app.connectors.portainer.schema.stack import StackStatus
 from app.connectors.portainer.utils.universal import get_endpoint_id
 from app.connectors.portainer.utils.universal import get_swarm_id
-from app.connectors.portainer.utils.universal import send_post_request, send_get_request, send_delete_request
+from app.connectors.portainer.utils.universal import send_delete_request
+from app.connectors.portainer.utils.universal import send_get_request
+from app.connectors.portainer.utils.universal import send_post_request
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.connectors.portainer.schema.stack import StackStatus
-from fastapi import HTTPException
+
 
 async def get_stacks() -> StackResponse:
     """
@@ -20,10 +25,10 @@ async def get_stacks() -> StackResponse:
     Returns:
         StackResponse: The response from Portainer
     """
-    endpoint_id = await get_endpoint_id()
-    response = await send_get_request(f"/api/stacks")
+    response = await send_get_request("/api/stacks")
     logger.info(f"Stacks received: {response}")
-    return StacksResponse(data=response['data'], message="Stacks fetched successfully", success=True)
+    return StacksResponse(data=response["data"], message="Stacks fetched successfully", success=True)
+
 
 async def get_stack_details(stack_id: int) -> StackResponse:
     """
@@ -39,6 +44,7 @@ async def get_stack_details(stack_id: int) -> StackResponse:
     response = await send_get_request(f"/api/stacks/{stack_id}?endpointId={endpoint_id}")
     logger.info(f"Stack details received: {response}")
     return StackResponse(**response)
+
 
 async def _load_stack_template(template_path: Path) -> str:
     """
@@ -73,7 +79,7 @@ async def _prepare_template_variables(request: ProvisionNewCustomer) -> Dict[str
         "REPLACE_LOG": request.wazuh_logs_port,
         "REPLACE_REGISTRATION": request.wazuh_registration_port,
         "REPLACE_API": request.wazuh_api_port,
-        "customer_name": formatted_customer_name
+        "customer_name": formatted_customer_name,
     }
 
 
@@ -136,6 +142,7 @@ async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
 
     return StackResponse(**response)
 
+
 async def start_wazuh_customer_stack(stack_id: int) -> StackResponse:
     """
     Start a Wazuh stack for a customer.
@@ -173,7 +180,8 @@ async def start_wazuh_customer_stack(stack_id: int) -> StackResponse:
 
     # If stack is in any other state
     logger.warning(f"Stack {stack_id} is in an unexpected state: {stack_details.data.Status}")
-    raise HTTPException(status_code=400, detail=f'Unexpected stack status: {stack_details.data.Status}')
+    raise HTTPException(status_code=400, detail=f"Unexpected stack status: {stack_details.data.Status}")
+
 
 async def stop_wazuh_customer_stack(stack_id: int) -> StackResponse:
     """
@@ -212,7 +220,8 @@ async def stop_wazuh_customer_stack(stack_id: int) -> StackResponse:
 
     # If stack is in any other state
     logger.warning(f"Stack {stack_id} is in an unexpected state: {stack_details.data.Status}")
-    raise HTTPException(status_code=400, detail=f'Unexpected stack status: {stack_details.data.Status}')
+    raise HTTPException(status_code=400, detail=f"Unexpected stack status: {stack_details.data.Status}")
+
 
 async def delete_wazuh_customer_stack(stack_id: int) -> DeleteStackResponse:
     """

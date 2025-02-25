@@ -215,7 +215,6 @@ class ProvisionHaProxyRequest(BaseModel):
     )
 
 
-
 class ProvisionDashboardRequest(BaseModel):
     customer_name: str = Field(
         ...,

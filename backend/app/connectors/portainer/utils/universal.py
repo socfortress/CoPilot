@@ -8,10 +8,10 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
+
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from app.db.universal_models import CustomersMeta
 
 
 async def get_endpoint_id() -> int:
@@ -384,17 +384,11 @@ async def get_customer_portainer_stack_id(customer_name: str, session: AsyncSess
 
     if customer_meta is None:
         logger.error(f"Customer {customer_name} not found in database")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Customer {customer_name} not found in database"
-        )
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
 
     if not customer_meta.customer_meta_portainer_stack_id:
         logger.error(f"No Portainer stack ID found for customer {customer_name}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"No Portainer stack ID found for customer {customer_name}"
-        )
+        raise HTTPException(status_code=404, detail=f"No Portainer stack ID found for customer {customer_name}")
 
     logger.info(f"Found Portainer stack ID {customer_meta.customer_meta_portainer_stack_id} for customer {customer_name}")
     return customer_meta.customer_meta_portainer_stack_id

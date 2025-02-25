@@ -1,23 +1,24 @@
 import requests
+from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.connectors.portainer.services.stack import delete_wazuh_customer_stack
+from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
 from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.services.graylog import delete_index_set
-from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.services.graylog import delete_stream
 from app.customer_provisioning.services.portainer import list_node_ips
-from app.connectors.portainer.services.stack import delete_wazuh_customer_stack
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
 from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
-from fastapi import HTTPException
 
 
 async def get_customer_portainer_stack_id(
@@ -46,20 +47,15 @@ async def get_customer_portainer_stack_id(
 
     if not customer:
         logger.error(f"Customer {customer_name} not found in database")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Customer {customer_name} not found in database"
-        )
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
 
     if not customer.customer_meta_portainer_stack_id:
         logger.error(f"No Portainer stack ID found for customer {customer_name}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"No Portainer stack ID found for customer {customer_name}"
-        )
+        raise HTTPException(status_code=404, detail=f"No Portainer stack ID found for customer {customer_name}")
 
     logger.info(f"Found Portainer stack ID {customer.customer_meta_portainer_stack_id} for customer {customer_name}")
     return customer.customer_meta_portainer_stack_id
+
 
 async def clear_customer_portainer_stack_id(
     customer_name: str,
@@ -84,21 +80,15 @@ async def clear_customer_portainer_stack_id(
 
     if not customer:
         logger.error(f"Customer {customer_name} not found in database")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Customer {customer_name} not found in database"
-        )
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
 
     # Update the customer's Portainer stack ID to None
-    stmt = (
-        update(CustomersMeta)
-        .where(CustomersMeta.customer_name == customer_name)
-        .values(customer_meta_portainer_stack_id=None)
-    )
+    stmt = update(CustomersMeta).where(CustomersMeta.customer_name == customer_name).values(customer_meta_portainer_stack_id=None)
     await session.execute(stmt)
     await session.commit()
 
     logger.info(f"Successfully cleared Portainer stack ID for customer {customer_name}")
+
 
 async def decomission_wazuh_customer(
     customer_meta: CustomersMeta,
@@ -190,7 +180,7 @@ async def decommission_wazuh_worker(
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
     if await is_connector_verified(connector_name="Portainer", db=session) is False:
-    # Check if the connector is verified
+        # Check if the connector is verified
         if (
             await get_connector_attribute(
                 connector_name="Wazuh Worker Provisioning",
@@ -254,6 +244,7 @@ async def decommission_wazuh_worker(
             success=True,
             message="Wazuh worker decommissioned successfully",
         )
+
 
 ######### ! Decommission HAProxy ! ############
 async def decommission_haproxy(

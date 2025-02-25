@@ -3,26 +3,25 @@ from typing import Callable
 import requests
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.agents.routes.agents import check_wazuh_manager_version
+from app.agents.routes.agents import get_wazuh_manager_version
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
-from sqlalchemy import update
-from app.agents.routes.agents import get_wazuh_manager_version
-from sqlalchemy.future import select
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import verify_graylog_connection
-from app.customer_provisioning.services.portainer import list_node_ips
 from app.connectors.portainer.services.stack import create_wazuh_customer_stack
+from app.connectors.utils import is_connector_verified
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import ProvisionHaProxyRequest
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.grafana import create_grafana_datasource
@@ -33,6 +32,7 @@ from app.customer_provisioning.services.graylog import connect_stream_to_pipelin
 from app.customer_provisioning.services.graylog import create_event_stream
 from app.customer_provisioning.services.graylog import create_index_set
 from app.customer_provisioning.services.graylog import get_pipeline_id
+from app.customer_provisioning.services.portainer import list_node_ips
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
@@ -230,6 +230,7 @@ async def update_customer_meta_table(
     await session.commit()
     return customer_meta
 
+
 async def update_customer_portainer_stack_id(
     customer_name: str,
     stack_id: int,
@@ -252,20 +253,13 @@ async def update_customer_portainer_stack_id(
 
     if customer:
         # Update the customer's Portainer stack ID
-        stmt = (
-            update(CustomersMeta)
-            .where(CustomersMeta.customer_name == customer_name)
-            .values(customer_meta_portainer_stack_id=stack_id)
-        )
+        stmt = update(CustomersMeta).where(CustomersMeta.customer_name == customer_name).values(customer_meta_portainer_stack_id=stack_id)
         await session.execute(stmt)
         await session.commit()
         logger.info(f"Successfully updated Portainer stack ID for customer {customer_name}")
     else:
         logger.error(f"Customer {customer_name} not found in database")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Customer {customer_name} not found in database"
-        )
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
 
 
 ######### ! Update Customer Alert Settings Table ! ############
@@ -367,17 +361,12 @@ async def provision_wazuh_worker(
         stack_response = await create_wazuh_customer_stack(request)
 
         # Update the customer's Portainer stack ID
-        await update_customer_portainer_stack_id(
-            customer_name=request.customer_name,
-            stack_id=stack_response.data.Id,
-            session=session
-        )
+        await update_customer_portainer_stack_id(customer_name=request.customer_name, stack_id=stack_response.data.Id, session=session)
 
         return ProvisionWorkerResponse(
             success=True,
             message="Wazuh worker provisioned successfully via Portainer",
         )
-
 
 
 ######### ! Provision HAProxy ! ############
@@ -445,4 +434,3 @@ async def provision_haproxy(
             success=True,
             message="HAProxy provisioned successfully via Portainer",
         )
-

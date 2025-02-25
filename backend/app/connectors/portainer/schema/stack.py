@@ -1,13 +1,14 @@
+from enum import IntEnum
 from typing import Any
 from typing import List
 from typing import Optional
-from enum import IntEnum
 
-from pydantic import BaseModel, validator
-from loguru import logger
+from pydantic import BaseModel
+
 
 class StackStatus(IntEnum):
     """Enum for Portainer stack status values"""
+
     ACTIVE = 1
     DOWN = 2
     INACTIVE = 3
@@ -20,6 +21,7 @@ class StackStatus(IntEnum):
     def __str__(self) -> str:
         """Return human-readable status"""
         return self.name.title()
+
 
 class ResourceControlResponse(BaseModel):
     Id: int
@@ -62,18 +64,20 @@ class StackResponse(BaseModel):
     success: bool
     message: str
 
+
 class StacksResponse(BaseModel):
     data: List[StackData]
     success: bool
     message: str
+
 
 class DeleteStackResponse(BaseModel):
     data: Optional[Any] = None
     success: bool
     message: str
 
+
 class StackIDResponse(BaseModel):
     stack_id: int
     success: bool
     message: str
-
