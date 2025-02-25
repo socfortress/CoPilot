@@ -20,6 +20,7 @@ from app.connectors.portainer.services.stack import get_stacks
 from app.connectors.portainer.services.stack import start_wazuh_customer_stack
 from app.connectors.portainer.services.stack import stop_wazuh_customer_stack
 from app.connectors.portainer.utils.universal import get_customer_portainer_stack_id
+from app.connectors.portainer.utils.universal import update_customer_portainer_stack_id
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.db.db_session import get_db
 
@@ -159,6 +160,34 @@ async def stop_wazuh_customer_stack_route(stack_id: int):
         dict: The response object.
     """
     return await stop_wazuh_customer_stack(stack_id)
+
+
+@portainer_integrations_router.post(
+    "/update-customer-stack-id",
+    description="Update the ID of a customer stack.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+    response_model=StackIDResponse,
+)
+async def update_customer_stack_id_route(
+    customer_name: str,
+    stack_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Update the ID of a customer stack by the customer name.
+
+    Args:
+        customer_name (str): The name of the customer.
+        stack_id (int): The ID of the stack.
+
+    Returns:
+        dict: The response object.
+    """
+    return StackIDResponse(
+        stack_id=await update_customer_portainer_stack_id(customer_name=customer_name, stack_id=stack_id, session=session),
+        success=True,
+        message="Customer stack ID updated successfully.",
+    )
 
 
 @portainer_integrations_router.delete(

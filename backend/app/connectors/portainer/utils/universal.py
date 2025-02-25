@@ -392,3 +392,30 @@ async def get_customer_portainer_stack_id(customer_name: str, session: AsyncSess
 
     logger.info(f"Found Portainer stack ID {customer_meta.customer_meta_portainer_stack_id} for customer {customer_name}")
     return customer_meta.customer_meta_portainer_stack_id
+
+
+async def update_customer_portainer_stack_id(customer_name: str, stack_id: int, session: AsyncSession) -> None:
+    """
+    Update the Portainer stack ID for a customer.
+
+    Args:
+        customer_name (str): The name of the customer.
+        stack_id (int): The Portainer stack ID.
+        session (AsyncSession): The database session.
+    """
+    logger.info(f"Updating Portainer stack ID for customer {customer_name} to {stack_id}")
+
+    # Get customer metadata
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer_meta = result.scalar_one_or_none()
+
+    if customer_meta is None:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
+
+    customer_meta.customer_meta_portainer_stack_id = stack_id
+    await session.commit()
+
+    logger.info(f"Updated Portainer stack ID for customer {customer_name} to {stack_id}")
+    return stack_id
