@@ -470,6 +470,7 @@ async def build_alert_payload(
 
 async def handle_customer_notifications(
     customer_code: str,
+    asset_name: str,
     alert_payload: CreatedAlertPayload,
     session: AsyncSession,
     type: str = "alert",
@@ -483,6 +484,7 @@ async def handle_customer_notifications(
                 execution_arguments={
                     "type": type,
                     "customer_code": customer_code,
+                    "asset_name": asset_name,
                     "alert_context_payload": alert_payload.alert_context_payload,
                     "alert_title": alert_payload.alert_title_payload,
                     "alert_id": alert_payload.alert_id,
@@ -511,7 +513,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
     alert_context_id = (
         await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)
     ).id
-    asset_id = (
+    asset = (
         await create_asset_context_payload(
             customer_code=customer_code,
             asset_payload=alert_payload,
@@ -519,7 +521,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             alert_id=alert_id,
             session=session,
         )
-    ).id
+    )
     if alert_payload.ioc_payload is not None:
         ioc_id = (
             await create_ioc_payload(
@@ -534,11 +536,11 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             )
         ).id
         logger.info(
-            f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id} and ioc ID {ioc_id}",
+            f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset.id} and ioc ID {ioc_id}",
         )
-    logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
+    logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset.id}")
     alert_payload.alert_id = alert_id
-    await handle_customer_notifications(customer_code=customer_code, alert_payload=alert_payload, session=session)
+    await handle_customer_notifications(customer_code=customer_code, asset_name=asset.asset_name, alert_payload=alert_payload, session=session)
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 
