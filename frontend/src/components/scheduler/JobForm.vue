@@ -33,8 +33,8 @@ import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import Api from "@/api"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
+import _get from "lodash-es/get"
+import _trim from "lodash-es/trim"
 import { NButton, NForm, NFormItem, NInputNumber, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 
@@ -74,7 +74,7 @@ const isValid = computed(() => {
 })
 
 function validatorNumber(fieldName: string, defaultMessage?: string) {
-	return (rule: FormItemRule, value: string) => {
+	return (_rule: FormItemRule, value: string) => {
 		if (!value) {
 			return new Error(defaultMessage || `${fieldName} is required`)
 		} else if (!/^\d*$/.test(value)) {

@@ -59,8 +59,8 @@ import type { DeepNullable } from "@/types/common"
 import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
+import _get from "lodash-es/get"
+import _trim from "lodash-es/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
@@ -123,7 +123,7 @@ const isValid = computed(() => {
 	return valid
 })
 
-function validateValue(rule: FormItemRule, value: string) {
+function validateValue(_rule: FormItemRule, value: string) {
 	if (!value) {
 		return new Error("Please input a valid Value")
 	}

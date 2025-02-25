@@ -38,8 +38,8 @@
 import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
+import _get from "lodash-es/get"
+import _trim from "lodash-es/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
@@ -193,7 +193,7 @@ function setForm(settings?: CustomerProvisioningDefaultSettings) {
 	form.value = getClearForm(settings)
 }
 
-function validateIp(rule: FormItemRule, value: string) {
+function validateIp(_rule: FormItemRule, value: string) {
 	if (value && !isIP(value)) {
 		return new Error("Please input a valid IP Address")
 	}
@@ -201,7 +201,7 @@ function validateIp(rule: FormItemRule, value: string) {
 	return true
 }
 
-function validateUrl(rule: FormItemRule, value: string) {
+function validateUrl(_rule: FormItemRule, value: string) {
 	if (value && !isURL(value, { require_tld: false })) {
 		return new Error("Please input a valid URL")
 	}

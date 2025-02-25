@@ -102,6 +102,10 @@ class ProvisionNewCustomer(BaseModel):
         False,
         description="Whether to provision an HAProxy for the customer",
     )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        description="Whether deployment of Portainer is occurring",
+    )
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -198,6 +202,16 @@ class ProvisionHaProxyRequest(BaseModel):
         None,
         example="worker1",
         description="The hostname of the Wazuh worker",
+    )
+    portainer_deployment: Optional[bool] = Field(
+        None,
+        example=True,
+        description="Whether deployment of Portainer is occurring",
+    )
+    swarm_nodes: Optional[List[str]] = Field(
+        None,
+        example=["127.0.0.1"],
+        description="The IP addresses of the swarm nodes",
     )
 
 

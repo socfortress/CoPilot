@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import _round from "lodash/round"
+import _round from "lodash-es/round"
 import { NCard } from "naive-ui"
 import { computed } from "vue"
 

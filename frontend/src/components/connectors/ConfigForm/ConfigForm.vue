@@ -76,7 +76,7 @@ import type {
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import { ConnectorFormType } from "@/types/connectors.d"
-import _pick from "lodash/pick"
+import _pick from "lodash-es/pick"
 import { NAvatar, NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import CredentialsType from "./FormTypes/CredentialsType.vue"

@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Any
 from typing import List
 from typing import Optional
@@ -5,7 +6,24 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class ResourceControl(BaseModel):
+class StackStatus(IntEnum):
+    """Enum for Portainer stack status values"""
+
+    ACTIVE = 1
+    DOWN = 2
+    INACTIVE = 3
+
+    @classmethod
+    def _missing_(cls, value: int) -> "StackStatus":
+        """Handle unknown status values"""
+        return cls.INACTIVE
+
+    def __str__(self) -> str:
+        """Return human-readable status"""
+        return self.name.title()
+
+
+class ResourceControlResponse(BaseModel):
     Id: int
     ResourceId: str
     SubResourceIds: List[str]
@@ -25,7 +43,7 @@ class StackData(BaseModel):
     SwarmId: str
     EntryPoint: str
     Env: List[Any]
-    ResourceControl: ResourceControl
+    ResourceControl: Optional[ResourceControlResponse] = None
     Status: int
     ProjectPath: str
     CreationDate: int
@@ -43,5 +61,23 @@ class StackData(BaseModel):
 
 class StackResponse(BaseModel):
     data: StackData
+    success: bool
+    message: str
+
+
+class StacksResponse(BaseModel):
+    data: List[StackData]
+    success: bool
+    message: str
+
+
+class DeleteStackResponse(BaseModel):
+    data: Optional[Any] = None
+    success: bool
+    message: str
+
+
+class StackIDResponse(BaseModel):
+    stack_id: int
     success: bool
     message: str

@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
-import _clone from "lodash/cloneDeep"
+import _clone from "lodash-es/cloneDeep"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 

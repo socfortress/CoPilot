@@ -229,7 +229,7 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
-import _orderBy from "lodash/orderBy"
+import _orderBy from "lodash-es/orderBy"
 import {
 	NBadge,
 	NButton,

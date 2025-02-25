@@ -28,7 +28,7 @@
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import _trim from "lodash/trim"
+import _trim from "lodash-es/trim"
 import { NButton, NDynamicTags, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 

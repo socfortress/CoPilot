@@ -16,7 +16,7 @@ RUN npm ci
 COPY --chown=node . .
 
 # Run the Vue.js project build
-RUN npm run build-only
+RUN npm run build:only
 
 FROM node:21 as dev
 
@@ -32,7 +32,7 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-CMD npm i && npm run start-vue
+CMD npm i && npm run start-frontend
 
 FROM nginx:1.24.0-alpine
 

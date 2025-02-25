@@ -3,14 +3,19 @@ from typing import Callable
 import requests
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.agents.routes.agents import check_wazuh_manager_version
+from app.agents.routes.agents import get_wazuh_manager_version
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import verify_graylog_connection
+from app.connectors.portainer.services.stack import create_wazuh_customer_stack
+from app.connectors.utils import is_connector_verified
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
@@ -27,6 +32,7 @@ from app.customer_provisioning.services.graylog import connect_stream_to_pipelin
 from app.customer_provisioning.services.graylog import create_event_stream
 from app.customer_provisioning.services.graylog import create_index_set
 from app.customer_provisioning.services.graylog import get_pipeline_id
+from app.customer_provisioning.services.portainer import list_node_ips
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
@@ -225,6 +231,37 @@ async def update_customer_meta_table(
     return customer_meta
 
 
+async def update_customer_portainer_stack_id(
+    customer_name: str,
+    stack_id: int,
+    session: AsyncSession,
+) -> None:
+    """
+    Update the customer's Portainer stack ID in the CustomersMeta table.
+
+    Args:
+        customer_name (str): The name of the customer
+        stack_id (int): The Portainer stack ID
+        session (AsyncSession): The database session
+    """
+    logger.info(f"Updating Portainer stack ID {stack_id} for customer {customer_name}")
+
+    # Find the customer record
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_name == customer_name)
+    result = await session.execute(stmt)
+    customer = result.scalar_one_or_none()
+
+    if customer:
+        # Update the customer's Portainer stack ID
+        stmt = update(CustomersMeta).where(CustomersMeta.customer_name == customer_name).values(customer_meta_portainer_stack_id=stack_id)
+        await session.execute(stmt)
+        await session.commit()
+        logger.info(f"Successfully updated Portainer stack ID for customer {customer_name}")
+    else:
+        logger.error(f"Customer {customer_name} not found in database")
+        raise HTTPException(status_code=404, detail=f"Customer {customer_name} not found in database")
+
+
 ######### ! Update Customer Alert Settings Table ! ############
 async def update_customer_alert_settings_table(
     request: ProvisionNewCustomer,
@@ -268,6 +305,7 @@ async def provision_wazuh_worker(
 ) -> ProvisionWorkerResponse:
     """
     Provisions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
+    This can be done either by directly invoking the worker or by invoking the worker via Portainer.
 
     Args:
         request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
@@ -277,29 +315,58 @@ async def provision_wazuh_worker(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning Wazuh worker {request}")
-    api_endpoint = await get_connector_attribute(
-        connector_name="Wazuh Worker Provisioning",
-        column_name="connector_url",
-        session=session,
-    )
-    logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
-    # Send the POST request to the Wazuh worker
-    response = requests.post(
-        url=f"{api_endpoint}/provision_worker",
-        json=request.dict(),
-    )
-    logger.info(f"Status code from Wazuh Worker: {response.status_code}")
-    # Check the response status code
-    if response.status_code != 200:
-        return ProvisionWorkerResponse(
-            success=False,
-            message=f"Failed to provision Wazuh worker: {response.text}",
+    if await is_connector_verified(connector_name="Portainer", db=session) is False:
+        api_endpoint = await get_connector_attribute(
+            connector_name="Wazuh Worker Provisioning",
+            column_name="connector_url",
+            session=session,
         )
-    # Return the response
-    return ProvisionWorkerResponse(
-        success=True,
-        message="Wazuh worker provisioned successfully",
-    )
+        logger.info(f"Wazuh Worker API endpoint: {api_endpoint}")
+        # Send the POST request to the Wazuh worker
+        request.portainer_deployment = False
+        request.wazuh_manager_version = await get_wazuh_manager_version()
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker",
+            json=request.dict(),
+        )
+        logger.info(f"Status code from Wazuh Worker: {response.status_code}")
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision Wazuh worker: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="Wazuh worker provisioned successfully",
+        )
+    else:
+        request.portainer_deployment = True
+        swarm_node_ips = await list_node_ips()
+        logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {swarm_node_ips}")
+        for ip in swarm_node_ips:
+            logger.info(f"Provisioning Wazuh worker on IP: {ip}")
+            response = requests.post(
+                url=f"http://{ip}:5003/provision_worker",
+                json=request.dict(),
+            )
+            logger.info(f"Status code from Wazuh Worker: {response.status_code}")
+            if response.status_code != 200:
+                return ProvisionWorkerResponse(
+                    success=False,
+                    message=f"Failed to provision Wazuh worker: {response.text}",
+                )
+        # Create the stack and get the response
+        stack_response = await create_wazuh_customer_stack(request)
+
+        # Update the customer's Portainer stack ID
+        await update_customer_portainer_stack_id(customer_name=request.customer_name, stack_id=stack_response.data.Id, session=session)
+
+        return ProvisionWorkerResponse(
+            success=True,
+            message="Wazuh worker provisioned successfully via Portainer",
+        )
 
 
 ######### ! Provision HAProxy ! ############
@@ -318,25 +385,52 @@ async def provision_haproxy(
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning HAProxy {request}")
-    api_endpoint = await get_connector_attribute(
-        connector_name="HAProxy Provisioning",
-        column_name="connector_url",
-        session=session,
-    )
-    logger.info(f"HAProxy API endpoint: {api_endpoint}")
-    # Send the POST request to the Wazuh worker
-    response = requests.post(
-        url=f"{api_endpoint}/provision_worker/haproxy",
-        json=request.dict(),
-    )
-    # Check the response status code
-    if response.status_code != 200:
-        return ProvisionWorkerResponse(
-            success=False,
-            message=f"Failed to provision HAProxy: {response.text}",
+    if await is_connector_verified(connector_name="Portainer", db=session) is False:
+        api_endpoint = await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_url",
+            session=session,
         )
-    # Return the response
-    return ProvisionWorkerResponse(
-        success=True,
-        message="HAProxy provisioned successfully",
-    )
+        logger.info(f"HAProxy API endpoint: {api_endpoint}")
+        request.portainer_deployment = False
+        # Send the POST request to the Wazuh worker
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker/haproxy",
+            json=request.dict(),
+        )
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision HAProxy: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="HAProxy provisioned successfully",
+        )
+    else:
+        request.portainer_deployment = True
+        request.swarm_nodes = await list_node_ips()
+        api_endpoint = await get_connector_attribute(
+            connector_name="HAProxy Provisioning",
+            column_name="connector_url",
+            session=session,
+        )
+        logger.info(f"HAProxy API endpoint: {api_endpoint}")
+        logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {request.swarm_nodes}")
+        response = requests.post(
+            url=f"{api_endpoint}/provision_worker/haproxy",
+            json=request.dict(),
+        )
+        # Check the response status code
+        if response.status_code != 200:
+            return ProvisionWorkerResponse(
+                success=False,
+                message=f"Failed to provision HAProxy: {response.text}",
+            )
+        # Return the response
+        return ProvisionWorkerResponse(
+            success=True,
+            message="HAProxy provisioned successfully via Portainer",
+        )

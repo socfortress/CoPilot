@@ -83,7 +83,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of properties" :key="key">
+						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
 							</template>
@@ -177,7 +177,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _pick from "lodash/pick"
+import _pick from "lodash-es/pick"
 import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"

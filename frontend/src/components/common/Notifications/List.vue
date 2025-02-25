@@ -44,7 +44,7 @@
 <script lang="ts" setup>
 import Icon from "@/components/common/Icon.vue"
 import { useNotifications } from "@/composables/useNotifications"
-import _take from "lodash/take"
+import _take from "lodash-es/take"
 import { NEmpty, NScrollbar, NTooltip } from "naive-ui"
 import { computed } from "vue"
 

@@ -218,7 +218,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _pick from "lodash/pick"
+import _pick from "lodash-es/pick"
 import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 

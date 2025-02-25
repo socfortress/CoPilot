@@ -117,7 +117,7 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="!p-0"
-			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="customerInfo?.customer_name"
 			:bordered="false"
 			segmented
@@ -165,8 +165,19 @@
 					>
 						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
+
 					<template #suffix>
-						<div class="hover:text-primary cursor-pointer pr-8" @click="selectedTabsGroup = 'agents'">
+						<div
+							v-if="customerPortainerStackId !== null"
+							class="hover:text-primary cursor-pointer pr-8 text-sm"
+							@click="selectedTabsGroup = 'wazuh_worker'"
+						>
+							Wazuh Worker
+						</div>
+						<div
+							class="hover:text-primary cursor-pointer pr-8 text-sm"
+							@click="selectedTabsGroup = 'agents'"
+						>
 							Agents
 						</div>
 					</template>
@@ -209,6 +220,21 @@
 						</n-scrollbar>
 					</n-tab-pane>
 				</n-tabs>
+				<n-tabs v-else-if="selectedTabsGroup === 'wazuh_worker'" type="line" animated :tabs-padding="24">
+					<template #prefix>
+						<div
+							class="hover:text-primary relative top-1 cursor-pointer pl-6"
+							@click="selectedTabsGroup = 'customer'"
+						>
+							<Icon :name="ArrowIcon" :size="20"></Icon>
+						</div>
+					</template>
+					<n-tab-pane name="Wazuh Worker" tab="Wazuh Worker" display-directive="show:lazy">
+						<div class="px-7 py-4">
+							<CustomerWazuhWorker v-if="customerPortainerStackId" :stack-id="customerPortainerStackId" />
+						</div>
+					</n-tab-pane>
+				</n-tabs>
 			</Transition>
 		</n-modal>
 	</div>
@@ -221,7 +247,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { hashMD5 } from "@/utils"
-import _toSafeInteger from "lodash/toSafeInteger"
+import _toSafeInteger from "lodash-es/toSafeInteger"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 
@@ -244,6 +270,7 @@ const CustomerNetworkConnectors = defineAsyncComponent(
 const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
+const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
 const { customer, highlight, hideCardActions } = toRefs(props)
 
@@ -256,12 +283,13 @@ const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
 
 const showDetails = ref(false)
-const selectedTabsGroup = ref<"customer" | "agents">("customer")
+const selectedTabsGroup = ref<"customer" | "agents" | "wazuh_worker">("customer")
 const loadingFull = ref(false)
 const loadingDelete = ref(false)
 const message = useMessage()
 const customerInfo = ref<Customer | null>(null)
 const customerMeta = ref<CustomerMeta | null>(null)
+const customerPortainerStackId = ref<number | null>(null)
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
 const fallbackAvatar = computed(() => {
@@ -303,6 +331,16 @@ function getFull() {
 		})
 }
 
+function getPortainerStackId() {
+	Api.portainer.getCustomerStackId(customer.value.customer_name).then(res => {
+		if (res.data.success) {
+			customerPortainerStackId.value = res.data.stack_id || null
+		} else {
+			message.warning(res.data?.message || "An error occurred. Please try again later.")
+		}
+	})
+}
+
 function deletedItem() {
 	showDetails.value = false
 	emit("delete")
@@ -317,6 +355,10 @@ watch(showDetails, val => {
 			(!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index)
 		) {
 			getFull()
+		}
+
+		if (!customerPortainerStackId.value) {
+			getPortainerStackId()
 		}
 	}
 })

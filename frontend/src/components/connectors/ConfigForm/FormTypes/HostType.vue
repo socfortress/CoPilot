@@ -28,7 +28,7 @@ const { form } = toRefs(props)
 
 const formRef = ref<FormInst>()
 
-function validateUrl(rule: FormItemRule, value: string) {
+function validateUrl(_rule: FormItemRule, value: string) {
 	if (!value) {
 		return new Error("Please input a valid URL")
 	}

@@ -272,7 +272,7 @@ import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettin
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import _uniqBy from "lodash/uniqBy"
+import _uniqBy from "lodash-es/uniqBy"
 import {
 	NButton,
 	NCard,
@@ -427,7 +427,7 @@ const rules: FormRules = {
 	}
 }
 
-function validateUrl(rule: FormItemRule, value: string) {
+function validateUrl(_rule: FormItemRule, value: string) {
 	if (!value || !isURL(value, { require_tld: false })) {
 		return new Error("Please input a valid URL")
 	}
@@ -435,7 +435,7 @@ function validateUrl(rule: FormItemRule, value: string) {
 	return true
 }
 
-function validatePort(rule: FormItemRule, value: string) {
+function validatePort(_rule: FormItemRule, value: string) {
 	if (!value || !isPort(value)) {
 		return new Error("Please input a valid Port number")
 	}
@@ -451,7 +451,7 @@ function validatePort(rule: FormItemRule, value: string) {
 	return true
 }
 
-function validateIp(rule: FormItemRule, value: string) {
+function validateIp(_rule: FormItemRule, value: string) {
 	if (!value || !isIP(value)) {
 		return new Error("Please input a valid IP Address")
 	}
@@ -459,7 +459,7 @@ function validateIp(rule: FormItemRule, value: string) {
 	return true
 }
 
-function validateAtLeastOne(rule: FormItemRule, value: string[]) {
+function validateAtLeastOne(_rule: FormItemRule, value: string[]) {
 	if (!value || !value.length) {
 		return new Error("Please select at least one option")
 	}

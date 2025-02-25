@@ -163,7 +163,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import _truncate from "lodash/truncate"
+import _truncate from "lodash-es/truncate"
 import { NCard, NDivider, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 
@@ -186,7 +186,7 @@ const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifac
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
 
-const ViewIcon = "iconoir:eye-alt"
+const ViewIcon = "iconoir:eye-solid"
 const LinkIcon = "carbon:launch"
 const { gotoAgent, gotoIndex } = useGoto()
 const message = useMessage()

@@ -15,7 +15,7 @@
 import type { SocCaseExt } from "@/types/soc/case.d"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import _toNumber from "lodash/toSafeInteger"
+import _toNumber from "lodash-es/toSafeInteger"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 

@@ -78,7 +78,7 @@ import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _trim from "lodash/trim"
+import _trim from "lodash-es/trim"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 
