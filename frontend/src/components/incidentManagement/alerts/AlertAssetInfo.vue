@@ -87,7 +87,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import _omit from "lodash/omit"
+import _omit from "lodash-es/omit"
 import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 
@@ -98,7 +98,7 @@ const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSo
 const { asset } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const ViewIcon = "iconoir:eye-alt"
+const ViewIcon = "iconoir:eye-solid"
 const { gotoAgent, gotoIndex, gotoCustomer } = useGoto()
 const message = useMessage()
 const loading = ref(false)

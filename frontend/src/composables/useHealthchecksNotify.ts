@@ -1,7 +1,7 @@
 import type { Notification } from "./useNotifications"
 import { usHealthcheckStore } from "@/stores/healthcheck"
 import { IndexHealth } from "@/types/indices.d"
-import _capitalize from "lodash/capitalize"
+import _capitalize from "lodash-es/capitalize"
 import { computed, watch } from "vue"
 import { useGoto } from "./useGoto"
 import { useNotifications } from "./useNotifications"

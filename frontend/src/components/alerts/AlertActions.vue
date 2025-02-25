@@ -111,7 +111,7 @@ const emit = defineEmits<{
 
 const DangerIcon = "majesticons:exclamation-line"
 const AskIcon = "majesticons:question-mark-circle-line"
-const ViewIcon = "iconoir:eye-alt"
+const ViewIcon = "iconoir:eye-solid"
 const RulesIcon = "carbon:rule-cancelled"
 
 const router = useRouter()

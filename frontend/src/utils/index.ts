@@ -5,7 +5,7 @@ import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
-import _trim from "lodash/trim"
+import _trim from "lodash-es/trim"
 import { h } from "vue"
 
 // Transform File Instance in base64 string

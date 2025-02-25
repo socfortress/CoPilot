@@ -32,7 +32,7 @@ const emit = defineEmits<{
 
 const { rules } = toRefs(props)
 
-const ViewIcon = "iconoir:eye-alt"
+const ViewIcon = "iconoir:eye-solid"
 </script>
 
 <style lang="scss" scoped>

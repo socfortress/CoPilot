@@ -539,7 +539,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _pick from "lodash/pick"
+import _pick from "lodash-es/pick"
 import { NButton, NEmpty, NInput, NModal, NStatistic, NTable, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 

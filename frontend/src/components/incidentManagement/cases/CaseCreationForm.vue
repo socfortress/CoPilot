@@ -75,8 +75,8 @@ import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/c
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Ref } from "vue"
 import Api from "@/api"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
+import _get from "lodash-es/get"
+import _trim from "lodash-es/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, inject, onBeforeMount, onMounted, ref, watch } from "vue"
 

@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import type { Alert, AlertComment, AlertIOC } from "@/types/incidentManagement/alerts.d"
 import Api from "@/api"
-import _clone from "lodash/cloneDeep"
+import _clone from "lodash-es/cloneDeep"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 

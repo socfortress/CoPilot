@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import vShiki from "@/directives/v-shiki"
-import _truncate from "lodash/truncate"
+import _truncate from "lodash-es/truncate"
 import { NPopover } from "naive-ui"
 import { toRefs } from "vue"
 

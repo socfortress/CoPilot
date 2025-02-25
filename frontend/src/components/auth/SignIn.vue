@@ -4,8 +4,8 @@
 			<n-input
 				v-model:value="model.username"
 				placeholder="Insert your Username"
+				:input-props="{ autocomplete: 'username' }"
 				size="large"
-				autocomplete="on"
 				@keydown.enter="signIn"
 			/>
 		</n-form-item>
@@ -15,7 +15,7 @@
 				type="password"
 				show-password-on="click"
 				placeholder="Insert your password"
-				autocomplete="on"
+				:input-props="{ autocomplete: 'password' }"
 				size="large"
 				@keydown.enter="signIn"
 			/>

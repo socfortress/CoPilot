@@ -17,6 +17,7 @@ import license from "./endpoints/license"
 import logs from "./endpoints/logs"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
+import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
 import scheduler from "./endpoints/scheduler"
 import sigma from "./endpoints/sigma"
@@ -53,5 +54,6 @@ export default {
 	webVulnerabilityAssessment,
 	incidentManagement,
 	sigma,
-	users
+	users,
+	portainer
 }

@@ -80,7 +80,7 @@ const emit = defineEmits<{
 
 const DeleteIcon = "ph:trash"
 const DangerIcon = "majesticons:exclamation-line"
-const ViewIcon = "iconoir:eye-alt"
+const ViewIcon = "iconoir:eye-solid"
 
 const dialog = useDialog()
 const message = useMessage()

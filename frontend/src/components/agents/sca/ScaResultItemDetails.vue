@@ -146,7 +146,7 @@
 import type { ScaPolicyResult } from "@/types/agents.d"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import vShiki from "@/directives/v-shiki"
-import _pick from "lodash/pick"
+import _pick from "lodash-es/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed } from "vue"
 

@@ -1,26 +1,24 @@
 <template>
-	<div class="overview-section">
-		<div class="property-group grid-auto-fit-250 grid gap-2">
-			<CardKV v-for="item of propsSanitized" :key="item.key">
-				<template #key>
-					{{ item.key }}
+	<div class="grid-auto-fit-250 grid gap-2">
+		<CardKV v-for="item of propsSanitized" :key="item.key">
+			<template #key>
+				{{ item.key }}
+			</template>
+			<template #value>
+				<template v-if="item.key === 'customer_code' && item.val !== '-'">
+					<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: item.val })">
+						{{ item.val }}
+						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+					</code>
 				</template>
-				<template #value>
-					<template v-if="item.key === 'customer_code' && item.val !== '-'">
-						<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: item.val })">
-							{{ item.val }}
-							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-						</code>
-					</template>
-					<template v-else-if="item.key === 'velociraptor_id'">
-						<AgentVelociraptorIdForm v-model:velociraptor-id="item.val" :agent @updated="emit('updated')" />
-					</template>
-					<template v-else>
-						{{ item.val ?? "-" }}
-					</template>
+				<template v-else-if="item.key === 'velociraptor_id'">
+					<AgentVelociraptorIdForm v-model:velociraptor-id="item.val" :agent @updated="emit('updated')" />
 				</template>
-			</CardKV>
-		</div>
+				<template v-else>
+					{{ item.val ?? "-" }}
+				</template>
+			</template>
+		</CardKV>
 	</div>
 </template>
 

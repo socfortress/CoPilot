@@ -35,8 +35,8 @@
 import type { Customer } from "@/types/customers.d"
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
-import _get from "lodash/get"
-import _trim from "lodash/trim"
+import _get from "lodash-es/get"
+import _trim from "lodash-es/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 

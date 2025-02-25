@@ -58,7 +58,7 @@ import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/cus
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { watchDebounced } from "@vueuse/core"
-import _get from "lodash/get"
+import _get from "lodash-es/get"
 import { NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
