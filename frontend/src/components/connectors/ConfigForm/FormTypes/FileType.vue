@@ -54,7 +54,7 @@ function handleChange({ file }: { file: UploadFileInfo }) {
 	formRef.value?.validate()
 }
 
-function validateFile(rule: FormItemRule, value: File) {
+function validateFile(_rule: FormItemRule, value: File) {
 	if (!value) {
 		return new Error("Please input a valid File")
 	}

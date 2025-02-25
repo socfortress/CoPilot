@@ -138,7 +138,7 @@ const rules: FormRules = {
 	customer_email: {
 		required: true,
 		trigger: ["input", "blur"],
-		validator: (rule: FormItemRule, value: string) => {
+		validator: (_rule: FormItemRule, value: string) => {
 			if (!value) {
 				return new Error("Email is required")
 			}

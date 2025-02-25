@@ -114,7 +114,7 @@ const rules: FormRules = {
 			message: "Password is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return !!passwordSchema.validate(value, { details: false })
 			},
 			message:
@@ -129,7 +129,7 @@ const rules: FormRules = {
 			message: "Confirm Password is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return value === model.value.password
 			},
 			message: "Password is not same as re-entered password",

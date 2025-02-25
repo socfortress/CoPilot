@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import _get from "lodash-es/get"
 import _trim from "lodash-es/trim"
@@ -70,7 +70,7 @@ const rules: FormRules = {
 		required: true,
 		message: "Please input code. Code must be all lowercase and contain no spaces or special characters.",
 		trigger: ["input", "blur"],
-		validator: (rule, value) => {
+		validator: (_rule: FormItemRule, value: string) => {
 			if (value !== value.toLowerCase()) {
 				return new Error("Code must be all lowercase")
 			} else if (!/^[a-z]+$/.test(value)) {

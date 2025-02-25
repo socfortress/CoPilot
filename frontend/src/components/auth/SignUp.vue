@@ -224,14 +224,14 @@ const rules: FormRules = {
 			message: "Email is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return isEmail(value)
 			},
 			message: "The email is not formatted correctly",
 			trigger: ["blur", "input"]
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return !unavailableEmailList?.length || !unavailableEmailList.includes(value)
 			},
 			message: "The Email is already used",
@@ -245,7 +245,7 @@ const rules: FormRules = {
 			message: "Password is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return !!passwordSchema.validate(value, { details: false })
 			},
 			message:
@@ -260,7 +260,7 @@ const rules: FormRules = {
 			message: "Confirm Password is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return value === model.value.password
 			},
 			message: "Password is not same as re-entered password",
@@ -274,7 +274,7 @@ const rules: FormRules = {
 			message: "Username is required"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return !unavailableUsernameList?.length || !unavailableUsernameList.includes(value)
 			},
 			message: "The Username is already used",

@@ -42,7 +42,7 @@ const rules: FormRules = {
 			message: "The email is mandatory"
 		},
 		{
-			validator: (rule: FormItemRule, value: string): boolean => {
+			validator: (_rule: FormItemRule, value: string): boolean => {
 				return isEmail(value)
 			},
 			message: "The email is not formatted correctly",

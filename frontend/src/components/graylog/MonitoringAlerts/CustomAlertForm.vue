@@ -250,8 +250,8 @@ const rules: FormRules = {
 	},
 	custom_fields: {
 		required: false,
-		// eslint-disable-next-line unused-imports/no-unused-vars
-		validator(rule: FormItemRule, value: string) {
+
+		validator(_rule: FormItemRule, _value: string) {
 			if (!areAllCustomerFieldsFilled.value) {
 				return new Error(`Please fill all customer fields`)
 			}
@@ -303,7 +303,7 @@ const isValid = computed(() => {
 })
 
 function validatorNumber(fieldName: string, defaultMessage?: string) {
-	return (rule: FormItemRule, value: string) => {
+	return (_rule: FormItemRule, value: string) => {
 		if (!value) {
 			return new Error(defaultMessage || `${fieldName} is required`)
 		} else if (!/^\d*$/.test(value)) {

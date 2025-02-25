@@ -91,7 +91,7 @@ const rules: FormRules = {
 	}
 }
 
-function validateIp(rule: FormItemRule, value: string) {
+function validateIp(_rule: FormItemRule, value: string) {
 	if (!value || !isIP(value)) {
 		return new Error("Please input a valid IP Address")
 	}

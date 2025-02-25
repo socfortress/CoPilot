@@ -53,14 +53,14 @@ const rules: FormRules = {
 	hot_data_retention: {
 		message: "Field required",
 		trigger: ["input", "blur"],
-		validator: (rule: FormItemRule, value: string): boolean => {
+		validator: (_rule: FormItemRule, value: string): boolean => {
 			return value !== null
 		}
 	},
 	index_replicas: {
 		message: "Field required",
 		trigger: ["input", "blur"],
-		validator: (rule: FormItemRule, value: string): boolean => {
+		validator: (_rule: FormItemRule, value: string): boolean => {
 			return value !== null
 		}
 	}

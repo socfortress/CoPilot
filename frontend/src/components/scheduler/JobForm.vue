@@ -74,7 +74,7 @@ const isValid = computed(() => {
 })
 
 function validatorNumber(fieldName: string, defaultMessage?: string) {
-	return (rule: FormItemRule, value: string) => {
+	return (_rule: FormItemRule, value: string) => {
 		if (!value) {
 			return new Error(defaultMessage || `${fieldName} is required`)
 		} else if (!/^\d*$/.test(value)) {

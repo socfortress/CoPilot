@@ -264,7 +264,7 @@ function resetIndexAvailable() {
 	}
 }
 
-function validateAtLeastOne(rule: FormItemRule, value: string[]) {
+function validateAtLeastOne(_rule: FormItemRule, value: string[]) {
 	if (!value || !value.length) {
 		return new Error("Please select at least one option")
 	}

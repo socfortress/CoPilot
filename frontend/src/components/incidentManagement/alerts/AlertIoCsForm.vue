@@ -123,7 +123,7 @@ const isValid = computed(() => {
 	return valid
 })
 
-function validateValue(rule: FormItemRule, value: string) {
+function validateValue(_rule: FormItemRule, value: string) {
 	if (!value) {
 		return new Error("Please input a valid Value")
 	}

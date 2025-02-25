@@ -193,7 +193,7 @@ function setForm(settings?: CustomerProvisioningDefaultSettings) {
 	form.value = getClearForm(settings)
 }
 
-function validateIp(rule: FormItemRule, value: string) {
+function validateIp(_rule: FormItemRule, value: string) {
 	if (value && !isIP(value)) {
 		return new Error("Please input a valid IP Address")
 	}
@@ -201,7 +201,7 @@ function validateIp(rule: FormItemRule, value: string) {
 	return true
 }
 
-function validateUrl(rule: FormItemRule, value: string) {
+function validateUrl(_rule: FormItemRule, value: string) {
 	if (value && !isURL(value, { require_tld: false })) {
 		return new Error("Please input a valid URL")
 	}
