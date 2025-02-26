@@ -540,7 +540,10 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
         )
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset.id}")
     alert_payload.alert_id = alert_id
-    await handle_customer_notifications(customer_code=customer_code, asset_name=asset.asset_name, alert_payload=alert_payload, session=session)
+    if asset is not None:
+        await handle_customer_notifications(customer_code=customer_code, asset_name=asset.asset_name, alert_payload=alert_payload, session=session)
+    else:
+        await handle_customer_notifications(customer_code=customer_code, asset_name="No asset found", alert_payload=alert_payload, session=session)
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 
