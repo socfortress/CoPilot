@@ -7,16 +7,18 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files into the working directory
-COPY package.json package-lock.json ./
+# Copy the package.json and pnpm-lock.yaml files into the working directory
+COPY package.json pnpm-lock.yaml ./
+
+RUN corepack enable
 # Install project dependencies
-RUN npm ci
+RUN pnpm i
 
 # Copy project files into the working directory
 COPY --chown=node . .
 
 # Run the Vue.js project build
-RUN npm run build:only
+RUN pnpm run build:only
 
 FROM node:21 as dev
 
@@ -32,7 +34,7 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-CMD npm i && npm run start-frontend
+CMD pnpm i && pnpm start-frontend
 
 FROM nginx:1.24.0-alpine
 
