@@ -9,6 +9,8 @@ WORKDIR /app
 
 # Copy the package.json and pnpm-lock.yaml files into the working directory
 COPY package.json pnpm-lock.yaml ./
+
+RUN corepack enable
 # Install project dependencies
 RUN pnpm i
 
