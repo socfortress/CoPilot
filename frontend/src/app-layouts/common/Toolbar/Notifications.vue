@@ -2,7 +2,7 @@
 	<n-popover :show-arrow="false" placement="bottom" content-class="!p-0 w-72">
 		<template #trigger>
 			<n-badge :show="hasUnread" dot :color="primaryColor">
-				<Icon :name="BellIcon" :size="21" class="trigger-icon" />
+				<Icon :name="BellIcon" :size="21" class="text-default" />
 			</n-badge>
 		</template>
 		<template #header>
@@ -42,6 +42,7 @@ import { useThemeStore } from "@/stores/theme"
 import { NBadge, NButton, NDrawer, NDrawerContent, NPopover, NText } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 
+const MAX_ITEMS = 7
 const BellIcon = "ph:bell"
 const themeStore = useThemeStore()
 const primaryColor = computed(() => themeStore.style["primary-color"])
@@ -49,15 +50,7 @@ const hasUnread = useNotifications().hasUnread
 const showDrawer = ref(false)
 const list = useNotifications().list
 
-const MAX_ITEMS = 7
-
 onBeforeMount(() => {
 	useHealthchecksNotify().init()
 })
 </script>
-
-<style lang="scss" scoped>
-.trigger-icon {
-	color: var(--fg-default-color);
-}
-</style>
