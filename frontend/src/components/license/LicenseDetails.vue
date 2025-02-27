@@ -101,7 +101,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _startCase from "lodash-es/startCase"
+import _startCase from "lodash/startCase"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
 

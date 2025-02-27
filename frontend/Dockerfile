@@ -1,26 +1,25 @@
 # Use a node.js base image
 FROM node:21 as builder
 
-# Set the working directory
-WORKDIR /app
-
-RUN npm i -g corepack@latest && \
-    corepack enable && \
-    corepack prepare pnpm@latest --activate
+# Install pnpm globally
+RUN npm install -g pnpm
 
 # Drop root
 USER node
 
+# Set the working directory
+WORKDIR /app
+
 # Copy the package.json and pnpm-lock.yaml files into the working directory
 COPY package.json pnpm-lock.yaml ./
 
-# Install project dependencies
-RUN pnpm install --frozen-lockfile
+# Install project dependencies using pnpm
+RUN pnpm install
 
 # Copy project files into the working directory
 COPY --chown=node . .
 
-# Run the Vue.js project build
+# Run the Vue.js project build using pnpm
 RUN pnpm run build:only
 
 FROM node:21 as dev
@@ -37,7 +36,7 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-CMD pnpm i && pnpm start-frontend
+CMD pnpm install && pnpm run start-frontend
 
 FROM nginx:1.24.0-alpine
 

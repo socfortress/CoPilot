@@ -118,8 +118,8 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
 import { useResizeObserver } from "@vueuse/core"
-import _cloneDeep from "lodash-es/cloneDeep"
-import _orderBy from "lodash-es/orderBy"
+import _cloneDeep from "lodash/cloneDeep"
+import _orderBy from "lodash/orderBy"
 import {
 	NBadge,
 	NButton,

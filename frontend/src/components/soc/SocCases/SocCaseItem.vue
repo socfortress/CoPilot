@@ -242,8 +242,8 @@ import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { StateName } from "@/types/soc/case.d"
 import dayjs from "@/utils/dayjs"
-import _omit from "lodash-es/omit"
-import _split from "lodash-es/split"
+import _omit from "lodash/omit"
+import _split from "lodash/split"
 import {
 	NCollapse,
 	NCollapseItem,

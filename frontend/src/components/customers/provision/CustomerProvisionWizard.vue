@@ -272,7 +272,7 @@ import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettin
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import _uniqBy from "lodash-es/uniqBy"
+import _uniqBy from "lodash/uniqBy"
 import {
 	NButton,
 	NCard,

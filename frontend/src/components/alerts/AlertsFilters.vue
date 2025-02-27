@@ -61,7 +61,7 @@ import type { SelectOption } from "naive-ui"
 import type { VNodeChild } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
-import _uniqBy from "lodash-es/uniqBy"
+import _uniqBy from "lodash/uniqBy"
 import { NButton, NEmpty, NFormItem, NInput, NInputGroup, NSelect } from "naive-ui"
 import { h, onBeforeMount, toRefs, watch } from "vue"
 

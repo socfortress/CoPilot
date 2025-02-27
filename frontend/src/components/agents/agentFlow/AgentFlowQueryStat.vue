@@ -92,7 +92,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _pick from "lodash-es/pick"
+import _pick from "lodash/pick"
 import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, ref } from "vue"
 

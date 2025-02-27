@@ -150,7 +150,7 @@ import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { isUrlLike } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _omit from "lodash-es/omit"
+import _omit from "lodash/omit"
 import { NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 
