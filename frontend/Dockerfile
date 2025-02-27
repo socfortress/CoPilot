@@ -4,7 +4,9 @@ FROM node:21 as builder
 # Set the working directory
 WORKDIR /app
 
-RUN npm i -g corepack@latest && corepack enable
+RUN npm i -g corepack@latest && \
+    corepack enable && \
+    corepack prepare pnpm@latest --activate
 
 # Drop root
 USER node
@@ -13,7 +15,7 @@ USER node
 COPY package.json pnpm-lock.yaml ./
 
 # Install project dependencies
-RUN pnpm i
+RUN pnpm install --frozen-lockfile
 
 # Copy project files into the working directory
 COPY --chown=node . .
