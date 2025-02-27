@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [pnpm-switch]
+        branches: [main]
 
 jobs:
     build-backend:
@@ -27,7 +27,7 @@ jobs:
               with:
                   context: ./backend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-backend:pnpm-switch
+                  tags: ghcr.io/socfortress/copilot-backend:latest
                   build-args: |
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
@@ -60,7 +60,7 @@ jobs:
               with:
                   context: ./frontend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-frontend:pnpm-switch
+                  tags: ghcr.io/socfortress/copilot-frontend:latest
 
             - name: Notify Discord
               uses: appleboy/discord-action@v1.0.0
