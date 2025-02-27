@@ -60,8 +60,8 @@ import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryV
 import type { User } from "@/types/user.d"
 import Api from "@/api"
 import { LogEventType } from "@/types/logs.d"
-import _cloneDeep from "lodash-es/cloneDeep"
-import _toSafeInteger from "lodash-es/toSafeInteger"
+import _cloneDeep from "lodash/cloneDeep"
+import _toSafeInteger from "lodash/toSafeInteger"
 import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 

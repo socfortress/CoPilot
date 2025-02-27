@@ -34,9 +34,9 @@
 import type { CustomerMeta } from "@/types/customers.d"
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
-import _get from "lodash-es/get"
-import _toSafeInteger from "lodash-es/toSafeInteger"
-import _trim from "lodash-es/trim"
+import _get from "lodash/get"
+import _toSafeInteger from "lodash/toSafeInteger"
+import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 

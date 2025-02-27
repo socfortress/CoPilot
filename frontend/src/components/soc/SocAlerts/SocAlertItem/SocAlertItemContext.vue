@@ -37,9 +37,9 @@
 import type { SocAlert } from "@/types/soc/alert.d"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import _compact from "lodash-es/compact"
-import _split from "lodash-es/split"
-import _uniq from "lodash-es/uniq"
+import _compact from "lodash/compact"
+import _split from "lodash/split"
+import _uniq from "lodash/uniq"
 import { NInput } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 

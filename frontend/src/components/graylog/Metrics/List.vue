@@ -33,9 +33,9 @@
 
 <script setup lang="ts">
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
-import _groupBy from "lodash-es/groupBy"
-import _map from "lodash-es/map"
-import _trim from "lodash-es/trim"
+import _groupBy from "lodash/groupBy"
+import _map from "lodash/map"
+import _trim from "lodash/trim"
 import { NCard, NProgress } from "naive-ui"
 import { computed, toRefs } from "vue"
 

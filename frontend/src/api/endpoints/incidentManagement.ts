@@ -19,7 +19,7 @@ import type {
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
-import _castArray from "lodash-es/castArray"
+import _castArray from "lodash/castArray"
 import { HttpClient } from "../httpClient"
 
 export type AlertsListFilterValue = string | string[] | AlertStatus | null

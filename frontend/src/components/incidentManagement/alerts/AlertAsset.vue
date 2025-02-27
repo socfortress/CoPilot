@@ -163,7 +163,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import _truncate from "lodash-es/truncate"
+import _truncate from "lodash/truncate"
 import { NCard, NDivider, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 
