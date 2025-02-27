@@ -1,16 +1,17 @@
 # Use a node.js base image
 FROM node:21 as builder
 
-# Drop root
-USER node
-
 # Set the working directory
 WORKDIR /app
+
+RUN npm i -g corepack@latest && corepack enable
+
+# Drop root
+USER node
 
 # Copy the package.json and pnpm-lock.yaml files into the working directory
 COPY package.json pnpm-lock.yaml ./
 
-RUN npm i -g corepack@latest && corepack enable
 # Install project dependencies
 RUN pnpm i
 
