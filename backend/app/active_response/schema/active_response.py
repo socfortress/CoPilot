@@ -46,6 +46,7 @@ class ActiveResponseDetailsResponse(BaseModel):
 class AlertAction(str, Enum):
     unblock = "unblock"
     block = "block"
+    sysmon_config_reload = "sysmon_config_reload"
 
 
 class BaseModelWithEnum(BaseModel):
@@ -62,10 +63,14 @@ class LinuxFirewallAlert(BaseModelWithEnum):
     action: AlertAction
     ip: str
 
+class SysmonConfigReloadAlert(BaseModelWithEnum):
+    action: AlertAction = Field(default=AlertAction.sysmon_config_reload, const=True)
+
 
 class ActiveResponseCommand(str, Enum):
     windows_firewall = "windows_firewall"
     linux_firewall = "linux_firewall"
+    sysmon_config_reload = "sysmon_config_reload"
 
     @classmethod
     def _missing_(cls, value):
@@ -95,7 +100,7 @@ class ParamsModel(BaseModel):
 
 
 class InvokeActiveResponseRequest(BaseModel):
-    endpoint: str = Field("active-response", const=True)
+    endpoint: str = Field("/active-response", const=True)
     arguments: list[str] = Field(default_factory=list)
     command: ActiveResponseCommand
     custom: bool = Field(True, const=True)
@@ -110,6 +115,8 @@ class InvokeActiveResponseRequest(BaseModel):
             values["alert"] = WindowsFirewallAlert(**alert)
         elif command == ActiveResponseCommand.linux_firewall:
             values["alert"] = LinuxFirewallAlert(**alert)
+        elif command == ActiveResponseCommand.sysmon_config_reload:
+            values["alert"] = SysmonConfigReloadAlert(**alert)
         else:
             raise HTTPException(status_code=400, detail="Invalid command for alert")
 
