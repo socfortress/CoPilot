@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from typing import Optional
 
 class SysmonConfigDataStoreCreation(BaseModel):
     customer_code: str
@@ -23,3 +24,11 @@ class SysmonConfigContentResponse(BaseModel):
     message: str
     customer_code: str
     config_content: str
+
+class SysmonConfigDeploymentResult(BaseModel):
+    success: bool
+    message: str
+    customer_code: str
+    worker_success: bool = False
+    worker_message: Optional[str] = None
+    error_detail: Optional[str] = None
