@@ -219,5 +219,5 @@ async def list_sysmon_configs() -> list:
 
         return list(customers)
     except Exception as e:
-        logger.error(f"Error listing sysmon configs: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list sysmon configs: {str(e)}")
+        logger.error(f"Error listing sysmon configs: returning empty list")
+        return []

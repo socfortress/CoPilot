@@ -118,15 +118,52 @@ async def validate_sysmon_config(xml_content: str) -> None:
         raise HTTPException(status_code=400, detail=f"Invalid XML syntax: {str(e)}")
 
 
+# async def check_config_exists(customer_code: str) -> bool:
+#     """Check if a sysmon config exists for the given customer."""
+#     try:
+#         await download_sysmon_config(customer_code)
+#         return True
+#     except HTTPException as e:
+#         if e.status_code == 404:
+#             return False
+#         raise
+
 async def check_config_exists(customer_code: str) -> bool:
-    """Check if a sysmon config exists for the given customer."""
+    """
+    Check if a sysmon config exists for the given customer.
+    Creates the bucket if it doesn't exist.
+    """
+    from app.data_store.data_store_session import create_session
+
+    bucket_name = "sysmon-configs"
+    object_name = f"{customer_code}/sysmon_config.xml"
+
     try:
-        await download_sysmon_config(customer_code)
-        return True
-    except HTTPException as e:
-        if e.status_code == 404:
+        # Get MinIO client
+        client = await create_session()
+
+        # Create bucket if it doesn't exist
+        if not await client.bucket_exists(bucket_name):
+            logger.info(f"Bucket {bucket_name} doesn't exist. Creating it.")
+            await client.make_bucket(bucket_name)
             return False
-        raise
+
+        # Check if object exists directly using stat_object
+        try:
+            await client.stat_object(bucket_name, object_name)
+            logger.info(f"Found existing sysmon config for customer {customer_code}")
+            return True
+        except Exception as e:
+            # If stat_object fails, the file doesn't exist
+            logger.info(f"No existing sysmon config found for customer {customer_code}")
+            return False
+
+    except Exception as e:
+        logger.error(f"Error checking if config exists for customer {customer_code}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error checking config existence: {str(e)}"
+        )
 
 
 async def fetch_sysmon_config(customer_code: str) -> bytes:

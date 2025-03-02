@@ -81,7 +81,7 @@ async def get_customer_sysmon_config_content(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving config: {str(e)}")
 
-@sysmon_config_router.get("/", response_model=SysmonConfigListResponse)
+@sysmon_config_router.get("", response_model=SysmonConfigListResponse)
 async def get_all_sysmon_configs(
     session: AsyncSession = Depends(get_db)
 ):
