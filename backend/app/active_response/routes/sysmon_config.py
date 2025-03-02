@@ -121,3 +121,39 @@ async def get_all_sysmon_configs(
         "message": "Successfully retrieved list of customer sysmon configs",
         "customer_codes": customers
     }
+
+@sysmon_config_router.get("/content/{customer_code}")
+async def get_customer_sysmon_config_content(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get the sysmon config for a specific customer as a string.
+
+    Returns the XML content directly for display in the frontend UI.
+    """
+    try:
+        # Get the data as bytes
+        data_bytes = await download_sysmon_config(customer_code)
+
+        # Convert to string
+        xml_content = data_bytes.decode('utf-8')
+
+        return {
+            "success": True,
+            "message": f"Successfully retrieved Sysmon config for customer {customer_code}",
+            "customer_code": customer_code,
+            "config_content": xml_content
+        }
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to decode Sysmon config file as UTF-8"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving sysmon config: {str(e)}"
+        )
