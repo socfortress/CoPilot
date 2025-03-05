@@ -10,7 +10,6 @@ class ReplayInfo(BaseModel):
     filters: List[Any] = Field(default_factory=list)
 
 class GraylogEventFields(BaseModel):
-    ALERT_ID: str
     COMMAND: str
     AGENT_ID: str
     ACTION: str
@@ -87,7 +86,6 @@ class GraylogEventNotification(BaseModel):
                     "associated_assets": [],
                     "alert": True,
                     "fields": {
-                        "ALERT_ID": "alert-123456",
                         "COMMAND": "domain_sinkhole",
                         "AGENT_ID": "032",
                         "ACTION": "sinkhole",
