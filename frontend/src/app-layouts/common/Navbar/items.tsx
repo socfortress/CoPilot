@@ -50,18 +50,37 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(IndiciesIcon)
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Agents"
-						}
-					},
-					{ default: () => "Agents" }
-				),
+			label: "Agents",
 			key: "Agents",
-			icon: renderIcon(AgentsIcon)
+			icon: renderIcon(AgentsIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Agents"
+								}
+							},
+							{ default: () => "Agents list" }
+						),
+					key: "Agents"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "SysmonConfig"
+								}
+							},
+							{ default: () => "Sysmon Config" }
+						),
+					key: "SysmonConfig"
+				}
+			]
 		},
 		{
 			label: () =>

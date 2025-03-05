@@ -21,7 +21,7 @@
 								<AgentCard
 									v-for="agent in itemsPaginated"
 									:key="agent.agent_id"
-									:agent="agent"
+									:agent
 									show-actions
 									hoverable
 									clickable
