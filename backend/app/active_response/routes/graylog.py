@@ -39,6 +39,23 @@ async def invoke_active_response_graylog_route(
      1. Agent ID - The ID of the agent that triggered the alert
      2. Command - The command to execute (i.e. 'dns_block.py')
      3. Arguments - The arguments to pass to the command such as IP addresses, domains, etc.
+     {
+        "endpoint": "/active-response",
+        "arguments": [
+            "string"
+        ],
+        "command": "sysmon_config_reload",
+        "custom": true,
+        "alert": {
+            "action": "sysmon_config_reload"
+        },
+        "params": {
+            "wait_for_complete": true,
+            "agents_list": [
+            "085"
+            ]
+        }
+        }
 
     Args:
         request (InvokeActiveResponseRequest): The request object containing the command, custom, arguments, and alert.
