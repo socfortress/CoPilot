@@ -23,6 +23,7 @@ import scheduler from "./endpoints/scheduler"
 import sigma from "./endpoints/sigma"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
+import sysmonConfig from "./endpoints/sysmonConfig"
 import threatIntel from "./endpoints/threatIntel"
 import users from "./endpoints/users"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
@@ -55,5 +56,6 @@ export default {
 	incidentManagement,
 	sigma,
 	users,
+	sysmonConfig,
 	portainer
 }
