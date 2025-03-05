@@ -226,6 +226,63 @@ async def send_post_request(
         }
 
 
+# async def send_put_request(
+#     endpoint: str,
+#     data: Optional[Dict[str, Any]],
+#     params: Optional[Dict[str, str]] = None,
+#     xml_data: Optional[bool] = False,
+#     binary_data: Optional[bool] = False,
+#     connector_name: str = "Wazuh-Manager",
+# ) -> Dict[str, Any]:
+#     """
+#     Sends a PUT request to the Wazuh Manager service.
+
+#     Args:
+#         endpoint (str): The endpoint to send the PUT request to.
+#         data (Dict[str, Any]): The data to send with the PUT request.
+#         params (Optional[Dict[str, str]], optional): The parameters to send with the PUT request. Defaults to None.
+#         xml_data (Optional[bool], optional): Whether or not the data is XML. Defaults to False.
+#         connector_name (str, optional): The name of the connector to use. Defaults to "Wazuh-Manager".
+
+#     Returns:
+#         Dict[str, Any]: The response from the PUT request.
+#     """
+#     logger.info(f"Sending PUT request to {endpoint}")
+#     wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+#     async with AsyncSessionLocal() as session:
+#         attributes = await get_connector_info_from_db(connector_name, session)
+#     if attributes is None:
+#         logger.error("No Wazuh Manager connector found in the database")
+#         return None
+#     # Add the default `Content-Type` header to the request
+#     wazuh_manager_client["Content-Type"] = "application/json"
+#     # Add the `Content-Type` header to the request if the data is XML
+#     if xml_data:
+#         wazuh_manager_client["Content-Type"] = "application/xml"
+#     if binary_data:
+#         wazuh_manager_client["Content-Type"] = "application/octet-stream"
+#     try:
+#         logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
+#         response = requests.put(
+#             f"{attributes['connector_url']}{endpoint}",
+#             headers=wazuh_manager_client,
+#             params=params,
+#             data=data,
+#             verify=False,
+#         )
+#         response.raise_for_status()
+#         return {
+#             "data": response.json(),
+#             "success": True,
+#             "message": "Successfully retrieved data",
+#         }
+#     except Exception as e:
+#         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
+#         return {
+#             "success": False,
+#             "message": f"Failed to send PUT request to {endpoint} with error: {e}",
+#         }
+
 async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]],
@@ -233,6 +290,7 @@ async def send_put_request(
     xml_data: Optional[bool] = False,
     binary_data: Optional[bool] = False,
     connector_name: str = "Wazuh-Manager",
+    debug: bool = False,
 ) -> Dict[str, Any]:
     """
     Sends a PUT request to the Wazuh Manager service.
@@ -242,7 +300,9 @@ async def send_put_request(
         data (Dict[str, Any]): The data to send with the PUT request.
         params (Optional[Dict[str, str]], optional): The parameters to send with the PUT request. Defaults to None.
         xml_data (Optional[bool], optional): Whether or not the data is XML. Defaults to False.
+        binary_data (Optional[bool], optional): Whether or not the data is binary. Defaults to False.
         connector_name (str, optional): The name of the connector to use. Defaults to "Wazuh-Manager".
+        debug (bool, optional): Whether to enable detailed debug logging. Defaults to False.
 
     Returns:
         Dict[str, Any]: The response from the PUT request.
@@ -251,18 +311,30 @@ async def send_put_request(
     wazuh_manager_client = await create_wazuh_manager_client(connector_name)
     async with AsyncSessionLocal() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
+
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+
     # Add the default `Content-Type` header to the request
     wazuh_manager_client["Content-Type"] = "application/json"
+
     # Add the `Content-Type` header to the request if the data is XML
     if xml_data:
         wazuh_manager_client["Content-Type"] = "application/xml"
     if binary_data:
         wazuh_manager_client["Content-Type"] = "application/octet-stream"
+
+    # Enhanced debugging
+    if debug:
+        logger.debug(f"Request URL: {attributes['connector_url']}{endpoint}")
+        logger.debug(f"Request headers: {wazuh_manager_client}")
+        logger.debug(f"Request params: {params}")
+        logger.debug(f"Request data: {data}")
+
     try:
         logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
+
         response = requests.put(
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
@@ -270,17 +342,55 @@ async def send_put_request(
             data=data,
             verify=False,
         )
-        response.raise_for_status()
+
+        # Log response details before checking status
+        if debug:
+            logger.debug(f"Response status: {response.status_code}")
+            logger.debug(f"Response headers: {response.headers}")
+            try:
+                logger.debug(f"Response body: {response.text}")
+            except:
+                logger.debug("Could not parse response body")
+
+        # Handle HTTP errors with detailed logging
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            error_detail = ""
+            try:
+                error_json = response.json()
+                if isinstance(error_json, dict):
+                    # Extract Wazuh API specific error details
+                    if "detail" in error_json:
+                        error_detail = error_json["detail"]
+                    elif "message" in error_json:
+                        error_detail = error_json["message"]
+                    elif "data" in error_json and "detail" in error_json["data"]:
+                        error_detail = error_json["data"]["detail"]
+            except:
+                # If can't parse JSON, use text response
+                error_detail = response.text
+
+            logger.error(f"HTTP error {response.status_code}: {error_detail}")
+            return {
+                "success": False,
+                "status_code": response.status_code,
+                "message": f"HTTP error {response.status_code}: {error_detail}",
+                "error_detail": error_detail,
+                "raw_response": response.text
+            }
+
         return {
             "data": response.json(),
             "success": True,
             "message": "Successfully retrieved data",
         }
     except Exception as e:
-        logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
+        logger.exception(f"Failed to send PUT request to {endpoint}")
         return {
             "success": False,
-            "message": f"Failed to send PUT request to {endpoint} with error: {e}",
+            "message": f"Failed to send PUT request to {endpoint} with error: {str(e)}",
+            "exception": str(e)
         }
 
 

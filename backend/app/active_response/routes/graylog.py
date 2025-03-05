@@ -26,7 +26,7 @@ async def verify_graylog_header(graylog: str = Header(None)):
     return graylog
 
 @active_response_graylog_router.post(
-    "/graylog/invoke",
+    "/invoke",
     response_model=InvokeActiveResponseResponse,
     description="Invoke an active response via a Graylog Alert notification.",
     dependencies=[Depends(verify_graylog_header)],
@@ -67,11 +67,14 @@ async def invoke_active_response_graylog_route(
     # Append '0' to the command - This is required for Wazuh Active Response
     command = f"{request.event.fields.COMMAND}0"
     # Create a dictionary with the request data
-    data_dict = {"command": command, "arguments": request.event.fields.ARGUMENTS, "alert": request.event.fields.COMMAND}
+    # {"endpoint":"active-response","arguments":[],"command":"windows_firewall","custom":true,"alert":{"action":"block","ip":"1.1.1.1"},"params":{"wait_for_complete":true,"agents_list":["086"]}}
+
+    data_dict = {"command": command, "arguments": [], "alert": {"action": request.event.fields.ACTION, "value": request.event.fields.VALUE}}
     await send_put_request(
         endpoint='/active-response',
         data=json.dumps(data_dict),
-        params={"wait_for_complete": True, "agents_list": [request.event.fields.AGENT_ID]}
+        params={"wait_for_complete": True, "agents_list": [request.event.fields.AGENT_ID]},
+        debug=True,
     )
 
     return InvokeActiveResponseResponse(success=True, message="Wazuh Active Response invoked successfully")
