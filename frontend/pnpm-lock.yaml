@@ -107,6 +107,9 @@ importers:
       shiki:
         specifier: ^3.1.0
         version: 3.1.0
+      thememirror:
+        specifier: ^2.0.1
+        version: 2.0.1(@codemirror/language@6.10.8)(@codemirror/state@6.5.2)(@codemirror/view@6.36.4)
       validator:
         specifier: ^13.12.0
         version: 13.12.0
@@ -4132,6 +4135,13 @@ packages:
   taze@18.6.0:
     resolution: {integrity: sha512-VfAQzvSRFLbKpNon1aUx982P0Z7znNuaRJDFEcIjnyT3ly8+aFUVGGWKCm3KIZ/h9eqCV9aoZPjiFUojqYe1pw==}
     hasBin: true
+
+  thememirror@2.0.1:
+    resolution: {integrity: sha512-d5i6FVvWWPkwrm4cHLI3t9AT1OrkAt7Ig8dtdYSofgF7C/eiyNuq6zQzSTusWTde3jpW9WLvA9J/fzNKMUsd0w==}
+    peerDependencies:
+      '@codemirror/language': ^6.0.0
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
 
   thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
@@ -8957,6 +8967,12 @@ snapshots:
       unconfig: 7.3.0
       yaml: 2.7.0
       yargs: 17.7.2
+
+  thememirror@2.0.1(@codemirror/language@6.10.8)(@codemirror/state@6.5.2)(@codemirror/view@6.36.4):
+    dependencies:
+      '@codemirror/language': 6.10.8
+      '@codemirror/state': 6.5.2
+      '@codemirror/view': 6.36.4
 
   thenify-all@1.6.0:
     dependencies:

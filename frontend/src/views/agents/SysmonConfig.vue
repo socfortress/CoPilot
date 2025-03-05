@@ -1,6 +1,7 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col">
-		<SegmentedPage>
+		<SegmentedPage main-content-class="!p-0 overflow-hidden grow flex h-full" :use-main-scroll="false">
+			<template #sidebar-header>Customers</template>
 			<template #sidebar-content>
 				<n-spin :show="loadingList">
 					<template v-if="customers.length">
@@ -16,10 +17,30 @@
 					</template>
 				</n-spin>
 			</template>
+			<template #main-toolbar>
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-4">
+						<n-button v-if="xmlEditorCTX" @click="xmlEditorCTX.undo">undo</n-button>
+						<n-button v-if="xmlEditorCTX" @click="xmlEditorCTX.redo">redo</n-button>
+					</div>
+					<div v-if="currentConfig" class="flex items-center gap-4">
+						<n-button :loading="uploadingConfig" @click="uploadConfigFile()">Upload</n-button>
+						<n-button :loading="deployingConfig" @click="deployConfig()">Deploy</n-button>
+					</div>
+				</div>
+			</template>
 			<template #main-content>
-				<n-spin :show="loadingConfig">
+				<n-spin
+					:show="loadingConfig || uploadingConfig || deployingConfig"
+					class="flex h-full overflow-hidden"
+					content-class="overflow-hidden grow h-full"
+				>
 					<template v-if="currentConfig">
-						<XMLEditor v-model="currentConfig.config_content" />
+						<XMLEditor
+							v-model="currentConfig.config_content"
+							class="text-sm"
+							@mounted="xmlEditorCTX = $event"
+						/>
 					</template>
 					<template v-else>
 						<n-empty v-if="!loadingConfig" description="Select a customer" class="h-48 justify-center" />
@@ -31,22 +52,24 @@
 </template>
 
 <script setup lang="ts">
+import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import Api from "@/api"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const { gotoCustomer } = useGoto()
 const loadingList = ref(false)
 const loadingConfig = ref(false)
-// const uploadingConfig = ref(false)
-// const deployingConfig = ref(false)
+const uploadingConfig = ref(false)
+const deployingConfig = ref(false)
 const customers = ref<string[]>([])
 const currentConfig = ref<ConfigContent | null>(null)
+const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
 
 function loadConfig(customerCode: string) {
 	getConfigContent(customerCode)
@@ -92,8 +115,6 @@ function getConfigContent(customerCode: string) {
 		})
 }
 
-/*
-
 function uploadConfigFile() {
 	if (currentConfig.value) {
 		uploadingConfig.value = true
@@ -123,26 +144,27 @@ function uploadConfigFile() {
 	}
 }
 
-function deployConfig(customerCode: string) {
-	deployingConfig.value = true
+function deployConfig() {
+	if (currentConfig.value) {
+		deployingConfig.value = true
 
-	Api.sysmonConfig
-		.deployConfig(customerCode)
-		.then(res => {
-			if (res.data.success) {
-				message.success("Sysmon Config deployed successfully")
-			} else {
-				message.error("An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			deployingConfig.value = false
-		})
+		Api.sysmonConfig
+			.deployConfig(currentConfig.value.customer_code)
+			.then(res => {
+				if (res.data.success) {
+					message.success("Sysmon Config deployed successfully")
+				} else {
+					message.error("An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				deployingConfig.value = false
+			})
+	}
 }
-		*/
 
 onBeforeMount(() => {
 	getList()
