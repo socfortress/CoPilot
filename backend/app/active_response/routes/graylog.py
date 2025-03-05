@@ -48,6 +48,7 @@ async def invoke_active_response_graylog_route(
         ACTION: str - the action to take i.e 'sinkhole' - this is defined in the python script of the valid actions
         VALUE: str - the value to use i.e 'example.com' - this is the value that the action will be taken on
 
+    #### IMPORTANT: IF THE MANAGERS ARE IN A CLUSTER, THE WORKER FOR THE AGENT MUST GET THE COMMAND AND ACTIVE RESPONSE BLOCKS
 
     Args:
         request (InvokeActiveResponseRequest): The request object containing the command, custom, arguments, and alert.
