@@ -10,10 +10,10 @@ class ReplayInfo(BaseModel):
     filters: List[Any] = Field(default_factory=list)
 
 class GraylogEventFields(BaseModel):
-    ALERT_ID: str
     COMMAND: str
     AGENT_ID: str
-    ARGUMENTS: str
+    ACTION: str
+    VALUE: str
     # Allow additional fields
     additional_fields: Dict[str, Any] = Field(default_factory=dict, alias="__extra__")
 
@@ -86,10 +86,10 @@ class GraylogEventNotification(BaseModel):
                     "associated_assets": [],
                     "alert": True,
                     "fields": {
-                        "ALERT_ID": "alert-123456",
-                        "COMMAND": "dns_block.py",
+                        "COMMAND": "domain_sinkhole",
                         "AGENT_ID": "032",
-                        "ARGUMENTS": "malicious-domain.com"
+                        "ACTION": "sinkhole",
+                        "VALUE": "example.com"
                     },
                     "group_by_fields": {},
                     "replay_info": {

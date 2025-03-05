@@ -122,6 +122,24 @@ class InvokeActiveResponseRequest(BaseModel):
 
         return values
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "endpoint": "/active-response",
+                "arguments": [],
+                "command": "windows_firewall",
+                "custom": True,
+                "alert": {
+                    "action": "block",
+                    "ip": "1.1.1.1"
+                },
+                "params": {
+                    "wait_for_complete": True,
+                    "agents_list": ["032"]
+                }
+            }
+        }
+
 
 class InvokeActiveResponseResponse(BaseModel):
     success: bool

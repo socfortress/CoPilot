@@ -157,10 +157,17 @@ async def invoke_active_response_route(
     request.command = f"{request.command.value}0"
     # Create a dictionary with the request data
     data_dict = {"command": request.command, "arguments": request.arguments, "alert": request.alert}
-    await send_put_request(
+    response = await send_put_request(
         endpoint=request.endpoint,
         data=json.dumps(data_dict),
         params=request.params,
+        debug=True,
     )
+    if not response['success']:
+        logger.error(f"Request failed: {response.get('message')}")
+    if 'raw_response' in response:
+        logger.error(f"Raw response: {response['raw_response']}")
+    if 'error_detail' in response:
+        logger.error(f"Error details: {response['error_detail']}")
 
     return InvokeActiveResponseResponse(success=True, message="Wazuh Active Response invoked successfully")
