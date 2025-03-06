@@ -18,17 +18,20 @@
 
 import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
+import type { Ref } from "vue"
 import { useThemeStore } from "@/stores/theme"
-import { redo, undo } from "@codemirror/commands"
+import { redo, redoDepth, undo, undoDepth } from "@codemirror/commands"
 import { xml } from "@codemirror/lang-xml"
 import { oneDark } from "@codemirror/theme-one-dark"
 import { tomorrow } from "thememirror"
-import { computed, onMounted, shallowRef } from "vue"
+import { computed, onMounted, ref, shallowRef, watch } from "vue"
 import { Codemirror } from "vue-codemirror"
 
 export interface XMLEditorCtx {
 	undo: () => void
 	redo: () => void
+	canUndo: () => boolean
+	canRedo: () => boolean
 }
 
 const emit = defineEmits<{
@@ -42,6 +45,7 @@ const isDark = computed<boolean>(() => themeStore.isThemeDark)
 
 const extensions = computed(() => {
 	const list: Extension[] = [xml()]
+
 	if (isDark.value) {
 		list.push(oneDark)
 	} else {
@@ -51,29 +55,47 @@ const extensions = computed(() => {
 	return list
 })
 
-const cmView = shallowRef<EditorView>()
+const cmView = shallowRef<EditorView | null>(null)
+const canUndo = ref<boolean>(false)
+const canRedo = ref<boolean>(false)
+
+function updateHistoryState() {
+	canUndo.value = cmView.value ? !!undoDepth(cmView.value.state) : false
+	canRedo.value = cmView.value ? !!redoDepth(cmView.value.state) : false
+}
+
 function handleReady({ view }: any) {
 	cmView.value = view
 }
 
 function handleUndo() {
-	undo({
-		state: cmView.value!.state,
-		dispatch: cmView.value!.dispatch
-	})
+	if (cmView.value) {
+		undo({
+			state: cmView.value.state,
+			dispatch: cmView.value.dispatch
+		})
+	}
 }
 
 function handleRedo() {
-	redo({
-		state: cmView.value!.state,
-		dispatch: cmView.value!.dispatch
-	})
+	if (cmView.value) {
+		redo({
+			state: cmView.value.state,
+			dispatch: cmView.value.dispatch
+		})
+	}
 }
+
+watch(code, () => {
+	updateHistoryState()
+})
 
 onMounted(() => {
 	emit("mounted", {
 		undo: handleUndo,
-		redo: handleRedo
+		redo: handleRedo,
+		canRedo: () => canRedo.value,
+		canUndo: () => canUndo.value
 	})
 })
 </script>

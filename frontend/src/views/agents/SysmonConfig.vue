@@ -25,22 +25,38 @@
 			</template>
 			<template #main-toolbar>
 				<div v-if="currentConfig" class="@container flex items-center justify-between">
-					<div class="flex items-center gap-4">
-						<n-button v-if="xmlEditorCTX" size="small" @click="xmlEditorCTX.undo">
+					<div class="flex items-center gap-3 md:gap-4">
+						<n-button
+							v-if="xmlEditorCTX"
+							size="small"
+							:disabled="!xmlEditorCTX.canUndo()"
+							@click="xmlEditorCTX.undo"
+						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UndoIcon" />
 								<span class="@sm:flex hidden">Undo</span>
 							</div>
 						</n-button>
-						<n-button v-if="xmlEditorCTX" size="small" @click="xmlEditorCTX.redo">
+						<n-button
+							v-if="xmlEditorCTX"
+							size="small"
+							:disabled="!xmlEditorCTX.canRedo()"
+							@click="xmlEditorCTX.redo"
+						>
 							<div class="flex items-center gap-2">
 								<span class="@sm:flex hidden">Redo</span>
 								<Icon :name="RedoIcon" />
 							</div>
 						</n-button>
 					</div>
-					<div class="flex items-center gap-4">
-						<n-button :loading="uploadingConfig" size="small" type="primary" @click="uploadConfigFile()">
+					<div class="flex items-center gap-3 md:gap-4">
+						<n-button
+							:loading="uploadingConfig"
+							size="small"
+							type="primary"
+							:disabled="!isDirty"
+							@click="uploadConfigFile()"
+						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UploadIcon" />
 								<span class="@xs:flex hidden">Upload</span>
@@ -64,7 +80,7 @@
 					<template v-if="currentConfig">
 						<XMLEditor
 							v-model="currentConfig.config_content"
-							class="text-sm"
+							class="scrollbar-styled text-sm"
 							@mounted="xmlEditorCTX = $event"
 						/>
 					</template>
@@ -85,8 +101,9 @@ import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useGoto } from "@/composables/useGoto"
+import _clone from "lodash/cloneDeep"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const { gotoCustomer } = useGoto()
@@ -96,11 +113,14 @@ const uploadingConfig = ref(false)
 const deployingConfig = ref(false)
 const customers = ref<string[]>([])
 const currentConfig = ref<ConfigContent | null>(null)
+const backupConfig = ref<ConfigContent | null>(null)
 const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
 const DeployIcon = "carbon:deploy"
 const UploadIcon = "carbon:cloud-upload"
+
+const isDirty = computed(() => currentConfig.value?.config_content !== backupConfig.value?.config_content)
 
 function loadConfig(customerCode: string) {
 	if (customerCode !== currentConfig.value?.customer_code) {
@@ -135,7 +155,8 @@ function getConfigContent(customerCode: string) {
 		.getConfigContent(customerCode)
 		.then(res => {
 			if (res.data.success) {
-				currentConfig.value = res.data
+				currentConfig.value = _clone(res.data)
+				backupConfig.value = _clone(res.data)
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
