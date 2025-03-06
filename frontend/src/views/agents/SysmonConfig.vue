@@ -4,6 +4,7 @@
 			main-content-class="!p-0 overflow-hidden grow flex h-full"
 			:use-main-scroll="false"
 			padding="18px"
+			enable-resize
 			toolbar-height="54px"
 		>
 			<template #sidebar-header>Customers</template>
@@ -197,6 +198,8 @@ function uploadConfigFile() {
 			)
 			.then(res => {
 				if (res.data.success) {
+					currentConfig.value = _clone(currentConfig.value)
+					backupConfig.value = _clone(currentConfig.value)
 					message.success("Sysmon Config uploaded Successfully")
 				} else {
 					message.error("An error occurred. Please try again later.")
