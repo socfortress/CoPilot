@@ -24,7 +24,7 @@ export default {
 	},
 	invoke(params: InvokeRequest) {
 		const payload = {
-			endpoint: "active-response",
+			endpoint: "/active-response",
 			arguments: [],
 			command: params.activeResponseName.toLowerCase(),
 			custom: true,
