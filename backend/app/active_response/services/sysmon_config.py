@@ -198,7 +198,7 @@ async def deploy_sysmon_config_to_worker(customer_code: str, session: AsyncSessi
                 error_detail=str(endpoint_error),
             )
 
-        # Step 4: Upload to Wazuh
+        # Step 4: Upload to Wazuh via the agent group shared folder
         success, response_data, error_text = await upload_to_wazuh(endpoint, customer_code, temp_path)
 
         if success:
