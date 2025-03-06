@@ -13,8 +13,11 @@
 	>
 		<template #[tplNameSide]>
 			<div v-if="sidebarAvailable" ref="sidebar" class="sidebar flex flex-col">
-				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center">
+				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center justify-between">
 					<slot name="sidebar-header" />
+					<n-button text class="close-btn" @click="sidebarOpen = false">
+						<Icon :size="24" :name="CloseIcon" />
+					</n-button>
 				</div>
 				<div v-if="$slots['sidebar-content']" class="sidebar-main grow">
 					<n-scrollbar class="max-h-full">
@@ -101,7 +104,9 @@ const {
 	maxSidebarWidth = 450,
 	minSidebarWidth = 250,
 	padding = "30px",
-	toolbarHeight = "70px"
+	paddingMobile = "20px",
+	toolbarHeight = "70px",
+	toolbarHeightMobile = "62px"
 } = defineProps<{
 	sidebarPosition?: SidebarPosition
 	hideMenuBtn?: boolean
@@ -116,7 +121,9 @@ const {
 	maxSidebarWidth?: number
 	minSidebarWidth?: number
 	padding?: string
+	paddingMobile?: string
 	toolbarHeight?: string
+	toolbarHeightMobile?: string
 }>()
 
 const emit = defineEmits<{
@@ -125,6 +132,7 @@ const emit = defineEmits<{
 }>()
 
 const MenuIcon = "ph:list-light"
+const CloseIcon = "carbon:close"
 const SplitIcon = "carbon:draggable"
 
 const splitPane = ref()
@@ -238,6 +246,10 @@ onMounted(() => {
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
 			padding: 0 var(--padding-x);
+
+			.close-btn {
+				display: none;
+			}
 		}
 
 		.sidebar-main {
@@ -316,7 +328,9 @@ onMounted(() => {
 	}
 
 	@media (max-width: 700px) {
-		--mb-toolbar-height: 62px;
+		--mb-toolbar-height: v-bind(toolbarHeightMobile);
+		--padding-x: v-bind(paddingMobile);
+
 		height: 100%;
 		overflow: hidden;
 		border-radius: 0;
@@ -362,18 +376,22 @@ onMounted(() => {
 
 			.sidebar-header,
 			.sidebar-footer {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
+
+				.close-btn {
+					display: flex;
+				}
 			}
 
 			.sidebar-main {
 				.sidebar-main-content {
-					padding: 20px;
+					padding: var(--padding-x);
 				}
 			}
 		}
 		.main {
 			.main-toolbar {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
 				gap: 14px;
 
 				.menu-btn {
@@ -383,11 +401,11 @@ onMounted(() => {
 
 			.main-view {
 				.main-content {
-					padding: 20px;
+					padding: var(--padding-x);
 				}
 			}
 			.main-footer {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
 			}
 		}
 

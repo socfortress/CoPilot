@@ -18,7 +18,6 @@
 
 import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
-import type { Ref } from "vue"
 import { useThemeStore } from "@/stores/theme"
 import { redo, redoDepth, undo, undoDepth } from "@codemirror/commands"
 import { xml } from "@codemirror/lang-xml"
@@ -64,7 +63,7 @@ function updateHistoryState() {
 	canRedo.value = cmView.value ? !!redoDepth(cmView.value.state) : false
 }
 
-function handleReady({ view }: any) {
+function handleReady({ view }: { view: EditorView }) {
 	cmView.value = view
 }
 

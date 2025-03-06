@@ -11,11 +11,22 @@
 				<n-spin :show="loadingList">
 					<template v-if="customers.length">
 						<div class="flex flex-col gap-4">
-							<div v-for="customer of customers" :key="customer" @click.stop="loadConfig(customer)">
-								<div>{{ customer }}</div>
-								<button @click.stop="gotoCustomer({ code: customer })">open</button>
-							</div>
-							<n-button @click="currentConfig = null">clear</n-button>
+							<CardEntity
+								v-for="customer of customers"
+								:key="customer"
+								hoverable
+								clickable
+								@click.stop="loadConfig(customer)"
+							>
+								<div class="flex items-center justify-between">
+									<div>{{ customer }}</div>
+									<n-button text @click.stop="gotoCustomer({ code: customer })">
+										<template #icon>
+											<Icon :size="14" :name="LinkIcon" />
+										</template>
+									</n-button>
+								</div>
+							</CardEntity>
 						</div>
 					</template>
 					<template v-else>
@@ -97,6 +108,7 @@
 import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
@@ -117,6 +129,7 @@ const backupConfig = ref<ConfigContent | null>(null)
 const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
+const LinkIcon = "carbon:launch"
 const DeployIcon = "carbon:deploy"
 const UploadIcon = "carbon:cloud-upload"
 
