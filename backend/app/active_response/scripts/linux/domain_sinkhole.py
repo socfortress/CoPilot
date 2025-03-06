@@ -11,8 +11,8 @@ import datetime
 import json
 import os
 import re
-import sys
 import subprocess
+import sys
 
 LOG_FILE = "/var/ossec/logs/active-responses.log"
 HOSTS_FILE = "/etc/hosts"
@@ -59,7 +59,7 @@ def setup_and_check_message(argv):
 def is_valid_domain(domain):
     """Checks if a domain name is valid."""
     # Basic domain validation regex
-    pattern = r'^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$'
+    pattern = r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
     return bool(re.match(pattern, domain))
 
 
@@ -67,20 +67,21 @@ def sinkhole_domain(domain):
     """Adds a domain to /etc/hosts pointing to loopback."""
     try:
         # Check if domain already exists in hosts file
-        with open(HOSTS_FILE, 'r') as f:
+        with open(HOSTS_FILE, "r") as f:
             hosts_content = f.read()
 
         if f"{SINKHOLE_IP} {domain}" in hosts_content:
             return f"Domain {domain} is already sinkholed"
 
         # Add the domain to hosts file
-        with open(HOSTS_FILE, 'a') as f:
+        with open(HOSTS_FILE, "a") as f:
             f.write(f"\n{SINKHOLE_IP} {domain} # Added by SOCFortress sinkhole\n")
 
         # Flush DNS cache if dnsmasq is running
         try:
             subprocess.run(["systemctl", "restart", "dnsmasq"], check=False)
-        except:
+        except (subprocess.SubprocessError, FileNotFoundError):
+            # More specific exceptions for when systemctl doesn't exist or fails
             pass  # It's okay if dnsmasq isn't installed
 
         return f"Sinkholed domain {domain} to {SINKHOLE_IP}"
@@ -92,21 +93,21 @@ def remove_sinkholed_domain(domain):
     """Removes a domain from the /etc/hosts file."""
     try:
         # Read hosts file
-        with open(HOSTS_FILE, 'r') as f:
+        with open(HOSTS_FILE, "r") as f:
             hosts_lines = f.readlines()
 
         # Filter out the domain entry
-        new_hosts = [line for line in hosts_lines
-                     if not (domain in line and "Added by SOCFortress sinkhole" in line)]
+        new_hosts = [line for line in hosts_lines if not (domain in line and "Added by SOCFortress sinkhole" in line)]
 
         # Write back the file without the domain
-        with open(HOSTS_FILE, 'w') as f:
+        with open(HOSTS_FILE, "w") as f:
             f.writelines(new_hosts)
 
         # Flush DNS cache if dnsmasq is running
         try:
             subprocess.run(["systemctl", "restart", "dnsmasq"], check=False)
-        except:
+        except (subprocess.SubprocessError, FileNotFoundError):
+            # More specific exceptions for when systemctl doesn't exist or fails
             pass  # It's okay if dnsmasq isn't installed
 
         return f"Removed sinkholed domain {domain}"

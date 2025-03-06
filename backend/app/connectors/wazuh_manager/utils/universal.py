@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -283,6 +284,7 @@ async def send_post_request(
 #             "message": f"Failed to send PUT request to {endpoint} with error: {e}",
 #         }
 
+
 async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]],
@@ -349,13 +351,13 @@ async def send_put_request(
             logger.debug(f"Response headers: {response.headers}")
             try:
                 logger.debug(f"Response body: {response.text}")
-            except:
-                logger.debug("Could not parse response body")
+            except Exception as e:  # Specify Exception instead of bare except
+                logger.debug(f"Could not parse response body: {str(e)}")
 
         # Handle HTTP errors with detailed logging
         try:
             response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.HTTPError:
             error_detail = ""
             try:
                 error_json = response.json()
@@ -367,9 +369,10 @@ async def send_put_request(
                         error_detail = error_json["message"]
                     elif "data" in error_json and "detail" in error_json["data"]:
                         error_detail = error_json["data"]["detail"]
-            except:
+            except (ValueError, json.JSONDecodeError) as e:  # Specify exceptions instead of bare except
                 # If can't parse JSON, use text response
                 error_detail = response.text
+                logger.debug(f"Could not parse JSON response: {str(e)}")
 
             logger.error(f"HTTP error {response.status_code}: {error_detail}")
             return {
@@ -377,7 +380,7 @@ async def send_put_request(
                 "status_code": response.status_code,
                 "message": f"HTTP error {response.status_code}: {error_detail}",
                 "error_detail": error_detail,
-                "raw_response": response.text
+                "raw_response": response.text,
             }
 
         return {
@@ -387,11 +390,7 @@ async def send_put_request(
         }
     except Exception as e:
         logger.exception(f"Failed to send PUT request to {endpoint}")
-        return {
-            "success": False,
-            "message": f"Failed to send PUT request to {endpoint} with error: {str(e)}",
-            "exception": str(e)
-        }
+        return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {str(e)}", "exception": str(e)}
 
 
 async def send_delete_request(
