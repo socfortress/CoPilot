@@ -17,6 +17,7 @@
 								:key="customer"
 								hoverable
 								clickable
+								:highlighted="customer === currentConfig?.customer_code"
 								@click.stop="loadConfig(customer)"
 							>
 								<div class="flex items-center justify-between">
