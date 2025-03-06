@@ -25,6 +25,8 @@ async def get_endpoint_id() -> int:
         if endpoint["Name"] == "local":
             # Convert the ID to an integer
             return int(endpoint["Id"])
+        if endpoint["Name"] == "primary":
+            return int(endpoint["Id"])
     return None
 
 

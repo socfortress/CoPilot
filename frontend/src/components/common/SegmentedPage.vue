@@ -13,8 +13,11 @@
 	>
 		<template #[tplNameSide]>
 			<div v-if="sidebarAvailable" ref="sidebar" class="sidebar flex flex-col">
-				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center">
+				<div v-if="$slots['sidebar-header']" class="sidebar-header flex items-center justify-between">
 					<slot name="sidebar-header" />
+					<n-button text class="close-btn" @click="sidebarOpen = false">
+						<Icon :size="24" :name="CloseIcon" />
+					</n-button>
 				</div>
 				<div v-if="$slots['sidebar-content']" class="sidebar-main grow">
 					<n-scrollbar class="max-h-full">
@@ -99,7 +102,11 @@ const {
 	useMainScroll = true,
 	defaultSplit = 0.3,
 	maxSidebarWidth = 450,
-	minSidebarWidth = 250
+	minSidebarWidth = 250,
+	padding = "30px",
+	paddingMobile = "20px",
+	toolbarHeight = "70px",
+	toolbarHeightMobile = "62px"
 } = defineProps<{
 	sidebarPosition?: SidebarPosition
 	hideMenuBtn?: boolean
@@ -113,6 +120,10 @@ const {
 	defaultSplit?: number
 	maxSidebarWidth?: number
 	minSidebarWidth?: number
+	padding?: string
+	paddingMobile?: string
+	toolbarHeight?: string
+	toolbarHeightMobile?: string
 }>()
 
 const emit = defineEmits<{
@@ -121,6 +132,7 @@ const emit = defineEmits<{
 }>()
 
 const MenuIcon = "ph:list-light"
+const CloseIcon = "carbon:close"
 const SplitIcon = "carbon:draggable"
 
 const splitPane = ref()
@@ -181,7 +193,8 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .wrapper {
-	--mb-toolbar-height: 70px;
+	--mb-toolbar-height: v-bind(toolbarHeight);
+	--padding-x: v-bind(padding);
 	position: relative;
 	height: 100%;
 	overflow: hidden;
@@ -232,21 +245,25 @@ onMounted(() => {
 			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
+
+			.close-btn {
+				display: none;
+			}
 		}
 
 		.sidebar-main {
 			overflow: hidden;
 
 			.sidebar-main-content {
-				padding: 30px;
+				padding: var(--padding-x);
 			}
 		}
 
 		.sidebar-footer {
 			border-block-start: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 		}
 	}
 
@@ -268,7 +285,7 @@ onMounted(() => {
 			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 			gap: 18px;
 			line-height: 1.3;
 			container-type: inline-size;
@@ -285,14 +302,14 @@ onMounted(() => {
 			}
 
 			.main-content {
-				padding: 30px;
+				padding: var(--padding-x);
 			}
 		}
 
 		.main-footer {
 			container-type: inline-size;
 			border-block-start: 1px solid var(--border-color);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 
 			.wrap {
 				min-height: calc(var(--mb-toolbar-height) - 1px);
@@ -311,7 +328,9 @@ onMounted(() => {
 	}
 
 	@media (max-width: 700px) {
-		--mb-toolbar-height: 62px;
+		--mb-toolbar-height: v-bind(toolbarHeightMobile);
+		--padding-x: v-bind(paddingMobile);
+
 		height: 100%;
 		overflow: hidden;
 		border-radius: 0;
@@ -357,18 +376,22 @@ onMounted(() => {
 
 			.sidebar-header,
 			.sidebar-footer {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
+
+				.close-btn {
+					display: flex;
+				}
 			}
 
 			.sidebar-main {
 				.sidebar-main-content {
-					padding: 20px;
+					padding: var(--padding-x);
 				}
 			}
 		}
 		.main {
 			.main-toolbar {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
 				gap: 14px;
 
 				.menu-btn {
@@ -378,11 +401,11 @@ onMounted(() => {
 
 			.main-view {
 				.main-content {
-					padding: 20px;
+					padding: var(--padding-x);
 				}
 			}
 			.main-footer {
-				padding: 0 20px;
+				padding: 0 var(--padding-x);
 			}
 		}
 

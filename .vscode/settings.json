@@ -60,6 +60,7 @@
 		"Sysmon",
 		"tabler",
 		"taze",
+		"thememirror",
 		"timefield",
 		"timerange",
 		"timesec",
@@ -76,5 +77,6 @@
 	],
 	"i18n-ally.localesPaths": [
 		"frontend/src/lang"
-	]
+	],
+	"tailwindCSS.classAttributes": ["class", "className", "ngClass", "class:list", "content-class"]
 }

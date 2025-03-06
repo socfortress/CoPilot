@@ -49,6 +49,12 @@ const router = createRouter({
 					name: "Agent",
 					component: () => import("@/views/agents/Overview.vue"),
 					meta: { title: "Agent", skipPin: true }
+				},
+				{
+					path: "sysmon-config",
+					name: "SysmonConfig",
+					component: () => import("@/views/agents/SysmonConfig.vue"),
+					meta: { title: "Sysmon Config" }
 				}
 			]
 		},

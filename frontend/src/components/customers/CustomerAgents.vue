@@ -4,7 +4,7 @@
 			<AgentCard
 				v-for="agent in list"
 				:key="agent.agent_id"
-				:agent="agent"
+				:agent
 				embedded
 				show-actions
 				class="item-appear item-appear-bottom item-appear-005"
