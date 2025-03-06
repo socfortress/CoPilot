@@ -1,22 +1,18 @@
 import json
-from pathlib import Path
 import os
-import aiofiles
-from fastapi import APIRouter
-from fastapi import Depends, Header
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.active_response.schema.graylog import GraylogEventNotification
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Header
+from fastapi import HTTPException
+from loguru import logger
+
 from app.active_response.schema.active_response import InvokeActiveResponseResponse
-from app.agents.routes.agents import get_agent
-from app.auth.utils import AuthHandler
+from app.active_response.schema.graylog import GraylogEventNotification
 from app.connectors.wazuh_manager.utils.universal import send_put_request
-from app.db.db_session import get_db
 
 active_response_graylog_router = APIRouter()
+
 
 # Function to validate the Graylog header
 async def verify_graylog_header(graylog: str = Header(None)):
@@ -27,6 +23,7 @@ async def verify_graylog_header(graylog: str = Header(None)):
     if graylog != expected_header:
         raise HTTPException(status_code=403, detail="Invalid or missing Graylog header")
     return graylog
+
 
 @active_response_graylog_router.post(
     "/invoke",
@@ -64,7 +61,7 @@ async def invoke_active_response_graylog_route(
 
     data_dict = {"command": command, "arguments": [], "alert": {"action": request.event.fields.ACTION, "value": request.event.fields.VALUE}}
     await send_put_request(
-        endpoint='/active-response',
+        endpoint="/active-response",
         data=json.dumps(data_dict),
         params={"wait_for_complete": True, "agents_list": [request.event.fields.AGENT_ID]},
         debug=True,

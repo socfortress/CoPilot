@@ -134,6 +134,7 @@ async def delete_file(bucket_name: str, object_name: str) -> None:
 
 # ! Handle Sysmon Config Files ! #
 
+
 async def upload_sysmon_config(customer_code: str, file: UploadFile) -> None:
     """
     Upload a sysmon config XML file to the specified customer folder in the sysmon-configs bucket.
@@ -162,12 +163,7 @@ async def upload_sysmon_config(customer_code: str, file: UploadFile) -> None:
     # Upload the file to MinIO with customer folder structure
     object_name = f"{customer_code}/sysmon_config.xml"
 
-    await client.fput_object(
-        bucket_name=bucket_name,
-        object_name=object_name,
-        file_path=temp_file_path,
-        content_type="application/xml"
-    )
+    await client.fput_object(bucket_name=bucket_name, object_name=object_name, file_path=temp_file_path, content_type="application/xml")
 
     # Remove the temporary file after upload
     os.remove(temp_file_path)
@@ -213,11 +209,11 @@ async def list_sysmon_configs() -> list:
 
         # Extract customer codes from paths
         async for obj in objects:
-            if obj.object_name.endswith('sysmon_config.xml'):
-                customer_code = obj.object_name.split('/')[0]
+            if obj.object_name.endswith("sysmon_config.xml"):
+                customer_code = obj.object_name.split("/")[0]
                 customers.add(customer_code)
 
         return list(customers)
     except Exception as e:
-        logger.error(f"Error listing sysmon configs: returning empty list")
+        logger.error(f"Error listing sysmon configs: returning empty list - {e}")
         return []

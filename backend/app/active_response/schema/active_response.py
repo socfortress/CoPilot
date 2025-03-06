@@ -63,6 +63,7 @@ class LinuxFirewallAlert(BaseModelWithEnum):
     action: AlertAction
     ip: str
 
+
 class SysmonConfigReloadAlert(BaseModelWithEnum):
     action: AlertAction = Field(default=AlertAction.sysmon_config_reload, const=True)
 
@@ -129,15 +130,9 @@ class InvokeActiveResponseRequest(BaseModel):
                 "arguments": [],
                 "command": "windows_firewall",
                 "custom": True,
-                "alert": {
-                    "action": "block",
-                    "ip": "1.1.1.1"
-                },
-                "params": {
-                    "wait_for_complete": True,
-                    "agents_list": ["032"]
-                }
-            }
+                "alert": {"action": "block", "ip": "1.1.1.1"},
+                "params": {"wait_for_complete": True, "agents_list": ["032"]},
+            },
         }
 
 

@@ -1,6 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class ReplayInfo(BaseModel):
     timerange_start: datetime
@@ -8,6 +14,7 @@ class ReplayInfo(BaseModel):
     query: str
     streams: List[str]
     filters: List[Any] = Field(default_factory=list)
+
 
 class GraylogEventFields(BaseModel):
     COMMAND: str
@@ -20,6 +27,7 @@ class GraylogEventFields(BaseModel):
     class Config:
         extra = "allow"  # Allow extra fields
         populate_by_name = True  # Process alias fields
+
 
 class GraylogEvent(BaseModel):
     id: str
@@ -43,6 +51,7 @@ class GraylogEvent(BaseModel):
     fields: GraylogEventFields
     group_by_fields: Dict[str, Any] = Field(default_factory=dict)
     replay_info: ReplayInfo
+
 
 class GraylogEventNotification(BaseModel):
     event_definition_id: str
@@ -73,10 +82,7 @@ class GraylogEventNotification(BaseModel):
                     "timerange_start": None,
                     "timerange_end": None,
                     "streams": [],
-                    "source_streams": [
-                        "679945aa7c4dd06afcef5feb",
-                        "679945a47c4dd06afcef5ef3"
-                    ],
+                    "source_streams": ["679945aa7c4dd06afcef5feb", "679945a47c4dd06afcef5ef3"],
                     "message": "ACTIVE RESPONSE WEBSERVER THREAT INTEL",
                     "source": "soc-grlog01",
                     "key_tuple": [],
@@ -85,24 +91,16 @@ class GraylogEventNotification(BaseModel):
                     "scores": {},
                     "associated_assets": [],
                     "alert": True,
-                    "fields": {
-                        "COMMAND": "domain_sinkhole",
-                        "AGENT_ID": "032",
-                        "ACTION": "sinkhole",
-                        "VALUE": "example.com"
-                    },
+                    "fields": {"COMMAND": "domain_sinkhole", "AGENT_ID": "032", "ACTION": "sinkhole", "VALUE": "example.com"},
                     "group_by_fields": {},
                     "replay_info": {
                         "timerange_start": "2025-03-04T23:21:03.360Z",
                         "timerange_end": "2025-03-04T23:26:03.360Z",
                         "query": "_exists_:threat_intel_score",
-                        "streams": [
-                            "679945aa7c4dd06afcef5feb",
-                            "679945a47c4dd06afcef5ef3"
-                        ],
-                        "filters": []
-                    }
+                        "streams": ["679945aa7c4dd06afcef5feb", "679945a47c4dd06afcef5ef3"],
+                        "filters": [],
+                    },
                 },
-                "backlog": []
-            }
+                "backlog": [],
+            },
         }
