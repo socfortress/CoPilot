@@ -1,6 +1,11 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col">
-		<SegmentedPage main-content-class="!p-0 overflow-hidden grow flex h-full" :use-main-scroll="false">
+		<SegmentedPage
+			main-content-class="!p-0 overflow-hidden grow flex h-full"
+			:use-main-scroll="false"
+			padding="18px"
+			toolbar-height="54px"
+		>
 			<template #sidebar-header>Customers</template>
 			<template #sidebar-content>
 				<n-spin :show="loadingList">
@@ -10,6 +15,7 @@
 								<div>{{ customer }}</div>
 								<button @click.stop="gotoCustomer({ code: customer })">open</button>
 							</div>
+							<n-button @click="currentConfig = null">clear</n-button>
 						</div>
 					</template>
 					<template v-else>
@@ -18,22 +24,42 @@
 				</n-spin>
 			</template>
 			<template #main-toolbar>
-				<div class="flex items-center justify-between">
+				<div v-if="currentConfig" class="@container flex items-center justify-between">
 					<div class="flex items-center gap-4">
-						<n-button v-if="xmlEditorCTX" @click="xmlEditorCTX.undo">undo</n-button>
-						<n-button v-if="xmlEditorCTX" @click="xmlEditorCTX.redo">redo</n-button>
+						<n-button v-if="xmlEditorCTX" size="small" @click="xmlEditorCTX.undo">
+							<div class="flex items-center gap-2">
+								<Icon :name="UndoIcon" />
+								<span class="@sm:flex hidden">Undo</span>
+							</div>
+						</n-button>
+						<n-button v-if="xmlEditorCTX" size="small" @click="xmlEditorCTX.redo">
+							<div class="flex items-center gap-2">
+								<span class="@sm:flex hidden">Redo</span>
+								<Icon :name="RedoIcon" />
+							</div>
+						</n-button>
 					</div>
-					<div v-if="currentConfig" class="flex items-center gap-4">
-						<n-button :loading="uploadingConfig" @click="uploadConfigFile()">Upload</n-button>
-						<n-button :loading="deployingConfig" @click="deployConfig()">Deploy</n-button>
+					<div class="flex items-center gap-4">
+						<n-button :loading="uploadingConfig" size="small" type="primary" @click="uploadConfigFile()">
+							<div class="flex items-center gap-2">
+								<Icon :name="UploadIcon" />
+								<span class="@xs:flex hidden">Upload</span>
+							</div>
+						</n-button>
+						<n-button :loading="deployingConfig" size="small" type="success" @click="deployConfig()">
+							<div class="flex items-center gap-2">
+								<Icon :name="DeployIcon" />
+								<span class="@xs:flex hidden">Deploy</span>
+							</div>
+						</n-button>
 					</div>
 				</div>
 			</template>
 			<template #main-content>
 				<n-spin
 					:show="loadingConfig || uploadingConfig || deployingConfig"
-					class="flex h-full overflow-hidden"
-					content-class="overflow-hidden grow h-full"
+					class="flex h-full w-full overflow-hidden"
+					content-class="overflow-hidden grow h-full flex flex-col justify-center"
 				>
 					<template v-if="currentConfig">
 						<XMLEditor
@@ -55,6 +81,7 @@
 import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -70,9 +97,15 @@ const deployingConfig = ref(false)
 const customers = ref<string[]>([])
 const currentConfig = ref<ConfigContent | null>(null)
 const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
+const UndoIcon = "carbon:undo"
+const RedoIcon = "carbon:redo"
+const DeployIcon = "carbon:deploy"
+const UploadIcon = "carbon:cloud-upload"
 
 function loadConfig(customerCode: string) {
-	getConfigContent(customerCode)
+	if (customerCode !== currentConfig.value?.customer_code) {
+		getConfigContent(customerCode)
+	}
 }
 
 function getList() {

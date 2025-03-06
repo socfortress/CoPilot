@@ -99,7 +99,9 @@ const {
 	useMainScroll = true,
 	defaultSplit = 0.3,
 	maxSidebarWidth = 450,
-	minSidebarWidth = 250
+	minSidebarWidth = 250,
+	padding = "30px",
+	toolbarHeight = "70px"
 } = defineProps<{
 	sidebarPosition?: SidebarPosition
 	hideMenuBtn?: boolean
@@ -113,6 +115,8 @@ const {
 	defaultSplit?: number
 	maxSidebarWidth?: number
 	minSidebarWidth?: number
+	padding?: string
+	toolbarHeight?: string
 }>()
 
 const emit = defineEmits<{
@@ -181,7 +185,8 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .wrapper {
-	--mb-toolbar-height: 70px;
+	--mb-toolbar-height: v-bind(toolbarHeight);
+	--padding-x: v-bind(padding);
 	position: relative;
 	height: 100%;
 	overflow: hidden;
@@ -232,21 +237,21 @@ onMounted(() => {
 			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 		}
 
 		.sidebar-main {
 			overflow: hidden;
 
 			.sidebar-main-content {
-				padding: 30px;
+				padding: var(--padding-x);
 			}
 		}
 
 		.sidebar-footer {
 			border-block-start: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 		}
 	}
 
@@ -268,7 +273,7 @@ onMounted(() => {
 			border-block-end: 1px solid var(--border-color);
 			min-height: var(--mb-toolbar-height);
 			height: var(--mb-toolbar-height);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 			gap: 18px;
 			line-height: 1.3;
 			container-type: inline-size;
@@ -285,14 +290,14 @@ onMounted(() => {
 			}
 
 			.main-content {
-				padding: 30px;
+				padding: var(--padding-x);
 			}
 		}
 
 		.main-footer {
 			container-type: inline-size;
 			border-block-start: 1px solid var(--border-color);
-			padding: 0 30px;
+			padding: 0 var(--padding-x);
 
 			.wrap {
 				min-height: calc(var(--mb-toolbar-height) - 1px);
