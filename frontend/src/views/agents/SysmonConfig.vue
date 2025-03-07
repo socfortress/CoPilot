@@ -34,6 +34,20 @@
 					<template v-else>
 						<n-empty v-if="!loadingList" description="No items found" class="h-48 justify-center" />
 					</template>
+					<n-dropdown
+						v-if="hasCustomersAvailable"
+						placement="bottom-start"
+						trigger="click"
+						:options="customersOptions"
+						@select="newConfig($event)"
+					>
+						<n-button secondary class="!mt-4 !w-full" size="large">
+							<template #icon>
+								<Icon :size="18" :name="NewConfigIcon" />
+							</template>
+							<span class="ml-2">Add new Configuration</span>
+						</n-button>
+					</n-dropdown>
 				</n-spin>
 			</template>
 			<template #main-toolbar>
@@ -75,7 +89,13 @@
 								<span class="@xs:flex hidden">Upload</span>
 							</div>
 						</n-button>
-						<n-button :loading="deployingConfig" size="small" type="success" @click="deployConfig()">
+						<n-button
+							:loading="deployingConfig"
+							size="small"
+							type="success"
+							:disabled="!currentConfig.config_content"
+							@click="deployConfig()"
+						>
 							<div class="flex items-center gap-2">
 								<Icon :name="DeployIcon" />
 								<span class="@xs:flex hidden">Deploy</span>
@@ -108,7 +128,9 @@
 
 <script setup lang="ts">
 import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
+import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
+import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -116,8 +138,8 @@ import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useGoto } from "@/composables/useGoto"
 import _clone from "lodash/cloneDeep"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { NButton, NDropdown, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, h, onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const { gotoCustomer } = useGoto()
@@ -134,8 +156,73 @@ const RedoIcon = "carbon:redo"
 const LinkIcon = "carbon:launch"
 const DeployIcon = "carbon:deploy"
 const UploadIcon = "carbon:cloud-upload"
+const NewConfigIcon = "carbon:document-add"
 
 const isDirty = computed(() => currentConfig.value?.config_content !== backupConfig.value?.config_content)
+
+const loadingCustomersList = ref(false)
+const customersList = ref<Customer[]>([])
+const hasCustomersAvailable = computed<boolean>(
+	() => !!customersList.value.filter(o => !customers.value.includes(o.customer_code)).length
+)
+
+const customersOptions = computed(() => {
+	const options: DropdownMixedOption[] = []
+
+	options.push({
+		label: () => h("div", { class: "pl-2" }, `Select a Customer${loadingCustomersList.value ? "..." : ""}`),
+		type: "group",
+		children: customersList.value
+			.filter(o => !customers.value.includes(o.customer_code))
+			.map(o => ({
+				label: `#${o.customer_code} - ${o.customer_name}`,
+				key: o.customer_code
+			}))
+	})
+
+	return options
+})
+
+function getCustomers() {
+	loadingCustomersList.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomersList.value = false
+		})
+}
+
+function newConfig(customerCode: string) {
+	customers.value.push(customerCode)
+	currentConfig.value = {
+		customer_code: customerCode,
+		config_content: `<Sysmon schemaversion="4.60">
+	<EventFiltering>
+		<RuleGroup groupRelation="or"></RuleGroup>
+	</EventFiltering>
+</Sysmon>`
+	}
+	backupConfig.value = {
+		customer_code: customerCode,
+		config_content: `<Sysmon schemaversion="4.60">
+	<EventFiltering>
+		<RuleGroup groupRelation="or"></RuleGroup>
+	</EventFiltering>
+</Sysmon>`
+	}
+	uploadConfigFile()
+}
 
 function loadConfig(customerCode: string) {
 	if (customerCode !== currentConfig.value?.customer_code) {
@@ -239,5 +326,6 @@ function deployConfig() {
 
 onBeforeMount(() => {
 	getList()
+	getCustomers()
 })
 </script>
