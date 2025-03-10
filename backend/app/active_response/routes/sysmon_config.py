@@ -114,5 +114,33 @@ async def deploy_sysmon_config(customer_code: str, session: AsyncSession = Depen
     """
     Deploy a customer's Sysmon config to the Wazuh master.
     Fetches the config from MinIO storage and sends it to the Wazuh master.
+    The Wazuh Master needs to be running the Customer-Provisioning-Worker application.
+    Currently we are invoking this via a wodle command that must be placed in the wazuh agent group.
+    <wodle name="command">
+                <disabled>no</disabled>
+                <tag>sysmon-reload</tag>
+                <command>"C:\Program Files (x86)\ossec-agent\active-response\bin\run_sysmon_config_reload.cmd"</command>
+                <interval>24h</interval>
+                <ignore_output>yes</ignore_output>
+                <run_on_start>yes</run_on_start>
+                <timeout>0</timeout>
+        </wodle>
+    Might revisit in the future to use the Wazuh API directly to invoke the active response.
+    The current limitation with the active-response is that we have to wait for the manager to pass the new sysmon_config.xml
+    file to the agent.
+    I.E:
+    {
+    "endpoint": "/active-response",
+    "arguments": [],
+    "command": "sysmon_config_reload",
+    "custom": true,
+    "alert": {
+        "action": "sysmon_config_reload"
+    },
+    "params": {
+        "wait_for_complete": true,
+        "agents_list": ["085"]
+    }
+    }
     """
     return await deploy_sysmon_config_to_worker(customer_code=customer_code, session=session)
