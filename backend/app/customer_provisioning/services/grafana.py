@@ -63,20 +63,20 @@ async def create_grafana_datasource(
         typeName="OpenSearch",
         access="proxy",
         url=await get_connector_attribute(
-            connector_id=1,
+            connector_name="Wazuh-Indexer",
             column_name="connector_url",
             session=session,
         ),
         database=f"{request.customer_index_name}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
-            connector_id=1,
+            connector_name="Wazuh-Indexer",
             column_name="connector_username",
             session=session,
         ),
         secureJsonData={
             "basicAuthPassword": await get_connector_attribute(
-                connector_id=1,
+                connector_name="Wazuh-Indexer",
                 column_name="connector_password",
                 session=session,
             ),
