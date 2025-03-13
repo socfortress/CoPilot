@@ -187,39 +187,119 @@ async def update_connector(
         )
 
 
+# @connector_router.post(
+#     "/upload/{connector_id}",
+#     description="Upload a YAML file for a specific connector",
+#     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+# )
+# async def upload_yaml_file(
+#     connector_id: int,
+#     file: UploadFile = File(...),
+#     session: AsyncSession = Depends(get_db),
+# ) -> dict:
+#     """
+#     Upload a YAML file for a specific connector ID.
+
+#     This endpoint allows you to upload a `.yaml` file for a specific connector
+#     identified by `connector_id`.
+
+#     Args:
+#         connector_id (int): The unique identifier for the connector.
+#         file (UploadFile): The `.yaml` file to be uploaded.
+
+#     Returns:
+#         dict: A dictionary with a success message and other information.
+
+#     Raises:
+#         HTTPException: An exception with a 400 status code is raised if the file format is incorrect or connector ID is not 6.
+#     """
+#     if connector_id not in [5, 6]:
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Only the Velociraptor or another specific connector is allowed for YAML file uploads.",
+#         )
+#     if not file.filename.endswith(".yaml"):
+#         raise HTTPException(status_code=400, detail="Only .yaml files are allowed.")
+#     try:
+#         save_file_result = await ConnectorServices.save_file(file, connector_id, session=session)
+#         if save_file_result:
+#             await ConnectorServices.verify_connector_by_id(
+#                 connector_id,
+#                 session=session,
+#             )
+#             return {"success": True, "message": "File uploaded successfully"}
+#         else:
+#             raise HTTPException(status_code=500, detail="Failed to upload file")
+#     except Exception as e:
+#         logger.error(f"Failed to upload file: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to upload file")
+
 @connector_router.post(
-    "/upload/{connector_id}",
+    "/upload/{connector_identifier}",
     description="Upload a YAML file for a specific connector",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def upload_yaml_file(
-    connector_id: int,
+    connector_identifier: str,
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
     """
-    Upload a YAML file for a specific connector ID.
+    Upload a YAML file for a specific connector identified by ID or name.
 
-    This endpoint allows you to upload a `.yaml` file for a specific connector
-    identified by `connector_id`.
+    This endpoint allows you to upload a `.yaml` file for a connector
+    identified by either its ID (number) or name (string).
 
     Args:
-        connector_id (int): The unique identifier for the connector.
+        connector_identifier (str): The unique identifier (ID or name) for the connector.
         file (UploadFile): The `.yaml` file to be uploaded.
 
     Returns:
         dict: A dictionary with a success message and other information.
 
     Raises:
-        HTTPException: An exception with a 400 status code is raised if the file format is incorrect or connector ID is not 6.
+        HTTPException: An exception is raised if the file format is incorrect or connector is not found/supported.
     """
-    if connector_id not in [5, 6]:
-        raise HTTPException(
-            status_code=400,
-            detail="Only the Velociraptor or another specific connector is allowed for YAML file uploads.",
-        )
+    # Try to parse as integer for connector_id
+    connector_id = None
+    try:
+        connector_id = int(connector_identifier)
+        # Check if this is a valid connector ID for YAML uploads
+        if connector_id not in [5, 6]:
+            raise HTTPException(
+                status_code=400,
+                detail="Only the Velociraptor or another specific connector is allowed for YAML file uploads.",
+            )
+    except ValueError:
+        # If not an integer, treat as connector name
+        connector_name = connector_identifier
+        try:
+            # Look up the connector ID from the name
+            connector = await ConnectorServices.fetch_connector_by_name(connector_name, session=session)
+            if not connector:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No connector found with name: {connector_name}",
+                )
+            connector_id = connector["id"]
+            # Check if this is a valid connector for YAML uploads
+            if connector_id not in [5, 6]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Connector '{connector_name}' does not support YAML file uploads.",
+                )
+        except Exception as e:
+            logger.error(f"Error finding connector by name: {str(e)}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Could not find connector with name: {connector_name}",
+            )
+
+    # Check file format
     if not file.filename.endswith(".yaml"):
         raise HTTPException(status_code=400, detail="Only .yaml files are allowed.")
+
+    # Process the file upload
     try:
         save_file_result = await ConnectorServices.save_file(file, connector_id, session=session)
         if save_file_result:

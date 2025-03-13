@@ -272,6 +272,34 @@ class ConnectorServices:
         return None
 
     @classmethod
+    async def fetch_connector_by_name(
+        cls,
+        connector_name: str,
+        session: AsyncSession,
+    ) -> Optional[ConnectorResponse]:
+        """
+        Fetches a connector by its name from the database.
+
+        Args:
+            connector_name (str): The name of the connector to fetch.
+            session (AsyncSession): The database session.
+
+        Returns:
+            Optional[ConnectorResponse]: The fetched connector, or None if not found.
+        """
+        try:
+            result = await session.execute(
+                select(Connectors).where(Connectors.connector_name == connector_name),
+            )
+            connector = result.scalar_one_or_none()
+            if connector:
+                return ConnectorResponse.from_orm(connector)
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching connector by name '{connector_name}': {e}")
+            return None
+
+    @classmethod
     async def verify_connector_by_id(
         cls,
         connector_id: int,
@@ -441,3 +469,4 @@ class ConnectorServices:
                 return False
         else:
             return False
+
