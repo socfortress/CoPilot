@@ -234,6 +234,7 @@ async def update_connector(
 #         logger.error(f"Failed to upload file: {e}")
 #         raise HTTPException(status_code=500, detail="Failed to upload file")
 
+
 @connector_router.post(
     "/upload/{connector_identifier}",
     description="Upload a YAML file for a specific connector",
