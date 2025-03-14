@@ -234,6 +234,7 @@ async def update_connector(
 #         logger.error(f"Failed to upload file: {e}")
 #         raise HTTPException(status_code=500, detail="Failed to upload file")
 
+
 @connector_router.post(
     "/upload/{connector_identifier}",
     description="Upload a YAML file for a specific connector",
@@ -273,6 +274,7 @@ async def upload_yaml_file(
     except ValueError:
         # If not an integer, treat as connector name
         connector_name = connector_identifier
+        logger.info(f"Using connector name: {connector_name}")
         try:
             # Look up the connector ID from the name
             connector = await ConnectorServices.fetch_connector_by_name(connector_name, session=session)
@@ -281,7 +283,10 @@ async def upload_yaml_file(
                     status_code=404,
                     detail=f"No connector found with name: {connector_name}",
                 )
-            connector_id = connector["id"]
+
+            # Access as an attribute using dot notation, not as a dictionary
+            connector_id = connector.id
+
             # Check if this is a valid connector for YAML uploads
             if connector_id not in [5, 6]:
                 raise HTTPException(
