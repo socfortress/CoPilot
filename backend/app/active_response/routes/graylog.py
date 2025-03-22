@@ -21,6 +21,7 @@ async def verify_graylog_header(graylog: str = Header(None)):
     expected_header = os.getenv("GRAYLOG_API_HEADER_VALUE", "ab73de7a-6f61-4dde-87cd-3af5175a7281")
 
     if graylog != expected_header:
+        logger.error("Invalid or missing Graylog header")
         raise HTTPException(status_code=403, detail="Invalid or missing Graylog header")
     return graylog
 
