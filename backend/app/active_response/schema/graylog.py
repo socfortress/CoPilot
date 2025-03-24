@@ -28,10 +28,11 @@ class GraylogEventFields(BaseModel):
         extra = "allow"  # Allow extra fields
         populate_by_name = True  # Process alias fields
 
+
 class GraylogThresholdEventFields(BaseModel):
     CUSTOMER_CODE: str
     SOURCE: str
-    ALERT_DESCIRPTION: str
+    ALERT_DESCRIPTION: str
     # Allow additional fields
     additional_fields: Dict[str, Any] = Field(default_factory=dict, alias="__extra__")
 
@@ -182,17 +183,17 @@ class GraylogThresholdEventNotification(BaseModel):
                     "fields": {
                         "CUSTOMER_CODE": "6bdd96a0-06a5-11f0-a499-005056b6c109",
                         "SOURCE": "DELLSWITCH",
-                        "ALERT_DESCIRPTION": "THIS IS A TEST"
+                        "ALERT_DESCRIPTION": "THIS IS A TEST",
                     },
                     "group_by_fields": {"source": "10.0.64.233"},
                     "replay_info": {
                         "timerange_start": "2024-08-25T14:39:54.219Z",
                         "timerange_end": "2025-03-21T22:39:54.219Z",
-                        "query": "\"An invalid user tried to login\"",
+                        "query": '"An invalid user tried to login"',
                         "streams": ["67abcb0a84088513bdc09e32"],
-                        "filters": []
-                    }
+                        "filters": [],
+                    },
                 },
-                "backlog": []
-            }
+                "backlog": [],
+            },
         }

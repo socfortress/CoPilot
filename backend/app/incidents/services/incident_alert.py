@@ -494,7 +494,12 @@ async def handle_customer_notifications(
         )
 
 
-async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession, threshold_alert: bool = False) -> Alert:
+async def create_alert_full(
+    alert_payload: CreatedAlertPayload,
+    customer_code: str,
+    session: AsyncSession,
+    threshold_alert: bool = False,
+) -> Alert:
     """
     Create an alert in CoPilot.
 

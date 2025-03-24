@@ -4,6 +4,8 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.active_response.routes.graylog import verify_graylog_header
+from app.active_response.schema.graylog import GraylogThresholdEventNotification
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
@@ -13,16 +15,15 @@ from app.incidents.schema.incident_alert import AutoCreateAlertResponse
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
-from app.active_response.schema.graylog import GraylogThresholdEventNotification
-from app.active_response.routes.graylog import verify_graylog_header
+from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
-from app.incidents.services.incident_alert import create_alert, create_alert_full
-from app.incidents.schema.incident_alert import CreatedAlertPayload
+from app.incidents.services.incident_alert import create_alert
+from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
 
@@ -179,7 +180,6 @@ async def create_alert_auto_route(
             logger.error(f"Failed to create alert {alert} in CoPilot: {e}")
 
 
-
 @incidents_alerts_router.post(
     "/create/threshold",
     response_model=CreateAlertResponse,
@@ -199,6 +199,9 @@ async def invoke_alert_threshold_graylog_route(
     2. SOURCE: str - the source of the alert
     3. ALERT_DESCRIPTION: str - the description of the alert
 
+    # ! IMPORTANT: DO NOT ADD THE "COPILOT_ALERT_ID": "NONE" AS A CUSTOM FIELD WHEN CREATING THE ALERT IN GRAYLOG # !
+        # ! THIS WILL BREAK THE AUTO-ALERT CREATION FUNCTIONALITY # !
+
     Args:
         request (InvokeActiveResponseRequest): The request object containing the command, custom, arguments, and alert.
 
@@ -207,18 +210,18 @@ async def invoke_alert_threshold_graylog_route(
     """
     logger.info("Invoking alert threshold Graylog...")
     logger.info(f"Timestamp: {request.event.timestamp}")
-    await create_alert_full(alert_payload=CreatedAlertPayload(
-        alert_context_payload=request.event.fields.dict(),
-        asset_payload=request.event.source,
-        timefield_payload=str(request.event.timestamp),
-        alert_title_payload=request.event.message,
-        source=request.event.fields.SOURCE,
-        index_name="gl-events_",
-        index_id=request.event.id,
-
-    ),
-    customer_code=request.event.fields.CUSTOMER_CODE,
-    session=session,
-    threshold_alert=True,
+    alert_id = await create_alert_full(
+        alert_payload=CreatedAlertPayload(
+            alert_context_payload=request.event.fields.dict(),
+            asset_payload=request.event.source,
+            timefield_payload=str(request.event.timestamp),
+            alert_title_payload=request.event.message,
+            source=request.event.fields.SOURCE,
+            index_name="gl-events_",
+            index_id=request.event.id,
+        ),
+        customer_code=request.event.fields.CUSTOMER_CODE,
+        session=session,
+        threshold_alert=True,
     )
-    return CreateAlertResponse(success=True, message="Alert threshold Graylog invoked successfully", alert_id="0")
+    return CreateAlertResponse(success=True, message="Alert threshold Graylog invoked successfully", alert_id=alert_id)
