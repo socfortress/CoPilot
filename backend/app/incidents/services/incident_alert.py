@@ -494,7 +494,12 @@ async def handle_customer_notifications(
         )
 
 
-async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
+async def create_alert_full(
+    alert_payload: CreatedAlertPayload,
+    customer_code: str,
+    session: AsyncSession,
+    threshold_alert: bool = False,
+) -> Alert:
     """
     Create an alert in CoPilot.
 
@@ -552,6 +557,10 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
             alert_payload=alert_payload,
             session=session,
         )
+
+    if threshold_alert is True:
+        logger.info(f"Threshold alert created for customer code {customer_code} with alert ID {alert_id}")
+        return alert_id
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 
