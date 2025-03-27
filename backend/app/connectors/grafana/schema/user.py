@@ -1,9 +1,5 @@
-from enum import Enum
-from typing import List
-
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class UserOrganizationAddRequest(BaseModel):
@@ -23,6 +19,7 @@ class UserOrganizationAddRequest(BaseModel):
         ...,
         description="ID of the organization to which the user will be added.",
     )
+
 
 class UserOrganizationAddResponse(BaseModel):
     """

@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from fastapi import Body
 from fastapi import Security
 from loguru import logger
 
