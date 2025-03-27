@@ -24,8 +24,8 @@ async def add_user_to_organization(request: UserOrganizationAddRequest) -> UserO
             "loginorEmail": request.loginorEmail,
             "role": request.role,
         }
-        request = grafana_client.organizations.organization_user_add(request.organizationId, user)
-        logger.info(f"User {request.loginorEmail} added to organization {request.organizationId}")
+        response = grafana_client.organizations.organization_user_add(request.organizationId, user)
+        logger.info(f"Grafana user added to organization: {response}")
         return UserOrganizationAddResponse(
             message=f"User {request.loginorEmail} added to organization {request.organizationId}",
             status="success",
