@@ -34,9 +34,7 @@ async def get_flows(velociraptor_id: str, velociraptor_org: str = "root") -> Flo
         f"SELECT * FROM flows(client_id='{velociraptor_id}')",
     )
     all_flows = velociraptor_service.execute_query(query, org_id=velociraptor_org)
-    logger.info(f"all_flows: {all_flows}")
     flows = [FlowClientSession(**flow) for flow in all_flows["results"]]
-    logger.info(f"flows: {flows}")
     try:
         if all_flows["success"]:
             flows = [FlowClientSession(**flow) for flow in all_flows["results"]]

@@ -86,8 +86,8 @@ export function hashMD5(text: number | string) {
 
 export function formatDate(date: Date | string | number, format: string) {
 	let parsedDate = date
-	if (typeof date === "number" && date.toString().length === 10) {
-		parsedDate = date * 1000
+	if (typeof date === "number" && date.toString().length >= 15) {
+		parsedDate = date / 1000
 	}
 	const datejs = dayjs(parsedDate)
 	if (!datejs.isValid()) return date
