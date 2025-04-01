@@ -852,6 +852,7 @@ async def create_alert(
     alert_details = await get_single_alert_details(alert_details=alert)
     await validate_syslog_type_source(alert_details.syslog_type, session)
     customer_code = await get_customer_code(dict(alert_details._source))
+    # ! Need to add some logic for customer_code mapping to Office365 ! #
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
