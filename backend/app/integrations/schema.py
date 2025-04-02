@@ -238,3 +238,16 @@ class CustomerIntegrationsMetaResponse(BaseModel):
         None,
         description="The customer integrations metadata.",
     )
+
+
+class CustomerByAuthKeyResponse(BaseModel):
+    """
+    Response model for the get_customer_by_auth_key endpoint.
+    """
+
+    customer_code: str
+    customer_name: str
+    integration_name: str
+    auth_key_name: str
+    success: bool = True
+    message: str = "Customer found successfully."
