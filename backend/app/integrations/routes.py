@@ -38,6 +38,7 @@ from app.integrations.schema import AuthKey
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
+from app.integrations.schema import CustomerByAuthKeyResponse
 from app.integrations.schema import CustomerIntegrationCreate
 from app.integrations.schema import CustomerIntegrationCreateResponse
 from app.integrations.schema import CustomerIntegrationDeleteResponse
@@ -999,6 +1000,71 @@ async def delete_integration(
     await session.commit()
 
     return generate_decommission_response(customer_code, integration_name)
+
+
+@integration_settings_router.get(
+    "/integration_customer/{integration_name}/{auth_key_name}/{auth_key_value}",
+    description="Get customer code by integration details and auth key value",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_customer_by_auth_key(
+    integration_name: str,
+    auth_key_name: str,
+    auth_key_value: str,
+    session: AsyncSession = Depends(get_db),
+) -> CustomerByAuthKeyResponse:
+    """
+    Retrieve a customer code based on integration name, auth key name, and auth key value.
+
+    This is useful for identifying which customer an integration belongs to when you only
+    have specific integration details, like a tenant ID.
+
+    Args:
+        integration_name: The name of the integration (e.g., "Office365")
+        auth_key_name: The name of the auth key (e.g., "TENANT_ID")
+        auth_key_value: The value of the auth key to look up
+
+    Returns:
+        Customer code and name associated with the provided integration details
+    """
+    try:
+        # Build query to find customer by auth key value
+        query = (
+            select(CustomerIntegrations.customer_code, CustomerIntegrations.customer_name)
+            .join(IntegrationSubscription, CustomerIntegrations.id == IntegrationSubscription.customer_id)
+            .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
+            .join(IntegrationAuthKeys, IntegrationSubscription.id == IntegrationAuthKeys.subscription_id)
+            .where(
+                IntegrationService.service_name == integration_name,
+                IntegrationAuthKeys.auth_key_name == auth_key_name,
+                IntegrationAuthKeys.auth_value == auth_key_value,
+            )
+        )
+
+        # Execute query
+        result = await session.execute(query)
+        customer_info = result.first()
+
+        if customer_info is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No customer found with {integration_name} integration having {auth_key_name}={auth_key_value}",
+            )
+
+        customer_code, customer_name = customer_info
+
+        return CustomerByAuthKeyResponse(
+            customer_code=customer_code,
+            customer_name=customer_name,
+            integration_name=integration_name,
+            auth_key_name=auth_key_name,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error looking up customer by integration auth key: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to look up customer: {str(e)}")
 
 
 # @integration_settings_router.delete(

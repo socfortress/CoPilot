@@ -44,6 +44,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
+from app.integrations.routes import get_customer_by_auth_key
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
@@ -203,7 +204,45 @@ async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
     return f"{root_url}{url_path}"
 
 
-async def get_customer_code(alert_details: dict):
+# async def get_customer_code(alert_details: dict):
+#     logger.info(f"Fetching customer code for alert {alert_details}")
+
+#     # Iterate over the possible keys and return the value if the key is present
+#     for key in CustomerCodeKeys:
+#         logger.info(f"Checking for key {key.value}")
+#         if key.value in alert_details:
+#             value = alert_details[key.value]
+#             if key == CustomerCodeKeys.CLUSTER_NODE:
+#                 processed_value = CustomerCodeKeys.get_processed_value(key, value)
+#                 logger.info(f"Processed value for {key.value} is {processed_value}")
+#                 return processed_value
+#             return value
+
+#     # If none of the keys are present, raise an exception
+#     logger.info(f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}")
+#     raise HTTPException(
+#         status_code=400,
+#         detail=f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}",
+#     )
+
+
+async def get_customer_code(alert_details: dict, session: AsyncSession = None):
+    """
+    Fetch the customer code from alert details.
+
+    For Office365 organization IDs, uses the integration auth key lookup service.
+    For other customer code types, uses the standard lookup process.
+
+    Args:
+        alert_details (dict): The alert details dictionary containing potential customer code fields
+        session (AsyncSession, optional): Database session for integration lookups
+
+    Returns:
+        str: The customer code
+
+    Raises:
+        HTTPException: If no valid customer code can be found
+    """
     logger.info(f"Fetching customer code for alert {alert_details}")
 
     # Iterate over the possible keys and return the value if the key is present
@@ -211,10 +250,31 @@ async def get_customer_code(alert_details: dict):
         logger.info(f"Checking for key {key.value}")
         if key.value in alert_details:
             value = alert_details[key.value]
+
+            # Handle Office365 OrganizationId specially - lookup from integrations
+            if key == CustomerCodeKeys.DATA_OFFICE365_ORGANIZATION_ID and session:
+                try:
+                    logger.info(f"Looking up customer by Office365 organization ID: {value}")
+                    customer_response = await get_customer_by_auth_key(
+                        integration_name="Office365",
+                        auth_key_name="TENANT_ID",
+                        auth_key_value=value,
+                        session=session,
+                    )
+                    logger.info(f"Found customer {customer_response.customer_code} for Office365 organization ID {value}")
+                    return customer_response.customer_code
+                except HTTPException as e:
+                    logger.warning(f"Failed to get customer code from Office365 organization ID: {str(e)}")
+                    # Continue checking other keys if this lookup fails
+                    continue
+
+            # Handle cluster node special processing
             if key == CustomerCodeKeys.CLUSTER_NODE:
                 processed_value = CustomerCodeKeys.get_processed_value(key, value)
                 logger.info(f"Processed value for {key.value} is {processed_value}")
                 return processed_value
+
+            # For other keys, return the value directly
             return value
 
     # If none of the keys are present, raise an exception
@@ -851,8 +911,7 @@ async def create_alert(
     logger.info(f"Creating alert {alert.alert_id} in CoPilot")
     alert_details = await get_single_alert_details(alert_details=alert)
     await validate_syslog_type_source(alert_details.syslog_type, session)
-    customer_code = await get_customer_code(dict(alert_details._source))
-    # ! Need to add some logic for customer_code mapping to Office365 ! #
+    customer_code = await get_customer_code(dict(alert_details._source), session=session)
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
