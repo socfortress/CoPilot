@@ -504,14 +504,14 @@ onMounted(() => {
 					z-index: 0;
 					width: unset;
 					height: unset;
-					@apply bottom-3 left-3 right-3 top-3;
+					inset: calc(var(--spacing) * 3);
 				}
 
 				.drop-panels-area {
 					position: absolute;
 					width: unset;
 					height: unset;
-					@apply bottom-3 left-3 right-3 top-3;
+					inset: calc(var(--spacing) * 3);
 				}
 
 				.left-box {

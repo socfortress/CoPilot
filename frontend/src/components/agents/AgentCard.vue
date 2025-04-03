@@ -149,9 +149,9 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 
 	.wrapper {
 		display: flex;
-		@apply gap-6;
 		flex-direction: row;
 		align-items: center;
+		gap: calc(var(--spacing) * 6);
 		overflow: hidden;
 
 		.agent-header {
@@ -162,7 +162,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 			.title {
 				display: flex;
 				align-items: center;
-				@apply gap-2;
+				gap: calc(var(--spacing) * 2);
 				margin-bottom: 4px;
 
 				.hostname {
@@ -192,7 +192,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 			}
 			.info {
 				font-family: var(--font-family-mono);
-				@apply text-xs;
+				font-size: var(--text-xs);
 				opacity: 0.7;
 				white-space: nowrap;
 				overflow: hidden;
@@ -217,7 +217,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 			}
 			.ip-address {
 				white-space: nowrap;
-				@apply text-xs;
+				font-size: var(--text-xs);
 				font-family: var(--font-family-mono);
 				opacity: 0.7;
 				overflow: hidden;
@@ -236,7 +236,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 
 	@container (max-width: 550px) {
 		.wrapper {
-			@apply gap-5;
+			gap: calc(var(--spacing) * 5);
 
 			.agent-header {
 				min-width: initial;
@@ -245,7 +245,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	}
 	@container (max-width: 400px) {
 		.wrapper {
-			@apply gap-4;
+			gap: calc(var(--spacing) * 4);
 
 			.agent-header {
 				flex-grow: 1;

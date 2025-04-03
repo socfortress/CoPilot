@@ -68,7 +68,7 @@ const unhealthyIndices = computed(() =>
 		cursor: pointer;
 
 		&:not(:last-child) {
-			@apply mb-3;
+			margin-bottom: calc(var(--spacing) * 3);
 		}
 	}
 }

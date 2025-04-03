@@ -201,20 +201,21 @@ function load() {
 		}
 		.agents-list {
 			.title {
-				@apply mb-2;
+				margin-bottom: calc(var(--spacing) * 2);
 			}
 
 			.list {
 				.item {
 					border: 2px solid transparent;
-					@apply px-3 py-2;
+					padding-inline: calc(var(--spacing) * 3);
+					padding-block: calc(var(--spacing) * 2);
 					font-size: 14px;
 					font-weight: bold;
 					cursor: pointer;
 					border-radius: var(--border-radius);
 
 					&:not(:last-child) {
-						@apply mb-2;
+						margin-bottom: calc(var(--spacing) * 2);
 					}
 
 					&:hover {
@@ -224,7 +225,7 @@ function load() {
 			}
 
 			.agents-critical-list {
-				@apply mb-5;
+				margin-bottom: calc(var(--spacing) * 5);
 
 				.list {
 					.item {

@@ -109,7 +109,7 @@ onBeforeMount(() => {
 .indices-marquee {
 	.info {
 		opacity: 0.5;
-		@apply text-xs;
+		font-size: var(--text-xs);
 		margin-top: 5px;
 	}
 	.marquee-wrap {

@@ -107,20 +107,23 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 .cluster-health {
 	.card-wrap {
-		@apply gap-6 gap-x-6 px-4 py-3;
+		gap: calc(var(--spacing) * 6);
+		column-gap: calc(var(--spacing) * 6);
+		padding-inline: calc(var(--spacing) * 4);
+		padding-block: calc(var(--spacing) * 3);
 		column-width: 12rem;
 		column-count: auto;
 
 		.box {
 			overflow: hidden;
-			@apply mb-6;
+			margin-bottom: calc(var(--spacing) * 6);
 			.value {
 				font-weight: bold;
 				margin-bottom: 2px;
 				white-space: nowrap;
 			}
 			.label {
-				@apply text-xs;
+				font-size: var(--text-xs);
 				font-family: var(--font-family-mono);
 				opacity: 0.8;
 			}

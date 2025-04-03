@@ -86,13 +86,14 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 <style lang="scss" scoped>
 .metrics-list {
 	.metrics-group {
-		@apply mb-6;
+		margin-bottom: calc(var(--spacing) * 6);
 		overflow: hidden;
 
 		.list {
 			background-color: var(--bg-secondary-color);
 			.metric-wrap {
-				@apply px-4 py-3;
+				padding-inline: calc(var(--spacing) * 4);
+				padding-block: calc(var(--spacing) * 3);
 
 				.metric {
 					line-height: 1.1;

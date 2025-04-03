@@ -107,12 +107,13 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 		.main-box,
 		.extra-box,
 		.footer-box {
-			@apply gap-3 p-4;
+			gap: calc(var(--spacing) * 3);
+			padding: calc(var(--spacing) * 4);
 		}
 
 		.main-box {
 			.header-box {
-				@apply gap-3;
+				gap: calc(var(--spacing) * 3);
 			}
 		}
 	}
@@ -122,12 +123,13 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 			.main-box,
 			.extra-box,
 			.footer-box {
-				@apply gap-2 p-3;
+				gap: calc(var(--spacing) * 2);
+				padding: calc(var(--spacing) * 3);
 			}
 
 			.main-box {
 				.header-box {
-					@apply gap-2;
+					gap: calc(var(--spacing) * 2);
 				}
 			}
 		}
@@ -138,19 +140,20 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 			.main-box,
 			.extra-box,
 			.footer-box {
-				@apply gap-6 p-6;
+				gap: calc(var(--spacing) * 6);
+				padding: calc(var(--spacing) * 6);
 			}
 
 			.main-box {
 				.header-box {
-					@apply gap-6;
+					gap: calc(var(--spacing) * 6);
 				}
 			}
 		}
 	}
 
 	&.clickable {
-		@apply cursor-pointer;
+		cursor: pointer;
 	}
 
 	&.embedded {
@@ -197,10 +200,10 @@ const { size, status, embedded, highlighted, clickable, hoverable, disabled, loa
 	}
 
 	&.disabled {
-		@apply cursor-not-allowed;
+		cursor: not-allowed;
 
 		.card-entity-wrapper {
-			@apply opacity-70;
+			opacity: 70%;
 		}
 	}
 }

@@ -114,11 +114,11 @@ useResizeObserver(page, entries => {
 <style lang="scss" scoped>
 .page {
 	.section {
-		@apply mb-6;
+		margin-bottom: calc(var(--spacing) * 6);
 
 		.columns {
 			display: flex;
-			@apply gap-6;
+			gap: calc(var(--spacing) * 6);
 
 			.stretchy {
 				height: 100%;

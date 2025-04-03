@@ -324,11 +324,11 @@ onBeforeMount(() => {
 			display: flex;
 			align-items: center;
 			line-height: 1;
-			@apply gap-4;
+			gap: calc(var(--spacing) * 4);
 
 			h1 {
 				margin: 0;
-				@apply text-2xl;
+				font-size: var(--text-2xl);
 				word-break: break-all;
 			}
 
@@ -344,7 +344,8 @@ onBeforeMount(() => {
 	}
 
 	.section {
-		@apply mt-2 min-h-52;
+		margin-top: calc(var(--spacing) * 2);
+		min-height: 200px;
 	}
 }
 </style>

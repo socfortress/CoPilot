@@ -88,13 +88,11 @@ onBeforeMount(() => {
 
 			&.centered {
 				flex-basis: 100%;
+
 				.form-wrap {
 					padding: 60px;
 					width: 100%;
 					max-width: 500px;
-					background-color: var(--bg-default-color);
-					border-radius: 20px;
-					@apply shadow-xl;
 				}
 
 				@media (max-width: 600px) {

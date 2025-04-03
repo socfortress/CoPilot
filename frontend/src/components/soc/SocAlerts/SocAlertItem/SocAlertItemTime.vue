@@ -44,7 +44,7 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 	font-family: var(--font-family-mono);
 
 	&.hover {
-		@apply cursor-help;
+		cursor: help;
 
 		&:hover {
 			color: var(--primary-color);
