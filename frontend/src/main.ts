@@ -6,6 +6,8 @@ import { createPinia } from "pinia"
 import { createPersistedState } from "pinia-plugin-persistedstate"
 import { createApp } from "vue"
 import { createI18n } from "vue-i18n"
+import "@/assets/scss/index.scss"
+import "./tailwind.css"
 
 const meta = document.createElement("meta")
 meta.name = "naive-ui-style"

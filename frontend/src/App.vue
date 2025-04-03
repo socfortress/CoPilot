@@ -36,7 +36,6 @@ import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import "@/assets/scss/index.scss"
 
 const router = useRouter()
 const route = useRoute()

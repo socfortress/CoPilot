@@ -1,8 +1,4 @@
 @use "sass:meta";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @include meta.load-css("fonts");
 @include meta.load-css("common");
 @include meta.load-css("common-animations");
