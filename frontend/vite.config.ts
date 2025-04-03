@@ -31,8 +31,7 @@ export default defineConfig(({ mode }) => {
 		],
 		resolve: {
 			alias: {
-				"@": fileURLToPath(new URL("./src", import.meta.url)),
-				"node:process": "process/browser"
+				"@": fileURLToPath(new URL("./src", import.meta.url))
 			}
 		},
 		optimizeDeps: {
