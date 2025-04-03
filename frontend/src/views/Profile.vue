@@ -39,7 +39,7 @@
 					</div>
 				</div>
 				<div class="actions">
-					<ChangePassword :username="userName" size="small" />
+					<ChangePassword :user="{ username: userName, id: 0, email: '' }" size="small" />
 
 					<ImageCropper
 						v-if="propicEnabled"
