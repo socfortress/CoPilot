@@ -1,33 +1,35 @@
 <template>
-	<n-form ref="formRef" :model="model" :rules="rules">
-		<n-form-item path="username" label="Username">
-			<n-input
-				v-model:value="model.username"
-				placeholder="Insert your Username"
-				:input-props="{ autocomplete: 'username' }"
-				size="large"
-				@keydown.enter="signIn"
-			/>
-		</n-form-item>
-		<n-form-item path="password" label="Password">
-			<n-input
-				v-model:value="model.password"
-				type="password"
-				show-password-on="click"
-				placeholder="Insert your password"
-				:input-props="{ autocomplete: 'password' }"
-				size="large"
-				@keydown.enter="signIn"
-			/>
-		</n-form-item>
-		<div class="flex flex-col items-end gap-6">
-			<div class="w-full">
-				<n-button type="primary" class="!w-full" size="large" :loading :disabled="!isValid" @click="signIn">
-					Sign in
-				</n-button>
+	<div>
+		<n-form ref="formRef" :model :rules>
+			<n-form-item path="username" label="Username">
+				<n-input
+					v-model:value="model.username"
+					placeholder="Insert your Username"
+					:input-props="{ autocomplete: 'username' }"
+					size="large"
+					@keydown.enter="signIn"
+				/>
+			</n-form-item>
+			<n-form-item path="password" label="Password">
+				<n-input
+					v-model:value="model.password"
+					type="password"
+					show-password-on="click"
+					placeholder="Insert your password"
+					:input-props="{ autocomplete: 'password' }"
+					size="large"
+					@keydown.enter="signIn"
+				/>
+			</n-form-item>
+			<div class="flex flex-col items-end gap-6">
+				<div class="w-full">
+					<n-button type="primary" class="w-full!" size="large" :loading :disabled="!isValid" @click="signIn">
+						Sign in
+					</n-button>
+				</div>
 			</div>
-		</div>
-	</n-form>
+		</n-form>
+	</div>
 </template>
 
 <script lang="ts" setup>

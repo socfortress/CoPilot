@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
+import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig, loadEnv } from "vite"
@@ -16,6 +17,7 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		plugins: [
+			tailwindcss(),
 			vue({
 				script: {
 					defineModel: true
@@ -29,7 +31,8 @@ export default defineConfig(({ mode }) => {
 		],
 		resolve: {
 			alias: {
-				"@": fileURLToPath(new URL("./src", import.meta.url))
+				"@": fileURLToPath(new URL("./src", import.meta.url)),
+				"node:process": "process/browser"
 			}
 		},
 		optimizeDeps: {

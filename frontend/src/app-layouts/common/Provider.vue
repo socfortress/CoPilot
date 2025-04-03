@@ -1,14 +1,14 @@
 <template>
 	<n-config-provider
 		:rtl="rtlOptions"
-		:theme="theme"
-		:theme-overrides="themeOverrides"
+		:theme
+		:theme-overrides
 		:locale="providerLocale"
 		:date-locale="providerDateLocale"
 		preflight-style-disabled
 		inline-theme-disabled
 	>
-		<n-loading-bar-provider container-class="!h-0.75">
+		<n-loading-bar-provider container-class="h-0.75!">
 			<n-message-provider>
 				<n-notification-provider>
 					<n-dialog-provider>

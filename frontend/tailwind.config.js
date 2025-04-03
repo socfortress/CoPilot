@@ -1,57 +1,65 @@
-export default {
-	theme: {
-		fontFamily: {
-			sans: ["var(--font-family)", "sans-serif"],
-			serif: ["var(--font-family-display)", "serif"],
-			display: ["var(--font-family-display)", "serif"],
-			mono: ["var(--font-family-mono)", "monospace"]
-		},
-		extend: {
-			colors: {
-				primary: "rgb(var(--primary-color-rgb))",
-				success: "rgb(var(--success-color-rgb))",
-				error: "rgb(var(--error-color-rgb))",
-				warning: "rgb(var(--warning-color-rgb))",
-				info: "rgb(var(--info-color-rgb))",
-				border: "rgb(var(--border-color-rgb))",
-				hover: "rgb(var(--hover-color-rgb))",
-				extra: {
-					1: "rgb(var(--extra1-color-rgb))",
-					2: "rgb(var(--extra2-color-rgb))",
-					3: "rgb(var(--extra3-color-rgb))",
-					4: "rgb(var(--extra4-color-rgb))"
-				}
-			},
-			backgroundColor: {
-				default: "rgb(var(--bg-default-color-rgb))",
-				secondary: "rgb(var(--bg-secondary-color-rgb))",
-				body: "rgb(var(--bg-body-color-rgb))",
-				sidebar: "rgb(var(--bg-sidebar-color-rgb))"
-			},
-			textColor: {
-				default: "rgb(var(--fg-default-color-rgb))",
-				secondary: "rgb(var(--fg-secondary-color-rgb))",
-				tertiary: "rgb(var(--fg-tertiary-color-rgb))"
-			},
-			animation: {
-				fade: "fade 0.3s forwards"
-			},
-			keyframes: {
-				fade: {
-					from: { opacity: 0 },
-					to: { opacity: 1 }
-				}
-			},
-			screens: {
-				xs: "460px"
-			},
-			spacing: {
-				"50vh": "50vh",
-				"90vw": "90vw",
-				"60vh": "60vh",
-				"20vh": "20vh",
-				"50vw": "50vw"
-			}
-		}
+import { readFileSync } from "node:fs"
+import _ from "lodash"
+import plugin from "tailwindcss/plugin.js"
+
+const fileUrl = new URL("./src/design-tokens.json", import.meta.url)
+const tokens = JSON.parse(readFileSync(fileUrl))
+
+function getValue(origin, val) {
+	if (val && val.indexOf("{") === 0) {
+		const path = val.replace("{", "").replace("}", "")
+		return _.get(origin, path)
 	}
+
+	return val
+}
+
+export default {
+	plugins: [
+		plugin(({ addBase, theme }) => {
+			addBase({
+				h1: {
+					fontFamily: getValue(tokens, tokens?.typography?.h1?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h1?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h1?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h1?.letterSpacing) || theme("letterSpacing.tight")
+				},
+				h2: {
+					fontFamily: getValue(tokens, tokens?.typography?.h2?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h2?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h2?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h2?.letterSpacing) || theme("letterSpacing.tight")
+				},
+				h3: {
+					fontFamily: getValue(tokens, tokens?.typography?.h3?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h3?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h3?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h3?.letterSpacing) || theme("letterSpacing.tight")
+				},
+				h4: {
+					fontFamily: getValue(tokens, tokens?.typography?.h4?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h4?.fontWeight) || theme("fontWeight.medium"),
+					fontSize: getValue(tokens, tokens?.typography?.h4?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h4?.letterSpacing) || theme("letterSpacing.tight")
+				},
+				h5: {
+					fontFamily: getValue(tokens, tokens?.typography?.h5?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h5?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h5?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h5?.letterSpacing) || theme("letterSpacing.tight")
+				},
+				h6: {
+					fontFamily: getValue(tokens, tokens?.typography?.h6?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h6?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h6?.fontSize),
+					letterSpacing: getValue(tokens, tokens?.typography?.h6?.letterSpacing)
+				}
+			})
+		})
+	]
 }

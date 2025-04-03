@@ -1,68 +1,69 @@
 <template>
-	<n-spin :show="loading">
-		<n-form ref="formRef" :model="model" :rules="rules">
-			<n-steps :current="wizardCurrent" vertical>
-				<n-step title="Account">
-					<div v-show="wizardCurrent === 1" class="pt-3">
-						<n-form-item path="email" label="Email" first>
-							<n-input
-								v-model:value="model.email"
-								size="large"
-								placeholder="Email..."
-								@keydown.enter="signUp"
-							/>
-						</n-form-item>
-						<n-form-item path="password" label="Password" first>
-							<n-input
-								v-model:value="model.password"
-								type="password"
-								size="large"
-								show-password-on="click"
-								placeholder="At least 8 characters"
-								@keydown.enter="signUp"
-							/>
-						</n-form-item>
-						<n-form-item path="confirmPassword" label="Confirm Password" first>
-							<n-input
-								v-model:value="model.confirmPassword"
-								type="password"
-								:disabled="!model.password"
-								size="large"
-								show-password-on="click"
-								placeholder="At least 8 characters"
-								@keydown.enter="signUp"
-							/>
-						</n-form-item>
-						<div class="mt-3 flex items-center justify-between gap-3">
-							<n-button secondary size="large" @click="reset(1)">Reset</n-button>
+	<div>
+		<n-spin :show="loading">
+			<n-form ref="formRef" :model :rules>
+				<n-steps :current="wizardCurrent" vertical>
+					<n-step title="Account">
+						<div v-show="wizardCurrent === 1" class="pt-3">
+							<n-form-item path="email" label="Email" first>
+								<n-input
+									v-model:value="model.email"
+									size="large"
+									placeholder="Email..."
+									@keydown.enter="signUp"
+								/>
+							</n-form-item>
+							<n-form-item path="password" label="Password" first>
+								<n-input
+									v-model:value="model.password"
+									type="password"
+									size="large"
+									show-password-on="click"
+									placeholder="At least 8 characters"
+									@keydown.enter="signUp"
+								/>
+							</n-form-item>
+							<n-form-item path="confirmPassword" label="Confirm Password" first>
+								<n-input
+									v-model:value="model.confirmPassword"
+									type="password"
+									:disabled="!model.password"
+									size="large"
+									show-password-on="click"
+									placeholder="At least 8 characters"
+									@keydown.enter="signUp"
+								/>
+							</n-form-item>
+							<div class="mt-3 flex items-center justify-between gap-3">
+								<n-button secondary size="large" @click="reset(1)">Reset</n-button>
 
-							<n-button
-								type="primary"
-								size="large"
-								icon-placement="right"
-								:disabled="!accountStepValid"
-								@click="wizardCurrent = 2"
-							>
-								<template #icon>
-									<Icon :name="ArrowRightIcon"></Icon>
-								</template>
-								Next
-							</n-button>
+								<n-button
+									type="primary"
+									size="large"
+									icon-placement="right"
+									:disabled="!accountStepValid"
+									@click="wizardCurrent = 2"
+								>
+									<template #icon>
+										<Icon :name="ArrowRightIcon"></Icon>
+									</template>
+									Next
+								</n-button>
+							</div>
 						</div>
-					</div>
-				</n-step>
-				<n-step title="Details">
-					<div v-show="wizardCurrent === 2" class="pt-3">
-						<n-form-item path="username" label="Username" first>
-							<n-input
-								v-model:value="model.username"
-								size="large"
-								placeholder="Username..."
-								@keydown.enter="signUp"
-							/>
-						</n-form-item>
+					</n-step>
+					<n-step title="Details">
+						<div v-show="wizardCurrent === 2" class="pt-3">
+							<n-form-item path="username" label="Username" first>
+								<n-input
+									v-model:value="model.username"
+									size="large"
+									placeholder="Username..."
+									@keydown.enter="signUp"
+								/>
+							</n-form-item>
 
-						<!--
+							<!--
 						<div class="propic flex gap-5 mb-5">
 							<div class="avatar">
 								<n-avatar :size="80" :src="model.propic" round />
@@ -115,34 +116,35 @@
 						</n-form-item>
 						-->
 
-						<div class="mt-3 flex items-center justify-between gap-3">
-							<div class="flex items-center justify-between gap-3">
-								<n-button size="large" @click="wizardCurrent = 1">
+							<div class="mt-3 flex items-center justify-between gap-3">
+								<div class="flex items-center justify-between gap-3">
+									<n-button size="large" @click="wizardCurrent = 1">
+										<template #icon>
+											<Icon :name="ArrowLeftIcon"></Icon>
+										</template>
+										Back
+									</n-button>
+									<n-button secondary size="large" @click="reset(2)">Reset</n-button>
+								</div>
+								<n-button
+									type="success"
+									size="large"
+									:loading="loading"
+									:disabled="!accountStepValid || !detailsStepValid"
+									@click="signUp"
+								>
 									<template #icon>
-										<Icon :name="ArrowLeftIcon"></Icon>
+										<Icon :name="UserAddIcon"></Icon>
 									</template>
-									Back
+									Create account
 								</n-button>
-								<n-button secondary size="large" @click="reset(2)">Reset</n-button>
 							</div>
-							<n-button
-								type="success"
-								size="large"
-								:loading="loading"
-								:disabled="!accountStepValid || !detailsStepValid"
-								@click="signUp"
-							>
-								<template #icon>
-									<Icon :name="UserAddIcon"></Icon>
-								</template>
-								Create account
-							</n-button>
 						</div>
-					</div>
-				</n-step>
-			</n-steps>
-		</n-form>
-	</n-spin>
+					</n-step>
+				</n-steps>
+			</n-form>
+		</n-spin>
+	</div>
 </template>
 
 <script lang="ts" setup>

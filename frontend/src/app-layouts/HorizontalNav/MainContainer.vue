@@ -14,7 +14,7 @@
 				railInsetVerticalLeft: `${toolbarHeight}px auto 4px 4px`
 			}"
 		>
-			<Toolbar :boxed="toolbarBoxed" class="gradient-bg-sidebar" />
+			<Toolbar :boxed="toolbarBoxed" gradient="sidebar" />
 			<div
 				id="app-view"
 				class="view"

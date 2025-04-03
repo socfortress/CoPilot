@@ -6,8 +6,9 @@
 			:options="menuOptions"
 			:collapsed
 			:mode
+			:indent="18"
 			accordion
-			:collapsed-width="collapsedWidth"
+			:collapsed-width
 			:dropdown-props="{
 				scrollable: true,
 				menuProps: () => ({
@@ -95,75 +96,18 @@ function handleUpdateExpandedKeys(value: string[]) {
 	}
 
 	:deep() {
-		.n-menu-item {
-			.n-menu-item-content {
-				gap: 8px;
-
-				.n-menu-item-content__icon {
-					margin-right: 0 !important;
-				}
-			}
-		}
-		.n-menu-item-content,
-		.n-menu-item-group {
-			.item-badge {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				gap: 10px;
-
-				:nth-child(1) {
-					overflow: hidden;
-					white-space: nowrap;
-					text-overflow: ellipsis;
-				}
-
-				:nth-child(2) {
-					color: var(--fg-default-color);
-					background: var(--hover-color);
-					height: 22px;
-					line-height: 24px;
-					border-radius: 15px;
-					padding: 0 7px;
-					font-weight: bold;
-					font-size: 13px;
-					font-family: var(--font-family-mono);
-				}
-			}
-
-			&.n-menu-item-content--selected,
-			&.n-menu-item-content--child-active {
-				.item-badge {
-					:nth-child(2) {
-						color: var(--n-item-text-color-active);
-						background: var(--n-item-color-active);
-					}
-				}
-			}
-		}
-
 		.n-menu-item-group {
 			.n-menu-item-group-title {
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
-			.item-badge {
-				:nth-child(2) {
-					font-size: 10px;
-					margin-right: 0px;
-					height: 20px;
-					line-height: 20px;
-					border-radius: 8px;
-					padding: 0 6px;
-				}
-			}
 		}
 
 		.n-submenu-children {
-			--dash-width: 12px;
+			--dash-width: 8px;
 			--dash-height: 2px;
-			--dash-offset: 43px;
+			--dash-offset: 29px;
 
 			position: relative;
 
@@ -194,7 +138,7 @@ function handleUpdateExpandedKeys(value: string[]) {
 
 			.n-menu-item-group {
 				.n-menu-item-group-title {
-					padding-left: 64px !important;
+					padding-left: 44px !important;
 				}
 			}
 
@@ -231,51 +175,7 @@ function handleUpdateExpandedKeys(value: string[]) {
 	.nav {
 		:deep() {
 			.n-submenu-children {
-				--dash-offset: 39px;
-			}
-		}
-	}
-}
-</style>
-
-<style lang="scss">
-.main-nav {
-	.n-dropdown-option-body,
-	.n-dropdown-option-body--group,
-	.n-dropdown-option-body__label {
-		.item-badge {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			gap: 12px;
-
-			:nth-child(1) {
-				overflow: hidden;
-				white-space: nowrap;
-				text-overflow: ellipsis;
-			}
-
-			:nth-child(2) {
-				color: var(--fg-default-color);
-				background: var(--hover-color);
-				font-weight: bold;
-				font-family: var(--font-family-mono);
-				font-size: 10px;
-				margin-right: 0px;
-				height: 20px;
-				line-height: 20px;
-				border-radius: 8px;
-				padding: 0 6px;
-			}
-		}
-
-		&.n-dropdown-option-body--selected,
-		&.n-dropdown-option-body--child-active {
-			.item-badge {
-				:nth-child(2) {
-					color: var(--n-item-text-color-active);
-					background: rgba(var(--primary-color-rgb) / 0.1);
-				}
+				--dash-offset: 25px;
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 <template>
 	<n-modal v-model:show="showSearchBox" class="search-box-modal">
-		<n-card content-class="!p-0" class="!w-150" :bordered="false" size="huge" role="dialog" aria-modal="true">
+		<n-card content-class="p-0!" class="w-150!" :bordered="false" size="huge" role="dialog" aria-modal="true">
 			<div class="search-box" @keydown.up="prevItem()" @keydown.down="nextItem()">
 				<div class="search-input flex items-center">
 					<Icon :name="SearchIcon" :size="16" />
@@ -9,7 +9,7 @@
 					<Icon :name="CloseIcon" :size="20" class="cursor-pointer" @click="closeBox()" />
 				</div>
 				<n-divider />
-				<n-scrollbar ref="scrollContent" class="!h-96">
+				<n-scrollbar ref="scrollContent" class="h-96!">
 					<div class="conten-wrap">
 						<div v-for="group of filteredGroups" :key="group.name" class="group">
 							<div class="group-title">{{ group.name }}</div>

@@ -1,6 +1,9 @@
-export * as de from "./de"
-export * as en from "./en"
-export * as es from "./es"
-export * as fr from "./fr"
-export * as it from "./it"
-export * as jp from "./jp"
+import type { LocaleCodes, MessageSchema } from "./config"
+import { createI18n } from "vue-i18n"
+import { getI18NConf } from "./config"
+
+const instance = createI18n<[MessageSchema], LocaleCodes>(getI18NConf())
+
+export default instance
+
+export const i18nGlobal = instance.global

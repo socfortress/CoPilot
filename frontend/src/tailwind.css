@@ -1,3 +1,279 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config '../tailwind.config.js';
+
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
+@theme inline {
+	--font-*: initial;
+	--font-sans: var(--font-family), sans-serif;
+	--font-serif: var(--font-family-display), serif;
+	--font-display: var(--font-family-display), serif;
+	--font-mono: var(--font-family-mono), monospace;
+
+	--color-primary: var(--primary-color);
+	--color-success: var(--success-color);
+	--color-error: var(--error-color);
+	--color-warning: var(--warning-color);
+	--color-info: var(--info-color);
+	--color-border: var(--border-color);
+	--color-hover: var(--hover-color);
+
+	--color-extra-1: var(--extra1-color);
+	--color-extra-2: var(--extra2-color);
+	--color-extra-3: var(--extra3-color);
+	--color-extra-4: var(--extra4-color);
+
+	--border-color-default: var(--border-color);
+
+	--background-color-default: var(--bg-default-color);
+	--background-color-secondary: var(--bg-secondary-color);
+	--background-color-body: var(--bg-body-color);
+	--background-color-sidebar: var(--bg-sidebar-color);
+
+	--text-color-default: var(--fg-default-color);
+	--text-color-secondary: var(--fg-secondary-color);
+	--text-color-tertiary: var(--fg-tertiary-color);
+
+	--breakpoint-xs: 460px;
+
+	--animate-fade: fade 0.3s forwards;
+
+	@keyframes fade {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+}
+
+@layer base {
+	/*
+	The default border color has changed to `currentColor` in Tailwind CSS v4,
+	so we've added these compatibility styles to make sure everything still
+	looks the same as it did with Tailwind CSS v3.
+
+	If we ever want to remove these styles, we need to add an explicit border
+	color utility to any element that depends on these defaults.
+	*/
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
+
+	html,
+	body {
+		text-size-adjust: 100%;
+		-webkit-tap-highlight-color: transparent;
+		-webkit-touch-callout: none;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
+		line-height: var(--line-height);
+		font-size: var(--font-size);
+		text-wrap: pretty;
+
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+
+		width: 100vw;
+		height: 100vh;
+		height: 100svh;
+		overflow: hidden;
+
+		&:focus {
+			outline: none;
+		}
+	}
+
+	[v-cloak] {
+		display: none !important;
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+		mix-blend-mode: normal;
+	}
+	::view-transition-old(root) {
+		z-index: 1;
+	}
+	::view-transition-new(root) {
+		z-index: 99999;
+	}
+
+	::selection {
+		background-color: rgba(var(--primary-color-rgb) / 0.2);
+	}
+
+	#app {
+		width: 100vw;
+		height: 100vh;
+		height: 100svh;
+		overflow: auto;
+	}
+
+	svg {
+		touch-action: initial !important;
+	}
+
+	input {
+		accent-color: var(--primary-color);
+	}
+
+	p {
+		color: var(--fg-secondary-color);
+	}
+
+	code,
+	kbd,
+	samp,
+	pre {
+		font-family: var(--font-family-mono);
+	}
+
+	code {
+		padding: 1px 6px;
+		border-radius: var(--border-radius-small);
+		background-color: rgba(var(--hover-color-rgb) / 0.4);
+		font-size: 13px;
+	}
+	pre {
+		border-radius: var(--border-radius-small);
+
+		code {
+			padding: 12px;
+			display: block;
+			overflow-x: auto;
+		}
+	}
+
+	a {
+		text-decoration: underline;
+		text-decoration-color: var(--primary-color);
+		color: var(--primary-color);
+	}
+
+	blockquote {
+		display: block;
+		padding-left: 1em;
+		border-left: 4px solid var(--border-color);
+	}
+
+	dl {
+		dt {
+			font-weight: bold;
+			margin-bottom: 2px;
+		}
+
+		& > dd:not(:last-child) {
+			margin-bottom: 10px;
+		}
+	}
+
+	ul {
+		display: block;
+		list-style-type: disc;
+		padding-left: 20px;
+		line-height: 1.6;
+
+		ul {
+			list-style-type: circle;
+			margin-top: 3px;
+			margin-bottom: 6px;
+		}
+	}
+
+	ol {
+		display: block;
+		list-style-type: decimal;
+		padding-left: 20px;
+		line-height: 1.6;
+
+		ol {
+			list-style-type: decimal;
+			margin-top: 3px;
+			margin-bottom: 6px;
+		}
+	}
+
+	mark {
+		padding: 2px 0px;
+		border-radius: var(--border-radius-small);
+		background-color: rgba(var(--primary-color-rgb) / 0.3);
+		color: var(--fg-default-color);
+	}
+
+	@media print {
+		html,
+		body {
+			overflow: initial;
+		}
+		body {
+			#app {
+				height: initial;
+				background-color: white;
+
+				& > .n-config-provider {
+					& > .layout {
+						display: block;
+						height: initial;
+						background-color: white;
+
+						& > .header-bar {
+							display: none;
+						}
+						& > .main {
+							background-color: white;
+							overflow: initial;
+							height: initial;
+
+							header.toolbar {
+								display: none;
+							}
+							footer.footer {
+								display: none;
+							}
+
+							& > .n-scrollbar {
+								overflow: initial;
+								height: initial;
+
+								& > .n-scrollbar-container {
+									overflow: initial;
+									height: initial;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	html.theme-dark .shiki,
+	html.theme-dark .shiki span {
+		color: var(--shiki-dark) !important;
+		/*background-color: var(--shiki-dark-bg) !important;*/
+		/* Optional, if you also want font styles */
+		font-style: var(--shiki-dark-font-style) !important;
+		font-weight: var(--shiki-dark-font-weight) !important;
+		text-decoration: var(--shiki-dark-text-decoration) !important;
+	}
+	html.theme-dark,
+	html.theme-light {
+		.shiki {
+			overflow: hidden;
+			background-color: transparent !important;
+
+			span {
+				background-color: transparent !important;
+			}
+		}
+	}
+}

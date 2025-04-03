@@ -22,7 +22,7 @@ const {
 	dark,
 	maxHeight = "32px"
 } = defineProps<{
-	mini: boolean
+	mini?: boolean
 	dark?: boolean
 	maxHeight?: string
 }>()
@@ -41,16 +41,6 @@ const isLight = computed<boolean>(() => !dark || themeStore.isThemeLight)
 		max-height: v-bind(maxHeight);
 		display: block;
 		height: 100%;
-	}
-
-	&.fade-enter-active,
-	&.fade-leave-active {
-		transition: opacity var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-	}
-
-	&.fade-enter-from,
-	&.fade-leave-to {
-		opacity: 0;
 	}
 }
 </style>

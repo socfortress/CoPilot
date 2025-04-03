@@ -8,5 +8,14 @@
 	"htmlWhitespaceSensitivity": "ignore",
 	"plugins": [
 		"prettier-plugin-tailwindcss"
+	],
+	"tailwindAttributes": [
+		"class",
+		"container-class",
+		"header-class",
+		"pane-wrapper-class",
+		"trigger-class",
+		"tab-class",
+		"content-class"
 	]
 }

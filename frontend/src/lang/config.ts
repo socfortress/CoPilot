@@ -1,23 +1,22 @@
-import * as locales from "."
+import type { RecursiveKeyOf } from "@/types/common"
+import type { I18nOptions } from "vue-i18n"
+import * as locales from "./locales"
 
-export type Locale = keyof typeof locales
-export type MessageSchema = (typeof locales)[Locale]
+export type LocaleCodes = keyof typeof locales
+export type MessageSchema = (typeof locales)[LocaleCodes]
+export type I18nString = RecursiveKeyOf<MessageSchema>
 
 export function getI18NConf() {
-	// @ts-expect-error "locales" don't match with  [key: string]: { default: MessageSchema } }
-	const localesEntries = Object.entries<{ default: MessageSchema }>(locales)
+	const localesEntries = Object.entries<MessageSchema>(locales)
 
-	const messages = localesEntries.reduce(
-		(acc: { [key: string]: MessageSchema }, cur: [string, { default: MessageSchema }]) => {
-			acc[cur[0]] = cur[1].default
-			return acc
-		},
-		{}
-	) as { [key in Locale]: MessageSchema }
+	const messages = localesEntries.reduce((acc: { [key: string]: MessageSchema }, cur: [string, MessageSchema]) => {
+		acc[cur[0]] = cur[1]
+		return acc
+	}, {}) as { [key in LocaleCodes]: MessageSchema }
 
 	return {
 		legacy: false,
 		locale: "en",
 		messages
-	}
+	} satisfies I18nOptions
 }
