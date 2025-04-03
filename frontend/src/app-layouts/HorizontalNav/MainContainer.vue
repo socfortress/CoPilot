@@ -8,13 +8,13 @@
 			ref="scrollbar"
 			trigger="none"
 			:y-placement="isRTL ? 'left' : 'right'"
-			content-class="min-h-full flex flex-col"
+			content-class="flex min-h-full flex-col"
 			:theme-overrides="{
 				railInsetVerticalRight: `${toolbarHeight}px 4px 4px auto`,
 				railInsetVerticalLeft: `${toolbarHeight}px auto 4px 4px`
 			}"
 		>
-			<Toolbar :boxed="toolbarBoxed" class="gradient-bg-sidebar" />
+			<Toolbar :boxed="toolbarBoxed" gradient="sidebar" />
 			<div
 				id="app-view"
 				class="view"

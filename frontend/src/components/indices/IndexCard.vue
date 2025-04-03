@@ -141,12 +141,12 @@ function deleteIndex() {
 		display: flex;
 		justify-content: space-between;
 		flex-wrap: wrap;
-		@apply gap-6;
+		gap: calc(var(--spacing) * 6);
 
 		.group {
 			display: flex;
 			justify-content: space-between;
-			@apply gap-6;
+			gap: calc(var(--spacing) * 6);
 			flex-grow: 1;
 			flex-wrap: wrap;
 
@@ -159,7 +159,7 @@ function deleteIndex() {
 				}
 				.label {
 					white-space: nowrap;
-					@apply text-xs;
+					font-size: var(--text-xs);
 					font-family: var(--font-family-mono);
 					opacity: 0.8;
 				}

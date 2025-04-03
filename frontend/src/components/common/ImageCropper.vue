@@ -3,7 +3,7 @@
 		<slot :open-cropper="openCropper" />
 
 		<n-modal v-model:show="showCropper">
-			<n-card class="image-cropper-modal flex flex-col" content-class="!p-5">
+			<n-card class="image-cropper-modal flex flex-col" content-class="p-5!">
 				<div class="aspect-square">
 					<div v-if="!img" class="upload-box">
 						<n-upload v-show="!img" accept="image/*" :show-file-list="false" @change="setImage">

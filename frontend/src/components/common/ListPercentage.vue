@@ -54,7 +54,7 @@ const style = computed(() => themeStore.style)
 .list-header {
 	& > * {
 		border-bottom: 1px solid var(--border-color);
-		@apply pb-1;
+		padding-bottom: calc(var(--spacing) * 1);
 	}
 }
 </style>

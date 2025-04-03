@@ -1,7 +1,7 @@
-import type { Locale } from "@/lang/config"
+import type { LocaleCodes } from "@/lang/config"
 import type { NDateLocale, NLocale } from "naive-ui"
 import type { WritableComputedRef } from "vue"
-import type { ComposerTranslation } from "vue-i18n"
+import dayjs from "@/utils/dayjs"
 import {
 	dateDeDE,
 	dateEnUS,
@@ -17,26 +17,31 @@ import {
 	jaJP
 } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
+import { nextTick } from "vue"
 import { useI18n } from "vue-i18n"
 
-export type I18nLangCode = Locale
-
 export const useLocalesStore = defineStore("i18n", {
-	state: () => ({
-		locale: useI18n().locale as WritableComputedRef<I18nLangCode, string>,
-		availableLocales: useI18n().availableLocales as I18nLangCode[]
-	}),
+	state: () => {
+		nextTick(() => {
+			const dayjsLocale = useLocalesStore().locale === "jp" ? "ja" : useLocalesStore().locale
+			dayjs.locale(dayjsLocale)
+		})
+
+		return {
+			locale: useI18n().locale as WritableComputedRef<LocaleCodes, string>,
+			availableLocales: useI18n().availableLocales as LocaleCodes[]
+		}
+	},
 	actions: {
-		setLocale(locale: I18nLangCode): I18nLangCode {
+		setLocale(locale: LocaleCodes): LocaleCodes {
+			const dayjsLocale = locale === "jp" ? "ja" : locale
+			dayjs.locale(dayjsLocale)
 			this.locale = locale
 			return locale
 		}
 	},
 	getters: {
-		t(): ComposerTranslation {
-			return useI18n().t
-		},
-		naiveuiLocales(): { code: I18nLangCode; ui: NLocale; date: NDateLocale }[] {
+		naiveuiLocales(): { code: LocaleCodes; ui: NLocale; date: NDateLocale }[] {
 			return [
 				{ code: "de", ui: deDE, date: dateDeDE },
 				{ code: "en", ui: enUS, date: dateEnUS },

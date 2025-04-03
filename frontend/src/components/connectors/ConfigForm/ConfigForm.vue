@@ -295,7 +295,8 @@ onMounted(() => {
 	.connector-header {
 		display: flex;
 		align-items: center;
-		@apply mb-7 gap-5;
+		margin-bottom: calc(var(--spacing) * 7);
+		gap: calc(var(--spacing) * 5);
 
 		.connector-image {
 			border: 2px solid var(--bg-body-color);

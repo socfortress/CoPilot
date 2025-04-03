@@ -155,12 +155,12 @@ onBeforeMount(() => {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		@apply gap-4;
+		gap: calc(var(--spacing) * 4);
 	}
 
 	.details-box {
 		.shards {
-			@apply mt-4;
+			margin-top: calc(var(--spacing) * 4);
 
 			.shard-state {
 				font-weight: bold;
@@ -178,7 +178,7 @@ onBeforeMount(() => {
 		.box-header {
 			flex-direction: column;
 			align-items: flex-start;
-			@apply gap-2;
+			gap: calc(var(--spacing) * 2);
 
 			.select-box {
 				width: 100%;

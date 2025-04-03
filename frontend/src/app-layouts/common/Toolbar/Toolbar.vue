@@ -9,51 +9,44 @@
 			<Breadcrumb class="grow" />
 			<PinnedPages />
 
-			<div class="bubble flex items-center">
+			<PillWrapper>
 				<Search />
 				<FullscreenSwitch />
 				<ThemeSwitch />
 				<Notifications />
 				<Avatar />
-			</div>
+			</PillWrapper>
 		</div>
+
+		<BlurEffect />
+		<div v-if="gradient" :class="`gradient-${gradient}`"></div>
 	</header>
 </template>
 
 <script lang="ts" setup>
 import Icon from "@/components/common/Icon.vue"
-import { useMainStore } from "@/stores/main"
+import { useLoadingBarSetup } from "@/composables/useLoadingBarSetup"
 import { useThemeStore } from "@/stores/theme"
-import { useLoadingBar } from "naive-ui"
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
 import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
+import BlurEffect from "./BlurEffect.vue"
 import Breadcrumb from "./Breadcrumb.vue"
 import FullscreenSwitch from "./FullscreenSwitch.vue"
 import Notifications from "./Notifications.vue"
-import PinnedPages from "./PinnedPages.vue"
+import PillWrapper from "./PillWrapper.vue"
+import PinnedPages from "./PinnedPagesV2.vue"
 import Search from "./Search.vue"
 import ThemeSwitch from "./ThemeSwitch.vue"
 
-const { boxed } = defineProps<{
+const { boxed, gradient } = defineProps<{
 	boxed: boolean
+	gradient?: "body" | "sidebar"
 }>()
 
-const router = useRouter()
 const themeStore = useThemeStore()
-const mainStore = useMainStore()
+const openNav = () => themeStore.openSidebar()
 
-function openNav() {
-	themeStore.openSidebar()
-}
-
-onMounted(() => {
-	const loadingBar = useLoadingBar()
-	router.beforeEach(() => loadingBar?.start())
-	router.afterEach(() => loadingBar?.finish())
-	mainStore.setLoadingBar(loadingBar)
-})
+useLoadingBarSetup()
 </script>
 
 <style lang="scss" scoped>
@@ -68,42 +61,13 @@ onMounted(() => {
 	z-index: 3;
 	overflow: hidden;
 
-	&::after {
-		content: "";
-		width: 100%;
-		height: 100%;
-		position: absolute;
-		display: block;
-		top: 0;
-		left: 0;
-		z-index: -2;
-		backdrop-filter: blur(20px);
-		mask-image: linear-gradient(
-			to bottom,
-			rgba(0, 0, 0, 1) 0%,
-			rgba(0, 0, 0, 0.96) 70%,
-			rgba(0, 0, 0, 0.8) 80%,
-			rgba(0, 0, 0, 0) 100%
-		);
-	}
-
 	.wrap {
 		height: var(--toolbar-height);
 		overflow: hidden;
 		width: 100%;
 		max-width: 100%;
 		position: relative;
-		z-index: 0;
-
-		.bubble {
-			background-color: var(--bg-sidebar-color);
-			border: 1px solid var(--border-color);
-			color: var(--fg-default-color);
-			border-radius: 50px;
-			padding: 6px;
-			transition: all 0.3s;
-			gap: 14px;
-		}
+		z-index: 1;
 
 		@media (max-width: 850px) {
 			.pinned-pages {
@@ -128,66 +92,50 @@ onMounted(() => {
 		}
 	}
 
-	&.gradient-bg-sidebar {
-		&::before {
-			content: "";
-			width: 100%;
-			height: 100%;
-			position: absolute;
-			display: block;
-			top: 0;
-			left: 0;
-			z-index: -1;
-			background-color: var(--bg-sidebar-color);
-			background: linear-gradient(
-				to bottom,
-				rgba(var(--bg-sidebar-color-rgb) / 1) 0%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.945) 8.6%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.888) 16.2%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.83) 22.9%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.769) 28.9%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.707) 34.4%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.644) 39.5%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.578) 44.5%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.511) 49.5%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.443) 54.7%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.373) 60.3%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.301) 66.4%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.228) 73.3%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.153) 81%,
-				rgba(var(--bg-sidebar-color-rgb) / 0.077) 89.9%,
-				rgba(var(--bg-sidebar-color-rgb) / 0) 100%
-			);
-		}
+	.gradient-sidebar {
+		position: absolute;
+		inset: 0;
+		background-color: var(--bg-sidebar-color);
+		background: linear-gradient(
+			to bottom,
+			rgba(var(--bg-sidebar-color-rgb) / 1) 0%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.945) 8.6%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.888) 16.2%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.83) 22.9%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.769) 28.9%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.707) 34.4%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.644) 39.5%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.578) 44.5%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.511) 49.5%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.443) 54.7%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.373) 60.3%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.301) 66.4%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.228) 73.3%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.153) 81%,
+			rgba(var(--bg-sidebar-color-rgb) / 0.077) 89.9%,
+			rgba(var(--bg-sidebar-color-rgb) / 0) 100%
+		);
 	}
-	&.gradient-bg-body {
-		&::before {
-			content: "";
-			width: 100%;
-			height: 100%;
-			position: absolute;
-			display: block;
-			top: 0;
-			left: 0;
-			z-index: -1;
-			background-color: var(--bg-body-color);
-			background: linear-gradient(
-				to bottom,
-				rgba(var(--bg-body-color-rgb) / 1) 0%,
-				rgba(var(--bg-body-color-rgb) / 0.738) 19%,
-				rgba(var(--bg-body-color-rgb) / 0.541) 34%,
-				rgba(var(--bg-body-color-rgb) / 0.382) 47%,
-				rgba(var(--bg-body-color-rgb) / 0.278) 56.5%,
-				rgba(var(--bg-body-color-rgb) / 0.194) 65%,
-				rgba(var(--bg-body-color-rgb) / 0.126) 73%,
-				rgba(var(--bg-body-color-rgb) / 0.075) 80.2%,
-				rgba(var(--bg-body-color-rgb) / 0.042) 86.1%,
-				rgba(var(--bg-body-color-rgb) / 0.021) 91%,
-				rgba(var(--bg-body-color-rgb) / 0.008) 95.2%,
-				rgba(var(--bg-body-color-rgb) / 0.002) 98.2%,
-				rgba(var(--bg-body-color-rgb) / 0) 100%
-			);
-		}
+	.gradient-body {
+		position: absolute;
+		inset: 0;
+		background-color: var(--bg-body-color);
+		background: linear-gradient(
+			to bottom,
+			rgba(var(--bg-body-color-rgb) / 1) 0%,
+			rgba(var(--bg-body-color-rgb) / 0.738) 19%,
+			rgba(var(--bg-body-color-rgb) / 0.541) 34%,
+			rgba(var(--bg-body-color-rgb) / 0.382) 47%,
+			rgba(var(--bg-body-color-rgb) / 0.278) 56.5%,
+			rgba(var(--bg-body-color-rgb) / 0.194) 65%,
+			rgba(var(--bg-body-color-rgb) / 0.126) 73%,
+			rgba(var(--bg-body-color-rgb) / 0.075) 80.2%,
+			rgba(var(--bg-body-color-rgb) / 0.042) 86.1%,
+			rgba(var(--bg-body-color-rgb) / 0.021) 91%,
+			rgba(var(--bg-body-color-rgb) / 0.008) 95.2%,
+			rgba(var(--bg-body-color-rgb) / 0.002) 98.2%,
+			rgba(var(--bg-body-color-rgb) / 0) 100%
+		);
 	}
 }
 

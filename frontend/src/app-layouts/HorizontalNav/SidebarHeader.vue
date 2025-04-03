@@ -1,7 +1,17 @@
 <template>
-	<div class="sidebar-header flex items-center justify-between gap-4 px-4">
-		<div class="grow">
-			<Logo :mini="logoMini" :dark="isDark" />
+	<div class="sidebar-header flex items-center justify-between gap-4">
+		<div class="flex grow" :class="{ 'justify-center': logoMini }">
+			<Logo
+				v-if="logoMini"
+				mini
+				:dark="isDark"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+			/>
+			<Logo
+				v-if="!logoMini"
+				:dark="isDark"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+			/>
 		</div>
 		<Transition name="fade" mode="out-in">
 			<div v-if="showPin" class="sidebar-pin flex items-center">

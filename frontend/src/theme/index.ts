@@ -162,6 +162,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 	const fontFamilyDisplay = state.fontFamily.display
 	const fontFamilyMono = state.fontFamily.mono
 	const fontSize = state.fontSize.default
+	const lineHeight = state.lineHeight.default
 
 	const borderRadius = state.borderRadius.default
 	const borderRadiusSmall = state.borderRadius.small
@@ -195,7 +196,8 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"font-family": `${fontFamily}`,
 		"font-family-display": `${fontFamilyDisplay}`,
 		"font-family-mono": `${fontFamilyMono}`,
-		"font-size": `${fontSize}`
+		"font-size": `${fontSize}`,
+		"line-height": `${lineHeight}`
 	}
 
 	// import colors by patterns

@@ -5,11 +5,17 @@
 		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
 	>
 		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
-			<SidebarHeader :logo-mini="sidebarClosed" />
+			<div :class="{ 'px-7': !sidebarClosed, 'px-2': sidebarClosed }" class="transition-all">
+				<SidebarHeader :logo-mini="sidebarClosed" />
+			</div>
 			<n-scrollbar>
-				<Navbar :collapsed="sidebarClosed" mode="vertical" />
+				<div :class="{ 'px-2': !sidebarClosed }" class="transition-all">
+					<Navbar :collapsed="sidebarClosed" mode="vertical" />
+				</div>
 			</n-scrollbar>
-			<SidebarFooter :collapsed="sidebarClosed" />
+			<div class="p-2">
+				<SidebarFooter :collapsed="sidebarClosed" />
+			</div>
 		</div>
 	</aside>
 </template>
@@ -90,7 +96,7 @@ onMounted(() => {
 
 	@media (max-width: $sidebar-bp) {
 		&.opened {
-			z-index: 4;
+			z-index: 2100;
 			transform: translateX(0);
 			box-shadow: 0px 0px 80px 0px rgba(0, 0, 0, 0.2);
 		}

@@ -46,9 +46,7 @@
 }
 
 .n-badge {
-	.n-badge-sup {
-		top: inherit;
-	}
+	direction: ltr;
 }
 
 .n-dropdown-menu {
@@ -109,6 +107,82 @@
 	}
 }
 
+.n-form-item {
+	.n-form-item-feedback-wrapper:not(:empty) {
+		transform: translateY(-7px);
+		padding-left: 0px !important;
+		padding-right: 0px !important;
+		padding-top: 0 !important;
+		z-index: 1;
+
+		.n-form-item-feedback {
+			font-size: 13px;
+			line-height: 1.2;
+			padding: 3px 12px;
+			border-bottom-left-radius: var(--border-radius);
+			border-bottom-right-radius: var(--border-radius);
+			background: color-mix(in srgb, currentColor 5%, var(--bg-default-color) 95%);
+			border: 1px solid currentColor;
+			border-top: 0;
+		}
+	}
+
+	&.n-form-item--small-size {
+		.n-form-item-feedback-wrapper:not(:empty) {
+			transform: translateY(-6px);
+
+			.n-form-item-feedback {
+				font-size: 11px;
+				padding: 3px 10px;
+			}
+		}
+	}
+
+	&.n-form-item--small-large {
+		.n-form-item-feedback-wrapper:not(:empty) {
+			.n-form-item-feedback {
+				padding: 3px 14px;
+			}
+		}
+	}
+
+	.n-form-item-blank--error {
+		.n-upload-dragger {
+			border-color: var(--n-feedback-text-color-error);
+		}
+		.n-upload-file-list:not(:empty) {
+			margin-bottom: 24px;
+		}
+	}
+}
+
+.n-menu {
+	.n-menu-item {
+		.n-menu-item-content {
+			gap: 16px;
+
+			.n-menu-item-content__icon {
+				margin-right: 0 !important;
+				margin-left: 0 !important;
+			}
+		}
+	}
+	.n-menu-item-group {
+		.n-menu-item-group-title {
+			padding-left: 22px !important;
+			padding-right: 22px !important;
+		}
+	}
+
+	&.n-menu--horizontal {
+		.n-menu-item {
+			.n-menu-item-content {
+				gap: 8px;
+			}
+		}
+	}
+}
+
 .n-space.n-space--rtl {
 	.n-layout {
 		aside.n-layout-sider.n-layout-sider--left-placement.n-layout-sider--bordered {
@@ -138,25 +212,6 @@
 
 	.n-menu {
 		direction: rtl;
-
-		.n-menu-item {
-			.n-menu-item-content {
-				padding-left: unset;
-				padding-right: 32px;
-				gap: 8px;
-
-				.n-menu-item-content__icon {
-					margin-right: unset !important;
-				}
-			}
-		}
-
-		.n-menu-item-group {
-			.n-menu-item-group-title {
-				padding-right: 32px;
-				padding-left: 0 !important;
-			}
-		}
 
 		&.n-menu--collapsed {
 			.n-menu-item {

@@ -1,12 +1,12 @@
 <template>
-	<n-spin :show="loading" class="flex grow flex-col" content-class="flex flex-col grow">
+	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<n-tabs
 			v-if="caseEntity"
 			type="line"
 			animated
 			:tabs-padding="24"
 			class="grow"
-			pane-wrapper-class="flex flex-col grow"
+			pane-wrapper-class="flex grow flex-col"
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 				<div class="pt-1">

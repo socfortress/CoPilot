@@ -5,24 +5,20 @@
 			:key="item.id"
 			class="item flex"
 			:class="[{ pointer: !!item.action }, item.type]"
-			@click="item.action ? preformAction(item.id, item.action) : () => {}"
+			@click.stop="item.action ? preformAction(item.id, item.action) : () => {}"
 		>
 			<div class="icon-box">
 				<Icon v-if="item.category === 'alert'" :name="AlertIcon" :size="21" />
-				<n-tooltip v-if="!item.read" trigger="hover" class="!p-0" content-class="!p-0" placement="right">
+				<n-tooltip v-if="!item.read" trigger="hover" class="p-0!" content-class="p-0!" placement="right">
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
 					</template>
-					<div class="px-3 py-2">Set as read</div>
+					<div class="px-2 py-1 text-sm">Set as read</div>
 				</n-tooltip>
 			</div>
 			<div class="content grow">
-				<div class="title">
-					{{ item.title }}
-				</div>
-				<div class="description">
-					{{ item.description }}
-				</div>
+				<div class="title">{{ item.title }}</div>
+				<div class="description">{{ item.description }}</div>
 				<div class="footer flex items-center justify-between">
 					<div class="date">
 						{{ formatDatetime(item.date) }}
@@ -32,9 +28,14 @@
 					</div>
 				</div>
 			</div>
-			<div class="delete-btn" @click.stop="deleteOne(item.id)">
-				<Icon :name="DeleteIcon" :size="18" />
-			</div>
+			<n-tooltip trigger="hover" class="p-0!" content-class="p-0!" placement="left">
+				<template #trigger>
+					<div class="delete-btn" @click.stop="deleteOne(item.id)">
+						<Icon :name="DeleteIcon" :size="14" />
+					</div>
+				</template>
+				<div class="px-2 py-1 text-sm">Delete</div>
+			</n-tooltip>
 		</div>
 		<slot name="last" />
 		<n-empty v-if="!list.length" description="There is no notification" class="h-48 justify-center" />
@@ -51,7 +52,7 @@ import { computed } from "vue"
 const props = defineProps<{
 	maxItems?: number
 }>()
-const DeleteIcon = "carbon:close"
+const DeleteIcon = "carbon:trash-can"
 const AlertIcon = "mdi:alert-outline"
 
 const list = useNotifications().list
@@ -145,6 +146,10 @@ function formatDatetime(date: Date | string) {
 			right: 8px;
 			cursor: pointer;
 			opacity: 0;
+
+			&:hover {
+				color: var(--error-color);
+			}
 		}
 
 		&.success {

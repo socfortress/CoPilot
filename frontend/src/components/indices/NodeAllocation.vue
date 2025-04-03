@@ -137,8 +137,9 @@ onBeforeMount(() => {
 			overflow: hidden;
 
 			.group {
-				@apply px-4 py-3;
-				@apply gap-6;
+				padding-inline: calc(var(--spacing) * 4);
+				padding-block: calc(var(--spacing) * 3);
+				gap: calc(var(--spacing) * 6);
 				display: flex;
 				justify-content: space-between;
 				flex-grow: 1;
@@ -153,7 +154,7 @@ onBeforeMount(() => {
 						margin-bottom: 2px;
 					}
 					.label {
-						@apply text-xs;
+						font-size: var(--text-xs);
 						font-family: var(--font-family-mono);
 						opacity: 0.8;
 					}
@@ -181,7 +182,7 @@ onBeforeMount(() => {
 			}
 
 			&:not(:last-child) {
-				@apply mb-4;
+				margin-bottom: calc(var(--spacing) * 4);
 			}
 		}
 	}

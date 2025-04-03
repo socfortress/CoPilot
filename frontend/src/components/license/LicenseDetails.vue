@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" content-class=" grow flex flex-col" class="flex flex-col overflow-hidden">
+	<n-spin :show="loading" content-class="flex grow flex-col" class="flex flex-col overflow-hidden">
 		<div v-if="license" class="flex flex-col gap-4">
 			<CardKV v-if="!hideKey">
 				<template #key>

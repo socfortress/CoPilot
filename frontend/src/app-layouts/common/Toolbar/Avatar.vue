@@ -1,5 +1,5 @@
 <template>
-	<n-dropdown :options="options" placement="bottom-end" @select="handleSelect">
+	<n-dropdown :options placement="bottom-end" @select="handleSelect">
 		<n-avatar round :size="32" :src="userPic" :img-props="{ alt: 'avatar' }" />
 	</n-dropdown>
 </template>

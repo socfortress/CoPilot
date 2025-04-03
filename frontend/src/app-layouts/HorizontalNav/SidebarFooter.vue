@@ -1,6 +1,6 @@
 <template>
-	<div class="sidebar-footer" :class="{ collapsed }">
-		<n-menu :options="menuOptions" :collapsed="collapsed" :collapsed-width="collapsedWidth" />
+	<div class="bg-body rounded-lg py-0.5" :class="{ collapsed }">
+		<n-menu :options="menuOptions" :collapsed :collapsed-width :indent="18" />
 	</div>
 </template>
 
@@ -33,21 +33,3 @@ const menuOptions = ref([
 const themeStore = useThemeStore()
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth - 16)
 </script>
-
-<style lang="scss" scoped>
-.sidebar-footer {
-	margin: 8px;
-	background-color: var(--bg-body-color);
-	border-radius: var(--border-radius);
-	padding: 3px 0;
-	transition: all 0.3s;
-
-	:deep() {
-		.n-menu {
-			.n-menu-item-content.n-menu-item-content--selected::before {
-				background-color: transparent !important;
-			}
-		}
-	}
-}
-</style>

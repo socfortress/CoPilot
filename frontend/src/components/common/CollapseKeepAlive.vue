@@ -86,7 +86,7 @@ const { show, embedded, arrow, arrowOffset } = defineProps<{
 		opacity: 1;
 
 		&.arrow {
-			@apply pt-3;
+			padding-top: calc(var(--spacing) * 3);
 
 			&::after {
 				transform: rotateX(0deg);

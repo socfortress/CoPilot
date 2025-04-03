@@ -35,7 +35,7 @@
 				:percentage="value"
 				:show-indicator="false"
 				:stroke-width="18"
-				class="!w-5"
+				class="w-5!"
 			/>
 		</span>
 	</div>

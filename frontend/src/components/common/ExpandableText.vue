@@ -42,7 +42,7 @@ function truncate(val: string): string {
 
 <style lang="scss">
 .expandable-text-popover {
-	@apply max-w-96;
+	max-width: 380px;
 
 	.expandable-text-popover-container {
 		overflow-x: hidden;

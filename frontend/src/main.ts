@@ -1,11 +1,11 @@
-import type { Locale, MessageSchema } from "@/lang/config"
 import App from "@/App.vue"
-import { getI18NConf } from "@/lang/config"
+import i18n from "@/lang"
 import router from "@/router"
 import { createPinia } from "pinia"
 import { createPersistedState } from "pinia-plugin-persistedstate"
 import { createApp } from "vue"
-import { createI18n } from "vue-i18n"
+import "@/assets/scss/index.scss"
+import "./tailwind.css"
 
 const meta = document.createElement("meta")
 meta.name = "naive-ui-style"
@@ -17,8 +17,6 @@ pinia.use(
 		key: id => `__persisted__${id}`
 	})
 )
-
-const i18n = createI18n<MessageSchema, Locale>(getI18NConf())
 
 const app = createApp(App)
 app.use(pinia)

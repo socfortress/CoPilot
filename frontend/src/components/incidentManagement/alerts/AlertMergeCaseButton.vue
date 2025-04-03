@@ -12,13 +12,13 @@
 		preset="card"
 		:title="`Select the case you want to merge ${alerts.length > 1 ? 'them' : 'it'} with :`"
 		:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', maxHeight: '80vh' }"
-		content-class="overflow-hidden flex flex-col !px-2 !py-0"
+		content-class="flex flex-col overflow-hidden !px-2 !py-0"
 		segmented
 	>
 		<n-spin
 			:show="loadingCases"
 			class="flex grow flex-col overflow-hidden"
-			content-class="grow overflow-hidden flex flex-col"
+			content-class="flex grow flex-col overflow-hidden"
 		>
 			<n-scrollbar class="flex grow flex-col" content-class="grow" trigger="none">
 				<div class="flex flex-col gap-2 px-5 py-5">

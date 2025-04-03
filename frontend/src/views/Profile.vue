@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<n-card class="header flex flex-col" content-class="!p-0">
+		<n-card class="header flex flex-col" content-class="p-0!">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
 					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
@@ -39,7 +39,7 @@
 					</div>
 				</div>
 				<div class="actions">
-					<ChangePassword :username="userName" size="small" />
+					<ChangePassword :user="{ username: userName, id: 0, email: '' }" size="small" />
 
 					<ImageCropper
 						v-if="propicEnabled"
