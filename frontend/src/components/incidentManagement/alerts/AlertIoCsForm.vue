@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="submitting" class="flex min-h-48 grow flex-col" content-class="flex flex-col grow gap-4">
+	<n-spin :show="submitting" class="flex min-h-48 grow flex-col" content-class="flex grow flex-col gap-4">
 		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-3">
 				<div>

@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="flex min-h-48 grow flex-col" content-class="flex flex-col grow gap-4">
+	<n-spin :show="loading" class="flex min-h-48 grow flex-col" content-class="flex grow flex-col gap-4">
 		<div>
 			<n-collapse-transition :show="!showUploadForm">
 				<div class="flex flex-wrap items-center gap-3">
@@ -74,7 +74,7 @@
 					size="small"
 					class="overflow-hidden"
 					embedded
-					content-class="flex justify-between items-center flex-wrap gap-4"
+					content-class="flex flex-wrap items-center justify-between gap-4"
 				>
 					<div class="flex gap-3">
 						<n-tooltip to="body">

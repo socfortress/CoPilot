@@ -108,7 +108,7 @@
 				<n-spin
 					:show="loadingConfig || uploadingConfig || deployingConfig"
 					class="flex h-full w-full overflow-hidden"
-					content-class="overflow-hidden grow h-full flex flex-col justify-center"
+					content-class="flex h-full grow flex-col justify-center overflow-hidden"
 				>
 					<template v-if="currentConfig">
 						<XMLEditor

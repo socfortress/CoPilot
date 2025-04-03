@@ -31,7 +31,7 @@
 			</div>
 		</n-collapse-transition>
 		<n-collapse-transition :show="mode === 'edit'">
-			<n-spin v-model:show="updating" class="flex min-h-80" content-class="flex flex-col grow">
+			<n-spin v-model:show="updating" class="flex min-h-80" content-class="flex grow flex-col">
 				<div class="flex grow flex-col justify-between gap-5">
 					<n-form ref="form" :rules :label-width="80" :model>
 						<div class="flex flex-wrap gap-2">

@@ -1,5 +1,5 @@
 <template>
-	<n-spin v-model:show="loading" class="h-full w-full overflow-hidden" content-class="overflow-hidden h-full w-full">
+	<n-spin v-model:show="loading" class="h-full w-full overflow-hidden" content-class="h-full w-full overflow-hidden">
 		<div v-if="org" class="report-panels flex h-full w-full gap-2">
 			<div class="panels-container flex h-full grow flex-col gap-4">
 				<div class="rows-container">

@@ -54,7 +54,7 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<n-spin :show="canceling" content-class="flex flex-col gap-4 grow" class="flex grow flex-col">
+			<n-spin :show="canceling" content-class="flex grow flex-col gap-4" class="flex grow flex-col">
 				<div class="flex justify-between gap-4">
 					<div>{{ subscription.info }}</div>
 					<div class="text-primary whitespace-nowrap font-mono">
