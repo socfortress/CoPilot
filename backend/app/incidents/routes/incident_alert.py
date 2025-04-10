@@ -19,11 +19,6 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
-from app.incidents.schema.velo_sigma import SysmonEvent
-from app.incidents.schema.velo_sigma import DefenderEvent
-from app.incidents.schema.velo_sigma import GenericEvent
-from app.incidents.services.velo_sigma import create_velo_sigma_alert
-
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
@@ -33,6 +28,7 @@ from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
+from app.incidents.services.velo_sigma import create_velo_sigma_alert
 
 incidents_alerts_router = APIRouter()
 

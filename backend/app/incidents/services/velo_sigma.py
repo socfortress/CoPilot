@@ -1,21 +1,27 @@
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Union, List
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.incidents.schema.velo_sigma import (
-    VelociraptorSigmaAlert,
-    VelociraptorSigmaAlertResponse,
-    SysmonEvent,
-    DefenderEvent,
-    GenericEvent,
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
 )
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
-from app.incidents.services.incident_alert import create_alert
+from app.incidents.schema.db_operations import AlertTagCreate
+from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.db_operations import CommentCreate, AlertTagCreate
-from app.incidents.services.db_operations import create_comment, create_alert_tag
+from app.incidents.schema.velo_sigma import DefenderEvent
+from app.incidents.schema.velo_sigma import GenericEvent
+from app.incidents.schema.velo_sigma import SysmonEvent
+from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
+from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
+from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_comment
+from app.incidents.services.incident_alert import create_alert
 
 
 class VelociraptorSigmaService:
@@ -49,11 +55,7 @@ class VelociraptorSigmaService:
         except Exception as e:
             logger.error(f"Error processing Velociraptor Sigma alert: {str(e)}")
             logger.exception(e)
-            return VelociraptorSigmaAlertResponse(
-                success=False,
-                message=f"Error: {str(e)}",
-                alert_id=getattr(alert, "sourceRef", None)
-            )
+            return VelociraptorSigmaAlertResponse(success=False, message=f"Error: {str(e)}", alert_id=getattr(alert, "sourceRef", None))
 
     async def _process_event_by_type(self, alert: VelociraptorSigmaAlert) -> Dict[str, Any]:
         """Process event according to its type or channel."""
@@ -75,8 +77,7 @@ class VelociraptorSigmaService:
             logger.info(f"Unrecognized event channel: {alert.channel}")
             return {"success": False, "reason": "Unsupported channel type"}
 
-    async def _process_sysmon_event(self, alert: VelociraptorSigmaAlert,
-                                    parsed_event: Union[SysmonEvent, GenericEvent]) -> Dict[str, Any]:
+    async def _process_sysmon_event(self, alert: VelociraptorSigmaAlert, parsed_event: Union[SysmonEvent, GenericEvent]) -> Dict[str, Any]:
         """Process a Sysmon event."""
         logger.info(f"Processing Sysmon event from channel: {alert.channel}")
 
@@ -96,7 +97,7 @@ class VelociraptorSigmaService:
             wazuh_event = await self._fetch_wazuh_alert(
                 agent_name=alert.computer,
                 event_record_id=event_record_id,
-                index_pattern=alert.index_pattern
+                index_pattern=alert.index_pattern,
             )
 
             # Build result
@@ -108,7 +109,7 @@ class VelociraptorSigmaService:
                 "source_process_id": source_process_id,
                 "source_user": source_user,
                 "wazuh_data": wazuh_event,
-                "success": wazuh_event is not None
+                "success": wazuh_event is not None,
             }
 
             logger.info(f"Sysmon event processed | EventRecordID: {event_record_id} | Success: {result['success']}")
@@ -118,8 +119,11 @@ class VelociraptorSigmaService:
             logger.error(f"Failed to process Sysmon event - missing attribute: {str(e)}")
             return {"success": False, "reason": f"Failed to process Sysmon event: {str(e)}"}
 
-    async def _process_defender_event(self, alert: VelociraptorSigmaAlert,
-                                     parsed_event: Union[DefenderEvent, GenericEvent]) -> Dict[str, Any]:
+    async def _process_defender_event(
+        self,
+        alert: VelociraptorSigmaAlert,
+        parsed_event: Union[DefenderEvent, GenericEvent],
+    ) -> Dict[str, Any]:
         """Process a Windows Defender event."""
         logger.info(f"Processing Defender event from channel: {alert.channel}")
 
@@ -131,15 +135,11 @@ class VelociraptorSigmaService:
             wazuh_event = await self._fetch_wazuh_alert(
                 agent_name=alert.computer,
                 event_record_id=event_record_id,
-                index_pattern=alert.index_pattern
+                index_pattern=alert.index_pattern,
             )
 
             # Build basic result
-            result = {
-                "event_record_id": event_record_id,
-                "wazuh_data": wazuh_event,
-                "success": wazuh_event is not None
-            }
+            result = {"event_record_id": event_record_id, "wazuh_data": wazuh_event, "success": wazuh_event is not None}
 
             # Safely extract additional fields
             event_data = parsed_event.EventData
@@ -166,11 +166,8 @@ class VelociraptorSigmaService:
             # Create the alert
             wazuh_data = result["wazuh_data"]
             alert_response = await create_alert(
-                alert=CreateAlertRequest(
-                    index_name=wazuh_data["index_name"],
-                    alert_id=wazuh_data["alert_id"]
-                ),
-                session=self.session
+                alert=CreateAlertRequest(index_name=wazuh_data["index_name"], alert_id=wazuh_data["alert_id"]),
+                session=self.session,
             )
             result["alert_id"] = alert_response
 
@@ -182,17 +179,11 @@ class VelociraptorSigmaService:
                     user_name="admin",
                     created_at=datetime.utcnow(),
                 ),
-                db=self.session
+                db=self.session,
             )
 
             # Add a tag
-            await create_alert_tag(
-                alert_tag=AlertTagCreate(
-                    alert_id=result["alert_id"],
-                    tag=f"{alert.type}"
-                ),
-                db=self.session
-            )
+            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
 
             logger.info(f"Created CoPilot alert with ID: {result['alert_id']}")
 
@@ -212,14 +203,9 @@ class VelociraptorSigmaService:
             message = f"Successfully processed {alert.channel} alert"
             logger.info(f"{message} | EventRecordID: {result.get('event_record_id')} | AlertID: {result.get('alert_id')}")
 
-        return VelociraptorSigmaAlertResponse(
-            success=success,
-            message=message,
-            alert_id=result.get("alert_id")
-        )
+        return VelociraptorSigmaAlertResponse(success=success, message=message, alert_id=result.get("alert_id"))
 
-    async def _fetch_wazuh_alert(self, agent_name: str, event_record_id: str,
-                               index_pattern: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_wazuh_alert(self, agent_name: str, event_record_id: str, index_pattern: str) -> Optional[Dict[str, Any]]:
         """Fetch alert data from Wazuh Indexer."""
         try:
             # Create client and prepare search parameters
@@ -249,26 +235,16 @@ class VelociraptorSigmaService:
         """Build the OpenSearch query for finding the alert in Wazuh."""
         return {
             "bool": {
-                "must": [
-                    {"term": {"agent_name": agent_name}},
-                    {"term": {"data_win_system_eventRecordID": event_record_id}}
-                ],
-                "filter": [
-                    {"range": {"timestamp": {"gte": timestamp}}}
-                ]
-            }
+                "must": [{"term": {"agent_name": agent_name}}, {"term": {"data_win_system_eventRecordID": event_record_id}}],
+                "filter": [{"range": {"timestamp": {"gte": timestamp}}}],
+            },
         }
 
     @staticmethod
     async def _execute_wazuh_search(client, query: Dict[str, Any], index_pattern: str) -> Dict[str, Any]:
         """Execute the search against the Wazuh Indexer."""
         try:
-            response = await client.search(
-                index=index_pattern,
-                body={"query": query},
-                size=1,
-                timeout="1m"
-            )
+            response = await client.search(index=index_pattern, body={"query": query}, size=1, timeout="1m")
             logger.debug(f"Search response received | Status: {'hits' in response}")
             return response
         except Exception as search_error:
