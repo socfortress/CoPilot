@@ -1,157 +1,3 @@
-# from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
-# from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
-# from app.incidents.schema.velo_sigma import SysmonEvent
-# from app.incidents.schema.velo_sigma import DefenderEvent
-# from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
-# from app.incidents.schema.velo_sigma import GenericEvent
-# from loguru import logger
-
-# async def fetch_raw_alert(agent_name: str, event_record_id: str):
-#     """
-#     Fetch raw alert data from Wazuh Indexer based on the agent name and event record ID retrieved from the sigma alert.
-#     This is needed so that we can populate the id, and index fields within the alert created with the alert context
-#     so that we can fetch the timeline and alert within the CoPilot UI.
-
-#     Searches for events within the last hour to improve performance and relevance.
-
-#     Fields to search within the Wazuh Indexer:
-#     - agent_name: The name of the agent that generated the alert.
-#     - data_win_system_eventRecordID: The event record ID of the alert.
-#     - timestamp: Limited to the last hour.
-#     """
-#     try:
-#         # Create Wazuh Indexer client
-#         logger.debug(f"Creating Wazuh Indexer client")
-#         client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
-
-#         # Create timestamp for one hour ago
-#         # Use a format that's compatible with Elasticsearch's date parsing
-#         from datetime import datetime, timedelta
-#         one_hour_ago = datetime.utcnow() - timedelta(hours=1)
-#         # Format the date in a way ES/OpenSearch can understand
-#         one_hour_ago_str = one_hour_ago.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-#         logger.debug(f"One hour ago timestamp: {one_hour_ago_str}")
-
-#         # Build OpenSearch query with timestamp filtering
-#         query = {
-#             "bool": {
-#                 "must": [
-#                     {"term": {"agent_name": agent_name}},
-#                     {"term": {"data_win_system_eventRecordID": event_record_id}}
-#                 ],
-#                 "filter": [
-#                     {"range": {"timestamp": {"gte": one_hour_ago_str}}}
-#                 ]
-#             }
-#         }
-
-#         logger.debug(f"Searching Wazuh Indexer with query: {query}")
-
-#         try:
-#             # Fetch the raw alert data
-#             logger.debug(f"Sending search request to Wazuh Indexer")
-#             response = await client.search(
-#                 index="new-wazuh*",  # Use the correct index pattern for Wazuh
-#                 body={"query": query},
-#                 size=1,
-#                 timeout="1m"
-#             )
-
-#             logger.debug(f"Response structure: {list(response.keys() if response else [])}")
-
-#             if response and "hits" in response and "hits" in response["hits"]:
-#                 hits = response["hits"]["hits"]
-#                 logger.debug(f"Found {len(hits)} hits")
-#                 if hits:
-#                     # Extract the raw alert data
-#                     raw_alert = hits[0]["_source"]
-#                     logger.debug(f"Successfully extracted raw alert data")
-#                     return raw_alert
-#                 else:
-#                     logger.warning(f"No hits found in response")
-#             else:
-#                 logger.warning(f"Invalid response structure: {response}")
-
-#         except Exception as search_error:
-#             logger.error(f"Error during search operation: {str(search_error)}")
-#             logger.exception(search_error)
-#             return None
-
-#     except Exception as e:
-#         logger.error(f"Error fetching raw alert for agent {agent_name} with event ID {event_record_id}: {str(e)}")
-#         logger.exception(e)
-#         return None
-
-#     logger.warning(f"No matching alert found for agent {agent_name} with event ID {event_record_id} within the last hour")
-#     return None
-
-
-# async def create_velo_sigma_alert(alert: VelociraptorSigmaAlert) -> VelociraptorSigmaAlertResponse:
-#     """
-#     Process a Velociraptor Sigma alert.
-#     This function handles the parsing and processing of the alert,
-#     including extracting relevant information and returning a response.
-#     """
-#     # Parse and decode the event
-#     parsed_event = alert.get_parsed_event()
-#     logger.info(f"Parsed event type: {type(parsed_event).__name__}")
-#     logger.debug(f"Channel: {alert.channel}")
-
-#     # Check the channel to determine event type
-#     if "Sysmon" in alert.channel:
-#         logger.info(f"Processing Sysmon event from channel: {alert.channel}")
-#         # Extract the EventRecordID from the System section
-#         event_record_id = str(parsed_event.System.EventRecordID)
-#         logger.debug(f"EventRecordID: {event_record_id}")
-
-#         # Fetch corresponding Wazuh alert
-#         wazuh_event = await fetch_raw_alert(
-#             agent_name=alert.computer,
-#             event_record_id=event_record_id
-#         )
-#         logger.info(f"Wazuh event found: {True if wazuh_event else False}")
-
-#         # Extract useful fields for processing
-#         rule_name = parsed_event.EventData.RuleName
-#         source_image = parsed_event.EventData.SourceImage
-#         target_image = parsed_event.EventData.TargetImage
-
-#         # Process Sysmon-specific logic here
-#         # ...
-
-#     elif "Defender" in alert.channel:
-#         logger.info(f"Processing Defender event from channel: {alert.channel}")
-#         # Extract the EventRecordID from the System section
-#         event_record_id = str(parsed_event.System.EventRecordID)
-
-#         # Fetch corresponding Wazuh alert
-#         wazuh_event = await fetch_raw_alert(
-#             agent_name=alert.computer,
-#             event_record_id=event_record_id
-#         )
-
-#         # Access fields specific to Defender events
-#         try:
-#             product_name = parsed_event.EventData.product_name
-#             threat_name = parsed_event.EventData.threat_name if hasattr(parsed_event.EventData, "threat_name") else None
-
-#             # Process Defender-specific logic here
-#             # ...
-
-#         except Exception as e:
-#             logger.error(f"Error processing Defender event: {str(e)}")
-#     else:
-#         logger.info(f"Unrecognized event channel: {alert.channel}")
-#         # Handle other event types or generic processing
-#         # ...
-
-#     # Return a response regardless of event type
-#     return VelociraptorSigmaAlertResponse(
-#         success=True,
-#         message=f"Alert from {alert.channel} processed successfully",
-#         alert_id=alert.sourceRef
-#     )
-
 """
 Service module for processing Velociraptor Sigma alerts.
 This module handles the interaction between Velociraptor alerts and the Wazuh Indexer.
@@ -169,9 +15,14 @@ from app.incidents.schema.velo_sigma import (
     GenericEvent,
 )
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+from app.incidents.services.incident_alert import create_alert
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.incidents.schema.incident_alert import CreateAlertRequest, CreateAlertResponse
+from app.incidents.schema.db_operations import CommentCreate, AlertTagCreate
+from app.incidents.services.db_operations import create_comment, create_alert_tag
 
 
-async def fetch_raw_alert(agent_name: str, event_record_id: str) -> Optional[Dict[str, Any]]:
+async def fetch_raw_alert(agent_name: str, event_record_id: str, index_pattern: str) -> Optional[Dict[str, Any]]:
     """
     Fetch raw alert data from Wazuh Indexer based on the agent name and event record ID.
 
@@ -185,7 +36,7 @@ async def fetch_raw_alert(agent_name: str, event_record_id: str) -> Optional[Dic
     try:
         # Create client and prepare search parameters
         client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
-        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        one_hour_ago = datetime.utcnow() - timedelta(hours=4)
         timestamp = one_hour_ago.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
         # Build query
@@ -193,7 +44,7 @@ async def fetch_raw_alert(agent_name: str, event_record_id: str) -> Optional[Dic
         logger.debug(f"Searching Wazuh Indexer | Query: {query}")
 
         # Execute search
-        response = await execute_wazuh_search(client, query)
+        response = await execute_wazuh_search(client, query, index_pattern)
 
         # Extract and return results
         return extract_wazuh_results(response)
@@ -229,7 +80,7 @@ def build_wazuh_query(agent_name: str, event_record_id: str, timestamp: str) -> 
     }
 
 
-async def execute_wazuh_search(client, query: Dict[str, Any]) -> Dict[str, Any]:
+async def execute_wazuh_search(client, query: Dict[str, Any], index_pattern) -> Dict[str, Any]:
     """
     Execute the search against the Wazuh Indexer.
 
@@ -242,7 +93,7 @@ async def execute_wazuh_search(client, query: Dict[str, Any]) -> Dict[str, Any]:
     """
     try:
         response = await client.search(
-            index="new-wazuh*",
+            index=index_pattern,
             body={"query": query},
             size=1,
             timeout="1m"
@@ -257,13 +108,13 @@ async def execute_wazuh_search(client, query: Dict[str, Any]) -> Dict[str, Any]:
 
 def extract_wazuh_results(response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
-    Extract the alert data from the Wazuh Indexer response.
+    Extract the alert data from the Wazuh Indexer response, including metadata needed for references.
 
     Args:
         response: Search response from Wazuh Indexer
 
     Returns:
-        Raw alert data or None if not found
+        Raw alert data enriched with metadata, or None if not found
     """
     if not response or "hits" not in response or "hits" not in response["hits"]:
         logger.warning("Invalid response structure from Wazuh Indexer")
@@ -274,43 +125,60 @@ def extract_wazuh_results(response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         logger.warning("No matching alerts found in Wazuh Indexer")
         return None
 
-    # Return the first matching alert
-    raw_alert = hits[0]["_source"]
-    logger.debug("Successfully extracted raw alert data")
+    # Get the first matching hit
+    hit = hits[0]
+
+    # Extract index, document ID and source data
+    index_name = hit.get("_index")
+    alert_id = hit.get("_id")
+    raw_alert = hit.get("_source", {})
+
+    # Enrich the raw alert with metadata needed for references
+    raw_alert["index_name"] = index_name
+    raw_alert["alert_id"] = alert_id
+
+    logger.debug(f"Successfully extracted raw alert data from index {index_name} with ID {alert_id}")
     return raw_alert
 
 
-async def process_sysmon_event(alert: VelociraptorSigmaAlert, parsed_event) -> Dict[str, Any]:
+async def process_sysmon_event(alert: VelociraptorSigmaAlert, parsed_event: SysmonEvent) -> Dict[str, Any]:
     """
     Process a Sysmon event from Velociraptor.
 
     Args:
         alert: The original Sigma alert
-        parsed_event: The parsed event data
+        parsed_event: The parsed Sysmon event data
 
     Returns:
         Dict containing processed event data
     """
     logger.info(f"Processing Sysmon event from channel: {alert.channel}")
 
-    # Extract key fields
+    # Now we have proper type hints and IDE completion support
     event_record_id = str(parsed_event.System.EventRecordID)
     rule_name = parsed_event.EventData.RuleName
     source_image = parsed_event.EventData.SourceImage
     target_image = parsed_event.EventData.TargetImage
 
+    # Additional Sysmon-specific fields we can access with confidence
+    source_process_id = parsed_event.EventData.SourceProcessId
+    source_user = parsed_event.EventData.SourceUser
+
     # Fetch corresponding Wazuh alert
     wazuh_event = await fetch_raw_alert(
         agent_name=alert.computer,
-        event_record_id=event_record_id
+        event_record_id=event_record_id,
+        index_pattern=alert.index_pattern
     )
 
-    # Build result
+    # Build result with more Sysmon-specific details
     result = {
         "event_record_id": event_record_id,
         "rule_name": rule_name,
         "source_image": source_image,
         "target_image": target_image,
+        "source_process_id": source_process_id,
+        "source_user": source_user,
         "wazuh_data": wazuh_event,
         "success": wazuh_event is not None
     }
@@ -319,7 +187,7 @@ async def process_sysmon_event(alert: VelociraptorSigmaAlert, parsed_event) -> D
     return result
 
 
-async def process_defender_event(alert: VelociraptorSigmaAlert, parsed_event) -> Dict[str, Any]:
+async def process_defender_event(alert: VelociraptorSigmaAlert, parsed_event: DefenderEvent) -> Dict[str, Any]:
     """
     Process a Windows Defender event from Velociraptor.
 
@@ -364,7 +232,7 @@ async def process_defender_event(alert: VelociraptorSigmaAlert, parsed_event) ->
     return result
 
 
-async def create_velo_sigma_alert(alert: VelociraptorSigmaAlert) -> VelociraptorSigmaAlertResponse:
+async def create_velo_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession) -> VelociraptorSigmaAlertResponse:
     """
     Process a Velociraptor Sigma alert based on its channel type.
 
@@ -375,19 +243,78 @@ async def create_velo_sigma_alert(alert: VelociraptorSigmaAlert) -> Velociraptor
         Response indicating the success or failure of the processing
     """
     try:
-        # Parse event and determine event type based on channel
+         # Parse event and determine event type based on channel
         parsed_event = alert.get_parsed_event()
         logger.debug(f"Processing alert | Channel: {alert.channel} | Type: {type(parsed_event).__name__}")
 
-        # Process based on channel type
+        # Use type checking to ensure correct handling
         result = {}
-        if "Sysmon" in alert.channel:
+        if isinstance(parsed_event, SysmonEvent):
+            result = await process_sysmon_event(alert, parsed_event)
+        elif isinstance(parsed_event, DefenderEvent):
+            result = await process_defender_event(alert, parsed_event)
+        elif "Sysmon" in alert.channel:
+            # Fallback for Sysmon channel but generic event type
+            logger.warning(f"Expected SysmonEvent but got {type(parsed_event).__name__} for Sysmon channel")
             result = await process_sysmon_event(alert, parsed_event)
         elif "Defender" in alert.channel:
+            # Fallback for Defender channel but generic event type
+            logger.warning(f"Expected DefenderEvent but got {type(parsed_event).__name__} for Defender channel")
             result = await process_defender_event(alert, parsed_event)
         else:
             logger.info(f"Unrecognized event channel: {alert.channel}")
             result = {"success": False, "reason": "Unsupported channel type"}
+
+        logger.info(f'Result : {result}')
+
+        # Now that we have the processed event data, we can create an alert
+        if result.get("success"):
+            # ! Create alert in CoPilot ! #
+            result["alert_id"] = await create_alert(
+                alert=CreateAlertRequest(
+                    index_name=result["wazuh_data"]["index_name"],
+                    alert_id=result["wazuh_data"]["alert_id"]
+                ),
+                session=session
+            )
+            # ! Now lets add a comment to the alert ! #
+            await create_comment(
+                comment=CommentCreate(
+                    alert_id=result.get("alert_id"),
+                    comment=f"Velociraptor Sigma: {alert.title} | {alert.channel}",
+                    user_name="admin",
+                    created_at=datetime.utcnow(),
+                ),
+                db=session
+            )
+
+            # ! Now lets add a tag to the alert ! #
+            await create_alert_tag(
+                alert_tag=AlertTagCreate(
+                    alert_id=result.get("alert_id"),
+                    tag=f"{alert.type}"
+                ),
+                db=session
+            )
+        else:
+            logger.warning(f"Failed to process alert data | EventRecordID: {result['event_record_id']}")
+            result["alert_id"] = None
+        # Log the result
+        logger.info(f"Alert processing result | EventRecordID: {result['event_record_id']} | Success: {result['success']}")
+        logger.debug(f"Alert processing result | Data: {result}")
+
+        # Handle success and failure cases
+        if not result.get("success"):
+            logger.warning(f"Failed to process alert data | EventRecordID: {result['event_record_id']}")
+            return VelociraptorSigmaAlertResponse(
+                success=False,
+                message="Failed to process alert data",
+                alert_id=result.get("alert_id")
+            )
+        # Log the result
+        logger.info(f"Alert processing result | EventRecordID: {result['event_record_id']} | Success: {result['success']}")
+        logger.debug(f"Alert processing result | Data: {result}")
+
 
         # Build appropriate response
         success = result.get("success", False)
@@ -397,7 +324,7 @@ async def create_velo_sigma_alert(alert: VelociraptorSigmaAlert) -> Velociraptor
         return VelociraptorSigmaAlertResponse(
             success=success,
             message=message,
-            alert_id=alert.sourceRef
+            alert_id=result.get("alert_id"),
         )
 
     except Exception as e:

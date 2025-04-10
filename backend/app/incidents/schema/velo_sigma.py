@@ -157,6 +157,7 @@ class VelociraptorSigmaAlert(BaseModel):
     event: Union[str, Dict[str, Any], SysmonEvent, DefenderEvent, GenericEvent]
     type: str = "sigma-alert"
     source: str = "velociraptor"
+    index_pattern: str
     sourceRef: str
 
     @validator('event', pre=True)
@@ -169,40 +170,6 @@ class VelociraptorSigmaAlert(BaseModel):
                 raise ValueError(f"Invalid JSON in event field: {e}")
         return v
 
-    # def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, GenericEvent]:
-    #     """
-    #     Get the event object parsed into the appropriate type based on the channel
-    #     """
-    #     if isinstance(self.event, str):
-    #         # If still a string (though validator should have converted it)
-    #         event_data = json.loads(self.event)
-    #     elif isinstance(self.event, (SysmonEvent, DefenderEvent, GenericEvent)):
-    #         # Already parsed into appropriate model
-    #         return self.event
-    #     else:
-    #         # Dictionary that needs to be converted
-    #         event_data = self.event
-
-    #     # Determine the event type based on the channel or Provider.Name
-    #     provider_name = None
-    #     if isinstance(event_data, dict) and "System" in event_data and "Provider" in event_data["System"]:
-    #         provider_name = event_data["System"]["Provider"].get("Name", "")
-
-    #     if "Sysmon" in self.channel or (provider_name and "Sysmon" in provider_name):
-    #         try:
-    #             return SysmonEvent(**event_data)
-    #         except Exception:
-    #             # Fall back to generic if structure doesn't match
-    #             return GenericEvent(**event_data)
-    #     elif "Defender" in self.channel or (provider_name and "Defender" in provider_name):
-    #         try:
-    #             return DefenderEvent(**event_data)
-    #         except Exception:
-    #             # Fall back to generic if structure doesn't match
-    #             return GenericEvent(**event_data)
-    #     else:
-    #         # Use generic model for other event types
-    #         return GenericEvent(**event_data)
     def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, GenericEvent]:
         """
         Get the event object parsed into the appropriate type based on the channel
@@ -288,6 +255,7 @@ class VelociraptorSigmaAlert(BaseModel):
                 "event": "{\"System\":{\"Provider\":{\"Name\":\"Microsoft-Windows-Sysmon\",\"Guid\":\"5770385F-C22A-43E0-BF4C-06F5698FFBD9\"},\"EventID\":{\"Value\":10},\"Version\":3,\"Level\":4,\"Task\":10,\"Opcode\":0,\"Keywords\":9223372036854775808,\"TimeCreated\":{\"SystemTime\":1744233485.0778975},\"EventRecordID\":564617,\"Correlation\":{},\"Execution\":{\"ProcessID\":2320,\"ThreadID\":3540},\"Channel\":\"Microsoft-Windows-Sysmon/Operational\",\"Computer\":\"WIN-HFOU106TD7K\",\"Security\":{\"UserID\":\"S-1-5-18\"}},\"EventData\":{\"RuleName\":\"technique_id=T1003,technique_name=Credential Dumping\",\"UtcTime\":\"2025-04-09 21:18:05.064\",\"SourceProcessGUID\":\"691FF406-E40B-67F6-2901-000000003A00\",\"SourceProcessId\":4964,\"SourceThreadId\":4448,\"SourceImage\":\"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe\",\"TargetProcessGUID\":\"691FF406-DDC8-67F6-0C00-000000003A00\",\"TargetProcessId\":668,\"TargetImage\":\"C:\\\\Windows\\\\system32\\\\lsass.exe\",\"GrantedAccess\":2097151,\"CallTrace\":\"C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)\",\"SourceUser\":\"WIN-HFOU106TD7K\\\\Administrator\",\"TargetUser\":\"NT AUTHORITY\\\\SYSTEM\"},\"Message\":\"Process accessed:\\nRuleName: technique_id=T1003,technique_name=Credential Dumping!s!\\nUtcTime: 2025-04-09 21:18:05.064!s!\\nSourceProcessGUID: 691FF406-E40B-67F6-2901-000000003A00!s!\\nSourceProcessId: 4964!s!\\nSourceThreadId: 4448!s!\\nSourceImage: C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe!s!\\nTargetProcessGUID: 691FF406-DDC8-67F6-0C00-000000003A00!s!\\nTargetProcessId: 668!s!\\nTargetImage: C:\\\\Windows\\\\system32\\\\lsass.exe!s!\\nGrantedAccess: 2097151!s!\\nCallTrace: C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)!s!\\nSourceUser: WIN-HFOU106TD7K\\\\Administrator!s!\\nTargetUser: NT AUTHORITY\\\\SYSTEM!s!\\r\\n\"}",
                 "type": "sigma-alert",
                 "source": "velociraptor",
+                "index_pattern": "wazuh-*",
                 "sourceRef": "754600692"
             }
         }

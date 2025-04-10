@@ -235,32 +235,14 @@ async def invoke_alert_threshold_graylog_route(
 
 
 @incidents_alerts_router.post("/create/velo-sigma", response_model=VelociraptorSigmaAlertResponse)
-async def process_sigma_alert(alert: VelociraptorSigmaAlert):
+async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
+    """
+    Process a Velociraptor Sigma alert based on its channel type.
+    Args:
+        alert: The original Sigma alert
+        session: The database session
+    Returns:
+        VelociraptorSigmaAlertResponse: The response object containing the result of the alert creation
+    """
     logger.info(f"Processing Velociraptor Sigma alert: {alert}")
-    return await create_velo_sigma_alert(alert)
-    # # The event is automatically parsed in the validator
-
-    # # Get a properly typed event object
-    # parsed_event = alert.get_parsed_event()
-
-    # # Now you can access properly structured fields
-    # if isinstance(parsed_event, SysmonEvent):
-    #     logger.info(f"Processing Sysmon event: {parsed_event.EventData}")
-    #     # Handle Sysmon event
-    #     rule_name = parsed_event.EventData.RuleName
-    #     source_image = parsed_event.EventData.SourceImage
-    #     # ...
-    # elif isinstance(parsed_event, DefenderEvent):
-    #     logger.info(f"Processing Defender event: {parsed_event.EventData}")
-    #     # Handle Defender event
-    #     product_name = parsed_event.EventData.product_name
-    #     # ...
-
-    # # Process the alert
-    # # ...
-
-    # return VelociraptorSigmaAlertResponse(
-    #     success=True,
-    #     message="Alert processed successfully",
-    #     alert_id="some-generated-id"
-    # )
+    return await create_velo_sigma_alert(alert, session)
