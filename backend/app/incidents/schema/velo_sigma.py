@@ -125,6 +125,30 @@ class DefenderEventData(BaseModel):
         extra = "allow"  # Allow additional fields not specified in the model
 
 
+class PowerShellEventData(BaseModel):
+    """PowerShell-specific event data structure"""
+
+    MessageNumber: int
+    MessageTotal: int
+    ScriptBlockText: str
+    ScriptBlockId: str
+    Path: str
+
+    # Optional fields that might be present in other PowerShell events
+    HostApplication: Optional[str] = None
+    HostName: Optional[str] = None
+    HostVersion: Optional[str] = None
+    EngineVersion: Optional[str] = None
+    RunspaceId: Optional[str] = None
+    PipelineId: Optional[int] = None
+    CommandName: Optional[str] = None
+    CommandType: Optional[str] = None
+    ConnectedUser: Optional[str] = None
+
+    class Config:
+        extra = "allow"  # Allow additional fields not specified in the model
+
+
 # Generic event data model that accepts any fields
 class GenericEventData(BaseModel):
     """Generic event data structure that accepts any fields"""
@@ -150,6 +174,12 @@ class DefenderEvent(EventBase):
     """Windows Defender-specific event"""
 
     EventData: DefenderEventData
+
+
+class PowerShellEvent(EventBase):
+    """PowerShell-specific event"""
+
+    EventData: PowerShellEventData
 
 
 class GenericEvent(EventBase):
@@ -184,7 +214,7 @@ class VelociraptorSigmaAlert(BaseModel):
                 raise ValueError(f"Invalid JSON in event field: {e}")
         return v
 
-    def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, GenericEvent]:
+    def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, PowerShellEvent, GenericEvent]:
         """
         Get the event object parsed into the appropriate type based on the channel
 
@@ -195,7 +225,7 @@ class VelociraptorSigmaAlert(BaseModel):
         if isinstance(self.event, str):
             # If still a string (though validator should have converted it)
             event_data = json.loads(self.event)
-        elif isinstance(self.event, (SysmonEvent, DefenderEvent, GenericEvent)):
+        elif isinstance(self.event, (SysmonEvent, DefenderEvent, PowerShellEvent, GenericEvent)):
             # Already parsed into appropriate model
             return self.event
         else:
@@ -224,6 +254,15 @@ class VelociraptorSigmaAlert(BaseModel):
                     logger.warning(f"Failed to parse Defender event: {e}")
                     return GenericEvent(**event_data)
 
+            # Check for PowerShell in channel
+            elif "powershell" in channel_lower:
+                try:
+                    return PowerShellEvent(**event_data)
+                except Exception as e:
+                    # Fall back to generic if structure doesn't match
+                    logger.warning(f"Failed to parse PowerShell event: {e}")
+                    return GenericEvent(**event_data)
+
         # If channel doesn't give us enough info, check Provider.Name in the event
         provider_name = ""
         if isinstance(event_data, dict) and "System" in event_data:
@@ -244,6 +283,12 @@ class VelociraptorSigmaAlert(BaseModel):
                     except Exception as e:
                         logger.warning(f"Failed to parse Defender event: {e}")
                         return GenericEvent(**event_data)
+                elif "powershell" in provider_name:
+                    try:
+                        return PowerShellEvent(**event_data)
+                    except Exception as e:
+                        logger.warning(f"Failed to parse PowerShell event: {e}")
+                        return GenericEvent(**event_data)
 
             # If we have System.Channel, check that too
             if "Channel" in system:
@@ -259,6 +304,12 @@ class VelociraptorSigmaAlert(BaseModel):
                         return DefenderEvent(**event_data)
                     except Exception as e:
                         logger.warning(f"Failed to parse Defender event: {e}")
+                        return GenericEvent(**event_data)
+                elif "powershell" in system_channel:
+                    try:
+                        return PowerShellEvent(**event_data)
+                    except Exception as e:
+                        logger.warning(f"Failed to parse PowerShell event: {e}")
                         return GenericEvent(**event_data)
 
         # Use generic model for other event types
