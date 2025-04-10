@@ -59,6 +59,10 @@ class SysmonEventData(BaseModel):
     SourceUser: str
     TargetUser: str
 
+    class Config:
+        extra = "allow"  # Allow additional fields not specified in the model
+
+
 
 # class DefenderEventData(BaseModel):
 #     """Windows Defender event data structure"""
@@ -165,9 +169,47 @@ class VelociraptorSigmaAlert(BaseModel):
                 raise ValueError(f"Invalid JSON in event field: {e}")
         return v
 
+    # def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, GenericEvent]:
+    #     """
+    #     Get the event object parsed into the appropriate type based on the channel
+    #     """
+    #     if isinstance(self.event, str):
+    #         # If still a string (though validator should have converted it)
+    #         event_data = json.loads(self.event)
+    #     elif isinstance(self.event, (SysmonEvent, DefenderEvent, GenericEvent)):
+    #         # Already parsed into appropriate model
+    #         return self.event
+    #     else:
+    #         # Dictionary that needs to be converted
+    #         event_data = self.event
+
+    #     # Determine the event type based on the channel or Provider.Name
+    #     provider_name = None
+    #     if isinstance(event_data, dict) and "System" in event_data and "Provider" in event_data["System"]:
+    #         provider_name = event_data["System"]["Provider"].get("Name", "")
+
+    #     if "Sysmon" in self.channel or (provider_name and "Sysmon" in provider_name):
+    #         try:
+    #             return SysmonEvent(**event_data)
+    #         except Exception:
+    #             # Fall back to generic if structure doesn't match
+    #             return GenericEvent(**event_data)
+    #     elif "Defender" in self.channel or (provider_name and "Defender" in provider_name):
+    #         try:
+    #             return DefenderEvent(**event_data)
+    #         except Exception:
+    #             # Fall back to generic if structure doesn't match
+    #             return GenericEvent(**event_data)
+    #     else:
+    #         # Use generic model for other event types
+    #         return GenericEvent(**event_data)
     def get_parsed_event(self) -> Union[SysmonEvent, DefenderEvent, GenericEvent]:
         """
         Get the event object parsed into the appropriate type based on the channel
+
+        Detects the event type from:
+        1. The channel field in the alert (e.g. "Microsoft-Windows-Sysmon/Operational")
+        2. The System.Provider.Name in the event data
         """
         if isinstance(self.event, str):
             # If still a string (though validator should have converted it)
@@ -179,26 +221,61 @@ class VelociraptorSigmaAlert(BaseModel):
             # Dictionary that needs to be converted
             event_data = self.event
 
-        # Determine the event type based on the channel or Provider.Name
-        provider_name = None
-        if isinstance(event_data, dict) and "System" in event_data and "Provider" in event_data["System"]:
-            provider_name = event_data["System"]["Provider"].get("Name", "")
+        # First check the channel field in the alert
+        if self.channel:
+            channel_lower = self.channel.lower()
 
-        if "Sysmon" in self.channel or (provider_name and "Sysmon" in provider_name):
-            try:
-                return SysmonEvent(**event_data)
-            except Exception:
-                # Fall back to generic if structure doesn't match
-                return GenericEvent(**event_data)
-        elif "Defender" in self.channel or (provider_name and "Defender" in provider_name):
-            try:
-                return DefenderEvent(**event_data)
-            except Exception:
-                # Fall back to generic if structure doesn't match
-                return GenericEvent(**event_data)
-        else:
-            # Use generic model for other event types
-            return GenericEvent(**event_data)
+            # Check for Sysmon in channel
+            if "sysmon" in channel_lower:
+                try:
+                    return SysmonEvent(**event_data)
+                except Exception as e:
+                    # Fall back to generic if structure doesn't match
+                    return GenericEvent(**event_data)
+
+            # Check for Defender in channel
+            elif "defender" in channel_lower:
+                try:
+                    return DefenderEvent(**event_data)
+                except Exception as e:
+                    # Fall back to generic if structure doesn't match
+                    return GenericEvent(**event_data)
+
+        # If channel doesn't give us enough info, check Provider.Name in the event
+        provider_name = ""
+        if isinstance(event_data, dict) and "System" in event_data:
+            system = event_data["System"]
+            if "Provider" in system and "Name" in system["Provider"]:
+                provider_name = system["Provider"]["Name"].lower()
+
+                # Check provider name
+                if "sysmon" in provider_name:
+                    try:
+                        return SysmonEvent(**event_data)
+                    except Exception as e:
+                        return GenericEvent(**event_data)
+                elif "defender" in provider_name:
+                    try:
+                        return DefenderEvent(**event_data)
+                    except Exception as e:
+                        return GenericEvent(**event_data)
+
+            # If we have System.Channel, check that too
+            if "Channel" in system:
+                system_channel = system["Channel"].lower()
+                if "sysmon" in system_channel:
+                    try:
+                        return SysmonEvent(**event_data)
+                    except Exception as e:
+                        return GenericEvent(**event_data)
+                elif "defender" in system_channel:
+                    try:
+                        return DefenderEvent(**event_data)
+                    except Exception as e:
+                        return GenericEvent(**event_data)
+
+        # Use generic model for other event types
+        return GenericEvent(**event_data)
 
     class Config:
         schema_extra = {
