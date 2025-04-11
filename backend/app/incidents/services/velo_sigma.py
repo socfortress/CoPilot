@@ -4,7 +4,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Union
-from fastapi import HTTPException
+
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,25 +65,24 @@ class VelociraptorSigmaService:
                     }
 
             # Add alert metadata to context
-            event_context.update({
-                "alert_title": alert.title,
-                "alert_level": alert.level,
-                "alert_channel": alert.channel,
-                "alert_source": alert.source,
-                "computer": alert.computer,
-                "clientID": alert.clientID,
-            })
+            event_context.update(
+                {
+                    "alert_title": alert.title,
+                    "alert_level": alert.level,
+                    "alert_channel": alert.channel,
+                    "alert_source": alert.source,
+                    "computer": alert.computer,
+                    "clientID": alert.clientID,
+                },
+            )
 
-            # Create a unique ID for this alert based on sourceRef and timestamp
-            unique_id = f"{alert.sourceRef}_{int(datetime.utcnow().timestamp())}"
+            # Create a unique ID for this alert based on sourceRef and timestamp - Not using for now
+            # unique_id = f"{alert.sourceRef}_{int(datetime.utcnow().timestamp())}"
 
             # Look up the customer code from Agents table using the clientID
-            customer_code = "default"  # Default fallback
+            customer_code = "not_found"  # Default fallback
             if alert.clientID:
                 # Query the Agents table to find matching agent by velociraptor_id
-                # ! TODO: GET THE CUSTOMER CODE CORRECTLY ! #
-                from sqlalchemy import select
-
                 agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
                 agent_result = await self.session.execute(agent_query)
                 agent = agent_result.scalar_one_or_none()
@@ -104,8 +103,8 @@ class VelociraptorSigmaService:
                     timefield_payload=timestamp,
                     alert_title_payload=alert.title,
                     source=alert.source,
-                    index_id='not_applicable',
-                    index_name='not_applicable',
+                    index_id="not_applicable",
+                    index_name="not_applicable",
                 ),
                 customer_code=customer_code,  # Use the looked up customer code
                 session=self.session,
@@ -135,31 +134,19 @@ class VelociraptorSigmaService:
             )
 
             # Add tags
-            await create_alert_tag(
-                alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"),
-                db=self.session
-            )
-            await create_alert_tag(
-                alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"),
-                db=self.session
-            )
+            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
+            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
 
             # Add event-specific tags
             if "Sysmon" in alert.channel:
-                await create_alert_tag(
-                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"),
-                    db=self.session
-                )
+                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
             elif "Defender" in alert.channel:
-                await create_alert_tag(
-                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"),
-                    db=self.session
-                )
+                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
             elif "PowerShell" in alert.channel:
-                await create_alert_tag(
-                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"),
-                    db=self.session
-                )
+                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
+            else:
+                # Generic event type
+                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
 
             logger.info(f"Created fallback CoPilot alert with ID: {result['alert_id']} for customer {customer_code}")
             result["success"] = True
@@ -221,8 +208,9 @@ class VelociraptorSigmaService:
             logger.warning(f"Expected PowerShellEvent but got {type(parsed_event).__name__} for PowerShell channel")
             return await self._process_powershell_event(alert, parsed_event)
         else:
-            logger.info(f"Unrecognized event channel: {alert.channel}")
-            return {"success": False, "reason": "Unsupported channel type"}
+            # Use a generic processor for unknown event types
+            logger.info(f"Using generic processor for channel: {alert.channel}")
+            return await self._process_generic_event(alert, parsed_event)
 
     async def _process_sysmon_event(self, alert: VelociraptorSigmaAlert, parsed_event: Union[SysmonEvent, GenericEvent]) -> Dict[str, Any]:
         """Process a Sysmon event."""
@@ -359,6 +347,74 @@ class VelociraptorSigmaService:
             logger.error(f"Failed to process PowerShell event - missing attribute: {str(e)}")
             return {"success": False, "reason": f"Failed to process PowerShell event: {str(e)}"}
 
+    async def _process_generic_event(self, alert: VelociraptorSigmaAlert, parsed_event: GenericEvent) -> Dict[str, Any]:
+        """Process a generic event that doesn't match known types."""
+        logger.info(f"Processing generic event from channel: {alert.channel}")
+
+        try:
+            # Extract event record ID if available
+            event_record_id = str(getattr(parsed_event.System, "EventRecordID", "unknown"))
+
+            # Try to fetch corresponding Wazuh alert if we have an event record ID
+            wazuh_event = None
+            if event_record_id != "unknown":
+                wazuh_event = await self._fetch_wazuh_alert(
+                    agent_name=alert.computer,
+                    event_record_id=event_record_id,
+                    index_pattern=alert.index_pattern,
+                )
+
+            # Build basic result
+            result = {
+                "event_record_id": event_record_id,
+                "wazuh_data": wazuh_event,
+                "success": wazuh_event is not None,
+                "channel": alert.channel,
+            }
+
+            # Extract some generic system info
+            if hasattr(parsed_event, "System"):
+                system = parsed_event.System
+                if hasattr(system, "Channel"):
+                    result["system_channel"] = system.Channel
+                if hasattr(system, "Provider") and hasattr(system.Provider, "Name"):
+                    result["provider_name"] = system.Provider.Name
+                if hasattr(system, "EventID") and hasattr(system.EventID, "Value"):
+                    result["event_id"] = system.EventID.Value
+
+            # Try to extract some event data if available
+            if hasattr(parsed_event, "EventData"):
+                try:
+                    # Add the first few items from EventData to the result
+                    event_data = parsed_event.EventData
+                    event_data_dict = {}
+
+                    # Get all attributes that aren't methods or private
+                    for attr_name in dir(event_data):
+                        if not attr_name.startswith("_") and not callable(getattr(event_data, attr_name)):
+                            try:
+                                value = getattr(event_data, attr_name)
+                                if not callable(value):  # Skip methods
+                                    event_data_dict[attr_name] = str(value)
+                            except Exception as attr_error:
+                                logger.warning(f"Failed to access attribute '{attr_name}': {str(attr_error)}")
+                                # Skip attributes that can't be accessed
+                                pass
+
+                    # Add to result, limited to prevent overwhelming logs
+                    result["event_data"] = {k: v for i, (k, v) in enumerate(event_data_dict.items()) if i < 10}
+
+                except Exception as e:
+                    logger.warning(f"Failed to extract event data details: {e}")
+
+            logger.info(f"Generic event processed | EventRecordID: {event_record_id} | Success: {result['success']}")
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to process generic event: {str(e)}")
+            logger.exception(e)
+            return {"success": False, "reason": f"Failed to process generic event: {str(e)}"}
+
     async def _create_copilot_alert(self, alert: VelociraptorSigmaAlert, result: Dict[str, Any]) -> None:
         """Create an alert in CoPilot with comments and tags."""
         try:
@@ -410,8 +466,10 @@ class VelociraptorSigmaService:
             # Create client and prepare search parameters
             client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-            # Use ISO format for timestamps to avoid format errors
-            one_hour_ago = datetime.utcnow() - timedelta(hours=4)
+            # Use ISO format for timestamps to avoid format errors - default to current time -1 hour
+            # This is to ensure we are searching within the last hour
+            # ! Might need to revisit this if the time window is too small ! #
+            one_hour_ago = datetime.utcnow() - timedelta(hours=1)
             timestamp = one_hour_ago.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
             # Build query
