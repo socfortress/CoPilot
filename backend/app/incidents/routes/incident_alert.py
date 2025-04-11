@@ -1,5 +1,9 @@
+import os
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Header
+from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +35,18 @@ from app.incidents.services.incident_alert import retrieve_alert_timeline
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
 
 incidents_alerts_router = APIRouter()
+
+
+# Function to validate the Velociraptor header
+async def verify_velociraptor_header(velociraptor: str = Header(None)):
+    """Verify that the request has the correct Velociraptor header."""
+    # Get the header value from environment variable or use "ab73de7a-6f61-4dde-87cd-3af5175a7281" as default
+    expected_header = os.getenv("VELOCIRAPTOR_API_HEADER_VALUE", "ab73de7a-6f61-4dde-87cd-3af5175a7281")
+
+    if velociraptor != expected_header:
+        logger.error("Invalid or missing Velociraptor header")
+        raise HTTPException(status_code=403, detail="Invalid or missing Velociraptor header")
+    return velociraptor
 
 
 @incidents_alerts_router.get(
@@ -230,7 +246,12 @@ async def invoke_alert_threshold_graylog_route(
     return CreateAlertResponse(success=True, message="Alert threshold Graylog invoked successfully", alert_id=alert_id)
 
 
-@incidents_alerts_router.post("/create/velo-sigma", response_model=VelociraptorSigmaAlertResponse)
+@incidents_alerts_router.post(
+    "/create/velo-sigma",
+    response_model=VelociraptorSigmaAlertResponse,
+    description="Creates an incident alert in CoPilot for a Velociraptor Sigma alert",
+    dependencies=[Depends(verify_velociraptor_header)],
+)
 async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
     """
     This route receives a Velociraptor Sigma alert. You must have defined the Windows.Hayabusa.Monitoring
