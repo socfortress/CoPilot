@@ -17,6 +17,8 @@ from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import IndexNamesResponse
+from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
+from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
@@ -26,6 +28,7 @@ from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
+from app.incidents.services.velo_sigma import create_velo_sigma_alert
 
 incidents_alerts_router = APIRouter()
 
@@ -225,3 +228,22 @@ async def invoke_alert_threshold_graylog_route(
         threshold_alert=True,
     )
     return CreateAlertResponse(success=True, message="Alert threshold Graylog invoked successfully", alert_id=alert_id)
+
+
+@incidents_alerts_router.post("/create/velo-sigma", response_model=VelociraptorSigmaAlertResponse)
+async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
+    """
+    This route receives a Velociraptor Sigma alert. You must have defined the Windows.Hayabusa.Monitoring
+    client Event defined which will search for the Sigma alert in the Velociraptor client.
+    When a Sigma alert is found, Velociraptor will us the `CoPilot.Events.Upload` to send a POST
+    request to this endpoint with the alert data.
+
+    An issue is that we want to fetch the wazuh event that is related to the Sigma alert so that we can
+    create the alert within CoPilot accordingly. To do this we extract the `computer` as the `agent_name`
+    and the `EventRecordID` as the `data_win_system_eventRecordID` and then query the Wazuh Indexer
+    to fetch this sepcific event with a timeframe of 1 hour.
+
+    Then we progress through the CoPilot Alert Creation process as normal.
+    """
+    logger.info(f"Processing Velociraptor Sigma alert: {alert}")
+    return await create_velo_sigma_alert(alert, session)
