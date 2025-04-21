@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -441,3 +442,17 @@ class VeloSigmaExclusionResponse(VeloSigmaExclusionBase):
 
     class Config:
         orm_mode = True
+
+
+class VeloSigmaExlcusionRouteResponse(BaseModel):
+    """Response schema for exclusion rules."""
+
+    exclusion_response: VeloSigmaExclusionResponse
+    success: bool
+    message: str
+
+
+class VeloSigmaExclusionListResponse(BaseModel):
+    success: bool
+    message: str
+    exclusions: List[VeloSigmaExclusionResponse]
