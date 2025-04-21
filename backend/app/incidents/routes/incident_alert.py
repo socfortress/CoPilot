@@ -5,7 +5,9 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Security
+from fastapi import Query
 from loguru import logger
+from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.active_response.routes.graylog import verify_graylog_header
@@ -16,6 +18,9 @@ from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AlertDetailsResponse
 from app.incidents.schema.incident_alert import AlertTimelineResponse
 from app.incidents.schema.incident_alert import AutoCreateAlertResponse
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionResponse
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionUpdate
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
@@ -23,6 +28,10 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
+from app.incidents.services.velo_sigma import VeloSigmaExclusionService
+from typing import List
+from app.auth.utils import AuthHandler
+
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
@@ -250,7 +259,8 @@ async def invoke_alert_threshold_graylog_route(
     "/create/velo-sigma",
     response_model=VelociraptorSigmaAlertResponse,
     description="Creates an incident alert in CoPilot for a Velociraptor Sigma alert",
-    dependencies=[Depends(verify_velociraptor_header)],
+    # ! UNCOMMENT THIS LINE TO ENABLE THE VELOCIRAPTOR HEADER CHECK # !
+    #dependencies=[Depends(verify_velociraptor_header)],
 )
 async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
     """
@@ -268,3 +278,127 @@ async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSessi
     """
     logger.info(f"Processing Velociraptor Sigma alert: {alert}")
     return await create_velo_sigma_alert(alert, session)
+
+@incidents_alerts_router.post(
+    "/create/velo-sigma/exclusion",
+    response_model=VeloSigmaExclusionResponse,
+    summary="Create a new Velociraptor Sigma exclusion rule"
+)
+async def create_exclusion(
+    exclusion: VeloSigmaExclusionCreate,
+    current_user: str = Depends(AuthHandler().return_username_for_logging),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new exclusion rule for Velociraptor Sigma alerts."""
+    # Set the created_by field to the current user
+    logger.info(f"Current user: {current_user}")
+
+    # Take only needed fields from exclusion, excluding created_by
+    exclusion_dict = exclusion.dict(exclude={"created_by"})
+    # Create a new exclusion with the current user
+    updated_exclusion = VeloSigmaExclusionCreate(**exclusion_dict, created_by=current_user)
+
+    # Log the exclusion data for debugging
+    logger.info(f"Exclusion data: {updated_exclusion.dict()}")
+
+    service = VeloSigmaExclusionService(db)
+    return await service.create_exclusion(updated_exclusion)
+
+
+@incidents_alerts_router.get(
+    "/create/velo-sigma/exclusion/{exclusion_id}",
+    response_model=VeloSigmaExclusionResponse,
+    summary="Get an exclusion rule by ID"
+)
+async def get_exclusion(
+    exclusion_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(AuthHandler().get_current_user),
+):
+    """Retrieve details of a specific exclusion rule."""
+    service = VeloSigmaExclusionService(db)
+    exclusion = await service.get_exclusion(exclusion_id)
+
+    if not exclusion:
+        raise HTTPException(status_code=404, detail="Exclusion rule not found")
+
+    return exclusion
+
+
+@incidents_alerts_router.get(
+    "/create/velo-sigma/exclusion",
+    response_model=List[VeloSigmaExclusionResponse],
+    summary="List all exclusion rules"
+)
+async def list_exclusions(
+    skip: int = Query(0, description="Number of items to skip for pagination"),
+    limit: int = Query(100, description="Maximum number of items to return"),
+    enabled_only: bool = Query(False, description="Only return enabled exclusions"),
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(AuthHandler().get_current_user),
+):
+    """List all exclusion rules with pagination."""
+    service = VeloSigmaExclusionService(db)
+    return await service.list_exclusions(skip=skip, limit=limit, enabled_only=enabled_only)
+
+
+@incidents_alerts_router.patch(
+    "/create/velo-sigma/exclusion/{exclusion_id}",
+    response_model=VeloSigmaExclusionResponse,
+    summary="Update an exclusion rule"
+)
+async def update_exclusion(
+    exclusion_id: int,
+    exclusion: VeloSigmaExclusionUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(AuthHandler().get_current_user),
+):
+    """Update an existing exclusion rule."""
+    service = VeloSigmaExclusionService(db)
+    updated = await service.update_exclusion(exclusion_id, exclusion.dict(exclude_unset=True))
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Exclusion rule not found")
+
+    return updated
+
+
+@incidents_alerts_router.delete(
+    "/create/velo-sigma/exclusion/{exclusion_id}",
+    summary="Delete an exclusion rule"
+)
+async def delete_exclusion(
+    exclusion_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(AuthHandler().get_current_user),
+):
+    """Delete an exclusion rule."""
+    service = VeloSigmaExclusionService(db)
+    deleted = await service.delete_exclusion(exclusion_id)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Exclusion rule not found")
+
+    return {"message": "Exclusion rule deleted successfully"}
+
+
+@incidents_alerts_router.post(
+    "/velo-sigma/exclusion/{exclusion_id}/toggle",
+    response_model=VeloSigmaExclusionResponse,
+    summary="Toggle an exclusion rule's enabled status"
+)
+async def toggle_exclusion(
+    exclusion_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(AuthHandler().get_current_user),
+):
+    """Enable or disable an exclusion rule."""
+    service = VeloSigmaExclusionService(db)
+    exclusion = await service.get_exclusion(exclusion_id)
+
+    if not exclusion:
+        raise HTTPException(status_code=404, detail="Exclusion rule not found")
+
+    # Toggle the enabled status
+    updated = await service.update_exclusion(exclusion_id, {"enabled": not exclusion.enabled})
+    return updated

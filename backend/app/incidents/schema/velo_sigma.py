@@ -6,6 +6,7 @@ from typing import Union
 
 from loguru import logger
 from pydantic import BaseModel
+from datetime import datetime
 from pydantic import Field
 from pydantic import validator
 
@@ -382,3 +383,59 @@ class VelociraptorSigmaAlertResponse(BaseModel):
     success: bool
     message: str
     alert_id: Optional[str] = None
+
+
+class VeloSigmaExclusionBase(BaseModel):
+    """Base class for Velociraptor Sigma exclusion rules."""
+    name: str = Field(..., description="Friendly name for this exclusion rule")
+    description: Optional[str] = Field(None, description="Description of why this exclusion exists")
+    channel: Optional[str] = Field(None, description="Windows event channel to match (exact match)")
+    title: Optional[str] = Field(None, description="Sigma rule title to match (exact match)")
+    field_matches: Optional[Dict] = Field(None, description="Field names and values to match in the event data")
+    customer_code: Optional[str] = Field(None, description="Customer code this exclusion applies to (null means all customers)")
+    enabled: bool = Field(True, description="Whether this exclusion is active")
+
+
+class VeloSigmaExclusionCreate(VeloSigmaExclusionBase):
+    """Schema for creating a new exclusion rule."""
+    # Make created_by optional so it can be set by the server
+    created_by: Optional[str] = Field(None, description="User who created this exclusion rule")
+
+    class Config:
+        # Example showing the expected request format
+        schema_extra = {
+            "example": {
+                "name": "Chainsaw Batch Script Exclusion",
+                "description": "Exclude alerts from chainsaw batch scripts in Windows Temp folder",
+                "channel": "Microsoft-Windows-Sysmon/Operational",
+                "title": "HackTool - Powerup Write Hijack DLL",
+                "field_matches": {
+                    "TargetFilename": "C:\\Windows\\Temp\\chainsaw_batch.bat"
+                },
+                "customer_code": None,  # Optional, NULL means apply to all customers
+                "enabled": True
+            }
+        }
+
+
+class VeloSigmaExclusionUpdate(BaseModel):
+    """Schema for updating an exclusion rule."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    channel: Optional[str] = None
+    title: Optional[str] = None
+    field_matches: Optional[Dict] = None
+    customer_code: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
+class VeloSigmaExclusionResponse(VeloSigmaExclusionBase):
+    """Response schema for exclusion rules."""
+    id: int
+    created_by: str
+    created_at: datetime
+    last_matched_at: Optional[datetime] = None
+    match_count: int
+
+    class Config:
+        orm_mode = True

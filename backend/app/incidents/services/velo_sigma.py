@@ -4,9 +4,12 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Union
-
+import re
+from typing import List
+from typing import TYPE_CHECKING
+from typing import Any
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.utils.universal import (
@@ -23,10 +26,268 @@ from app.incidents.schema.velo_sigma import PowerShellEvent
 from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
+from app.incidents.models import VeloSigmaExclusion
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
+
+
+class VeloSigmaExclusionService:
+    """Service for managing and checking Velociraptor Sigma exclusions."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def check_exclusions(self, alert: VelociraptorSigmaAlert) -> Optional[VeloSigmaExclusion]:
+        """
+        Check if the given alert matches any exclusion rules.
+
+        Args:
+            alert: The Velociraptor Sigma alert to check
+
+        Returns:
+            The first matching exclusion rule, or None if no match is found
+        """
+        # Get all enabled exclusions
+        stmt = select(VeloSigmaExclusion).where(VeloSigmaExclusion.enabled == True)
+        result = await self.session.execute(stmt)
+        exclusions = result.scalars().all()
+
+        if not exclusions:
+            return None
+
+        # Parse the event data
+        try:
+            parsed_event = alert.get_parsed_event()
+            logger.debug(f"Checking exclusions for alert | Channel: {alert.channel} | Type: {type(parsed_event).__name__}")
+            logger.debug(f"Parsed event: {parsed_event}")
+            event_data = {}
+
+            # Extract event data fields from different event types
+            if hasattr(parsed_event, "EventData"):
+                # First add all top-level fields
+                for attr_name in dir(parsed_event.EventData):
+                    if not attr_name.startswith("_") and not callable(getattr(parsed_event.EventData, attr_name)):
+                        try:
+                            value = getattr(parsed_event.EventData, attr_name)
+                            if not callable(value):
+                                event_data[attr_name] = str(value)
+                        except Exception:
+                            pass
+
+                # Special handling for PowerShell ContextInfo which contains Host Application
+                if hasattr(parsed_event.EventData, "ContextInfo") and parsed_event.EventData.ContextInfo:
+                    # Parse the ContextInfo string which contains multiple lines of key-value pairs
+                    context_info = parsed_event.EventData.ContextInfo
+                    logger.debug(f"Found ContextInfo in PowerShell event: {context_info}")
+
+                    for line in context_info.splitlines():
+                        line = line.strip()
+                        if line and " = " in line:
+                            key, value = line.split(" = ", 1)
+                            key = key.strip()
+                            # Add these fields with their original names for direct matching
+                            event_data[key] = value.strip()
+                            # Also add common CamelCase variations to make matching more flexible
+                            if " " in key:
+                                # Convert "Host Application" to "HostApplication"
+                                camel_key = "".join(word.capitalize() for word in key.split())
+                                camel_key = camel_key[0].lower() + camel_key[1:]  # lowerCamelCase
+                                event_data[camel_key] = value.strip()
+
+                # Log the extracted field names and values for debugging
+                for key, value in event_data.items():
+                    logger.debug(f"Extracted field: {key} = {value}")
+
+        except Exception as e:
+            logger.error(f"Error parsing event data: {str(e)}")
+            # If we can't parse the event, we won't exclude it
+            return None
+
+        # Check each exclusion against this alert
+        for exclusion in exclusions:
+            logger.debug(f"Checking exclusion: {exclusion.name} (ID: {exclusion.id})")
+            if await self._matches_exclusion(alert, event_data, exclusion):
+                # Update match statistics
+                await self._update_exclusion_stats(exclusion.id)
+                return exclusion
+
+        return None
+
+    async def _matches_exclusion(
+    self,
+    alert: VelociraptorSigmaAlert,
+    event_data: Dict[str, str],
+    exclusion: VeloSigmaExclusion
+) -> bool:
+        """Check if the alert matches the given exclusion rule."""
+        # Check customer code if specified
+        if exclusion.customer_code and exclusion.customer_code != self._get_customer_code(alert):
+            logger.debug(f"Customer code mismatch: rule={exclusion.customer_code}, alert={self._get_customer_code(alert)}")
+            return False
+
+        # Check channel if specified
+        if exclusion.channel and exclusion.channel != alert.channel:
+            logger.debug(f"Channel mismatch: rule={exclusion.channel}, alert={alert.channel}")
+            return False
+
+        # Check title if specified
+        if exclusion.title and exclusion.title != alert.title:
+            logger.debug(f"Title mismatch: rule={exclusion.title}, alert={alert.title}")
+            return False
+
+        # Check field matches if specified
+        if exclusion.field_matches:
+            for field_name, field_value in exclusion.field_matches.items():
+                # Special handling for Host Application field
+                if field_name.lower() == "hostapplication" and field_name not in event_data:
+                    # Try common variations
+                    alternate_keys = ["Host Application", "HostApplication", "hostApplication"]
+                    found = False
+                    for alt_key in alternate_keys:
+                        if alt_key in event_data:
+                            field_name = alt_key  # Use the key that exists in the data
+                            found = True
+                            break
+                    if not found:
+                        logger.debug(f"Field '{field_name}' and its variations not found in event data")
+                        return False
+
+                # Direct match
+                if field_name in event_data:
+                    event_value = event_data[field_name]
+                    logger.debug(f"Checking field match: {field_name}={field_value} against {event_value}")
+
+                    # Support exact match or regex match
+                    if isinstance(field_value, str):
+                        if field_value.startswith("regex:"):
+                            # Remove the regex: prefix and try to match
+                            regex_pattern = field_value[6:]
+                            try:
+                                if not re.search(regex_pattern, event_value, re.IGNORECASE):
+                                    logger.debug(f"Regex pattern '{regex_pattern}' did not match '{event_value}'")
+                                    return False
+                                else:
+                                    logger.debug(f"Regex pattern '{regex_pattern}' matched '{event_value}'")
+                            except re.error:
+                                logger.error(f"Invalid regex pattern in exclusion {exclusion.id}: {regex_pattern}")
+                                return False
+                        else:
+                            # Case-insensitive path comparison for Windows paths
+                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in field_value:
+                                norm_field_value = field_value.lower().replace("\\\\", "\\")
+                                norm_event_value = event_value.lower().replace("\\\\", "\\")
+                                if norm_field_value != norm_event_value:
+                                    logger.debug(f"Path mismatch: rule='{norm_field_value}' event='{norm_event_value}'")
+                                    return False
+                            else:
+                                # Standard case-insensitive match for other fields
+                                if field_value.lower() != event_value.lower():
+                                    logger.debug(f"Case-insensitive match failed: rule='{field_value}' event='{event_value}'")
+                                    return False
+                    else:
+                        # For non-string values (like lists or objects), convert to string for comparison
+                        if str(field_value) != event_value:
+                            logger.debug(f"String conversion match failed: rule='{str(field_value)}' event='{event_value}'")
+                            return False
+                else:
+                    # If field doesn't exist in the event and we're looking for it, no match
+                    logger.debug(f"Field '{field_name}' not found in event data")
+                    logger.debug(f"Available fields: {', '.join(event_data.keys())}")
+                    return False
+
+        # If we passed all checks, this is a match
+        logger.info(f"Alert matched exclusion rule '{exclusion.name}' (ID: {exclusion.id})")
+        return True
+
+    async def _update_exclusion_stats(self, exclusion_id: int) -> None:
+        """Update the statistics for an exclusion after it matches."""
+        try:
+            stmt = (
+                update(VeloSigmaExclusion)
+                .where(VeloSigmaExclusion.id == exclusion_id)
+                .values(
+                    last_matched_at=datetime.utcnow(),
+                    match_count=VeloSigmaExclusion.match_count + 1
+                )
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+        except Exception as e:
+            logger.error(f"Error updating exclusion stats: {str(e)}")
+            # Don't raise the error, just log it
+
+    def _get_customer_code(self, alert: VelociraptorSigmaAlert) -> str:
+        """Extract or determine customer code from the alert."""
+        # This will depend on where customer code is stored in your alerts
+        # You might need to use your agent lookup logic here
+        # For now, we'll return a placeholder
+        return "unknown"
+
+    async def create_exclusion(self, exclusion: VeloSigmaExclusionCreate) -> VeloSigmaExclusion:
+        """Create a new exclusion rule."""
+        exclusion_data = exclusion.dict()
+
+        # Ensure created_by is set to something non-null
+        if not exclusion_data.get("created_by"):
+            exclusion_data["created_by"] = "system"  # Default fallback
+
+        db_exclusion = VeloSigmaExclusion(**exclusion_data)
+        self.session.add(db_exclusion)
+        await self.session.commit()
+        await self.session.refresh(db_exclusion)
+        return db_exclusion
+
+    async def get_exclusion(self, exclusion_id: int) -> Optional[VeloSigmaExclusion]:
+        """Retrieve an exclusion by ID."""
+        stmt = select(VeloSigmaExclusion).where(VeloSigmaExclusion.id == exclusion_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def list_exclusions(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        enabled_only: bool = False
+    ) -> List[VeloSigmaExclusion]:
+        """List all exclusion rules with pagination."""
+        query = select(VeloSigmaExclusion)
+        if enabled_only:
+            query = query.where(VeloSigmaExclusion.enabled == True)
+        query = query.offset(skip).limit(limit)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def update_exclusion(
+        self,
+        exclusion_id: int,
+        exclusion_data: Dict[str, Any]
+    ) -> Optional[VeloSigmaExclusion]:
+        """Update an existing exclusion rule."""
+        db_exclusion = await self.get_exclusion(exclusion_id)
+        if not db_exclusion:
+            return None
+
+        # Update only provided fields
+        for key, value in exclusion_data.items():
+            if hasattr(db_exclusion, key):
+                setattr(db_exclusion, key, value)
+
+        await self.session.commit()
+        await self.session.refresh(db_exclusion)
+        return db_exclusion
+
+    async def delete_exclusion(self, exclusion_id: int) -> bool:
+        """Delete an exclusion rule."""
+        db_exclusion = await self.get_exclusion(exclusion_id)
+        if not db_exclusion:
+            return False
+
+        await self.session.delete(db_exclusion)
+        await self.session.commit()
+        return True
 
 
 class VelociraptorSigmaService:
@@ -169,6 +430,23 @@ class VelociraptorSigmaService:
             Response indicating the success or failure of the processing
         """
         try:
+            # Check exclusions first
+            exclusion_service = VeloSigmaExclusionService(self.session)
+            matching_exclusion = await exclusion_service.check_exclusions(alert)
+
+            if matching_exclusion:
+                # Alert is excluded, return a response indicating this
+                logger.info(
+                    f"Skipping alert processing: matched exclusion rule '{matching_exclusion.name}' (ID: {matching_exclusion.id})"
+                )
+                return VelociraptorSigmaAlertResponse(
+                    success=True,
+                    message=f"Alert excluded by rule: {matching_exclusion.name}",
+                    alert_id=None,
+                    excluded=True,
+                    exclusion_id=matching_exclusion.id
+                )
+
             # Parse event and determine event type
             result = await self._process_event_by_type(alert)
 
