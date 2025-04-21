@@ -334,7 +334,7 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
         for ioc_name in names.ioc_field_names:
             await add_ioc_name(names.source, ioc_name, session)
 
-    logger.info(f"Field names and asset names created successfully for source {names.source}")
+    logger.info(f"Field names, asset names, and timefield name created successfully for source {names.source}")
 
     await session.commit()
 

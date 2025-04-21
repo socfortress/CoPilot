@@ -15,36 +15,46 @@
 							:loading="loadingIndexNames"
 						/>
 					</n-form-item>
-					<n-form-item v-if="showSourceField" path="source" :show-require-mark="false" class="source-field">
-						<template #label>
-							<div class="flex items-end justify-between gap-2">
-								<span>
-									Source
-									<span class="n-form-item-label__asterisk">*</span>
-								</span>
 
-								<span v-if="isSocfortressRecommendsAvailable">
-									<n-button
-										:loading="loadingSocfortressRecommendsWazuh"
-										size="tiny"
-										ghost
-										type="primary"
-										@click="getSocfortressRecommendsWazuh()"
-									>
-										SOCFortress Recommends
-									</n-button>
-								</span>
-							</div>
-						</template>
-						<n-input
-							v-model:value.trim="form.source"
-							placeholder="Please insert Source"
-							clearable
-							:disabled="disableSourceField"
-							:loading="loadingSource"
-							@update:value="resetIndexAvailable()"
-						/>
-					</n-form-item>
+					<div v-if="showSourceField">
+						<n-form-item path="source" :show-require-mark="false" class="source-field">
+							<template #label>
+								<div class="flex items-end justify-between gap-2">
+									<span>
+										Source
+										<span class="n-form-item-label__asterisk">*</span>
+									</span>
+
+									<span v-if="isSocfortressRecommendsAvailable">
+										<n-button
+											:loading="loadingSocfortressRecommendsWazuh"
+											size="tiny"
+											ghost
+											type="primary"
+											@click="getSocfortressRecommendsWazuh()"
+										>
+											SOCFortress Recommends
+										</n-button>
+									</span>
+								</div>
+							</template>
+							<n-input
+								v-if="arbitrarySourceField"
+								v-model:value.trim="form.source"
+								placeholder="Please insert Source"
+								clearable
+							/>
+							<n-input
+								v-else
+								v-model:value.trim="form.source"
+								placeholder="Please insert Source"
+								clearable
+								:disabled="disableSourceField"
+								:loading="loadingSource"
+								@update:value="resetIndexAvailable()"
+							/>
+						</n-form-item>
+					</div>
 
 					<n-alert v-if="isSourceNotAllowed" title="Source already exists" type="warning" class="mb-5">
 						A configuration for
@@ -54,6 +64,13 @@
 						to proceed.
 					</n-alert>
 
+					<n-alert
+						v-if="arbitrarySourceField"
+						title="Proceed with caution, incorrect settings can disrupt system operation"
+						type="warning"
+						class="mb-5"
+					></n-alert>
+
 					<n-form-item label="Field names" path="field_names">
 						<n-select
 							v-model:value="form.field_names"
@@ -62,10 +79,13 @@
 							clearable
 							filterable
 							multiple
+							:tag="arbitrarySourceField"
 							to="body"
 							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
-						/>
+						>
+							<template v-if="arbitrarySourceField" #empty>Press Enter to add the typed value</template>
+						</n-select>
 					</n-form-item>
 					<n-form-item label="IOC Field names" path="ioc_field_names">
 						<n-select
@@ -75,10 +95,13 @@
 							clearable
 							filterable
 							multiple
+							:tag="arbitrarySourceField"
 							to="body"
 							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
-						/>
+						>
+							<template v-if="arbitrarySourceField" #empty>Press Enter to add the typed value</template>
+						</n-select>
 					</n-form-item>
 					<n-form-item label="Asset name" path="asset_name">
 						<n-select
@@ -87,10 +110,13 @@
 							placeholder="Select..."
 							clearable
 							filterable
+							:tag="arbitrarySourceField"
 							to="body"
 							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
-						/>
+						>
+							<template v-if="arbitrarySourceField" #empty>Press Enter to add the typed value</template>
+						</n-select>
 					</n-form-item>
 					<n-form-item label="Timefield name" path="timefield_name">
 						<n-select
@@ -99,10 +125,13 @@
 							placeholder="Select..."
 							clearable
 							filterable
+							:tag="arbitrarySourceField"
 							to="body"
 							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
-						/>
+						>
+							<template v-if="arbitrarySourceField" #empty>Press Enter to add the typed value</template>
+						</n-select>
 					</n-form-item>
 					<n-form-item label="Alert title name" path="alert_title_name">
 						<n-select
@@ -111,10 +140,13 @@
 							placeholder="Select..."
 							clearable
 							filterable
+							:tag="arbitrarySourceField"
 							to="body"
 							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
-						/>
+						>
+							<template v-if="arbitrarySourceField" #empty>Press Enter to add the typed value</template>
+						</n-select>
 					</n-form-item>
 				</div>
 				<div class="flex justify-between gap-3">
@@ -149,6 +181,7 @@ import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 const props = defineProps<{
 	sourceConfigurationModel?: SourceConfigurationModel
 	showSourceField?: boolean
+	arbitrarySourceField?: boolean
 	disableSourceField?: boolean
 	showIndexNameField?: boolean
 	disableIndexNameField?: boolean
@@ -169,6 +202,7 @@ const emit = defineEmits<{
 const {
 	sourceConfigurationModel,
 	showSourceField,
+	arbitrarySourceField,
 	disableSourceField,
 	showIndexNameField,
 	disableIndexNameField,
@@ -197,7 +231,7 @@ const rules: FormRules = {
 	field_names: {
 		required: true,
 		validator: validateAtLeastOne,
-		trigger: ["blur"]
+		trigger: ["input", "blur"]
 	},
 	asset_name: {
 		required: true,
@@ -221,7 +255,9 @@ let validationMessage: MessageReactive | null = null
 const isSourceNotAllowed = computed(
 	() => form.value.source && disabledSources.value?.length && disabledSources.value.includes(form.value.source)
 )
-const isFieldEnabled = computed(() => form.value.index_name && !isSourceNotAllowed.value)
+const isFieldEnabled = computed(
+	() => (!!form.value.index_name && !isSourceNotAllowed.value) || arbitrarySourceField.value
+)
 
 const isValid = computed(() => {
 	if (
