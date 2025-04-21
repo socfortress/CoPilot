@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -6,7 +7,6 @@ from typing import Union
 
 from loguru import logger
 from pydantic import BaseModel
-from datetime import datetime
 from pydantic import Field
 from pydantic import validator
 
@@ -387,6 +387,7 @@ class VelociraptorSigmaAlertResponse(BaseModel):
 
 class VeloSigmaExclusionBase(BaseModel):
     """Base class for Velociraptor Sigma exclusion rules."""
+
     name: str = Field(..., description="Friendly name for this exclusion rule")
     description: Optional[str] = Field(None, description="Description of why this exclusion exists")
     channel: Optional[str] = Field(None, description="Windows event channel to match (exact match)")
@@ -398,6 +399,7 @@ class VeloSigmaExclusionBase(BaseModel):
 
 class VeloSigmaExclusionCreate(VeloSigmaExclusionBase):
     """Schema for creating a new exclusion rule."""
+
     # Make created_by optional so it can be set by the server
     created_by: Optional[str] = Field(None, description="User who created this exclusion rule")
 
@@ -409,17 +411,16 @@ class VeloSigmaExclusionCreate(VeloSigmaExclusionBase):
                 "description": "Exclude alerts from chainsaw batch scripts in Windows Temp folder",
                 "channel": "Microsoft-Windows-Sysmon/Operational",
                 "title": "HackTool - Powerup Write Hijack DLL",
-                "field_matches": {
-                    "TargetFilename": "C:\\Windows\\Temp\\chainsaw_batch.bat"
-                },
+                "field_matches": {"TargetFilename": "C:\\Windows\\Temp\\chainsaw_batch.bat"},
                 "customer_code": None,  # Optional, NULL means apply to all customers
-                "enabled": True
-            }
+                "enabled": True,
+            },
         }
 
 
 class VeloSigmaExclusionUpdate(BaseModel):
     """Schema for updating an exclusion rule."""
+
     name: Optional[str] = None
     description: Optional[str] = None
     channel: Optional[str] = None
@@ -431,6 +432,7 @@ class VeloSigmaExclusionUpdate(BaseModel):
 
 class VeloSigmaExclusionResponse(VeloSigmaExclusionBase):
     """Response schema for exclusion rules."""
+
     id: int
     created_by: str
     created_at: datetime

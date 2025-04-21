@@ -1,21 +1,22 @@
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
-import re
-from typing import List
-from typing import TYPE_CHECKING
-from typing import Any
+
 from loguru import logger
-from sqlalchemy import select, update
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
 from app.db.universal_models import Agents
+from app.incidents.models import VeloSigmaExclusion
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.incident_alert import CreateAlertRequest
@@ -26,7 +27,6 @@ from app.incidents.schema.velo_sigma import PowerShellEvent
 from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
-from app.incidents.models import VeloSigmaExclusion
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_comment
@@ -116,12 +116,7 @@ class VeloSigmaExclusionService:
 
         return None
 
-    async def _matches_exclusion(
-    self,
-    alert: VelociraptorSigmaAlert,
-    event_data: Dict[str, str],
-    exclusion: VeloSigmaExclusion
-) -> bool:
+    async def _matches_exclusion(self, alert: VelociraptorSigmaAlert, event_data: Dict[str, str], exclusion: VeloSigmaExclusion) -> bool:
         """Check if the alert matches the given exclusion rule."""
         # Check customer code if specified
         if exclusion.customer_code and exclusion.customer_code != self._get_customer_code(alert):
@@ -208,10 +203,7 @@ class VeloSigmaExclusionService:
             stmt = (
                 update(VeloSigmaExclusion)
                 .where(VeloSigmaExclusion.id == exclusion_id)
-                .values(
-                    last_matched_at=datetime.utcnow(),
-                    match_count=VeloSigmaExclusion.match_count + 1
-                )
+                .values(last_matched_at=datetime.utcnow(), match_count=VeloSigmaExclusion.match_count + 1)
             )
             await self.session.execute(stmt)
             await self.session.commit()
@@ -246,12 +238,7 @@ class VeloSigmaExclusionService:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_exclusions(
-        self,
-        skip: int = 0,
-        limit: int = 100,
-        enabled_only: bool = False
-    ) -> List[VeloSigmaExclusion]:
+    async def list_exclusions(self, skip: int = 0, limit: int = 100, enabled_only: bool = False) -> List[VeloSigmaExclusion]:
         """List all exclusion rules with pagination."""
         query = select(VeloSigmaExclusion)
         if enabled_only:
@@ -260,11 +247,7 @@ class VeloSigmaExclusionService:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def update_exclusion(
-        self,
-        exclusion_id: int,
-        exclusion_data: Dict[str, Any]
-    ) -> Optional[VeloSigmaExclusion]:
+    async def update_exclusion(self, exclusion_id: int, exclusion_data: Dict[str, Any]) -> Optional[VeloSigmaExclusion]:
         """Update an existing exclusion rule."""
         db_exclusion = await self.get_exclusion(exclusion_id)
         if not db_exclusion:
@@ -436,15 +419,13 @@ class VelociraptorSigmaService:
 
             if matching_exclusion:
                 # Alert is excluded, return a response indicating this
-                logger.info(
-                    f"Skipping alert processing: matched exclusion rule '{matching_exclusion.name}' (ID: {matching_exclusion.id})"
-                )
+                logger.info(f"Skipping alert processing: matched exclusion rule '{matching_exclusion.name}' (ID: {matching_exclusion.id})")
                 return VelociraptorSigmaAlertResponse(
                     success=True,
                     message=f"Alert excluded by rule: {matching_exclusion.name}",
                     alert_id=None,
                     excluded=True,
-                    exclusion_id=matching_exclusion.id
+                    exclusion_id=matching_exclusion.id,
                 )
 
             # Parse event and determine event type

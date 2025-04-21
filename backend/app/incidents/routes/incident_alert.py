@@ -1,13 +1,13 @@
 import os
+from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
-from fastapi import Security
 from fastapi import Query
+from fastapi import Security
 from loguru import logger
-from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.active_response.routes.graylog import verify_graylog_header
@@ -18,9 +18,6 @@ from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AlertDetailsResponse
 from app.incidents.schema.incident_alert import AlertTimelineResponse
 from app.incidents.schema.incident_alert import AutoCreateAlertResponse
-from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
-from app.incidents.schema.velo_sigma import VeloSigmaExclusionResponse
-from app.incidents.schema.velo_sigma import VeloSigmaExclusionUpdate
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import CreateAlertResponse
@@ -28,10 +25,9 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
-from app.incidents.services.velo_sigma import VeloSigmaExclusionService
-from typing import List
-from app.auth.utils import AuthHandler
-
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionResponse
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionUpdate
 from app.incidents.services.alert_collection import add_copilot_alert_id
 from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
 from app.incidents.services.alert_collection import get_graylog_event_indices
@@ -41,6 +37,7 @@ from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
+from app.incidents.services.velo_sigma import VeloSigmaExclusionService
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
 
 incidents_alerts_router = APIRouter()
@@ -260,7 +257,7 @@ async def invoke_alert_threshold_graylog_route(
     response_model=VelociraptorSigmaAlertResponse,
     description="Creates an incident alert in CoPilot for a Velociraptor Sigma alert",
     # ! UNCOMMENT THIS LINE TO ENABLE THE VELOCIRAPTOR HEADER CHECK # !
-    #dependencies=[Depends(verify_velociraptor_header)],
+    # dependencies=[Depends(verify_velociraptor_header)],
 )
 async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
     """
@@ -279,15 +276,16 @@ async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSessi
     logger.info(f"Processing Velociraptor Sigma alert: {alert}")
     return await create_velo_sigma_alert(alert, session)
 
+
 @incidents_alerts_router.post(
     "/create/velo-sigma/exclusion",
     response_model=VeloSigmaExclusionResponse,
-    summary="Create a new Velociraptor Sigma exclusion rule"
+    summary="Create a new Velociraptor Sigma exclusion rule",
 )
 async def create_exclusion(
     exclusion: VeloSigmaExclusionCreate,
     current_user: str = Depends(AuthHandler().return_username_for_logging),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a new exclusion rule for Velociraptor Sigma alerts."""
     # Set the created_by field to the current user
@@ -308,7 +306,7 @@ async def create_exclusion(
 @incidents_alerts_router.get(
     "/create/velo-sigma/exclusion/{exclusion_id}",
     response_model=VeloSigmaExclusionResponse,
-    summary="Get an exclusion rule by ID"
+    summary="Get an exclusion rule by ID",
 )
 async def get_exclusion(
     exclusion_id: int,
@@ -328,7 +326,7 @@ async def get_exclusion(
 @incidents_alerts_router.get(
     "/create/velo-sigma/exclusion",
     response_model=List[VeloSigmaExclusionResponse],
-    summary="List all exclusion rules"
+    summary="List all exclusion rules",
 )
 async def list_exclusions(
     skip: int = Query(0, description="Number of items to skip for pagination"),
@@ -345,7 +343,7 @@ async def list_exclusions(
 @incidents_alerts_router.patch(
     "/create/velo-sigma/exclusion/{exclusion_id}",
     response_model=VeloSigmaExclusionResponse,
-    summary="Update an exclusion rule"
+    summary="Update an exclusion rule",
 )
 async def update_exclusion(
     exclusion_id: int,
@@ -363,10 +361,7 @@ async def update_exclusion(
     return updated
 
 
-@incidents_alerts_router.delete(
-    "/create/velo-sigma/exclusion/{exclusion_id}",
-    summary="Delete an exclusion rule"
-)
+@incidents_alerts_router.delete("/create/velo-sigma/exclusion/{exclusion_id}", summary="Delete an exclusion rule")
 async def delete_exclusion(
     exclusion_id: int,
     db: AsyncSession = Depends(get_db),
@@ -385,7 +380,7 @@ async def delete_exclusion(
 @incidents_alerts_router.post(
     "/velo-sigma/exclusion/{exclusion_id}/toggle",
     response_model=VeloSigmaExclusionResponse,
-    summary="Toggle an exclusion rule's enabled status"
+    summary="Toggle an exclusion rule's enabled status",
 )
 async def toggle_exclusion(
     exclusion_id: int,

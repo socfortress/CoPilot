@@ -211,6 +211,7 @@ class CaseReportTemplateDataStore(SQLModel, table=True):
 
 class VeloSigmaExclusion(SQLModel, table=True):
     """Exclusion rules for Velociraptor Sigma alerts."""
+
     __tablename__ = "incident_management_velo_sigma_exclusion"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -222,12 +223,18 @@ class VeloSigmaExclusion(SQLModel, table=True):
     title: Optional[str] = Field(max_length=255, nullable=True, description="Sigma rule title to match (exact match)")
 
     # Field matching data - stored as JSON to allow flexible field matching
-    field_matches: Optional[Dict] = Field(sa_column=Column(JSON), nullable=True,
-                                        description="JSON of field names and values to match in the event data")
+    field_matches: Optional[Dict] = Field(
+        sa_column=Column(JSON),
+        nullable=True,
+        description="JSON of field names and values to match in the event data",
+    )
 
     # Metadata
-    customer_code: Optional[str] = Field(max_length=50, nullable=True,
-                                       description="Customer code this exclusion applies to (null means all customers)")
+    customer_code: Optional[str] = Field(
+        max_length=50,
+        nullable=True,
+        description="Customer code this exclusion applies to (null means all customers)",
+    )
     created_by: str = Field(max_length=100, nullable=False, description="User who created this exclusion")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="When this exclusion was created")
     last_matched_at: Optional[datetime] = Field(nullable=True, description="When this exclusion last matched an alert")
