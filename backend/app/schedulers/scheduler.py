@@ -145,12 +145,13 @@ async def initialize_job_metadata():
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
             },
-            {
-                "job_id": "invoke_sigma_queries_collect",
-                "time_interval": 5,
-                "function": invoke_sigma_queries_collect,
-                "description": "Invokes Sigma queries collection.",
-            },
+            # ! Mirgrated SIGMA to VELO ! #
+            # {
+            #     "job_id": "invoke_sigma_queries_collect",
+            #     "time_interval": 5,
+            #     "function": invoke_sigma_queries_collect,
+            #     "description": "Invokes Sigma queries collection.",
+            # },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
