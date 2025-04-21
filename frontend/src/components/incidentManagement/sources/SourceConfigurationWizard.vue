@@ -26,11 +26,12 @@
 							></n-select>
 
 							<div class="flex justify-end gap-4">
+								<n-button @click="overrideMode()">Manual override</n-button>
 								<n-button
 									v-if="isNextStepEnabled"
 									icon-placement="right"
 									:disabled="!selectedIndex"
-									@click="next()"
+									@click="standardMode()"
 								>
 									<template #icon>
 										<Icon :name="ArrowRightIcon"></Icon>
@@ -46,7 +47,8 @@
 								:source-configuration-model
 								show-source-field
 								disable-source-field
-								show-index-name-field
+								:show-index-name-field
+								:arbitrary-source-field
 								disable-index-name-field
 								:disabled-sources
 								@mounted="formCTX = $event"
@@ -114,6 +116,21 @@ watch(loading, val => {
 
 const isPrevStepEnabled = computed(() => current.value > 1)
 const isNextStepEnabled = computed(() => current.value < 2)
+const showIndexNameField = ref(true)
+const arbitrarySourceField = ref(false)
+
+function overrideMode() {
+	showIndexNameField.value = false
+	arbitrarySourceField.value = true
+	setSourceConfiguration(null)
+	next()
+}
+
+function standardMode() {
+	showIndexNameField.value = true
+	arbitrarySourceField.value = false
+	next()
+}
 
 function next() {
 	currentStatus.value = "process"
@@ -151,6 +168,16 @@ function setSourceConfiguration(indexName: string | null) {
 			index_name: indexName
 		}
 		next()
+	} else {
+		sourceConfigurationModel.value = {
+			field_names: [],
+			ioc_field_names: [],
+			asset_name: null,
+			timefield_name: null,
+			alert_title_name: null,
+			source: "",
+			index_name: ""
+		}
 	}
 }
 
