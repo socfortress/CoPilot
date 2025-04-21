@@ -25,7 +25,7 @@
 										<span class="n-form-item-label__asterisk">*</span>
 									</span>
 
-									<span v-if="isSocfortressRecommendsAvailable && !arbitrarySourceField">
+									<span v-if="isSocfortressRecommendsAvailable">
 										<n-button
 											:loading="loadingSocfortressRecommendsWazuh"
 											size="tiny"
