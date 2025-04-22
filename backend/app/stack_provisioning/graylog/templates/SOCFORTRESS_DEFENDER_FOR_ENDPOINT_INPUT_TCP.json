@@ -1,0 +1,106 @@
+{
+  "v": 1,
+  "id": "REPLACE_UUID_GLOBAL",
+  "rev": 1,
+  "name": "customer_name_DEFENDER_FOR_ENDPOINT_INPUT_TCP",
+  "summary": "customer_name_DEFENDER_FOR_ENDPOINT_INPUT_TCP",
+  "description": "",
+  "vendor": "SOCFortress",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "REPLACE_UUID_SPECIFIC",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "customer_name - DEFENDER FOR ENDPOINT"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": "SYSLOG_PORT"
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "no_beats_prefix": {
+            "@type": "boolean",
+            "@value": true
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "charset_name": {
+            "@type": "string",
+            "@value": "UTF-8"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 4
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {
+          "syslog_type": {
+            "@type": "string",
+            "@value": "defender-atp"
+          },
+          "syslog_customer": {
+            "@type": "string",
+            "@value": "customer_code"
+          }
+        },
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.plugins.beats.Beats2Input"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    }
+  ]
+}
