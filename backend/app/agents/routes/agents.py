@@ -13,6 +13,8 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from packaging import version
 from sqlalchemy import delete
+from fastapi import Header
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -176,6 +178,56 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     except Exception as e:
         logger.error(f"Failed to fetch agents: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
+
+@agents_router.get(
+    "/dashboard/agents",
+    response_model=AgentsResponse,
+    description="Get all Wazuh agents for a specific customer (Grafana dashboard use)",
+)
+async def get_customer_agents_for_dashboard(
+    customer_code: Optional[str] = Header(None, description="Customer code to filter agents by"),
+    db: AsyncSession = Depends(get_db)
+) -> AgentsResponse:
+    """
+    Retrieve all agents for a specific customer for dashboard use.
+    This endpoint is designed specifically for integration with Grafana dashboards.
+
+    Args:
+        customer_code (str, optional): The customer code from the request header.
+        db (AsyncSession): The database session.
+
+    Returns:
+        AgentsResponse: The response containing the list of agents for the specified customer.
+
+    Raises:
+        HTTPException: If the customer_code is not provided or if there's an error fetching the agents.
+    """
+    if not customer_code:
+        logger.warning("Dashboard agent request made with no customer_code header")
+        return AgentsResponse(
+            agents=[],
+            success=False,
+            message="No customer_code header provided",
+        )
+
+    logger.info(f"Fetching agents for customer_code: {customer_code} (dashboard request)")
+    try:
+        # Query agents with the specified customer code
+        result = await db.execute(select(Agents).filter(Agents.customer_code == customer_code))
+        agents = result.scalars().all()
+
+        logger.info(f"Found {len(agents)} agents for customer_code: {customer_code}")
+        return AgentsResponse(
+            agents=agents,
+            success=True,
+            message=f"Agents for customer {customer_code} fetched successfully",
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch agents for customer {customer_code}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch agents for customer {customer_code}"
+        )
 
 
 @agents_router.get(
