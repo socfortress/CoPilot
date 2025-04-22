@@ -332,6 +332,7 @@ def get_available_integrations_list():
         ("Darktrace", "Integrate Darktrace with SOCFortress."),
         ("BitDefender", "Integrate BitDefender with SOCFortress."),
         ("CATO", "Integrate CATO NETWORKS with SOCFortress."),
+        ("DefenderForEndpoint", "Integrate DefenderForEndpoint with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -470,6 +471,10 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("CATO", "ACCOUNT_ID"),
         ("CATO", "EVENT_TYPES"),
         ("CATO", "EVENT_SUB_TYPES"),
+        ("DefenderForEndpoint", "TENANT_ID"),
+        ("DefenderForEndpoint", "CLIENT_ID"),
+        ("DefenderForEndpoint", "CLIENT_SECRET"),
+        ("DefenderForEndpoint", "SYSLOG_PORT"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

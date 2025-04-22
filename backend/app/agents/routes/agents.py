@@ -1,11 +1,13 @@
 import asyncio
 import csv
 import io
+from typing import Optional
 
 # from fastapi import BackgroundTasks
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Security
@@ -13,8 +15,6 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from packaging import version
 from sqlalchemy import delete
-from fastapi import Header
-from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -179,6 +179,7 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
         logger.error(f"Failed to fetch agents: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
 
+
 @agents_router.get(
     "/dashboard/agents",
     response_model=AgentsResponse,
@@ -186,7 +187,7 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
 )
 async def get_customer_agents_for_dashboard(
     customer_code: Optional[str] = Header(None, description="Customer code to filter agents by"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Retrieve all agents for a specific customer for dashboard use.
@@ -224,10 +225,7 @@ async def get_customer_agents_for_dashboard(
         )
     except Exception as e:
         logger.error(f"Failed to fetch agents for customer {customer_code}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch agents for customer {customer_code}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agents for customer {customer_code}")
 
 
 @agents_router.get(

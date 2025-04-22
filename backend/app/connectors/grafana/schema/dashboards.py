@@ -113,6 +113,7 @@ class BitdefenderDashboard(Enum):
 class CatoDashboard(Enum):
     CATO_SUMMARY = ("Cato", "summary.json")
 
+
 class DefenderForEndpointDashboard(Enum):
     DEFENDERFORENDPOINT_SUMMARY = ("DefenderForEndpoint", "summary.json")
 

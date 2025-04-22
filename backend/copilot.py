@@ -43,6 +43,7 @@ from app.routers import crowdstrike
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import darktrace
+from app.routers import defenderforendpoint
 from app.routers import dfir_iris
 from app.routers import dnstwist
 from app.routers import duo
@@ -162,6 +163,7 @@ api_router.include_router(duo.router)
 api_router.include_router(portainer.router)
 api_router.include_router(incidents.router)
 api_router.include_router(darktrace.router)
+api_router.include_router(defenderforendpoint.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
