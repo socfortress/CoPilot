@@ -333,6 +333,7 @@ class VelociraptorSigmaService:
 
                 if agent and agent.customer_code:
                     customer_code = agent.customer_code
+                    agent_name = agent.hostname
                     logger.info(f"Found customer code '{customer_code}' for clientID {alert.clientID}")
                 else:
                     logger.warning(f"No agent found with velociraptor_id '{alert.clientID}', using default customer code")
@@ -343,7 +344,7 @@ class VelociraptorSigmaService:
             alert_id = await create_alert_full(
                 alert_payload=CreatedAlertPayload(
                     alert_context_payload=event_context,
-                    asset_payload=alert.computer,
+                    asset_payload=agent_name,
                     timefield_payload=timestamp,
                     alert_title_payload=alert.title,
                     source=alert.source,
