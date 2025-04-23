@@ -332,6 +332,7 @@ class VelociraptorSigmaService:
                 agent = agent_result.scalar_one_or_none()
 
                 if agent and agent.customer_code:
+                    logger.info(f"Found agent details {agent}")
                     customer_code = agent.customer_code
                     agent_name = agent.hostname
                     logger.info(f"Found customer code '{customer_code}' for clientID {alert.clientID}")
@@ -353,7 +354,8 @@ class VelociraptorSigmaService:
                 ),
                 customer_code=customer_code,  # Use the looked up customer code
                 session=self.session,
-                threshold_alert=True,
+                threshold_alert=False,
+                velo_sigma_alert=True,
             )
             result["alert_id"] = alert_id
 
