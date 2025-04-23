@@ -1,6 +1,6 @@
 <template>
 	<div class="configured-sources-list">
-		<div class="header mb-3 flex items-center justify-end gap-2">
+		<div v-if="showToolbar" class="mb-3 flex items-center justify-end gap-2">
 			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -68,6 +68,18 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
 import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 
+const { showToolbar = true } = defineProps<{ showToolbar?: boolean }>()
+
+const emit = defineEmits<{
+	(
+		e: "mounted",
+		value: {
+			reload: () => void
+		}
+	): void
+	(e: "loaded", value: number): void
+}>()
+
 const InfoIcon = "carbon:information"
 const NewSourceConfigurationIcon = "carbon:fetch-upload-cloud"
 const message = useMessage()
@@ -94,6 +106,7 @@ function getConfiguredSources() {
 		})
 		.finally(() => {
 			loading.value = false
+			emit("loaded", configuredSourcesList.value.length)
 		})
 }
 
@@ -105,5 +118,9 @@ watch(showWizard, val => {
 
 onBeforeMount(() => {
 	getConfiguredSources()
+
+	emit("mounted", {
+		reload: getConfiguredSources
+	})
 })
 </script>
