@@ -334,6 +334,9 @@ class VelociraptorSigmaService:
                 if agent and agent.customer_code:
                     logger.info(f"Found agent details {agent}")
                     customer_code = agent.customer_code
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
                     agent_name = agent.hostname
                     logger.info(f"Found customer code '{customer_code}' for clientID {alert.clientID}")
                 else:
