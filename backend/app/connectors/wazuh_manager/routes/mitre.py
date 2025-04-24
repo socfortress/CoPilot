@@ -1,7 +1,7 @@
 # App specific imports
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi import Security
+from fastapi import Security, Path
 from fastapi import Query
 from typing import Optional, List
 from loguru import logger
@@ -9,6 +9,8 @@ from loguru import logger
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse, WazuhMitreTechniquesResponse
 from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics, get_mitre_techniques
+from app.connectors.wazuh_manager.services.mitre import AtomicRedTeamService
+from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
 
 # Initialize router and auth handler
 wazuh_manager_mitre_router = APIRouter()
@@ -88,4 +90,45 @@ async def list_mitre_techniques(
         sort=sort,
         search=search,
         q=q
+    )
+
+
+@wazuh_manager_mitre_router.get(
+    "/techniques/{technique_id}/atomic-tests",
+    response_model=AtomicRedTeamMarkdownResponse,
+    description="Get Atomic Red Team tests for a MITRE ATT&CK technique",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def get_technique_atomic_tests(
+    technique_id: str = Path(..., description="MITRE ATT&CK technique ID (e.g., T1003, T1003.004)")
+):
+    """
+    Get Atomic Red Team tests for a specific MITRE ATT&CK technique.
+
+    Args:
+        technique_id: The MITRE ATT&CK technique ID
+
+    Returns:
+        AtomicRedTeamMarkdownResponse: The Atomic Red Team tests for the technique
+    """
+    logger.info(f"Request for Atomic Red Team tests for technique {technique_id}")
+
+    # Extract the technique ID from the full ID if needed (e.g., "T1003.004" -> "T1003.004")
+    clean_technique_id = technique_id.split("-")[-1] if "-" in technique_id else technique_id
+
+    # Fetch the markdown content
+    markdown_content = await AtomicRedTeamService.get_technique_markdown(clean_technique_id)
+
+    if markdown_content is None:
+        return AtomicRedTeamMarkdownResponse(
+            success=False,
+            message=f"No Atomic Red Team tests found for technique {technique_id}",
+            technique_id=clean_technique_id
+        )
+
+    return AtomicRedTeamMarkdownResponse(
+        success=True,
+        message=f"Atomic Red Team tests retrieved for technique {technique_id}",
+        technique_id=clean_technique_id,
+        markdown_content=markdown_content
     )

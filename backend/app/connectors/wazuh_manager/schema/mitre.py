@@ -96,3 +96,10 @@ class WazuhMitreTechniquesResponse(BaseModel):
     success: bool
     message: str
     results: List[MitreTechniqueItem] = []
+
+class AtomicRedTeamMarkdownResponse(BaseModel):
+    """Response model for Atomic Red Team markdown content."""
+    success: bool
+    message: str
+    technique_id: str
+    markdown_content: Optional[str] = None
