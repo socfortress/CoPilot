@@ -539,7 +539,7 @@ async def load_and_replace_filebeat_cfg(
     # Open the filebeat.yml file and read the content
     with open(os.path.join(parent_directory, "templates", "filebeat.yml"), "r") as file:
         data = file.read()
-    data = data.replace("REPLACE_TENANT_ID", keys.BASE_URL)
+    data = data.replace("REPLACE_TENANT_ID", keys.TENANT_ID)
     data = data.replace("REPLACE_CLIENT_ID", keys.CLIENT_ID)
     data = data.replace("REPLACE_CLIENT_SECRET", keys.CLIENT_SECRET)
     data = data.replace("REPLACE_SYSLOG_HOST", connector_url)
