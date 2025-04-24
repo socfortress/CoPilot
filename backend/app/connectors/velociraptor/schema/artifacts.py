@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 from typing import Dict
-from typing import List
+from typing import List, Union
 from typing import Optional
 
 from fastapi import HTTPException
@@ -72,6 +72,11 @@ class QuarantineArtifactsEnum(str, Enum):
     linux_quarantine = "Linux.Remediation.Quarantine"
 
 
+class ParameterKeyValue(BaseModel):
+    """Represents a key-value pair for artifact parameters."""
+    key: str = Field(..., description="Parameter key/name")
+    value: str = Field(..., description="Parameter value")
+
 class BaseBody(BaseModel):
     hostname: str = Field(..., description="Name of the client")
     velociraptor_id: Optional[str] = Field(None, description="Client ID of the client")
@@ -79,11 +84,37 @@ class BaseBody(BaseModel):
 
 
 class CollectArtifactBody(BaseBody):
+    """Request body for collecting artifacts with optional parameters."""
     artifact_name: Optional[str] = Field(
         None,
         description="Name of the artifact for collection or command running",
     )
+    parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]] = Field(
+        None,
+        description="Optional parameters for the artifact, such as environment variables"
+    )
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "hostname": "WIN-HFOU106TD7K",
+                "velociraptor_id": "C.475df76785008b04",
+                "velociraptor_org": "root",
+                "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
+                "parameters": {
+                    "env": [
+                        {
+                            "key": "InstallART",
+                            "value": "N"
+                        },
+                        {
+                            "key": "T1552.001 - 3",
+                            "value": "Y"
+                        }
+                    ]
+                }
+            }
+        }
 
 class CollectFileBody(BaseBody):
     artifact_name: str = Field(
