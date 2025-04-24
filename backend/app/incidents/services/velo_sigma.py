@@ -8,7 +8,7 @@ from typing import Optional
 from typing import Union
 
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -271,6 +271,38 @@ class VeloSigmaExclusionService:
         await self.session.delete(db_exclusion)
         await self.session.commit()
         return True
+
+    async def list_exclusions_with_count(self, skip: int = 0, limit: int = 100, enabled_only: bool = False) -> tuple[list, int]:
+        """
+        List all exclusion rules with pagination and return total count.
+
+        Args:
+            skip: Number of items to skip
+            limit: Maximum number of items to return
+            enabled_only: If True, only return enabled exclusions
+
+        Returns:
+            Tuple of (list of exclusions, total count)
+        """
+        query = select(VeloSigmaExclusion)
+
+        if enabled_only:
+            query = query.where(VeloSigmaExclusion.enabled == True)
+
+        # Get total count first
+        count_query = select(func.count()).select_from(query.subquery())
+        # Change self.db to self.session
+        total_count = await self.session.scalar(count_query)
+
+        # Then get the paginated results
+        query = query.order_by(VeloSigmaExclusion.id.desc())
+        query = query.offset(skip).limit(limit)
+
+        # Change self.db to self.session
+        result = await self.session.execute(query)
+        exclusions = result.scalars().all()
+
+        return list(exclusions), total_count
 
 
 class VelociraptorSigmaService:

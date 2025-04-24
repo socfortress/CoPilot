@@ -345,12 +345,23 @@ async def list_exclusions(
 ):
     """List all exclusion rules with pagination."""
     service = VeloSigmaExclusionService(db)
-    exclusions = await service.list_exclusions(skip=skip, limit=limit, enabled_only=enabled_only)
+
+    # Get exclusions and total count
+    exclusions, total_count = await service.list_exclusions_with_count(
+        skip=skip,
+        limit=limit,
+        enabled_only=enabled_only
+    )
 
     return VeloSigmaExclusionListResponse(
         success=True,
         message="Exclusion rules retrieved successfully",
         exclusions=exclusions,
+        pagination={
+            "total": total_count,
+            "skip": skip,
+            "limit": limit
+        }
     )
 
 
