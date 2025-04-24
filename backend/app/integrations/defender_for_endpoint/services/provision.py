@@ -263,10 +263,10 @@ async def create_customer_network_connector_meta(
     """
     return CustomerNetworkConnectorsMeta(
         customer_code=customer_details.customer_code,
-        network_connector_name="CROWDSTRIKE",
+        network_connector_name="DefenderForEndpoint",
         graylog_stream_id=stream_id,
-        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - CROWDSTRIKE LOGS AND EVENTS")),
-        graylog_pipeline_id=((await get_pipeline_id(subscription="CROWDSTRIKE"))[0]),
+        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - DEFENDER FOR ENDPOINT")),
+        graylog_pipeline_id='not_set',
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
         grafana_org_id=(
@@ -311,7 +311,7 @@ async def provision_defender_for_endpoint(
     6. Creates a directory for the customer to store the docker compose and falconhose cfg.
 
     Args:
-        customer_details (DefenderForEndpointCustomerDetails): The details of the Crowdstrike customer.
+        customer_details (DefenderForEndpointCustomerDetails): The details of the DefenderForEndpoint customer.
         keys (ProvisionDefenderForEndpointAuthKeys): The keys required for provisioning.
         session (AsyncSession): The database session.
 
@@ -524,8 +524,8 @@ async def load_and_replace_filebeat_cfg(
     Load the filebeat.yml file and replace the placeholders with the customer details.
 
     Args:
-        customer_details (CrowdstrikeCustomerDetails): The details of the customer.
-        keys (ProvisionCrowdstrikeAuthKeys): The authentication keys for Crowdstrike.
+        customer_details (DefenderForEndpointCustomerDetails): The details of the customer.
+        keys (ProvisionDefenderForEndpointAuthKeys): The authentication keys for DefenderForEndpoint.
 
     Returns:
         str: The content of the filebeat.yml file with the placeholders replaced.
@@ -560,7 +560,7 @@ async def update_customer_integration_table(
 ) -> None:
     """
     Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
-    matches the given customer code and the `integration_service_name` is "Crowdstrike".
+    matches the given customer code and the `integration_service_name` is "DefenderForEndpoint".
 
     Args:
         customer_code (str): The customer code.
