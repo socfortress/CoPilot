@@ -21,12 +21,10 @@
 				</n-popover>
 			</div>
 			<div class="actions flex items-center gap-2">
-				<n-button size="small" type="primary" @click="showWizard = true">
-					<template #icon>
-						<Icon :name="NewSourceConfigurationIcon" :size="15"></Icon>
-					</template>
-					Create Source Configuration
-				</n-button>
+				<NewConfiguredSourceButton
+					:disabled-sources="configuredSourcesList"
+					@success="getConfiguredSources()"
+				/>
 			</div>
 		</div>
 		<n-spin :show="loading" class="min-h-32">
@@ -43,19 +41,6 @@
 				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</n-spin>
-
-		<n-modal
-			v-model:show="showWizard"
-			display-directive="show"
-			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(200px, 90vh)', overflow: 'hidden' }"
-			title="Create Source Configuration"
-			:bordered="false"
-			content-class="flex flex-col !p-0"
-			segmented
-		>
-			<SourceConfigurationWizard :disabled-sources="configuredSourcesList" @submitted="getConfiguredSources()" />
-		</n-modal>
 	</div>
 </template>
 
@@ -63,10 +48,10 @@
 import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NEmpty, NModal, NPopover, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { NButton, NEmpty, NPopover, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
-import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
+import NewConfiguredSourceButton from "./NewConfiguredSourceButton.vue"
 
 const { showToolbar = true } = defineProps<{ showToolbar?: boolean }>()
 
@@ -81,13 +66,10 @@ const emit = defineEmits<{
 }>()
 
 const InfoIcon = "carbon:information"
-const NewSourceConfigurationIcon = "carbon:fetch-upload-cloud"
 const message = useMessage()
-const showWizard = ref(false)
 const loading = ref(false)
 const configuredSourcesList = ref<SourceName[]>([])
 const totalConfiguredSources = computed(() => configuredSourcesList.value.length)
-const formCTX = ref<{ reset: () => void } | null>(null)
 
 function getConfiguredSources() {
 	loading.value = true
@@ -109,12 +91,6 @@ function getConfiguredSources() {
 			emit("loaded", configuredSourcesList.value.length)
 		})
 }
-
-watch(showWizard, val => {
-	if (val) {
-		formCTX.value?.reset()
-	}
-})
 
 onBeforeMount(() => {
 	getConfiguredSources()

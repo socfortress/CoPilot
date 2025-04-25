@@ -17,7 +17,7 @@ import type {
 	CaseStatus
 } from "@/types/incidentManagement/cases.d"
 import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { ExclusionRule, SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
 import _castArray from "lodash/castArray"
 import { HttpClient } from "../httpClient"
@@ -59,6 +59,25 @@ export interface CaseReportPayload {
 	case_id: number
 	file_name: string
 	template_name: string
+}
+
+export interface ExclusionRulesQuery {
+	pagination: {
+		skip?: number
+		limit?: number
+	}
+	filters: {
+		enabledOnly?: boolean
+	}
+}
+
+export interface ExclusionRulePayload {
+	name: string
+	description: string
+	channel: string
+	title: string
+	field_matches: { [key: string]: string }
+	enabled: boolean
 }
 
 export default {
@@ -107,6 +126,30 @@ export default {
 	},
 	deleteSourceConfiguration(source: SourceName) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/configured/sources/${source}`)
+	},
+	getExclusionRulesList(args: Partial<ExclusionRulesQuery>, signal?: AbortSignal) {
+		const params: any = {
+			skip: args.pagination?.skip || 0,
+			limit: args.pagination?.limit || 25
+		}
+
+		if (args.filters?.enabledOnly !== undefined) {
+			params.enabled_only = args.filters.enabledOnly
+		}
+
+		return HttpClient.get<
+			FlaskBaseResponse & {
+				exclusions: ExclusionRule[]
+				pagination: {
+					total: number
+					skip: number
+					limit: number
+				}
+			}
+		>(`/incidents/alerts/create/velo-sigma/exclusion`, { params, signal })
+	},
+	createExclusionRule(payload: ExclusionRulePayload) {
+		return HttpClient.post<FlaskBaseResponse>(`/incidents/alerts/create/velo-sigma/exclusion`, payload)
 	},
 	// #endregion
 

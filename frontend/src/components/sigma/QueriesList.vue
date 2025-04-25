@@ -72,7 +72,7 @@
 						<n-select
 							v-model:value="filters.active"
 							:options="activeOptions"
-							placeholder="Active Status"
+							placeholder="Select a status"
 							clearable
 							class="!w-56"
 						/>
@@ -154,11 +154,11 @@ const showFilters = ref(false)
 const showActionsView = useStorage<boolean>("sigma-queries-list-actions-view-state", false, localStorage)
 const queriesList = ref<SigmaQuery[]>([])
 
-const pageSize = ref(25)
+const pageSizes = [10, 25, 50, 100]
+const pageSize = ref(pageSizes[1])
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
-const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
 

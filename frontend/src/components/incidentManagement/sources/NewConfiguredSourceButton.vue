@@ -30,6 +30,8 @@ import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 
+const { disabledSources } = defineProps<{ disabledSources?: SourceName[] }>()
+
 const emit = defineEmits<{
 	(e: "success"): void
 }>()
@@ -73,6 +75,10 @@ watch(showWizard, val => {
 })
 
 onBeforeMount(() => {
-	getConfiguredSources()
+	if (disabledSources?.length) {
+		configuredSourcesList.value = disabledSources
+	} else {
+		getConfiguredSources()
+	}
 })
 </script>

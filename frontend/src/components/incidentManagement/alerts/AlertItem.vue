@@ -181,7 +181,7 @@
 			</template>
 
 			<template v-if="alert && !compact" #footerMain>
-				<div class="flex items-center gap-3">
+				<div class="flex flex-wrap items-center gap-3">
 					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:!hidden': !compact }">
 						<template #iconLeft>
 							<Icon :name="TimeIcon" :size="16" />

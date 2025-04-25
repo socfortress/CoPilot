@@ -13,11 +13,11 @@
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="ExclusionRules" tab="Exclusion Rules" display-directive="show">
-				Exclusion Rules...
+				<ExclusionRulesList :show-toolbar="false" @mounted="exclusionRulesListCTX = $event" />
 			</n-tab-pane>
 
 			<template #suffix>
-				<NewConfiguredSourceButton @success="reload()" />
+				<NewConfiguredSourceButton @success="reloadConfiguredSourcesList()" />
 			</template>
 		</n-tabs>
 	</div>
@@ -25,14 +25,16 @@
 
 <script setup lang="ts">
 import ConfiguredSourcesList from "@/components/incidentManagement/sources/ConfiguredSourcesList.vue"
+import ExclusionRulesList from "@/components/incidentManagement/sources/ExclusionRulesList.vue"
 import NewConfiguredSourceButton from "@/components/incidentManagement/sources/NewConfiguredSourceButton.vue"
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 
 const configuredSourcesListTotal = ref(0)
 const configuredSourcesListCTX = ref<{ reload: () => void } | null>(null)
+const exclusionRulesListCTX = ref<{ reload: () => void } | null>(null)
 
-function reload() {
+function reloadConfiguredSourcesList() {
 	if (configuredSourcesListCTX.value) {
 		configuredSourcesListCTX.value.reload()
 	}
