@@ -1,11 +1,85 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from loguru import logger
 from fastapi import HTTPException
 from pydantic import ValidationError
+import aiohttp
+import time
+from loguru import logger
 
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse, WazuhMitreTechniquesResponse
 
+# Constants for the Atomic Red Team GitHub repository
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/redcanaryco/atomic-red-team/refs/heads/master/atomics"
+CACHE_EXPIRY = 86400  # Cache expiry time in seconds (24 hours)
+
+
+class AtomicRedTeamService:
+    """Service for fetching Atomic Red Team markdown content."""
+
+    # Cache to store the markdown content with timestamp
+    # Format: {technique_id: (markdown_content, timestamp)}
+    _cache: Dict[str, Tuple[str, float]] = {}
+
+    @classmethod
+    async def get_technique_markdown(cls, technique_id: str) -> Optional[str]:
+        """
+        Get the markdown content for a given MITRE ATT&CK technique ID.
+
+        Args:
+            technique_id: The MITRE ATT&CK technique ID (e.g., T1003, T1003.004)
+
+        Returns:
+            The markdown content or None if not found
+        """
+        # Check the cache first
+        if technique_id in cls._cache:
+            content, timestamp = cls._cache[technique_id]
+            if time.time() - timestamp < CACHE_EXPIRY:
+                logger.debug(f"Returning cached markdown for {technique_id}")
+                return content
+
+        # Construct the URL for the raw markdown file
+        url = f"{GITHUB_RAW_URL}/{technique_id}/{technique_id}.md"
+
+        logger.info(f"Fetching Atomic Red Team markdown from {url}")
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        content = await response.text()
+                        # Store in cache with current timestamp
+                        cls._cache[technique_id] = (content, time.time())
+                        return content
+                    elif response.status == 404:
+                        logger.warning(f"Atomic Red Team markdown not found for technique {technique_id}")
+                        return None
+                    else:
+                        logger.error(f"Failed to fetch markdown for {technique_id}: {response.status}")
+                        return None
+        except aiohttp.ClientError as e:
+            logger.error(f"Error fetching markdown for {technique_id}: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error fetching markdown for {technique_id}: {str(e)}")
+            return None
+
+    @classmethod
+    def clear_cache(cls, technique_id: Optional[str] = None) -> None:
+        """
+        Clear the cache for a specific technique or all techniques.
+
+        Args:
+            technique_id: The MITRE ATT&CK technique ID to clear, or None to clear all
+        """
+        if technique_id:
+            if technique_id in cls._cache:
+                del cls._cache[technique_id]
+                logger.info(f"Cleared cache for {technique_id}")
+        else:
+            cls._cache.clear()
+            logger.info("Cleared all cached Atomic Red Team markdown content")
 
 async def get_mitre_tactics(
     limit: Optional[int] = None,
