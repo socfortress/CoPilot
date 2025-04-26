@@ -41,7 +41,7 @@ const values = computed<ItemProps[]>(() => [
 function getData() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlertsList({
 			page: 0,
 			pageSize: 0

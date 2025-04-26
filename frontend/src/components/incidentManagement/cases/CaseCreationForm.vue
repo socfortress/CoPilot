@@ -193,7 +193,7 @@ function resetForm() {
 function submit() {
 	submitting.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.createCase(form.value)
 		.then(res => {
 			if (res.data.success) {
@@ -215,7 +215,7 @@ function submit() {
 function getAvailableUsers() {
 	loadingAvailableUsers.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAvailableUsers()
 		.then(res => {
 			if (res.data.success) {

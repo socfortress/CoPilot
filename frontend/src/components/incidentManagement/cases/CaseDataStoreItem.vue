@@ -100,7 +100,7 @@ const prettyBytes = computed(() => bytes(dataStoreFile.file_size))
 function downloadFile() {
 	downloading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.downloadCaseDataStoreFile(dataStoreFile.case_id, dataStoreFile.file_name)
 		.then(res => {
 			if (res.data) {
@@ -120,7 +120,7 @@ function downloadFile() {
 function deleteDataStoreFile() {
 	canceling.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.deleteCaseDataStoreFile(dataStoreFile.case_id, dataStoreFile.file_name)
 		.then(res => {
 			if (res.data.success) {

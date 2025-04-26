@@ -124,7 +124,7 @@ function editComment() {
 function updateAlertComment() {
 	saving.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.updateAlertComment({
 			alert_id: comment.value.alert_id,
 			comment_id: comment.value.id,
@@ -152,7 +152,7 @@ function updateAlertComment() {
 function deleteAlertComment() {
 	canceling.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.deleteAlertComment(comment.value.id)
 		.then(res => {
 			if (res.data.success) {

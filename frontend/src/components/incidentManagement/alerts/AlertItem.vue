@@ -338,7 +338,7 @@ function updateAlert(updatedAlert: Alert) {
 function getAlert(alertId: number) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlert(alertId)
 		.then(res => {
 			if (res.data.success) {

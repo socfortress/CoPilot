@@ -46,7 +46,7 @@ const formCTX = ref<{ reset: () => void } | null>(null)
 function getConfiguredSources() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getConfiguredSources()
 		.then(res => {
 			if (res.data.success) {

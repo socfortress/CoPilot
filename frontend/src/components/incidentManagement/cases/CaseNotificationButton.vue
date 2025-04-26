@@ -40,7 +40,7 @@ const message = useMessage()
 function invoke() {
 	invoking.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.createCaseNotification(caseId)
 		.then(res => {
 			if (res.data) {

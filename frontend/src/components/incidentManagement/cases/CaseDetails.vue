@@ -72,7 +72,7 @@ function updateCase(updatedCase: Case) {
 function getCase(caseId: number) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCase(caseId)
 		.then(res => {
 			if (res.data.success) {

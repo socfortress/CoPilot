@@ -44,7 +44,7 @@ const userSelected = ref<string | null>(null)
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAvailableUsers()
 		.then(res => {
 			if (res.data.success) {
@@ -66,7 +66,7 @@ function assignUser() {
 	if (userSelected.value && userSelected.value !== assignedTo.value) {
 		loadingUsers.value = true
 
-		Api.incidentManagement
+		Api.incidentManagement.cases
 			.updateCaseAssignedUser(caseData.value.id, userSelected.value)
 			.then(res => {
 				if (res.data.success) {

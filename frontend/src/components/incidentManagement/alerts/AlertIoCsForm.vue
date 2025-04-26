@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertIocPayload } from "@/api/endpoints/incidentManagement"
+import type { AlertIocPayload } from "@/api/endpoints/incidentManagement/alerts"
 import type { DeepNullable } from "@/types/common"
 import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
@@ -188,7 +188,7 @@ function resetForm() {
 function submit() {
 	submitting.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.createAlertIoc(form.value as AlertIocPayload)
 		.then(res => {
 			if (res.data.success) {

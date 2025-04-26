@@ -55,7 +55,7 @@ const showDeleteConfirm = ref(false)
 function deleteIoc() {
 	canceling.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.deleteAlertIoc(alertId, ioc.id)
 		.then(res => {
 			if (res.data.success) {

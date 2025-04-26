@@ -81,7 +81,7 @@ function exportCases(key: string) {
 			? `cases_${formatDate(new Date(), dFormats.datetimesec)}.csv`
 			: `cases_customer:${key}_${formatDate(new Date(), dFormats.datetimesec)}.csv`
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.exportCases(key === "--all--" ? undefined : key)
 		.then(res => {
 			if (res.data) {

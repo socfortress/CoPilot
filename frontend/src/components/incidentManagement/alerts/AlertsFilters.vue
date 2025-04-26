@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement"
+import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { Customer } from "@/types/customers.d"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
@@ -291,7 +291,7 @@ function getQueryString() {
 function getAvailableUsers() {
 	loadingAvailableUsers.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAvailableUsers()
 		.then(res => {
 			if (res.data.success) {
@@ -331,7 +331,7 @@ function getCustomers() {
 function getConfiguredSources() {
 	loadingConfiguredSources.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getConfiguredSources()
 		.then(res => {
 			if (res.data.success) {

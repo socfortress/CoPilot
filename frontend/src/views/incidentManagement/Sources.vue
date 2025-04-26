@@ -24,8 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import ExclusionRulesList from "@/components/incidentManagement/exclusionRules/ExclusionRulesList.vue"
 import ConfiguredSourcesList from "@/components/incidentManagement/sources/ConfiguredSourcesList.vue"
-import ExclusionRulesList from "@/components/incidentManagement/sources/ExclusionRulesList.vue"
 import NewConfiguredSourceButton from "@/components/incidentManagement/sources/NewConfiguredSourceButton.vue"
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"

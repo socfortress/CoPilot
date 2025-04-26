@@ -205,7 +205,7 @@ function uploadCustomTemplate() {
 function uploadDefaultTemplate() {
 	uploading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.uploadDefaultCaseReportTemplate()
 		.then(res => {
 			if (res.data.success) {
@@ -226,7 +226,7 @@ function uploadDefaultTemplate() {
 function checkDefaultCaseReportTemplateExists() {
 	checkingDefaultTemplate.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.checkDefaultCaseReportTemplateExists()
 		.then(res => {
 			if (res.data.success) {
@@ -246,7 +246,7 @@ function checkDefaultCaseReportTemplateExists() {
 function downloadTemplate(templateName: string) {
 	downloading.value = templateName
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.downloadCaseReportTemplate(templateName)
 		.then(res => {
 			if (res.data) {

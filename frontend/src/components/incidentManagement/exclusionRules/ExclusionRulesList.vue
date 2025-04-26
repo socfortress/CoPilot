@@ -65,15 +65,15 @@
 </template>
 
 <script setup lang="ts">
-import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement"
-import type { ExclusionRule } from "@/types/incidentManagement/sources"
+import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
+import NewConfiguredSourceButton from "../sources/NewConfiguredSourceButton.vue"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
-import NewConfiguredSourceButton from "./NewConfiguredSourceButton.vue"
 
 const { showCreationButton = true } = defineProps<{ showCreationButton?: boolean }>()
 
@@ -116,7 +116,7 @@ function getData() {
 		query.filters = { enabledOnly: filters.value.enabledOnly }
 	}
 
-	Api.incidentManagement
+	Api.incidentManagement.exclusionRules
 		.getExclusionRulesList(query)
 		.then(res => {
 			if (res.data.success) {

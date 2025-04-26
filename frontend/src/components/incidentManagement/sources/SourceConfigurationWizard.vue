@@ -207,7 +207,7 @@ function getIndices() {
 function createSourceConfiguration(payload: SourceConfiguration) {
 	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.createSourceConfiguration(payload)
 		.then(res => {
 			if (res.data.success) {

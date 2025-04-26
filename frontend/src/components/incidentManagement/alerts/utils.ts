@@ -45,7 +45,7 @@ export function deleteAlert({ alert, cbBefore, cbSuccess, cbAfter, cbError, mess
 		cbBefore()
 	}
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.deleteAlert(alert.id)
 		.then(res => {
 			if (res.data.success) {

@@ -99,17 +99,14 @@
 				role="modal"
 				@close="closeDetails()"
 			>
-				details
-				<!--
-				<QueryDetails :query @deleted="emitDelete(query)" @updated="updateQuery($event)" />
-				-->
+				<ExclusionRuleDetails :entity />
 			</n-card>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { ExclusionRule } from "@/types/incidentManagement/sources.d"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import type { CSSProperties } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -121,6 +118,7 @@ import { useThemeStore } from "@/stores/theme"
 import { formatDate } from "@/utils"
 import { NButton, NCard, NModal, NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
+import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 
 const props = defineProps<{
 	entity: ExclusionRule
@@ -145,8 +143,8 @@ const message = useMessage()
 const themeStore = useThemeStore()
 const checkedColor = computed(() => themeStore.style["success-color-rgb"])
 const uncheckedColor = computed(() => themeStore.style["border-color-rgb"])
-const loading = ref(false)
 const updatingStatus = ref(false)
+const loading = computed(() => updatingStatus.value)
 const showDetails = ref(false)
 const { gotoCustomer } = useGoto()
 const dFormats = useSettingsStore().dateFormat
@@ -178,7 +176,7 @@ function railStyle({ focused, checked }: { focused: boolean; checked: boolean })
 function toggleExclusionRuleStatus() {
 	updatingStatus.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.exclusionRules
 		.toggleExclusionRuleStatus(entity.value.id)
 		.then(res => {
 			if (res.data.success) {

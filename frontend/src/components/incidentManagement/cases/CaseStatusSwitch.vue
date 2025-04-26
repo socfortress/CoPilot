@@ -47,7 +47,7 @@ function updateStatus() {
 	if (statusSelected.value && statusSelected.value !== status.value) {
 		loading.value = true
 
-		Api.incidentManagement
+		Api.incidentManagement.cases
 			.updateCaseStatus(caseData.value.id, statusSelected.value)
 			.then(res => {
 				if (res.data.success && statusSelected.value) {

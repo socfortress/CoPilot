@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement"
+import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import Api from "@/api"
@@ -359,7 +359,7 @@ function getData() {
 		query = { [filters.value.type]: filters.value.value }
 	}
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCasesList(query)
 		.then(res => {
 			if (res.data.success) {
@@ -379,7 +379,7 @@ function getData() {
 }
 
 function getAvailableUsers() {
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAvailableUsers()
 		.then(res => {
 			if (res.data.success) {

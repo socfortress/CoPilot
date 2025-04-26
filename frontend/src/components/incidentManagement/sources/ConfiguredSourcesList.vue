@@ -74,7 +74,7 @@ const totalConfiguredSources = computed(() => configuredSourcesList.value.length
 function getConfiguredSources() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getConfiguredSources()
 		.then(res => {
 			if (res.data.success) {

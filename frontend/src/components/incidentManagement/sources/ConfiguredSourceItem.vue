@@ -55,7 +55,7 @@ const showConfirm = ref(false)
 function deleteSourceConfiguration() {
 	canceling.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.deleteSourceConfiguration(source)
 		.then(res => {
 			if (res.data.success) {
