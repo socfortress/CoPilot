@@ -176,6 +176,7 @@ function updateEntity(value: ExclusionRule) {
 	entity.value.title = value.title
 	entity.value.field_matches = value.field_matches
 	entity.value.enabled = value.enabled
+	entity.value.customer_code = value.customer_code
 
 	editing.value = false
 	emit("updated")

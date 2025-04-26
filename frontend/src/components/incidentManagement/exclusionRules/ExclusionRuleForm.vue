@@ -73,6 +73,17 @@
 					</n-alert>
 				</div>
 
+				<n-form-item label="Customer" path="customer_code">
+					<n-select
+						v-model:value="model.customer_code"
+						:options="customersOptions"
+						placeholder="Select Customer..."
+						to="body"
+						filterable
+						:loading="loadingCustomers || !customersOptions.length"
+					/>
+				</n-form-item>
+
 				<n-form-item path="enabled" label="Status">
 					<n-checkbox v-model:checked="model.enabled" size="large">Enabled</n-checkbox>
 				</n-form-item>
@@ -101,8 +112,9 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref, toRefs, watch } from "vue"
+import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage, NSelect } from "naive-ui"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import type { Customer } from "@/types/customers.d"
 
 interface FieldMatch {
 	id: string
@@ -135,9 +147,15 @@ const { entity, resetOnSubmit } = toRefs(props)
 const DelIcon = "carbon:close-filled"
 const AddIcon = "carbon:add"
 const loading = ref(false)
+const loadingCustomers = ref(false)
 const message = useMessage()
 const model = ref<Model>(getDefaultModel())
 const formRef = ref<FormInst | null>(null)
+const customersList = ref<Customer[]>([])
+
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
 
 const areFieldsPresent = computed(() => {
 	return !!model.value.field_matches.length
@@ -240,6 +258,7 @@ function getDefaultModel(entity?: Partial<ExclusionRule>): Model {
 		field_matches: entity?.field_matches
 			? Object.entries(entity.field_matches).map(o => ({ key: o[0], value: o[1], id: o[0] }))
 			: [{ id: `${new Date().getTime()}`, key: null, value: null }],
+		customer_code: entity?.customer_code || undefined,
 		enabled: entity?.enabled || false
 	}
 }
@@ -265,6 +284,26 @@ function delField(index: number) {
 	if (!model.value.field_matches.length) {
 		addField()
 	}
+}
+
+function getCustomers() {
+	loadingCustomers.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
 }
 
 function submit() {
@@ -320,6 +359,10 @@ watch(
 	},
 	{ immediate: true }
 )
+
+onBeforeMount(() => {
+	getCustomers()
+})
 
 onMounted(() => {
 	emit("mounted", {
