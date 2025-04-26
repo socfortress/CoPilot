@@ -1,9 +1,13 @@
 <template>
-	<div class="page" ref="page">
+	<div ref="page" class="page">
 		<n-tabs type="line" animated :tabs-padding="24">
 			<n-tab-pane
 				name="ConfiguredSources"
-				:tab="`Configured Sources (${configuredSourcesListTotal})`"
+				:tab="
+					showConfiguredSourcesListToolbar
+						? 'Configured Sources'
+						: `Configured Sources (${configuredSourcesListTotal})`
+				"
 				display-directive="show"
 			>
 				<ConfiguredSourcesList
@@ -23,12 +27,12 @@
 			<template #suffix>
 				<div class="flex items-center gap-2">
 					<NewConfiguredSourceButton
-						@success="reloadConfiguredSourcesList()"
 						v-if="!showConfiguredSourcesListToolbar"
+						@success="reloadConfiguredSourcesList()"
 					/>
 					<NewExclusionRuleButton
-						@success="reloadExclusionRulesList()"
 						v-if="!showExclusionRulesListCreationButton"
+						@success="reloadExclusionRulesList()"
 					/>
 				</div>
 			</template>
@@ -38,13 +42,13 @@
 
 <script setup lang="ts">
 import ExclusionRulesList from "@/components/incidentManagement/exclusionRules/ExclusionRulesList.vue"
+import NewExclusionRuleButton from "@/components/incidentManagement/exclusionRules/NewExclusionRuleButton.vue"
 import ConfiguredSourcesList from "@/components/incidentManagement/sources/ConfiguredSourcesList.vue"
 import NewConfiguredSourceButton from "@/components/incidentManagement/sources/NewConfiguredSourceButton.vue"
-import NewExclusionRuleButton from "@/components/incidentManagement/exclusionRules/NewExclusionRuleButton.vue"
 
+import { useResizeObserver } from "@vueuse/core"
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
-import { useResizeObserver } from "@vueuse/core"
 
 const configuredSourcesListTotal = ref(0)
 const configuredSourcesListCTX = ref<{ reload: () => void } | null>(null)

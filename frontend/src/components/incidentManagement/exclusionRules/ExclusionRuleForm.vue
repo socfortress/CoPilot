@@ -106,15 +106,15 @@
 
 <script setup lang="ts">
 import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { Customer } from "@/types/customers.d"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage, NSelect } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
-import type { Customer } from "@/types/customers.d"
 
 interface FieldMatch {
 	id: string

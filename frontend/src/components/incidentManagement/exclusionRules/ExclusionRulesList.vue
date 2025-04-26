@@ -2,7 +2,7 @@
 	<div class="sigma-queries-list">
 		<div ref="header" class="header @container flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
-				<n-popover overlap placement="bottom-start" v-if="showInfoPopover">
+				<n-popover v-if="showInfoPopover" overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
@@ -22,8 +22,8 @@
 
 				<NewExclusionRuleButton
 					v-if="showCreationButton"
-					@success="getData()"
 					:hide-button-extended-label="simpleMode"
+					@success="getData()"
 				/>
 			</div>
 
@@ -98,7 +98,7 @@ import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
-import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage, NBadge } from "naive-ui"
+import { NBadge, NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
 import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"

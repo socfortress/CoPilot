@@ -30,11 +30,11 @@ import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 
 const props = defineProps<{ hideButtonExtendedLabel?: boolean }>()
 
-const { hideButtonExtendedLabel } = toRefs(props)
-
 const emit = defineEmits<{
 	(e: "success"): void
 }>()
+
+const { hideButtonExtendedLabel } = toRefs(props)
 
 const NewNewExclusionRuleIcon = "ic:outline-do-not-disturb-on"
 const showForm = ref(false)
