@@ -40,12 +40,12 @@
 								/>
 								<div class="absolute -right-2.5 -top-2.5">
 									<n-button
-										@click="delField(index)"
 										v-if="model.field_matches.length > 1"
 										circle
 										secondary
 										size="tiny"
 										type="error"
+										@click="delField(index)"
 									>
 										<template #icon>
 											<Icon :name="DelIcon" />
@@ -74,7 +74,7 @@
 				</div>
 
 				<n-form-item path="enabled" label="Status">
-					<n-checkbox size="large" v-model:checked="model.enabled">Enabled</n-checkbox>
+					<n-checkbox v-model:checked="model.enabled" size="large">Enabled</n-checkbox>
 				</n-form-item>
 
 				<div class="flex justify-between gap-4">
@@ -101,7 +101,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import { NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage, NAlert } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 
 interface FieldMatch {

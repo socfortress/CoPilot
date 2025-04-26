@@ -17,16 +17,16 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<ExclusionRuleForm @submitted="submitted()" reset-on-submit @mounted="formCTX = $event" />
+			<ExclusionRuleForm reset-on-submit @submitted="submitted()" @mounted="formCTX = $event" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, watch } from "vue"
+import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 
 const emit = defineEmits<{
 	(e: "success"): void

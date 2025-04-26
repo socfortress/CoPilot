@@ -72,8 +72,8 @@ import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
-import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
+import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"
 
 const { showCreationButton = true } = defineProps<{ showCreationButton?: boolean }>()
 

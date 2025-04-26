@@ -86,14 +86,14 @@
 				<n-spin :show="loadingDelete">
 					<ExclusionRuleForm v-if="editing" :entity class="p-6" @submitted="updateEntity($event)">
 						<template #additionalActions>
-							<n-button @click="editing = false" v-if="editing">Close</n-button>
+							<n-button v-if="editing" @click="editing = false">Close</n-button>
 						</template>
 					</ExclusionRuleForm>
 					<ExclusionRuleDetails v-else :entity />
 				</n-spin>
 
 				<template #footer>
-					<div class="flex items-center justify-end gap-4" v-if="!editing">
+					<div v-if="!editing" class="flex items-center justify-end gap-4">
 						<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
 							<template #icon>
 								<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -122,7 +122,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NCard, NModal, useDialog, useMessage, NSpin } from "naive-ui"
+import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
@@ -150,9 +150,9 @@ const TargetIcon = "zondicons:target"
 const message = useMessage()
 const dialog = useDialog()
 const updatingStatus = ref(false)
+const loadingDelete = ref(false)
 const loading = computed(() => updatingStatus.value || loadingDelete.value)
 const editing = ref(false)
-const loadingDelete = ref(false)
 const showDetails = ref(false)
 const { gotoCustomer } = useGoto()
 const dFormats = useSettingsStore().dateFormat
