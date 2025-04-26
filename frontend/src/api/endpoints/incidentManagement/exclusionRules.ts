@@ -53,5 +53,8 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { exclusion_response: ExclusionRule }>(
 			`/incidents/alerts/velo-sigma/exclusion/${exclusionId}/toggle`
 		)
+	},
+	deleteExclusionRules(exclusionId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/alerts/create/velo-sigma/exclusion/${exclusionId}`)
 	}
 }

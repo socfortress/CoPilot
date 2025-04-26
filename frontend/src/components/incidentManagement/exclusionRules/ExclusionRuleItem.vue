@@ -4,15 +4,11 @@
 			<template #headerMain>{{ entity.name }}</template>
 			<template #headerExtra>
 				<div class="hidden font-sans sm:block">
-					<n-switch
-						v-model:value="entity.enabled"
-						:rail-style
-						:loading="updatingStatus"
-						@update:value="toggleExclusionRuleStatus()"
-					>
-						<template #checked>Enabled</template>
-						<template #unchecked>Disabled</template>
-					</n-switch>
+					<ExclusionRuleStatusToggler
+						:entity
+						@loading="updatingStatus = $event"
+						@updated="setStatus($event)"
+					/>
 				</div>
 			</template>
 			<template #default>
@@ -25,11 +21,7 @@
 							<Icon :name="TargetIcon" />
 						</template>
 						<template #label>Match count</template>
-						<template #value>
-							<div class="flex items-center gap-2">
-								{{ entity.match_count }}
-							</div>
-						</template>
+						<template #value>{{ entity.match_count }}</template>
 					</Badge>
 
 					<Badge v-if="entity.last_matched_at" type="splitted" color="primary">
@@ -38,24 +30,20 @@
 						</template>
 						<template #label>Last match</template>
 						<template #value>
-							<div class="flex items-center gap-2">
-								{{ formatDate(entity.last_matched_at, dFormats.datetimesec) }}
-							</div>
+							{{ formatDate(entity.last_matched_at, dFormats.datetimesec) }}
 						</template>
 					</Badge>
 
 					<Badge v-if="entity.customer_code" type="splitted">
 						<template #label>Customer</template>
 						<template #value>
-							<div class="flex h-full items-center">
-								<code
-									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: entity.customer_code })"
-								>
-									#{{ entity.customer_code }}
-									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
-								</code>
-							</div>
+							<code
+								class="text-primary cursor-pointer leading-none"
+								@click.stop="gotoCustomer({ code: entity.customer_code })"
+							>
+								#{{ entity.customer_code }}
+								<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+							</code>
 						</template>
 					</Badge>
 				</div>
@@ -64,15 +52,11 @@
 			<template #footerExtra>
 				<div class="flex items-center gap-3">
 					<div class="block sm:hidden">
-						<n-switch
-							v-model:value="entity.enabled"
-							:rail-style
-							:loading="updatingStatus"
-							@update:value="toggleExclusionRuleStatus()"
-						>
-							<template #checked>Enabled</template>
-							<template #unchecked>Disabled</template>
-						</n-switch>
+						<ExclusionRuleStatusToggler
+							:entity
+							@loading="updatingStatus = $event"
+							@updated="setStatus($event)"
+						/>
 					</div>
 
 					<n-button size="small" @click.stop="openDetails()">
@@ -92,7 +76,7 @@
 		>
 			<n-card
 				content-class="flex flex-col !p-0"
-				:title="entity.name"
+				:title="`#${entity.id} • ${entity.name}`"
 				closable
 				:bordered="false"
 				segmented
@@ -100,6 +84,23 @@
 				@close="closeDetails()"
 			>
 				<ExclusionRuleDetails :entity />
+
+				<template #footer>
+					<div class="flex items-center justify-end gap-4">
+						<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
+							<template #icon>
+								<Icon :name="DeleteIcon" :size="15"></Icon>
+							</template>
+							Delete
+						</n-button>
+						<n-button :disabled="loadingDelete" @click="editing = true">
+							<template #icon>
+								<Icon :name="EditIcon" :size="14"></Icon>
+							</template>
+							Edit
+						</n-button>
+					</div>
+				</template>
 			</n-card>
 		</n-modal>
 	</div>
@@ -107,44 +108,42 @@
 
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
-import type { CSSProperties } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
-import { useThemeStore } from "@/stores/theme"
 import { formatDate } from "@/utils"
-import { NButton, NCard, NModal, NSwitch, useMessage } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { NButton, NCard, NModal, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref, toRefs } from "vue"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
+import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{
 	entity: ExclusionRule
 	embedded?: boolean
 }>()
 
-/*
 const emit = defineEmits<{
-	(e: "deleted"): void
-	(e: "updated"): void
+	(e: "delete"): void
 }>()
-*/
 
 const { entity, embedded } = toRefs(props)
 
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const DetailsIcon = "carbon:settings-adjust"
+const DeleteIcon = "ph:trash"
+const EditIcon = "uil:edit-alt"
 const TargetIcon = "zondicons:target"
 
 const message = useMessage()
-const themeStore = useThemeStore()
-const checkedColor = computed(() => themeStore.style["success-color-rgb"])
-const uncheckedColor = computed(() => themeStore.style["border-color-rgb"])
+const dialog = useDialog()
 const updatingStatus = ref(false)
 const loading = computed(() => updatingStatus.value)
+const editing = ref(false)
+const loadingDelete = ref(false)
 const showDetails = ref(false)
 const { gotoCustomer } = useGoto()
 const dFormats = useSettingsStore().dateFormat
@@ -157,37 +156,45 @@ function closeDetails() {
 	showDetails.value = false
 }
 
-function railStyle({ focused, checked }: { focused: boolean; checked: boolean }) {
-	const style: CSSProperties = {}
-	if (checked) {
-		style.background = `rgb(${checkedColor.value})`
-		if (focused) {
-			style.boxShadow = `0 0 0 2px rgb(${checkedColor.value} / 30%)`
-		}
-	} else {
-		style.background = `rgb(${uncheckedColor.value})`
-		if (focused) {
-			style.boxShadow = `0 0 0 2px rgb(${uncheckedColor.value} / 30%)`
-		}
-	}
-	return style
+function setStatus(value: ExclusionRule) {
+	entity.value.enabled = value.enabled
 }
 
-function toggleExclusionRuleStatus() {
-	updatingStatus.value = true
+function deleteExclusionRules() {
+	loadingDelete.value = true
 
 	Api.incidentManagement.exclusionRules
-		.toggleExclusionRuleStatus(entity.value.id)
+		.deleteExclusionRules(entity.value.id)
 		.then(res => {
 			if (res.data.success) {
-				entity.value.enabled = res.data.exclusion_response.enabled
+				emit("delete")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			updatingStatus.value = false
+			loadingDelete.value = false
 		})
+}
+
+function handleDelete() {
+	dialog.warning({
+		title: "Confirm",
+		content: () =>
+			h("div", {
+				innerHTML: `Are you sure you want to delete the Exclusion Rule: <strong>${entity.value.name}</strong> ?`
+			}),
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			deleteExclusionRules()
+		},
+		onNegativeClick: () => {
+			message.info("Delete canceled")
+		}
+	})
 }
 </script>
