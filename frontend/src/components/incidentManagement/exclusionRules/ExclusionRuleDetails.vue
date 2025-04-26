@@ -101,13 +101,14 @@
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import _pick from "lodash/pick"
 import { NSpin, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
+import { computed, ref, toRefs } from "vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{
@@ -115,8 +116,6 @@ const props = defineProps<{
 }>()
 
 const { entity } = toRefs(props)
-
-const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"

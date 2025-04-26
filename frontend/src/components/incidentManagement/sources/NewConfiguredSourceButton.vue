@@ -17,7 +17,11 @@
 			content-class="flex flex-col !p-0"
 			segmented
 		>
-			<SourceConfigurationWizard :disabled-sources="configuredSourcesList" @submitted="submitted()" />
+			<SourceConfigurationWizard
+				:disabled-sources="configuredSourcesList"
+				@submitted="submitted()"
+				@mounted="formCTX = $event"
+			/>
 		</n-modal>
 	</div>
 </template>

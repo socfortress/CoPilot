@@ -20,7 +20,7 @@
 					</div>
 				</n-popover>
 
-				<NewConfiguredSourceButton v-if="showCreationButton" @success="getData()" />
+				<NewExclusionRuleButton v-if="showCreationButton" @success="getData()" />
 			</div>
 			<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
 			<n-pagination
@@ -72,7 +72,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
-import NewConfiguredSourceButton from "../sources/NewConfiguredSourceButton.vue"
+import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
 
 const { showCreationButton = true } = defineProps<{ showCreationButton?: boolean }>()

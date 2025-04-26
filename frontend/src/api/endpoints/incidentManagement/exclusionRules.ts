@@ -19,6 +19,7 @@ export interface ExclusionRulePayload {
 	title: string
 	field_matches: { [key: string]: string }
 	enabled: boolean
+	customer_code?: string
 }
 
 export default {
@@ -46,6 +47,12 @@ export default {
 	createExclusionRule(payload: ExclusionRulePayload) {
 		return HttpClient.post<FlaskBaseResponse & { exclusion_response: ExclusionRule }>(
 			`/incidents/alerts/create/velo-sigma/exclusion`,
+			payload
+		)
+	},
+	updateExclusionRule(exclusionId: number, payload: ExclusionRulePayload) {
+		return HttpClient.patch<FlaskBaseResponse & { exclusion_response: ExclusionRule }>(
+			`/incidents/alerts/create/velo-sigma/exclusion/${exclusionId}`,
 			payload
 		)
 	},

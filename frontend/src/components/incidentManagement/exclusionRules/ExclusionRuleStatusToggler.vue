@@ -38,14 +38,14 @@ const updatingStatus = ref(false)
 function railStyle({ focused, checked }: { focused: boolean; checked: boolean }) {
 	const style: CSSProperties = {}
 	if (checked) {
-		style.background = `rgb(${checkedColor.value})`
+		style.background = `rgb(${checkedColor.value} / 40%)`
 		if (focused) {
 			style.boxShadow = `0 0 0 2px rgb(${checkedColor.value} / 30%)`
 		}
 	} else {
 		style.background = `rgb(${uncheckedColor.value})`
 		if (focused) {
-			style.boxShadow = `0 0 0 2px rgb(${uncheckedColor.value} / 30%)`
+			style.boxShadow = `0 0 0 2px rgb(${uncheckedColor.value} / 10%)`
 		}
 	}
 	return style

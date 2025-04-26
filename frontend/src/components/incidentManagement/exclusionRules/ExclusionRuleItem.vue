@@ -83,10 +83,17 @@
 				role="modal"
 				@close="closeDetails()"
 			>
-				<ExclusionRuleDetails :entity />
+				<n-spin :show="loadingDelete">
+					<ExclusionRuleForm v-if="editing" :entity class="p-6">
+						<template #additionalActions>
+							<n-button @click="editing = false" v-if="editing">Close</n-button>
+						</template>
+					</ExclusionRuleForm>
+					<ExclusionRuleDetails v-else :entity />
+				</n-spin>
 
 				<template #footer>
-					<div class="flex items-center justify-end gap-4">
+					<div class="flex items-center justify-end gap-4" v-if="!editing">
 						<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
 							<template #icon>
 								<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -115,9 +122,10 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NCard, NModal, useDialog, useMessage } from "naive-ui"
+import { NButton, NCard, NModal, useDialog, useMessage, NSpin } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
+import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{
@@ -126,7 +134,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "delete"): void
+	(e: "deleted"): void
 }>()
 
 const { entity, embedded } = toRefs(props)
@@ -141,7 +149,7 @@ const TargetIcon = "zondicons:target"
 const message = useMessage()
 const dialog = useDialog()
 const updatingStatus = ref(false)
-const loading = computed(() => updatingStatus.value)
+const loading = computed(() => updatingStatus.value || loadingDelete.value)
 const editing = ref(false)
 const loadingDelete = ref(false)
 const showDetails = ref(false)
@@ -167,7 +175,8 @@ function deleteExclusionRules() {
 		.deleteExclusionRules(entity.value.id)
 		.then(res => {
 			if (res.data.success) {
-				emit("delete")
+				showDetails.value = false
+				emit("deleted")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
