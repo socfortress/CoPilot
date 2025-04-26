@@ -95,7 +95,7 @@ const list = ref<ExclusionRule[]>([])
 const total = ref(0)
 
 const currentPage = ref(1)
-const pageSizes = [1, 10, 25, 50, 100]
+const pageSizes = [10, 25, 50, 100]
 const pageSize = ref(pageSizes[1])
 const header = ref()
 const pageSlot = ref(8)

@@ -84,7 +84,7 @@
 				@close="closeDetails()"
 			>
 				<n-spin :show="loadingDelete">
-					<ExclusionRuleForm v-if="editing" :entity class="p-6">
+					<ExclusionRuleForm v-if="editing" :entity class="p-6" @submitted="updateEntity($event)">
 						<template #additionalActions>
 							<n-button @click="editing = false" v-if="editing">Close</n-button>
 						</template>
@@ -135,6 +135,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "deleted"): void
+	(e: "updated"): void
 }>()
 
 const { entity, embedded } = toRefs(props)
@@ -166,6 +167,18 @@ function closeDetails() {
 
 function setStatus(value: ExclusionRule) {
 	entity.value.enabled = value.enabled
+}
+
+function updateEntity(value: ExclusionRule) {
+	entity.value.name = value.name
+	entity.value.description = value.description
+	entity.value.channel = value.channel
+	entity.value.title = value.title
+	entity.value.field_matches = value.field_matches
+	entity.value.enabled = value.enabled
+
+	editing.value = false
+	emit("updated")
 }
 
 function deleteExclusionRules() {

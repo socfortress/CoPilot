@@ -19,7 +19,6 @@ export interface ExclusionRulePayload {
 	title: string
 	field_matches: { [key: string]: string }
 	enabled: boolean
-	customer_code?: string
 }
 
 export default {

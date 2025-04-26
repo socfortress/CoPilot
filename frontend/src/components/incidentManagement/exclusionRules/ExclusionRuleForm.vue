@@ -22,7 +22,58 @@
 					<n-input v-model:value.trim="model.title" placeholder="Exclusion rule title" clearable />
 				</n-form-item>
 
-				<n-form-item path="enabled" :show-label="false">
+				<div class="mb-6 flex flex-col gap-2">
+					<n-form-item path="field_matches" required label="Field matches" :show-feedback="false">
+						<div class="flex w-full flex-col gap-4">
+							<div
+								v-for="(field, index) of model.field_matches"
+								:key="field.id"
+								class="border-default relative flex w-full flex-col gap-2 rounded-xl border p-2"
+							>
+								<n-input v-model:value.trim="field.key" placeholder="Field name" clearable />
+								<n-input
+									v-model:value.trim="field.value"
+									placeholder="Field match"
+									clearable
+									type="textarea"
+									:autosize="{ minRows: 3 }"
+								/>
+								<div class="absolute -right-2.5 -top-2.5">
+									<n-button
+										@click="delField(index)"
+										v-if="model.field_matches.length > 1"
+										circle
+										secondary
+										size="tiny"
+										type="error"
+									>
+										<template #icon>
+											<Icon :name="DelIcon" />
+										</template>
+									</n-button>
+								</div>
+							</div>
+						</div>
+					</n-form-item>
+
+					<div class="flex justify-end">
+						<n-button @click="addField()">
+							<template #icon>
+								<Icon :name="AddIcon" />
+							</template>
+							Add field
+						</n-button>
+					</div>
+
+					<n-alert v-if="!areFieldsFilled" type="warning">
+						<span class="text-sm">Please fill in all fields</span>
+					</n-alert>
+					<n-alert v-if="!areFieldsUniques && model.field_matches.length > 1" type="warning">
+						<span class="text-sm">Attention, there are duplicate fields</span>
+					</n-alert>
+				</div>
+
+				<n-form-item path="enabled" label="Status">
 					<n-checkbox size="large" v-model:checked="model.enabled">Enabled</n-checkbox>
 				</n-form-item>
 
@@ -47,12 +98,14 @@ import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/ex
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import { NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NForm, NFormItem, NInput, NSpin, useMessage, NAlert } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 
 interface FieldMatch {
+	id: string
 	key: string | null
 	value: string | null
 }
@@ -79,15 +132,21 @@ const emit = defineEmits<{
 
 const { entity, resetOnSubmit } = toRefs(props)
 
+const DelIcon = "carbon:close-filled"
+const AddIcon = "carbon:add"
 const loading = ref(false)
 const message = useMessage()
 const model = ref<Model>(getDefaultModel())
 const formRef = ref<FormInst | null>(null)
 
-const areFieldsFilled = computed(() => {
-	const fieldsFilled = model.value.field_matches.filter(o => !!o.key && !!o.value)
+const areFieldsPresent = computed(() => {
+	return !!model.value.field_matches.length
+})
 
-	return fieldsFilled.length === model.value.field_matches.length
+const areFieldsFilled = computed(() => {
+	const fieldsFilled = model.value.field_matches.filter(o => (!!o.key && !o.value) || (!o.key && !!o.value))
+
+	return fieldsFilled.length === 0
 })
 
 const areFieldsUniques = computed(() => {
@@ -95,7 +154,7 @@ const areFieldsUniques = computed(() => {
 
 	const uniques: (string | null)[] = fieldsFilled.filter((value, index, self) => self.indexOf(value) === index)
 
-	return uniques.length === model.value.field_matches.length
+	return uniques.length === fieldsFilled.length
 })
 
 const rules: FormRules = {
@@ -123,8 +182,12 @@ const rules: FormRules = {
 		required: false,
 
 		validator(_rule: FormItemRule, _value: string) {
+			if (!areFieldsPresent.value) {
+				return new Error(`Please fill least one fields`)
+			}
+
 			if (!areFieldsFilled.value) {
-				return new Error(`Please fill all customer fields`)
+				return new Error(`Please fill all fields`)
 			}
 
 			if (!areFieldsUniques.value) {
@@ -148,11 +211,7 @@ const isValid = computed(() => {
 		}
 	}
 
-	if (!areFieldsFilled.value) {
-		valid = false
-	}
-
-	if (!areFieldsUniques.value) {
+	if (!areFieldsFilled.value || !areFieldsPresent.value || !areFieldsUniques.value) {
 		valid = false
 	}
 
@@ -179,8 +238,8 @@ function getDefaultModel(entity?: Partial<ExclusionRule>): Model {
 		channel: entity?.channel || "",
 		title: entity?.title || "",
 		field_matches: entity?.field_matches
-			? Object.entries(entity.field_matches).map(o => ({ key: o[0], value: o[1] }))
-			: [],
+			? Object.entries(entity.field_matches).map(o => ({ key: o[0], value: o[1], id: o[0] }))
+			: [{ id: `${new Date().getTime()}`, key: null, value: null }],
 		enabled: entity?.enabled || false
 	}
 }
@@ -189,6 +248,22 @@ function reset(force?: boolean) {
 	if (!loading.value || force) {
 		setModel()
 		formRef.value?.restoreValidation()
+	}
+}
+
+function addField() {
+	model.value.field_matches.push({
+		id: `${new Date().getTime()}`,
+		key: null,
+		value: null
+	})
+}
+
+function delField(index: number) {
+	model.value.field_matches.splice(index, 1)
+
+	if (!model.value.field_matches.length) {
+		addField()
 	}
 }
 
