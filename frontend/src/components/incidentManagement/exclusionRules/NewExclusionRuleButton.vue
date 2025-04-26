@@ -2,9 +2,9 @@
 	<div>
 		<n-button size="small" type="primary" @click="showForm = true">
 			<template #icon>
-				<Icon :name="NewNewExclusionRuleIcon" :size="15"></Icon>
+				<Icon :name="NewNewExclusionRuleIcon" :size="16"></Icon>
 			</template>
-			Create Exclusion Rule
+			{{ hideButtonExtendedLabel ? "Create" : " Create Exclusion Rule" }}
 		</n-button>
 
 		<n-modal
@@ -25,14 +25,18 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
-import { ref, watch } from "vue"
+import { ref, toRefs, watch } from "vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
+
+const props = defineProps<{ hideButtonExtendedLabel?: boolean }>()
+
+const { hideButtonExtendedLabel } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "success"): void
 }>()
 
-const NewNewExclusionRuleIcon = "carbon:add-alt"
+const NewNewExclusionRuleIcon = "ic:outline-do-not-disturb-on"
 const showForm = ref(false)
 const formCTX = ref<{ reset: () => void } | null>(null)
 

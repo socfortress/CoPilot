@@ -37,7 +37,7 @@
 						</CardKV>
 					</div>
 
-					<div class="flex flex-wrap items-center gap-3">
+					<div class="border-default bg-secondary flex flex-wrap items-center gap-3 rounded-lg border p-3">
 						<Badge type="splitted">
 							<template #label># ID</template>
 							<template #value>{{ entity.id }}</template>

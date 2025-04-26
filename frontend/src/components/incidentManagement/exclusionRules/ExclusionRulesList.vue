@@ -1,8 +1,8 @@
 <template>
 	<div class="sigma-queries-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+		<div ref="header" class="header @container flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
-				<n-popover overlap placement="bottom-start">
+				<n-popover overlap placement="bottom-start" v-if="showInfoPopover">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
@@ -20,9 +20,37 @@
 					</div>
 				</n-popover>
 
-				<NewExclusionRuleButton v-if="showCreationButton" @success="getData()" />
+				<NewExclusionRuleButton
+					v-if="showCreationButton"
+					@success="getData()"
+					:hide-button-extended-label="simpleMode"
+				/>
 			</div>
-			<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
+
+			<div class="@md:block hidden">
+				<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
+			</div>
+			<div class="@md:hidden block">
+				<n-popover overlap placement="right" class="!px-0">
+					<template #trigger>
+						<div class="bg-default rounded-lg">
+							<n-badge :show="filters.enabledOnly" dot type="success" :offset="[-3, 4]">
+								<n-button size="small">
+									<template #icon>
+										<Icon :name="FilterIcon"></Icon>
+									</template>
+								</n-button>
+							</n-badge>
+						</div>
+					</template>
+					<div class="py-1">
+						<div class="px-4">
+							<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
+						</div>
+					</div>
+				</n-popover>
+			</div>
+
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
@@ -70,12 +98,15 @@ import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
-import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage, NBadge } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
 import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"
 
-const { showCreationButton = true } = defineProps<{ showCreationButton?: boolean }>()
+const { showCreationButton = true, showInfoPopover = true } = defineProps<{
+	showCreationButton?: boolean
+	showInfoPopover?: boolean
+}>()
 
 const emit = defineEmits<{
 	(
@@ -87,6 +118,7 @@ const emit = defineEmits<{
 	(e: "loaded", value: number): void
 }>()
 
+const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 const message = useMessage()
 const filters = ref({ enabledOnly: false })
