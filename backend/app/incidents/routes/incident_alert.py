@@ -404,7 +404,7 @@ async def delete_exclusion(
     if not deleted:
         raise HTTPException(status_code=404, detail="Exclusion rule not found")
 
-    return {"message": "Exclusion rule deleted successfully"}
+    return {"message": "Exclusion rule deleted successfully", "success": True}
 
 
 @incidents_alerts_router.post(
