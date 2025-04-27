@@ -1,13 +1,17 @@
-from typing import Dict, List, Any, Optional, Tuple
-from loguru import logger
-from fastapi import HTTPException
-from pydantic import ValidationError
-import aiohttp
 import time
-from loguru import logger
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
+import aiohttp
+from fastapi import HTTPException
+from loguru import logger
+from pydantic import ValidationError
+
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse, WazuhMitreTechniquesResponse
 
 # Constants for the Atomic Red Team GitHub repository
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/redcanaryco/atomic-red-team/refs/heads/master/atomics"
@@ -81,13 +85,14 @@ class AtomicRedTeamService:
             cls._cache.clear()
             logger.info("Cleared all cached Atomic Red Team markdown content")
 
+
 async def get_mitre_tactics(
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     select: Optional[List[str]] = None,
     sort: Optional[str] = None,
     search: Optional[str] = None,
-    q: Optional[str] = None
+    q: Optional[str] = None,
 ) -> WazuhMitreTacticsResponse:
     """
     Fetch MITRE ATT&CK tactics from Wazuh API.
@@ -104,13 +109,7 @@ async def get_mitre_tactics(
         WazuhMitreTacticsResponse: A list of all MITRE ATT&CK tactics.
     """
     # Build parameters dictionary, excluding None values
-    params = {
-        "limit": limit,
-        "offset": offset,
-        "sort": sort,
-        "search": search,
-        "q": q
-    }
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
 
     # Add select parameter if provided
     if select:
@@ -119,26 +118,23 @@ async def get_mitre_tactics(
     # Remove None values
     params = {k: v for k, v in params.items() if v is not None}
 
-    response = await send_get_request(
-        endpoint="/mitre/tactics",
-        params=params
-    )
+    response = await send_get_request(endpoint="/mitre/tactics", params=params)
 
     logger.debug(f"Response from Wazuh MITRE tactics endpoint with params {params}")
 
     try:
         # Extract data from response
-        if 'data' in response and 'data' in response['data']:
-            wazuh_data = response['data']['data']
-            mitre_tactics = wazuh_data.get('affected_items', [])
-            total_items = wazuh_data.get('total_affected_items', len(mitre_tactics))
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_tactics = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_tactics))
 
             logger.debug(f"Retrieved {len(mitre_tactics)} of {total_items} MITRE tactics from Wazuh")
 
             return WazuhMitreTacticsResponse(
                 success=True,
                 message=f"Successfully retrieved {len(mitre_tactics)} MITRE tactics",
-                results=mitre_tactics
+                results=mitre_tactics,
             )
         else:
             logger.error("Unexpected response structure from Wazuh API")
@@ -155,7 +151,7 @@ async def get_mitre_techniques(
     select: Optional[List[str]] = None,
     sort: Optional[str] = None,
     search: Optional[str] = None,
-    q: Optional[str] = None
+    q: Optional[str] = None,
 ) -> WazuhMitreTechniquesResponse:
     """
     Fetch MITRE ATT&CK techniques from Wazuh API.
@@ -172,13 +168,7 @@ async def get_mitre_techniques(
         WazuhMitreTechniquesResponse: A list of all MITRE ATT&CK techniques.
     """
     # Build parameters dictionary, excluding None values
-    params = {
-        "limit": limit,
-        "offset": offset,
-        "sort": sort,
-        "search": search,
-        "q": q
-    }
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
 
     # Add select parameter if provided
     if select:
@@ -187,31 +177,28 @@ async def get_mitre_techniques(
     # Remove None values
     params = {k: v for k, v in params.items() if v is not None}
 
-    response = await send_get_request(
-        endpoint="/mitre/techniques",
-        params=params
-    )
+    response = await send_get_request(endpoint="/mitre/techniques", params=params)
 
     logger.debug(f"Response from Wazuh MITRE techniques endpoint with params {params}")
 
     try:
         # Extract data from response
-        if 'data' in response and 'data' in response['data']:
-            wazuh_data = response['data']['data']
-            mitre_techniques = wazuh_data.get('affected_items', [])
-            total_items = wazuh_data.get('total_affected_items', len(mitre_techniques))
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_techniques = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_techniques))
 
             # Process each technique to set is_subtechnique based on subtechnique_of
             for technique in mitre_techniques:
-                if 'subtechnique_of' in technique and technique['subtechnique_of']:
-                    technique['is_subtechnique'] = True
+                if "subtechnique_of" in technique and technique["subtechnique_of"]:
+                    technique["is_subtechnique"] = True
 
             logger.debug(f"Retrieved {len(mitre_techniques)} of {total_items} MITRE techniques from Wazuh")
 
             return WazuhMitreTechniquesResponse(
                 success=True,
                 message=f"Successfully retrieved {len(mitre_techniques)} MITRE techniques",
-                results=mitre_techniques
+                results=mitre_techniques,
             )
         else:
             logger.error("Unexpected response structure from Wazuh API")

@@ -626,6 +626,7 @@ async def handle_customer_notifications(
 
 #     return alert_id
 
+
 async def create_alert_full(
     alert_payload: CreatedAlertPayload,
     customer_code: str,
@@ -654,7 +655,7 @@ async def create_alert_full(
         existing_alert_id = await open_alert_exists(alert_payload, customer_code, session)
         if existing_alert_id:
             logger.info(
-                f"Found existing open alert ID {existing_alert_id} for Velociraptor Sigma alert with title {alert_payload.alert_title_payload}"
+                f"Found existing open alert ID {existing_alert_id} for Velociraptor Sigma alert with title {alert_payload.alert_title_payload}",
             )
 
             # Add the asset to the existing alert if it doesn't already exist
@@ -684,7 +685,7 @@ async def create_alert_full(
             if alert_payload.index_name and alert_payload.index_id:
                 await add_alert_to_document(
                     CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id),
-                    existing_alert_id
+                    existing_alert_id,
                 )
 
             # Set alert ID for notifications
@@ -754,7 +755,9 @@ async def create_alert_full(
         )
 
     if threshold_alert is True or velo_sigma_alert is True:
-        logger.info(f"{'Threshold' if threshold_alert else 'Velociraptor Sigma'} alert created for customer code {customer_code} with alert ID {alert_id}")
+        logger.info(
+            f"{'Threshold' if threshold_alert else 'Velociraptor Sigma'} alert created for customer code {customer_code} with alert ID {alert_id}",
+        )
         return alert_id
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)

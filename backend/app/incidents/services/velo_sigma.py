@@ -8,7 +8,8 @@ from typing import Optional
 from typing import Union
 
 from loguru import logger
-from sqlalchemy import select, func
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 

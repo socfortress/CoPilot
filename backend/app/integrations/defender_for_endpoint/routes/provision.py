@@ -8,11 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.defender_for_endpoint.schema.provision import DefenderForEndpointCustomerDetails
-from app.integrations.defender_for_endpoint.schema.provision import ProvisionDefenderForEndpointAuthKeys
-from app.integrations.defender_for_endpoint.schema.provision import ProvisionDefenderForEndpointRequest
-from app.integrations.defender_for_endpoint.schema.provision import ProvisionDefenderForEndpointResponse
-from app.integrations.defender_for_endpoint.services.provision import provision_defender_for_endpoint
+from app.integrations.defender_for_endpoint.schema.provision import (
+    DefenderForEndpointCustomerDetails,
+)
+from app.integrations.defender_for_endpoint.schema.provision import (
+    ProvisionDefenderForEndpointAuthKeys,
+)
+from app.integrations.defender_for_endpoint.schema.provision import (
+    ProvisionDefenderForEndpointRequest,
+)
+from app.integrations.defender_for_endpoint.schema.provision import (
+    ProvisionDefenderForEndpointResponse,
+)
+from app.integrations.defender_for_endpoint.services.provision import (
+    provision_defender_for_endpoint,
+)
 from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
 from app.integrations.schema import CustomerIntegrations

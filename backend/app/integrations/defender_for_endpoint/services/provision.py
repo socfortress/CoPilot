@@ -9,8 +9,8 @@ from sqlalchemy import and_
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.grafana.schema.dashboards import DefenderForEndpointDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import DefenderForEndpointDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.collector import (
@@ -26,17 +26,20 @@ from app.connectors.wazuh_indexer.services.monitoring import (
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
 from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
-from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
-from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customers.routes.customers import get_customer_meta
-from app.integrations.defender_for_endpoint.schema.provision import DefenderForEndpointCustomerDetails
-from app.integrations.defender_for_endpoint.schema.provision import ProvisionDefenderForEndpointAuthKeys
-from app.integrations.defender_for_endpoint.schema.provision import ProvisionDefenderForEndpointResponse
+from app.integrations.defender_for_endpoint.schema.provision import (
+    DefenderForEndpointCustomerDetails,
+)
+from app.integrations.defender_for_endpoint.schema.provision import (
+    ProvisionDefenderForEndpointAuthKeys,
+)
+from app.integrations.defender_for_endpoint.schema.provision import (
+    ProvisionDefenderForEndpointResponse,
+)
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
@@ -266,7 +269,7 @@ async def create_customer_network_connector_meta(
         network_connector_name="DefenderForEndpoint",
         graylog_stream_id=stream_id,
         graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - DEFENDER FOR ENDPOINT")),
-        graylog_pipeline_id='not_set',
+        graylog_pipeline_id="not_set",
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
         grafana_org_id=(
@@ -432,6 +435,7 @@ async def create_customer_directory_if_needed(customer_name: str):
     if not os.path.exists(customer_directory):
         # If it doesn't exist, create it
         os.makedirs(customer_directory)
+
 
 async def create_customer_data_directory(customer_name: str):
     """

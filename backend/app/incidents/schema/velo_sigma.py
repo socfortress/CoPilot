@@ -456,8 +456,4 @@ class VeloSigmaExclusionListResponse(BaseModel):
     success: bool
     message: str
     exclusions: List[VeloSigmaExclusionResponse]
-    pagination: dict = {
-        "total": 0,
-        "skip": 0,
-        "limit": 0
-    }
+    pagination: dict = {"total": 0, "skip": 0, "limit": 0}

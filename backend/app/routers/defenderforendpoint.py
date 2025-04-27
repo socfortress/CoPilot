@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-from app.integrations.defender_for_endpoint.routes.provision import integration_defender_for_endpoint_router
+from app.integrations.defender_for_endpoint.routes.provision import (
+    integration_defender_for_endpoint_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()

@@ -29,7 +29,6 @@ def create_query(query: str) -> str:
     return query
 
 
-
 def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
     """
     Construct the artifact key.
@@ -138,7 +137,7 @@ async def run_artifact_collection(
                     f"org_id='{collect_artifact_body.velociraptor_org}', "
                     f"client_id='{collect_artifact_body.velociraptor_id}', "
                     f"artifacts=['{collect_artifact_body.artifact_name}'], "
-                    f"env=dict("
+                    f"env=dict(",
                 )
 
                 # Add each environment variable as a key-value pair
@@ -156,7 +155,7 @@ async def run_artifact_collection(
                     f"SELECT collect_client("
                     f"org_id='{collect_artifact_body.velociraptor_org}', "
                     f"client_id='{collect_artifact_body.velociraptor_id}', "
-                    f"artifacts=['{collect_artifact_body.artifact_name}']"
+                    f"artifacts=['{collect_artifact_body.artifact_name}']",
                 )
 
                 # Add other parameters if needed
@@ -172,7 +171,7 @@ async def run_artifact_collection(
                 f"org_id='{collect_artifact_body.velociraptor_org}', "
                 f"client_id='{collect_artifact_body.velociraptor_id}', "
                 f"artifacts=['{collect_artifact_body.artifact_name}']) "
-                f"FROM scope()"
+                f"FROM scope()",
             )
 
         logger.info(f"Running artifact collection with query: {query}")
@@ -181,10 +180,10 @@ async def run_artifact_collection(
 
         # Check if results are available
         if not flow.get("results") or len(flow["results"]) == 0:
-            logger.error(f"No results returned from query execution")
+            logger.error("No results returned from query execution")
             raise HTTPException(
                 status_code=500,
-                detail="Query execution did not return any results"
+                detail="Query execution did not return any results",
             )
 
         # Instead of relying on get_artifact_key, extract the flow_id directly from results
@@ -203,7 +202,7 @@ async def run_artifact_collection(
             logger.error(f"Could not find flow_id in results: {result_dict}")
             raise HTTPException(
                 status_code=500,
-                detail="Failed to extract flow ID from results"
+                detail="Failed to extract flow ID from results",
             )
 
         logger.info(f"Extracted flow_id: {flow_id}")
@@ -238,6 +237,7 @@ async def run_artifact_collection(
             status_code=500,
             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
         )
+
 
 async def run_file_collection(
     collect_artifact_body: CollectFileBody,

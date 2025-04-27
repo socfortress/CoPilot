@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.connectors.wazuh_manager.routes.rules import wazuh_manager_rules_router
 from app.connectors.wazuh_manager.routes.mitre import wazuh_manager_mitre_router
+from app.connectors.wazuh_manager.routes.rules import wazuh_manager_rules_router
 
 # Instantiate the APIRouter
 router = APIRouter()
