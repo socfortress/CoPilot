@@ -10,6 +10,7 @@ from app.connectors.grafana.schema.dashboards import CatoDashboard
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
 from app.connectors.grafana.schema.dashboards import DarktraceDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import DefenderForEndpointDashboard
 from app.connectors.grafana.schema.dashboards import DuoDashboard
 from app.connectors.grafana.schema.dashboards import FortinetDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
@@ -189,6 +190,7 @@ async def provision_dashboards(
         + list(DarktraceDashboard)
         + list(BitdefenderDashboard)
         + list(CatoDashboard)
+        + list(DefenderForEndpointDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

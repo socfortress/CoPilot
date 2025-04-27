@@ -2,16 +2,15 @@
 	<CardEntity>
 		<template #headerMain>{{ job.id }}</template>
 		<template #headerExtra>
-			<div class="flex items-center gap-2">
-				{{ formatDate(job.last_success, dFormats.datetimesec) }}
-
-				<n-tooltip>
-					<template #trigger>
+			<n-tooltip placement="top-end">
+				<template #trigger>
+					<div class="flex items-center gap-2">
+						{{ formatDate(job.last_success, dFormats.datetimesec) }}
 						<Icon :name="TimeIcon"></Icon>
-					</template>
-					Last success time
-				</n-tooltip>
-			</div>
+					</div>
+				</template>
+				Last success time
+			</n-tooltip>
 		</template>
 
 		<template #default>

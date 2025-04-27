@@ -29,7 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IncidentNotification, IncidentNotificationPayload } from "@/types/incidentManagement/notifications.d"
+import type { IncidentNotificationPayload } from "@/api/endpoints/incidentManagement/notification"
+import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import Api from "@/api"
 import { NButton, NForm, NFormItem, NInput, NSpin, NSwitch, useMessage } from "naive-ui"
@@ -122,7 +123,7 @@ function submit() {
 		enabled: form.value.enabled
 	}
 
-	Api.incidentManagement
+	Api.incidentManagement.notification
 		.setNotification(payload)
 		.then(res => {
 			if (res.data.success) {

@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  defender-for-endpoint-connector-CUSTOMER_NAME:
+    image: docker.elastic.co/beats/filebeat:8.17.2
+    container_name: defender-for-endpoint-CUSTOMER_NAME
+    user: root
+    volumes:
+      - /opt/CoPilot/data/data/CUSTOMER_NAME/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /opt/CoPilot/data/data/CUSTOMER_NAME/data:/usr/share/filebeat/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      - /var/log/:/var/log/:ro
+      - /var/log/audit/:/var/log/audit/:ro

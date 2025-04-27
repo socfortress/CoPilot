@@ -114,6 +114,10 @@ class CatoDashboard(Enum):
     CATO_SUMMARY = ("Cato", "summary.json")
 
 
+class DefenderForEndpointDashboard(Enum):
+    DEFENDERFORENDPOINT_SUMMARY = ("DefenderForEndpoint", "summary.json")
+
+
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
         ...,
@@ -149,6 +153,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(DarktraceDashboard)
             + list(BitdefenderDashboard)
             + list(CatoDashboard)
+            + list(DefenderForEndpointDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')

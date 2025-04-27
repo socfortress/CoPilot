@@ -314,6 +314,7 @@ function removeRow(row: Row) {
 		1
 	)
 }
+
 function removePanel(row: Row, panel: PanelData) {
 	row.panels.splice(
 		row.panels.findIndex(o => o.panelId === panel.panelId),

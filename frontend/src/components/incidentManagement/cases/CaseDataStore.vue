@@ -121,7 +121,7 @@ function closeUploadForm() {
 function getCaseDataStore(caseId: number) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCaseDataStoreFiles(caseId)
 		.then(res => {
 			if (res.data.success) {
@@ -143,7 +143,7 @@ function uploadDataStoreFile() {
 
 	uploading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.uploadCaseDataStoreFile(caseId, newFile.value)
 		.then(res => {
 			if (res.data.success) {

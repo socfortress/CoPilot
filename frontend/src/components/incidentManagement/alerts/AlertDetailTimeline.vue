@@ -38,7 +38,7 @@ function formatDateTime(timestamp: Date | string): string {
 function getAlertTimeline() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlertTimeline(asset.index_id, asset.index_name)
 		.then(res => {
 			if (res.data.success) {

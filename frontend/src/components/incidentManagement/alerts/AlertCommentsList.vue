@@ -93,7 +93,7 @@ function submit() {
 	if (trimmedValue.value) {
 		submitting.value = true
 
-		Api.incidentManagement
+		Api.incidentManagement.alerts
 			.newAlertComment({
 				alert_id: alertId.value,
 				comment: trimmedValue.value,

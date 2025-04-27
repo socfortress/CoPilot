@@ -1,0 +1,16 @@
+filebeat.modules:
+- module: microsoft
+  defender_atp:
+    enabled: true
+    var.oauth2.client.id: "REPLACE_CLIENT_ID"
+    var.oauth2.client.secret: "REPLACE_CLIENT_SECRET"
+    var.oauth2.token_url: "https://login.microsoftonline.com/REPLACE_TENANT_ID/oauth2/token"
+
+filebeat.inputs:
+- type: log
+  enabled: false
+  paths:
+    - /var/log/*.log
+
+output.logstash:
+  hosts: ["REPLACE_SYSLOG_HOST:REPLACE_SYSLOG_PORT"]

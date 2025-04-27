@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CaseReportPayload } from "@/api/endpoints/incidentManagement"
+import type { CaseReportPayload } from "@/api/endpoints/incidentManagement/cases"
 import type { DeepNullable } from "@/types/common"
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Size } from "naive-ui/es/button/src/interface"
@@ -168,7 +168,7 @@ function exportCases() {
 		? `${form.value.file_name}.${extension}`
 		: `case:${caseId}_report_${formatDate(new Date(), dFormats.datetimesec)}.${extension}`
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.generateCaseReport(
 			{
 				case_id: caseId,

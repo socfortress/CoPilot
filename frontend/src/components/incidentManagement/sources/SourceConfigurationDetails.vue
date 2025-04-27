@@ -55,7 +55,7 @@ const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } |
 function getSourceConfiguration() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getSourceConfiguration(source)
 		.then(res => {
 			if (res.data.success) {
@@ -90,7 +90,7 @@ function setViewMode() {
 function updateSourceConfiguration(payload: SourceConfiguration) {
 	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.updateSourceConfiguration(payload)
 		.then(res => {
 			if (res.data.success) {

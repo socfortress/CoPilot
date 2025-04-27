@@ -116,7 +116,7 @@ watch(showAlertDetails, val => {
 function getAlertDetails(indexId: string, indexName: string) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlertDetails(indexId, indexName)
 		.then(res => {
 			if (res.data.success) {

@@ -109,7 +109,7 @@ function toggleSelectedCase(caseEntity: Case) {
 function getCasesList() {
 	loadingCases.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCasesList()
 		.then(res => {
 			if (res.data.success) {
@@ -130,7 +130,7 @@ function linkCase() {
 	if (selectedCase.value?.id) {
 		merging.value = true
 
-		Api.incidentManagement
+		Api.incidentManagement.cases
 			.multiLinkCase(
 				alerts.map(o => o.id),
 				selectedCase.value.id

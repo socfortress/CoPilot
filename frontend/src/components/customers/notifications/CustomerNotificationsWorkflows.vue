@@ -74,7 +74,7 @@ const formCTX = ref<{ reset: (incidentNotification?: IncidentNotification) => vo
 function getCustomerNetworkConnectors() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.notification
 		.getNotifications(customerCode)
 		.then(res => {
 			if (res.data.success) {

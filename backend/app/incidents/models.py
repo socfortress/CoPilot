@@ -207,3 +207,36 @@ class CaseReportTemplateDataStore(SQLModel, table=True):
     file_size: Optional[int] = Field(nullable=True)  # File size in bytes
     upload_time: datetime = Field(default_factory=datetime.utcnow)  # Time of upload
     file_hash: str = Field(max_length=128, nullable=False)  # Hash of the file (e.g., SHA-256)
+
+
+class VeloSigmaExclusion(SQLModel, table=True):
+    """Exclusion rules for Velociraptor Sigma alerts."""
+
+    __tablename__ = "incident_management_velo_sigma_exclusion"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(max_length=255, nullable=False, description="Friendly name for this exclusion rule")
+    description: Optional[str] = Field(sa_column=Text, nullable=True, description="Description of why this exclusion exists")
+
+    # Core matching criteria
+    channel: Optional[str] = Field(max_length=255, nullable=True, description="Windows event channel to match (exact match)")
+    title: Optional[str] = Field(max_length=255, nullable=True, description="Sigma rule title to match (exact match)")
+
+    # Field matching data - stored as JSON to allow flexible field matching
+    field_matches: Optional[Dict] = Field(
+        sa_column=Column(JSON),
+        nullable=True,
+        description="JSON of field names and values to match in the event data",
+    )
+
+    # Metadata
+    customer_code: Optional[str] = Field(
+        max_length=50,
+        nullable=True,
+        description="Customer code this exclusion applies to (null means all customers)",
+    )
+    created_by: str = Field(max_length=100, nullable=False, description="User who created this exclusion")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="When this exclusion was created")
+    last_matched_at: Optional[datetime] = Field(nullable=True, description="When this exclusion last matched an alert")
+    match_count: int = Field(default=0, description="How many times this exclusion has matched")
+    enabled: bool = Field(default=True, description="Whether this exclusion is active")

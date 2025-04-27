@@ -34,16 +34,14 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
     Construct the artifact key.
 
     Args:
-        client_id (str): The ID of the client.
-        artifact (str): The name of the artifact.
-        command (str): The command that was run, if applicable.
-        quarantined (bool): Whether the client is quarantined or not.
+        analyzer_body: The collector body with artifact details
 
     Returns:
         str: The constructed artifact key.
     """
     action = getattr(analyzer_body, "action", None)
     command = getattr(analyzer_body, "command", None)
+    parameters = getattr(analyzer_body, "parameters", None)
 
     if action == "quarantine":
         return (
@@ -62,6 +60,12 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
             f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
             f"urgent=true, artifacts=['{analyzer_body.artifact_name}'], "
             f"env=dict(Command='{analyzer_body.command}'))"
+        )
+    elif parameters is not None:
+        # Parameters are provided, will be included in the query
+        return (
+            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
+            f"artifacts=['{analyzer_body.artifact_name}'])"
         )
     else:
         return (
@@ -106,32 +110,101 @@ async def run_artifact_collection(
     collect_artifact_body: CollectArtifactBody,
 ) -> CollectArtifactResponse:
     """
-    Run an artifact collection on a client.
+    Run an artifact collection on a client with optional parameters.
 
     Args:
-        run_analyzer_body (RunAnalyzerBody): The body of the request.
+        collect_artifact_body: The body of the request with optional parameters.
 
     Returns:
-        RunAnalyzerResponse: A dictionary containing the success status and a message.
+        CollectArtifactResponse: A dictionary containing the success status, message and results.
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
-        # ! Can specify org_id with org_id='OL680' ! #
-        query = create_query(
-            (
+        # Build the query dynamically based on whether parameters are provided
+        parameters = getattr(collect_artifact_body, "parameters", None)
+
+        if parameters:
+            # Velociraptor expects parameters in a very specific format
+            # For the "env" parameter, we need to construct a dict
+            if "env" in parameters and isinstance(parameters["env"], list):
+                env_dict = {}
+                for item in parameters["env"]:
+                    env_dict[item.key] = item.value
+
+                # Format the query with proper VQL syntax
+                query = create_query(
+                    f"SELECT collect_client("
+                    f"org_id='{collect_artifact_body.velociraptor_org}', "
+                    f"client_id='{collect_artifact_body.velociraptor_id}', "
+                    f"artifacts=['{collect_artifact_body.artifact_name}'], "
+                    f"env=dict(",
+                )
+
+                # Add each environment variable as a key-value pair
+                env_parts = []
+                for key, value in env_dict.items():
+                    # Escape any single quotes in the values
+                    escaped_value = value.replace("'", "\\'")
+                    env_parts.append(f"`{key}`='{escaped_value}'")
+
+                query += ", ".join(env_parts)
+                query += ")) FROM scope()"
+            else:
+                # Handle other types of parameters
+                query = create_query(
+                    f"SELECT collect_client("
+                    f"org_id='{collect_artifact_body.velociraptor_org}', "
+                    f"client_id='{collect_artifact_body.velociraptor_id}', "
+                    f"artifacts=['{collect_artifact_body.artifact_name}']",
+                )
+
+                # Add other parameters if needed
+                for param_key, param_value in parameters.items():
+                    if isinstance(param_value, str):
+                        query += f", `{param_key}`='{param_value}'"
+
+                query += ") FROM scope()"
+        else:
+            # Original query without parameters
+            query = create_query(
                 f"SELECT collect_client("
                 f"org_id='{collect_artifact_body.velociraptor_org}', "
                 f"client_id='{collect_artifact_body.velociraptor_id}', "
                 f"artifacts=['{collect_artifact_body.artifact_name}']) "
-                f"FROM scope()"
-            ),
-        )
+                f"FROM scope()",
+            )
+
+        logger.info(f"Running artifact collection with query: {query}")
         flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
-        artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
+        # Check if results are available
+        if not flow.get("results") or len(flow["results"]) == 0:
+            logger.error("No results returned from query execution")
+            raise HTTPException(
+                status_code=500,
+                detail="Query execution did not return any results",
+            )
 
-        flow_id = flow["results"][0][artifact_key]["flow_id"]
+        # Instead of relying on get_artifact_key, extract the flow_id directly from results
+        # by checking all keys in the first result for a flow_id
+        result_dict = flow["results"][0]
+        flow_id = None
+
+        # Look for any key that has a flow_id in its value
+        for key, value in result_dict.items():
+            if isinstance(value, dict) and "flow_id" in value:
+                flow_id = value["flow_id"]
+                logger.debug(f"Found flow_id {flow_id} in key: {key}")
+                break
+
+        if not flow_id:
+            logger.error(f"Could not find flow_id in results: {result_dict}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to extract flow ID from results",
+            )
+
         logger.info(f"Extracted flow_id: {flow_id}")
 
         completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)

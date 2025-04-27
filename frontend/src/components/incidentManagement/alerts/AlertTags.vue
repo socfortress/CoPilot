@@ -52,7 +52,7 @@ function updateAlert(updatedAlert: Alert) {
 function deleteTag(tagId: number) {
 	deletingTag.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.deleteAlertTag(alert.value.id, tagId)
 		.then(res => {
 			if (res.data.success) {
@@ -80,7 +80,7 @@ function newAlertTag(text: string): string | { label: string; value: string } {
 	if (tag && alert.value.tags.filter(o => o.tag.toLowerCase() === tag.toLowerCase()).length === 0) {
 		creatingTag.value = true
 
-		Api.incidentManagement
+		Api.incidentManagement.alerts
 			.newAlertTag(alert.value.id, tag)
 			.then(res => {
 				if (res.data.success) {

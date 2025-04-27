@@ -209,7 +209,7 @@ watch(showDetails, val => {
 function getAlertContext(alertContextId: number) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlertContext(alertContextId)
 		.then(res => {
 			if (res.data.success) {

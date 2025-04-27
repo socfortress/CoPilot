@@ -34,7 +34,7 @@ export const useCaseReportTemplateStore = defineStore("caseReportTemplate", {
 			return new Promise((resolve, reject) => {
 				this.setLoading(true)
 
-				Api.incidentManagement
+				Api.incidentManagement.cases
 					.getCaseReportTemplate()
 					.then(res => {
 						if (res.data.success) {
@@ -54,7 +54,7 @@ export const useCaseReportTemplateStore = defineStore("caseReportTemplate", {
 		},
 		uploadCustomTemplate(file: File): Promise<AxiosResponse<FlaskBaseResponse>> {
 			return new Promise((resolve, reject) => {
-				Api.incidentManagement
+				Api.incidentManagement.cases
 					.uploadCustomCaseReportTemplate(file)
 					.then(res => {
 						if (res.data.success) {
@@ -71,7 +71,7 @@ export const useCaseReportTemplateStore = defineStore("caseReportTemplate", {
 		},
 		deleteTemplate(templateName: string): Promise<AxiosResponse<FlaskBaseResponse>> {
 			return new Promise((resolve, reject) => {
-				Api.incidentManagement
+				Api.incidentManagement.cases
 					.deleteCaseReportTemplate(templateName)
 					.then(res => {
 						if (res.data.success) {

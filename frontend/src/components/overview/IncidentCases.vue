@@ -57,7 +57,7 @@ const values = computed<ItemProps[]>(() => [
 function getData() {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCasesList()
 		.then(res => {
 			if (res.data.success) {

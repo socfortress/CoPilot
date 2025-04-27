@@ -181,7 +181,7 @@
 			</template>
 
 			<template v-if="alert && !compact" #footerMain>
-				<div class="flex items-center gap-3">
+				<div class="flex flex-wrap items-center gap-3">
 					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:!hidden': !compact }">
 						<template #iconLeft>
 							<Icon :name="TimeIcon" :size="16" />
@@ -338,7 +338,7 @@ function updateAlert(updatedAlert: Alert) {
 function getAlert(alertId: number) {
 	loading.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlert(alertId)
 		.then(res => {
 			if (res.data.success) {

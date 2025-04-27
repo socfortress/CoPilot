@@ -554,11 +554,85 @@ async def handle_customer_notifications(
         )
 
 
+# async def create_alert_full(
+#     alert_payload: CreatedAlertPayload,
+#     customer_code: str,
+#     session: AsyncSession,
+#     threshold_alert: bool = False,
+# ) -> Alert:
+#     """
+#     Create an alert in CoPilot.
+
+#     Args:
+#         alert_payload (dict): The alert payload.
+#         customer_code (str): The customer code.
+#         session (AsyncSession): The database session.
+
+#     Returns:
+#         CreateAlertResponse: The response object containing the created alert details.
+
+#     Raises:
+#         HTTPException: If there is an error creating the alert.
+#     """
+#     alert_id = (await create_alert_in_copilot(alert_payload=alert_payload, customer_code=customer_code, session=session)).id
+#     alert_context_id = (
+#         await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)
+#     ).id
+#     asset = await create_asset_context_payload(
+#         customer_code=customer_code,
+#         asset_payload=alert_payload,
+#         alert_context_id=alert_context_id,
+#         alert_id=alert_id,
+#         session=session,
+#     )
+#     if alert_payload.ioc_payload is not None:
+#         ioc_id = (
+#             await create_ioc_payload(
+#                 ioc_payload=AlertIoCCreate(
+#                     alert_id=alert_id,
+#                     ioc_value=alert_payload.ioc_payload["ioc_value"],
+#                     ioc_type=alert_payload.ioc_payload["ioc_type"],
+#                     ioc_description=alert_payload.ioc_payload["ioc_description"],
+#                 ),
+#                 alert_id=alert_id,
+#                 session=session,
+#             )
+#         ).id
+#         logger.info(
+#             f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset.id} and ioc ID {ioc_id}",
+#         )
+#     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset.id}")
+#     alert_payload.alert_id = alert_id
+#     if asset is not None:
+#         await handle_customer_notifications(
+#             customer_code=customer_code,
+#             asset_name=asset.asset_name,
+#             alert_payload=alert_payload,
+#             session=session,
+#         )
+#     else:
+#         await handle_customer_notifications(
+#             customer_code=customer_code,
+#             asset_name="No asset found",
+#             alert_payload=alert_payload,
+#             session=session,
+#         )
+
+#     if threshold_alert is True:
+#         logger.info(f"Threshold alert created for customer code {customer_code} with alert ID {alert_id}")
+#         return alert_id
+
+#     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
+
+#     return alert_id
+
+
 async def create_alert_full(
     alert_payload: CreatedAlertPayload,
     customer_code: str,
     session: AsyncSession,
     threshold_alert: bool = False,
+    velo_sigma_alert: bool = False,
 ) -> Alert:
     """
     Create an alert in CoPilot.
@@ -567,6 +641,8 @@ async def create_alert_full(
         alert_payload (dict): The alert payload.
         customer_code (str): The customer code.
         session (AsyncSession): The database session.
+        threshold_alert (bool, optional): Whether this is a threshold alert. Defaults to False.
+        velo_sigma_alert (bool, optional): Whether this is a Velociraptor Sigma alert. Defaults to False.
 
     Returns:
         CreateAlertResponse: The response object containing the created alert details.
@@ -574,6 +650,66 @@ async def create_alert_full(
     Raises:
         HTTPException: If there is an error creating the alert.
     """
+    # For velo_sigma_alert, check if an open alert with the same title already exists
+    if velo_sigma_alert:
+        existing_alert_id = await open_alert_exists(alert_payload, customer_code, session)
+        if existing_alert_id:
+            logger.info(
+                f"Found existing open alert ID {existing_alert_id} for Velociraptor Sigma alert with title {alert_payload.alert_title_payload}",
+            )
+
+            # Add the asset to the existing alert if it doesn't already exist
+            asset_exists = await does_assit_exist(alert_payload, existing_alert_id, session)
+            if not asset_exists and alert_payload.asset_payload:
+                logger.info(f"Adding asset {alert_payload.asset_payload} to existing alert ID {existing_alert_id}")
+                await add_asset_to_copilot_alert(
+                    alert_payload=alert_payload,
+                    alert_id=existing_alert_id,
+                    customer_code=customer_code,
+                    session=session,
+                )
+
+            # Add IOC if present and doesn't already exist
+            if alert_payload.ioc_payload is not None:
+                ioc_exists = await does_ioc_exist(alert_payload, existing_alert_id, session)
+                if not ioc_exists:
+                    logger.info(f"Adding IOC {alert_payload.ioc_payload['ioc_value']} to existing alert ID {existing_alert_id}")
+                    await add_ioc_to_copilot_alert(
+                        alert_payload=alert_payload,
+                        alert_id=existing_alert_id,
+                        customer_code=customer_code,
+                        session=session,
+                    )
+
+            # Update the document reference if needed
+            if alert_payload.index_name and alert_payload.index_id:
+                await add_alert_to_document(
+                    CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id),
+                    existing_alert_id,
+                )
+
+            # Set alert ID for notifications
+            alert_payload.alert_id = existing_alert_id
+
+            # Handle customer notifications
+            if alert_payload.asset_payload:
+                await handle_customer_notifications(
+                    customer_code=customer_code,
+                    asset_name=alert_payload.asset_payload,
+                    alert_payload=alert_payload,
+                    session=session,
+                )
+            else:
+                await handle_customer_notifications(
+                    customer_code=customer_code,
+                    asset_name="No asset found",
+                    alert_payload=alert_payload,
+                    session=session,
+                )
+
+            return existing_alert_id
+
+    # If not velo_sigma_alert or no existing alert found, proceed with normal alert creation
     alert_id = (await create_alert_in_copilot(alert_payload=alert_payload, customer_code=customer_code, session=session)).id
     alert_context_id = (
         await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)
@@ -618,8 +754,10 @@ async def create_alert_full(
             session=session,
         )
 
-    if threshold_alert is True:
-        logger.info(f"Threshold alert created for customer code {customer_code} with alert ID {alert_id}")
+    if threshold_alert is True or velo_sigma_alert is True:
+        logger.info(
+            f"{'Threshold' if threshold_alert else 'Velociraptor Sigma'} alert created for customer code {customer_code} with alert ID {alert_id}",
+        )
         return alert_id
 
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)

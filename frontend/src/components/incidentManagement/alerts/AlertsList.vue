@@ -220,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsQuery } from "@/api/endpoints/incidentManagement"
+import type { AlertsQuery } from "@/api/endpoints/incidentManagement/alerts"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import type { AlertsListFilter } from "./types.d"
@@ -408,7 +408,7 @@ function getData() {
 		query.filters = filters.value
 	}
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAlertsList(query, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
@@ -434,7 +434,7 @@ function getData() {
 }
 
 function getAvailableUsers() {
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.getAvailableUsers()
 		.then(res => {
 			if (res.data.success) {
@@ -449,7 +449,7 @@ function getAvailableUsers() {
 }
 
 function getCases() {
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.getCasesList()
 		.then(res => {
 			if (res.data.success) {
@@ -466,7 +466,7 @@ function getCases() {
 function deleteAlerts() {
 	deleting.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.alerts
 		.deleteAlerts(checkedAlerts.value.map(o => o.id))
 		.then(res => {
 			if (res.data.success) {

@@ -66,7 +66,7 @@ function unlink(caseId: number) {
 
 	loadingId.value = caseId
 
-	Api.incidentManagement
+	Api.incidentManagement.cases
 		.unlinkCase(alert.value.id, caseId)
 		.then(res => {
 			if (res.data.success) {

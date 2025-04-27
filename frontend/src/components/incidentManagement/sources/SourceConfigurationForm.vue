@@ -408,7 +408,7 @@ function getSocfortressRecommendsWazuh() {
 
 	loadingSocfortressRecommendsWazuh.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getSocfortressRecommendsWazuh()
 		.then(res => {
 			if (res.data.success) {
@@ -437,7 +437,7 @@ function getSocfortressRecommendsWazuh() {
 function getAvailableMappings(indexName: string) {
 	loadingAvailableMappings.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getAvailableMappings(indexName)
 		.then(res => {
 			if (res.data.success) {
@@ -461,7 +461,7 @@ function getAvailableMappings(indexName: string) {
 function getAvailableIndices(source: SourceName) {
 	loadingIndexNames.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getAvailableIndices(source)
 		.then(res => {
 			if (res.data.success) {
@@ -486,7 +486,7 @@ function getAvailableIndices(source: SourceName) {
 function getSourceByIndex(indexName: string) {
 	loadingSource.value = true
 
-	Api.incidentManagement
+	Api.incidentManagement.sources
 		.getSourceByIndex(indexName)
 		.then(res => {
 			if (res.data.success) {
