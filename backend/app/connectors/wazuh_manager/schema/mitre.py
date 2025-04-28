@@ -124,9 +124,10 @@ class AtomicRedTeamMarkdownResponse(BaseModel):
 class MitreTechniqueInAlert(BaseModel):
     """Schema for a MITRE technique found in alerts."""
     technique_id: str = Field(..., description="MITRE ATT&CK technique ID")
-    technique_name: str = Field(..., description="MITRE ATT&CK technique name")  # Add this field
+    technique_name: str = Field(..., description="MITRE ATT&CK technique name")
     count: int = Field(..., description="Number of alerts containing this technique")
     last_seen: Optional[str] = Field(None, description="Last time this technique was seen in an alert")
+    tactics: List[Dict[str, str]] = Field(default_factory=list, description="Associated tactics for this technique")
 
 
 class MitreTechniquesInAlertsResponse(BaseModel):

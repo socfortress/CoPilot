@@ -235,7 +235,19 @@ async def search_mitre_techniques_in_alerts(
         technique_mapping = await _build_technique_id_name_mapping()
         logger.debug(f"Built technique mapping with {len(technique_mapping)} techniques")
 
-        # Get OpenSearch client
+        # Now get the tactic information for each technique
+        technique_tactic_mapping = await _build_technique_tactic_mapping()
+
+        # Log the number of entries in our mappings
+        logger.info(f"Built technique mapping with {len(technique_mapping)} techniques")
+        logger.info(f"Built technique-tactic mapping with {len(technique_tactic_mapping)} techniques")
+
+        # If debugging is needed, log a few sample keys from the mapping
+        if technique_tactic_mapping:
+            sample_keys = list(technique_tactic_mapping.keys())[:5]
+            logger.debug(f"Sample keys in technique_tactic_mapping: {sample_keys}")
+
+        # Get Wazuh Indexer client
         client = await _get_wazuh_indexer_client()
 
         # Try multiple field paths that might contain MITRE IDs
@@ -284,7 +296,8 @@ async def search_mitre_techniques_in_alerts(
                         response=response,
                         mitre_field=field,
                         technique_mapping=technique_mapping,
-                        name_field=name_field
+                        name_field=name_field,
+                        technique_tactic_mapping=technique_tactic_mapping
                     )
                     logger.info(f"Found {results['techniques_count']} MITRE techniques with field '{field}'")
                     break
@@ -364,12 +377,93 @@ async def _build_technique_id_name_mapping() -> Dict[str, str]:
         logger.exception(f"Error building technique mapping: {str(e)}")
         return {}  # Return empty mapping if error occurs
 
+async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
+    """
+    Build a mapping of MITRE technique IDs to their associated tactics.
+
+    Returns:
+        Dict mapping technique IDs to lists of tactic information
+    """
+    try:
+        # Fetch all techniques from Wazuh
+        techniques_response = await get_mitre_techniques(limit=1000)
+
+        # Create mapping from ID to tactics
+        technique_tactic_mapping = {}
+        if hasattr(techniques_response, 'success') and techniques_response.success:
+            techniques = techniques_response.results
+
+            # Get all tactics for name lookup
+            tactics_response = await get_mitre_tactics(limit=1000)
+            tactic_name_mapping = {}
+
+            if hasattr(tactics_response, 'success') and tactics_response.success:
+                for tactic in tactics_response.results:
+                    if isinstance(tactic, dict):
+                        tactic_id = tactic.get("id", "")
+                        tactic_name = tactic.get("name", "")
+                        short_name = tactic.get("short_name", "")
+                    else:
+                        tactic_id = getattr(tactic, "id", "")
+                        tactic_name = getattr(tactic, "name", "")
+                        short_name = getattr(tactic, "short_name", "")
+
+                    if tactic_id:
+                        tactic_name_mapping[tactic_id] = {
+                            "name": tactic_name,
+                            "short_name": short_name
+                        }
+
+            logger.debug(f"Built tactic name mapping with {len(tactic_name_mapping)} tactics")
+
+            # Map techniques to tactics with names
+            for technique in techniques:
+                if isinstance(technique, dict):
+                    technique_id = technique.get("id", "")
+                    technique_external_id = technique.get("external_id", "")
+                    tactic_ids = technique.get("tactics", [])
+                else:
+                    technique_id = getattr(technique, "id", "")
+                    technique_external_id = getattr(technique, "external_id", "")
+                    tactic_ids = getattr(technique, "tactics", [])
+
+                if technique_id:
+                    tactics = []
+                    for tactic_id in tactic_ids:
+                        tactic_info = {
+                            "id": tactic_id,
+                            "name": tactic_name_mapping.get(tactic_id, {}).get("name", "Unknown"),
+                            "short_name": tactic_name_mapping.get(tactic_id, {}).get("short_name", "")
+                        }
+                        tactics.append(tactic_info)
+
+                    # Store with multiple key formats for more robust matching
+                    if technique_external_id:
+                        # Store as "T1234"
+                        technique_tactic_mapping[technique_external_id] = tactics
+                        # Store as "1234" (without T prefix)
+                        if technique_external_id.startswith('T'):
+                            technique_tactic_mapping[technique_external_id[1:]] = tactics
+
+                    technique_tactic_mapping[technique_id] = tactics
+
+            # Debug log some sample mappings
+            sample_keys = list(technique_tactic_mapping.keys())[:5]
+            logger.debug(f"Sample technique ID keys in mapping: {sample_keys}")
+
+            logger.info(f"Built mapping for {len(technique_tactic_mapping)} techniques with tactics")
+
+        return technique_tactic_mapping
+    except Exception as e:
+        logger.exception(f"Error building technique-tactic mapping: {str(e)}")
+        return {}
 
 def _process_mitre_search_results(
     response: Dict,
     mitre_field: str,
     technique_mapping: Dict[str, str],
-    name_field: Optional[str] = None
+    name_field: Optional[str] = None,
+    technique_tactic_mapping: Optional[Dict[str, List[Dict[str, str]]]] = None
 ) -> Dict:
     """
     Process the Wazuh Indexer response to extract MITRE technique information.
@@ -420,6 +514,25 @@ def _process_mitre_search_results(
                 if name_buckets and len(name_buckets) > 0 and name_buckets[0]["key"]:
                     technique_name = name_buckets[0]["key"]
 
+            # Get associated tactics for this technique
+            tactics = []
+            if technique_tactic_mapping:
+                # Try exact match first
+                if technique_id in technique_tactic_mapping:
+                    tactics = technique_tactic_mapping[technique_id]
+                    logger.debug(f"Found tactics for technique ID: {technique_id} (exact match)")
+                # Try with 'T' prefix if it doesn't have one
+                elif not technique_id.startswith('T') and f"T{technique_id}" in technique_tactic_mapping:
+                    tactics = technique_tactic_mapping[f"T{technique_id}"]
+                    logger.debug(f"Found tactics for technique ID: {technique_id} (added T prefix)")
+                # Try without 'T' prefix if it has one
+                elif technique_id.startswith('T') and technique_id[1:] in technique_tactic_mapping:
+                    tactics = technique_tactic_mapping[technique_id[1:]]
+                    logger.debug(f"Found tactics for technique ID: {technique_id} (removed T prefix)")
+                else:
+                    # Log that we couldn't find tactics for this technique
+                    logger.debug(f"No tactics found for technique ID: {technique_id}")
+
             # If no name found, use our mapping as fallback
             if technique_name == "Unknown Technique":
                 technique_name = technique_mapping.get(technique_id, "Unknown Technique")
@@ -432,8 +545,18 @@ def _process_mitre_search_results(
                 "technique_id": technique_id,
                 "technique_name": technique_name,
                 "count": bucket["doc_count"],
-                "last_seen": datetime.utcnow().isoformat() + "Z"
+                "last_seen": datetime.utcnow().isoformat() + "Z",
+                "tactics": tactics
             })
+
+    # Add debugging information
+    debug_info = {
+        "technique_count_in_aggs": len(techniques_buckets),
+        "mapping_size": len(technique_mapping),
+        "tactic_mapping_size": len(technique_tactic_mapping) if technique_tactic_mapping else 0,
+        "timestamp": datetime.utcnow().isoformat(),
+        "sample_technique_ids": [t["technique_id"] for t in techniques[:3]] if techniques else []
+    }
 
     # Compile the final result
     return {
@@ -442,11 +565,7 @@ def _process_mitre_search_results(
         "techniques": techniques,
         "field_used": mitre_field,
         "name_field_used": name_field,
-        "debug_info": {
-            "technique_count_in_aggs": len(techniques_buckets),
-            "mapping_size": len(technique_mapping),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        "debug_info": debug_info,
     }
 
 
