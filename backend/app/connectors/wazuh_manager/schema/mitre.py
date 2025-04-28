@@ -3,7 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class MitreTacticItem(BaseModel):
@@ -119,3 +119,22 @@ class AtomicRedTeamMarkdownResponse(BaseModel):
     message: str
     technique_id: str
     markdown_content: Optional[str] = None
+
+
+class MitreTechniqueInAlert(BaseModel):
+    """Schema for a MITRE technique found in alerts."""
+    technique_id: str = Field(..., description="MITRE ATT&CK technique ID")
+    technique_name: str = Field(..., description="MITRE ATT&CK technique name")  # Add this field
+    count: int = Field(..., description="Number of alerts containing this technique")
+    last_seen: Optional[str] = Field(None, description="Last time this technique was seen in an alert")
+
+
+class MitreTechniquesInAlertsResponse(BaseModel):
+    """Response schema for MITRE techniques found in alerts."""
+    success: bool = Field(True, description="Whether the request was successful")
+    message: str = Field(..., description="Description of the response")
+    total_alerts: int = Field(..., description="Total number of alerts matching the query")
+    techniques_count: int = Field(..., description="Number of unique techniques found")
+    techniques: List[MitreTechniqueInAlert] = Field(..., description="List of techniques with counts")
+    time_range: str = Field(..., description="Time range used for the search")
+    field_used: str = Field(..., description="Field name used to extract MITRE techniques")
