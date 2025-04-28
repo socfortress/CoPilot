@@ -523,3 +523,169 @@ def _build_mitre_search_query(
 
     return query
 
+
+
+async def get_alerts_by_mitre_id(
+    technique_id: str,
+    time_range: str = "now-24h",
+    size: int = 100,
+    additional_filters: Optional[List[Dict]] = None,
+    index_pattern: str = "wazuh-*",
+    mitre_field: Optional[str] = None,
+) -> Dict[str, Union[str, int, List[Dict]]]:
+    """
+    Fetch alert documents associated with a specific MITRE ATT&CK technique ID.
+
+    Args:
+        technique_id: The MITRE technique ID to search for
+        time_range: Time range for the search (e.g., "now-24h", "now-7d")
+        size: Maximum number of alerts to return
+        additional_filters: Additional filters to apply to the query
+        index_pattern: OpenSearch index pattern to search
+        mitre_field: Override the default field name containing MITRE IDs
+
+    Returns:
+        Dict containing results with technique info and alert documents
+    """
+    logger.info(f"Fetching alerts for MITRE technique {technique_id} from {time_range} to now")
+
+    try:
+        # Get technique name from mapping
+        technique_mapping = await _build_technique_id_name_mapping()
+
+        # Try matching with and without 'T' prefix
+        technique_name = "Unknown Technique"
+        if technique_id in technique_mapping:
+            technique_name = technique_mapping[technique_id]
+        elif technique_id.startswith('T') and technique_id[1:] in technique_mapping:
+            technique_name = technique_mapping[technique_id[1:]]
+        elif not technique_id.startswith('T') and f"T{technique_id}" in technique_mapping:
+            technique_name = technique_mapping[f"T{technique_id}"]
+
+        # Get OpenSearch client
+        client = await _get_wazuh_indexer_client()
+
+        # Try multiple field paths that might contain MITRE IDs
+        field_options = ["rule_mitre_id", "rule.mitre.id", "mitre.id"]
+        if mitre_field:
+            field_options.insert(0, mitre_field)  # Prioritize user-specified field
+
+        results = None
+        errors = []
+
+        # Try each field option until we find one that works
+        for field in field_options:
+            try:
+                logger.info(f"Trying to search alerts with field: {field}")
+
+                # Build query
+                query = _build_mitre_alerts_query(
+                    technique_id=technique_id,
+                    time_range=time_range,
+                    size=size,
+                    additional_filters=additional_filters,
+                    index_pattern=index_pattern,
+                    mitre_field=field
+                )
+
+                # Execute the search
+                response = await client.search(**query)
+
+                # Check if we got results
+                if response.get("hits") and response["hits"].get("hits") and len(response["hits"]["hits"]) > 0:
+                    # Get the total hits
+                    total_hits = (
+                        response["hits"]["total"]["value"]
+                        if isinstance(response["hits"]["total"], dict) and "value" in response["hits"]["total"]
+                        else response["hits"]["total"]
+                    )
+
+                    # Extract the documents
+                    documents = [hit["_source"] for hit in response["hits"]["hits"]]
+
+                    results = {
+                        "technique_id": technique_id,
+                        "technique_name": technique_name,
+                        "total_alerts": total_hits,
+                        "alerts": documents,
+                        "field_used": field
+                    }
+
+                    logger.info(f"Found {len(documents)} of {total_hits} alerts for technique {technique_id} using field '{field}'")
+                    break
+                else:
+                    logger.warning(f"No alerts found for technique {technique_id} with field '{field}'")
+
+            except Exception as e:
+                logger.warning(f"Error searching with field '{field}': {str(e)}")
+                errors.append(f"{field}: {str(e)}")
+
+        # If no results found with any field, return empty results
+        if not results:
+            logger.warning(f"No alerts found for technique {technique_id} with any field option")
+            return {
+                "technique_id": technique_id,
+                "technique_name": technique_name,
+                "total_alerts": 0,
+                "alerts": [],
+                "field_used": None,
+                "errors": errors
+            }
+
+        return results
+
+    except AsyncElasticsearch as oe:
+        error_message = f"Wazuh Indexer error: {str(oe)}"
+        logger.error(error_message)
+        raise HTTPException(status_code=503, detail=error_message)
+    except Exception as e:
+        error_message = f"Error fetching alerts for MITRE technique {technique_id}: {str(e)}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+def _build_mitre_alerts_query(
+    technique_id: str,
+    time_range: str,
+    size: int,
+    additional_filters: Optional[List[Dict]],
+    index_pattern: str,
+    mitre_field: str,
+) -> Dict:
+    """Build the OpenSearch query to fetch alerts for a specific MITRE technique."""
+    # Build the base filters
+    query_filters = [
+        {"range": {"timestamp": {"from": time_range, "to": "now"}}}
+    ]
+
+    # Add MITRE ID filter with support for array fields
+    query_filters.append({
+        "query_string": {
+            "query": f"{mitre_field}:\"{technique_id}\"",
+            "analyze_wildcard": True
+        }
+    })
+
+    # Add any additional filters provided
+    if additional_filters:
+        query_filters.extend(additional_filters)
+
+    # Base query
+    query = {
+        "index": index_pattern,
+        "body": {
+            "size": size,
+            "query": {
+                "bool": {
+                    "filter": query_filters
+                }
+            },
+            "_source": True,
+            "sort": [
+                {"timestamp": {"order": "desc"}}
+            ],
+            "track_total_hits": True
+        }
+    }
+
+    return query

@@ -137,4 +137,16 @@ class MitreTechniquesInAlertsResponse(BaseModel):
     techniques_count: int = Field(..., description="Number of unique techniques found")
     techniques: List[MitreTechniqueInAlert] = Field(..., description="List of techniques with counts")
     time_range: str = Field(..., description="Time range used for the search")
-    field_used: str = Field(..., description="Field name used to extract MITRE techniques")
+    field_used: Optional[str] = Field(..., description="Field name used to extract MITRE techniques")
+
+
+class MitreTechniqueAlertsResponse(BaseModel):
+    """Response schema for detailed alerts associated with a specific MITRE technique."""
+    success: bool = Field(True, description="Whether the request was successful")
+    message: str = Field(..., description="Description of the response")
+    technique_id: str = Field(..., description="The MITRE technique ID that was searched for")
+    technique_name: str = Field(..., description="The name of the MITRE technique")
+    total_alerts: int = Field(..., description="Total number of alerts found")
+    alerts: List[Dict] = Field(..., description="List of alert documents")
+    field_used: Optional[str] = Field(..., description="Field name used to search for MITRE techniques")
+    time_range: str = Field(..., description="Time range used for the search")
