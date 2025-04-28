@@ -11,16 +11,109 @@ from loguru import logger
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse
-from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse
+from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id, get_mitre_references
 from app.connectors.wazuh_manager.services.mitre import AtomicRedTeamService
-from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics
+from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics, get_mitre_software, get_mitre_mitigations
 from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques, search_mitre_techniques_in_alerts
 
 # Initialize router and auth handler
 wazuh_manager_mitre_router = APIRouter()
 auth_handler = AuthHandler()
 
+@wazuh_manager_mitre_router.get(
+    "/mitigations",
+    response_model=WazuhMitreMitigationsResponse,
+    description="List MITRE ATT&CK mitigations",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def list_mitre_mitigations(
+    limit: Optional[int] = Query(None, description="Maximum number of items to return"),
+    offset: Optional[int] = Query(None, description="First item to return"),
+    select: Optional[List[str]] = Query(None, description="List of fields to return"),
+    sort: Optional[str] = Query(None, description="Fields to sort by"),
+    search: Optional[str] = Query(None, description="Text to search in fields"),
+    q: Optional[str] = Query(None, description="Query to filter results"),
+):
+    """
+    List MITRE ATT&CK mitigations with optional filtering parameters.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreMitigationsResponse: A list of MITRE ATT&CK mitigations matching the criteria.
+    """
+    return await get_mitre_mitigations(
+        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
+    )
+
+@wazuh_manager_mitre_router.get(
+    "/references",
+    response_model=WazuhMitreReferencesResponse,
+    description="List MITRE ATT&CK references",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def list_mitre_references(
+    limit: Optional[int] = Query(None, description="Maximum number of items to return"),
+    offset: Optional[int] = Query(None, description="First item to return"),
+    sort: Optional[str] = Query(None, description="Fields to sort by"),
+    search: Optional[str] = Query(None, description="Text to search in fields"),
+    q: Optional[str] = Query(None, description="Query to filter results"),
+):
+    """
+    List MITRE ATT&CK references with optional filtering parameters.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreReferencesResponse: A list of MITRE ATT&CK references matching the criteria.
+    """
+    return await get_mitre_references(
+        limit=limit, offset=offset, sort=sort, search=search, q=q
+    )
+
+@wazuh_manager_mitre_router.get(
+    "/software",
+    response_model=WazuhMitreSoftwareResponse,
+    description="List MITRE ATT&CK software",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def list_mitre_software(
+    limit: Optional[int] = Query(None, description="Maximum number of items to return"),
+    offset: Optional[int] = Query(None, description="First item to return"),
+    select: Optional[List[str]] = Query(None, description="List of fields to return"),
+    sort: Optional[str] = Query(None, description="Fields to sort by"),
+    search: Optional[str] = Query(None, description="Text to search in fields"),
+    q: Optional[str] = Query(None, description="Query to filter results"),
+):
+    """
+    List MITRE ATT&CK software with optional filtering parameters.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreSoftwareResponse: A list of MITRE ATT&CK software matching the criteria.
+    """
+    return await get_mitre_software(
+        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
+    )
 
 @wazuh_manager_mitre_router.get(
     "/tactics",

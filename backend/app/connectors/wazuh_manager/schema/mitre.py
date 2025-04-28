@@ -150,3 +150,84 @@ class MitreTechniqueAlertsResponse(BaseModel):
     alerts: List[Dict] = Field(..., description="List of alert documents")
     field_used: Optional[str] = Field(..., description="Field name used to search for MITRE techniques")
     time_range: str = Field(..., description="Time range used for the search")
+
+
+class MitreSoftwareItem(BaseModel):
+    """Represents a single MITRE ATT&CK software from Wazuh's API."""
+
+    mitre_version: Optional[str] = None
+    deprecated: int = 0
+    description: str
+    name: str
+    id: str
+    modified_time: str
+    created_time: str
+    groups: List[str] = []
+    techniques: List[str] = []
+    references: List[MitreReference] = []
+    url: str
+    source: str
+    external_id: str
+
+    # Additional fields that might be present
+    platforms: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    type: Optional[str] = None  # For distinguishing between malware, tool, etc.
+
+    class Config:
+        """Configuration for the model."""
+        extra = "ignore"  # Ignore extra fields from the API
+
+
+class WazuhMitreSoftwareResponse(BaseModel):
+    """Response model for the MITRE software endpoint."""
+
+    success: bool
+    message: str
+    results: List[MitreSoftwareItem] = []
+
+class MitreReferenceItem(BaseModel):
+    """Represents a single MITRE ATT&CK reference from Wazuh's API."""
+    url: str
+    description: Optional[str] = None
+    source: str
+    id: Optional[str] = None  # ID of the related technique, tactic, or software
+    type: Optional[str] = None  # Type of the item the reference belongs to (technique, tactic, etc.)
+
+    class Config:
+        """Configuration for the model."""
+        extra = "ignore"  # Ignore extra fields from the API
+
+class WazuhMitreReferencesResponse(BaseModel):
+    """Response model for the MITRE references endpoint."""
+    success: bool
+    message: str
+    results: List[MitreReferenceItem] = []
+    total: int = 0
+
+class MitreMitigationItem(BaseModel):
+    """Represents a single MITRE ATT&CK mitigation from Wazuh's API."""
+    mitre_version: Optional[str] = None
+    deprecated: int = 0
+    description: str
+    name: str
+    id: str
+    modified_time: str
+    created_time: str
+    techniques: List[str] = []
+    references: List[MitreReference] = []
+    url: str
+    source: str
+    external_id: str
+
+    class Config:
+        """Configuration for the model."""
+        extra = "ignore"  # Ignore extra fields from the API
+
+
+class WazuhMitreMitigationsResponse(BaseModel):
+    """Response model for the MITRE mitigations endpoint."""
+    success: bool
+    message: str
+    results: List[MitreMitigationItem] = []
+    total: int = 0

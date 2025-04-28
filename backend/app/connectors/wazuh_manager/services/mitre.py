@@ -11,7 +11,7 @@ from loguru import logger
 from pydantic import ValidationError
 
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -689,3 +689,183 @@ def _build_mitre_alerts_query(
     }
 
     return query
+
+
+async def get_mitre_software(
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    select: Optional[List[str]] = None,
+    sort: Optional[str] = None,
+    search: Optional[str] = None,
+    q: Optional[str] = None,
+) -> WazuhMitreSoftwareResponse:
+    """
+    Fetch MITRE ATT&CK software from Wazuh API.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreSoftwareResponse: A list of all MITRE ATT&CK software.
+    """
+    # Build parameters dictionary, excluding None values
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
+
+    # Add select parameter if provided
+    if select:
+        params["select"] = ",".join(select)
+
+    # Remove None values
+    params = {k: v for k, v in params.items() if v is not None}
+
+    response = await send_get_request(endpoint="/mitre/software", params=params)
+
+    logger.debug(f"Response from Wazuh MITRE software endpoint with params {params}")
+
+    try:
+        # Extract data from response
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_software = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_software))
+
+            logger.debug(f"Retrieved {len(mitre_software)} of {total_items} MITRE software from Wazuh")
+
+            return WazuhMitreSoftwareResponse(
+                success=True,
+                message=f"Successfully retrieved {len(mitre_software)} MITRE software",
+                results=mitre_software,
+            )
+        else:
+            logger.error("Unexpected response structure from Wazuh API")
+            raise HTTPException(status_code=500, detail="Unexpected response structure from Wazuh API")
+
+    except ValidationError as e:
+        logger.error(f"Validation error parsing Wazuh MITRE software response: {e}")
+        raise HTTPException(status_code=500, detail=f"Data validation error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error parsing Wazuh MITRE software response: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
+
+async def get_mitre_references(
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort: Optional[str] = None,
+    search: Optional[str] = None,
+    q: Optional[str] = None,
+) -> WazuhMitreReferencesResponse:
+    """
+    Fetch MITRE ATT&CK references from Wazuh API.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreReferencesResponse: A list of all MITRE ATT&CK references.
+    """
+    # Build parameters dictionary, excluding None values
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
+
+    # Remove None values
+    params = {k: v for k, v in params.items() if v is not None}
+
+    response = await send_get_request(endpoint="/mitre/references", params=params)
+
+    logger.debug(f"Response from Wazuh MITRE references endpoint with params {params}")
+
+    try:
+        # Extract data from response
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_references = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_references))
+
+            logger.debug(f"Retrieved {len(mitre_references)} of {total_items} MITRE references from Wazuh")
+
+            return WazuhMitreReferencesResponse(
+                success=True,
+                message=f"Successfully retrieved {len(mitre_references)} MITRE references",
+                results=mitre_references,
+                total=total_items
+            )
+        else:
+            logger.error("Unexpected response structure from Wazuh API")
+            raise HTTPException(status_code=500, detail="Unexpected response structure from Wazuh API")
+
+    except ValidationError as e:
+        logger.error(f"Validation error parsing Wazuh MITRE references response: {e}")
+        raise HTTPException(status_code=500, detail=f"Data validation error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error parsing Wazuh MITRE references response: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
+
+async def get_mitre_mitigations(
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    select: Optional[List[str]] = None,
+    sort: Optional[str] = None,
+    search: Optional[str] = None,
+    q: Optional[str] = None,
+) -> WazuhMitreMitigationsResponse:
+    """
+    Fetch MITRE ATT&CK mitigations from Wazuh API.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreMitigationsResponse: A list of all MITRE ATT&CK mitigations.
+    """
+    # Build parameters dictionary, excluding None values
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
+
+    # Add select parameter if provided
+    if select:
+        params["select"] = ",".join(select)
+
+    # Remove None values
+    params = {k: v for k, v in params.items() if v is not None}
+
+    response = await send_get_request(endpoint="/mitre/mitigations", params=params)
+
+    logger.debug(f"Response from Wazuh MITRE mitigations endpoint with params {params}")
+
+    try:
+        # Extract data from response
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_mitigations = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_mitigations))
+
+            logger.debug(f"Retrieved {len(mitre_mitigations)} of {total_items} MITRE mitigations from Wazuh")
+
+            return WazuhMitreMitigationsResponse(
+                success=True,
+                message=f"Successfully retrieved {len(mitre_mitigations)} MITRE mitigations",
+                results=mitre_mitigations,
+                total=total_items
+            )
+        else:
+            logger.error("Unexpected response structure from Wazuh API")
+            raise HTTPException(status_code=500, detail="Unexpected response structure from Wazuh API")
+
+    except ValidationError as e:
+        logger.error(f"Validation error parsing Wazuh MITRE mitigations response: {e}")
+        raise HTTPException(status_code=500, detail=f"Data validation error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error parsing Wazuh MITRE mitigations response: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
