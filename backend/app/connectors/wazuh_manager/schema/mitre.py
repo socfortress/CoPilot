@@ -231,3 +231,35 @@ class WazuhMitreMitigationsResponse(BaseModel):
     message: str
     results: List[MitreMitigationItem] = []
     total: int = 0
+
+class MitreGroupItem(BaseModel):
+    """Represents a single MITRE ATT&CK group from Wazuh's API."""
+    mitre_version: Optional[str] = None
+    deprecated: int = 0
+    description: Optional[str] = None
+    name: str
+    id: str
+    modified_time: str
+    created_time: str
+    software: List[str] = []
+    techniques: List[str] = []
+    references: List[MitreReference] = []
+    url: str
+    external_id: str
+    source: str
+
+    # Additional fields that might be present
+    aliases: Optional[List[str]] = None
+    country: Optional[str] = None
+
+    class Config:
+        """Configuration for the model."""
+        extra = "ignore"  # Ignore extra fields from the API
+
+
+class WazuhMitreGroupsResponse(BaseModel):
+    """Response model for the MITRE groups endpoint."""
+    success: bool
+    message: str
+    results: List[MitreGroupItem] = []
+    total: int = 0

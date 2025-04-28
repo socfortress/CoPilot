@@ -11,8 +11,8 @@ from loguru import logger
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse
-from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id, get_mitre_references
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse, WazuhMitreGroupsResponse
+from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id, get_mitre_references, get_mitre_groups
 from app.connectors.wazuh_manager.services.mitre import AtomicRedTeamService
 from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics, get_mitre_software, get_mitre_mitigations
 from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques, search_mitre_techniques_in_alerts
@@ -20,6 +20,39 @@ from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques, se
 # Initialize router and auth handler
 wazuh_manager_mitre_router = APIRouter()
 auth_handler = AuthHandler()
+
+
+@wazuh_manager_mitre_router.get(
+    "/groups",
+    response_model=WazuhMitreGroupsResponse,
+    description="List MITRE ATT&CK groups",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def list_mitre_groups(
+    limit: Optional[int] = Query(None, description="Maximum number of items to return"),
+    offset: Optional[int] = Query(None, description="First item to return"),
+    select: Optional[List[str]] = Query(None, description="List of fields to return"),
+    sort: Optional[str] = Query(None, description="Fields to sort by"),
+    search: Optional[str] = Query(None, description="Text to search in fields"),
+    q: Optional[str] = Query(None, description="Query to filter results"),
+):
+    """
+    List MITRE ATT&CK groups with optional filtering parameters.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreGroupsResponse: A list of MITRE ATT&CK groups matching the criteria.
+    """
+    return await get_mitre_groups(
+        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
+    )
 
 @wazuh_manager_mitre_router.get(
     "/mitigations",

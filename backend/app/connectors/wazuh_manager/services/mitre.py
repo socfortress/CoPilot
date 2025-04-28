@@ -11,7 +11,7 @@ from loguru import logger
 from pydantic import ValidationError
 
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse, WazuhMitreGroupsResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -868,4 +868,66 @@ async def get_mitre_mitigations(
         raise HTTPException(status_code=500, detail=f"Data validation error: {str(e)}")
     except Exception as e:
         logger.error(f"Error parsing Wazuh MITRE mitigations response: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
+
+async def get_mitre_groups(
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    select: Optional[List[str]] = None,
+    sort: Optional[str] = None,
+    search: Optional[str] = None,
+    q: Optional[str] = None,
+) -> WazuhMitreGroupsResponse:
+    """
+    Fetch MITRE ATT&CK groups from Wazuh API.
+
+    Args:
+        limit: Maximum number of items to return
+        offset: First item to return
+        select: List of fields to return
+        sort: Fields to sort by
+        search: Text to search in fields
+        q: Query to filter results
+
+    Returns:
+        WazuhMitreGroupsResponse: A list of all MITRE ATT&CK groups.
+    """
+    # Build parameters dictionary, excluding None values
+    params = {"limit": limit, "offset": offset, "sort": sort, "search": search, "q": q}
+
+    # Add select parameter if provided
+    if select:
+        params["select"] = ",".join(select)
+
+    # Remove None values
+    params = {k: v for k, v in params.items() if v is not None}
+
+    response = await send_get_request(endpoint="/mitre/groups", params=params)
+
+    logger.debug(f"Response from Wazuh MITRE groups endpoint with params {params}")
+
+    try:
+        # Extract data from response
+        if "data" in response and "data" in response["data"]:
+            wazuh_data = response["data"]["data"]
+            mitre_groups = wazuh_data.get("affected_items", [])
+            total_items = wazuh_data.get("total_affected_items", len(mitre_groups))
+
+            logger.debug(f"Retrieved {len(mitre_groups)} of {total_items} MITRE groups from Wazuh")
+
+            return WazuhMitreGroupsResponse(
+                success=True,
+                message=f"Successfully retrieved {len(mitre_groups)} MITRE groups",
+                results=mitre_groups,
+                total=total_items
+            )
+        else:
+            logger.error("Unexpected response structure from Wazuh API")
+            raise HTTPException(status_code=500, detail="Unexpected response structure from Wazuh API")
+
+    except ValidationError as e:
+        logger.error(f"Validation error parsing Wazuh MITRE groups response: {e}")
+        raise HTTPException(status_code=500, detail=f"Data validation error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error parsing Wazuh MITRE groups response: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
