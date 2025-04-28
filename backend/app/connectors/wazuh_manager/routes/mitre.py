@@ -7,10 +7,11 @@ from fastapi import Path
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from fastapi import HTTPException
 
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse, AtomicTestsListResponse
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse, WazuhMitreGroupsResponse
 from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id, get_mitre_references, get_mitre_groups
 from app.connectors.wazuh_manager.services.mitre import AtomicRedTeamService
@@ -211,6 +212,37 @@ async def list_mitre_techniques(
 
 
 @wazuh_manager_mitre_router.get(
+    "/atomic-tests",
+    response_model=AtomicTestsListResponse,
+    description="List all available Atomic Red Team tests",
+    dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+)
+async def list_atomic_tests():
+    """
+    List all available Atomic Red Team tests across all techniques.
+
+    Returns:
+        AtomicTestsListResponse: A list of all techniques with Atomic Red Team tests.
+    """
+    logger.info("Request for list of all Atomic Red Team tests")
+
+    try:
+        # Get the list of all atomic tests
+        result = await AtomicRedTeamService.list_all_atomic_tests()
+
+        return AtomicTestsListResponse(
+            success=True,
+            message=f"Found {result['total_techniques']} techniques with {result.get('total_tests', 'many')} atomic tests",
+            total_techniques=result["total_techniques"],
+            total_tests=result.get("total_tests"),
+            tests=result["tests"],
+            last_updated=result["last_updated"]
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving atomic tests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving atomic tests: {str(e)}")
+
+@wazuh_manager_mitre_router.get(
     "/techniques/{technique_id}/atomic-tests",
     response_model=AtomicRedTeamMarkdownResponse,
     description="Get Atomic Red Team tests for a MITRE ATT&CK technique",
@@ -289,7 +321,7 @@ async def list_mitre_techniques_in_alerts(
 
     return MitreTechniquesInAlertsResponse(
         success=True,
-        message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} alerts",
+        message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events",
         total_alerts=results['total_alerts'],
         techniques_count=results['techniques_count'],
         techniques=results['techniques'],

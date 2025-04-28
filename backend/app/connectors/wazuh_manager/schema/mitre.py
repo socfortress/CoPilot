@@ -121,6 +121,23 @@ class AtomicRedTeamMarkdownResponse(BaseModel):
     markdown_content: Optional[str] = None
 
 
+class AtomicTestSummary(BaseModel):
+    """Summary information about an Atomic Red Team test."""
+    technique_id: str = Field(..., description="MITRE ATT&CK technique ID")
+    technique_name: str = Field(..., description="MITRE ATT&CK technique name")
+    test_count: int = Field(..., description="Number of atomic tests available for this technique")
+    categories: List[str] = Field(default_factory=list, description="Categories/platforms the tests cover")
+    has_prerequisites: bool = Field(False, description="Whether the tests have prerequisites")
+
+class AtomicTestsListResponse(BaseModel):
+    """Response model for listing all available Atomic Red Team tests."""
+    success: bool = Field(True, description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    total_techniques: int = Field(..., description="Total number of techniques with atomic tests")
+    total_tests: Optional[int] = Field(None, description="Total number of individual atomic tests")
+    tests: List[AtomicTestSummary] = Field(..., description="List of techniques with atomic tests")
+    last_updated: str = Field(..., description="When the test information was last updated")
+
 class MitreTechniqueInAlert(BaseModel):
     """Schema for a MITRE technique found in alerts."""
     technique_id: str = Field(..., description="MITRE ATT&CK technique ID")

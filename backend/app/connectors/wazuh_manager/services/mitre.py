@@ -4,10 +4,13 @@ from typing import List
 from typing import Optional
 from typing import Tuple, Union
 from datetime import datetime
-
+import yaml
 import aiohttp
+import asyncio
 from fastapi import HTTPException
 from loguru import logger
+import re
+import json
 from pydantic import ValidationError
 
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
@@ -29,6 +32,198 @@ class AtomicRedTeamService:
     # Cache to store the markdown content with timestamp
     # Format: {technique_id: (markdown_content, timestamp)}
     _cache: Dict[str, Tuple[str, float]] = {}
+    _tests_cache: Dict[str, Tuple[List[Dict], float]] = {}  # Cache for all tests
+
+    @classmethod
+    async def list_all_atomic_tests(cls) -> Dict:
+        """
+        Get a list of all available Atomic Red Team tests.
+
+        Returns:
+            Dict containing test information and metadata
+        """
+        # Check cache first
+        if "all_tests" in cls._tests_cache:
+            tests, timestamp = cls._tests_cache["all_tests"]
+            if time.time() - timestamp < CACHE_EXPIRY:
+                logger.debug("Returning cached list of all atomic tests")
+                return {
+                    "total_techniques": len(tests),
+                    "tests": tests,
+                    "last_updated": datetime.fromtimestamp(timestamp).isoformat()
+                }
+
+        # Fetch the list of all techniques with atomic tests
+        try:
+            # First, try to fetch index.yaml which has metadata about all tests
+            async with aiohttp.ClientSession() as session:
+                url = "https://raw.githubusercontent.com/redcanaryco/atomic-red-team/refs/heads/master/atomics/Indexes/Indexes-Markdown/atomic-red-team-index.md"
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        return await cls._parse_atomic_index_markdown(await response.text())
+
+                    # If markdown index not available, try alternate approach
+                    logger.warning(f"Could not fetch atomic-red-team-index.md: {response.status}. Trying alternate method.")
+                    return await cls._fetch_techniques_from_atomics_folder()
+        except Exception as e:
+            logger.error(f"Error listing atomic tests: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error listing atomic tests: {str(e)}")
+    @classmethod
+    async def _parse_atomic_index_markdown(cls, content: str) -> Dict:
+        """Parse the atomic-red-team-index.md file to extract test information."""
+        techniques = []
+        technique_pattern = r'\|\s*\[([^]]+)\]\([^)]+\)\s*\|\s*([T\d\.]+)\s*\|\s*(\d+)\s*\|'
+
+        matches = re.findall(technique_pattern, content)
+        total_tests = 0
+
+        for name, technique_id, test_count in matches:
+            try:
+                count = int(test_count)
+                total_tests += count
+                techniques.append({
+                    "technique_id": technique_id,
+                    "technique_name": name,
+                    "test_count": count,
+                    "categories": [],  # Would require additional requests to determine
+                    "has_prerequisites": False  # Would require additional requests to determine
+                })
+            except ValueError:
+                continue  # Skip if test_count isn't a valid integer
+
+        result = {
+            "total_techniques": len(techniques),
+            "total_tests": total_tests,
+            "tests": techniques,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+
+        # Cache the result
+        cls._tests_cache["all_tests"] = (techniques, time.time())
+
+        return result
+
+    @classmethod
+    async def _fetch_techniques_from_atomics_folder(cls) -> Dict:
+        """Fetch and parse techniques directly from the Atomic Red Team repository."""
+        # This is a fallback method that fetches the techniques directly from the GitHub API
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = "https://api.github.com/repos/redcanaryco/atomic-red-team/contents/atomics"
+                headers = {"Accept": "application/vnd.github.v3+json"}
+
+                async with session.get(url, headers=headers) as response:
+                    if response.status != 200:
+                        logger.error(f"GitHub API error: {response.status}")
+                        raise HTTPException(status_code=response.status,
+                                            detail="Could not access Atomic Red Team repository")
+
+                    folders = await response.json()
+
+                    # Filter to only include technique folders (T#### format)
+                    technique_folders = [f for f in folders if f["type"] == "dir" and f["name"].startswith("T")]
+
+                    techniques = []
+                    total_tests = 0
+
+                    # Process each technique folder (limit concurrent requests)
+                    semaphore = asyncio.Semaphore(5)  # Limit to 5 concurrent requests
+
+                    async def process_technique(folder):
+                        nonlocal total_tests
+                        technique_id = folder["name"]
+
+                        async with semaphore:
+                            # Try to get the YAML file that contains test information
+                            yaml_url = f"{GITHUB_RAW_URL}/{technique_id}/{technique_id}.yaml"
+                            md_url = f"{GITHUB_RAW_URL}/{technique_id}/{technique_id}.md"
+
+                            # First try YAML for structured data
+                            async with session.get(yaml_url) as yaml_resp:
+                                if yaml_resp.status == 200:
+                                    yaml_content = await yaml_resp.text()
+                                    try:
+                                        data = yaml.safe_load(yaml_content)
+                                        test_count = len(data.get('atomic_tests', []))
+                                        total_tests += test_count
+                                        platforms = set()
+                                        has_prereqs = False
+
+                                        for test in data.get('atomic_tests', []):
+                                            if test.get('supported_platforms'):
+                                                platforms.update(test.get('supported_platforms', []))
+                                            if test.get('dependencies'):
+                                                has_prereqs = True
+
+                                        return {
+                                            "technique_id": technique_id,
+                                            "technique_name": data.get('display_name', technique_id),
+                                            "test_count": test_count,
+                                            "categories": list(platforms),
+                                            "has_prerequisites": has_prereqs
+                                        }
+                                    except Exception as e:
+                                        logger.warning(f"Error parsing YAML for {technique_id}: {e}")
+
+                            # Fall back to MD file and extract basic info
+                            async with session.get(md_url) as md_resp:
+                                if md_resp.status == 200:
+                                    md_content = await md_resp.text()
+
+                                    # Extract name from markdown header
+                                    name_match = re.search(r'# ([^\n]+)', md_content)
+                                    name = name_match.group(1) if name_match else technique_id
+
+                                    # Count atomic tests by headers
+                                    test_headers = re.findall(r'## Atomic Test #\d+', md_content)
+                                    test_count = len(test_headers)
+                                    total_tests += test_count
+
+                                    # Look for platform indicators
+                                    platforms = []
+                                    if 'windows' in md_content.lower():
+                                        platforms.append('windows')
+                                    if 'macos' in md_content.lower() or 'darwin' in md_content.lower():
+                                        platforms.append('macos')
+                                    if 'linux' in md_content.lower():
+                                        platforms.append('linux')
+
+                                    return {
+                                        "technique_id": technique_id,
+                                        "technique_name": name.replace(f"- {technique_id}", "").strip(),
+                                        "test_count": test_count,
+                                        "categories": platforms,
+                                        "has_prerequisites": 'dependency' in md_content.lower() or 'dependencies' in md_content.lower()
+                                    }
+
+                        # If both methods fail, return basic info
+                        return {
+                            "technique_id": technique_id,
+                            "technique_name": technique_id,
+                            "test_count": 0,
+                            "categories": [],
+                            "has_prerequisites": False
+                        }
+
+                    # Process all techniques concurrently but with rate limiting
+                    technique_tasks = [process_technique(folder) for folder in technique_folders]
+                    techniques = [t for t in await asyncio.gather(*technique_tasks) if t["test_count"] > 0]
+
+                    result = {
+                        "total_techniques": len(techniques),
+                        "total_tests": total_tests,
+                        "tests": techniques,
+                        "last_updated": datetime.utcnow().isoformat()
+                    }
+
+                    # Cache the result
+                    cls._tests_cache["all_tests"] = (techniques, time.time())
+
+                    return result
+
+        except Exception as e:
+            logger.error(f"Error fetching atomic tests from GitHub: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error listing atomic tests: {str(e)}")
 
     @classmethod
     async def get_technique_markdown(cls, technique_id: str) -> Optional[str]:
