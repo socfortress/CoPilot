@@ -161,23 +161,57 @@ class VeloSigmaExclusionService:
                         if field_value.startswith("regex:"):
                             # Remove the regex: prefix and try to match
                             regex_pattern = field_value[6:]
-                            try:
-                                if not re.search(regex_pattern, event_value, re.IGNORECASE):
-                                    logger.debug(f"Regex pattern '{regex_pattern}' did not match '{event_value}'")
+
+                            # Special handling for path-based regex patterns
+                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in regex_pattern or "/" in regex_pattern:
+                                try:
+                                    # Normalize the regex pattern by replacing multiple backslashes with singles
+                                    normalized_pattern = self._normalize_windows_path(regex_pattern, is_regex=True)
+                                    # We need to re-escape backslashes for regex use
+                                    regex_ready_pattern = normalized_pattern.replace("\\", "\\\\")
+
+                                    logger.debug(f"Path-based regex: Original '{regex_pattern}' → Normalized '{normalized_pattern}' → Regex-ready '{regex_ready_pattern}'")
+
+                                    # Normalize the event value before matching
+                                    normalized_value = self._normalize_windows_path(event_value)
+
+                                    if not re.search(regex_ready_pattern, normalized_value, re.IGNORECASE):
+                                        logger.debug(f"Path regex pattern '{regex_ready_pattern}' did not match '{normalized_value}'")
+                                        return False
+                                    else:
+                                        logger.debug(f"Path regex pattern '{regex_ready_pattern}' matched '{normalized_value}'")
+                                except re.error as e:
+                                    logger.error(f"Invalid path regex pattern in exclusion {exclusion.id}: {regex_pattern} - Error: {str(e)}")
                                     return False
-                                else:
-                                    logger.debug(f"Regex pattern '{regex_pattern}' matched '{event_value}'")
-                            except re.error:
-                                logger.error(f"Invalid regex pattern in exclusion {exclusion.id}: {regex_pattern}")
-                                return False
+                                # Special handling for path-based regex patterns
+                            else:
+                                # Standard regex for non-path values
+                                try:
+                                    if not re.search(regex_pattern, event_value, re.IGNORECASE):
+                                        logger.debug(f"Regex pattern '{regex_pattern}' did not match '{event_value}'")
+                                        return False
+                                    else:
+                                        logger.debug(f"Regex pattern '{regex_pattern}' matched '{event_value}'")
+                                except re.error as e:
+                                    logger.error(f"Invalid regex pattern in exclusion {exclusion.id}: {regex_pattern} - Error: {str(e)}")
+                                    return False
                         else:
                             # Case-insensitive path comparison for Windows paths
-                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in field_value:
-                                norm_field_value = field_value.lower().replace("\\\\", "\\")
-                                norm_event_value = event_value.lower().replace("\\\\", "\\")
+                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in field_value or "/" in field_value:
+                                # Log raw values for debugging
+                                logger.debug(f"Before normalization - Rule: '{field_value}', Event: '{event_value}'")
+
+                                # Use the path normalization helper
+                                norm_field_value = self._normalize_windows_path(field_value)
+                                norm_event_value = self._normalize_windows_path(event_value)
+
+                                logger.debug(f"After normalization - Rule: '{norm_field_value}', Event: '{norm_event_value}'")
+
                                 if norm_field_value != norm_event_value:
                                     logger.debug(f"Path mismatch: rule='{norm_field_value}' event='{norm_event_value}'")
                                     return False
+                                else:
+                                    logger.debug(f"Path match found for: {field_name}")
                             else:
                                 # Standard case-insensitive match for other fields
                                 if field_value.lower() != event_value.lower():
@@ -197,6 +231,63 @@ class VeloSigmaExclusionService:
         # If we passed all checks, this is a match
         logger.info(f"Alert matched exclusion rule '{exclusion.name}' (ID: {exclusion.id})")
         return True
+
+    def _normalize_windows_path(self, path: str, is_regex: bool = False) -> str:
+        """
+        Normalize Windows paths by converting all backslash variations to a consistent format.
+
+        Args:
+            path: The path string to normalize
+            is_regex: Whether the path contains regex patterns that should be preserved
+
+        Returns:
+            Normalized path with consistent backslashes and formatting
+        """
+        if not path:
+            return ""
+
+        # Convert to lowercase for case-insensitive comparison
+        normalized = path.lower()
+
+        if is_regex:
+            # Special handling for regex patterns
+            # First, temporarily replace regex character classes with placeholders
+            placeholders = {}
+
+            # Find all character classes like [^\\] or [\\w] and preserve them
+            char_class_pattern = r'(\[\^?[^\]]*\])'
+            char_classes = re.finditer(char_class_pattern, normalized)
+
+            for i, match in enumerate(char_classes):
+                placeholder = f"__REGEX_PLACEHOLDER_{i}__"
+                placeholders[placeholder] = match.group(0)
+                normalized = normalized.replace(match.group(0), placeholder)
+
+        # Use regex to replace any sequence of one or more backslashes with a single backslash
+        # This handles \, \\, \\\, \\\\, etc.
+        normalized = re.sub(r'\\+', r'\\', normalized)
+
+        # Handle escaped special characters in paths
+        normalized = normalized.replace("\\(", "(").replace("\\)", ")")
+        normalized = normalized.replace("\\[", "[").replace("\\]", "]")
+        normalized = normalized.replace("\\ ", " ")
+
+        # Remove any trailing backslash
+        if normalized.endswith("\\"):
+            normalized = normalized[:-1]
+
+        if is_regex:
+            # Restore the regex character classes with their original content
+            for placeholder, original in placeholders.items():
+                normalized = normalized.replace(placeholder, original)
+
+        # Log only in debug for excessive paths
+        if path != normalized:
+            path_preview = path[:20] + "..." if len(path) > 20 else path
+            norm_preview = normalized[:20] + "..." if len(normalized) > 20 else normalized
+            logger.debug(f"Path normalized: '{path_preview}' → '{norm_preview}'")
+
+        return normalized
 
     async def _update_exclusion_stats(self, exclusion_id: int) -> None:
         """Update the statistics for an exclusion after it matches."""
