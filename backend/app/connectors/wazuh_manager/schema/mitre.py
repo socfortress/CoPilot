@@ -137,6 +137,9 @@ class AtomicTestsListResponse(BaseModel):
     total_tests: Optional[int] = Field(None, description="Total number of individual atomic tests")
     tests: List[AtomicTestSummary] = Field(..., description="List of techniques with atomic tests")
     last_updated: str = Field(..., description="When the test information was last updated")
+    page: int = Field(1, description="Current page number")
+    page_size: int = Field(..., description="Number of items per page")
+    total_pages: int = Field(..., description="Total number of pages available")
 
 class MitreTechniqueInAlert(BaseModel):
     """Schema for a MITRE technique found in alerts."""

@@ -217,26 +217,48 @@ async def list_mitre_techniques(
     description="List all available Atomic Red Team tests",
     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
 )
-async def list_atomic_tests():
+async def list_atomic_tests(
+    size: int = Query(25, description="Maximum number of techniques to return per page"),
+    page: int = Query(1, description="Page number for pagination", gt=0),
+):
     """
     List all available Atomic Red Team tests across all techniques.
 
+    Args:
+        size: Maximum number of techniques to return per page
+        page: Page number for pagination
+
     Returns:
-        AtomicTestsListResponse: A list of all techniques with Atomic Red Team tests.
+        AtomicTestsListResponse: A paginated list of techniques with Atomic Red Team tests.
     """
-    logger.info("Request for list of all Atomic Red Team tests")
+    logger.info(f"Request for list of all Atomic Red Team tests (page {page}, size {size})")
 
     try:
         # Get the list of all atomic tests
         result = await AtomicRedTeamService.list_all_atomic_tests()
 
+        # Apply pagination to the results
+        total_techniques = result["total_techniques"]
+        all_tests = result["tests"]
+
+        # Calculate total pages
+        total_pages = (total_techniques + size - 1) // size if total_techniques > 0 else 1
+
+        # Apply pagination
+        start_idx = (page - 1) * size
+        end_idx = start_idx + size
+        paginated_tests = all_tests[start_idx:end_idx]
+
         return AtomicTestsListResponse(
             success=True,
-            message=f"Found {result['total_techniques']} techniques with {result.get('total_tests', 'many')} atomic tests",
-            total_techniques=result["total_techniques"],
+            message=f"Found {total_techniques} techniques with {result.get('total_tests', 'many')} atomic tests (page {page} of {total_pages})",
+            total_techniques=total_techniques,
             total_tests=result.get("total_tests"),
-            tests=result["tests"],
-            last_updated=result["last_updated"]
+            tests=paginated_tests,
+            last_updated=result["last_updated"],
+            page=page,
+            page_size=size,
+            total_pages=total_pages
         )
     except Exception as e:
         logger.error(f"Error retrieving atomic tests: {str(e)}")
@@ -279,55 +301,6 @@ async def get_technique_atomic_tests(technique_id: str = Path(..., description="
         technique_id=clean_technique_id,
         markdown_content=markdown_content,
     )
-
-# @wazuh_manager_mitre_router.get(
-#     "/techniques/alerts",
-#     response_model=MitreTechniquesInAlertsResponse,
-#     description="Search for MITRE ATT&CK techniques in alerts",
-#     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
-# )
-# async def list_mitre_techniques_in_alerts(
-#     time_range: str = Query("now-24h", description="Time range for the search (e.g., now-24h, now-7d)"),
-#     size: int = Query(1000, description="Maximum number of techniques to return"),
-#     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
-#     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
-#     mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
-#     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
-# ) -> MitreTechniquesInAlertsResponse:
-#     """Search for MITRE ATT&CK techniques in Wazuh alerts."""
-#     logger.info(f"Searching for MITRE techniques in alerts from {time_range}")
-
-#     # Build additional filters based on request parameters
-#     additional_filters = []
-
-#     if rule_level is not None:
-#         additional_filters.append({
-#             "match_phrase": {"rule_level": {"query": str(rule_level)}}
-#         })
-
-#     if rule_group is not None:
-#         additional_filters.append({
-#             "match_phrase": {"rule_groups": {"query": rule_group}}
-#         })
-
-#     # Execute the search with the specified parameters
-#     results = await search_mitre_techniques_in_alerts(
-#         time_range=time_range,
-#         size=size,
-#         additional_filters=additional_filters,
-#         index_pattern=index_pattern,
-#         mitre_field=mitre_field
-#     )
-
-#     return MitreTechniquesInAlertsResponse(
-#         success=True,
-#         message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events",
-#         total_alerts=results['total_alerts'],
-#         techniques_count=results['techniques_count'],
-#         techniques=results['techniques'],
-#         time_range=time_range,
-#         field_used=results.get('field_used', 'unknown')
-#     )
 
 @wazuh_manager_mitre_router.get(
     "/techniques/alerts",
