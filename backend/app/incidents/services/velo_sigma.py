@@ -161,8 +161,6 @@ class VeloSigmaExclusionService:
                         if field_value.startswith("regex:"):
                             # Remove the regex: prefix and try to match
                             regex_pattern = field_value[6:]
-
-                            # Special handling for path-based regex patterns
                             # Special handling for path-based regex patterns
                             if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in regex_pattern or "/" in regex_pattern:
                                 try:
