@@ -156,6 +156,9 @@ class MitreTechniquesInAlertsResponse(BaseModel):
     techniques: List[MitreTechniqueInAlert] = Field(..., description="List of techniques with counts")
     time_range: str = Field(..., description="Time range used for the search")
     field_used: Optional[str] = Field(..., description="Field name used to extract MITRE techniques")
+    page: int = Field(1, description="Current page number")
+    page_size: int = Field(..., description="Number of items per page")
+    total_pages: int = Field(..., description="Total number of pages available")
 
 
 class MitreTechniqueAlertsResponse(BaseModel):

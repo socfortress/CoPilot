@@ -280,6 +280,55 @@ async def get_technique_atomic_tests(technique_id: str = Path(..., description="
         markdown_content=markdown_content,
     )
 
+# @wazuh_manager_mitre_router.get(
+#     "/techniques/alerts",
+#     response_model=MitreTechniquesInAlertsResponse,
+#     description="Search for MITRE ATT&CK techniques in alerts",
+#     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+# )
+# async def list_mitre_techniques_in_alerts(
+#     time_range: str = Query("now-24h", description="Time range for the search (e.g., now-24h, now-7d)"),
+#     size: int = Query(1000, description="Maximum number of techniques to return"),
+#     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
+#     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
+#     mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
+#     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
+# ) -> MitreTechniquesInAlertsResponse:
+#     """Search for MITRE ATT&CK techniques in Wazuh alerts."""
+#     logger.info(f"Searching for MITRE techniques in alerts from {time_range}")
+
+#     # Build additional filters based on request parameters
+#     additional_filters = []
+
+#     if rule_level is not None:
+#         additional_filters.append({
+#             "match_phrase": {"rule_level": {"query": str(rule_level)}}
+#         })
+
+#     if rule_group is not None:
+#         additional_filters.append({
+#             "match_phrase": {"rule_groups": {"query": rule_group}}
+#         })
+
+#     # Execute the search with the specified parameters
+#     results = await search_mitre_techniques_in_alerts(
+#         time_range=time_range,
+#         size=size,
+#         additional_filters=additional_filters,
+#         index_pattern=index_pattern,
+#         mitre_field=mitre_field
+#     )
+
+#     return MitreTechniquesInAlertsResponse(
+#         success=True,
+#         message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events",
+#         total_alerts=results['total_alerts'],
+#         techniques_count=results['techniques_count'],
+#         techniques=results['techniques'],
+#         time_range=time_range,
+#         field_used=results.get('field_used', 'unknown')
+#     )
+
 @wazuh_manager_mitre_router.get(
     "/techniques/alerts",
     response_model=MitreTechniquesInAlertsResponse,
@@ -288,14 +337,18 @@ async def get_technique_atomic_tests(technique_id: str = Path(..., description="
 )
 async def list_mitre_techniques_in_alerts(
     time_range: str = Query("now-24h", description="Time range for the search (e.g., now-24h, now-7d)"),
-    size: int = Query(1000, description="Maximum number of techniques to return"),
+    size: int = Query(25, description="Maximum number of techniques to return per page"),
+    page: int = Query(1, description="Page number for pagination", gt=0),
     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
     mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
 ) -> MitreTechniquesInAlertsResponse:
     """Search for MITRE ATT&CK techniques in Wazuh alerts."""
-    logger.info(f"Searching for MITRE techniques in alerts from {time_range}")
+    logger.info(f"Searching for MITRE techniques in alerts from {time_range} (page {page}, size {size})")
+
+    # Calculate the offset based on page and size
+    offset = (page - 1) * size
 
     # Build additional filters based on request parameters
     additional_filters = []
@@ -314,76 +367,28 @@ async def list_mitre_techniques_in_alerts(
     results = await search_mitre_techniques_in_alerts(
         time_range=time_range,
         size=size,
+        offset=offset,
         additional_filters=additional_filters,
         index_pattern=index_pattern,
         mitre_field=mitre_field
     )
 
+    # Calculate total pages
+    total_pages = (results['techniques_count'] + size - 1) // size if results['techniques_count'] > 0 else 1
+
     return MitreTechniquesInAlertsResponse(
         success=True,
-        message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events",
+        message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events (page {page} of {total_pages})",
         total_alerts=results['total_alerts'],
         techniques_count=results['techniques_count'],
         techniques=results['techniques'],
         time_range=time_range,
-        field_used=results.get('field_used', 'unknown')
+        field_used=results.get('field_used', 'unknown'),
+        page=page,
+        page_size=size,
+        total_pages=total_pages
     )
 
-
-# @wazuh_manager_mitre_router.get(
-#     "/techniques/{technique_id}/alerts",
-#     response_model=MitreTechniqueAlertsResponse,
-#     description="Get alert documents for a specific MITRE ATT&CK technique",
-#     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
-# )
-# async def get_mitre_technique_alerts(
-#     technique_id: str = Path(..., description="MITRE ATT&CK technique ID (e.g., T1047, 1047)"),
-#     time_range: str = Query("now-24h", description="Time range for the search (e.g., now-24h, now-7d)"),
-#     size: int = Query(25, description="Maximum number of alerts to return"),
-#     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
-#     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
-#     mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
-#     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
-# ) -> MitreTechniqueAlertsResponse:
-#     """Get alert documents for a specific MITRE ATT&CK technique."""
-#     logger.info(f"Request for alerts related to MITRE technique {technique_id} from {time_range}")
-
-#     # Clean up technique ID if needed
-#     clean_technique_id = technique_id.strip()
-
-#     # Build additional filters based on request parameters
-#     additional_filters = []
-
-#     if rule_level is not None:
-#         additional_filters.append({
-#             "match_phrase": {"rule_level": {"query": str(rule_level)}}
-#         })
-
-#     if rule_group is not None:
-#         additional_filters.append({
-#             "match_phrase": {"rule_groups": {"query": rule_group}}
-#         })
-
-#     # Get the alerts
-#     results = await get_alerts_by_mitre_id(
-#         technique_id=clean_technique_id,
-#         time_range=time_range,
-#         size=size,
-#         additional_filters=additional_filters,
-#         index_pattern=index_pattern,
-#         mitre_field=mitre_field
-#     )
-
-#     return MitreTechniqueAlertsResponse(
-#         success=True,
-#         message=f"Found {results['total_alerts']} alerts for MITRE technique {clean_technique_id}",
-#         technique_id=results['technique_id'],
-#         technique_name=results['technique_name'],
-#         total_alerts=results['total_alerts'],
-#         alerts=results['alerts'],
-#         field_used=results.get('field_used', 'unknown'),
-#         time_range=time_range
-#     )
 
 @wazuh_manager_mitre_router.get(
     "/techniques/{technique_id}/alerts",
