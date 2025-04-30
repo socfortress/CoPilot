@@ -843,6 +843,7 @@ async def get_alerts_by_mitre_id(
     technique_id: str,
     time_range: str = "now-24h",
     size: int = 100,
+    offset: int = 0,
     additional_filters: Optional[List[Dict]] = None,
     index_pattern: str = "wazuh-*",
     mitre_field: Optional[str] = None,
@@ -897,6 +898,7 @@ async def get_alerts_by_mitre_id(
                     technique_id=technique_id,
                     time_range=time_range,
                     size=size,
+                    offset=offset,
                     additional_filters=additional_filters,
                     index_pattern=index_pattern,
                     mitre_field=field
@@ -962,6 +964,7 @@ def _build_mitre_alerts_query(
     technique_id: str,
     time_range: str,
     size: int,
+    offset: int,
     additional_filters: Optional[List[Dict]],
     index_pattern: str,
     mitre_field: str,
@@ -989,6 +992,7 @@ def _build_mitre_alerts_query(
         "index": index_pattern,
         "body": {
             "size": size,
+            "from": offset,
             "query": {
                 "bool": {
                     "filter": query_filters
