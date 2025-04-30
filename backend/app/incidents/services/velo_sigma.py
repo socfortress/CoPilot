@@ -617,9 +617,24 @@ class VelociraptorSigmaService:
             source_process_id = getattr(event_data, "SourceProcessId", 0)
             source_user = getattr(event_data, "SourceUser", "Unknown User")
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -655,9 +670,24 @@ class VelociraptorSigmaService:
             # Extract event record ID
             event_record_id = str(parsed_event.System.EventRecordID)
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -696,9 +726,24 @@ class VelociraptorSigmaService:
             # Extract event record ID
             event_record_id = str(parsed_event.System.EventRecordID)
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -744,11 +789,26 @@ class VelociraptorSigmaService:
             # Extract event record ID if available
             event_record_id = str(getattr(parsed_event.System, "EventRecordID", "unknown"))
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Try to fetch corresponding Wazuh alert if we have an event record ID
             wazuh_event = None
             if event_record_id != "unknown":
                 wazuh_event = await self._fetch_wazuh_alert(
-                    agent_name=alert.computer,
+                    agent_name=agent_name,
                     event_record_id=event_record_id,
                     index_pattern=alert.index_pattern,
                 )
