@@ -163,27 +163,53 @@ class VeloSigmaExclusionService:
                             regex_pattern = field_value[6:]
 
                             # Special handling for path-based regex patterns
+                            # Special handling for path-based regex patterns
                             if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in regex_pattern or "/" in regex_pattern:
                                 try:
-                                    # Normalize the regex pattern by replacing multiple backslashes with singles
-                                    normalized_pattern = self._normalize_windows_path(regex_pattern, is_regex=True)
-                                    # We need to re-escape backslashes for regex use
-                                    regex_ready_pattern = normalized_pattern.replace("\\", "\\\\")
+                                    # Normalize paths for comparison by converting all to lowercase and standardizing backslashes
+                                    pattern = regex_pattern.lower().replace("\\\\", "\\")
+                                    value = event_value.lower().replace("\\\\", "\\")
 
-                                    logger.debug(f"Path-based regex: Original '{regex_pattern}' → Normalized '{normalized_pattern}' → Regex-ready '{regex_ready_pattern}'")
+                                    # Remove the regex: prefix if present
+                                    if pattern.startswith("regex:"):
+                                        pattern = pattern[6:]
 
-                                    # Normalize the event value before matching
-                                    normalized_value = self._normalize_windows_path(event_value)
+                                    # Handle escaped parentheses in Windows paths
+                                    pattern = pattern.replace("\\(", "(").replace("\\)", ")")
 
-                                    if not re.search(regex_ready_pattern, normalized_value, re.IGNORECASE):
-                                        logger.debug(f"Path regex pattern '{regex_ready_pattern}' did not match '{normalized_value}'")
-                                        return False
+                                    # Convert the wildcard pattern to proper regex format
+                                    # Escape special regex characters except for the wildcards we want to keep
+                                    pattern_parts = re.split(r'(\.\*)', pattern)
+                                    regex_parts = []
+
+                                    for i, part in enumerate(pattern_parts):
+                                        if part == ".*":
+                                            # Keep wildcards as-is
+                                            regex_parts.append(part)
+                                        else:
+                                            # Escape regex special characters but keep path separators
+                                            escaped = re.escape(part)
+                                            regex_parts.append(escaped)
+
+                                    pattern_regex = "".join(regex_parts)
+
+                                    # Force matching the entire string
+                                    pattern_regex = f"^{pattern_regex}$"
+
+                                    logger.debug(f"Path regex check: Pattern='{pattern}' → Regex='{pattern_regex}' vs Value='{value}'")
+
+                                    # Try the match
+                                    match_result = re.search(pattern_regex, value, re.IGNORECASE)
+                                    if match_result:
+                                        logger.debug(f"Path regex match succeeded! Match: {match_result.group(0)}")
+                                        return True
                                     else:
-                                        logger.debug(f"Path regex pattern '{regex_ready_pattern}' matched '{normalized_value}'")
-                                except re.error as e:
-                                    logger.error(f"Invalid path regex pattern in exclusion {exclusion.id}: {regex_pattern} - Error: {str(e)}")
+                                        logger.debug(f"Path regex match failed")
+                                        return False
+
+                                except Exception as e:
+                                    logger.error(f"Error in path regex matching: {str(e)}")
                                     return False
-                                # Special handling for path-based regex patterns
                             else:
                                 # Standard regex for non-path values
                                 try:
