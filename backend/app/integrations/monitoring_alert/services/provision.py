@@ -667,6 +667,98 @@ async def provision_office365_threat_intel_alert(
         message="Office365 Threat Intel monitoring alerts provisioned successfully",
     )
 
+async def provision_crowdstrike_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Crowdstrike monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_crowdstrike_monitoring_alert with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="CROWDSTRIKE ALERT",
+            description="Alert on Crowdstrike alerts",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:crowdstrike AND (syslog_level:Alert OR syslog_level:Warning)",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.syslog_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="CROWDSTRIKE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Crowdstrike monitoring alerts provisioned successfully",
+    )
+
 
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """
