@@ -25,7 +25,7 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
-from app.integrations.monitoring_alert.services.provision import provision_custom_alert
+from app.integrations.monitoring_alert.services.provision import provision_custom_alert, provision_crowdstrike_monitoring_alert
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
 )
@@ -120,6 +120,12 @@ async def invoke_provision_office365_threat_intel_alert(
     # Provision the Office365 Threat Intel monitoring alert
     await provision_office365_threat_intel_alert(request)
 
+async def invoke_provision_crowdstrike_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Provision the CrowdStrike monitoring alert
+    await provision_crowdstrike_monitoring_alert(request)
+
 
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
@@ -134,6 +140,7 @@ PROVISION_FUNCTIONS = {
     "SURICATA_ALERT_SEVERITY_1": invoke_provision_suricata_monitoring_alert,
     "OFFICE365_EXCHANGE_ONLINE": invoke_provision_office365_exchange_online_alert,
     "OFFICE365_THREAT_INTEL": invoke_provision_office365_threat_intel_alert,
+    "CROWDSTRIKE_ALERT": invoke_provision_crowdstrike_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }

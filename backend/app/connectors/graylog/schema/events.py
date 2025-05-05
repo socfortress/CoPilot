@@ -34,7 +34,7 @@ class Conditions(BaseModel):
 
 
 class SeriesItem(BaseModel):
-    type: str
+    type: Optional[str] = None
     id: str
     field: Optional[str] = None
 
@@ -48,7 +48,7 @@ class Config(BaseModel):
     search_within_ms: Optional[int] = Field(None, description="The search window in milliseconds")
     series: Optional[Union[str, List[SeriesItem]]] = Field(None, description="The series to be included in the config")
     streams: Optional[List[str]] = Field(None, description="The streams to be included in the config")
-    type: str = Field(..., description="The type of the config")
+    type: Optional[str] = Field(None, description="The type of the config")
 
 
 class NotificationSettings(BaseModel):
