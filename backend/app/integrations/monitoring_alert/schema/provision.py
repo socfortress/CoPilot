@@ -48,6 +48,11 @@ class AvailableMonitoringAlerts(str, Enum):
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the Fortinet alert is detected."
     )
+    PALOALTO_ALERT = (
+        "This alert monitors the PaloAlto events. When an alert is detected, it triggers an "
+        "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
+        "alert_severity field to 1 when the PaloAlto alert is detected."
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):
