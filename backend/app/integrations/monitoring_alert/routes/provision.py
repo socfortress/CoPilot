@@ -25,7 +25,7 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
-from app.integrations.monitoring_alert.services.provision import provision_custom_alert, provision_crowdstrike_monitoring_alert
+from app.integrations.monitoring_alert.services.provision import provision_custom_alert, provision_crowdstrike_monitoring_alert, provision_fortinet_system_monitoring_alert
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
 )
@@ -126,6 +126,12 @@ async def invoke_provision_crowdstrike_monitoring_alert(
     # Provision the CrowdStrike monitoring alert
     await provision_crowdstrike_monitoring_alert(request)
 
+async def invoke_provision_fortinet_system_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Provision the Fortinet System monitoring alert
+    await provision_fortinet_system_monitoring_alert(request)
+
 
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
@@ -141,6 +147,7 @@ PROVISION_FUNCTIONS = {
     "OFFICE365_EXCHANGE_ONLINE": invoke_provision_office365_exchange_online_alert,
     "OFFICE365_THREAT_INTEL": invoke_provision_office365_threat_intel_alert,
     "CROWDSTRIKE_ALERT": invoke_provision_crowdstrike_monitoring_alert,
+    "FORTINET_SYSTEM": invoke_provision_fortinet_system_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }

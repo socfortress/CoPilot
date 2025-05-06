@@ -38,6 +38,11 @@ class AvailableMonitoringAlerts(str, Enum):
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the CrowdStrike alert is detected."
     )
+    FORTINET_SYSTEM = (
+        "This alert monitors the Fortinet System events. When an alert is detected, it triggers an "
+        "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
+        "alert_severity field to 1 when the Fortinet alert is detected."
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):
