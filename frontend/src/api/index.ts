@@ -15,6 +15,7 @@ import indices from "./endpoints/indices"
 import integrations from "./endpoints/integrations"
 import license from "./endpoints/license"
 import logs from "./endpoints/logs"
+import mitre from "./endpoints/mitre"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
 import portainer from "./endpoints/portainer"
@@ -57,5 +58,6 @@ export default {
 	sigma,
 	users,
 	sysmonConfig,
+	mitre,
 	portainer
 }
