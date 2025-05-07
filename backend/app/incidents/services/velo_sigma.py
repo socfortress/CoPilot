@@ -29,7 +29,7 @@ from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, add_alert_tag_if_not_exists
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -532,19 +532,19 @@ class VelociraptorSigmaService:
             )
 
             # Add tags
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
 
             # Add event-specific tags
             if "Sysmon" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
             elif "Defender" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
             elif "PowerShell" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
             else:
                 # Generic event type
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
 
             logger.info(f"Created fallback CoPilot alert with ID: {result['alert_id']} for customer {customer_code}")
             result["success"] = True
@@ -911,7 +911,7 @@ class VelociraptorSigmaService:
             )
 
             # Add a tag
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
 
             logger.info(f"Created CoPilot alert with ID: {result['alert_id']}")
 
