@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/no-multi-asterisks */
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { MitreTechnique } from "@/types/mitre.d"
+import type { MitreTechnique, MitreTechniqueDetails } from "@/types/mitre.d"
 import { HttpClient } from "../httpClient"
 
 export interface MitreTechniquesAlertsQuery {
@@ -20,13 +20,21 @@ export interface MitreTechniquesAlertsQuery {
 	index_pattern?: string
 }
 
+export interface MitreTechniqueDetailsQuery {
+	external_id: string
+}
+
+export interface MitreGroupsQuery {
+	id: string
+}
+
 export default {
 	getMitreTechniquesAlerts(query?: MitreTechniquesAlertsQuery) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				total_alerts: number
 				techniques_count: number
-				techniques: MitreTechnique
+				techniques: MitreTechnique[]
 				time_range: string
 				field_used: string
 				page: number
@@ -42,6 +50,35 @@ export default {
 				rule_group: query?.rule_group,
 				mitre_field: query?.mitre_field,
 				index_pattern: query?.index_pattern || "wazuh-*"
+			}
+		})
+	},
+	getMitreTechniqueDetails(query?: MitreTechniqueDetailsQuery) {
+		let q: string | undefined
+
+		if (query?.external_id) {
+			q = `external_id=${query?.external_id}`
+		}
+
+		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniqueDetails[] }>(
+			`/wazuh_manager/mitre/techniques`,
+			{
+				params: {
+					q
+				}
+			}
+		)
+	},
+	getMitreGroups(query?: MitreGroupsQuery) {
+		let q: string | undefined
+
+		if (query?.id) {
+			q = `id=${query?.id}`
+		}
+
+		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniqueDetails[] }>(`/wazuh_manager/mitre/groups`, {
+			params: {
+				q
 			}
 		})
 	}
