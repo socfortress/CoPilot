@@ -2,6 +2,7 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class Rule(BaseModel):
@@ -18,7 +19,7 @@ class Stream(BaseModel):
     content_pack: Optional[str]
     created_at: str
     creator_user_id: str
-    description: str
+    description: Optional[str] = Field('No description provided')
     disabled: bool
     id: str
     index_set_id: str
