@@ -256,7 +256,7 @@ async def invoke_alert_threshold_graylog_route(
     "/create/velo-sigma",
     response_model=VelociraptorSigmaAlertResponse,
     description="Creates an incident alert in CoPilot for a Velociraptor Sigma alert",
-    #dependencies=[Depends(verify_velociraptor_header)],
+    dependencies=[Depends(verify_velociraptor_header)],
 )
 async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSession = Depends(get_db)) -> VelociraptorSigmaAlertResponse:
     """
