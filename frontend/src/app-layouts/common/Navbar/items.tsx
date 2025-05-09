@@ -143,18 +143,50 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Alerts"
-						}
-					},
-					{ default: () => "Alerts" }
-				),
+			label: "Alerts",
 			key: "Alerts",
-			icon: renderIcon(AlertsIcon)
+			icon: renderIcon(AlertsIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-Graylog"
+								}
+							},
+							{ default: () => "Graylog" }
+						),
+					key: "Alerts-Graylog"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-Mitre"
+								}
+							},
+							{ default: () => "MITRE ATT&CK" }
+						),
+					key: "Alerts-Mitre"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-AtomicRedTeam"
+								}
+							},
+							{ default: () => "Atomic Red Team" }
+						),
+					key: "Alerts-AtomicRedTeam"
+				}
+			]
 		},
 		{
 			label: () =>
