@@ -42,7 +42,7 @@
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
-				<span v-if="!usedFilters.length">Add filter</span>
+				Add filter
 			</n-button>
 		</n-dropdown>
 	</div>
