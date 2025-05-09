@@ -88,9 +88,31 @@ const router = createRouter({
 		},
 		{
 			path: "/alerts",
-			name: "Alerts",
-			component: () => import("@/views/AlertsGraylog.vue"),
-			meta: { title: "Alerts", auth: true, roles: RouteRole.All }
+			redirect: "/alerts/graylog",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "graylog",
+					name: "Alerts-Graylog",
+					component: () => import("@/views/alerts/AlertsGraylog.vue"),
+					meta: { title: "Graylog" }
+				},
+				{
+					path: "mitre",
+					name: "Alerts-Mitre",
+					component: () => import("@/views/alerts/Mitre.vue"),
+					meta: { title: "MITRE ATT&CK" }
+				},
+				{
+					path: "atomic-red-team",
+					name: "Alerts-AtomicRedTeam",
+					component: () => import("@/views/alerts/AtomicRedTeam.vue"),
+					meta: { title: "Atomic Red Team" }
+				}
+			]
 		},
 		{
 			path: "/artifacts",
