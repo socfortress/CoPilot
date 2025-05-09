@@ -88,17 +88,17 @@ const router = createRouter({
 		},
 		{
 			path: "/alerts",
-			redirect: "/alerts/graylog",
+			redirect: "/alerts/siem",
 			meta: {
 				auth: true,
 				roles: RouteRole.All
 			},
 			children: [
 				{
-					path: "graylog",
-					name: "Alerts-Graylog",
+					path: "siem",
+					name: "Alerts-SIEM",
 					component: () => import("@/views/alerts/AlertsGraylog.vue"),
-					meta: { title: "Graylog" }
+					meta: { title: "SIEM" }
 				},
 				{
 					path: "mitre",

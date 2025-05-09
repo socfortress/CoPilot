@@ -153,12 +153,12 @@ export default function getItems(): MenuMixedOption[] {
 							RouterLink,
 							{
 								to: {
-									name: "Alerts-Graylog"
+									name: "Alerts-SIEM"
 								}
 							},
-							{ default: () => "Graylog" }
+							{ default: () => "SIEM" }
 						),
-					key: "Alerts-Graylog"
+					key: "Alerts-SIEM"
 				},
 				{
 					label: () =>

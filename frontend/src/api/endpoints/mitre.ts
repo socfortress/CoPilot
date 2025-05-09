@@ -12,9 +12,11 @@ import type {
 } from "@/types/mitre.d"
 import { HttpClient } from "../httpClient"
 
+export type MitreTechniquesAlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
+
 export interface MitreTechniquesAlertsQuery {
 	/** Time range for the search (e.g., now-24h, now-7d) */
-	time_range?: string
+	time_range?: MitreTechniquesAlertsQueryTimeRange
 	/** Maximum number of techniques to return per page */
 	size?: number
 	/** Page number for pagination */
@@ -76,7 +78,7 @@ export interface MitreAtomicTestsQuery {
 }
 
 export default {
-	getMitreTechniquesAlerts(query?: MitreTechniquesAlertsQuery) {
+	getMitreTechniquesAlerts(query: MitreTechniquesAlertsQuery, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				total_alerts: number
@@ -97,7 +99,8 @@ export default {
 				rule_group: query?.rule_group,
 				mitre_field: query?.mitre_field,
 				index_pattern: query?.index_pattern || "wazuh-*"
-			}
+			},
+			signal
 		})
 	},
 	getMitreTechniqueDetails(query?: MitreTechniqueDetailsQuery) {
