@@ -465,38 +465,62 @@ async def search_mitre_techniques_in_alerts(
 
                 logger.info(f"Trying MITRE search with field: {field} (name field: {name_field})")
 
-                # Build query that includes both ID and name fields
-                query = _build_mitre_search_query(
+                # First fetch all techniques to get the total count
+                count_query = _build_mitre_search_query(
                     time_range=time_range,
-                    size=size,
-                    offset=offset,
+                    size=10000,  # Large size to get full count
+                    offset=0,
                     additional_filters=additional_filters,
                     index_pattern=index_pattern,
                     mitre_field=field,
                     name_field=name_field
                 )
 
-                # Log the query for debugging
-                logger.debug(f"Executing query: {query}")
+                # Set size to 0 to just get counts
+                count_query["body"]["size"] = 0
 
-                # Execute the search
-                response = await client.search(**query)
+                # Execute count query
+                count_response = await client.search(**count_query)
 
                 # If we get aggregations with buckets, we found the right field
-                if (response.get("aggregations") and
-                    response["aggregations"].get("techniques") and
-                    response["aggregations"]["techniques"].get("buckets") and
-                    len(response["aggregations"]["techniques"]["buckets"]) > 0):
+                if (count_response.get("aggregations") and
+                    count_response["aggregations"].get("techniques") and
+                    count_response["aggregations"]["techniques"].get("buckets")):
+
+                    # Get total count of techniques
+                    total_techniques = len(count_response["aggregations"]["techniques"]["buckets"])
+
+                    # Now fetch just the requested page
+                    query = _build_mitre_search_query(
+                        time_range=time_range,
+                        size=size,
+                        offset=offset,
+                        additional_filters=additional_filters,
+                        index_pattern=index_pattern,
+                        mitre_field=field,
+                        name_field=name_field
+                    )
+
+                    # Log the query for debugging
+                    logger.debug(f"Executing query: {query}")
+
+                    # Execute the search
+                    response = await client.search(**query)
 
                     # Process results with both ID and name field
-                    results = _process_mitre_search_results(
+                    page_results = _process_mitre_search_results(
                         response=response,
                         mitre_field=field,
                         technique_mapping=technique_mapping,
                         name_field=name_field,
                         technique_tactic_mapping=technique_tactic_mapping
                     )
-                    logger.info(f"Found {results['techniques_count']} MITRE techniques with field '{field}'")
+
+                    # Update with the full count
+                    results = page_results
+                    results["total_techniques_count"] = total_techniques
+
+                    logger.info(f"Found {results['techniques_count']} MITRE techniques on this page, {total_techniques} total with field '{field}'")
                     break
                 else:
                     logger.warning(f"No results found with field '{field}', trying next option")
@@ -511,6 +535,7 @@ async def search_mitre_techniques_in_alerts(
             return {
                 "total_alerts": 0,
                 "techniques_count": 0,
+                "total_techniques_count": 0,
                 "techniques": [],
                 "field_used": None,
                 "attempted_fields": field_options,
@@ -519,10 +544,6 @@ async def search_mitre_techniques_in_alerts(
 
         return results
 
-    except AsyncElasticsearch as oe:
-        error_message = f"Wazuh Indexer error: {str(oe)}"
-        logger.error(error_message)
-        raise HTTPException(status_code=503, detail=error_message)
     except Exception as e:
         error_message = f"Error searching MITRE techniques: {str(e)}"
         logger.exception(error_message)

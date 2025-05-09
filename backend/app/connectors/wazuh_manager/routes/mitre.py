@@ -346,15 +346,18 @@ async def list_mitre_techniques_in_alerts(
         mitre_field=mitre_field
     )
 
-    # Calculate total pages
-    total_pages = (results['techniques_count'] + size - 1) // size if results['techniques_count'] > 0 else 1
+    # Get the total number of techniques (from all pages)
+    total_techniques = results.get('total_techniques_count', results['techniques_count'])
+
+    # Calculate total pages based on the total number of techniques
+    total_pages = (total_techniques + size - 1) // size if total_techniques > 0 else 1
 
     return MitreTechniquesInAlertsResponse(
         success=True,
-        message=f"Found {results['techniques_count']} MITRE techniques in {results['total_alerts']} events (page {page} of {total_pages})",
+        message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages})",
         total_alerts=results['total_alerts'],
-        techniques_count=results['techniques_count'],
-        techniques=results['techniques'],
+        techniques_count=total_techniques,  # Use the total count for all pages
+        techniques=results['techniques'],  # Use current page techniques
         time_range=time_range,
         field_used=results.get('field_used', 'unknown'),
         page=page,
