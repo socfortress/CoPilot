@@ -1,6 +1,24 @@
 <template>
 	<div class="flex flex-wrap gap-3">
 		<div>
+			<n-popover placement="top-start" trigger="click" overlap>
+				<template #trigger>
+					<n-badge :show="!!mitreField" dot type="success" :offset="[0, 6]">
+						<n-button size="small" secondary class="px-2!">
+							<template #icon>
+								<Icon :name="ConfigIcon" :size="16" />
+							</template>
+						</n-button>
+					</n-badge>
+				</template>
+
+				<div class="pb-2 pt-1">
+					<div class="text-secondary mb-1 text-sm">Mitre field:</div>
+					<n-input v-model:value="mitreField" size="small" clearable class="!w-40" />
+				</div>
+			</n-popover>
+		</div>
+		<div>
 			<n-input-group>
 				<n-select
 					v-model:value="filterTimeRange.unit"
@@ -51,7 +69,17 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import _toSafeInteger from "lodash/toSafeInteger"
-import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect } from "naive-ui"
+import {
+	NBadge,
+	NButton,
+	NDropdown,
+	NInput,
+	NInputGroup,
+	NInputGroupLabel,
+	NInputNumber,
+	NPopover,
+	NSelect
+} from "naive-ui"
 import { computed, ref, watch } from "vue"
 
 const emit = defineEmits<{
@@ -65,6 +93,8 @@ const filterTimeRange = ref({
 	value: 24
 })
 
+const mitreField = ref<string | null>(null)
+
 const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 	{ label: "Hours", value: "h" },
 	{ label: "Days", value: "d" },
@@ -72,12 +102,19 @@ const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 ]
 
 const proxyFilters = computed<{ type: string; value: string }[]>(() => {
-	return [
+	const filters = [
 		{ type: "time_range", value: `now-${filterTimeRange.value.value}${filterTimeRange.value.unit}` },
 		...usedFilters.value.filter(o => !!o.value)
 	] as { type: string; value: string }[]
+
+	if (mitreField.value) {
+		filters.push({ type: "mitre_field", value: mitreField.value })
+	}
+
+	return filters
 })
 
+const ConfigIcon = "carbon:settings"
 const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 

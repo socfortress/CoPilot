@@ -1,7 +1,7 @@
 <template>
 	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<div class="relative flex h-full grow flex-col gap-4 overflow-hidden">
-			<Filters @update="filters = $event" />
+			<Filters class="max-mobile:px-5" @update="filters = $event" />
 			<List :filters class="grow" />
 		</div>
 	</div>

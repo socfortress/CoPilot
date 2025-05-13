@@ -35,6 +35,7 @@
 	--text-color-tertiary: var(--fg-tertiary-color);
 
 	--breakpoint-xs: 460px;
+	--breakpoint-mobile: 701px;
 
 	--animate-fade: fade 0.3s forwards;
 

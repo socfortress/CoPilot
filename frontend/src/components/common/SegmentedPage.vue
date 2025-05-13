@@ -374,6 +374,10 @@ onMounted(() => {
 				position: absolute;
 			}
 
+			.sidebar-header {
+				border-block-start: 1px solid var(--border-color);
+			}
+
 			.sidebar-header,
 			.sidebar-footer {
 				padding: 0 var(--padding-x);
@@ -391,6 +395,7 @@ onMounted(() => {
 		}
 		.main {
 			.main-toolbar {
+				border-block-start: 1px solid var(--border-color);
 				padding: 0 var(--padding-x);
 				gap: 14px;
 
