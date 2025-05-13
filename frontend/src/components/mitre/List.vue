@@ -33,7 +33,7 @@
 		</template>
 		<template #main-toolbar>
 			<div class="flex items-center gap-4">
-				<n-input placeholder="Search by technique name" v-model:value="textFilter">
+				<n-input placeholder="Search by technique name" v-model:value="textFilter" clearable>
 					<template #prefix>
 						<Icon name="carbon:search" :size="16" />
 					</template>
@@ -47,10 +47,12 @@
 		</template>
 		<template #main-content>
 			<n-spin :show="loading">
-				<div class="flex flex-col gap-3">
-					<div v-for="technique of filteredTechniques" :key="technique.technique_id">
-						<pre>{{ technique }}</pre>
-					</div>
+				<div class="grid-auto-fill-250 grid gap-2">
+					<TechniqueCard
+						:entity="technique"
+						v-for="technique of filteredTechniques"
+						:key="technique.technique_id"
+					/>
 				</div>
 			</n-spin>
 		</template>
@@ -68,6 +70,7 @@ import axios from "axios"
 import { NButton, NCheckbox, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import { techniques } from "./mock"
+import TechniqueCard from "./TechniqueCard.vue"
 
 const props = defineProps<{
 	filters?: { type: string; value: string }[]
@@ -117,6 +120,7 @@ const filteredTechniques = computed(() => {
 			return false
 		})
 		.filter(a => !textFilter.value || a.technique_name.toLowerCase().includes(textFilter.value.toLowerCase()))
+		.filter(a => !hideNoAlertsTechniques.value || (hideNoAlertsTechniques.value && a.count))
 })
 
 const areAllTacticsSelected = computed(() => {
