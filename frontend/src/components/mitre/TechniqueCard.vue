@@ -1,5 +1,5 @@
 <template>
-	<CardEntity embedded clickable hoverable size="small">
+	<CardEntity embedded clickable hoverable size="small" @click="showDetails = true">
 		<template #header>
 			<div class="flex items-start justify-between gap-4">
 				<div>
@@ -22,6 +22,19 @@
 					</code>
 				</div>
 			</div>
+
+			<n-modal
+				v-model:show="showDetails"
+				display-directive="show"
+				preset="card"
+				content-class="!p-0"
+				:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+				:title="entity.technique_id + ' • ' + entity.technique_name"
+				:bordered="false"
+				segmented
+			>
+				<TechniqueOverview :external-id="entity.technique_id" />
+			</n-modal>
 		</template>
 	</CardEntity>
 </template>
@@ -31,12 +44,15 @@ import type { MitreTechnique } from "@/types/mitre.d"
 import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import { NTooltip } from "naive-ui"
+import { NTooltip, NModal } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
+import TechniqueOverview from "./TechniqueOverview.vue"
+import { ref } from "vue"
 
 const { entity } = defineProps<{
 	entity: MitreTechnique
 }>()
 
 const dFormats = useSettingsStore().dateFormat
+const showDetails = ref(false)
 </script>
