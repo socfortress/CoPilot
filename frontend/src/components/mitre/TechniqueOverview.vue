@@ -1,7 +1,7 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-			<div class="px-7">
+			<div class="px-7 pb-7 pt-4">
 				<TechniqueDetails :external-id />
 			</div>
 		</n-tab-pane>
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { NTabs, NTabPane } from "naive-ui"
+import { NTabPane, NTabs } from "naive-ui"
 import TechniqueDetails from "./TechniqueDetails.vue"
 
 const { externalId } = defineProps<{

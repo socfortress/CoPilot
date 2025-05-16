@@ -297,10 +297,10 @@ export const techniqueResultDetails: MitreTechniqueDetails = {
 	mitre_detection:
 		"Configure robust, consistent account activity audit policies across the enterprise and with externally accessible services.(Citation: TechNet Audit Policy) Look for suspicious account behavior across systems that share accounts, either user, admin, or service accounts. Examples: one account logged into multiple systems simultaneously; multiple accounts logged into the same machine simultaneously; accounts logged in at odd times or outside of business hours. Activity may be from interactive login sessions or process ownership from accounts being used to execute binaries on a remote system as a particular account. Correlate other security systems with login information (e.g., a user has an active login session but has not entered the building or does not have VPN access).\n\nPerform regular audits of domain and local system accounts to detect accounts that may have been created by an adversary for persistence. Checks on these accounts could also include whether default accounts such as Guest have been activated. These audits should also include checks on any appliances and applications for default credentials or SSH keys, and if any are discovered, they should be updated immediately.",
 	mitre_version: "2.6",
-	deprecated: 0,
-	remote_support: 0,
-	network_requirements: 0,
-	platforms: [],
+	deprecated: 1,
+	remote_support: 1,
+	network_requirements: 1,
+	platforms: ["macos", "linux"],
 	data_sources: [],
-	is_subtechnique: false
+	is_subtechnique: true
 }

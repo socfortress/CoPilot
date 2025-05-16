@@ -146,13 +146,13 @@
 
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases.d"
+import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
