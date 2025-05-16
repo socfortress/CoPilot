@@ -50,73 +50,75 @@
 				</template>
 			</CardKV>
 		</div>
-		<div class="md:max-w-70 shrink-0 basis-1/3">
-			<n-card content-class="bg-secondary flex flex-col gap-3 rounded-lg" size="small">
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">external_id</div>
-					<div>{{ techniqueDetails.external_id }}</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">created_time</div>
-					<div>{{ formatDate(techniqueDetails.created_time, dFormats.datetime) }}</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">modified_time</div>
-					<div>{{ formatDate(techniqueDetails.modified_time, dFormats.datetime) }}</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">url</div>
-					<div>
-						<a :href="techniqueDetails.url" target="_blank" rel="nofollow noopener noreferrer">
-							{{ techniqueDetails.url }}
-						</a>
+		<div ref="sidebarRef" class="md:max-w-70 shrink-0 basis-1/3">
+			<div ref="sidebarCardRef" class="flex flex-col gap-2">
+				<n-card content-class="bg-secondary flex flex-col gap-3 rounded-lg" size="small">
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">external_id</div>
+						<div>{{ techniqueDetails.external_id }}</div>
 					</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">source</div>
-					<div>{{ techniqueDetails.source }}</div>
-				</div>
-				<div v-if="techniqueDetails.subtechnique_of" class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">subtechnique_of</div>
-					<div>{{ techniqueDetails.subtechnique_of }}</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">platforms</div>
-					<div class="mt-0.5 flex flex-wrap gap-1">
-						<template v-if="!techniqueDetails.platforms?.length">—</template>
-						<template v-else>
-							<code v-for="item of techniqueDetails.platforms" :key="item" class="text-xs">
-								{{ item }}
-							</code>
-						</template>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">created_time</div>
+						<div>{{ formatDate(techniqueDetails.created_time, dFormats.datetime) }}</div>
 					</div>
-				</div>
-				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="text-secondary font-mono text-xs">data_sources</div>
-					<div class="mt-0.5 flex flex-wrap gap-1">
-						<template v-if="!techniqueDetails.data_sources?.length">—</template>
-						<template v-else>
-							<code v-for="item of techniqueDetails.data_sources" :key="item" class="text-xs">
-								{{ item }}
-							</code>
-						</template>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">modified_time</div>
+						<div>{{ formatDate(techniqueDetails.modified_time, dFormats.datetime) }}</div>
 					</div>
-				</div>
-			</n-card>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">url</div>
+						<div>
+							<a :href="techniqueDetails.url" target="_blank" rel="nofollow noopener noreferrer">
+								{{ techniqueDetails.url }}
+							</a>
+						</div>
+					</div>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">source</div>
+						<div>{{ techniqueDetails.source }}</div>
+					</div>
+					<div v-if="techniqueDetails.subtechnique_of" class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">subtechnique_of</div>
+						<div>{{ techniqueDetails.subtechnique_of }}</div>
+					</div>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">platforms</div>
+						<div class="mt-0.5 flex flex-wrap gap-1">
+							<template v-if="!techniqueDetails.platforms?.length">—</template>
+							<template v-else>
+								<code v-for="item of techniqueDetails.platforms" :key="item" class="text-xs">
+									{{ item }}
+								</code>
+							</template>
+						</div>
+					</div>
+					<div class="flex flex-col gap-0.5 text-sm">
+						<div class="text-secondary font-mono text-xs">data_sources</div>
+						<div class="mt-0.5 flex flex-wrap gap-1">
+							<template v-if="!techniqueDetails.data_sources?.length">—</template>
+							<template v-else>
+								<code v-for="item of techniqueDetails.data_sources" :key="item" class="text-xs">
+									{{ item }}
+								</code>
+							</template>
+						</div>
+					</div>
+				</n-card>
 
-			<div class="mt-2 flex flex-wrap gap-1">
-				<Badge v-if="techniqueDetails.deprecated" color="primary" class="text-xs! font-mono">
-					<template #value>deprecated</template>
-				</Badge>
-				<Badge v-if="techniqueDetails.remote_support" color="primary">
-					<template #value>remote_support</template>
-				</Badge>
-				<Badge v-if="techniqueDetails.network_requirements" color="primary">
-					<template #value>network_requirements</template>
-				</Badge>
-				<Badge v-if="techniqueDetails.is_subtechnique" color="primary">
-					<template #value>subtechnique</template>
-				</Badge>
+				<div class="flex flex-wrap gap-1">
+					<Badge v-if="techniqueDetails.deprecated" color="primary" class="text-xs! font-mono">
+						<template #value>deprecated</template>
+					</Badge>
+					<Badge v-if="techniqueDetails.remote_support" color="primary">
+						<template #value>remote_support</template>
+					</Badge>
+					<Badge v-if="techniqueDetails.network_requirements" color="primary">
+						<template #value>network_requirements</template>
+					</Badge>
+					<Badge v-if="techniqueDetails.is_subtechnique" color="primary">
+						<template #value>subtechnique</template>
+					</Badge>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -124,8 +126,10 @@
 
 <script setup lang="ts">
 import type { MitreTechniqueDetails } from "@/types/mitre.d"
+import { useElementBounding } from "@vueuse/core"
+import { useElementStyle } from "@vueuse/motion"
 import { NCard, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -141,6 +145,11 @@ const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loadingDetails = ref(false)
 const techniqueDetails = ref<MitreTechniqueDetails | null>(null)
+
+const sidebarRef = ref(null)
+const sidebarCardRef = ref(null)
+const { top: sidebarTop } = useElementBounding(sidebarRef)
+const { style: styleCardTop } = useElementStyle(sidebarCardRef)
 
 function getDetails() {
 	loadingDetails.value = true
@@ -161,6 +170,16 @@ function getDetails() {
 			loadingDetails.value = false
 		})
 }
+
+watch(sidebarTop, val => {
+	if (val < 100) {
+		styleCardTop.position = "sticky"
+		styleCardTop.top = `${val * -1 + 100}px`
+	} else {
+		styleCardTop.position = "relative"
+		styleCardTop.top = "0px"
+	}
+})
 
 onBeforeMount(() => {
 	/*
