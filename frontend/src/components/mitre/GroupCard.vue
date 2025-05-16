@@ -15,8 +15,10 @@
 				<n-skeleton v-else text style="width: 60%" :height="20" />
 			</template>
 			<template #footer>
-				<p v-if="groupDetails">
-					{{ groupDetails.description }}
+				<p v-if="groupDetails" @click.stop="() => {}">
+					<Suspense>
+						<Markdown :source="groupDetails.description" />
+					</Suspense>
 				</p>
 				<div v-else>
 					<n-skeleton text :repeat="2" :height="16" />
@@ -42,7 +44,7 @@
 <script setup lang="ts">
 import type { MitreGroupDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 
@@ -54,6 +56,8 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreGroupDetails): void
 }>()
+
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const showDetails = ref(false)
 const message = useMessage()

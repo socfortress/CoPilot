@@ -97,6 +97,7 @@
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.16",
+		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^22.15.18",
 		"@types/validator": "^13.15.0",
 		"@vitejs/plugin-vue": "^5.2.4",
