@@ -1,4 +1,5 @@
 import re
+import json
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -531,6 +532,32 @@ class VelociraptorSigmaService:
                 db=self.session,
             )
 
+            # Add the full event payload as a separate comment
+            try:
+                # Convert event to string if it's an object or dictionary
+                event_payload = alert.event
+                if not isinstance(event_payload, str):
+                    # Try to serialize using json
+                    try:
+                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                    except TypeError:
+                        # If JSON serialization fails, use string representation
+                        event_payload = str(event_payload)
+
+                await create_comment(
+                    comment=CommentCreate(
+                        alert_id=result["alert_id"],
+                        comment=f"Full Event Payload:\n```\n{event_payload}\n```",
+                        user_name="admin",
+                        created_at=datetime.utcnow(),
+                    ),
+                    db=self.session,
+                )
+                logger.info(f"Added full event payload as comment to alert ID: {result['alert_id']}")
+            except Exception as e:
+                logger.error(f"Failed to add event payload as comment: {str(e)}")
+                logger.exception(e)
+
             # Add tags
             await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
             await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
@@ -909,6 +936,32 @@ class VelociraptorSigmaService:
                 ),
                 db=self.session,
             )
+
+            # Add the full event payload as a separate comment
+            try:
+                # Convert event to string if it's an object or dictionary
+                event_payload = alert.event
+                if not isinstance(event_payload, str):
+                    # Try to serialize using json
+                    try:
+                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                    except TypeError:
+                        # If JSON serialization fails, use string representation
+                        event_payload = str(event_payload)
+
+                await create_comment(
+                    comment=CommentCreate(
+                        alert_id=result["alert_id"],
+                        comment=f"Full Event Payload:\n```\n{event_payload}\n```",
+                        user_name="admin",
+                        created_at=datetime.utcnow(),
+                    ),
+                    db=self.session,
+                )
+                logger.info(f"Added full event payload as comment to alert ID: {result['alert_id']}")
+            except Exception as e:
+                logger.error(f"Failed to add event payload as comment: {str(e)}")
+                logger.exception(e)
 
             # Add a tag
             await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
