@@ -12,11 +12,17 @@
 				display-directive="show:lazy"
 			>
 				<div class="px-7 pb-7 pt-4">
-					<GroupOverview v-if="techniqueDetails" :list="techniqueDetails.groups" />
+					<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Mitigations" tab="Mitigations" display-directive="show:lazy">
-				<div class="px-7">Mitigations...</div>
+			<n-tab-pane
+				name="Mitigations"
+				:tab="`Mitigations (${techniqueDetails?.mitigations?.length || 0})`"
+				display-directive="show:lazy"
+			>
+				<div class="px-7 pb-7 pt-4">
+					<MitigationsList v-if="techniqueDetails" :list="techniqueDetails.mitigations" />
+				</div>
 			</n-tab-pane>
 			<n-tab-pane
 				name="Software"
@@ -24,11 +30,17 @@
 				display-directive="show:lazy"
 			>
 				<div class="px-7 pb-7 pt-4">
-					<SoftwareOverview v-if="techniqueDetails" :list="techniqueDetails.software" />
+					<SoftwareList v-if="techniqueDetails" :list="techniqueDetails.software" />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Tactics" tab="Tactics" display-directive="show:lazy">
-				<div class="px-7">Tactics...</div>
+			<n-tab-pane
+				name="Tactics"
+				:tab="`Tactics (${techniqueDetails?.tactics?.length || 0})`"
+				display-directive="show:lazy"
+			>
+				<div class="px-7 pb-7 pt-4">
+					<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
+				</div>
 			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
@@ -39,9 +51,11 @@ import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import GroupOverview from "../Group/GroupOverview.vue"
+import GroupsList from "../Group/GroupsList.vue"
+import MitigationsList from "../Mitigation/MitigationsList.vue"
 import { techniqueResultDetails } from "../mock"
-import SoftwareOverview from "../Software/SoftwareOverview.vue"
+import SoftwareList from "../Software/SoftwareList.vue"
+import TacticsList from "../Tactic/TacticsList.vue"
 import TechniqueDetails from "./TechniqueDetails.vue"
 
 const { externalId } = defineProps<{

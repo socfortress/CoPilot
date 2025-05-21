@@ -53,7 +53,7 @@ export interface MitreMitigationDetails {
 	modified_time: Date
 	created_time: Date
 	techniques: string[]
-	references: string[]
+	references: MitreReference[]
 	url: string
 	source: string
 	external_id: string

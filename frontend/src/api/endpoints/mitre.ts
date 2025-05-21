@@ -180,7 +180,7 @@ export default {
 			}
 		})
 	},
-	getMitreEvents(query: MitreEventsQuery) {
+	getMitreEvents(query: MitreEventsQuery, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				technique_id: string
@@ -199,7 +199,8 @@ export default {
 				rule_group: query?.rule_group,
 				mitre_field: query?.mitre_field,
 				index_pattern: query?.index_pattern || "wazuh-*"
-			}
+			},
+			signal
 		})
 	},
 	getMitreAtomicTests(query?: MitreAtomicTestsQuery) {
