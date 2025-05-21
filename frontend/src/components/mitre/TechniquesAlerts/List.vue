@@ -55,6 +55,7 @@
 						class="flex"
 					/>
 				</div>
+				<n-empty v-if="!filteredTechniques.length" description="No items found" class="h-48 justify-center" />
 			</n-spin>
 		</template>
 	</SegmentedPage>
@@ -65,7 +66,7 @@ import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } 
 import type { MitreTechnique } from "@/types/mitre.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { NButton, NCheckbox, NInput, NSpin, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

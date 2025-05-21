@@ -1,32 +1,32 @@
 <template>
 	<n-spin :show="loadingDetails" content-class="min-h-40">
-		<div v-if="groupDetails" class="flex flex-col gap-4 md:flex-row">
+		<div v-if="softwareDetails" class="flex flex-col gap-4 md:flex-row">
 			<div class="flex grow flex-col gap-3">
 				<code class="self-start">
-					{{ groupDetails.id ?? "—" }}
+					{{ softwareDetails.id ?? "—" }}
 				</code>
 
 				<CardKV>
 					<template #key>name</template>
 					<template #value>
 						<span class="whitespace-pre-wrap">
-							{{ groupDetails.name ?? "—" }}
+							{{ softwareDetails.name ?? "—" }}
 						</span>
 					</template>
 				</CardKV>
-				<CardKV v-if="groupDetails.description" class="[&_p]:text-white">
+				<CardKV v-if="softwareDetails.description" class="[&_p]:text-white">
 					<template #key>description</template>
 					<template #value>
 						<Suspense>
-							<Markdown :source="groupDetails.description" />
+							<Markdown :source="softwareDetails.description" />
 						</Suspense>
 					</template>
 				</CardKV>
 
-				<CardKV v-if="groupDetails.references?.length">
+				<CardKV v-if="softwareDetails.references?.length">
 					<template #key>references</template>
 					<template #value>
-						<References :references="groupDetails.references" />
+						<References :references="softwareDetails.references" />
 					</template>
 				</CardKV>
 			</div>
@@ -35,42 +35,53 @@
 					<n-card content-class="bg-secondary flex flex-col gap-3 rounded-lg" size="small">
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">external_id</div>
-							<div>{{ groupDetails.external_id }}</div>
+							<div>{{ softwareDetails.external_id }}</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">created_time</div>
-							<div>{{ formatDate(groupDetails.created_time, dFormats.datetime) }}</div>
+							<div>{{ formatDate(softwareDetails.created_time, dFormats.datetime) }}</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">modified_time</div>
-							<div>{{ formatDate(groupDetails.modified_time, dFormats.datetime) }}</div>
+							<div>{{ formatDate(softwareDetails.modified_time, dFormats.datetime) }}</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">url</div>
 							<div>
-								<a :href="groupDetails.url" target="_blank" rel="nofollow noopener noreferrer">
-									{{ groupDetails.url }}
+								<a :href="softwareDetails.url" target="_blank" rel="nofollow noopener noreferrer">
+									{{ softwareDetails.url }}
 								</a>
 							</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">source</div>
-							<div>{{ groupDetails.source }}</div>
+							<div>{{ softwareDetails.source }}</div>
+						</div>
+						<div class="flex flex-col gap-0.5 text-sm">
+							<div class="text-secondary font-mono text-xs">type</div>
+							<div>{{ softwareDetails.type || "—" }}</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">mitre_version</div>
-							<div>{{ groupDetails.mitre_version }}</div>
+							<div>{{ softwareDetails.mitre_version }}</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
-							<div class="text-secondary font-mono text-xs">country</div>
-							<div>{{ groupDetails.country || "—" }}</div>
+							<div class="text-secondary font-mono text-xs">platforms</div>
+							<div class="mt-0.5 flex flex-wrap gap-1">
+								<template v-if="!softwareDetails.platforms?.length">—</template>
+								<template v-else>
+									<code v-for="item of softwareDetails.platforms" :key="item" class="text-xs">
+										{{ item }}
+									</code>
+								</template>
+							</div>
 						</div>
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">aliases</div>
 							<div class="mt-0.5 flex flex-wrap gap-1">
-								<template v-if="!groupDetails.aliases?.length">—</template>
+								<template v-if="!softwareDetails.aliases?.length">—</template>
 								<template v-else>
-									<code v-for="item of groupDetails.aliases" :key="item" class="text-xs">
+									<code v-for="item of softwareDetails.aliases" :key="item" class="text-xs">
 										{{ item }}
 									</code>
 								</template>
@@ -79,7 +90,7 @@
 					</n-card>
 
 					<div class="flex flex-wrap gap-1">
-						<Badge v-if="groupDetails.deprecated" color="primary" class="text-xs! font-mono">
+						<Badge v-if="softwareDetails.deprecated" color="primary" class="text-xs! font-mono">
 							<template #value>deprecated</template>
 						</Badge>
 					</div>
@@ -90,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreGroupDetails } from "@/types/mitre.d"
+import type { MitreSoftwareDetails } from "@/types/mitre.d"
 import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
 import { NCard, NSpin, useMessage } from "naive-ui"
@@ -104,7 +115,7 @@ import References from "../common/References.vue"
 
 const { externalId, entity } = defineProps<{
 	externalId?: string
-	entity?: MitreGroupDetails
+	entity?: MitreSoftwareDetails
 }>()
 
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
@@ -112,7 +123,7 @@ const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loadingDetails = ref(false)
-const groupDetails = ref<MitreGroupDetails | null>(null)
+const softwareDetails = ref<MitreSoftwareDetails | null>(null)
 
 const sidebarRef = ref(null)
 const sidebarCardRef = ref(null)
@@ -135,10 +146,10 @@ function getDetails(id: string) {
 	loadingDetails.value = true
 
 	Api.mitre
-		.getMitreGroups({ id })
+		.getMitreSoftware({ id })
 		.then(res => {
 			if (res.data.success) {
-				groupDetails.value = res.data.results?.[0] || null
+				softwareDetails.value = res.data.results?.[0] || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -156,7 +167,7 @@ onBeforeMount(() => {
 		getDetails(externalId)
 	}
 	if (entity) {
-		groupDetails.value = entity
+		softwareDetails.value = entity
 	}
 })
 </script>

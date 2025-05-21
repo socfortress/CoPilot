@@ -14,12 +14,12 @@
 						</span>
 					</template>
 				</CardKV>
-				<CardKV>
+				<CardKV v-if="techniqueDetails.description" class="[&_p]:text-white">
 					<template #key>description</template>
 					<template #value>
-						<span class="whitespace-pre-wrap">
-							{{ techniqueDetails.description ?? "—" }}
-						</span>
+						<Suspense>
+							<Markdown :source="techniqueDetails.description" />
+						</Suspense>
 					</template>
 				</CardKV>
 				<CardKV>
@@ -30,24 +30,10 @@
 						</span>
 					</template>
 				</CardKV>
-				<CardKV>
+				<CardKV v-if="techniqueDetails.references?.length">
 					<template #key>references</template>
 					<template #value>
-						<div class="divide-border flex flex-col gap-4 divide-y-2">
-							<div
-								v-for="reference of techniqueDetails.references"
-								:key="reference.url"
-								class="flex flex-col gap-0.5 pb-1 text-sm"
-							>
-								<div>{{ reference.source }}</div>
-								<div class="text-secondary text-xs">{{ reference.description }}</div>
-								<div>
-									<a :href="reference.url" target="_blank" rel="nofollow noopener noreferrer">
-										{{ reference.url }}
-									</a>
-								</div>
-							</div>
-						</div>
+						<References :references="techniqueDetails.references" />
 					</template>
 				</CardKV>
 			</div>
@@ -131,17 +117,20 @@ import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
 import { NCard, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import References from "../common/References.vue"
 
 const { externalId, entity } = defineProps<{
 	externalId?: string
 	entity?: MitreTechniqueDetails
 }>()
+
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()

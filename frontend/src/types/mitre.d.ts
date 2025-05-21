@@ -250,8 +250,8 @@ export interface MitreGroupDetails {
 	techniques: string[]
 	references: MitreReference[]
 	url: string
-	external_id: string
 	source: string
+	external_id: string
 	aliases: null | string[]
 	country: null | string
 }

@@ -18,8 +18,14 @@
 			<n-tab-pane name="Mitigations" tab="Mitigations" display-directive="show:lazy">
 				<div class="px-7">Mitigations...</div>
 			</n-tab-pane>
-			<n-tab-pane name="Software" tab="Software" display-directive="show:lazy">
-				<div class="px-7">Software...</div>
+			<n-tab-pane
+				name="Software"
+				:tab="`Software (${techniqueDetails?.software?.length || 0})`"
+				display-directive="show:lazy"
+			>
+				<div class="px-7 pb-7 pt-4">
+					<SoftwareOverview v-if="techniqueDetails" :list="techniqueDetails.software" />
+				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Tactics" tab="Tactics" display-directive="show:lazy">
 				<div class="px-7">Tactics...</div>
@@ -35,6 +41,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import GroupOverview from "../Group/GroupOverview.vue"
 import { techniqueResultDetails } from "../mock"
+import SoftwareOverview from "../Software/SoftwareOverview.vue"
 import TechniqueDetails from "./TechniqueDetails.vue"
 
 const { externalId } = defineProps<{

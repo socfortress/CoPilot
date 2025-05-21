@@ -3,21 +3,21 @@
 		<CardEntity embedded clickable hoverable size="small" :loading="loadingDetails" @click="showDetails = true">
 			<template #headerMain>{{ id }}</template>
 			<template #headerExtra>
-				<span v-if="groupDetails" class="text-default">
-					{{ groupDetails.external_id }}
+				<span v-if="softwareDetails" class="text-default">
+					{{ softwareDetails.external_id }}
 				</span>
 				<n-skeleton v-else text :width="100" :height="18" />
 			</template>
 			<template #default>
-				<div v-if="groupDetails">
-					{{ groupDetails.name }}
+				<div v-if="softwareDetails">
+					{{ softwareDetails.name }}
 				</div>
 				<n-skeleton v-else text style="width: 60%" :height="20" />
 			</template>
 			<template #footer>
-				<p v-if="groupDetails" @click.stop="() => {}">
+				<p v-if="softwareDetails" @click.stop="() => {}">
 					<Suspense>
-						<Markdown :source="groupDetails.description" />
+						<Markdown :source="softwareDetails.description" />
 					</Suspense>
 				</p>
 				<div v-else>
@@ -32,28 +32,28 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`Group • ${id}`"
+			:title="`Software • ${id}`"
 			:bordered="false"
 			segmented
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
 					<div class="px-7 pb-7 pt-4">
-						<GroupDetails :entity="groupDetails" />
+						<SoftwareDetails :entity="softwareDetails" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
-					name="Software"
-					:tab="`Software (${groupDetails?.software?.length || 0})`"
+					name="Groups"
+					:tab="`Groups (${softwareDetails?.groups?.length || 0})`"
 					display-directive="show:lazy"
 				>
 					<div class="px-7 pb-7 pt-4">
-						<SoftwareOverview v-if="groupDetails" :list="groupDetails.software" />
+						<GroupOverview v-if="softwareDetails" :list="softwareDetails.groups" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
 					name="Techniques"
-					:tab="`Techniques (${groupDetails?.techniques?.length || 0})`"
+					:tab="`Techniques (${softwareDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
 					<!--
@@ -68,21 +68,21 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreGroupDetails } from "@/types/mitre.d"
+import type { MitreSoftwareDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import SoftwareOverview from "../Software/SoftwareOverview.vue"
-import GroupDetails from "./GroupDetails.vue"
+import GroupOverview from "../Group/GroupOverview.vue"
+import SoftwareDetails from "./SoftwareDetails.vue"
 
 const { id, entity } = defineProps<{
 	id: string
-	entity?: MitreGroupDetails
+	entity?: MitreSoftwareDetails
 }>()
 
 const emit = defineEmits<{
-	(e: "loaded", value: MitreGroupDetails): void
+	(e: "loaded", value: MitreSoftwareDetails): void
 }>()
 
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
@@ -90,17 +90,17 @@ const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown
 const showDetails = ref(false)
 const message = useMessage()
 const loadingDetails = ref(false)
-const groupDetails = ref<MitreGroupDetails | undefined>(undefined)
+const softwareDetails = ref<MitreSoftwareDetails | undefined>(undefined)
 
 function getDetails(id: string) {
 	loadingDetails.value = true
 
 	Api.mitre
-		.getMitreGroups({ id })
+		.getMitreSoftware({ id })
 		.then(res => {
 			if (res.data.success) {
-				groupDetails.value = res.data.results?.[0] || null
-				emit("loaded", groupDetails.value)
+				softwareDetails.value = res.data.results?.[0] || null
+				emit("loaded", softwareDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -115,7 +115,7 @@ function getDetails(id: string) {
 
 onBeforeMount(() => {
 	if (entity) {
-		groupDetails.value = entity
+		softwareDetails.value = entity
 	} else if (id) {
 		getDetails(id)
 	}
