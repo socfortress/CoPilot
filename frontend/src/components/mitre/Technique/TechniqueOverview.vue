@@ -33,8 +33,8 @@ import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import GroupOverview from "./GroupOverview.vue"
-import { techniqueResultDetails } from "./mock"
+import GroupOverview from "../Group/GroupOverview.vue"
+import { techniqueResultDetails } from "../mock"
 import TechniqueDetails from "./TechniqueDetails.vue"
 
 const { externalId } = defineProps<{

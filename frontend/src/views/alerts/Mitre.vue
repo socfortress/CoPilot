@@ -8,9 +8,9 @@
 </template>
 
 <script setup lang="ts">
-import Filters from "@/components/mitre/Filters.vue"
-import List from "@/components/mitre/List.vue"
 import { ref } from "vue"
+import Filters from "@/components/mitre/TechniquesAlerts/Filters.vue"
+import List from "@/components/mitre/TechniquesAlerts/List.vue"
 
 const filters = ref<{ type: string; value: string }[]>([])
 </script>

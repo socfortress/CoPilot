@@ -3,14 +3,14 @@
 		<div v-if="techniqueDetails" class="flex flex-col gap-4 md:flex-row">
 			<div class="flex grow flex-col gap-3">
 				<code class="self-start">
-					{{ techniqueDetails.id ?? "-" }}
+					{{ techniqueDetails.id ?? "—" }}
 				</code>
 
 				<CardKV>
 					<template #key>name</template>
 					<template #value>
 						<span class="whitespace-pre-wrap">
-							{{ techniqueDetails.name ?? "-" }}
+							{{ techniqueDetails.name ?? "—" }}
 						</span>
 					</template>
 				</CardKV>
@@ -18,7 +18,7 @@
 					<template #key>description</template>
 					<template #value>
 						<span class="whitespace-pre-wrap">
-							{{ techniqueDetails.description ?? "-" }}
+							{{ techniqueDetails.description ?? "—" }}
 						</span>
 					</template>
 				</CardKV>
@@ -26,7 +26,7 @@
 					<template #key>mitre_detection (v{{ techniqueDetails.mitre_version }})</template>
 					<template #value>
 						<span class="whitespace-pre-wrap">
-							{{ techniqueDetails.mitre_detection ?? "-" }}
+							{{ techniqueDetails.mitre_detection ?? "—" }}
 						</span>
 					</template>
 				</CardKV>

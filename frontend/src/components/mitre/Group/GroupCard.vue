@@ -32,21 +32,48 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`${id}`"
+			:title="`Group • ${id}`"
 			:bordered="false"
 			segmented
 		>
-			{{ id }}
+			<n-tabs type="line" animated :tabs-padding="24">
+				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
+					<div class="px-7 pb-7 pt-4">
+						<GroupDetails :entity="groupDetails" />
+					</div>
+				</n-tab-pane>
+				<!--
+					<n-tab-pane
+					name="Groups"
+					:tab="`Groups (${techniqueDetails?.groups?.length || 0})`"
+					display-directive="show:lazy"
+					>
+					<div class="px-7 pb-7 pt-4">
+						<GroupOverview v-if="techniqueDetails" :list="techniqueDetails.groups" />
+					</div>
+				</n-tab-pane>
+				-->
+				<n-tab-pane name="Mitigations" tab="Mitigations" display-directive="show:lazy">
+					<pre>{{ groupDetails }}</pre>
+				</n-tab-pane>
+				<n-tab-pane name="Software" tab="Software" display-directive="show:lazy">
+					<div class="px-7">Software...</div>
+				</n-tab-pane>
+				<n-tab-pane name="Tactics" tab="Tactics" display-directive="show:lazy">
+					<div class="px-7">Tactics...</div>
+				</n-tab-pane>
+			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { MitreGroupDetails } from "@/types/mitre.d"
-import { NModal, NSkeleton, useMessage } from "naive-ui"
+import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import GroupDetails from "./GroupDetails.vue"
 
 const { id, entity } = defineProps<{
 	id: string

@@ -33,13 +33,13 @@
 		</template>
 		<template #main-toolbar>
 			<div class="flex items-center gap-4">
-				<n-input placeholder="Search by technique name" v-model:value="textFilter" clearable>
+				<n-input v-model:value="textFilter" placeholder="Search by technique name" clearable>
 					<template #prefix>
 						<Icon name="carbon:search" :size="16" />
 					</template>
 				</n-input>
 				<div class="min-w-32 max-w-32">
-					<n-checkbox class="items-center!" v-model:checked="hideNoAlertsTechniques" size="large">
+					<n-checkbox v-model:checked="hideNoAlertsTechniques" class="items-center!" size="large">
 						<span class="text-xs/tight">Hide techniques with no alerts</span>
 					</n-checkbox>
 				</div>
@@ -49,9 +49,10 @@
 			<n-spin :show="loading">
 				<div class="grid-auto-fill-250 grid gap-2">
 					<TechniqueCard
-						:entity="technique"
 						v-for="technique of filteredTechniques"
 						:key="technique.technique_id"
+						:entity="technique"
+						class="flex"
 					/>
 				</div>
 			</n-spin>
@@ -62,15 +63,15 @@
 <script setup lang="ts">
 import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/mitre"
 import type { MitreTechnique } from "@/types/mitre.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NCheckbox, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
-import { techniques } from "./mock"
-import TechniqueCard from "./TechniqueCard.vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import SegmentedPage from "@/components/common/SegmentedPage.vue"
+import { techniques } from "../mock"
+import TechniqueCard from "../Technique/TechniqueCard.vue"
 
 const props = defineProps<{
 	filters?: { type: string; value: string }[]
