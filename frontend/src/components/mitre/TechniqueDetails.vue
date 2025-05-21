@@ -52,7 +52,7 @@
 				</CardKV>
 			</div>
 			<div ref="sidebarRef" class="md:max-w-70 shrink-0 basis-1/3">
-				<div ref="sidebarCardRef" class="flex flex-col gap-2">
+				<div ref="sidebarCardRef" class="flex flex-col gap-2 will-change-transform">
 					<n-card content-class="bg-secondary flex flex-col gap-3 rounded-lg" size="small">
 						<div class="flex flex-col gap-0.5 text-sm">
 							<div class="text-secondary font-mono text-xs">external_id</div>
@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import type { MitreTechniqueDetails } from "@/types/mitre.d"
-import { useElementBounding } from "@vueuse/core"
+import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
 import { NCard, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
@@ -153,6 +153,18 @@ const sidebarCardRef = ref(null)
 const { top: sidebarTop } = useElementBounding(sidebarRef)
 const { transform: styleCardTransform } = useMotionProperties(sidebarCardRef)
 
+const { resume } = useRafFn(
+	() => {
+		const targetY = sidebarTop.value <= 50 ? sidebarTop.value * -1 + 50 : 0
+		styleCardTransform.translateY = `${targetY}px`
+	},
+	{ immediate: false }
+)
+
+watch(sidebarTop, () => {
+	resume()
+})
+
 function getDetails(id: string) {
 	loadingDetails.value = true
 
@@ -172,14 +184,6 @@ function getDetails(id: string) {
 			loadingDetails.value = false
 		})
 }
-
-watch(sidebarTop, val => {
-	if (val <= 50) {
-		styleCardTransform.translateY = `${val * -1 + 50}px`
-	} else {
-		styleCardTransform.translateY = "0px"
-	}
-})
 
 onBeforeMount(() => {
 	if (externalId) {
