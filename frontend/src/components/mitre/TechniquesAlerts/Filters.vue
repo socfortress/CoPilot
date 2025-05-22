@@ -67,7 +67,6 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import _toSafeInteger from "lodash/toSafeInteger"
 import {
 	NBadge,
@@ -81,6 +80,7 @@ import {
 	NSelect
 } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "update", value: { type: string; value: string }[]): void

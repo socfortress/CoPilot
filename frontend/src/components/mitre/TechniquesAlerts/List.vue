@@ -210,13 +210,13 @@ watch(
 	{ deep: true, immediate: true }
 )
 
-/*
 watchDebounced(filters, resetList, {
 	deep: true,
 	debounce: 300,
-	immediate:true
+	immediate: true
 })
-*/
 // MOCK
+/*
 techniquesList.value = techniques
+*/
 </script>

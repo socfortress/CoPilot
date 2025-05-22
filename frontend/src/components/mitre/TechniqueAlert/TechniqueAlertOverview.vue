@@ -87,10 +87,10 @@ function getDetails(id: string) {
 }
 
 onBeforeMount(() => {
-	/*
 	getDetails(externalId)
-	 */
 	// MOCK
+	/*
 	techniqueDetails.value = techniqueResultDetails
+	*/
 })
 </script>
