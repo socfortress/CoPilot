@@ -92,6 +92,26 @@ export interface MitreTacticDetails {
 	external_id: string
 }
 
+export interface MitreGroupDetails {
+	mitre_version: string
+	deprecated: number
+	description: string
+	name: string
+	id: string
+	modified_time: Date
+	created_time: Date
+	software: string[]
+	techniques: string[]
+	references: MitreReference[]
+	url: string
+	source: string
+	external_id: string
+	aliases: null | string[]
+	country: null | string
+}
+
+export type MitreTechniquesDetails = any
+
 export interface MitreEventDetails {
 	data_source_ip: string
 	data_host_architecture: string
@@ -236,22 +256,4 @@ export enum MitreAtomicTestCategory {
 	Linux = "linux",
 	Macos = "macos",
 	Windows = "windows"
-}
-
-export interface MitreGroupDetails {
-	mitre_version: string
-	deprecated: number
-	description: string
-	name: string
-	id: string
-	modified_time: Date
-	created_time: Date
-	software: string[]
-	techniques: string[]
-	references: MitreReference[]
-	url: string
-	source: string
-	external_id: string
-	aliases: null | string[]
-	country: null | string
 }

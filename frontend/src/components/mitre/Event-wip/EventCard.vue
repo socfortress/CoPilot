@@ -32,7 +32,7 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`Software • ${id}`"
+			:title="`Event • ${id}`"
 			:bordered="false"
 			segmented
 		>
@@ -100,7 +100,7 @@ function getDetails(id: string) {
 		.then(res => {
 			if (res.data.success) {
 				softwareDetails.value = res.data.results?.[0] || null
-				emit("loaded", softwareDetails.value)
+				if (softwareDetails.value) emit("loaded", softwareDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

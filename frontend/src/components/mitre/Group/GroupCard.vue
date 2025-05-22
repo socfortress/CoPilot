@@ -56,11 +56,9 @@
 					:tab="`Techniques (${groupDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<!--
 					<div class="px-7 pb-7 pt-4">
-						<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
+						<TechniquesList v-if="groupDetails" :list="groupDetails.techniques" />
 					</div>
-					-->
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
@@ -74,6 +72,7 @@ import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import SoftwareList from "../Software/SoftwareList.vue"
+import TechniquesList from "../Technique/TechniquesList.vue"
 import GroupDetails from "./GroupDetails.vue"
 
 const { id, entity } = defineProps<{
@@ -100,7 +99,7 @@ function getDetails(id: string) {
 		.then(res => {
 			if (res.data.success) {
 				groupDetails.value = res.data.results?.[0] || null
-				emit("loaded", groupDetails.value)
+				if (groupDetails.value) emit("loaded", groupDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

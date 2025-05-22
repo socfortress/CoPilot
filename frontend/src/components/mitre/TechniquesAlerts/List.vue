@@ -48,7 +48,7 @@
 		<template #main-content>
 			<n-spin :show="loading">
 				<div class="grid-auto-fill-250 grid gap-2">
-					<TechniqueCard
+					<TechniqueAlertCard
 						v-for="technique of filteredTechniques"
 						:key="technique.technique_id"
 						:entity="technique"
@@ -72,7 +72,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import { techniques } from "../mock"
-import TechniqueCard from "../Technique/TechniqueCard.vue"
+import TechniqueAlertCard from "../TechniqueAlert/TechniqueAlertCard.vue"
 
 const props = defineProps<{
 	filters?: { type: string; value: string }[]

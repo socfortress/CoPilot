@@ -125,8 +125,9 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import References from "../common/References.vue"
 
-const { externalId, entity } = defineProps<{
+const { externalId, id, entity } = defineProps<{
 	externalId?: string
+	id?: string
 	entity?: MitreTechniqueDetails
 }>()
 
@@ -154,11 +155,11 @@ watch(sidebarTop, () => {
 	resume()
 })
 
-function getDetails(id: string) {
+function getDetails(query: { external_id: string } | { id: string }) {
 	loadingDetails.value = true
 
 	Api.mitre
-		.getMitreTechniqueDetails({ external_id: id })
+		.getMitreTechniques(query)
 		.then(res => {
 			if (res.data.success) {
 				techniqueDetails.value = res.data.results?.[0] || null
@@ -176,7 +177,10 @@ function getDetails(id: string) {
 
 onBeforeMount(() => {
 	if (externalId) {
-		getDetails(externalId)
+		getDetails({ external_id: externalId })
+	}
+	if (id) {
+		getDetails({ id })
 	}
 	if (entity) {
 		techniqueDetails.value = entity

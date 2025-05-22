@@ -32,7 +32,7 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`Group • ${id}`"
+			:title="`Mitigation • ${id}`"
 			:bordered="false"
 			segmented
 		>
@@ -47,11 +47,9 @@
 					:tab="`Techniques (${mitigationDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<!--
 					<div class="px-7 pb-7 pt-4">
-						<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
+						<TechniquesList v-if="mitigationDetails" :list="mitigationDetails.techniques" />
 					</div>
-					-->
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
@@ -64,6 +62,7 @@ import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import TechniquesList from "../Technique/TechniquesList.vue"
 import MitigationDetails from "./MitigationDetails.vue"
 
 const { id, entity } = defineProps<{
@@ -90,7 +89,7 @@ function getDetails(id: string) {
 		.then(res => {
 			if (res.data.success) {
 				mitigationDetails.value = res.data.results?.[0] || null
-				emit("loaded", mitigationDetails.value)
+				if (mitigationDetails.value) emit("loaded", mitigationDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

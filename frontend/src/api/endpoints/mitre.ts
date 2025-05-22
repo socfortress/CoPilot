@@ -8,7 +8,8 @@ import type {
 	MitreSoftwareDetails,
 	MitreTacticDetails,
 	MitreTechnique,
-	MitreTechniqueDetails
+	MitreTechniqueDetails,
+	MitreTechniquesDetails
 } from "@/types/mitre.d"
 import { HttpClient } from "../httpClient"
 
@@ -31,10 +32,6 @@ export interface MitreTechniquesAlertsQuery {
 	index_pattern?: string
 }
 
-export interface MitreTechniqueDetailsQuery {
-	external_id: string
-}
-
 export interface MitreGroupsQuery {
 	id: string
 }
@@ -49,6 +46,11 @@ export interface MitreSoftwareQuery {
 
 export interface MitreTacticsQuery {
 	id: string
+}
+
+export interface MitreTechniquesQuery {
+	external_id?: string
+	id?: string
 }
 
 export interface MitreEventsQuery {
@@ -103,14 +105,18 @@ export default {
 			signal
 		})
 	},
-	getMitreTechniqueDetails(query?: MitreTechniqueDetailsQuery) {
+	getMitreTechniques(query?: MitreTechniquesQuery) {
 		let q: string | undefined
 
 		if (query?.external_id) {
 			q = `external_id=${query?.external_id}`
 		}
 
-		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniqueDetails[] }>(
+		if (query?.id) {
+			q = `id=${query?.id}`
+		}
+
+		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniquesDetails[] }>(
 			`/wazuh_manager/mitre/techniques`,
 			{
 				params: {

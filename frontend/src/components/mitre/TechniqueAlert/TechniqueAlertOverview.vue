@@ -3,7 +3,7 @@
 		<n-tabs type="line" animated :tabs-padding="24">
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
 				<div class="px-7 pb-7 pt-4">
-					<TechniqueDetails v-if="techniqueDetails" :entity="techniqueDetails" />
+					<TechniqueAlertDetails v-if="techniqueDetails" :entity="techniqueDetails" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane
@@ -56,7 +56,7 @@ import MitigationsList from "../Mitigation/MitigationsList.vue"
 import { techniqueResultDetails } from "../mock"
 import SoftwareList from "../Software/SoftwareList.vue"
 import TacticsList from "../Tactic/TacticsList.vue"
-import TechniqueDetails from "./TechniqueDetails.vue"
+import TechniqueAlertDetails from "./TechniqueAlertDetails.vue"
 
 const { externalId } = defineProps<{
 	externalId: string
@@ -70,7 +70,7 @@ function getDetails(id: string) {
 	loadingDetails.value = true
 
 	Api.mitre
-		.getMitreTechniqueDetails({ external_id: id })
+		.getMitreTechniques({ external_id: id })
 		.then(res => {
 			if (res.data.success) {
 				techniqueDetails.value = res.data.results?.[0] || null
