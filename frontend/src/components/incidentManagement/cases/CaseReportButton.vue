@@ -52,14 +52,10 @@
 </template>
 
 <script setup lang="ts">
-import type { CaseReportPayload } from "@/api/endpoints/incidentManagement/cases"
-import type { DeepNullable } from "@/types/common"
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Size } from "naive-ui/es/button/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import type { CaseReportPayload } from "@/api/endpoints/incidentManagement/cases"
+import type { DeepNullable } from "@/types/common"
 import { saveAs } from "file-saver"
 import {
 	NButton,
@@ -74,6 +70,10 @@ import {
 	useMessage
 } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import CaseReportTemplateSelect from "./CaseReportTemplateSelect.vue"
 
 const { size, caseId } = defineProps<{ size?: Size; caseId: number }>()

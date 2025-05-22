@@ -220,13 +220,10 @@
 </template>
 
 <script setup lang="ts">
+import type { AlertsListFilter } from "./types.d"
 import type { AlertsQuery } from "@/api/endpoints/incidentManagement/alerts"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
-import type { AlertsListFilter } from "./types.d"
-import Api from "@/api"
-import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _orderBy from "lodash/orderBy"
@@ -245,6 +242,9 @@ import {
 	useMessage
 } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, watch } from "vue"
+import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import Icon from "@/components/common/Icon.vue"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 

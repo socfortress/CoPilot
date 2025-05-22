@@ -15,9 +15,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import { toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 export interface RuleExtended {
 	title: string

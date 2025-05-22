@@ -23,9 +23,9 @@
 <script setup lang="ts">
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { Agent } from "@/types/agents.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
 
 const { embedded, agent } = defineProps<{

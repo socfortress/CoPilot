@@ -11,8 +11,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useNotifications } from "@/composables/useNotifications"
 import { NButton } from "naive-ui"
+import { useNotifications } from "@/composables/useNotifications"
 
 const hasUnread = useNotifications().hasUnread
 const hasNotifications = useNotifications().hasNotifications

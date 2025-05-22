@@ -48,10 +48,10 @@
 
 <script setup lang="ts">
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const { customerCode } = defineProps<{
 	customerCode: string

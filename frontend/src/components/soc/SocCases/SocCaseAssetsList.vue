@@ -23,11 +23,11 @@
 
 <script setup lang="ts">
 import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
 import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
 
 const { caseId } = defineProps<{ caseId: string | number }>()

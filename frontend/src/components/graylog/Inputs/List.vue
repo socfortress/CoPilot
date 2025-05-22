@@ -54,10 +54,10 @@
 
 <script setup lang="ts">
 import type { ConfiguredInput, InputExtended, RunningInput } from "@/types/graylog/inputs.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NPopover, NScrollbar, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import InputItem from "./Item.vue"
 
 const InfoIcon = "carbon:information"

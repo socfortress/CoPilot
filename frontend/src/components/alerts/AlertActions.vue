@@ -86,13 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
 import type { SocAlertField } from "./type.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import AlertWazuhRules from "./AlertWazuhRules.vue"
 
 const { alert, size, socAlertField } = defineProps<{

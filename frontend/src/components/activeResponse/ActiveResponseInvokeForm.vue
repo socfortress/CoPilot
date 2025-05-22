@@ -28,13 +28,13 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import { computed, onMounted, ref, watch } from "vue"
+import Api from "@/api"
 
 interface InvokeForm {
 	action: null | InvokeRequestAction

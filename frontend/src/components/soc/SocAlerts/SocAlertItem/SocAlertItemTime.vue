@@ -16,11 +16,11 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
+import { NPopover } from "naive-ui"
+import { toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { NPopover } from "naive-ui"
-import { toRefs } from "vue"
 import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
 
 const props = defineProps<{

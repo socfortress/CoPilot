@@ -171,12 +171,12 @@
 </template>
 
 <script setup lang="ts">
-import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
-import Api from "@/api"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
 import _intersection from "lodash/intersection"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	sourceConfigurationModel?: SourceConfigurationModel

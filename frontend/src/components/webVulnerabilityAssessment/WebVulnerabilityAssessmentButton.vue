@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 import type { Size, Type } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 
 const { type, size } = defineProps<{
 	size?: Size

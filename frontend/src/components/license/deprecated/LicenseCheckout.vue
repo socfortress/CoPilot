@@ -36,10 +36,10 @@
 
 <script setup lang="ts">
 import type { LicenseKey } from "@/types/license.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 
 const emit = defineEmits<{

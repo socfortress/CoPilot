@@ -49,10 +49,10 @@
 
 <script setup lang="ts">
 import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
-import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import Icon from "@/components/common/Icon.vue"
 import AlertIoCItem from "./AlertIoCItem.vue"
 import AlertIoCsForm from "./AlertIoCsForm.vue"
 

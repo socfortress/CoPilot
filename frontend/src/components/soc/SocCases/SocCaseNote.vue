@@ -96,14 +96,14 @@
 
 <script setup lang="ts">
 import type { SocNote } from "@/types/soc/note.d"
+import _omit from "lodash/omit"
+import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import _omit from "lodash/omit"
-import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref } from "vue"
 
 const { note } = defineProps<{ note: SocNote }>()
 

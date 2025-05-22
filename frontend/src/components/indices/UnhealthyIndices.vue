@@ -35,11 +35,11 @@
 
 <script setup lang="ts">
 import type { IndexStats } from "@/types/indices.d"
+import { NCard, NEmpty, NScrollbar, NSpin } from "naive-ui"
+import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import { IndexHealth } from "@/types/indices.d"
-import { NCard, NEmpty, NScrollbar, NSpin } from "naive-ui"
-import { computed, toRefs } from "vue"
 
 const props = defineProps<{
 	indices: IndexStats[] | null

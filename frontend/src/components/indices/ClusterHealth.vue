@@ -38,10 +38,10 @@
 
 <script setup lang="ts">
 import type { ClusterHealth } from "@/types/indices.d"
-import Api from "@/api"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { NCard, NEmpty, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
 
 const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)

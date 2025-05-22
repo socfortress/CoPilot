@@ -1,10 +1,10 @@
 import type { NotificationObject } from "./useGlobalActions"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
 import { NButton } from "naive-ui"
 import { computed, h } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 import { useGlobalActions } from "./useGlobalActions"
 
 export type NotificationCategory = "alert"

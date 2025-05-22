@@ -13,10 +13,10 @@
 
 <script setup lang="ts">
 import type { SocNote } from "@/types/soc/note.d"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 
 const { note } = defineProps<{ note: SocNote }>()
 

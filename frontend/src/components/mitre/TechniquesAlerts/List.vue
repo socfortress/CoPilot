@@ -71,7 +71,6 @@ import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
-import { techniques } from "../mock"
 import TechniqueAlertCard from "../TechniqueAlert/TechniqueAlertCard.vue"
 
 const props = defineProps<{

@@ -61,7 +61,6 @@
 import type { RemovableRef } from "@vueuse/core"
 import type { ComputedRef } from "vue"
 import type { RouteLocationNormalized, RouteRecordName } from "vue-router"
-import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
 import _split from "lodash/split"
 import _takeRight from "lodash/takeRight"
@@ -69,6 +68,7 @@ import _uniqBy from "lodash/uniqBy"
 import { NBadge, NButton, NPopover, NTag } from "naive-ui"
 import { computed } from "vue"
 import { useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 
 interface Page {
 	name: RouteRecordName | string

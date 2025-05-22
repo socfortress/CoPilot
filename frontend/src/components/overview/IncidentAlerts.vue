@@ -16,12 +16,12 @@
 
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
 
 const AlertsIcon = "carbon:warning-hex"
 const { gotoIncidentManagementAlerts } = useGoto()

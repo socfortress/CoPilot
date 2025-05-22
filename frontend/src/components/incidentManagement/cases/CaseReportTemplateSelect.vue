@@ -30,10 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { useCaseReportTemplateStore } from "@/stores/caseReportTemplate"
 import { NButton, NInputGroup, NModal, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import { useCaseReportTemplateStore } from "@/stores/caseReportTemplate"
 import CaseReportTemplateManager from "./CaseReportTemplateManager.vue"
 
 const templateName = defineModel<string | null>("value", { default: null })

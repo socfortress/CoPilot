@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import CustomerDefaultSettingsForm from "./CustomerDefaultSettingsForm.vue"
 
 const SettingsIcon = "carbon:settings-edit"

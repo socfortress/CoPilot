@@ -43,12 +43,12 @@
 
 <script setup lang="ts">
 import type { IndexStats } from "@/types/indices.d"
-import Api from "@/api"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { useThemeStore } from "@/stores/theme"
 import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { Vue3Marquee } from "vue3-marquee"
+import Api from "@/api"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{
 	indices?: IndexStats[] | null

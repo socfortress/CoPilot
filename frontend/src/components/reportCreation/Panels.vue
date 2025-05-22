@@ -196,19 +196,19 @@
 </template>
 
 <script setup lang="ts">
+import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
-import type { PrintSettingsData } from "./PrintSettings.vue"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
 import { useStorage } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import _kebabCase from "lodash/kebabCase"
 import { NButton, NDrawer, NDrawerContent, NPopover, NScrollbar, NSpin, NSwitch, NTooltip, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import draggable from "vuedraggable"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import * as defaultSettings from "./defaultSettings"
 import PrintSettings from "./PrintSettings.vue"
 

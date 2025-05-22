@@ -17,11 +17,11 @@
 
 <script lang="ts" setup>
 import type { FormType } from "@/components/auth/types.d"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { useRoute } from "vue-router"
 import AuthForm from "@/components/auth/AuthForm.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useThemeStore } from "@/stores/theme"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-import { useRoute } from "vue-router"
 
 type Align = "left" | "center" | "right"
 

@@ -40,15 +40,15 @@
 
 <script setup lang="ts">
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
+import { useStorage } from "@vueuse/core"
+import { NButton, NSelect, useMessage } from "naive-ui"
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
 import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { useStorage } from "@vueuse/core"
-import { NButton, NSelect, useMessage } from "naive-ui"
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 
 const UpdatedIcon = "carbon:update-now"
 const StopIcon = "carbon:stop"

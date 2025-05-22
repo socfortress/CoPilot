@@ -32,11 +32,11 @@
 
 <script setup lang="ts">
 import type { AlertIOC } from "@/types/incidentManagement/alerts"
+import { NButton, NPopconfirm, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
-import { NButton, NPopconfirm, useMessage } from "naive-ui"
-import { ref } from "vue"
 
 const { ioc, embedded, alertId } = defineProps<{
 	ioc: AlertIOC

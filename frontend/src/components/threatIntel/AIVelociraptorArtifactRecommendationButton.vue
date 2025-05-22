@@ -67,14 +67,14 @@
 </template>
 
 <script setup lang="ts">
-import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threatIntel.d"
+import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
+import { ref, watchEffect } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
-import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
-import { ref, watchEffect } from "vue"
 
 const {
 	indexName,

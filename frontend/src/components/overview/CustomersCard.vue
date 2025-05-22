@@ -16,12 +16,12 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
 
 const CustomersIcon = "carbon:user-multiple"
 const { gotoCustomer } = useGoto()

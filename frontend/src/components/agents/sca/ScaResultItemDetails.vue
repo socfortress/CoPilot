@@ -144,11 +144,11 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents.d"
-import CardKV from "@/components/common/cards/CardKV.vue"
-import vShiki from "@/directives/v-shiki"
 import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed } from "vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import vShiki from "@/directives/v-shiki"
 
 const { data } = defineProps<{
 	data: ScaPolicyResult

@@ -92,13 +92,13 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
+import { NButton, NCard, NModal, NSpin } from "naive-ui"
+import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NCard, NModal, NSpin } from "naive-ui"
-import { ref, toRefs } from "vue"
 import QueryDeleteOne from "./actionsProviders/QueryDeleteOne.vue"
 import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"
 import QueryDetails from "./QueryDetails.vue"

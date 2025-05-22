@@ -59,13 +59,13 @@
 
 <script setup lang="ts">
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
+import _uniqBy from "lodash/uniqBy"
+import { NButton, NModal } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import _uniqBy from "lodash/uniqBy"
-import { NButton, NModal } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
 import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
 
 const props = defineProps<{

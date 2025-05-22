@@ -128,12 +128,12 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
+import { NButton, NSpin } from "naive-ui"
+import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NSpin } from "naive-ui"
-import { ref, toRefs } from "vue"
 import QueryActiveForm from "./actionsProviders/QueryActiveForm.vue"
 import QueryDeleteOne from "./actionsProviders/QueryDeleteOne.vue"
 import QueryTimeIntervalForm from "./actionsProviders/QueryTimeIntervalForm.vue"

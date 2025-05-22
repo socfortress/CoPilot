@@ -26,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import vShiki from "@/directives/v-shiki"
 import { NButton, NCard, NInput } from "naive-ui"
 import { computed, ref } from "vue"
+import vShiki from "@/directives/v-shiki"
 
 const {
 	code,

@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type {
 	Connector,
 	ConnectorForm,
@@ -73,12 +74,11 @@ import type {
 	ConnectorFormOptions,
 	ConnectorRequestPayload
 } from "@/types/connectors.d"
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
-import { ConnectorFormType } from "@/types/connectors.d"
 import _pick from "lodash/pick"
 import { NAvatar, NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import { ConnectorFormType } from "@/types/connectors.d"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import HostType from "./FormTypes/HostType.vue"

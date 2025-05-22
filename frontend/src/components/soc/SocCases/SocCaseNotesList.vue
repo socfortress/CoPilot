@@ -16,11 +16,11 @@
 
 <script setup lang="ts">
 import type { SocNote } from "@/types/soc/note.d"
-import Api from "@/api"
 import { refDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 import SocCaseNote from "./SocCaseNote.vue"
 
 const props = defineProps<{ caseId: string | number }>()

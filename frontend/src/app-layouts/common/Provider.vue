@@ -26,9 +26,6 @@
 <script lang="ts" setup>
 import type { GlobalThemeOverrides } from "naive-ui"
 import type { RtlItem } from "naive-ui/es/config-provider/src/internal-interface"
-import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
-import { useLocalesStore } from "@/stores/i18n"
-import { useThemeStore } from "@/stores/theme"
 import {
 	NConfigProvider,
 	NDialogProvider,
@@ -38,6 +35,9 @@ import {
 	NNotificationProvider
 } from "naive-ui"
 import { computed, onBeforeMount } from "vue"
+import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
+import { useLocalesStore } from "@/stores/i18n"
+import { useThemeStore } from "@/stores/theme"
 import { rtlStyles } from "./rtlProvider"
 
 const localesStore = useLocalesStore()

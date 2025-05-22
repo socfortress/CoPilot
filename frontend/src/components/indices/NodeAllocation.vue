@@ -71,10 +71,10 @@
 
 <script setup lang="ts">
 import type { IndexAllocation } from "@/types/indices.d"
-import Api from "@/api"
 import { NCard, NEmpty, NProgress, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
 
 const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])

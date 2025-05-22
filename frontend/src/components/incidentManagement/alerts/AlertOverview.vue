@@ -163,11 +163,11 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"

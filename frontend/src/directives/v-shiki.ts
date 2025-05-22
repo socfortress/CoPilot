@@ -1,6 +1,6 @@
-import { codeThemes, getHighlighter } from "@/utils/highlighter"
 import flourite from "flourite"
 import { decode } from "html-entities"
+import { codeThemes, getHighlighter } from "@/utils/highlighter"
 
 const vShiki = {
 	created: async (

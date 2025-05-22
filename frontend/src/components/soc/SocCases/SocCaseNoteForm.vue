@@ -24,9 +24,9 @@
 
 <script setup lang="ts">
 import type { SocNewNote } from "@/types/soc/note.d"
-import Api from "@/api"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
+import Api from "@/api"
 
 const { caseId } = defineProps<{ caseId: string | number }>()
 

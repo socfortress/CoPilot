@@ -39,10 +39,10 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import Api from "@/api"
 import axios from "axios"
 import { NModal, NSpin, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, ref } from "vue"
+import Api from "@/api"
 import SocAlertItem from "../SocAlerts/SocAlertItem/SocAlertItem.vue"
 
 const { userId } = defineProps<{

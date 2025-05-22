@@ -67,14 +67,14 @@
 <script setup lang="ts">
 import type { SocCaseAssetLink } from "@/types/soc/asset.d"
 import type { SocCase } from "@/types/soc/case.d"
+import { NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
-import { ref } from "vue"
 import SocCaseItem from "./SocCaseItem.vue"
 
 const { link } = defineProps<{ link: SocCaseAssetLink }>()

@@ -8,7 +8,6 @@ import type {
 	MitreSoftwareDetails,
 	MitreTacticDetails,
 	MitreTechnique,
-	MitreTechniqueDetails,
 	MitreTechniquesDetails
 } from "@/types/mitre.d"
 import { HttpClient } from "../httpClient"

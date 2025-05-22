@@ -34,11 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { Size } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 
 const { activeResponse, size, agentId } = defineProps<{

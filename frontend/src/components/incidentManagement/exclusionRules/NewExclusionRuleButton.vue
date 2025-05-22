@@ -23,9 +23,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, toRefs, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 
 const props = defineProps<{ hideButtonExtendedLabel?: boolean }>()

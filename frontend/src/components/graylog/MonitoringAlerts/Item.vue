@@ -76,15 +76,15 @@
 </template>
 
 <script setup lang="ts">
+import type { FormRules, FormValidationError } from "naive-ui"
 import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
-import type { FormRules, FormValidationError } from "naive-ui"
+import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
-import { ref } from "vue"
 
 const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert; isEnabled: boolean }>()
 

@@ -8,9 +8,9 @@
 
 <script setup lang="ts">
 import type { IndexStats } from "@/types/indices.d"
+import { toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { IndexHealth } from "@/types/indices.d"
-import { toRefs } from "vue"
 
 const props = defineProps<{
 	health: IndexStats["health"]

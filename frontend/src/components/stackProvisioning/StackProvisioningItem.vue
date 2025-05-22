@@ -25,11 +25,11 @@
 
 <script setup lang="ts">
 import type { AvailableContentPack } from "@/types/stackProvisioning.d"
+import { NButton, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, useMessage } from "naive-ui"
-import { ref } from "vue"
 
 const { contentPack } = defineProps<{ contentPack: AvailableContentPack }>()
 

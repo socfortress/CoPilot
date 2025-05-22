@@ -128,14 +128,14 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
-import Api from "@/api"
-import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
 import { NBadge, NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import Icon from "@/components/common/Icon.vue"
 import QueriesActions from "./QueriesActions.vue"
 import QueryItem from "./QueryItem.vue"
 

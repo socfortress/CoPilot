@@ -26,9 +26,9 @@
 
 <script setup lang="ts">
 import type { SigmaRuleLevels } from "@/types/sigma.d"
-import Api from "@/api"
 import { NButton, NCheckbox, NCheckboxGroup, NPopover, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
 
 const emit = defineEmits<{
 	(e: "updated"): void

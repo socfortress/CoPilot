@@ -13,11 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Ref } from "vue"
-import Api from "@/api"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, inject, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	alert: Alert

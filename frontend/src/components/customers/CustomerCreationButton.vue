@@ -59,10 +59,10 @@
 
 <script setup lang="ts">
 import type { Size } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
-import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import CustomerForm from "./CustomerForm.vue"
 
 const { customersCount, disabled, size } = defineProps<{

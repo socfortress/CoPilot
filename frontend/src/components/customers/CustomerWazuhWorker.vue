@@ -137,6 +137,11 @@
 
 <script setup lang="ts">
 import type { PortainerStack } from "@/types/portainer.d"
+import _castArray from "lodash/castArray"
+import _pick from "lodash/pick"
+import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -145,11 +150,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { PortainerStackStatus } from "@/types/portainer.d"
 import { formatDate } from "@/utils"
-import _castArray from "lodash/castArray"
-import _pick from "lodash/pick"
-import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { stackId } = defineProps<{ stackId: number }>()

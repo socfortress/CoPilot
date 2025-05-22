@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type {
 	ScoutSuiteAwsReportPayload,
 	ScoutSuiteAzureReportPayload,
@@ -66,11 +67,10 @@ import type {
 	ScoutSuiteReportPayload
 } from "@/types/cloudSecurityAssessment.d"
 import type { ApiCommonResponse, ApiError } from "@/types/common.d"
-import type { FormInst, FormRules, FormValidationError, MessageReactive } from "naive-ui"
-import Api from "@/api"
-import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment.d"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import Api from "@/api"
+import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment.d"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
 import GcpTypeForm from "./FormTypes/GcpTypeForm.vue"

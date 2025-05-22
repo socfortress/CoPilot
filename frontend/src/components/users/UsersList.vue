@@ -84,11 +84,11 @@
 
 <script setup lang="ts">
 import type { User } from "@/types/user.d"
+import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
-import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))

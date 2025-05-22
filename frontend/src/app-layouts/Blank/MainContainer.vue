@@ -14,10 +14,10 @@
 
 <script lang="ts" setup>
 import type { RouteLocationNormalizedGeneric } from "vue-router"
-import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { useThemeStore } from "@/stores/theme"
 
 const themeStore = useThemeStore()
 const router = useRouter()

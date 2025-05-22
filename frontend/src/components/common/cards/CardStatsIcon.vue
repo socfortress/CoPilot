@@ -9,9 +9,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
-import { computed } from "vue"
 
 const {
 	boxSize = 40,

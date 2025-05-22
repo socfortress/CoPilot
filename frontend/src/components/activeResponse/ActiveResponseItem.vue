@@ -41,10 +41,10 @@
 
 <script setup lang="ts">
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, toRefs } from "vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Icon from "@/components/common/Icon.vue"
 import ActiveResponseActions from "./ActiveResponseActions.vue"
 import ActiveResponseDetails from "./ActiveResponseDetails.vue"
 

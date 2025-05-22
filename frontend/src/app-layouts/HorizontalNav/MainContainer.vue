@@ -29,12 +29,12 @@
 
 <script lang="ts" setup>
 import type { RouteLocationNormalizedGeneric } from "vue-router"
-import MainFooter from "@/app-layouts/common/MainFooter.vue"
-import Toolbar from "@/app-layouts/common/Toolbar"
-import { useThemeStore } from "@/stores/theme"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import MainFooter from "@/app-layouts/common/MainFooter.vue"
+import Toolbar from "@/app-layouts/common/Toolbar"
+import { useThemeStore } from "@/stores/theme"
 
 const themeStore = useThemeStore()
 const router = useRouter()

@@ -5,8 +5,8 @@
 </template>
 
 <script setup lang="ts">
-import LicenseCheckoutResponse from "@/components/license/LicenseCheckoutResponse.vue"
 import { useRoute } from "vue-router"
+import LicenseCheckoutResponse from "@/components/license/LicenseCheckoutResponse.vue"
 
 const route = useRoute()
 </script>

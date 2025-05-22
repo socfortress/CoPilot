@@ -24,11 +24,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Case } from "@/types/incidentManagement/cases"
 import type { Size } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
+import type { Case } from "@/types/incidentManagement/cases"
 import { NButton, NModal } from "naive-ui"
 import { ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import CaseCreationForm from "./CaseCreationForm.vue"
 
 const { showIcon, size } = defineProps<{ showIcon?: boolean; size?: Size }>()

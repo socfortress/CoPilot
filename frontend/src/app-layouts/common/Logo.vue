@@ -14,8 +14,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useThemeStore } from "@/stores/theme"
 import { computed } from "vue"
+import { useThemeStore } from "@/stores/theme"
 
 const {
 	mini,

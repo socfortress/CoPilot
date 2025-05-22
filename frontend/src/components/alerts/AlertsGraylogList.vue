@@ -68,15 +68,15 @@
 </template>
 
 <script setup lang="ts">
-import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
-import type { IndexStats } from "@/types/indices.d"
 import type { AlertsSummaryExt } from "./AlertsSummary.vue"
 import type { SocAlertField } from "./type.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { GraylogAlertsQuery } from "@/api/endpoints/alerts"
+import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, provide, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
 import AlertsSummaryItem from "./AlertsSummary.vue"
 

@@ -71,10 +71,10 @@
 
 <script setup lang="ts">
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { NInput, NModal, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const props = defineProps<{ event: EventDefinition; highlight: boolean | null | undefined }>()

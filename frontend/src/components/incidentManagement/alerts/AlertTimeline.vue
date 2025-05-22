@@ -7,9 +7,9 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NTimeline, NTimelineItem } from "naive-ui"
 
 const { alert } = defineProps<{ alert: Alert }>()
 

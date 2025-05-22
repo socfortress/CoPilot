@@ -26,10 +26,10 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NPopover, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	query: SigmaQuery

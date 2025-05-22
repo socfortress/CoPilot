@@ -26,11 +26,11 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import _trim from "lodash/trim"
 import { NButton, NDynamicTags, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ alert: Alert }>()
 const emit = defineEmits<{

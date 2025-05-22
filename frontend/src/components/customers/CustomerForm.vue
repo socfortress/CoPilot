@@ -32,13 +32,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Customer } from "@/types/customers.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
+import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	customer?: Customer

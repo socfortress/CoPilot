@@ -21,11 +21,11 @@
 
 <script setup lang="ts">
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
+import { NButton, NPopconfirm, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { getBaseUrl } from "@/utils"
-import { NButton, NPopconfirm, useMessage } from "naive-ui"
-import { ref } from "vue"
 
 const { report } = defineProps<{ report: ScoutSuiteReport }>()
 

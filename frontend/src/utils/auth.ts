@@ -1,10 +1,10 @@
-import type { JWTRole, RouteMetaAuth } from "@/types/auth.d"
 import type { RouteLocationNormalized } from "vue-router"
-import { useAuthStore } from "@/stores/auth"
-import { AuthUserRole } from "@/types/auth.d"
+import type { JWTRole, RouteMetaAuth } from "@/types/auth.d"
 import { decodeJwt } from "jose"
 import _castArray from "lodash/castArray"
 import _toNumber from "lodash/toNumber"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth.d"
 
 export function isDebounceTimeOver(lastCheck: Date | null) {
 	const debounceTime = useAuthStore().tokenDebounceTime

@@ -71,14 +71,14 @@
 </template>
 
 <script setup lang="ts">
+import type { Size } from "naive-ui/es/button/src/interface"
 import type { Recommendation } from "@/types/artifacts.d"
 import type { OsTypesFull } from "@/types/common.d"
-import type { Size } from "naive-ui/es/button/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCard, NDivider, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 interface RecommendationStore {
 	os: OsTypesFull

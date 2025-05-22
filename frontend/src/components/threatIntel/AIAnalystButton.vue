@@ -98,13 +98,13 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalysisResponse } from "@/types/threatIntel.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import type { AiAnalysisResponse } from "@/types/threatIntel.d"
+import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
+import { defineAsyncComponent, ref, watchEffect } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
-import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
-import { defineAsyncComponent, ref, watchEffect } from "vue"
 
 const {
 	indexName,

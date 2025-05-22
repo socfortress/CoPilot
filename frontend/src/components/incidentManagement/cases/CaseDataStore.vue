@@ -71,12 +71,12 @@
 </template>
 
 <script setup lang="ts">
-import type { CaseDataStore } from "@/types/incidentManagement/cases.d"
 import type { UploadFileInfo } from "naive-ui"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { CaseDataStore } from "@/types/incidentManagement/cases.d"
 import { NButton, NCollapseTransition, NEmpty, NSpin, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CaseDataStoreItem from "./CaseDataStoreItem.vue"
 
 const { caseId } = defineProps<{

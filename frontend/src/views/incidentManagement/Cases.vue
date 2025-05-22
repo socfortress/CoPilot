@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import CasesList from "@/components/incidentManagement/cases/CasesList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
+import CasesList from "@/components/incidentManagement/cases/CasesList.vue"
 
 const route = useRoute()
 

@@ -27,11 +27,11 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
-import Api from "@/api"
-import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 import axios from "axios"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, ref, toRefs } from "vue"
+import Api from "@/api"
+import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 
 const props = defineProps<{
 	agent: Agent

@@ -29,14 +29,14 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
-import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
-import Api from "@/api"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInputNumber, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{ job: Job }>()
 const emit = defineEmits<{

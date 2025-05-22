@@ -72,13 +72,13 @@
 </template>
 
 <script setup lang="ts">
+import type { StepsProps } from "naive-ui"
 import type { ApiError } from "@/types/common.d"
 import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
-import type { StepsProps } from "naive-ui"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NScrollbar, NSelect, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 
 const props = defineProps<{ disabledSources?: SourceName[] }>()

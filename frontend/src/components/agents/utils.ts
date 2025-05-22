@@ -1,9 +1,9 @@
-import type { Agent } from "@/types/agents.d"
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
+import type { Agent } from "@/types/agents.d"
+import { h } from "vue"
 import Api from "@/api"
 import dayjs from "@/utils/dayjs"
-import { h } from "vue"
 
 export function isAgentOnline(lastSeen: string) {
 	const lastSeenDate = dayjs(lastSeen)

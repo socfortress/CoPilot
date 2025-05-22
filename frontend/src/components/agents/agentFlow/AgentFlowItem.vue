@@ -170,6 +170,10 @@
 
 <script setup lang="ts">
 import type { FlowResult } from "@/types/flow.d"
+import _pick from "lodash/pick"
+import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -177,10 +181,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _pick from "lodash/pick"
-import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()

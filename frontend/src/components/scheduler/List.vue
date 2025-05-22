@@ -15,9 +15,9 @@
 
 <script setup lang="ts">
 import type { Job } from "@/types/scheduler.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import JobCard from "./Item.vue"
 
 const message = useMessage()

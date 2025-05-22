@@ -80,13 +80,13 @@
 
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents.d"
+import _pick from "lodash/pick"
+import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _pick from "lodash/pick"
-import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent } from "vue"
 
 const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 

@@ -89,11 +89,11 @@
 
 <script setup lang="ts">
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import ScaResultItem from "./ScaResultItem.vue"
 
 const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()

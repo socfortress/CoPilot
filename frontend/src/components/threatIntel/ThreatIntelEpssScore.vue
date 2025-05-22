@@ -46,13 +46,13 @@
 
 <script setup lang="ts">
 import type { EpssScore } from "@/types/threatIntel.d"
+import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"
+import { nanoid } from "nanoid"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"
-import { nanoid } from "nanoid"
-import { onBeforeMount, ref } from "vue"
 
 interface EpssScoreExt extends EpssScore {
 	___id?: string

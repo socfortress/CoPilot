@@ -14,9 +14,9 @@
 
 <script setup lang="ts">
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
-import Api from "@/api"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	caseData: Case

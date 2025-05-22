@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ScoutSuiteAzureReportPayload } from "@/types/cloudSecurityAssessment.d"
 import type { FormInst, FormRules } from "naive-ui"
+import type { ScoutSuiteAzureReportPayload } from "@/types/cloudSecurityAssessment.d"
 import { NForm, NFormItem, NInput } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 

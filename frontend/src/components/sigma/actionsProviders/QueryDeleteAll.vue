@@ -18,9 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import Api from "@/api"
 import { NButton, NPopover, useMessage } from "naive-ui"
 import { ref } from "vue"
+import Api from "@/api"
 
 const emit = defineEmits<{
 	(e: "updated"): void

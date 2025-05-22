@@ -25,11 +25,11 @@
 import type { MenuInst } from "naive-ui"
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import type { RouteRecordNormalized } from "vue-router"
-import { useThemeStore } from "@/stores/theme"
 import _uniq from "lodash/uniq"
 import { NMenu } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { useThemeStore } from "@/stores/theme"
 import getItems from "./items"
 
 const { mode = "horizontal", collapsed = false } = defineProps<{

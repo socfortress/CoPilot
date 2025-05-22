@@ -46,11 +46,11 @@
 
 <script setup lang="ts">
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { computed, ref } from "vue"
 import AlertActions from "./ItemActions.vue"
 
 const { alert, embedded } = defineProps<{

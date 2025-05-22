@@ -1,5 +1,5 @@
-import { useThemeStore } from "@/stores/theme"
 import { onBeforeMount, onBeforeUnmount } from "vue"
+import { useThemeStore } from "@/stores/theme"
 
 // :has() CSS relational pseudo-class not yet supported by Firefox
 // (https://caniuse.com/css-has)

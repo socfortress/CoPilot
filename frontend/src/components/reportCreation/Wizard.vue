@@ -52,10 +52,10 @@
 <script setup lang="ts">
 import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
-import Api from "@/api"
 import { useStorage } from "@vueuse/core"
 import { NForm, NFormItem, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	hidePanelsSelect?: boolean

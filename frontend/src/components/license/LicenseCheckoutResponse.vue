@@ -31,11 +31,11 @@
 
 <script setup lang="ts">
 import type { LicenseKey } from "@/types/license.d"
+import { NButton, NCard, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NButton, NCard, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()
 const { type, data } = toRefs(props)

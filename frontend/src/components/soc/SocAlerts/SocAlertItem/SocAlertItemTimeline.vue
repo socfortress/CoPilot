@@ -13,11 +13,11 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import _toNumber from "lodash/toSafeInteger"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 
 const { alert } = defineProps<{ alert: SocAlert }>()
 

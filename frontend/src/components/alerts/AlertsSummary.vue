@@ -51,12 +51,12 @@
 <script setup lang="ts">
 import type { AlertsSummary } from "@/types/alerts.d"
 import type { IndexStats } from "@/types/indices.d"
+import { NButton, NScrollbar } from "naive-ui"
+import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NButton, NScrollbar } from "naive-ui"
-import { ref } from "vue"
 import Alert from "./Alert.vue"
 
 export interface AlertsSummaryExt extends AlertsSummary {

@@ -47,12 +47,12 @@
 
 <script setup lang="ts">
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
 import _trim from "lodash/trim"
 import { NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import AlertCommentItem from "./AlertComment.vue"
 
 const props = defineProps<{ comments: AlertComment[]; alertId: number }>()

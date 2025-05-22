@@ -1,10 +1,10 @@
 import type { FormType } from "@/components/auth/types.d"
+import { createRouter, createWebHistory } from "vue-router"
 import { RouteRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
 import OverviewPage from "@/views/Overview.vue"
-import { createRouter, createWebHistory } from "vue-router"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),

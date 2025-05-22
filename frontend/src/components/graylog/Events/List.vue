@@ -46,12 +46,12 @@
 </template>
 
 <script setup lang="ts">
-import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { SelectMixedOption } from "naive-ui/es/select/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import { NButton, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import EventItem from "./Item.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()

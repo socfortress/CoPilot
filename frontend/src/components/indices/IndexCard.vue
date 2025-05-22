@@ -61,12 +61,12 @@
 
 <script setup lang="ts">
 import type { IndexStats } from "@/types/indices.d"
+import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
+import { h, ref, toRefs } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
-import { h, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	index: IndexStats

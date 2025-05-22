@@ -47,13 +47,13 @@
 
 <script setup lang="ts">
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
+import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
-import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "openRule", value: string): void

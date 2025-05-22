@@ -23,12 +23,12 @@
 
 <script setup lang="ts">
 import type { InfluxDBAlert } from "@/types/healthchecks.d"
+import { computed } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import dayjs from "@/utils/dayjs"
-import { computed } from "vue"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()
 

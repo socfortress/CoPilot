@@ -9,19 +9,19 @@
 </template>
 
 <script setup lang="ts">
-import type { IndexStats } from "@/types/indices.d"
 import type { ECharts } from "echarts/core"
-import { useThemeStore } from "@/stores/theme"
-import { IndexHealth } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices.d"
 import bytes from "bytes"
-
 import { PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
+
 import { init as echartsInit, use as echartsUse } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import _ from "lodash"
 import { NCard, NSpin } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
+import { useThemeStore } from "@/stores/theme"
+import { IndexHealth } from "@/types/indices.d"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
