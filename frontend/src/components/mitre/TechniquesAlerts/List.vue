@@ -29,6 +29,7 @@
 						</n-checkbox>
 					</div>
 				</div>
+				<n-empty v-if="!tacticsList.length" description="No tactics available" class="h-48 justify-center" />
 			</n-spin>
 		</template>
 		<template #main-toolbar>

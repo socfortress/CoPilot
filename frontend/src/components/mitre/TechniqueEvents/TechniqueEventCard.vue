@@ -134,9 +134,86 @@
 					</div>
 				</n-tab-pane>
 
+				<n-tab-pane
+					v-for="tabCard of tabsCards"
+					:key="tabCard.tab"
+					:name="tabCard.tab"
+					:tab="tabCard.tab"
+					display-directive="show"
+				>
+					<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+						<CardKV v-for="(value, key) of tabCard.properties" :key="key">
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane name="DNS" tab="DNS" display-directive="show">
+					<div class="px-7 pt-4">
+						<CardKV v-if="alert.data_dns_answers">
+							<template #key>data_dns_answers</template>
+							<template #value>
+								<CodeSource :code="alert.data_dns_answers" :decode="false" />
+							</template>
+						</CardKV>
+					</div>
+					<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+						<CardKV v-for="(value, key) of dnsProperties" :key="key">
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane name="GL2" tab="GL2" display-directive="show">
+					<div class="px-7 pt-4">
+						<CardKV v-if="alert.gl2_processing_error">
+							<template #key>gl2_processing_error</template>
+							<template #value>
+								{{ alert.gl2_processing_error }}
+							</template>
+						</CardKV>
+					</div>
+					<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+						<CardKV v-for="(value, key) of gl2Properties" :key="key">
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
+
 				<n-tab-pane v-if="alert.message" name="Message" tab="Message" display-directive="show">
 					<div class="p-7 pt-4">
 						<CodeSource :code="alert.message" :decode="false" />
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane v-if="alert.location" name="Location" tab="Location" display-directive="show">
+					<div class="p-7 pt-4">
+						<CodeSource :code="alert.location" :decode="false" />
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane v-if="alert.streams?.length" name="Streams" tab="Streams" display-directive="show">
+					<div class="flex flex-wrap gap-3 p-7 pt-4">
+						<ul>
+							<li v-for="stream of alert.streams" :key="stream">
+								<code>{{ stream }}</code>
+							</li>
+						</ul>
 					</div>
 				</n-tab-pane>
 
@@ -170,8 +247,6 @@ const { alert, embedded } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const TargetIcon = "zondicons:target"
-const DisabledIcon = "carbon:subtract"
-const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
@@ -179,16 +254,149 @@ const { gotoCustomer, gotoAgent } = useGoto()
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
+const tabsCards = computed(() => [
+	{
+		tab: "Host",
+		properties: _pick(alert.value, [
+			"data_host_architecture",
+			"data_host_id",
+			"data_host_mac",
+			"data_host_name",
+			"data_host_hostname",
+			"data_host_containerized",
+			"data_host_ip",
+			"data_host_os_codename",
+			"data_host_os_family",
+			"data_host_os_kernel",
+			"data_host_os_name",
+			"data_host_os_platform",
+			"data_host_os_type",
+			"data_host_os_version"
+		])
+	},
+	{
+		tab: "Network",
+		properties: _pick(alert.value, [
+			"data_network_protocol",
+			"data_network_transport",
+			"data_network_type",
+			"data_network_bytes",
+			"data_network_direction",
+			"data_network_community_id",
+			"traffic_direction"
+		])
+	},
+	{
+		tab: "Event",
+		properties: _pick(alert.value, [
+			"data_event_category",
+			"data_event_dataset",
+			"data_event_duration",
+			"data_event_end",
+			"data_event_kind",
+			"data_event_start",
+			"data_event_type",
+			"data_type"
+		])
+	},
+	{
+		tab: "Timestamp",
+		properties: _pick(alert.value, ["timestamp", "timestamp_utc", "data_@timestamp", "msg_timestamp"])
+	},
+	{
+		tab: "Source",
+		properties: _pick(alert.value, ["data_source_ip", "data_source_port", "data_source_bytes"])
+	},
+	{
+		tab: "Destination",
+		properties: _pick(alert.value, ["data_destination_ip", "data_destination_port", "data_destination_bytes"])
+	},
+	{
+		tab: "Client",
+		properties: _pick(alert.value, ["data_client_ip", "data_client_port", "data_client_bytes"])
+	},
+	{
+		tab: "Server",
+		properties: _pick(alert.value, ["data_server_ip", "data_server_port", "data_server_bytes"])
+	},
+	{
+		tab: "Cluster",
+		properties: _pick(alert.value, ["cluster_name", "cluster_node"])
+	},
+	{
+		tab: "Rule",
+		properties: _pick(alert.value, [
+			"rule_id",
+			"rule_level",
+			"rule_mail",
+			"rule_mitre_id",
+			"rule_mitre_tactic",
+			"rule_mitre_technique",
+			"rule_description",
+			"rule_firedtimes",
+			"rule_groups",
+			"rule_group1",
+			"rule_group2",
+			"rule_group3"
+		])
+	}
+])
+
 const agentProperties = computed(() => {
 	return _pick(alert.value, [
 		"agent_id",
-		"agent_ip_city_name",
-		"agent_ip_country_code",
-		"agent_ip_geolocation",
-		"agent_ip_reserved_ip",
+		"agent_name",
 		"agent_ip",
-		"agent_labels_customer",
-		"agent_name"
+		"data_agent_id",
+		"data_agent_name",
+		"data_agent_type",
+		"data_agent_version",
+		"data_agent_ephemeral_id",
+		"agent_labels_customer"
+	])
+})
+
+const dnsProperties = computed(() => {
+	return _pick(alert.value, [
+		"data_dns_answers_count",
+		"data_dns_authorities_count",
+		"data_dns_flags_authentic_data",
+		"data_dns_flags_authoritative",
+		"data_dns_flags_checking_disabled",
+		"data_dns_flags_recursion_available",
+		"data_dns_flags_recursion_desired",
+		"data_dns_flags_truncated_response",
+		"data_dns_header_flags",
+		"data_dns_id",
+		"data_dns_op_code",
+		"data_dns_opt_do",
+		"data_dns_opt_ext_rcode",
+		"data_dns_opt_udp_size",
+		"data_dns_opt_version",
+		"data_dns_question_class",
+		"data_dns_question_etld_plus_one",
+		"data_dns_question_name",
+		"data_dns_question_registered_domain",
+		"data_dns_question_subdomain",
+		"data_dns_question_top_level_domain",
+		"data_dns_question_type",
+		"data_dns_resolved_ip",
+		"data_dns_response_code",
+		"data_dns_type",
+		"dns_query",
+		"dns_response_code",
+		"dns_answer"
+	])
+})
+
+const gl2Properties = computed(() => {
+	return _pick(alert.value, [
+		"gl2_remote_ip",
+		"gl2_source_node",
+		"gl2_accounted_message_size",
+		"gl2_remote_port",
+		"gl2_source_input",
+		"gl2_message_id"
 	])
 })
 </script>

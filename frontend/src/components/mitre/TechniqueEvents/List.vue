@@ -66,7 +66,6 @@ import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { techniqueAlertsResponse } from "../mock"
 import Filters from "./Filters.vue"
 import TechniqueEventCard from "./TechniqueEventCard.vue"
 
@@ -145,14 +144,14 @@ useResizeObserver(header, entries => {
 	simpleMode.value = width < 450
 })
 
-/*
 watchDebounced([filters, currentPage, pageSize], getList, {
 	deep: true,
 	debounce: 300,
 	immediate: true
 })
-*/
 // MOCK
+/*
 alertsList.value = techniqueAlertsResponse.alerts
 total.value = techniqueAlertsResponse.total_alerts
+*/
 </script>
