@@ -42,6 +42,11 @@
 					<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
+				<div class="px-7 pb-7 pt-4">
+					<TechniqueEventsList v-if="techniqueDetails" :external-id />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -55,6 +60,7 @@ import GroupsList from "../Group/GroupsList.vue"
 import MitigationsList from "../Mitigation/MitigationsList.vue"
 import SoftwareList from "../Software/SoftwareList.vue"
 import TacticsList from "../Tactic/TacticsList.vue"
+import TechniqueEventsList from "../TechniqueEvents/List.vue"
 import TechniqueAlertDetails from "./TechniqueAlertDetails.vue"
 
 const { externalId } = defineProps<{

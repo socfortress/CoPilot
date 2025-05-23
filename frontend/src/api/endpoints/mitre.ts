@@ -191,6 +191,9 @@ export default {
 				technique_id: string
 				technique_name: string
 				total_alerts: number
+				total_pages: number
+				page_size: number
+				page: number
 				alerts: MitreEventDetails[]
 				field_used: string
 				time_range: string

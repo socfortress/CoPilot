@@ -15,7 +15,7 @@
 				<n-skeleton v-else text style="width: 60%" :height="20" />
 			</template>
 			<template #footer>
-				<p v-if="groupDetails" @click.stop="() => {}">
+				<p v-if="groupDetails" class="cursor-text" @click.stop="() => {}">
 					<Suspense>
 						<Markdown :source="groupDetails.description" />
 					</Suspense>
