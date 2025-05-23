@@ -39,7 +39,7 @@
 						<Icon name="carbon:search" :size="16" />
 					</template>
 				</n-input>
-				<div class="min-w-32 max-w-32">
+				<div v-if="hasNoCountAlerts" class="min-w-32 max-w-32">
 					<n-checkbox v-model:checked="hideNoAlertsTechniques" class="items-center!" size="large">
 						<span class="text-xs/tight">Hide techniques with no alerts</span>
 					</n-checkbox>
@@ -128,6 +128,8 @@ const filteredTechniques = computed(() => {
 const areAllTacticsSelected = computed(() => {
 	return selectedTactics.value.length === tacticsList.value.length
 })
+
+const hasNoCountAlerts = computed(() => !!techniquesList.value.filter(o => !o.count).length)
 
 function isTacticSelected(id: string) {
 	return !!selectedTactics.value.find(o => o === id)

@@ -180,6 +180,19 @@ export const techniques = [
 		]
 	},
 	{
+		technique_id: "T104X",
+		technique_name: "Network Service Discovery",
+		count: 0,
+		last_seen: "2025-05-09T16:02:20.206271Z",
+		tactics: [
+			{
+				id: "x-mitre-tactic--c17c5845-175e-4421-9713-829d0573dbc9",
+				name: "Discovery",
+				short_name: "discovery"
+			}
+		]
+	},
+	{
 		technique_id: "T1548.003",
 		technique_name: "Sudo and Sudo Caching",
 		count: 1,
