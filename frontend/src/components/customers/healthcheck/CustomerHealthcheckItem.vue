@@ -12,7 +12,7 @@
 			<template #default>
 				<div class="flex grow flex-col gap-1">
 					<div class="flex flex-wrap items-center gap-2">
-						<Icon :name="iconFromOs(healthData.os)" :size="16"></Icon>
+						<Icon :name="iconFromOs(healthData.os)" :size="16" />
 						{{ healthData.os }}
 					</div>
 					<p>

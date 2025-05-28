@@ -11,7 +11,7 @@
 				markdownItLinkTargetBlank
 			]"
 			class="markdown-style scrollbar-styled"
-			:class="{ codeBgTransparent }"
+			:class="{ 'code-bg-transparent': codeBgTransparent }"
 			@click="emit('click', $event)"
 		/>
 	</Suspense>
@@ -82,7 +82,7 @@ const { source, codeBgTransparent } = toRefs(props)
 		}
 	}
 
-	&.codeBgTransparent {
+	&.code-bg-transparent {
 		:deep() {
 			& > pre {
 				& > code {
