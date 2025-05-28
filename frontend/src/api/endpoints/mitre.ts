@@ -211,7 +211,7 @@ export default {
 			signal
 		})
 	},
-	getMitreAtomicTests(query?: MitreAtomicTestsQuery) {
+	getMitreAtomicTests(query: MitreAtomicTestsQuery, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				total_techniques: number
@@ -226,7 +226,8 @@ export default {
 			params: {
 				size: query?.size || 25,
 				page: query?.page || 1
-			}
+			},
+			signal
 		})
 	},
 	getMitreAtomicTestContent(technique_id: string) {
@@ -235,6 +236,6 @@ export default {
 				technique_id: string
 				markdown_content: string
 			}
-		>(`/wazuh_manager/mitre/techniques/${technique_id}/alerts`)
+		>(`/wazuh_manager/mitre/techniques/${technique_id}/atomic-tests`)
 	}
 }
