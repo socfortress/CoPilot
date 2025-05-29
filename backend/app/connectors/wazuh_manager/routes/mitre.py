@@ -262,7 +262,7 @@ async def list_atomic_tests(
 
         return AtomicTestsListResponse(
             success=True,
-            message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages})",
+            message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages})",
             total_techniques=total_techniques,
             total_tests=result.get("total_tests"),
             tests=paginated_tests,
