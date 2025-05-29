@@ -1,5 +1,5 @@
-import re
 import json
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -30,7 +30,8 @@ from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
-from app.incidents.services.db_operations import create_alert_tag, add_alert_tag_if_not_exists
+from app.incidents.services.db_operations import add_alert_tag_if_not_exists
+from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -163,7 +164,12 @@ class VeloSigmaExclusionService:
                             # Remove the regex: prefix and try to match
                             regex_pattern = field_value[6:]
                             # Special handling for path-based regex patterns
-                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in regex_pattern or "/" in regex_pattern:
+                            if (
+                                "path" in field_name.lower()
+                                or "file" in field_name.lower()
+                                or "\\" in regex_pattern
+                                or "/" in regex_pattern
+                            ):
                                 try:
                                     # Normalize paths for comparison by converting all to lowercase and standardizing backslashes
                                     pattern = regex_pattern.lower().replace("\\\\", "\\")
@@ -178,7 +184,7 @@ class VeloSigmaExclusionService:
 
                                     # Convert the wildcard pattern to proper regex format
                                     # Escape special regex characters except for the wildcards we want to keep
-                                    pattern_parts = re.split(r'(\.\*)', pattern)
+                                    pattern_parts = re.split(r"(\.\*)", pattern)
                                     regex_parts = []
 
                                     for i, part in enumerate(pattern_parts):
@@ -280,7 +286,7 @@ class VeloSigmaExclusionService:
             placeholders = {}
 
             # Find all character classes like [^\\] or [\\w] and preserve them
-            char_class_pattern = r'(\[\^?[^\]]*\])'
+            char_class_pattern = r"(\[\^?[^\]]*\])"
             char_classes = re.finditer(char_class_pattern, normalized)
 
             for i, match in enumerate(char_classes):
@@ -290,7 +296,7 @@ class VeloSigmaExclusionService:
 
         # Use regex to replace any sequence of one or more backslashes with a single backslash
         # This handles \, \\, \\\, \\\\, etc.
-        normalized = re.sub(r'\\+', r'\\', normalized)
+        normalized = re.sub(r"\\+", r"\\", normalized)
 
         # Handle escaped special characters in paths
         normalized = normalized.replace("\\(", "(").replace("\\)", ")")
@@ -539,7 +545,11 @@ class VelociraptorSigmaService:
                 if not isinstance(event_payload, str):
                     # Try to serialize using json
                     try:
-                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                        event_payload = json.dumps(
+                            event_payload,
+                            default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o),
+                            indent=2,
+                        )
                     except TypeError:
                         # If JSON serialization fails, use string representation
                         event_payload = str(event_payload)
@@ -560,18 +570,33 @@ class VelociraptorSigmaService:
 
             # Add tags
             await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
-            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
+            await add_alert_tag_if_not_exists(
+                alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"),
+                db=self.session,
+            )
 
             # Add event-specific tags
             if "Sysmon" in alert.channel:
-                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
+                await add_alert_tag_if_not_exists(
+                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"),
+                    db=self.session,
+                )
             elif "Defender" in alert.channel:
-                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
+                await add_alert_tag_if_not_exists(
+                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"),
+                    db=self.session,
+                )
             elif "PowerShell" in alert.channel:
-                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
+                await add_alert_tag_if_not_exists(
+                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"),
+                    db=self.session,
+                )
             else:
                 # Generic event type
-                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
+                await add_alert_tag_if_not_exists(
+                    alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"),
+                    db=self.session,
+                )
 
             logger.info(f"Created fallback CoPilot alert with ID: {result['alert_id']} for customer {customer_code}")
             result["success"] = True
@@ -944,7 +969,11 @@ class VelociraptorSigmaService:
                 if not isinstance(event_payload, str):
                     # Try to serialize using json
                     try:
-                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                        event_payload = json.dumps(
+                            event_payload,
+                            default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o),
+                            indent=2,
+                        )
                     except TypeError:
                         # If JSON serialization fails, use string representation
                         event_payload = str(event_payload)

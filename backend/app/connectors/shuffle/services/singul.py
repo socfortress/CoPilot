@@ -1,9 +1,11 @@
 from loguru import logger
 from shufflepy import Singul
+
 from app.connectors.shuffle.schema.singul import SingulRequest
 from app.connectors.shuffle.utils.universal import send_post_request
 
 singul = Singul(auth="TEMP", url="https://singul.io")
+
 
 async def execute_singul(
     request: SingulRequest,
@@ -24,11 +26,10 @@ async def execute_singul(
             {"key": "to", "value": "walton.taylor23@gmail.com"},
             {"key": "subject", "value": "Test Email from Singul"},
             {"key": "body", "value": "This is a test email sent from Singul."},
-        ]
+        ],
     )
     logger.info(f"Singul response: {response}")
     return {
         "executionId": response.get("id", "unknown"),
         "message": "Singul integration executed successfully",
     }
-

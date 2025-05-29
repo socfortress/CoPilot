@@ -25,12 +25,24 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
-from app.integrations.monitoring_alert.services.provision import provision_custom_alert, provision_crowdstrike_monitoring_alert, provision_fortinet_system_monitoring_alert, provision_fortinet_utm_monitoring_alert, provision_paloalto_monitoring_alert
+from app.integrations.monitoring_alert.services.provision import (
+    provision_crowdstrike_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import provision_custom_alert
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_system_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_utm_monitoring_alert,
+)
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_threat_intel_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
@@ -120,11 +132,13 @@ async def invoke_provision_office365_threat_intel_alert(
     # Provision the Office365 Threat Intel monitoring alert
     await provision_office365_threat_intel_alert(request)
 
+
 async def invoke_provision_crowdstrike_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
     # Provision the CrowdStrike monitoring alert
     await provision_crowdstrike_monitoring_alert(request)
+
 
 async def invoke_provision_fortinet_system_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
@@ -132,11 +146,13 @@ async def invoke_provision_fortinet_system_monitoring_alert(
     # Provision the Fortinet System monitoring alert
     await provision_fortinet_system_monitoring_alert(request)
 
+
 async def invoke_provision_fortinet_utm_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
     # Provision the Fortinet UTM monitoring alert
     await provision_fortinet_utm_monitoring_alert(request)
+
 
 async def invoke_provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,

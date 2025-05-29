@@ -939,6 +939,7 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
 
+
 async def add_alert_tag_if_not_exists(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:
     # Check if the tag already exists
     result = await db.execute(select(AlertTag).where(AlertTag.tag == alert_tag.tag))

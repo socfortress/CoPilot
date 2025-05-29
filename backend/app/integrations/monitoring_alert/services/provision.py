@@ -667,6 +667,7 @@ async def provision_office365_threat_intel_alert(
         message="Office365 Threat Intel monitoring alerts provisioned successfully",
     )
 
+
 async def provision_crowdstrike_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
@@ -758,6 +759,7 @@ async def provision_crowdstrike_monitoring_alert(
         success=True,
         message="Crowdstrike monitoring alerts provisioned successfully",
     )
+
 
 async def provision_fortinet_system_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
@@ -851,6 +853,7 @@ async def provision_fortinet_system_monitoring_alert(
         message="Fortinet system monitoring alerts provisioned successfully",
     )
 
+
 async def provision_fortinet_utm_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
@@ -943,6 +946,7 @@ async def provision_fortinet_utm_monitoring_alert(
         message="Fortinet UTM monitoring alerts provisioned successfully",
     )
 
+
 async def provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
@@ -1034,6 +1038,7 @@ async def provision_paloalto_monitoring_alert(
         success=True,
         message="Palo Alto monitoring alerts provisioned successfully",
     )
+
 
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """
