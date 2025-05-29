@@ -44,13 +44,13 @@
 </template>
 
 <script setup lang="ts">
+import type { Size } from "naive-ui/es/button/src/interface"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
-import type { Size } from "naive-ui/es/button/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import JobForm from "./JobForm.vue"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()

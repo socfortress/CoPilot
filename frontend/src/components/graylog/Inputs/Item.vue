@@ -113,15 +113,15 @@
 
 <script setup lang="ts">
 import type { InputExtended } from "@/types/graylog/inputs.d"
+import { NButton, NModal, NTabPane, NTabs, NTooltip, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NModal, NTabPane, NTabs, NTooltip, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { input, embedded } = defineProps<{ input: InputExtended; embedded?: boolean }>()

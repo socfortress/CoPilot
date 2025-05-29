@@ -86,15 +86,15 @@
 
 <script setup lang="ts">
 import type { FlowQueryStat } from "@/types/flow.d"
+import _pick from "lodash/pick"
+import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _pick from "lodash/pick"
-import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
-import { computed, ref } from "vue"
 
 const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
 

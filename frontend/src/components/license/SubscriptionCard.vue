@@ -85,12 +85,12 @@
 <script setup lang="ts">
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 import type { License, SubscriptionFeature } from "@/types/license.d"
+import { NButton, NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { price } from "@/utils"
-import { NButton, NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
-import { ref, toRefs } from "vue"
 
 const props = defineProps<{
 	subscription: SubscriptionFeature

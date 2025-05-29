@@ -15,9 +15,9 @@
 
 <script setup lang="ts">
 import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 
 const { activeResponse } = defineProps<{
 	activeResponse: SupportedActiveResponse

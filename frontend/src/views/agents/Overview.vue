@@ -143,15 +143,15 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
+import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { AgentStatus } from "@/types/agents.d"
-import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
 
 const VulnerabilitiesGrid = defineAsyncComponent(
 	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")

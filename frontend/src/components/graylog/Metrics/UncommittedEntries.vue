@@ -24,14 +24,14 @@
 </template>
 
 <script setup lang="ts">
+import { NButton } from "naive-ui"
+import { computed, ref, toRefs, watch } from "vue"
+import apexchart from "vue3-apexcharts"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { usHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import { NButton } from "naive-ui"
-import { computed, ref, toRefs, watch } from "vue"
-import apexchart from "vue3-apexcharts"
 import "@/assets/scss/overrides/apexchart-override.scss"
 
 const props = defineProps<{

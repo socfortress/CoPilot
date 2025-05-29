@@ -49,11 +49,11 @@
 
 <script setup lang="ts">
 import type { CustomerIntegration } from "@/types/integrations.d"
+import { NButton, NModal } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NModal } from "naive-ui"
-import { computed, defineAsyncComponent, ref } from "vue"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
 const { integration: customerIntegration, embedded } = defineProps<{

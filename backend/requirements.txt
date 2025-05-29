@@ -155,6 +155,7 @@ starlette==0.27.0
 stix==1.2.0.11
 stix2==3.0.1
 stix2-elevator==4.1.7
+shufflepy==0.1.6
 stix2-patterns==2.0.0
 stix2-validator==3.1.4
 stixmarx==1.0.8

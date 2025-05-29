@@ -182,8 +182,6 @@
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
@@ -200,6 +198,8 @@ import {
 	useMessage
 } from "naive-ui"
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
 import CasesExport from "./CasesExport.vue"

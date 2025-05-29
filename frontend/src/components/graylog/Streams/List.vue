@@ -92,11 +92,11 @@
 
 <script setup lang="ts">
 import type { Stream } from "@/types/graylog/stream.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import StreamItem from "./Item.vue"
 
 const FilterIcon = "carbon:filter-edit"

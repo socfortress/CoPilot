@@ -77,12 +77,12 @@
 
 <script setup lang="ts">
 import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import dayjs from "@/utils/dayjs"
 import AlertsEventItem from "./Item.vue"
 
 const emit = defineEmits<{

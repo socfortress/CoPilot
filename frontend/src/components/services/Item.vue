@@ -52,11 +52,11 @@
 
 <script setup lang="ts">
 import type { ServiceItemData, ServiceItemType } from "./types"
+import { NButton, NModal, NRadio } from "naive-ui"
+import { defineAsyncComponent, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NModal, NRadio } from "naive-ui"
-import { defineAsyncComponent, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	data: ServiceItemData

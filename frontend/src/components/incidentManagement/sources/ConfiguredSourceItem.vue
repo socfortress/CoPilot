@@ -35,10 +35,10 @@
 
 <script setup lang="ts">
 import type { SourceName } from "@/types/incidentManagement/sources.d"
-import Api from "@/api"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { NButton, NModal, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
+import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
 
 const { source } = defineProps<{ source: SourceName }>()

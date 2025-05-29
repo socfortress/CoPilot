@@ -16,12 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import type { Size } from "naive-ui/es/button/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const { alert, size } = defineProps<{
 	alert: MonitoringAlert

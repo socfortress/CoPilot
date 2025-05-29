@@ -34,10 +34,10 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common.d"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import SourceConfigurationViewer from "./SourceConfigurationViewer.vue"
 

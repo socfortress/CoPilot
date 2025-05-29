@@ -17,11 +17,11 @@
 
 <script setup lang="ts">
 import type { AlertAsset, AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import { NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
 import AlertDetailTimelineItem from "./AlertDetailTimelineItem.vue"
 
 const { asset } = defineProps<{ asset: AlertAsset }>()

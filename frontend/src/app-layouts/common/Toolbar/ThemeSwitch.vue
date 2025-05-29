@@ -14,10 +14,10 @@
 </template>
 
 <script lang="ts" setup>
-import Icon from "@/components/common/Icon.vue"
-import { useThemeStore } from "@/stores/theme"
 import { Icon as Iconify } from "@iconify/vue"
 import { computed, nextTick } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
 
 const Sunny = "ion:sunny"
 const Moon = "ion:moon"

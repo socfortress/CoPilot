@@ -76,11 +76,11 @@
 
 <script setup lang="ts">
 import type { LicenseFeatures } from "@/types/license.d"
+import { NButton, NCard, NModal, NTooltip } from "naive-ui"
+import { ref, watch, watchEffect } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NButton, NCard, NModal, NTooltip } from "naive-ui"
-import { ref, watch, watchEffect } from "vue"
 
 const { feature, feedback, disabled, forceShowFeedback } = defineProps<{
 	feature: LicenseFeatures

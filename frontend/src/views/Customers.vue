@@ -23,12 +23,12 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeMount, onMounted, onUnmounted, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import CustomerCreationButton from "@/components/customers/CustomerCreationButton.vue"
 import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerDefaultSettingsButton from "@/components/customers/provision/CustomerDefaultSettingsButton.vue"
 import { emitter } from "@/emitter"
-import { onBeforeMount, onMounted, onUnmounted, ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
 
 const route = useRoute()
 const router = useRouter()

@@ -23,9 +23,9 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from "vue"
 import BrainIcon from "@/assets/icons/brain-icon.svg"
 import Icon from "@/components/common/Icon.vue"
-import { ref } from "vue"
 
 const { boxed } = defineProps<{
 	boxed: boolean

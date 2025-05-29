@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalActions } from "@/composables/useGlobalActions"
 import { useMessage, useNotification } from "naive-ui"
+import { useGlobalActions } from "@/composables/useGlobalActions"
 
 const message = useMessage()
 const notification = useNotification()

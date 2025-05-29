@@ -66,10 +66,10 @@
 <script setup lang="ts">
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CustomAlertButton from "./CustomAlertButton.vue"
 import MonitoringAlert from "./Item.vue"
 

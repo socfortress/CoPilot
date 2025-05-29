@@ -12,7 +12,7 @@
 			<template #default>
 				<div class="flex grow flex-col gap-1">
 					<div class="flex flex-wrap items-center gap-2">
-						<Icon :name="iconFromOs(healthData.os)" :size="16"></Icon>
+						<Icon :name="iconFromOs(healthData.os)" :size="16" />
 						{{ healthData.os }}
 					</div>
 					<p>
@@ -94,6 +94,8 @@
 
 <script setup lang="ts">
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
+import { NModal, NPopover } from "naive-ui"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -102,8 +104,6 @@ import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import { NModal, NPopover } from "naive-ui"
-import { computed, ref } from "vue"
 
 const { healthData, source, embedded, type } = defineProps<{
 	healthData: CustomerAgentHealth

@@ -29,12 +29,12 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IncidentNotificationPayload } from "@/api/endpoints/incidentManagement/notification"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
 import { NButton, NForm, NFormItem, NInput, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
+import Api from "@/api"
 
 interface IncidentNotificationForm {
 	shuffle_workflow_id: string

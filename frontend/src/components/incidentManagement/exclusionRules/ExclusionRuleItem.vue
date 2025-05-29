@@ -115,6 +115,8 @@
 
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -122,8 +124,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, h, ref, toRefs } from "vue"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"

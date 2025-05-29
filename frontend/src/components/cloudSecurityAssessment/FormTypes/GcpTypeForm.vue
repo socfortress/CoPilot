@@ -17,11 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment.d"
 import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment.d"
 import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void

@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NInputNumber, NSelect } from "naive-ui"
 import { computed, toRefs, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ showPageSizes?: boolean; showSort?: boolean; pageSizes?: number[]; disabled?: boolean }>()
 const page = defineModel<number>("page", { default: 1 })

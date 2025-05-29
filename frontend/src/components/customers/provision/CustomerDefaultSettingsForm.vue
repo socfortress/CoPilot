@@ -35,15 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
+import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import Api from "@/api"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

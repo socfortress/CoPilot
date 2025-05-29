@@ -91,11 +91,11 @@
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, CollectResult } from "@/types/artifacts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CollectItem from "./CollectItem.vue"
 
 const props = defineProps<{

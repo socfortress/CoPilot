@@ -77,10 +77,10 @@
 
 <script setup lang="ts">
 import type { SetupContext } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
 import { computed, onMounted, ref, useSlots, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 type SidebarPosition = "left" | "right"
 
@@ -374,6 +374,10 @@ onMounted(() => {
 				position: absolute;
 			}
 
+			.sidebar-header {
+				border-block-start: 1px solid var(--border-color);
+			}
+
 			.sidebar-header,
 			.sidebar-footer {
 				padding: 0 var(--padding-x);
@@ -391,6 +395,7 @@ onMounted(() => {
 		}
 		.main {
 			.main-toolbar {
+				border-block-start: 1px solid var(--border-color);
 				padding: 0 var(--padding-x);
 				gap: 14px;
 

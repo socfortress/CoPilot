@@ -22,9 +22,9 @@
 
 <script setup lang="ts">
 import type { SigmaQuery } from "@/types/sigma.d"
-import Api from "@/api"
 import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	query: SigmaQuery

@@ -76,14 +76,14 @@
 </template>
 
 <script setup lang="ts">
-import type { FortinetProvision } from "@/api/endpoints/networkConnectors"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { FortinetModel } from "./provisions/FortinetForm.vue"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { FortinetProvision } from "@/api/endpoints/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import FortinetForm from "./provisions/FortinetForm.vue"
 
 const { networkConnector, hideDeleteButton, size } = defineProps<{

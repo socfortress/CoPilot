@@ -75,11 +75,11 @@
 
 <script setup lang="ts">
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import Alert from "./Item.vue"
 
 const dialog = useDialog()

@@ -43,12 +43,12 @@
 <script setup lang="ts">
 import type { ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import { NAlert, NSpin } from "naive-ui"
+import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
-import { NAlert, NSpin } from "naive-ui"
-import { ref } from "vue"
 
 const AlertIcon = "mdi:alert-outline"
 const timerange = ref<ReportTimeRange | null>(null)

@@ -32,10 +32,10 @@
 
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NPopover, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "updated"): void

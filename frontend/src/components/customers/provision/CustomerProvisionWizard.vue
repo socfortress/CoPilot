@@ -268,10 +268,8 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"
 import {
 	NButton,
@@ -292,6 +290,8 @@ import isIP from "validator/es/lib/isIP"
 import isPort from "validator/es/lib/isPort"
 import isURL from "validator/es/lib/isURL"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	customerCode: string

@@ -57,10 +57,10 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import SocUserAlerts from "./SocUserAlerts.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()

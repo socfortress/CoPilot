@@ -11,12 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import type { CSSProperties } from "vue"
-import Api from "@/api"
-import { useThemeStore } from "@/stores/theme"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{
 	entity: ExclusionRule

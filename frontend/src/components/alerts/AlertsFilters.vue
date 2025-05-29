@@ -56,14 +56,14 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { SelectOption } from "naive-ui"
 import type { VNodeChild } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NEmpty, NFormItem, NInput, NInputGroup, NSelect } from "naive-ui"
 import { h, onBeforeMount, toRefs, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ filters: AlertsSummaryQuery }>()
 const emit = defineEmits<{

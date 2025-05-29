@@ -28,10 +28,10 @@
 
 <script setup lang="ts">
 import type { SourceName } from "@/types/incidentManagement/sources.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 
 const { disabledSources } = defineProps<{ disabledSources?: SourceName[] }>()

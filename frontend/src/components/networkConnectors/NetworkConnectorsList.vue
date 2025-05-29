@@ -13,10 +13,10 @@
 
 <script setup lang="ts">
 import type { ServiceItemData } from "../services/types"
-import Api from "@/api"
-import ServicesList from "@/components/services/List.vue"
 import { useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import ServicesList from "@/components/services/List.vue"
 
 const { embedded, hideTotals, selectable, disabledIdsList } = defineProps<{
 	embedded?: boolean

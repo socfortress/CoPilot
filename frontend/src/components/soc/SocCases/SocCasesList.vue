@@ -114,9 +114,6 @@
 <script setup lang="ts">
 import type { CasesFilter } from "@/api/endpoints/soc"
 import type { DateFormatted, SocCase } from "@/types/soc/case.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
@@ -134,6 +131,9 @@ import {
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import dayjs from "@/utils/dayjs"
 import SocCaseItem from "./SocCaseItem.vue"
 
 const dialog = useDialog()

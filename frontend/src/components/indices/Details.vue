@@ -56,11 +56,11 @@
 
 <script setup lang="ts">
 import type { IndexShard, IndexStats } from "@/types/indices.d"
-import Api from "@/api"
-import IndexCard from "@/components/indices/IndexCard.vue"
 import { NCard, NScrollbar, NSelect, NSpin, NTable, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import IndexCard from "@/components/indices/IndexCard.vue"
 
 type IndexModel = IndexStats | null | ""
 

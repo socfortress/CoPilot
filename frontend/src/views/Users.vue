@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import UsersList from "@/components/users/UsersList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
+import UsersList from "@/components/users/UsersList.vue"
 
 const route = useRoute()
 

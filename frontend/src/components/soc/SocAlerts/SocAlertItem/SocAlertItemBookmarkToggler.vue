@@ -10,10 +10,10 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	alert: SocAlert

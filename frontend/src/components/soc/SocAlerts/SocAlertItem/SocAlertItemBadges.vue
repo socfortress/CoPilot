@@ -86,11 +86,11 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import { NSpin, NTooltip } from "naive-ui"
+import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, NTooltip } from "naive-ui"
-import { computed, toRefs } from "vue"
 import SocAssignUser from "./SocAssignUser.vue"
 
 const props = defineProps<{

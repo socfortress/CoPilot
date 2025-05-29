@@ -1,4 +1,5 @@
 import re
+import json
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -29,7 +30,7 @@ from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, add_alert_tag_if_not_exists
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -161,23 +162,81 @@ class VeloSigmaExclusionService:
                         if field_value.startswith("regex:"):
                             # Remove the regex: prefix and try to match
                             regex_pattern = field_value[6:]
-                            try:
-                                if not re.search(regex_pattern, event_value, re.IGNORECASE):
-                                    logger.debug(f"Regex pattern '{regex_pattern}' did not match '{event_value}'")
+                            # Special handling for path-based regex patterns
+                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in regex_pattern or "/" in regex_pattern:
+                                try:
+                                    # Normalize paths for comparison by converting all to lowercase and standardizing backslashes
+                                    pattern = regex_pattern.lower().replace("\\\\", "\\")
+                                    value = event_value.lower().replace("\\\\", "\\")
+
+                                    # Remove the regex: prefix if present
+                                    if pattern.startswith("regex:"):
+                                        pattern = pattern[6:]
+
+                                    # Handle escaped parentheses in Windows paths
+                                    pattern = pattern.replace("\\(", "(").replace("\\)", ")")
+
+                                    # Convert the wildcard pattern to proper regex format
+                                    # Escape special regex characters except for the wildcards we want to keep
+                                    pattern_parts = re.split(r'(\.\*)', pattern)
+                                    regex_parts = []
+
+                                    for i, part in enumerate(pattern_parts):
+                                        if part == ".*":
+                                            # Keep wildcards as-is
+                                            regex_parts.append(part)
+                                        else:
+                                            # Escape regex special characters but keep path separators
+                                            escaped = re.escape(part)
+                                            regex_parts.append(escaped)
+
+                                    pattern_regex = "".join(regex_parts)
+
+                                    # Force matching the entire string
+                                    pattern_regex = f"^{pattern_regex}$"
+
+                                    logger.debug(f"Path regex check: Pattern='{pattern}' → Regex='{pattern_regex}' vs Value='{value}'")
+
+                                    # Try the match
+                                    match_result = re.search(pattern_regex, value, re.IGNORECASE)
+                                    if match_result:
+                                        logger.debug(f"Path regex match succeeded! Match: {match_result.group(0)}")
+                                        return True
+                                    else:
+                                        logger.debug(f"Path regex match failed")
+                                        return False
+
+                                except Exception as e:
+                                    logger.error(f"Error in path regex matching: {str(e)}")
                                     return False
-                                else:
-                                    logger.debug(f"Regex pattern '{regex_pattern}' matched '{event_value}'")
-                            except re.error:
-                                logger.error(f"Invalid regex pattern in exclusion {exclusion.id}: {regex_pattern}")
-                                return False
+                            else:
+                                # Standard regex for non-path values
+                                try:
+                                    if not re.search(regex_pattern, event_value, re.IGNORECASE):
+                                        logger.debug(f"Regex pattern '{regex_pattern}' did not match '{event_value}'")
+                                        return False
+                                    else:
+                                        logger.debug(f"Regex pattern '{regex_pattern}' matched '{event_value}'")
+                                except re.error as e:
+                                    logger.error(f"Invalid regex pattern in exclusion {exclusion.id}: {regex_pattern} - Error: {str(e)}")
+                                    return False
                         else:
                             # Case-insensitive path comparison for Windows paths
-                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in field_value:
-                                norm_field_value = field_value.lower().replace("\\\\", "\\")
-                                norm_event_value = event_value.lower().replace("\\\\", "\\")
+                            if "path" in field_name.lower() or "file" in field_name.lower() or "\\" in field_value or "/" in field_value:
+                                # Log raw values for debugging
+                                logger.debug(f"Before normalization - Rule: '{field_value}', Event: '{event_value}'")
+
+                                # Use the path normalization helper
+                                norm_field_value = self._normalize_windows_path(field_value)
+                                norm_event_value = self._normalize_windows_path(event_value)
+
+                                logger.debug(f"After normalization - Rule: '{norm_field_value}', Event: '{norm_event_value}'")
+
                                 if norm_field_value != norm_event_value:
                                     logger.debug(f"Path mismatch: rule='{norm_field_value}' event='{norm_event_value}'")
                                     return False
+                                else:
+                                    logger.debug(f"Path match found for: {field_name}")
                             else:
                                 # Standard case-insensitive match for other fields
                                 if field_value.lower() != event_value.lower():
@@ -197,6 +256,63 @@ class VeloSigmaExclusionService:
         # If we passed all checks, this is a match
         logger.info(f"Alert matched exclusion rule '{exclusion.name}' (ID: {exclusion.id})")
         return True
+
+    def _normalize_windows_path(self, path: str, is_regex: bool = False) -> str:
+        """
+        Normalize Windows paths by converting all backslash variations to a consistent format.
+
+        Args:
+            path: The path string to normalize
+            is_regex: Whether the path contains regex patterns that should be preserved
+
+        Returns:
+            Normalized path with consistent backslashes and formatting
+        """
+        if not path:
+            return ""
+
+        # Convert to lowercase for case-insensitive comparison
+        normalized = path.lower()
+
+        if is_regex:
+            # Special handling for regex patterns
+            # First, temporarily replace regex character classes with placeholders
+            placeholders = {}
+
+            # Find all character classes like [^\\] or [\\w] and preserve them
+            char_class_pattern = r'(\[\^?[^\]]*\])'
+            char_classes = re.finditer(char_class_pattern, normalized)
+
+            for i, match in enumerate(char_classes):
+                placeholder = f"__REGEX_PLACEHOLDER_{i}__"
+                placeholders[placeholder] = match.group(0)
+                normalized = normalized.replace(match.group(0), placeholder)
+
+        # Use regex to replace any sequence of one or more backslashes with a single backslash
+        # This handles \, \\, \\\, \\\\, etc.
+        normalized = re.sub(r'\\+', r'\\', normalized)
+
+        # Handle escaped special characters in paths
+        normalized = normalized.replace("\\(", "(").replace("\\)", ")")
+        normalized = normalized.replace("\\[", "[").replace("\\]", "]")
+        normalized = normalized.replace("\\ ", " ")
+
+        # Remove any trailing backslash
+        if normalized.endswith("\\"):
+            normalized = normalized[:-1]
+
+        if is_regex:
+            # Restore the regex character classes with their original content
+            for placeholder, original in placeholders.items():
+                normalized = normalized.replace(placeholder, original)
+
+        # Log only in debug for excessive paths
+        if path != normalized:
+            path_preview = path[:20] + "..." if len(path) > 20 else path
+            norm_preview = normalized[:20] + "..." if len(normalized) > 20 else normalized
+            logger.debug(f"Path normalized: '{path_preview}' → '{norm_preview}'")
+
+        return normalized
 
     async def _update_exclusion_stats(self, exclusion_id: int) -> None:
         """Update the statistics for an exclusion after it matches."""
@@ -416,20 +532,46 @@ class VelociraptorSigmaService:
                 db=self.session,
             )
 
+            # Add the full event payload as a separate comment
+            try:
+                # Convert event to string if it's an object or dictionary
+                event_payload = alert.event
+                if not isinstance(event_payload, str):
+                    # Try to serialize using json
+                    try:
+                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                    except TypeError:
+                        # If JSON serialization fails, use string representation
+                        event_payload = str(event_payload)
+
+                await create_comment(
+                    comment=CommentCreate(
+                        alert_id=result["alert_id"],
+                        comment=f"Full Event Payload:\n```\n{event_payload}\n```",
+                        user_name="admin",
+                        created_at=datetime.utcnow(),
+                    ),
+                    db=self.session,
+                )
+                logger.info(f"Added full event payload as comment to alert ID: {result['alert_id']}")
+            except Exception as e:
+                logger.error(f"Failed to add event payload as comment: {str(e)}")
+                logger.exception(e)
+
             # Add tags
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="velociraptor-direct"), db=self.session)
 
             # Add event-specific tags
             if "Sysmon" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:sysmon"), db=self.session)
             elif "Defender" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:defender"), db=self.session)
             elif "PowerShell" in alert.channel:
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:powershell"), db=self.session)
             else:
                 # Generic event type
-                await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
+                await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag="event_type:generic"), db=self.session)
 
             logger.info(f"Created fallback CoPilot alert with ID: {result['alert_id']} for customer {customer_code}")
             result["success"] = True
@@ -526,9 +668,24 @@ class VelociraptorSigmaService:
             source_process_id = getattr(event_data, "SourceProcessId", 0)
             source_user = getattr(event_data, "SourceUser", "Unknown User")
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -564,9 +721,24 @@ class VelociraptorSigmaService:
             # Extract event record ID
             event_record_id = str(parsed_event.System.EventRecordID)
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -605,9 +777,24 @@ class VelociraptorSigmaService:
             # Extract event record ID
             event_record_id = str(parsed_event.System.EventRecordID)
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Fetch corresponding Wazuh alert
             wazuh_event = await self._fetch_wazuh_alert(
-                agent_name=alert.computer,
+                agent_name=agent_name,
                 event_record_id=event_record_id,
                 index_pattern=alert.index_pattern,
             )
@@ -653,11 +840,26 @@ class VelociraptorSigmaService:
             # Extract event record ID if available
             event_record_id = str(getattr(parsed_event.System, "EventRecordID", "unknown"))
 
+            agent_name = alert.computer  # Default to the computer name from the alert
+
+            if alert.clientID:
+                # Query the Agents table to find matching agent by velociraptor_id
+                agent_query = select(Agents).where(Agents.velociraptor_id == alert.clientID)
+                agent_result = await self.session.execute(agent_query)
+                agent = agent_result.scalar_one_or_none()
+
+                if agent and agent.hostname:
+                    logger.info(f"Found agent details {agent}")
+                    # ! SOMETIMES VELOCIRAPTOR AND WAZUH ENUMERATE DIFFERENT HOSTNAMES ! #
+                    # ! Due to this, we will use the agent.hostname as the asset name as this is what ! #
+                    # ! used in the Wazuh events.!#
+                    agent_name = agent.hostname
+
             # Try to fetch corresponding Wazuh alert if we have an event record ID
             wazuh_event = None
             if event_record_id != "unknown":
                 wazuh_event = await self._fetch_wazuh_alert(
-                    agent_name=alert.computer,
+                    agent_name=agent_name,
                     event_record_id=event_record_id,
                     index_pattern=alert.index_pattern,
                 )
@@ -735,8 +937,34 @@ class VelociraptorSigmaService:
                 db=self.session,
             )
 
+            # Add the full event payload as a separate comment
+            try:
+                # Convert event to string if it's an object or dictionary
+                event_payload = alert.event
+                if not isinstance(event_payload, str):
+                    # Try to serialize using json
+                    try:
+                        event_payload = json.dumps(event_payload, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else str(o), indent=2)
+                    except TypeError:
+                        # If JSON serialization fails, use string representation
+                        event_payload = str(event_payload)
+
+                await create_comment(
+                    comment=CommentCreate(
+                        alert_id=result["alert_id"],
+                        comment=f"Full Event Payload:\n```\n{event_payload}\n```",
+                        user_name="admin",
+                        created_at=datetime.utcnow(),
+                    ),
+                    db=self.session,
+                )
+                logger.info(f"Added full event payload as comment to alert ID: {result['alert_id']}")
+            except Exception as e:
+                logger.error(f"Failed to add event payload as comment: {str(e)}")
+                logger.exception(e)
+
             # Add a tag
-            await create_alert_tag(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
+            await add_alert_tag_if_not_exists(alert_tag=AlertTagCreate(alert_id=result["alert_id"], tag=f"{alert.type}"), db=self.session)
 
             logger.info(f"Created CoPilot alert with ID: {result['alert_id']}")
 

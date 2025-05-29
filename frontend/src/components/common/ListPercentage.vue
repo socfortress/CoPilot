@@ -35,9 +35,9 @@
 
 <script setup lang="ts">
 import type { SafeAny } from "@/types/common.d"
-import { useThemeStore } from "@/stores/theme"
 import { NEmpty, NProgress } from "naive-ui"
 import { computed } from "vue"
+import { useThemeStore } from "@/stores/theme"
 
 const { list, labelKey, percentageKey } = defineProps<{
 	list: SafeAny[]

@@ -21,12 +21,12 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/app-layouts/common/Navbar"
-import { useThemeStore } from "@/stores/theme"
-import { isMobile } from "@/utils"
 import { onClickOutside, useElementHover } from "@vueuse/core"
 import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
+import Navbar from "@/app-layouts/common/Navbar"
+import { useThemeStore } from "@/stores/theme"
+import { isMobile } from "@/utils"
 import SidebarFooter from "./SidebarFooter.vue"
 import SidebarHeader from "./SidebarHeader.vue"
 

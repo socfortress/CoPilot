@@ -22,9 +22,9 @@
 
 <script setup lang="ts">
 import type { Size, Type } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ActiveResponseWizard from "./ActiveResponseWizard.vue"
 
 const { type, size } = defineProps<{

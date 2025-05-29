@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import LogsList from "@/components/logs/LogsList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
+import LogsList from "@/components/logs/LogsList.vue"
 
 const route = useRoute()
 

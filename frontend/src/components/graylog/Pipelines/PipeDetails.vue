@@ -41,13 +41,13 @@
 </template>
 
 <script setup lang="ts">
-import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
 import type { RuleExtended } from "./RulesSmallList.vue"
+import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
+import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"
+import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"
-import { computed, toRefs } from "vue"
 import RulesSmallList from "./RulesSmallList.vue"
 
 interface PipelineFullStageExt extends Omit<PipelineFullStage, "rules" | "rule_ids"> {

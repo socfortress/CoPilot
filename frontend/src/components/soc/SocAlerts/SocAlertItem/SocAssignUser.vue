@@ -15,9 +15,9 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import Api from "@/api"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 
 const props = defineProps<{
 	alert: SocAlert

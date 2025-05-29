@@ -30,14 +30,14 @@
 <script setup lang="ts">
 import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
 import type { Agent, AgentVulnerabilities } from "@/types/agents.d"
-import Api from "@/api"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 
 const props = defineProps<{

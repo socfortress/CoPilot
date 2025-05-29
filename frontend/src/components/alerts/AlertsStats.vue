@@ -77,10 +77,10 @@
 <script setup lang="ts">
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
-import Api from "@/api"
 import axios from "axios"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import Api from "@/api"
 import AlertsStatsItem from "./AlertsStatsItem.vue"
 // import { alerts_by_host, alerts_by_rule, alerts_by_rule_per_host } from "./mock"
 

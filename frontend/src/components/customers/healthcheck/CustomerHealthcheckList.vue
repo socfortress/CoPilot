@@ -55,12 +55,12 @@
 <script setup lang="ts">
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
 import { NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 
 const { source, customerCode } = defineProps<{

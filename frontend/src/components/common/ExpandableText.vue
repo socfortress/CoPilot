@@ -22,10 +22,10 @@
 </template>
 
 <script setup lang="ts">
-import vShiki from "@/directives/v-shiki"
 import _truncate from "lodash/truncate"
 import { NPopover } from "naive-ui"
 import { toRefs } from "vue"
+import vShiki from "@/directives/v-shiki"
 
 const props = defineProps<{
 	text: string

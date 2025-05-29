@@ -43,13 +43,13 @@
 
 <script setup lang="ts">
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
+import { NButton, NDrawer, NDrawerContent, NModal } from "naive-ui"
+import { onBeforeMount, ref, watch } from "vue"
+import { useRoute } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import RulesList from "@/components/graylog/Pipelines/RulesList.vue"
-import { NButton, NDrawer, NDrawerContent, NModal } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
-import { useRoute } from "vue-router"
 
 const RulesIcon = "ic:outline-swipe-right-alt"
 

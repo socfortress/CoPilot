@@ -8,12 +8,12 @@
 </template>
 
 <script setup lang="ts">
-import type { User } from "@/types/user"
 import type { Size, Type } from "naive-ui/es/button/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { User } from "@/types/user"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const {
 	type = "error",

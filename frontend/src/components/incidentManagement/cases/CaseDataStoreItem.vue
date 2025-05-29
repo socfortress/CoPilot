@@ -68,16 +68,16 @@
 
 <script setup lang="ts">
 import type { CaseDataStore } from "@/types/incidentManagement/cases"
+import bytes from "bytes"
+import { saveAs } from "file-saver"
+import { NButton, NPopconfirm, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import bytes from "bytes"
-import { saveAs } from "file-saver"
-import { NButton, NPopconfirm, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
 
 const { dataStoreFile, embedded } = defineProps<{
 	dataStoreFile: CaseDataStore

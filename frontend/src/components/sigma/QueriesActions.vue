@@ -48,8 +48,8 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import QueryActiveAllForm from "./actionsProviders/QueryActiveAllForm.vue"
 import QueryDeleteAll from "./actionsProviders/QueryDeleteAll.vue"
 import QueryDownloadAll from "./actionsProviders/QueryDownloadAll.vue"

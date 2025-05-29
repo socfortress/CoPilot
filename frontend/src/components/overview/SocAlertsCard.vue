@@ -17,12 +17,12 @@
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	vertical?: boolean

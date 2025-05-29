@@ -148,15 +148,15 @@
 </template>
 
 <script lang="ts" setup>
-import type { RegisterPayload } from "@/types/auth.d"
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import type { RegisterPayload } from "@/types/auth.d"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import PasswordValidator from "password-validator"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {

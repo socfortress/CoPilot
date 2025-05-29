@@ -70,13 +70,13 @@
 
 <script lang="ts" setup>
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
+import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import ChangePassword from "@/components/users/ChangePassword.vue"
 import { useAuthStore } from "@/stores/auth"
-import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
-import { ref } from "vue"
 
 const propicEnabled = false
 

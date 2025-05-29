@@ -81,10 +81,10 @@
 import type { QuarantineRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NInput, NInputGroup, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import QuarantineItem from "./QuarantineItem.vue"
 
 const props = defineProps<{

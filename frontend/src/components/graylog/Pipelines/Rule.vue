@@ -75,12 +75,12 @@
 
 <script setup lang="ts">
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
+import { NInput, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
+import { ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NInput, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
-import { ref, toRefs } from "vue"
 
 const props = defineProps<{ rule: PipelineRule; embedded?: boolean; highlight: boolean | null | undefined }>()
 const { rule, highlight, embedded } = toRefs(props)

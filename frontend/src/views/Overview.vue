@@ -76,6 +76,9 @@
 </template>
 
 <script setup lang="ts">
+import { useResizeObserver } from "@vueuse/core"
+import { NButton, NDrawer, NDrawerContent } from "naive-ui"
+import { defineAsyncComponent, ref } from "vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -91,9 +94,6 @@ import IncidentCases from "@/components/overview/IncidentCases.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
 import { useGoto } from "@/composables/useGoto"
-import { useResizeObserver } from "@vueuse/core"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 

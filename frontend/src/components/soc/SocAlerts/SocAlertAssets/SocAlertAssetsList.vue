@@ -13,9 +13,9 @@
 
 <script setup lang="ts">
 import type { SocAlertAsset } from "@/types/soc/asset.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import SocAlertAssetsItem from "./SocAlertAssetsItem.vue"
 
 const { alertId } = defineProps<{ alertId: string | number }>()

@@ -209,8 +209,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/alerts.d"
 import type { SocAlertField } from "./type.d"
+import type { Alert } from "@/types/alerts.d"
+import _pick from "lodash/pick"
+import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -218,9 +221,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _pick from "lodash/pick"
-import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean; embedded?: boolean }>()
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))

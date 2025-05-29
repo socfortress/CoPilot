@@ -1,7 +1,6 @@
-import type { LocaleCodes } from "@/lang/config"
 import type { NDateLocale, NLocale } from "naive-ui"
 import type { WritableComputedRef } from "vue"
-import dayjs from "@/utils/dayjs"
+import type { LocaleCodes } from "@/lang/config"
 import {
 	dateDeDE,
 	dateEnUS,
@@ -19,6 +18,7 @@ import {
 import { acceptHMRUpdate, defineStore } from "pinia"
 import { nextTick } from "vue"
 import { useI18n } from "vue-i18n"
+import dayjs from "@/utils/dayjs"
 
 export const useLocalesStore = defineStore("i18n", {
 	state: () => {

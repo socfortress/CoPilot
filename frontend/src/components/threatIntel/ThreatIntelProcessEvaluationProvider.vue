@@ -87,10 +87,10 @@
 
 <script setup lang="ts">
 import type { EvaluationData } from "@/types/threatIntel.d"
-import Api from "@/api"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
+import Api from "@/api"
 
 const { processName } = defineProps<{
 	processName: string

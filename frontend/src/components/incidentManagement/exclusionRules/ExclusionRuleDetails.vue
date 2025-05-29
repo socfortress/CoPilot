@@ -99,6 +99,9 @@
 
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import _pick from "lodash/pick"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
@@ -106,9 +109,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import _pick from "lodash/pick"
-import { NSpin, NTabPane, NTabs } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{

@@ -127,19 +127,19 @@
 </template>
 
 <script setup lang="ts">
+import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
 import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
-import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
+import _clone from "lodash/cloneDeep"
+import { NButton, NDropdown, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useGoto } from "@/composables/useGoto"
-import _clone from "lodash/cloneDeep"
-import { NButton, NDropdown, NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
 
 const message = useMessage()
 const { gotoCustomer } = useGoto()

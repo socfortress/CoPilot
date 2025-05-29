@@ -18,13 +18,13 @@
 
 import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
-import { useThemeStore } from "@/stores/theme"
 import { redo, redoDepth, undo, undoDepth } from "@codemirror/commands"
 import { xml } from "@codemirror/lang-xml"
 import { oneDark } from "@codemirror/theme-one-dark"
 import { tomorrow } from "thememirror"
 import { computed, onMounted, ref, shallowRef, watch } from "vue"
 import { Codemirror } from "vue-codemirror"
+import { useThemeStore } from "@/stores/theme"
 
 export interface XMLEditorCtx {
 	undo: () => void

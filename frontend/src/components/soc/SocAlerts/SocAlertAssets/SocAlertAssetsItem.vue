@@ -142,6 +142,9 @@
 
 <script setup lang="ts">
 import type { SocAlertAsset } from "@/types/soc/asset.d"
+import _omit from "lodash/omit"
+import { NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -150,9 +153,6 @@ import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { isUrlLike } from "@/utils"
 import dayjs from "@/utils/dayjs"
-import _omit from "lodash/omit"
-import { NModal, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref } from "vue"
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()
 

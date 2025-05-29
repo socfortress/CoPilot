@@ -69,14 +69,14 @@
 </template>
 
 <script setup lang="ts">
+import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
-import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { useWindowSize } from "@vueuse/core"
 import { NButton, NCard, NDropdown, NInput, NScrollbar, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	modelValue: string

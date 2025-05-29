@@ -18,7 +18,6 @@
 
 <script lang="ts" setup>
 import type { RouteLocationNormalizedLoaded } from "vue-router"
-import Icon from "@/components/common/Icon.vue"
 import _capitalize from "lodash/capitalize"
 import _compact from "lodash/compact"
 import _isEqual from "lodash/isEqual"
@@ -26,6 +25,7 @@ import _split from "lodash/split"
 import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 
 interface Page {
 	name: string

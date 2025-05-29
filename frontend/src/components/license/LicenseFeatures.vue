@@ -105,10 +105,10 @@
 
 <script setup lang="ts">
 import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 import LicenseDetails from "./LicenseDetails.vue"
 import LicenseLoadForm from "./LicenseLoadForm.vue"

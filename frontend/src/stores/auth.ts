@@ -1,15 +1,15 @@
 import type { AuthUser, JWTPayload, LoginPayload, RouteMetaAuthRole } from "@/types/auth.d"
 import type { ApiError } from "@/types/common.d"
-import Api from "@/api"
-import { AuthUserRole, RouteRole } from "@/types/auth.d"
-import { getAvatar, getNameInitials } from "@/utils"
-import { jwtRoleToUserRole } from "@/utils/auth"
 import * as jose from "jose"
 import _castArray from "lodash/castArray"
 import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import SecureLS from "secure-ls"
+import Api from "@/api"
+import { AuthUserRole, RouteRole } from "@/types/auth.d"
+import { getAvatar, getNameInitials } from "@/utils"
+import { jwtRoleToUserRole } from "@/utils/auth"
 
 const ls = new SecureLS({ encodingType: "aes", isCompression: false })
 

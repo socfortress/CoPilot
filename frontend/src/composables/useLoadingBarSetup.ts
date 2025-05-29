@@ -1,7 +1,7 @@
-import { useMainStore } from "@/stores/main"
 import { useLoadingBar } from "naive-ui"
 import { onMounted } from "vue"
 import { useRouter } from "vue-router"
+import { useMainStore } from "@/stores/main"
 
 export function useLoadingBarSetup() {
 	const router = useRouter()

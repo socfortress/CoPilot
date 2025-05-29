@@ -17,12 +17,12 @@
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { Case } from "@/types/incidentManagement/cases"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
 
 const CasesIcon = "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries"
 const { gotoIncidentManagementCases } = useGoto()

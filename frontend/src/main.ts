@@ -1,9 +1,9 @@
-import App from "@/App.vue"
-import i18n from "@/lang"
-import router from "@/router"
 import { createPinia } from "pinia"
 import { createPersistedState } from "pinia-plugin-persistedstate"
 import { createApp } from "vue"
+import App from "@/App.vue"
+import i18n from "@/lang"
+import router from "@/router"
 import "@/assets/scss/index.scss"
 import "./tailwind.css"
 

@@ -32,9 +32,9 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 import CustomerItem from "./CustomerItem.vue"
 
 const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()

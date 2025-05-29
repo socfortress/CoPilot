@@ -79,12 +79,12 @@
 
 <script setup lang="ts">
 import type { AlertsEventElement } from "@/types/graylog/alerts.d"
+import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 
 const { alertsEvent } = defineProps<{ alertsEvent: AlertsEventElement }>()
 

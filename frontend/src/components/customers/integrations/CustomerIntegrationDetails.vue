@@ -69,15 +69,15 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
 import type { CustomerIntegration } from "@/types/integrations.d"
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import Api from "@/api"
-import CardKV from "@/components/common/cards/CardKV.vue"
-import Icon from "@/components/common/Icon.vue"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCollapseTransition, NForm, NFormItem, NInput, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { handleDeleteIntegration } from "./utils"
 
 const props = defineProps<{

@@ -33,14 +33,14 @@
 </template>
 
 <script lang="ts" setup>
+import { NBadge, NButton, NDrawer, NDrawerContent, NPopover } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import NotificationsList from "@/components/common/Notifications/List.vue"
 import NotificationsToolbar from "@/components/common/Notifications/Toolbar.vue"
 import { useHealthchecksNotify } from "@/composables/useHealthchecksNotify"
 import { useNotifications } from "@/composables/useNotifications"
 import { useThemeStore } from "@/stores/theme"
-import { NBadge, NButton, NDrawer, NDrawerContent, NPopover } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
 
 const MAX_ITEMS = 7
 const BellIcon = "ph:bell"

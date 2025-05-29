@@ -1,10 +1,10 @@
 import type { FormType } from "@/components/auth/types.d"
+import { createRouter, createWebHistory } from "vue-router"
 import { RouteRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
 import OverviewPage from "@/views/Overview.vue"
-import { createRouter, createWebHistory } from "vue-router"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -88,9 +88,31 @@ const router = createRouter({
 		},
 		{
 			path: "/alerts",
-			name: "Alerts",
-			component: () => import("@/views/AlertsGraylog.vue"),
-			meta: { title: "Alerts", auth: true, roles: RouteRole.All }
+			redirect: "/alerts/siem",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "siem",
+					name: "Alerts-SIEM",
+					component: () => import("@/views/alerts/AlertsGraylog.vue"),
+					meta: { title: "SIEM" }
+				},
+				{
+					path: "mitre",
+					name: "Alerts-Mitre",
+					component: () => import("@/views/alerts/Mitre.vue"),
+					meta: { title: "MITRE ATT&CK" }
+				},
+				{
+					path: "atomic-red-team",
+					name: "Alerts-AtomicRedTeam",
+					component: () => import("@/views/alerts/AtomicRedTeam.vue"),
+					meta: { title: "Atomic Red Team" }
+				}
+			]
 		},
 		{
 			path: "/artifacts",

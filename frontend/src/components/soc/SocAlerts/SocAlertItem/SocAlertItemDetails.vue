@@ -90,13 +90,13 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NSpin, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { alert } = defineProps<{

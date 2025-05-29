@@ -22,10 +22,10 @@
 
 <script setup lang="ts">
 import type { AlertsQueryTimeRange, GraylogAlertsQuery } from "@/api/endpoints/alerts"
-import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
 import { NButton, NFormItem, NSelect } from "naive-ui"
 import { onBeforeMount, toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ filters: Partial<GraylogAlertsQuery> }>()
 const emit = defineEmits<{

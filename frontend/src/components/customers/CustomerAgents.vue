@@ -19,11 +19,11 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs } from "vue"
 
 const props = defineProps<{
 	customer: Customer

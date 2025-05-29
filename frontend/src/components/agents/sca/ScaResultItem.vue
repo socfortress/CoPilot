@@ -73,11 +73,11 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents.d"
+import { NButton, NModal } from "naive-ui"
+import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, NModal } from "naive-ui"
-import { ref } from "vue"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 
 const { data, embedded } = defineProps<{

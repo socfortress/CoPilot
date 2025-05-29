@@ -16,14 +16,14 @@
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import type { InfluxDBAlert } from "@/types/healthchecks.d"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
 import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
 
 const HealthcheckIcon = "ph:heartbeat"
 const { gotoHealthcheck } = useGoto()

@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import { NCard } from "naive-ui"
 import { toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	title: string

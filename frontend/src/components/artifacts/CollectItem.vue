@@ -32,16 +32,16 @@
 
 <script setup lang="ts">
 import type { CollectResult } from "@/types/artifacts.d"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
-import dayjs from "@/utils/dayjs"
 import _isNumber from "lodash/isNumber"
 import _isString from "lodash/isString"
 import { NModal } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import dayjs from "@/utils/dayjs"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 interface Prop {

@@ -49,13 +49,13 @@
 
 <script setup lang="ts">
 import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import _omit from "lodash/omit"
+import { NModal, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import _omit from "lodash/omit"
-import { NModal, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 
 const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 

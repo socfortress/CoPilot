@@ -62,10 +62,10 @@
 
 <script setup lang="ts">
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NModal, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import AvailableReportsItem from "./AvailableReportsItem.vue"
 import CreationReportForm from "./CreationReportForm.vue"
 

@@ -58,11 +58,11 @@
 
 <script setup lang="ts">
 import type { Size } from "naive-ui/es/button/src/interface"
+import { NButton, NModal, useDialog, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
-import { NButton, NModal, useDialog, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
 
 const { alertId, caseId, size } = defineProps<{
 	alertId?: string | number | null

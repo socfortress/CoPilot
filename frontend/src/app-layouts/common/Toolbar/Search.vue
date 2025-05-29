@@ -10,11 +10,11 @@
 </template>
 
 <script lang="ts" setup>
+import { NText } from "naive-ui"
+import { onMounted, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { getOS } from "@/utils"
-import { NText } from "naive-ui"
-import { onMounted, ref } from "vue"
 
 const SearchIcon = "ion:search-outline"
 const commandIcon = ref("⌘")

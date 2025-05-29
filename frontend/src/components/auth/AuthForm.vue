@@ -18,9 +18,9 @@
 
 <script lang="ts" setup>
 import type { FormType } from "./types.d"
+import { computed, onBeforeMount, ref } from "vue"
 import Logo from "@/app-layouts/common/Logo.vue"
 import { useThemeStore } from "@/stores/theme"
-import { computed, onBeforeMount, ref } from "vue"
 import SignIn from "./SignIn.vue"
 
 const props = defineProps<{

@@ -1,9 +1,9 @@
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
-import IncidentManagementIcon from "@/assets/icons/alert-settings-icon.svg"
-import { renderIcon } from "@/utils"
 import { h } from "vue"
-
 import { RouterLink } from "vue-router"
+import IncidentManagementIcon from "@/assets/icons/alert-settings-icon.svg"
+
+import { renderIcon } from "@/utils"
 
 const OverviewIcon = "carbon:dashboard"
 const IndiciesIcon = "ph:list-magnifying-glass"
@@ -143,18 +143,50 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Alerts"
-						}
-					},
-					{ default: () => "Alerts" }
-				),
+			label: "Alerts",
 			key: "Alerts",
-			icon: renderIcon(AlertsIcon)
+			icon: renderIcon(AlertsIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-SIEM"
+								}
+							},
+							{ default: () => "SIEM" }
+						),
+					key: "Alerts-SIEM"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-Mitre"
+								}
+							},
+							{ default: () => "MITRE ATT&CK" }
+						),
+					key: "Alerts-Mitre"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Alerts-AtomicRedTeam"
+								}
+							},
+							{ default: () => "Atomic Red Team" }
+						),
+					key: "Alerts-AtomicRedTeam"
+				}
+			]
 		},
 		{
 			label: () =>

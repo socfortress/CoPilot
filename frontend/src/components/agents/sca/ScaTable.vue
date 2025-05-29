@@ -99,14 +99,14 @@
 
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
 import { saveAs } from "file-saver"
 import _truncate from "lodash/truncate"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import ScaItem from "./ScaItem.vue"
 
 interface SCAExt extends AgentSca {

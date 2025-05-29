@@ -28,10 +28,10 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import type { FlowResult } from "@/types/flow.d"
-import Api from "@/api"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
 import AgentFlowItem from "./AgentFlowItem.vue"
 
 interface FlowResultExt extends FlowResult {

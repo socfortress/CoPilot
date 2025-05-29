@@ -667,6 +667,373 @@ async def provision_office365_threat_intel_alert(
         message="Office365 Threat Intel monitoring alerts provisioned successfully",
     )
 
+async def provision_crowdstrike_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Crowdstrike monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_crowdstrike_monitoring_alert with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="CROWDSTRIKE ALERT",
+            description="Alert on Crowdstrike alerts",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:crowdstrike AND (syslog_level:Alert OR syslog_level:Warning)",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.syslog_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="CROWDSTRIKE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Crowdstrike monitoring alerts provisioned successfully",
+    )
+
+async def provision_fortinet_system_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet system monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_fortinet_system_monitoring_alert with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET SYSTEM - CRITICAL EVENTS",
+            description="FORTINET SYSTEM - CRITICAL EVENTS",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:fortinet AND subtype:system AND level:critical",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.syslog_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="FORTINET",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet system monitoring alerts provisioned successfully",
+    )
+
+async def provision_fortinet_utm_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet UTM monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_fortinet_utm_monitoring_alert with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET UTM - HIGH SEVERITY EVENTS",
+            description="FORTINET UTM - HIGH SEVERITY EVENTS",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:fortinet AND type:utm AND (severity:high OR severity:critical) AND !action:dropped AND !action:clear_session",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.syslog_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="FORTINET",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet UTM monitoring alerts provisioned successfully",
+    )
+
+async def provision_paloalto_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Palo Alto monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_paloalto_monitoring_alert with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALO ALTO - HIGH SEVERITY EVENTS",
+            description="PALO ALTO - HIGH SEVERITY EVENTS",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:palo_alto AND event_log_name:THREAT AND (vendor_alert_severity:high OR vendor_alert_severity:critical) AND !vendor_event_action:drop",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.syslog_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="PALOALTO",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Palo Alto monitoring alerts provisioned successfully",
+    )
 
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """

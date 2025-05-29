@@ -23,9 +23,9 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
 import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
 import { onMounted, ref, toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 export interface IFileForm {
 	connector_file: File | null

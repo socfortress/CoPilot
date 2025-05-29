@@ -39,11 +39,11 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { h, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { NButton, useDialog, useMessage } from "naive-ui"
-import { h, ref, toRefs, watch } from "vue"
 import CustomerForm from "./CustomerForm.vue"
 
 const props = defineProps<{

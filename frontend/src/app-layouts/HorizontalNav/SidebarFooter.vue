@@ -5,10 +5,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useThemeStore } from "@/stores/theme"
-import { renderIcon } from "@/utils"
 import { NMenu } from "naive-ui"
 import { computed, h, ref } from "vue"
+import { useThemeStore } from "@/stores/theme"
+import { renderIcon } from "@/utils"
 
 const { collapsed = false } = defineProps<{
 	collapsed?: boolean

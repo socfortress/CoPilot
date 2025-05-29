@@ -50,10 +50,10 @@
 
 <script setup lang="ts">
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CustomerNetworkConnectorForm from "./CustomerNetworkConnectorForm.vue"
 import CustomerNetworkConnectorItem from "./CustomerNetworkConnectorItem.vue"
 

@@ -21,9 +21,9 @@
 
 <script setup lang="ts">
 import type { Size, Type } from "naive-ui/es/button/src/interface"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import { ref, watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
 
 const { type, size } = defineProps<{

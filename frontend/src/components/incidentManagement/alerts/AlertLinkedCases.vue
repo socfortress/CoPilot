@@ -33,11 +33,11 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NButton, NPopover, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { NButton, NPopover, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, watch } from "vue"
 
 const props = defineProps<{ alert: Alert }>()
 

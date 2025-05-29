@@ -9,11 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import type { PipelineRule } from "@/types/graylog/pipelines.d"
 import type { ScrollbarInst } from "naive-ui"
-import Api from "@/api"
+import type { PipelineRule } from "@/types/graylog/pipelines.d"
 import { NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
+import Api from "@/api"
 import Rule from "./Rule.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()

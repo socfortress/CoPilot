@@ -80,12 +80,12 @@
 
 <script setup lang="ts">
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
+import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
+import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate, getAvatar, getNameInitials } from "@/utils"
-import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 
 type Mode = "view" | "edit"
 

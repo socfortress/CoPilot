@@ -1,7 +1,7 @@
-import type { FlaskBaseResponse } from "@/types/flask"
 import type { AxiosResponse } from "axios"
-import Api from "@/api"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { acceptHMRUpdate, defineStore } from "pinia"
+import Api from "@/api"
 
 export const useCaseReportTemplateStore = defineStore("caseReportTemplate", {
 	state: () => ({

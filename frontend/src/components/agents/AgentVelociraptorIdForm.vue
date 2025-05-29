@@ -30,10 +30,10 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NInput, NInputGroup, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	agent: Agent

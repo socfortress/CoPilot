@@ -108,7 +108,7 @@ async def provision_wazuh_customer(
         )
     ).datasource.uid
     # ! CREATE THE VULNERABILITY DATASOURCE IF WAZUH VERSION 4.8.0 OR HIGHER ! #
-    if check_wazuh_manager_version() is True:
+    if await check_wazuh_manager_version() is True:
         logger.info("Creating vulnerability datasource since Wazuh version is 4.8.0 or higher")
         await create_vulnerability_datasource(
             request=request,

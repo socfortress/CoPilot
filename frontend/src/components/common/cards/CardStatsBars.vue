@@ -46,10 +46,10 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
 import _round from "lodash/round"
 import { NCard } from "naive-ui"
 import { computed } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 export interface ItemProps {
 	value: number

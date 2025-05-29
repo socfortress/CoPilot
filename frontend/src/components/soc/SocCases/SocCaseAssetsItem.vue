@@ -113,16 +113,16 @@
 
 <script setup lang="ts">
 import type { SocCaseAsset } from "@/types/soc/asset.d"
-import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
-import Icon from "@/components/common/Icon.vue"
-import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"
 import { NEmpty, NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
+import { isUrlLike } from "@/utils"
 
 const { asset } = defineProps<{ asset: SocCaseAsset }>()
 

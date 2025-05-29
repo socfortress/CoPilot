@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import AlertsList from "@/components/incidentManagement/alerts/AlertsList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
+import AlertsList from "@/components/incidentManagement/alerts/AlertsList.vue"
 
 const route = useRoute()
 

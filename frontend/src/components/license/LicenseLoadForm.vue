@@ -14,10 +14,10 @@
 
 <script setup lang="ts">
 import type { LicenseKey } from "@/types/license.d"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "uploaded"): void

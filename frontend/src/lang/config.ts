@@ -1,5 +1,5 @@
-import type { RecursiveKeyOf } from "@/types/common"
 import type { I18nOptions } from "vue-i18n"
+import type { RecursiveKeyOf } from "@/types/common"
 import * as locales from "./locales"
 
 export type LocaleCodes = keyof typeof locales

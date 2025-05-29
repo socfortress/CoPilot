@@ -8,11 +8,11 @@
 </template>
 
 <script lang="ts" setup>
+import { NScrollbar } from "naive-ui"
+import { computed } from "vue"
 import Logo from "@/app-layouts/common/Logo.vue"
 import Navbar from "@/app-layouts/common/Navbar"
 import { useThemeStore } from "@/stores/theme"
-import { NScrollbar } from "naive-ui"
-import { computed } from "vue"
 
 const themeStore = useThemeStore()
 const isDark = computed<boolean>(() => themeStore.isThemeDark)

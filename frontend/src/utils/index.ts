@@ -1,12 +1,12 @@
-import type { OsTypesFull } from "@/types/common.d"
 import type { Component } from "vue"
+import type { OsTypesFull } from "@/types/common.d"
 import process from "node:process"
-import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import _trim from "lodash/trim"
 import { h } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import dayjs from "@/utils/dayjs"
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {

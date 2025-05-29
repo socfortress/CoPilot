@@ -42,10 +42,10 @@
 
 <script setup lang="ts">
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
 import { NModal } from "naive-ui"
 import { defineAsyncComponent, ref, toRefs, watch } from "vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	incidentNotification: IncidentNotification
