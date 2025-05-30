@@ -1,5 +1,5 @@
 <template>
-	<n-button :size type="primary" secondary @click="showForm = true">
+	<n-button :size type="primary" secondary @click.stop="showForm = true">
 		<template #icon>
 			<Icon :name="AttackIcon" />
 		</template>
@@ -14,6 +14,7 @@
 		title="Simulate Windows Attack"
 		:bordered="false"
 		segmented
+		content-class="p-0!"
 	>
 		<SimulatorWizard :technique-id />
 	</n-modal>

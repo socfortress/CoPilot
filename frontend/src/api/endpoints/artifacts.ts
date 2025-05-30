@@ -75,7 +75,7 @@ export default {
 		)
 	},
 	getParameters(artifactName: string, parameterPrefix: string) {
-		return HttpClient.post<
+		return HttpClient.get<
 			FlaskBaseResponse & {
 				artifact_name: string
 				parameter_prefix: string

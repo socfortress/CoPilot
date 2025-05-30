@@ -44,7 +44,7 @@ const message = useMessage()
 const loading = ref(false)
 const list = ref<MatchingParameter[]>([])
 
-function getParameters() {
+function getList() {
 	loading.value = true
 
 	Api.artifacts
@@ -69,6 +69,6 @@ function setItem(item: MatchingParameter) {
 }
 
 onBeforeMount(() => {
-	getParameters()
+	getList()
 })
 </script>

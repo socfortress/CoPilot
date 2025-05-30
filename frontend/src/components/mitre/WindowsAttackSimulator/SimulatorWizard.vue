@@ -19,12 +19,34 @@
 						<ParametersList v-model:selected="selectedAttack" :technique-id class="px-7" />
 					</n-scrollbar>
 				</div>
-				<div v-if="current === 2" class="grow overflow-hidden">
+				<div v-else-if="current === 2" class="grow overflow-hidden">
 					<n-scrollbar style="max-height: 355px" trigger="none">
-						<ParametersList v-model:selected="selectedAttack" :technique-id class="px-7" />
+						<AgentsList v-model:selected="selectedAgent" class="px-7" />
 					</n-scrollbar>
 				</div>
-				<div v-else class="auth-key-form flex flex-wrap gap-3 px-7">recap...</div>
+				<div v-else class="flex flex-col gap-3 px-7">
+					<CardEntity v-if="selectedAttack" embedded size="small">
+						<template #header>
+							{{ selectedAttack.name }}
+						</template>
+						<template #main>
+							{{ selectedAttack.description }}
+						</template>
+					</CardEntity>
+					<CardEntity v-if="selectedAgent" embedded size="small">
+						<template #header>
+							{{ selectedAgent.hostname }}
+						</template>
+						<template #main>
+							{{ selectedAgent.ip_address }}
+						</template>
+					</CardEntity>
+
+					<div>
+						<div>{{ collectTime }}</div>
+						<pre>{{ collectResponse }}</pre>
+					</div>
+				</div>
 			</Transition>
 		</div>
 
@@ -35,13 +57,7 @@
 				</template>
 				Prev
 			</n-button>
-			<n-button
-				v-if="isSubmitEnabled"
-				type="primary"
-				:disabled="!isSubmitValid"
-				:loading="loading"
-				@click="submit()"
-			>
+			<n-button v-if="isSubmitEnabled" type="primary" :disabled="!isSubmitValid" :loading @click="submit()">
 				Submit
 			</n-button>
 		</div>
@@ -52,11 +68,13 @@
 import type { StepsProps } from "naive-ui"
 import type { CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
-import type { MatchingParameter } from "@/types/artifacts.d"
+import type { CollectResult, MatchingParameter } from "@/types/artifacts.d"
 import { NButton, NScrollbar, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import AgentsList from "./AgentsList.vue"
 import ParametersList from "./ParametersList.vue"
 
 const { techniqueId } = defineProps<{
@@ -78,12 +96,9 @@ const slideFormDirection = ref<"right" | "left">("right")
 
 const selectedAttack = ref<MatchingParameter | null>(null)
 const selectedAgent = ref<Agent | null>(null)
-
-watch(selectedAttack, val => {
-	if (val) {
-		next()
-	}
-})
+const loading = ref(false)
+const collectResponse = ref<CollectResult[] | null>(null)
+const collectTime = ref<Date | null>(null)
 
 const isPrevStepEnabled = computed(() => current.value > 1)
 const isSubmitEnabled = computed(() => current.value === 2)
@@ -98,8 +113,6 @@ const isSubmitValid = computed(() => {
 
 	return true
 })
-
-const loading = ref(false)
 
 function submit() {
 	if (selectedAttack.value && selectedAgent.value) {
@@ -129,6 +142,8 @@ function submit() {
 				if (res.data.success) {
 					emit("submitted")
 					reset()
+					collectResponse.value = res.data.results || []
+					collectTime.value = new Date()
 					message.success(res.data?.message || "Customer integration successfully created.")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -150,6 +165,8 @@ function reset() {
 
 	selectedAttack.value = null
 	selectedAgent.value = null
+	collectResponse.value = null
+	collectTime.value = null
 }
 
 function next() {
@@ -163,6 +180,12 @@ function prev() {
 	slideFormDirection.value = "left"
 	current.value--
 }
+
+watch(selectedAttack, val => {
+	if (val) {
+		next()
+	}
+})
 </script>
 
 <style lang="scss" scoped>
