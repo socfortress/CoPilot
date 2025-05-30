@@ -7,7 +7,7 @@
 				<code>{{ entity.test_count }}</code>
 			</template>
 			<template #default>{{ entity.technique_name }}</template>
-			<template #footer>
+			<template #footerMain>
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge v-if="entity.has_prerequisites" color="primary" type="splitted">
 						<template #label>has prerequisites</template>
@@ -18,6 +18,9 @@
 						<template #value>{{ cat }}</template>
 					</Badge>
 				</div>
+			</template>
+			<template #footerExtra>
+				<SimulatorButton :technique-id="entity.technique_id" size="small" />
 			</template>
 		</CardEntity>
 
@@ -42,6 +45,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
+import SimulatorButton from "../WindowsAttackSimulator/SimulatorButton.vue"
 import TechniqueCardContent from "./TechniqueCardContent.vue"
 
 const { entity } = defineProps<{ entity: MitreAtomicTest; embedded?: boolean }>()
