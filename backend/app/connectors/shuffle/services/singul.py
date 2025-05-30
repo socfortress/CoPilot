@@ -4,7 +4,7 @@ from shufflepy import Singul
 from app.connectors.shuffle.schema.singul import SingulRequest
 from app.connectors.shuffle.utils.universal import send_post_request
 
-singul = Singul(auth="AUTH", url="https://shuffler.io")
+singul = Singul(auth="REPLACE", url="https://shuffler.io")
 
 
 async def execute_singul(
@@ -22,9 +22,9 @@ async def execute_singul(
     logger.info("Executing Singul integration")
     response = singul.communication.send_message(
         app=request.app,
-        org_id=request.org_id,
+        auth_id='REPLACE',
         fields=[
-            {"key": "to", "value": "REPLACE_WITH_EMAIL"},
+            {"key": "to", "value": "REPLACE"},
             {"key": "subject", "value": "Test Email from Singul"},
             {"key": "body", "value": "This is a test email sent from Singul."},
         ],
