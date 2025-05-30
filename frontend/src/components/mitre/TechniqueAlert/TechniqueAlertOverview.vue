@@ -47,6 +47,11 @@
 					<TechniqueEventsList v-if="techniqueDetails" :external-id />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Atomic test" tab="Atomic test" display-directive="show:lazy">
+				<div class="px-7 pb-7 pt-4">
+					<TechniqueCardContent :technique-id="externalId" />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -56,6 +61,7 @@ import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import TechniqueCardContent from "../AtomicTests/TechniqueCardContent.vue"
 import GroupsList from "../Group/GroupsList.vue"
 import MitigationsList from "../Mitigation/MitigationsList.vue"
 import SoftwareList from "../Software/SoftwareList.vue"
