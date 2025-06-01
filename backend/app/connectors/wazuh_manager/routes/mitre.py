@@ -3,20 +3,34 @@ from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
-from fastapi import HTTPException
 
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse, AtomicTestsListResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, MitreTechniquesInAlertsResponse, MitreTechniqueInAlert, MitreTechniqueAlertsResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse, WazuhMitreGroupsResponse
-from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id, get_mitre_references, get_mitre_groups
+from app.connectors.wazuh_manager.schema.mitre import AtomicTestsListResponse
+from app.connectors.wazuh_manager.schema.mitre import MitreTechniqueAlertsResponse
+from app.connectors.wazuh_manager.schema.mitre import MitreTechniquesInAlertsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreGroupsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreMitigationsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreReferencesResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreSoftwareResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse
 from app.connectors.wazuh_manager.services.mitre import AtomicRedTeamService
-from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics, get_mitre_software, get_mitre_mitigations
-from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques, search_mitre_techniques_in_alerts
+from app.connectors.wazuh_manager.services.mitre import get_alerts_by_mitre_id
+from app.connectors.wazuh_manager.services.mitre import get_mitre_groups
+from app.connectors.wazuh_manager.services.mitre import get_mitre_mitigations
+from app.connectors.wazuh_manager.services.mitre import get_mitre_references
+from app.connectors.wazuh_manager.services.mitre import get_mitre_software
+from app.connectors.wazuh_manager.services.mitre import get_mitre_tactics
+from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques
+from app.connectors.wazuh_manager.services.mitre import (
+    search_mitre_techniques_in_alerts,
+)
 
 # Initialize router and auth handler
 wazuh_manager_mitre_router = APIRouter()
@@ -51,9 +65,8 @@ async def list_mitre_groups(
     Returns:
         WazuhMitreGroupsResponse: A list of MITRE ATT&CK groups matching the criteria.
     """
-    return await get_mitre_groups(
-        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
-    )
+    return await get_mitre_groups(limit=limit, offset=offset, select=select, sort=sort, search=search, q=q)
+
 
 @wazuh_manager_mitre_router.get(
     "/mitigations",
@@ -83,9 +96,8 @@ async def list_mitre_mitigations(
     Returns:
         WazuhMitreMitigationsResponse: A list of MITRE ATT&CK mitigations matching the criteria.
     """
-    return await get_mitre_mitigations(
-        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
-    )
+    return await get_mitre_mitigations(limit=limit, offset=offset, select=select, sort=sort, search=search, q=q)
+
 
 @wazuh_manager_mitre_router.get(
     "/references",
@@ -113,9 +125,8 @@ async def list_mitre_references(
     Returns:
         WazuhMitreReferencesResponse: A list of MITRE ATT&CK references matching the criteria.
     """
-    return await get_mitre_references(
-        limit=limit, offset=offset, sort=sort, search=search, q=q
-    )
+    return await get_mitre_references(limit=limit, offset=offset, sort=sort, search=search, q=q)
+
 
 @wazuh_manager_mitre_router.get(
     "/software",
@@ -145,9 +156,8 @@ async def list_mitre_software(
     Returns:
         WazuhMitreSoftwareResponse: A list of MITRE ATT&CK software matching the criteria.
     """
-    return await get_mitre_software(
-        limit=limit, offset=offset, select=select, sort=sort, search=search, q=q
-    )
+    return await get_mitre_software(limit=limit, offset=offset, select=select, sort=sort, search=search, q=q)
+
 
 @wazuh_manager_mitre_router.get(
     "/tactics",
@@ -251,18 +261,19 @@ async def list_atomic_tests(
 
         return AtomicTestsListResponse(
             success=True,
-            message=f"Found {total_techniques} techniques with {result.get('total_tests', 'many')} atomic tests (page {page} of {total_pages})",
+            message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages},)",
             total_techniques=total_techniques,
             total_tests=result.get("total_tests"),
             tests=paginated_tests,
             last_updated=result["last_updated"],
             page=page,
             page_size=size,
-            total_pages=total_pages
+            total_pages=total_pages,
         )
     except Exception as e:
         logger.error(f"Error retrieving atomic tests: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving atomic tests: {str(e)}")
+
 
 @wazuh_manager_mitre_router.get(
     "/techniques/{technique_id}/atomic-tests",
@@ -302,6 +313,7 @@ async def get_technique_atomic_tests(technique_id: str = Path(..., description="
         markdown_content=markdown_content,
     )
 
+
 @wazuh_manager_mitre_router.get(
     "/techniques/alerts",
     response_model=MitreTechniquesInAlertsResponse,
@@ -327,14 +339,10 @@ async def list_mitre_techniques_in_alerts(
     additional_filters = []
 
     if rule_level is not None:
-        additional_filters.append({
-            "match_phrase": {"rule_level": {"query": str(rule_level)}}
-        })
+        additional_filters.append({"match_phrase": {"rule_level": {"query": str(rule_level)}}})
 
     if rule_group is not None:
-        additional_filters.append({
-            "match_phrase": {"rule_groups": {"query": rule_group}}
-        })
+        additional_filters.append({"match_phrase": {"rule_groups": {"query": rule_group}}})
 
     # Execute the search with the specified parameters
     results = await search_mitre_techniques_in_alerts(
@@ -343,26 +351,26 @@ async def list_mitre_techniques_in_alerts(
         offset=offset,
         additional_filters=additional_filters,
         index_pattern=index_pattern,
-        mitre_field=mitre_field
+        mitre_field=mitre_field,
     )
 
     # Get the total number of techniques (from all pages)
-    total_techniques = results.get('total_techniques_count', results['techniques_count'])
+    total_techniques = results.get("total_techniques_count", results["techniques_count"])
 
     # Calculate total pages based on the total number of techniques
     total_pages = (total_techniques + size - 1) // size if total_techniques > 0 else 1
 
     return MitreTechniquesInAlertsResponse(
         success=True,
-        message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages})",
-        total_alerts=results['total_alerts'],
+        message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages},)",
+        total_alerts=results["total_alerts"],
         techniques_count=total_techniques,  # Use the total count for all pages
-        techniques=results['techniques'],  # Use current page techniques
+        techniques=results["techniques"],  # Use current page techniques
         time_range=time_range,
-        field_used=results.get('field_used', 'unknown'),
+        field_used=results.get("field_used", "unknown"),
         page=page,
         page_size=size,
-        total_pages=total_pages
+        total_pages=total_pages,
     )
 
 
@@ -395,14 +403,10 @@ async def get_mitre_technique_alerts(
     additional_filters = []
 
     if rule_level is not None:
-        additional_filters.append({
-            "match_phrase": {"rule_level": {"query": str(rule_level)}}
-        })
+        additional_filters.append({"match_phrase": {"rule_level": {"query": str(rule_level)}}})
 
     if rule_group is not None:
-        additional_filters.append({
-            "match_phrase": {"rule_groups": {"query": rule_group}}
-        })
+        additional_filters.append({"match_phrase": {"rule_groups": {"query": rule_group}}})
 
     # Get the alerts
     results = await get_alerts_by_mitre_id(
@@ -412,19 +416,19 @@ async def get_mitre_technique_alerts(
         offset=offset,
         additional_filters=additional_filters,
         index_pattern=index_pattern,
-        mitre_field=mitre_field
+        mitre_field=mitre_field,
     )
 
     return MitreTechniqueAlertsResponse(
         success=True,
-        message=f"Found {results['total_alerts']} alerts for MITRE technique {clean_technique_id} (page {page} of {(results['total_alerts'] + size - 1) // size})",
-        technique_id=results['technique_id'],
-        technique_name=results['technique_name'],
-        total_alerts=results['total_alerts'],
-        alerts=results['alerts'],
-        field_used=results.get('field_used', 'unknown'),
+        message=f"Found {results['total_alerts']} alerts for MITRE technique {clean_technique_id} (page {page} of {(results['total_alerts'] + size - 1) // size},)",
+        technique_id=results["technique_id"],
+        technique_name=results["technique_name"],
+        total_alerts=results["total_alerts"],
+        alerts=results["alerts"],
+        field_used=results.get("field_used", "unknown"),
         time_range=time_range,
         page=page,
         page_size=size,
-        total_pages=(results['total_alerts'] + size - 1) // size
+        total_pages=(results["total_alerts"] + size - 1) // size,
     )

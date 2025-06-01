@@ -1,25 +1,30 @@
+import asyncio
+import re
 import time
+from datetime import datetime
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Tuple, Union
-from datetime import datetime
-import yaml
+from typing import Tuple
+from typing import Union
+
 import aiohttp
-import asyncio
+import yaml
+from elasticsearch7 import AsyncElasticsearch
 from fastapi import HTTPException
 from loguru import logger
-import re
-import json
 from pydantic import ValidationError
 
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
-from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse, WazuhMitreSoftwareResponse, WazuhMitreReferencesResponse, WazuhMitreMitigationsResponse, WazuhMitreGroupsResponse
-from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
-from elasticsearch7 import AsyncElasticsearch
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreGroupsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreMitigationsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreReferencesResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreSoftwareResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTacticsResponse
+from app.connectors.wazuh_manager.schema.mitre import WazuhMitreTechniquesResponse
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 # Constants for the Atomic Red Team GitHub repository
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/redcanaryco/atomic-red-team/refs/heads/master/atomics"
@@ -47,11 +52,7 @@ class AtomicRedTeamService:
             tests, timestamp = cls._tests_cache["all_tests"]
             if time.time() - timestamp < CACHE_EXPIRY:
                 logger.debug("Returning cached list of all atomic tests")
-                return {
-                    "total_techniques": len(tests),
-                    "tests": tests,
-                    "last_updated": datetime.fromtimestamp(timestamp).isoformat()
-                }
+                return {"total_techniques": len(tests), "tests": tests, "last_updated": datetime.fromtimestamp(timestamp).isoformat()}
 
         # Fetch the list of all techniques with atomic tests
         try:
@@ -68,11 +69,12 @@ class AtomicRedTeamService:
         except Exception as e:
             logger.error(f"Error listing atomic tests: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error listing atomic tests: {str(e)}")
+
     @classmethod
     async def _parse_atomic_index_markdown(cls, content: str) -> Dict:
         """Parse the atomic-red-team-index.md file to extract test information."""
         techniques = []
-        technique_pattern = r'\|\s*\[([^]]+)\]\([^)]+\)\s*\|\s*([T\d\.]+)\s*\|\s*(\d+)\s*\|'
+        technique_pattern = r"\|\s*\[([^]]+)\]\([^)]+\)\s*\|\s*([T\d\.]+)\s*\|\s*(\d+)\s*\|"
 
         matches = re.findall(technique_pattern, content)
         total_tests = 0
@@ -81,13 +83,15 @@ class AtomicRedTeamService:
             try:
                 count = int(test_count)
                 total_tests += count
-                techniques.append({
-                    "technique_id": technique_id,
-                    "technique_name": name,
-                    "test_count": count,
-                    "categories": [],  # Would require additional requests to determine
-                    "has_prerequisites": False  # Would require additional requests to determine
-                })
+                techniques.append(
+                    {
+                        "technique_id": technique_id,
+                        "technique_name": name,
+                        "test_count": count,
+                        "categories": [],  # Would require additional requests to determine
+                        "has_prerequisites": False,  # Would require additional requests to determine
+                    },
+                )
             except ValueError:
                 continue  # Skip if test_count isn't a valid integer
 
@@ -95,7 +99,7 @@ class AtomicRedTeamService:
             "total_techniques": len(techniques),
             "total_tests": total_tests,
             "tests": techniques,
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
         # Cache the result
@@ -115,8 +119,7 @@ class AtomicRedTeamService:
                 async with session.get(url, headers=headers) as response:
                     if response.status != 200:
                         logger.error(f"GitHub API error: {response.status}")
-                        raise HTTPException(status_code=response.status,
-                                            detail="Could not access Atomic Red Team repository")
+                        raise HTTPException(status_code=response.status, detail="Could not access Atomic Red Team repository")
 
                     folders = await response.json()
 
@@ -144,23 +147,23 @@ class AtomicRedTeamService:
                                     yaml_content = await yaml_resp.text()
                                     try:
                                         data = yaml.safe_load(yaml_content)
-                                        test_count = len(data.get('atomic_tests', []))
+                                        test_count = len(data.get("atomic_tests", []))
                                         total_tests += test_count
                                         platforms = set()
                                         has_prereqs = False
 
-                                        for test in data.get('atomic_tests', []):
-                                            if test.get('supported_platforms'):
-                                                platforms.update(test.get('supported_platforms', []))
-                                            if test.get('dependencies'):
+                                        for test in data.get("atomic_tests", []):
+                                            if test.get("supported_platforms"):
+                                                platforms.update(test.get("supported_platforms", []))
+                                            if test.get("dependencies"):
                                                 has_prereqs = True
 
                                         return {
                                             "technique_id": technique_id,
-                                            "technique_name": data.get('display_name', technique_id),
+                                            "technique_name": data.get("display_name", technique_id),
                                             "test_count": test_count,
                                             "categories": list(platforms),
-                                            "has_prerequisites": has_prereqs
+                                            "has_prerequisites": has_prereqs,
                                         }
                                     except Exception as e:
                                         logger.warning(f"Error parsing YAML for {technique_id}: {e}")
@@ -171,29 +174,29 @@ class AtomicRedTeamService:
                                     md_content = await md_resp.text()
 
                                     # Extract name from markdown header
-                                    name_match = re.search(r'# ([^\n]+)', md_content)
+                                    name_match = re.search(r"# ([^\n]+)", md_content)
                                     name = name_match.group(1) if name_match else technique_id
 
                                     # Count atomic tests by headers
-                                    test_headers = re.findall(r'## Atomic Test #\d+', md_content)
+                                    test_headers = re.findall(r"## Atomic Test #\d+", md_content)
                                     test_count = len(test_headers)
                                     total_tests += test_count
 
                                     # Look for platform indicators
                                     platforms = []
-                                    if 'windows' in md_content.lower():
-                                        platforms.append('windows')
-                                    if 'macos' in md_content.lower() or 'darwin' in md_content.lower():
-                                        platforms.append('macos')
-                                    if 'linux' in md_content.lower():
-                                        platforms.append('linux')
+                                    if "windows" in md_content.lower():
+                                        platforms.append("windows")
+                                    if "macos" in md_content.lower() or "darwin" in md_content.lower():
+                                        platforms.append("macos")
+                                    if "linux" in md_content.lower():
+                                        platforms.append("linux")
 
                                     return {
                                         "technique_id": technique_id,
                                         "technique_name": name.replace(f"- {technique_id}", "").strip(),
                                         "test_count": test_count,
                                         "categories": platforms,
-                                        "has_prerequisites": 'dependency' in md_content.lower() or 'dependencies' in md_content.lower()
+                                        "has_prerequisites": "dependency" in md_content.lower() or "dependencies" in md_content.lower(),
                                     }
 
                         # If both methods fail, return basic info
@@ -202,7 +205,7 @@ class AtomicRedTeamService:
                             "technique_name": technique_id,
                             "test_count": 0,
                             "categories": [],
-                            "has_prerequisites": False
+                            "has_prerequisites": False,
                         }
 
                     # Process all techniques concurrently but with rate limiting
@@ -213,7 +216,7 @@ class AtomicRedTeamService:
                         "total_techniques": len(techniques),
                         "total_tests": total_tests,
                         "tests": techniques,
-                        "last_updated": datetime.utcnow().isoformat()
+                        "last_updated": datetime.utcnow().isoformat(),
                     }
 
                     # Cache the result
@@ -412,7 +415,6 @@ async def get_mitre_techniques(
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
 
 
-
 async def search_mitre_techniques_in_alerts(
     time_range: str = "now-24h",
     size: int = 1000,
@@ -473,7 +475,7 @@ async def search_mitre_techniques_in_alerts(
                     additional_filters=additional_filters,
                     index_pattern=index_pattern,
                     mitre_field=field,
-                    name_field=name_field
+                    name_field=name_field,
                 )
 
                 # Set size to 0 to just get counts
@@ -483,10 +485,11 @@ async def search_mitre_techniques_in_alerts(
                 count_response = await client.search(**count_query)
 
                 # If we get aggregations with buckets, we found the right field
-                if (count_response.get("aggregations") and
-                    count_response["aggregations"].get("techniques") and
-                    count_response["aggregations"]["techniques"].get("buckets")):
-
+                if (
+                    count_response.get("aggregations")
+                    and count_response["aggregations"].get("techniques")
+                    and count_response["aggregations"]["techniques"].get("buckets")
+                ):
                     # Get total count of techniques
                     total_techniques = len(count_response["aggregations"]["techniques"]["buckets"])
 
@@ -498,7 +501,7 @@ async def search_mitre_techniques_in_alerts(
                         additional_filters=additional_filters,
                         index_pattern=index_pattern,
                         mitre_field=field,
-                        name_field=name_field
+                        name_field=name_field,
                     )
 
                     # Log the query for debugging
@@ -513,14 +516,16 @@ async def search_mitre_techniques_in_alerts(
                         mitre_field=field,
                         technique_mapping=technique_mapping,
                         name_field=name_field,
-                        technique_tactic_mapping=technique_tactic_mapping
+                        technique_tactic_mapping=technique_tactic_mapping,
                     )
 
                     # Update with the full count
                     results = page_results
                     results["total_techniques_count"] = total_techniques
 
-                    logger.info(f"Found {results['techniques_count']} MITRE techniques on this page, {total_techniques} total with field '{field}'")
+                    logger.info(
+                        f"Found {results['techniques_count']} MITRE techniques on this page, {total_techniques} total with field '{field}'",
+                    )
                     break
                 else:
                     logger.warning(f"No results found with field '{field}', trying next option")
@@ -539,7 +544,7 @@ async def search_mitre_techniques_in_alerts(
                 "techniques": [],
                 "field_used": None,
                 "attempted_fields": field_options,
-                "errors": errors
+                "errors": errors,
             }
 
         return results
@@ -563,11 +568,11 @@ async def _build_technique_id_name_mapping() -> Dict[str, str]:
 
         # Create mapping from ID to name
         technique_mapping = {}
-        if techniques_response and hasattr(techniques_response, 'success') and techniques_response.success:
+        if techniques_response and hasattr(techniques_response, "success") and techniques_response.success:
             # Debug the response structure
             logger.debug(f"Techniques response type: {type(techniques_response)}")
 
-            if hasattr(techniques_response, 'results'):
+            if hasattr(techniques_response, "results"):
                 techniques = techniques_response.results
                 logger.debug(f"Got {len(techniques)} techniques, first item type: {type(techniques[0]) if techniques else 'None'}")
 
@@ -585,7 +590,7 @@ async def _build_technique_id_name_mapping() -> Dict[str, str]:
                         technique_mapping[technique_id] = technique_name
 
                         # Sometimes the ID might be referenced without the 'T' prefix
-                        if technique_id.startswith('T'):
+                        if technique_id.startswith("T"):
                             technique_mapping[technique_id[1:]] = technique_name
 
             logger.info(f"Built mapping for {len(technique_mapping)} MITRE techniques")
@@ -594,6 +599,7 @@ async def _build_technique_id_name_mapping() -> Dict[str, str]:
     except Exception as e:
         logger.exception(f"Error building technique mapping: {str(e)}")
         return {}  # Return empty mapping if error occurs
+
 
 async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
     """
@@ -608,14 +614,14 @@ async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
 
         # Create mapping from ID to tactics
         technique_tactic_mapping = {}
-        if hasattr(techniques_response, 'success') and techniques_response.success:
+        if hasattr(techniques_response, "success") and techniques_response.success:
             techniques = techniques_response.results
 
             # Get all tactics for name lookup
             tactics_response = await get_mitre_tactics(limit=1000)
             tactic_name_mapping = {}
 
-            if hasattr(tactics_response, 'success') and tactics_response.success:
+            if hasattr(tactics_response, "success") and tactics_response.success:
                 for tactic in tactics_response.results:
                     if isinstance(tactic, dict):
                         tactic_id = tactic.get("id", "")
@@ -627,10 +633,7 @@ async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
                         short_name = getattr(tactic, "short_name", "")
 
                     if tactic_id:
-                        tactic_name_mapping[tactic_id] = {
-                            "name": tactic_name,
-                            "short_name": short_name
-                        }
+                        tactic_name_mapping[tactic_id] = {"name": tactic_name, "short_name": short_name}
 
             logger.debug(f"Built tactic name mapping with {len(tactic_name_mapping)} tactics")
 
@@ -651,7 +654,7 @@ async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
                         tactic_info = {
                             "id": tactic_id,
                             "name": tactic_name_mapping.get(tactic_id, {}).get("name", "Unknown"),
-                            "short_name": tactic_name_mapping.get(tactic_id, {}).get("short_name", "")
+                            "short_name": tactic_name_mapping.get(tactic_id, {}).get("short_name", ""),
                         }
                         tactics.append(tactic_info)
 
@@ -660,7 +663,7 @@ async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
                         # Store as "T1234"
                         technique_tactic_mapping[technique_external_id] = tactics
                         # Store as "1234" (without T prefix)
-                        if technique_external_id.startswith('T'):
+                        if technique_external_id.startswith("T"):
                             technique_tactic_mapping[technique_external_id[1:]] = tactics
 
                     technique_tactic_mapping[technique_id] = tactics
@@ -676,12 +679,13 @@ async def _build_technique_tactic_mapping() -> Dict[str, List[Dict[str, str]]]:
         logger.exception(f"Error building technique-tactic mapping: {str(e)}")
         return {}
 
+
 def _process_mitre_search_results(
     response: Dict,
     mitre_field: str,
     technique_mapping: Dict[str, str],
     name_field: Optional[str] = None,
-    technique_tactic_mapping: Optional[Dict[str, List[Dict[str, str]]]] = None
+    technique_tactic_mapping: Optional[Dict[str, List[Dict[str, str]]]] = None,
 ) -> Dict:
     """
     Process the Wazuh Indexer response to extract MITRE technique information.
@@ -740,11 +744,11 @@ def _process_mitre_search_results(
                     tactics = technique_tactic_mapping[technique_id]
                     logger.debug(f"Found tactics for technique ID: {technique_id} (exact match)")
                 # Try with 'T' prefix if it doesn't have one
-                elif not technique_id.startswith('T') and f"T{technique_id}" in technique_tactic_mapping:
+                elif not technique_id.startswith("T") and f"T{technique_id}" in technique_tactic_mapping:
                     tactics = technique_tactic_mapping[f"T{technique_id}"]
                     logger.debug(f"Found tactics for technique ID: {technique_id} (added T prefix)")
                 # Try without 'T' prefix if it has one
-                elif technique_id.startswith('T') and technique_id[1:] in technique_tactic_mapping:
+                elif technique_id.startswith("T") and technique_id[1:] in technique_tactic_mapping:
                     tactics = technique_tactic_mapping[technique_id[1:]]
                     logger.debug(f"Found tactics for technique ID: {technique_id} (removed T prefix)")
                 else:
@@ -759,13 +763,15 @@ def _process_mitre_search_results(
             if technique_name == "Unknown Technique":
                 logger.debug(f"Could not find name for technique {technique_id} in document or mapping")
 
-            techniques.append({
-                "technique_id": technique_id,
-                "technique_name": technique_name,
-                "count": bucket["doc_count"],
-                "last_seen": datetime.utcnow().isoformat() + "Z",
-                "tactics": tactics
-            })
+            techniques.append(
+                {
+                    "technique_id": technique_id,
+                    "technique_name": technique_name,
+                    "count": bucket["doc_count"],
+                    "last_seen": datetime.utcnow().isoformat() + "Z",
+                    "tactics": tactics,
+                },
+            )
 
     # Add debugging information
     debug_info = {
@@ -773,7 +779,7 @@ def _process_mitre_search_results(
         "mapping_size": len(technique_mapping),
         "tactic_mapping_size": len(technique_tactic_mapping) if technique_tactic_mapping else 0,
         "timestamp": datetime.utcnow().isoformat(),
-        "sample_technique_ids": [t["technique_id"] for t in techniques[:3]] if techniques else []
+        "sample_technique_ids": [t["technique_id"] for t in techniques[:3]] if techniques else [],
     }
 
     # Compile the final result
@@ -793,10 +799,7 @@ async def _get_wazuh_indexer_client() -> AsyncElasticsearch:
         return await create_wazuh_indexer_client_async()
     except Exception as e:
         logger.error(f"Failed to create OpenSearch client: {str(e)}")
-        raise HTTPException(
-            status_code=503,
-            detail=f"Unable to connect to Wazuh Indexer: {str(e)}"
-        )
+        raise HTTPException(status_code=503, detail=f"Unable to connect to Wazuh Indexer: {str(e)}")
 
 
 def _build_mitre_search_query(
@@ -810,10 +813,7 @@ def _build_mitre_search_query(
 ) -> Dict:
     """Build the Wazuh Indexer query for MITRE technique aggregation."""
     # Build the base filters
-    query_filters = [
-        {"match_all": {}},
-        {"range": {"timestamp": {"from": time_range, "to": "now"}}}
-    ]
+    query_filters = [{"match_all": {}}, {"range": {"timestamp": {"from": time_range, "to": "now"}}}]
 
     # Add filters for mitre field (required)
     query_filters.append({"exists": {"field": mitre_field}})
@@ -828,40 +828,19 @@ def _build_mitre_search_query(
         "body": {
             "size": 0,
             "from": offset,
-            "query": {
-                "bool": {
-                    "must": [],
-                    "filter": query_filters,
-                    "should": [],
-                    "must_not": []
-                }
-            },
-            "aggs": {
-                "techniques": {
-                    "terms": {
-                        "field": mitre_field,
-                        "size": size,
-                        "order": {"_count": "desc"}
-                    }
-                }
-            }
-        }
+            "query": {"bool": {"must": [], "filter": query_filters, "should": [], "must_not": []}},
+            "aggs": {"techniques": {"terms": {"field": mitre_field, "size": size, "order": {"_count": "desc"}}}},
+        },
     }
 
     # If we have a separate name field, add a sub-aggregation to collect technique names
     if name_field:
         # Add filter for name field (optional)
         query["body"]["aggs"]["techniques"]["aggs"] = {
-            "technique_name": {
-                "terms": {
-                    "field": name_field,
-                    "size": 1  # Just need the first/most common name
-                }
-            }
+            "technique_name": {"terms": {"field": name_field, "size": 1}},  # Just need the first/most common name
         }
 
     return query
-
 
 
 async def get_alerts_by_mitre_id(
@@ -897,9 +876,9 @@ async def get_alerts_by_mitre_id(
         technique_name = "Unknown Technique"
         if technique_id in technique_mapping:
             technique_name = technique_mapping[technique_id]
-        elif technique_id.startswith('T') and technique_id[1:] in technique_mapping:
+        elif technique_id.startswith("T") and technique_id[1:] in technique_mapping:
             technique_name = technique_mapping[technique_id[1:]]
-        elif not technique_id.startswith('T') and f"T{technique_id}" in technique_mapping:
+        elif not technique_id.startswith("T") and f"T{technique_id}" in technique_mapping:
             technique_name = technique_mapping[f"T{technique_id}"]
 
         # Get OpenSearch client
@@ -926,7 +905,7 @@ async def get_alerts_by_mitre_id(
                     offset=offset,
                     additional_filters=additional_filters,
                     index_pattern=index_pattern,
-                    mitre_field=field
+                    mitre_field=field,
                 )
 
                 # Execute the search
@@ -949,7 +928,7 @@ async def get_alerts_by_mitre_id(
                         "technique_name": technique_name,
                         "total_alerts": total_hits,
                         "alerts": documents,
-                        "field_used": field
+                        "field_used": field,
                     }
 
                     logger.info(f"Found {len(documents)} of {total_hits} alerts for technique {technique_id} using field '{field}'")
@@ -970,7 +949,7 @@ async def get_alerts_by_mitre_id(
                 "total_alerts": 0,
                 "alerts": [],
                 "field_used": None,
-                "errors": errors
+                "errors": errors,
             }
 
         return results
@@ -996,17 +975,10 @@ def _build_mitre_alerts_query(
 ) -> Dict:
     """Build the OpenSearch query to fetch alerts for a specific MITRE technique."""
     # Build the base filters
-    query_filters = [
-        {"range": {"timestamp": {"from": time_range, "to": "now"}}}
-    ]
+    query_filters = [{"range": {"timestamp": {"from": time_range, "to": "now"}}}]
 
     # Add MITRE ID filter with support for array fields
-    query_filters.append({
-        "query_string": {
-            "query": f"{mitre_field}:\"{technique_id}\"",
-            "analyze_wildcard": True
-        }
-    })
+    query_filters.append({"query_string": {"query": f'{mitre_field}:"{technique_id}"', "analyze_wildcard": True}})
 
     # Add any additional filters provided
     if additional_filters:
@@ -1018,17 +990,11 @@ def _build_mitre_alerts_query(
         "body": {
             "size": size,
             "from": offset,
-            "query": {
-                "bool": {
-                    "filter": query_filters
-                }
-            },
+            "query": {"bool": {"filter": query_filters}},
             "_source": True,
-            "sort": [
-                {"timestamp": {"order": "desc"}}
-            ],
-            "track_total_hits": True
-        }
+            "sort": [{"timestamp": {"order": "desc"}}],
+            "track_total_hits": True,
+        },
     }
 
     return query
@@ -1095,6 +1061,7 @@ async def get_mitre_software(
         logger.error(f"Error parsing Wazuh MITRE software response: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
 
+
 async def get_mitre_references(
     limit: Optional[int] = None,
     offset: Optional[int] = None,
@@ -1138,7 +1105,7 @@ async def get_mitre_references(
                 success=True,
                 message=f"Successfully retrieved {len(mitre_references)} MITRE references",
                 results=mitre_references,
-                total=total_items
+                total=total_items,
             )
         else:
             logger.error("Unexpected response structure from Wazuh API")
@@ -1150,6 +1117,7 @@ async def get_mitre_references(
     except Exception as e:
         logger.error(f"Error parsing Wazuh MITRE references response: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
+
 
 async def get_mitre_mitigations(
     limit: Optional[int] = None,
@@ -1200,7 +1168,7 @@ async def get_mitre_mitigations(
                 success=True,
                 message=f"Successfully retrieved {len(mitre_mitigations)} MITRE mitigations",
                 results=mitre_mitigations,
-                total=total_items
+                total=total_items,
             )
         else:
             logger.error("Unexpected response structure from Wazuh API")
@@ -1212,6 +1180,7 @@ async def get_mitre_mitigations(
     except Exception as e:
         logger.error(f"Error parsing Wazuh MITRE mitigations response: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
+
 
 async def get_mitre_groups(
     limit: Optional[int] = None,
@@ -1262,7 +1231,7 @@ async def get_mitre_groups(
                 success=True,
                 message=f"Successfully retrieved {len(mitre_groups)} MITRE groups",
                 results=mitre_groups,
-                total=total_items
+                total=total_items,
             )
         else:
             logger.error("Unexpected response structure from Wazuh API")

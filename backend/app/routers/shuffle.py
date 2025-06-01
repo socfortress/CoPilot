@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 from app.connectors.shuffle.routes.integrations import shuffle_integrations_router
-from app.connectors.shuffle.routes.workflows import shuffle_workflows_router
 from app.connectors.shuffle.routes.singul import shuffle_singul_router
+from app.connectors.shuffle.routes.workflows import shuffle_workflows_router
 
 # Instantiate the APIRouter
 router = APIRouter()

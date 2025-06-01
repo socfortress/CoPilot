@@ -1,4 +1,11 @@
-import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
+import type {
+	Artifact,
+	CollectResult,
+	CommandResult,
+	MatchingParameter,
+	QuarantineResult,
+	Recommendation
+} from "@/types/artifacts.d"
 import type { OsTypesFull, OsTypesLower } from "@/types/common.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
@@ -12,6 +19,12 @@ export interface CollectRequest {
 	hostname: string
 	velociraptor_id?: string
 	artifact_name: string
+	parameters?: {
+		env?: {
+			key: string
+			value: string
+		}[]
+	}
 }
 
 export interface CommandRequest {
@@ -60,5 +73,15 @@ export default {
 			`/artifacts/velociraptor-artifact-recommendation`,
 			payload
 		)
+	},
+	getParameters(artifactName: string, parameterPrefix: string) {
+		return HttpClient.get<
+			FlaskBaseResponse & {
+				artifact_name: string
+				parameter_prefix: string
+				matching_parameters: MatchingParameter[]
+				total_matches: number
+			}
+		>(`/artifacts/artifact/${artifactName}/parameters/${parameterPrefix}`)
 	}
 }

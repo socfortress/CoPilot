@@ -107,6 +107,7 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
 #         logger.error(f"Error applying migrations: {e}")
 #         raise e
 
+
 def apply_migrations():
     """
     Applies Alembic migrations to ensure the database schema is up to date.
@@ -127,13 +128,15 @@ def apply_migrations():
     # Check current revision first
     logger.info("Checking current database revision...")
     try:
-        from alembic.script import ScriptDirectory
         from sqlalchemy import create_engine
+
+        from alembic.script import ScriptDirectory
 
         # Get current revision
         engine = create_engine(SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
         with engine.connect() as connection:
             from alembic.runtime.migration import MigrationContext
+
             context = MigrationContext.configure(connection)
             current_rev = context.get_current_revision()
             logger.info(f"Current database revision: {current_rev}")

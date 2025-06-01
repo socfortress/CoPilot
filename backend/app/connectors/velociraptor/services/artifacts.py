@@ -2,6 +2,7 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationResponse
 from app.connectors.velociraptor.schema.artifacts import Artifacts
@@ -103,6 +104,122 @@ async def get_artifacts() -> ArtifactsResponse:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get all artifacts: {err}",
+        )
+
+
+async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
+    """
+    Get a specific artifact by name from Velociraptor.
+
+    Args:
+        artifact_name (str): The name of the artifact to retrieve.
+
+    Returns:
+        ArtifactsResponse: A response containing the specific artifact.
+    """
+    logger.info(f"Fetching artifact '{artifact_name}' from Velociraptor")
+    velociraptor_service = await UniversalService.create("Velociraptor")
+
+    # Query for a specific artifact by name
+    query = create_query(f"SELECT name,description,parameters FROM artifact_definitions() WHERE name = '{artifact_name}'")
+    artifact_result = velociraptor_service.execute_query(query)
+
+    try:
+        if artifact_result["success"]:
+            if artifact_result["results"]:
+                artifacts = [Artifacts(**artifact) for artifact in artifact_result["results"]]
+                return ArtifactsResponse(
+                    success=True,
+                    message=f"Artifact '{artifact_name}' retrieved successfully",
+                    artifacts=artifacts,
+                )
+            else:
+                return ArtifactsResponse(
+                    success=True,
+                    message=f"Artifact '{artifact_name}' not found",
+                    artifacts=[],
+                )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get artifact '{artifact_name}': {artifact_result['message']}",
+            )
+    except Exception as err:
+        logger.error(f"Failed to get artifact '{artifact_name}': {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get artifact '{artifact_name}': {err}",
+        )
+
+
+async def get_artifact_parameters_by_prefix_service(
+    artifact_name: str,
+    parameter_prefix: str,
+) -> ArtifactParametersResponse:
+    """
+    Get parameters from a specific artifact that match a given prefix.
+
+    Args:
+        artifact_name (str): The name of the artifact to retrieve parameters from.
+        parameter_prefix (str): The prefix to filter parameters by.
+
+    Returns:
+        ArtifactParametersResponse: A response containing matching parameters.
+    """
+    logger.info(f"Fetching parameters with prefix '{parameter_prefix}' from artifact '{artifact_name}'")
+
+    try:
+        # First, get the artifact with its parameters
+        artifact_response = await get_artifact_by_name(artifact_name)
+
+        if not artifact_response.success or not artifact_response.artifacts:
+            return ArtifactParametersResponse(
+                success=False,
+                message=f"Artifact '{artifact_name}' not found",
+                artifact_name=artifact_name,
+                parameter_prefix=parameter_prefix,
+                matching_parameters=[],
+                total_matches=0,
+            )
+
+        artifact = artifact_response.artifacts[0]
+
+        # Filter parameters by prefix
+        matching_parameters = []
+        if artifact.parameters:
+            for param in artifact.parameters:
+                if param.name.startswith(parameter_prefix):
+                    matching_parameters.append(param)
+
+        # Sort the matching parameters for consistent ordering
+        matching_parameters.sort(key=lambda x: x.name)
+
+        total_matches = len(matching_parameters)
+
+        if total_matches == 0:
+            message = f"No parameters found matching prefix '{parameter_prefix}' in artifact '{artifact_name}'"
+        elif total_matches == 1:
+            message = f"Found 1 parameter matching prefix '{parameter_prefix}' in artifact '{artifact_name}'"
+        else:
+            message = f"Found {total_matches} parameters matching prefix '{parameter_prefix}' in artifact '{artifact_name}'"
+
+        logger.info(message)
+
+        return ArtifactParametersResponse(
+            success=True,
+            message=message,
+            artifact_name=artifact_name,
+            parameter_prefix=parameter_prefix,
+            matching_parameters=matching_parameters,
+            total_matches=total_matches,
+        )
+
+    except Exception as err:
+        error_message = f"Failed to get parameters with prefix '{parameter_prefix}' from artifact '{artifact_name}': {err}"
+        logger.error(error_message)
+        raise HTTPException(
+            status_code=500,
+            detail=error_message,
         )
 
 

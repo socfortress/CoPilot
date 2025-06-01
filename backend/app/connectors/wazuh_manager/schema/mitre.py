@@ -3,7 +3,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class MitreTacticItem(BaseModel):
@@ -123,14 +124,17 @@ class AtomicRedTeamMarkdownResponse(BaseModel):
 
 class AtomicTestSummary(BaseModel):
     """Summary information about an Atomic Red Team test."""
+
     technique_id: str = Field(..., description="MITRE ATT&CK technique ID")
     technique_name: str = Field(..., description="MITRE ATT&CK technique name")
     test_count: int = Field(..., description="Number of atomic tests available for this technique")
     categories: List[str] = Field(default_factory=list, description="Categories/platforms the tests cover")
     has_prerequisites: bool = Field(False, description="Whether the tests have prerequisites")
 
+
 class AtomicTestsListResponse(BaseModel):
     """Response model for listing all available Atomic Red Team tests."""
+
     success: bool = Field(True, description="Whether the request was successful")
     message: str = Field(..., description="Response message")
     total_techniques: int = Field(..., description="Total number of techniques with atomic tests")
@@ -141,8 +145,10 @@ class AtomicTestsListResponse(BaseModel):
     page_size: int = Field(..., description="Number of items per page")
     total_pages: int = Field(..., description="Total number of pages available")
 
+
 class MitreTechniqueInAlert(BaseModel):
     """Schema for a MITRE technique found in alerts."""
+
     technique_id: str = Field(..., description="MITRE ATT&CK technique ID")
     technique_name: str = Field(..., description="MITRE ATT&CK technique name")
     count: int = Field(..., description="Number of alerts containing this technique")
@@ -152,6 +158,7 @@ class MitreTechniqueInAlert(BaseModel):
 
 class MitreTechniquesInAlertsResponse(BaseModel):
     """Response schema for MITRE techniques found in alerts."""
+
     success: bool = Field(True, description="Whether the request was successful")
     message: str = Field(..., description="Description of the response")
     total_alerts: int = Field(..., description="Total number of alerts matching the query")
@@ -166,6 +173,7 @@ class MitreTechniquesInAlertsResponse(BaseModel):
 
 class MitreTechniqueAlertsResponse(BaseModel):
     """Response schema for detailed alerts associated with a specific MITRE technique."""
+
     success: bool = Field(True, description="Whether the request was successful")
     message: str = Field(..., description="Description of the response")
     technique_id: str = Field(..., description="The MITRE technique ID that was searched for")
@@ -203,6 +211,7 @@ class MitreSoftwareItem(BaseModel):
 
     class Config:
         """Configuration for the model."""
+
         extra = "ignore"  # Ignore extra fields from the API
 
 
@@ -213,8 +222,10 @@ class WazuhMitreSoftwareResponse(BaseModel):
     message: str
     results: List[MitreSoftwareItem] = []
 
+
 class MitreReferenceItem(BaseModel):
     """Represents a single MITRE ATT&CK reference from Wazuh's API."""
+
     url: str
     description: Optional[str] = None
     source: str
@@ -223,17 +234,22 @@ class MitreReferenceItem(BaseModel):
 
     class Config:
         """Configuration for the model."""
+
         extra = "ignore"  # Ignore extra fields from the API
+
 
 class WazuhMitreReferencesResponse(BaseModel):
     """Response model for the MITRE references endpoint."""
+
     success: bool
     message: str
     results: List[MitreReferenceItem] = []
     total: int = 0
 
+
 class MitreMitigationItem(BaseModel):
     """Represents a single MITRE ATT&CK mitigation from Wazuh's API."""
+
     mitre_version: Optional[str] = None
     deprecated: int = 0
     description: str
@@ -249,18 +265,22 @@ class MitreMitigationItem(BaseModel):
 
     class Config:
         """Configuration for the model."""
+
         extra = "ignore"  # Ignore extra fields from the API
 
 
 class WazuhMitreMitigationsResponse(BaseModel):
     """Response model for the MITRE mitigations endpoint."""
+
     success: bool
     message: str
     results: List[MitreMitigationItem] = []
     total: int = 0
 
+
 class MitreGroupItem(BaseModel):
     """Represents a single MITRE ATT&CK group from Wazuh's API."""
+
     mitre_version: Optional[str] = None
     deprecated: int = 0
     description: Optional[str] = None
@@ -281,11 +301,13 @@ class MitreGroupItem(BaseModel):
 
     class Config:
         """Configuration for the model."""
+
         extra = "ignore"  # Ignore extra fields from the API
 
 
 class WazuhMitreGroupsResponse(BaseModel):
     """Response model for the MITRE groups endpoint."""
+
     success: bool
     message: str
     results: List[MitreGroupItem] = []

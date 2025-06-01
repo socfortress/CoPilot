@@ -24,3 +24,10 @@ export interface Recommendation {
 	description: string
 	explanation: string
 }
+
+export interface MatchingParameter {
+	name: string
+	description: string
+	type: string
+	default?: string
+}
