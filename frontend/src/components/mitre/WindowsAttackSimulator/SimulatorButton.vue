@@ -10,8 +10,8 @@
 		v-model:show="showForm"
 		display-directive="show"
 		preset="card"
-		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(240px, 90vh)', overflow: 'hidden' }"
-		title="Simulate Windows Attack"
+		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
+		:title="`${techniqueId}: Simulate Windows Attack`"
 		:bordered="false"
 		segmented
 		content-class="p-0!"

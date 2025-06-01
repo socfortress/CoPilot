@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="min-h-52">
+		<div class="flex min-h-52 flex-col gap-2 py-0.5">
 			<template v-if="list.length">
 				<CardEntity
 					v-for="item of list"
@@ -12,14 +12,21 @@
 					size="small"
 					@click="setItem(item)"
 				>
-					<template #header>
+					<template #headerMain>
 						{{ item.hostname }}
 					</template>
-					<template #main>
-						{{ item.id }}
+					<template #headerExtra>
+						<code class="text-primary cursor-pointer" @click.stop="gotoAgent(item.agent_id)">
+							{{ item.agent_id }}
+							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+						</code>
+					</template>
+					<template #default>
+						{{ item.ip_address }}
+						<code>{{ item.label }}</code>
 					</template>
 					<template #footer>
-						<pre>{{ item }}</pre>
+						{{ item.os }}
 					</template>
 				</CardEntity>
 			</template>
@@ -36,9 +43,23 @@ import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
+
+const { agentsList, filter } = defineProps<{
+	agentsList?: Agent[] | null
+	filter?: (agent: Agent) => boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "loaded", value: Agent[]): void
+}>()
 
 const selected = defineModel<Agent | null>("selected", { default: null })
 
+const LinkIcon = "carbon:launch"
+
+const { gotoAgent } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const list = ref<Agent[]>([])
@@ -50,7 +71,9 @@ function getList() {
 		.getAgents()
 		.then(res => {
 			if (res.data.success) {
-				list.value = res.data?.agents || []
+				const tmpList = res.data?.agents || []
+				list.value = filter ? tmpList.filter(filter) : tmpList
+				emit("loaded", list.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -68,6 +91,10 @@ function setItem(item: Agent) {
 }
 
 onBeforeMount(() => {
-	getList()
+	if (agentsList?.length) {
+		list.value = agentsList
+	} else {
+		getList()
+	}
 })
 </script>

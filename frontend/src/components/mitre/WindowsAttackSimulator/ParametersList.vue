@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="min-h-52">
+		<div class="flex min-h-52 flex-col gap-2 py-0.5">
 			<template v-if="list.length">
 				<CardEntity
 					v-for="item of list"
@@ -15,7 +15,7 @@
 					<template #header>
 						{{ item.name }}
 					</template>
-					<template #main>
+					<template #default>
 						{{ item.description }}
 					</template>
 				</CardEntity>
@@ -34,8 +34,13 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 
-const { techniqueId } = defineProps<{
+const { techniqueId, parametersList } = defineProps<{
 	techniqueId: string
+	parametersList?: MatchingParameter[] | null
+}>()
+
+const emit = defineEmits<{
+	(e: "loaded", value: MatchingParameter[]): void
 }>()
 
 const selected = defineModel<MatchingParameter | null>("selected", { default: null })
@@ -52,6 +57,7 @@ function getList() {
 		.then(res => {
 			if (res.data.success) {
 				list.value = res.data?.matching_parameters || []
+				emit("loaded", list.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -69,6 +75,10 @@ function setItem(item: MatchingParameter) {
 }
 
 onBeforeMount(() => {
-	getList()
+	if (parametersList?.length) {
+		list.value = parametersList
+	} else {
+		getList()
+	}
 })
 </script>
