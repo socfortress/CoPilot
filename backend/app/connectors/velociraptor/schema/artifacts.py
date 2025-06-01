@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+
 class ArtifactParameter(BaseModel):
     """Represents a parameter definition from Velociraptor artifact."""
 
@@ -36,6 +37,7 @@ class ArtifactsResponse(BaseModel):
     artifacts: Optional[List[Artifacts]]
     success: str = Field(...)
 
+
 class ArtifactParametersResponse(BaseModel):
     """Response containing filtered artifact parameters."""
 
@@ -43,10 +45,7 @@ class ArtifactParametersResponse(BaseModel):
     message: str = Field(..., description="Response message")
     artifact_name: str = Field(..., description="Name of the artifact")
     parameter_prefix: str = Field(..., description="The prefix used for filtering")
-    matching_parameters: List[ArtifactParameter] = Field(
-        default_factory=list,
-        description="List of parameters that match the prefix"
-    )
+    matching_parameters: List[ArtifactParameter] = Field(default_factory=list, description="List of parameters that match the prefix")
     total_matches: int = Field(..., description="Total number of matching parameters")
 
     class Config:
@@ -57,20 +56,13 @@ class ArtifactParametersResponse(BaseModel):
                 "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
                 "parameter_prefix": "T1552.001",
                 "matching_parameters": [
-                    {
-                        "name": "T1552.001 - 3",
-                        "description": "Credentials In Files - Extracting passwords with findstr",
-                        "type": "bool"
-                    },
-                    {
-                        "name": "T1552.001 - 4",
-                        "description": "Credentials In Files - Access unattend.xml",
-                        "type": "bool"
-                    }
+                    {"name": "T1552.001 - 3", "description": "Credentials In Files - Extracting passwords with findstr", "type": "bool"},
+                    {"name": "T1552.001 - 4", "description": "Credentials In Files - Access unattend.xml", "type": "bool"},
                 ],
-                "total_matches": 2
-            }
+                "total_matches": 2,
+            },
         }
+
 
 class OSPrefixEnum(Enum):
     LINUX = "Linux."

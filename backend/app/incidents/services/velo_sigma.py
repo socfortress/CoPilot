@@ -31,7 +31,6 @@ from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
 from app.incidents.services.db_operations import add_alert_tag_if_not_exists
-from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -209,7 +208,7 @@ class VeloSigmaExclusionService:
                                         logger.debug(f"Path regex match succeeded! Match: {match_result.group(0)}")
                                         return True
                                     else:
-                                        logger.debug(f"Path regex match failed")
+                                        logger.debug("Path regex match failed")
                                         return False
 
                                 except Exception as e:

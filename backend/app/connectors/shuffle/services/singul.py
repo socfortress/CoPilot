@@ -2,7 +2,6 @@ from loguru import logger
 from shufflepy import Singul
 
 from app.connectors.shuffle.schema.singul import SingulRequest
-from app.connectors.shuffle.utils.universal import send_post_request
 
 singul = Singul(auth="REPLACE", url="https://shuffler.io")
 
@@ -22,7 +21,7 @@ async def execute_singul(
     logger.info("Executing Singul integration")
     response = singul.communication.send_message(
         app=request.app,
-        auth_id='REPLACE',
+        auth_id="REPLACE",
         fields=[
             {"key": "to", "value": "REPLACE"},
             {"key": "subject", "value": "Test Email from Singul"},

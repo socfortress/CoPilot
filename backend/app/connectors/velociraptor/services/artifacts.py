@@ -2,6 +2,7 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationResponse
 from app.connectors.velociraptor.schema.artifacts import Artifacts
@@ -11,7 +12,7 @@ from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody, ArtifactParametersResponse
+from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
 
@@ -105,6 +106,7 @@ async def get_artifacts() -> ArtifactsResponse:
             detail=f"Failed to get all artifacts: {err}",
         )
 
+
 async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
     """
     Get a specific artifact by name from Velociraptor.
@@ -152,7 +154,7 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
 
 async def get_artifact_parameters_by_prefix_service(
     artifact_name: str,
-    parameter_prefix: str
+    parameter_prefix: str,
 ) -> ArtifactParametersResponse:
     """
     Get parameters from a specific artifact that match a given prefix.
@@ -177,7 +179,7 @@ async def get_artifact_parameters_by_prefix_service(
                 artifact_name=artifact_name,
                 parameter_prefix=parameter_prefix,
                 matching_parameters=[],
-                total_matches=0
+                total_matches=0,
             )
 
         artifact = artifact_response.artifacts[0]
@@ -209,7 +211,7 @@ async def get_artifact_parameters_by_prefix_service(
             artifact_name=artifact_name,
             parameter_prefix=parameter_prefix,
             matching_parameters=matching_parameters,
-            total_matches=total_matches
+            total_matches=total_matches,
         )
 
     except Exception as err:
@@ -219,6 +221,7 @@ async def get_artifact_parameters_by_prefix_service(
             status_code=500,
             detail=error_message,
         )
+
 
 async def run_artifact_collection(
     collect_artifact_body: CollectArtifactBody,

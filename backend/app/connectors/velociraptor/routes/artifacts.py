@@ -9,19 +9,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.artifacts import CollectFileBody, ArtifactParametersResponse
+from app.connectors.velociraptor.schema.artifacts import CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
-from app.connectors.velociraptor.services.artifacts import get_artifacts, get_artifact_by_name, get_artifact_parameters_by_prefix_service
+from app.connectors.velociraptor.services.artifacts import get_artifact_by_name
+from app.connectors.velociraptor.services.artifacts import (
+    get_artifact_parameters_by_prefix_service,
+)
+from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
@@ -267,6 +272,7 @@ async def get_all_artifacts_for_os_prefix(
         artifacts=artifacts_for_os_prefix,
     )
 
+
 @velociraptor_artifacts_router.get(
     "/artifact/{artifact_name}",
     response_model=ArtifactsResponse,
@@ -286,16 +292,14 @@ async def get_artifact_by_name_route(artifact_name: str) -> ArtifactsResponse:
     logger.info(f"Fetching artifact by name: {artifact_name}")
     return await get_artifact_by_name(artifact_name)
 
+
 @velociraptor_artifacts_router.get(
     "/artifact/{artifact_name}/parameters/{parameter_prefix}",
     response_model=ArtifactParametersResponse,
     description="Get parameters from an artifact that match a specific prefix",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_artifact_parameters_by_prefix(
-    artifact_name: str,
-    parameter_prefix: str
-) -> ArtifactParametersResponse:
+async def get_artifact_parameters_by_prefix(artifact_name: str, parameter_prefix: str) -> ArtifactParametersResponse:
     """
     Retrieve parameters from a specific artifact that start with the given prefix.
 

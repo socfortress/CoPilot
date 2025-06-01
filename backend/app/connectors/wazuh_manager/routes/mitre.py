@@ -13,7 +13,6 @@ from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
 from app.connectors.wazuh_manager.schema.mitre import AtomicTestsListResponse
 from app.connectors.wazuh_manager.schema.mitre import MitreTechniqueAlertsResponse
-from app.connectors.wazuh_manager.schema.mitre import MitreTechniqueInAlert
 from app.connectors.wazuh_manager.schema.mitre import MitreTechniquesInAlertsResponse
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreGroupsResponse
 from app.connectors.wazuh_manager.schema.mitre import WazuhMitreMitigationsResponse
@@ -262,7 +261,7 @@ async def list_atomic_tests(
 
         return AtomicTestsListResponse(
             success=True,
-            message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages})",
+            message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages},)",
             total_techniques=total_techniques,
             total_tests=result.get("total_tests"),
             tests=paginated_tests,
@@ -363,7 +362,7 @@ async def list_mitre_techniques_in_alerts(
 
     return MitreTechniquesInAlertsResponse(
         success=True,
-        message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages})",
+        message=f"Found {total_techniques} MITRE techniques in {results['total_alerts']} alerts (page {page} of {total_pages},)",
         total_alerts=results["total_alerts"],
         techniques_count=total_techniques,  # Use the total count for all pages
         techniques=results["techniques"],  # Use current page techniques
@@ -422,7 +421,7 @@ async def get_mitre_technique_alerts(
 
     return MitreTechniqueAlertsResponse(
         success=True,
-        message=f"Found {results['total_alerts']} alerts for MITRE technique {clean_technique_id} (page {page} of {(results['total_alerts'] + size - 1) // size})",
+        message=f"Found {results['total_alerts']} alerts for MITRE technique {clean_technique_id} (page {page} of {(results['total_alerts'] + size - 1) // size},)",
         technique_id=results["technique_id"],
         technique_name=results["technique_name"],
         total_alerts=results["total_alerts"],
