@@ -84,6 +84,6 @@ async def get_alerts() -> InfluxDBAlertsResponse:
 
     except Exception as e:
         logger.error(f"Error fetching alerts: {e}")
-        raise HTTPException(status_code=500, detail=f"Error fetching alerts: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching healthcheck alerts from InfluxDB: {e}")
     finally:
         await client.close()
