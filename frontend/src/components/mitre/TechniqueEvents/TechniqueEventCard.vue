@@ -134,88 +134,90 @@
 					</div>
 				</n-tab-pane>
 
-				<n-tab-pane
-					v-for="tabCard of tabsCards"
-					:key="tabCard.tab"
-					:name="tabCard.tab"
-					:tab="tabCard.tab"
-					display-directive="show"
-				>
-					<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of tabCard.properties" :key="key">
-							<template #key>
-								{{ key }}
-							</template>
-							<template #value>
-								{{ value || "-" }}
-							</template>
-						</CardKV>
-					</div>
-				</n-tab-pane>
+				<template v-if="!useDetailsTab">
+					<n-tab-pane
+						v-for="tabCard of tabsCards"
+						:key="tabCard.tab"
+						:name="tabCard.tab"
+						:tab="tabCard.tab"
+						display-directive="show"
+					>
+						<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+							<CardKV v-for="(value, key) of tabCard.properties" :key="key">
+								<template #key>
+									{{ key }}
+								</template>
+								<template #value>
+									{{ value || "-" }}
+								</template>
+							</CardKV>
+						</div>
+					</n-tab-pane>
 
-				<n-tab-pane name="DNS" tab="DNS" display-directive="show">
-					<div class="px-7 pt-4">
-						<CardKV v-if="alert.data_dns_answers">
-							<template #key>data_dns_answers</template>
-							<template #value>
-								<CodeSource :code="alert.data_dns_answers" :decode="false" />
-							</template>
-						</CardKV>
-					</div>
-					<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
-						<CardKV v-for="(value, key) of dnsProperties" :key="key">
-							<template #key>
-								{{ key }}
-							</template>
-							<template #value>
-								{{ value || "-" }}
-							</template>
-						</CardKV>
-					</div>
-				</n-tab-pane>
+					<n-tab-pane name="DNS" tab="DNS" display-directive="show">
+						<div class="px-7 pt-4">
+							<CardKV v-if="alert.data_dns_answers">
+								<template #key>data_dns_answers</template>
+								<template #value>
+									<CodeSource :code="alert.data_dns_answers" :decode="false" />
+								</template>
+							</CardKV>
+						</div>
+						<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+							<CardKV v-for="(value, key) of dnsProperties" :key="key">
+								<template #key>
+									{{ key }}
+								</template>
+								<template #value>
+									{{ value || "-" }}
+								</template>
+							</CardKV>
+						</div>
+					</n-tab-pane>
 
-				<n-tab-pane name="GL2" tab="GL2" display-directive="show">
-					<div class="px-7 pt-4">
-						<CardKV v-if="alert.gl2_processing_error">
-							<template #key>gl2_processing_error</template>
-							<template #value>
-								{{ alert.gl2_processing_error }}
-							</template>
-						</CardKV>
-					</div>
-					<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
-						<CardKV v-for="(value, key) of gl2Properties" :key="key">
-							<template #key>
-								{{ key }}
-							</template>
-							<template #value>
-								{{ value || "-" }}
-							</template>
-						</CardKV>
-					</div>
-				</n-tab-pane>
+					<n-tab-pane name="GL2" tab="GL2" display-directive="show">
+						<div class="px-7 pt-4">
+							<CardKV v-if="alert.gl2_processing_error">
+								<template #key>gl2_processing_error</template>
+								<template #value>
+									{{ alert.gl2_processing_error }}
+								</template>
+							</CardKV>
+						</div>
+						<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+							<CardKV v-for="(value, key) of gl2Properties" :key="key">
+								<template #key>
+									{{ key }}
+								</template>
+								<template #value>
+									{{ value || "-" }}
+								</template>
+							</CardKV>
+						</div>
+					</n-tab-pane>
 
-				<n-tab-pane v-if="alert.message" name="Message" tab="Message" display-directive="show">
-					<div class="p-7 pt-4">
-						<CodeSource :code="alert.message" :decode="false" />
-					</div>
-				</n-tab-pane>
+					<n-tab-pane v-if="alert.message" name="Message" tab="Message" display-directive="show">
+						<div class="p-7 pt-4">
+							<CodeSource :code="alert.message" :decode="false" />
+						</div>
+					</n-tab-pane>
 
-				<n-tab-pane v-if="alert.location" name="Location" tab="Location" display-directive="show">
-					<div class="p-7 pt-4">
-						<CodeSource :code="alert.location" :decode="false" />
-					</div>
-				</n-tab-pane>
+					<n-tab-pane v-if="alert.location" name="Location" tab="Location" display-directive="show">
+						<div class="p-7 pt-4">
+							<CodeSource :code="alert.location" :decode="false" />
+						</div>
+					</n-tab-pane>
 
-				<n-tab-pane v-if="alert.streams?.length" name="Streams" tab="Streams" display-directive="show">
-					<div class="flex flex-wrap gap-3 p-7 pt-4">
-						<ul>
-							<li v-for="stream of alert.streams" :key="stream">
-								<code>{{ stream }}</code>
-							</li>
-						</ul>
-					</div>
-				</n-tab-pane>
+					<n-tab-pane v-if="alert.streams?.length" name="Streams" tab="Streams" display-directive="show">
+						<div class="flex flex-wrap gap-3 p-7 pt-4">
+							<ul>
+								<li v-for="stream of alert.streams" :key="stream">
+									<code>{{ stream }}</code>
+								</li>
+							</ul>
+						</div>
+					</n-tab-pane>
+				</template>
 
 				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
 					<div class="p-7 pt-4">
@@ -240,10 +242,15 @@ import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-const props = defineProps<{ alert: MitreEventDetails; hideActions?: boolean; embedded?: boolean }>()
+const props = defineProps<{
+	alert: MitreEventDetails
+	hideActions?: boolean
+	embedded?: boolean
+	useDetailsTab?: boolean
+}>()
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
-const { alert, embedded } = toRefs(props)
+const { alert, embedded, useDetailsTab } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const TargetIcon = "zondicons:target"

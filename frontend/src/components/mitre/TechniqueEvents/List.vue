@@ -37,7 +37,13 @@
 			<n-spin :show="loading">
 				<div class="my-3 flex min-h-28 flex-col gap-2">
 					<template v-if="alertsList.length">
-						<TechniqueEventCard v-for="alert of alertsList" :key="alert.id" :alert embedded />
+						<TechniqueEventCard
+							v-for="alert of alertsList"
+							:key="alert.id"
+							:alert
+							embedded
+							use-details-tab
+						/>
 					</template>
 					<template v-else>
 						<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
