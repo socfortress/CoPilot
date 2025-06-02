@@ -846,15 +846,8 @@ def _build_mitre_search_query(
             "query": {"bool": {"must": [], "filter": query_filters, "should": [], "must_not": []}},
             "aggs": {
                 "techniques": {
-                    "terms": {
-                        "script": {
-                            "source": script_source,
-                            "lang": "painless"
-                        },
-                        "size": size,
-                        "order": {"_count": "desc"}
-                    }
-                }
+                    "terms": {"script": {"source": script_source, "lang": "painless"}, "size": size, "order": {"_count": "desc"}},
+                },
             },
         },
     }
@@ -1013,13 +1006,15 @@ def _build_mitre_alerts_query(
                 # Match when it's in a comma-separated list
                 {"wildcard": {mitre_field: f"*{technique_id}*"}},
                 # Use query_string for more flexible matching
-                {"query_string": {
-                    "query": f'{mitre_field}:"{technique_id}" OR {mitre_field}:"*{technique_id}*"',
-                    "analyze_wildcard": True
-                }}
+                {
+                    "query_string": {
+                        "query": f'{mitre_field}:"{technique_id}" OR {mitre_field}:"*{technique_id}*"',
+                        "analyze_wildcard": True,
+                    },
+                },
             ],
-            "minimum_should_match": 1
-        }
+            "minimum_should_match": 1,
+        },
     }
 
     query_filters.append(mitre_query)
