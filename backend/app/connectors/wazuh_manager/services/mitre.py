@@ -717,61 +717,58 @@ def _process_mitre_search_results(
         if not key:
             continue
 
-        # The key might be a single ID or a nested structure
-        technique_ids = []
-        if isinstance(key, list):
-            # If key is already a list
-            technique_ids.extend([tid for tid in key if tid])
-        else:
-            # If key is a string, might contain comma-separated values
-            technique_ids.extend([tid.strip() for tid in str(key).split(",") if tid.strip()])
+        # With the script-based aggregation, the key should now be a single MITRE ID
+        # but we still handle potential edge cases
+        technique_id = str(key).strip()
 
-        for technique_id in technique_ids:
-            # First try to get name from the document itself via sub-aggregation
-            technique_name = "Unknown Technique"
+        if not technique_id:
+            continue
 
-            # Check if we have a name from sub-aggregation
-            if name_field and "technique_name" in bucket and "buckets" in bucket["technique_name"]:
-                name_buckets = bucket["technique_name"]["buckets"]
-                if name_buckets and len(name_buckets) > 0 and name_buckets[0]["key"]:
-                    technique_name = name_buckets[0]["key"]
+        # First try to get name from the document itself via sub-aggregation
+        technique_name = "Unknown Technique"
 
-            # Get associated tactics for this technique
-            tactics = []
-            if technique_tactic_mapping:
-                # Try exact match first
-                if technique_id in technique_tactic_mapping:
-                    tactics = technique_tactic_mapping[technique_id]
-                    logger.debug(f"Found tactics for technique ID: {technique_id} (exact match)")
-                # Try with 'T' prefix if it doesn't have one
-                elif not technique_id.startswith("T") and f"T{technique_id}" in technique_tactic_mapping:
-                    tactics = technique_tactic_mapping[f"T{technique_id}"]
-                    logger.debug(f"Found tactics for technique ID: {technique_id} (added T prefix)")
-                # Try without 'T' prefix if it has one
-                elif technique_id.startswith("T") and technique_id[1:] in technique_tactic_mapping:
-                    tactics = technique_tactic_mapping[technique_id[1:]]
-                    logger.debug(f"Found tactics for technique ID: {technique_id} (removed T prefix)")
-                else:
-                    # Log that we couldn't find tactics for this technique
-                    logger.debug(f"No tactics found for technique ID: {technique_id}")
+        # Check if we have a name from sub-aggregation
+        if name_field and "technique_name" in bucket and "buckets" in bucket["technique_name"]:
+            name_buckets = bucket["technique_name"]["buckets"]
+            if name_buckets and len(name_buckets) > 0 and name_buckets[0]["key"]:
+                technique_name = name_buckets[0]["key"]
 
-            # If no name found, use our mapping as fallback
-            if technique_name == "Unknown Technique":
-                technique_name = technique_mapping.get(technique_id, "Unknown Technique")
+        # Get associated tactics for this technique
+        tactics = []
+        if technique_tactic_mapping:
+            # Try exact match first
+            if technique_id in technique_tactic_mapping:
+                tactics = technique_tactic_mapping[technique_id]
+                logger.debug(f"Found tactics for technique ID: {technique_id} (exact match)")
+            # Try with 'T' prefix if it doesn't have one
+            elif not technique_id.startswith("T") and f"T{technique_id}" in technique_tactic_mapping:
+                tactics = technique_tactic_mapping[f"T{technique_id}"]
+                logger.debug(f"Found tactics for technique ID: {technique_id} (added T prefix)")
+            # Try without 'T' prefix if it has one
+            elif technique_id.startswith("T") and technique_id[1:] in technique_tactic_mapping:
+                tactics = technique_tactic_mapping[technique_id[1:]]
+                logger.debug(f"Found tactics for technique ID: {technique_id} (removed T prefix)")
+            else:
+                # Log that we couldn't find tactics for this technique
+                logger.debug(f"No tactics found for technique ID: {technique_id}")
 
-            # Debug log if we're still getting "Unknown Technique"
-            if technique_name == "Unknown Technique":
-                logger.debug(f"Could not find name for technique {technique_id} in document or mapping")
+        # If no name found, use our mapping as fallback
+        if technique_name == "Unknown Technique":
+            technique_name = technique_mapping.get(technique_id, "Unknown Technique")
 
-            techniques.append(
-                {
-                    "technique_id": technique_id,
-                    "technique_name": technique_name,
-                    "count": bucket["doc_count"],
-                    "last_seen": datetime.utcnow().isoformat() + "Z",
-                    "tactics": tactics,
-                },
-            )
+        # Debug log if we're still getting "Unknown Technique"
+        if technique_name == "Unknown Technique":
+            logger.debug(f"Could not find name for technique {technique_id} in document or mapping")
+
+        techniques.append(
+            {
+                "technique_id": technique_id,
+                "technique_name": technique_name,
+                "count": bucket["doc_count"],
+                "last_seen": datetime.utcnow().isoformat() + "Z",
+                "tactics": tactics,
+            },
+        )
 
     # Add debugging information
     debug_info = {
@@ -822,14 +819,36 @@ def _build_mitre_search_query(
     if additional_filters:
         query_filters.extend(additional_filters)
 
-    # Base query
+    # Use script-based aggregation to handle comma-separated MITRE IDs
+    script_source = f"""
+    def field_value = doc['{mitre_field}'].value;
+    if (field_value != null && field_value != '') {{
+        def techniques = new ArrayList();
+        // Split by comma and clean up whitespace
+        def parts = field_value.splitOnToken(',');
+        for (def part : parts) {{
+            def cleaned = part.trim();
+            if (cleaned != '') {{
+                techniques.add(cleaned);
+            }}
+        }}
+        return techniques;
+    }}
+    return [];
+    """
+
+    # Base query with script-based aggregation
     query = {
         "index": index_pattern,
         "body": {
             "size": 0,
             "from": offset,
             "query": {"bool": {"must": [], "filter": query_filters, "should": [], "must_not": []}},
-            "aggs": {"techniques": {"terms": {"field": mitre_field, "size": size, "order": {"_count": "desc"}}}},
+            "aggs": {
+                "techniques": {
+                    "terms": {"script": {"source": script_source, "lang": "painless"}, "size": size, "order": {"_count": "desc"}},
+                },
+            },
         },
     }
 
@@ -977,8 +996,28 @@ def _build_mitre_alerts_query(
     # Build the base filters
     query_filters = [{"range": {"timestamp": {"from": time_range, "to": "now"}}}]
 
-    # Add MITRE ID filter with support for array fields
-    query_filters.append({"query_string": {"query": f'{mitre_field}:"{technique_id}"', "analyze_wildcard": True}})
+    # Add MITRE ID filter with support for comma-separated values
+    # This will match the technique ID whether it appears alone or in a comma-separated list
+    mitre_query = {
+        "bool": {
+            "should": [
+                # Exact match for single technique ID
+                {"term": {mitre_field: technique_id}},
+                # Match when it's in a comma-separated list
+                {"wildcard": {mitre_field: f"*{technique_id}*"}},
+                # Use query_string for more flexible matching
+                {
+                    "query_string": {
+                        "query": f'{mitre_field}:"{technique_id}" OR {mitre_field}:"*{technique_id}*"',
+                        "analyze_wildcard": True,
+                    },
+                },
+            ],
+            "minimum_should_match": 1,
+        },
+    }
+
+    query_filters.append(mitre_query)
 
     # Add any additional filters provided
     if additional_filters:
