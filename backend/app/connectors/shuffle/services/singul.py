@@ -21,6 +21,7 @@ async def execute_singul(
     logger.info("Executing Singul integration")
     response = singul.communication.send_message(
         app=request.app,
+        #org_id="REPLACE",
         auth_id="REPLACE",
         fields=[
             {"key": "to", "value": "REPLACE"},
@@ -29,6 +30,7 @@ async def execute_singul(
         ],
     )
     logger.info(f"Singul response: {response}")
+    logger.info(f"Singul response: {response.get('success', 'unknown')}")
     return {
         "executionId": response.get("id", "unknown"),
         "message": "Singul integration executed successfully",
