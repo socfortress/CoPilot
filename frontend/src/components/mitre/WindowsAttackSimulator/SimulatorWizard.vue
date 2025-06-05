@@ -138,7 +138,7 @@ import type { CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { MatchingParameter } from "@/types/artifacts.d"
 import { NButton, NScrollbar, NSkeleton, NStep, NSteps, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -167,6 +167,7 @@ const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "close"): void
 	(e: "submitted"): void
+	(e: "mounted", value: { reset: () => void }): void
 }>()
 
 const ArrowRightIcon = "carbon:arrow-right"
@@ -278,7 +279,7 @@ function submit() {
 	}
 }
 
-function _reset() {
+function reset() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "right"
 	current.value = 1
@@ -345,6 +346,12 @@ watch([current, parametersList, agentsList], () => {
 			}
 		}, 200)
 	}
+})
+
+onMounted(() => {
+	emit("mounted", {
+		reset
+	})
 })
 </script>
 
