@@ -81,7 +81,7 @@ import { useGoto } from "@/composables/useGoto"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { emitter } from "@/emitter"
-import { getOS } from "@/utils"
+import { getNavigatorOS } from "@/utils"
 
 interface GroupItem {
 	iconName: string | null
@@ -274,7 +274,7 @@ function centerItem() {
 }
 
 onMounted(() => {
-	const isWindows = getOS() === "Windows"
+	const isWindows = getNavigatorOS() === "Windows"
 	commandIcon.value = isWindows ? "CTRL" : "⌘"
 
 	const keys = useMagicKeys()
