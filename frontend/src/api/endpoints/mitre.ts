@@ -71,11 +71,14 @@ export interface MitreEventsQuery {
 	index_pattern?: string
 }
 
+export type MitreAtomicOsCategory = "windows" | "linux" | "macos"
+
 export interface MitreAtomicTestsQuery {
 	/** Maximum number of techniques to return per page */
 	size?: number
 	/** Page number for pagination */
 	page?: number
+	os_category?: MitreAtomicOsCategory
 }
 
 export default {
@@ -225,7 +228,8 @@ export default {
 		>(`/wazuh_manager/mitre/atomic-tests`, {
 			params: {
 				size: query?.size || 25,
-				page: query?.page || 1
+				page: query?.page || 1,
+				os_category: query?.os_category || undefined
 			},
 			signal
 		})

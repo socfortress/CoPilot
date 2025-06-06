@@ -14,7 +14,7 @@ import { NText } from "naive-ui"
 import { onMounted, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSearchDialog } from "@/composables/useSearchDialog"
-import { getOS } from "@/utils"
+import { getNavigatorOS } from "@/utils"
 
 const SearchIcon = "ion:search-outline"
 const commandIcon = ref("⌘")
@@ -24,7 +24,7 @@ function openBox() {
 }
 
 onMounted(() => {
-	const isWindows = getOS() === "Windows"
+	const isWindows = getNavigatorOS() === "Windows"
 	commandIcon.value = isWindows ? "CTRL" : "⌘"
 })
 </script>

@@ -345,8 +345,12 @@ async def provision_wazuh_worker(
         request.portainer_deployment = True
         swarm_node_ips = await list_node_ips()
         logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {swarm_node_ips}")
-        for ip in swarm_node_ips:
-            logger.info(f"Provisioning Wazuh worker on IP: {ip}")
+        # Loop through each node IP and set the node_id based on position
+        for index, ip in enumerate(swarm_node_ips, start=1):
+            # Set the node_id to the current position in the list (1, 2, 3, etc.)
+            request.node_id = str(index)
+            logger.info(f"Provisioning Wazuh worker on IP: {ip} with node_id: {request.node_id}")
+
             response = requests.post(
                 url=f"http://{ip}:5003/provision_worker",
                 json=request.dict(),
@@ -357,6 +361,7 @@ async def provision_wazuh_worker(
                     success=False,
                     message=f"Failed to provision Wazuh worker: {response.text}",
                 )
+
         # Create the stack and get the response
         stack_response = await create_wazuh_customer_stack(request)
 

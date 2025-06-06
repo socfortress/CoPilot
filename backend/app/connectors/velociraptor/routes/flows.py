@@ -77,7 +77,7 @@ async def get_velociraptor_org(session: AsyncSession, hostname: str) -> str:
     if not agent:
         raise HTTPException(
             status_code=404,
-            detail=f"Agent with hostname {hostname} not found",
+            detail=f"Agent with hostname: {hostname} not found",
         )
 
     if agent.velociraptor_org is None:

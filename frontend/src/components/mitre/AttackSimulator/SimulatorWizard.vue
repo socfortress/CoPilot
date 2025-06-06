@@ -20,6 +20,7 @@
 							v-model:selected="selectedAttack"
 							:technique-id
 							class="px-7"
+							:os-list
 							:parameters-list
 							@loaded="parametersList = $event"
 						/>
@@ -67,7 +68,12 @@
 										<code>{{ selectedAgent.label }}</code>
 									</template>
 									<template #footer>
-										{{ selectedAgent.os }}
+										<div class="flex flex-wrap items-center gap-2">
+											<Icon :name="iconFromOs(selectedAgent.os)" :size="14" />
+											<span>
+												{{ selectedAgent.os }}
+											</span>
+										</div>
 									</template>
 								</CardEntity>
 							</div>
@@ -138,13 +144,13 @@ import type { CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { MatchingParameter } from "@/types/artifacts.d"
 import { NButton, NScrollbar, NSkeleton, NStep, NSteps, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate, getOS, iconFromOs } from "@/utils"
 import AgentsList from "./AgentsList.vue"
 import ParametersList from "./ParametersList.vue"
 
@@ -159,14 +165,16 @@ export interface Report {
 	GUID: string
 }
 
-const { techniqueId } = defineProps<{
+const { techniqueId, osList } = defineProps<{
 	techniqueId: string
+	osList: string[]
 }>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "close"): void
 	(e: "submitted"): void
+	(e: "mounted", value: { reset: () => void }): void
 }>()
 
 const ArrowRightIcon = "carbon:arrow-right"
@@ -210,12 +218,26 @@ const isSubmitValid = computed(() => {
 
 function submit() {
 	if (selectedAttack.value && selectedAgent.value) {
+		if (getOS(selectedAgent.value.os) === "MacOS") {
+			return
+		}
+
 		currentStatus.value = "finish"
 		loading.value = true
 
+		let artifact_name = ""
+
+		if (getOS(selectedAgent.value.os) === "Linux") {
+			artifact_name = "Linux.AttackSimulation.AtomicRedTeam"
+		}
+
+		if (getOS(selectedAgent.value.os) === "Windows") {
+			artifact_name = "Windows.AttackSimulation.AtomicRedTeam"
+		}
+
 		const payload: CollectRequest = {
 			hostname: selectedAgent.value.hostname,
-			artifact_name: "Windows.AttackSimulation.AtomicRedTeam",
+			artifact_name,
 			parameters: {
 				env: [
 					{
@@ -278,7 +300,7 @@ function submit() {
 	}
 }
 
-function _reset() {
+function reset() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "right"
 	current.value = 1
@@ -302,7 +324,12 @@ function prev() {
 }
 
 function agentsListFilter(agent: Agent) {
-	return agent.os.toLowerCase().includes("window")
+	for (const os of osList) {
+		if (agent.os.toLowerCase().includes(os.toLowerCase())) {
+			return true
+		}
+	}
+	return false
 }
 
 function scrollInView(scrollContainer: ScrollbarInst) {
@@ -345,6 +372,12 @@ watch([current, parametersList, agentsList], () => {
 			}
 		}, 200)
 	}
+})
+
+onMounted(() => {
+	emit("mounted", {
+		reset
+	})
 })
 </script>
 

@@ -26,7 +26,12 @@
 						<code>{{ item.label }}</code>
 					</template>
 					<template #footer>
-						{{ item.os }}
+						<div class="flex flex-wrap items-center gap-2">
+							<Icon :name="iconFromOs(item.os)" :size="14" />
+							<span>
+								{{ item.os }}
+							</span>
+						</div>
 					</template>
 				</CardEntity>
 			</template>
@@ -45,6 +50,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import { iconFromOs } from "@/utils"
 
 const { agentsList, filter } = defineProps<{
 	agentsList?: Agent[] | null

@@ -6,11 +6,9 @@ services:
     restart: always
     # Docker Swarm deployment configuration
     deploy:
-      replicas: 1
-      # If you want to let Swarm auto-balance, omit constraints:
-      # placement:
-      #   preferences:
-      #     - spread: node.id
+      replicas: NUMBER_OF_NODES                # one replica for each node
+      placement:
+        max_replicas_per_node: 1 # ensures they land on different nodes
 
     ports:
       - "REPLACE_LOG:1514"

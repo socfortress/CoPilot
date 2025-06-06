@@ -46,12 +46,26 @@ export function renderIcon(icon: Component | string) {
 }
 
 export function iconFromOs(os: string): string {
+	switch (getOS(os)) {
+		case "Windows":
+			return "mdi:microsoft"
+		case "MacOS":
+			return "mdi:apple"
+		case "Linux":
+		case "UNIX":
+			return "mdi:linux"
+		default:
+			return "mdi:help-box"
+	}
+}
+
+export function getOS(os: string): OsTypesFull {
 	const test = os.toLowerCase()
 	if (test.includes("mac") || test.includes("darwin") || test.includes("apple")) {
-		return "mdi:apple"
+		return "MacOS"
 	}
 	if (test.includes("win") || test.includes("microsoft")) {
-		return "mdi:microsoft"
+		return "Windows"
 	}
 	if (
 		test.includes("linux") ||
@@ -60,13 +74,13 @@ export function iconFromOs(os: string): string {
 		test.includes("debian") ||
 		test.includes("centos")
 	) {
-		return "mdi:linux"
+		return "Linux"
 	}
 
-	return "mdi:help-box"
+	return "Unknown"
 }
 
-export function getOS(): OsTypesFull {
+export function getNavigatorOS(): OsTypesFull {
 	let os: OsTypesFull = "Unknown"
 	if (navigator.userAgent.includes("Win")) os = "Windows"
 	if (navigator.userAgent.includes("Mac")) os = "MacOS"

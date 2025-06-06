@@ -16,6 +16,7 @@ from app.connectors.portainer.utils.universal import send_delete_request
 from app.connectors.portainer.utils.universal import send_get_request
 from app.connectors.portainer.utils.universal import send_post_request
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.services.portainer import list_node_ips
 
 
 async def get_stacks() -> StackResponse:
@@ -60,12 +61,36 @@ async def _load_stack_template(template_path: Path) -> str:
         return file.read()
 
 
-async def _prepare_template_variables(request: ProvisionNewCustomer) -> Dict[str, str]:
+# async def _prepare_template_variables(request: ProvisionNewCustomer) -> Dict[str, str]:
+#     """
+#     Prepare variables for template replacement.
+
+#     Args:
+#         request (ProvisionNewCustomer): The customer provisioning request
+
+#     Returns:
+#         Dict[str, str]: Dictionary of template variables and their values
+#     """
+#     formatted_customer_name = request.customer_name.replace(" ", "_")
+#     wazuh_manager_version = await get_wazuh_manager_version()
+
+#     return {
+#         "{{ wazuh_worker_customer_code }}": formatted_customer_name,
+#         "{{ wazuh_manager_version }}": wazuh_manager_version,
+#         "REPLACE_LOG": request.wazuh_logs_port,
+#         "REPLACE_REGISTRATION": request.wazuh_registration_port,
+#         "REPLACE_API": request.wazuh_api_port,
+#         "customer_name": formatted_customer_name,
+#     }
+
+
+async def _prepare_template_variables(request: ProvisionNewCustomer, node_count: int) -> Dict[str, str]:
     """
     Prepare variables for template replacement.
 
     Args:
         request (ProvisionNewCustomer): The customer provisioning request
+        node_count (int): Number of nodes in the swarm
 
     Returns:
         Dict[str, str]: Dictionary of template variables and their values
@@ -79,6 +104,7 @@ async def _prepare_template_variables(request: ProvisionNewCustomer) -> Dict[str
         "REPLACE_LOG": request.wazuh_logs_port,
         "REPLACE_REGISTRATION": request.wazuh_registration_port,
         "REPLACE_API": request.wazuh_api_port,
+        "NUMBER_OF_NODES": str(node_count),
         "customer_name": formatted_customer_name,
     }
 
@@ -103,6 +129,46 @@ async def _create_stack_payload(template: str, variables: Dict[str, str], swarm_
     }
 
 
+# async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackResponse:
+#     """
+#     Create a Wazuh stack for a customer.
+
+#     Args:
+#         request (ProvisionNewCustomer): The customer provisioning request
+
+#     Returns:
+#         StackResponse: The response from Portainer stack creation
+#     """
+#     logger.info(f"Creating Wazuh stack for customer {request.customer_name}")
+
+#     # Load template
+#     template_path = Path(__file__).parent.parent / "templates" / "wazuh_worker_stack.yml"
+#     template = await _load_stack_template(template_path)
+
+#     # Prepare variables
+#     variables = await _prepare_template_variables(request)
+#     logger.info(f"Template variables prepared for customer: {variables['customer_name']}")
+
+#     # Process template
+#     for placeholder, value in variables.items():
+#         template = template.replace(placeholder, value)
+#     logger.info("Template processed with variables")
+
+#     # Get required IDs
+#     endpoint_id = await get_endpoint_id()
+#     swarm_id = await get_swarm_id()
+#     logger.info(f"Retrieved endpoint ID: {endpoint_id} and swarm ID: {swarm_id}")
+
+#     # Create and send request
+#     create_stack_url = f"/api/stacks?type=1&method=string&endpointId={endpoint_id}"
+#     payload = await _create_stack_payload(template, variables, swarm_id)
+
+#     response = await send_post_request(endpoint=create_stack_url, data=payload)
+#     logger.info(f"Stack creation response received: {response}")
+
+#     return StackResponse(**response)
+
+
 async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackResponse:
     """
     Create a Wazuh stack for a customer.
@@ -115,18 +181,23 @@ async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackRes
     """
     logger.info(f"Creating Wazuh stack for customer {request.customer_name}")
 
+    # Get the number of swarm nodes
+    swarm_node_ips = await list_node_ips()
+    node_count = len(swarm_node_ips)
+    logger.info(f"Found {node_count} swarm nodes: {swarm_node_ips}")
+
     # Load template
     template_path = Path(__file__).parent.parent / "templates" / "wazuh_worker_stack.yml"
     template = await _load_stack_template(template_path)
 
-    # Prepare variables
-    variables = await _prepare_template_variables(request)
-    logger.info(f"Template variables prepared for customer: {variables['customer_name']}")
+    # Prepare variables with node count
+    variables = await _prepare_template_variables(request, node_count)
+    logger.info(f"Template variables prepared for customer: {variables['customer_name']} with {node_count} nodes")
 
     # Process template
     for placeholder, value in variables.items():
         template = template.replace(placeholder, value)
-    logger.info("Template processed with variables")
+    logger.info(f"Template processed with variables, replicas set to {node_count}")
 
     # Get required IDs
     endpoint_id = await get_endpoint_id()

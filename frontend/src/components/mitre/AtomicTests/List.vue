@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-col">
 			<div ref="header" class="header flex items-center justify-end gap-2">
-				<div class="info flex grow gap-5">
+				<div class="info flex grow gap-2">
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -20,6 +20,15 @@
 							</div>
 						</div>
 					</n-popover>
+
+					<n-select
+						v-model:value="osCategory"
+						:options="osCategoryOptions"
+						clearable
+						size="small"
+						placeholder="OS Category"
+						class="max-w-32"
+					/>
 				</div>
 				<n-pagination
 					v-model:page="currentPage"
@@ -56,11 +65,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreAtomicTestsQuery } from "@/api/endpoints/mitre"
+import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/mitre"
 import type { MitreAtomicTest } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -78,7 +87,13 @@ const showSizePicker = computed(() => !compactMode.value)
 const pageSizes = [25, 50, 100, 150, 200]
 const pageSize = ref(pageSizes[0])
 const pageSlot = ref(8)
+const osCategory = ref<MitreAtomicOsCategory | null>(null)
 const InfoIcon = "carbon:information"
+
+const osCategoryOptions: { label: string; value: MitreAtomicOsCategory }[] = ["windows", "linux", "macos"].map(o => ({
+	label: o,
+	value: o as MitreAtomicOsCategory
+}))
 
 let abortController: AbortController | null = null
 
@@ -90,7 +105,8 @@ function getList() {
 
 	const query: MitreAtomicTestsQuery = {
 		size: pageSize.value,
-		page: currentPage.value
+		page: currentPage.value,
+		os_category: osCategory.value || undefined
 	}
 
 	Api.mitre
@@ -128,7 +144,7 @@ useResizeObserver(header, entries => {
 	simpleMode.value = width < 450
 })
 
-watchDebounced([currentPage, pageSize], getList, {
+watchDebounced([currentPage, pageSize, osCategory], getList, {
 	deep: true,
 	debounce: 300,
 	immediate: true

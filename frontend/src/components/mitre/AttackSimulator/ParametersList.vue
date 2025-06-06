@@ -29,14 +29,17 @@
 
 <script setup lang="ts">
 import type { MatchingParameter } from "@/types/artifacts"
+import _uniq from "lodash/uniqBy"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { getOS } from "@/utils"
 
-const { techniqueId, parametersList } = defineProps<{
+const { techniqueId, parametersList, osList } = defineProps<{
 	techniqueId: string
 	parametersList?: MatchingParameter[] | null
+	osList: string[]
 }>()
 
 const emit = defineEmits<{
@@ -49,25 +52,34 @@ const message = useMessage()
 const loading = ref(false)
 const list = ref<MatchingParameter[]>([])
 
-function getList() {
+async function getList() {
 	loading.value = true
 
-	Api.artifacts
-		.getParameters("Windows.AttackSimulation.AtomicRedTeam", techniqueId)
-		.then(res => {
-			if (res.data.success) {
-				list.value = res.data?.matching_parameters || []
-				emit("loaded", list.value)
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
+	try {
+		const proms = []
+		for (const os of osList) {
+			if (getOS(os) === "Linux") {
+				proms.push(Api.artifacts.getParameters("Linux.AttackSimulation.AtomicRedTeam", techniqueId))
+			} else if (getOS(os) === "Windows") {
+				proms.push(Api.artifacts.getParameters("Windows.AttackSimulation.AtomicRedTeam", techniqueId))
 			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
+		}
+
+		const parametersListResponse = await Promise.all(proms)
+
+		let fullList: MatchingParameter[] = []
+
+		for (const res of parametersListResponse) {
+			fullList = [...fullList, ...res.data.matching_parameters]
+		}
+
+		list.value = _uniq(fullList, "name")
+		emit("loaded", list.value)
+	} catch (err: any) {
+		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+	} finally {
+		loading.value = false
+	}
 }
 
 function setItem(item: MatchingParameter) {

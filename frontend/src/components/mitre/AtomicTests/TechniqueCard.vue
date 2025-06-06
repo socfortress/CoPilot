@@ -20,7 +20,7 @@
 				</div>
 			</template>
 			<template #footerExtra>
-				<SimulatorButton :technique-id="entity.technique_id" size="small" />
+				<SimulatorButton :technique-id="entity.technique_id" size="small" :os-list="entity.categories" />
 			</template>
 		</CardEntity>
 
@@ -45,7 +45,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
-import SimulatorButton from "../WindowsAttackSimulator/SimulatorButton.vue"
+import SimulatorButton from "../AttackSimulator/SimulatorButton.vue"
 import TechniqueCardContent from "./TechniqueCardContent.vue"
 
 const { entity } = defineProps<{ entity: MitreAtomicTest; embedded?: boolean }>()

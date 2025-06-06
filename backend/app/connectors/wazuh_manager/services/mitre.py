@@ -40,18 +40,22 @@ class AtomicRedTeamService:
     _tests_cache: Dict[str, Tuple[List[Dict], float]] = {}  # Cache for all tests
 
     @classmethod
-    async def list_all_atomic_tests(cls) -> Dict:
+    async def list_all_atomic_tests(cls, os_category: Optional[str] = None) -> Dict:
         """
         Get a list of all available Atomic Red Team tests.
+
+        Args:
+            os_category: Optional filter for operating system category
 
         Returns:
             Dict containing test information and metadata
         """
         # Check cache first
-        if "all_tests" in cls._tests_cache:
-            tests, timestamp = cls._tests_cache["all_tests"]
+        cache_key = f"all_tests_{os_category}" if os_category else "all_tests"
+        if cache_key in cls._tests_cache:
+            tests, timestamp = cls._tests_cache[cache_key]
             if time.time() - timestamp < CACHE_EXPIRY:
-                logger.debug("Returning cached list of all atomic tests")
+                logger.debug(f"Returning cached list of atomic tests for OS category: {os_category}")
                 return {"total_techniques": len(tests), "tests": tests, "last_updated": datetime.fromtimestamp(timestamp).isoformat()}
 
         # Fetch the list of all techniques with atomic tests
@@ -61,17 +65,17 @@ class AtomicRedTeamService:
                 url = "https://raw.githubusercontent.com/redcanaryco/atomic-red-team/refs/heads/master/atomics/Indexes/Indexes-Markdown/atomic-red-team-index.md"
                 async with session.get(url) as response:
                     if response.status == 200:
-                        return await cls._parse_atomic_index_markdown(await response.text())
+                        return await cls._parse_atomic_index_markdown(await response.text(), os_category)
 
                     # If markdown index not available, try alternate approach
                     logger.warning(f"Could not fetch atomic-red-team-index.md: {response.status}. Trying alternate method.")
-                    return await cls._fetch_techniques_from_atomics_folder()
+                    return await cls._fetch_techniques_from_atomics_folder(os_category)
         except Exception as e:
             logger.error(f"Error listing atomic tests: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error listing atomic tests: {str(e)}")
 
     @classmethod
-    async def _parse_atomic_index_markdown(cls, content: str) -> Dict:
+    async def _parse_atomic_index_markdown(cls, content: str, os_category: Optional[str] = None) -> Dict:
         """Parse the atomic-red-team-index.md file to extract test information."""
         techniques = []
         technique_pattern = r"\|\s*\[([^]]+)\]\([^)]+\)\s*\|\s*([T\d\.]+)\s*\|\s*(\d+)\s*\|"
@@ -83,17 +87,29 @@ class AtomicRedTeamService:
             try:
                 count = int(test_count)
                 total_tests += count
-                techniques.append(
-                    {
-                        "technique_id": technique_id,
-                        "technique_name": name,
-                        "test_count": count,
-                        "categories": [],  # Would require additional requests to determine
-                        "has_prerequisites": False,  # Would require additional requests to determine
-                    },
-                )
+
+                # For now, we'll need to fetch individual technique details to get platform info
+                # This is a limitation of parsing just the index markdown
+                technique_data = {
+                    "technique_id": technique_id,
+                    "technique_name": name,
+                    "test_count": count,
+                    "categories": [],  # Would require additional requests to determine
+                    "has_prerequisites": False,  # Would require additional requests to determine
+                }
+
+                # If filtering by OS category, we'd need to fetch individual technique data
+                # For performance, we'll apply the filter after getting all data
+                techniques.append(technique_data)
+
             except ValueError:
                 continue  # Skip if test_count isn't a valid integer
+
+        # Apply OS category filter if specified
+        if os_category:
+            # Note: This approach has limitations because the index doesn't contain platform info
+            # We'd need to fetch individual technique data for accurate filtering
+            logger.warning("OS category filtering from index markdown has limitations. Consider using the alternate method.")
 
         result = {
             "total_techniques": len(techniques),
@@ -103,12 +119,13 @@ class AtomicRedTeamService:
         }
 
         # Cache the result
-        cls._tests_cache["all_tests"] = (techniques, time.time())
+        cache_key = f"all_tests_{os_category}" if os_category else "all_tests"
+        cls._tests_cache[cache_key] = (techniques, time.time())
 
         return result
 
     @classmethod
-    async def _fetch_techniques_from_atomics_folder(cls) -> Dict:
+    async def _fetch_techniques_from_atomics_folder(cls, os_category: Optional[str] = None) -> Dict:
         """Fetch and parse techniques directly from the Atomic Red Team repository."""
         # This is a fallback method that fetches the techniques directly from the GitHub API
         try:
@@ -148,7 +165,6 @@ class AtomicRedTeamService:
                                     try:
                                         data = yaml.safe_load(yaml_content)
                                         test_count = len(data.get("atomic_tests", []))
-                                        total_tests += test_count
                                         platforms = set()
                                         has_prereqs = False
 
@@ -158,13 +174,23 @@ class AtomicRedTeamService:
                                             if test.get("dependencies"):
                                                 has_prereqs = True
 
-                                        return {
+                                        technique_data = {
                                             "technique_id": technique_id,
                                             "technique_name": data.get("display_name", technique_id),
                                             "test_count": test_count,
                                             "categories": list(platforms),
                                             "has_prerequisites": has_prereqs,
                                         }
+
+                                        # Apply OS category filter if specified
+                                        if os_category:
+                                            os_category_lower = os_category.lower()
+                                            if os_category_lower not in [cat.lower() for cat in platforms]:
+                                                return None  # Skip this technique
+
+                                        total_tests += test_count
+                                        return technique_data
+
                                     except Exception as e:
                                         logger.warning(f"Error parsing YAML for {technique_id}: {e}")
 
@@ -180,7 +206,6 @@ class AtomicRedTeamService:
                                     # Count atomic tests by headers
                                     test_headers = re.findall(r"## Atomic Test #\d+", md_content)
                                     test_count = len(test_headers)
-                                    total_tests += test_count
 
                                     # Look for platform indicators
                                     platforms = []
@@ -191,13 +216,22 @@ class AtomicRedTeamService:
                                     if "linux" in md_content.lower():
                                         platforms.append("linux")
 
-                                    return {
+                                    technique_data = {
                                         "technique_id": technique_id,
                                         "technique_name": name.replace(f"- {technique_id}", "").strip(),
                                         "test_count": test_count,
                                         "categories": platforms,
                                         "has_prerequisites": "dependency" in md_content.lower() or "dependencies" in md_content.lower(),
                                     }
+
+                                    # Apply OS category filter if specified
+                                    if os_category:
+                                        os_category_lower = os_category.lower()
+                                        if os_category_lower not in [cat.lower() for cat in platforms]:
+                                            return None  # Skip this technique
+
+                                    total_tests += test_count
+                                    return technique_data
 
                         # If both methods fail, return basic info
                         return {
@@ -210,7 +244,10 @@ class AtomicRedTeamService:
 
                     # Process all techniques concurrently but with rate limiting
                     technique_tasks = [process_technique(folder) for folder in technique_folders]
-                    techniques = [t for t in await asyncio.gather(*technique_tasks) if t["test_count"] > 0]
+                    technique_results = await asyncio.gather(*technique_tasks)
+
+                    # Filter out None results and techniques with 0 tests
+                    techniques = [t for t in technique_results if t is not None and t["test_count"] > 0]
 
                     result = {
                         "total_techniques": len(techniques),
@@ -220,7 +257,8 @@ class AtomicRedTeamService:
                     }
 
                     # Cache the result
-                    cls._tests_cache["all_tests"] = (techniques, time.time())
+                    cache_key = f"all_tests_{os_category}" if os_category else "all_tests"
+                    cls._tests_cache[cache_key] = (techniques, time.time())
 
                     return result
 
