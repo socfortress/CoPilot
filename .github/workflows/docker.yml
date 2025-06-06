@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [atomic-test-linux]
+        branches: [main]
 
 jobs:
     build-backend:
