@@ -348,7 +348,7 @@ async def provision_wazuh_worker(
         # Loop through each node IP and set the node_id based on position
         for index, ip in enumerate(swarm_node_ips, start=1):
             # Set the node_id to the current position in the list (1, 2, 3, etc.)
-            request.node_id = index
+            request.node_id = str(index)
             logger.info(f"Provisioning Wazuh worker on IP: {ip} with node_id: {request.node_id}")
 
             response = requests.post(
