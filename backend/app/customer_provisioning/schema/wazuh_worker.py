@@ -66,6 +66,11 @@ class ProvisionWorkerRequest(BaseModel):
         example="4.10.1",
         description="The version of the Wazuh manager",
     )
+    node_id: Optional[str] = Field(
+        "1",
+        example="1",
+        description="The ID of the node in the swarm",
+    )
 
 
 class ProvisionWorkerResponse(BaseModel):
