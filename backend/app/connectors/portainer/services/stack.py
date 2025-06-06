@@ -83,6 +83,7 @@ async def _load_stack_template(template_path: Path) -> str:
 #         "customer_name": formatted_customer_name,
 #     }
 
+
 async def _prepare_template_variables(request: ProvisionNewCustomer, node_count: int) -> Dict[str, str]:
     """
     Prepare variables for template replacement.
@@ -166,6 +167,7 @@ async def _create_stack_payload(template: str, variables: Dict[str, str], swarm_
 #     logger.info(f"Stack creation response received: {response}")
 
 #     return StackResponse(**response)
+
 
 async def create_wazuh_customer_stack(request: ProvisionNewCustomer) -> StackResponse:
     """

@@ -274,6 +274,7 @@ async def list_mitre_techniques(
 #         logger.error(f"Error retrieving atomic tests: {str(e)}")
 #         raise HTTPException(status_code=500, detail=f"Error retrieving atomic tests: {str(e)}")
 
+
 @wazuh_manager_mitre_router.get(
     "/atomic-tests",
     response_model=AtomicTestsListResponse,
@@ -307,10 +308,7 @@ async def list_atomic_tests(
         if os_category:
             os_category_lower = os_category.lower()
             # Filter tests that have the specified OS category in their categories list
-            filtered_tests = [
-                test for test in all_tests
-                if os_category_lower in [cat.lower() for cat in test.get("categories", [])]
-            ]
+            filtered_tests = [test for test in all_tests if os_category_lower in [cat.lower() for cat in test.get("categories", [])]]
             logger.info(f"Filtered {len(all_tests)} tests down to {len(filtered_tests)} tests for OS category '{os_category}'")
         else:
             filtered_tests = all_tests

@@ -831,6 +831,7 @@ async def get_customer_alert_event_configs(
 #             "message": f"Connection to {attributes['connector_url']} failed with error.",
 #         }
 
+
 async def verify_wazuh_worker_provisioning_healtcheck(
     attributes: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -841,11 +842,11 @@ async def verify_wazuh_worker_provisioning_healtcheck(
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status and details.
     """
-    connector_url = attributes['connector_url']
+    connector_url = attributes["connector_url"]
     logger.info(f"Verifying the wazuh-worker provisioning connection to {connector_url}")
 
     # Parse multiple hosts if comma-separated
-    hosts = [host.strip() for host in connector_url.split(',') if host.strip()]
+    hosts = [host.strip() for host in connector_url.split(",") if host.strip()]
 
     if not hosts:
         return {
@@ -870,31 +871,23 @@ async def verify_wazuh_worker_provisioning_healtcheck(
 
             if wazuh_worker_provisioning_healthcheck.status_code == 200:
                 successful_hosts.append(host)
-                connection_details.append({
-                    "host": host,
-                    "status": "success",
-                    "status_code": 200,
-                    "message": "Connection successful"
-                })
+                connection_details.append({"host": host, "status": "success", "status_code": 200, "message": "Connection successful"})
                 logger.info(f"Connection to {host} successful")
             else:
                 failed_hosts.append(host)
-                connection_details.append({
-                    "host": host,
-                    "status": "failed",
-                    "status_code": wazuh_worker_provisioning_healthcheck.status_code,
-                    "message": f"HTTP {wazuh_worker_provisioning_healthcheck.status_code}: {wazuh_worker_provisioning_healthcheck.text}"
-                })
+                connection_details.append(
+                    {
+                        "host": host,
+                        "status": "failed",
+                        "status_code": wazuh_worker_provisioning_healthcheck.status_code,
+                        "message": f"HTTP {wazuh_worker_provisioning_healthcheck.status_code}: {wazuh_worker_provisioning_healthcheck.text}",
+                    },
+                )
                 logger.error(f"Connection to {host} failed with status {wazuh_worker_provisioning_healthcheck.status_code}")
 
         except Exception as e:
             failed_hosts.append(host)
-            connection_details.append({
-                "host": host,
-                "status": "error",
-                "status_code": None,
-                "message": f"Connection error: {str(e)}"
-            })
+            connection_details.append({"host": host, "status": "error", "status_code": None, "message": f"Connection error: {str(e)}"})
             logger.error(f"Connection to {host} failed with error: {e}")
 
     # Determine overall success
@@ -919,6 +912,7 @@ async def verify_wazuh_worker_provisioning_healtcheck(
         "connection_details": connection_details,
     }
 
+
 async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> str:
     """
     Returns the status of the connection to Wazuh Worker Provisioning service.
@@ -929,7 +923,6 @@ async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> st
         logger.error("No Wazuh Worker Provisioning connector found in the database")
         return None
     return await verify_wazuh_worker_provisioning_healtcheck(attributes)
-
 
 
 ################## ! HAPROXY Provisioning App ! ##################
