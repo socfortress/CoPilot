@@ -221,6 +221,59 @@ async def list_mitre_techniques(
     return await get_mitre_techniques(limit=limit, offset=offset, select=select, sort=sort, search=search, q=q)
 
 
+# @wazuh_manager_mitre_router.get(
+#     "/atomic-tests",
+#     response_model=AtomicTestsListResponse,
+#     description="List all available Atomic Red Team tests",
+#     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
+# )
+# async def list_atomic_tests(
+#     size: int = Query(25, description="Maximum number of techniques to return per page"),
+#     page: int = Query(1, description="Page number for pagination", gt=0),
+# ):
+#     """
+#     List all available Atomic Red Team tests across all techniques.
+
+#     Args:
+#         size: Maximum number of techniques to return per page
+#         page: Page number for pagination
+
+#     Returns:
+#         AtomicTestsListResponse: A paginated list of techniques with Atomic Red Team tests.
+#     """
+#     logger.info(f"Request for list of all Atomic Red Team tests (page {page}, size {size})")
+
+#     try:
+#         # Get the list of all atomic tests
+#         result = await AtomicRedTeamService.list_all_atomic_tests()
+
+#         # Apply pagination to the results
+#         total_techniques = result["total_techniques"]
+#         all_tests = result["tests"]
+
+#         # Calculate total pages
+#         total_pages = (total_techniques + size - 1) // size if total_techniques > 0 else 1
+
+#         # Apply pagination
+#         start_idx = (page - 1) * size
+#         end_idx = start_idx + size
+#         paginated_tests = all_tests[start_idx:end_idx]
+
+#         return AtomicTestsListResponse(
+#             success=True,
+#             message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages},)",
+#             total_techniques=total_techniques,
+#             total_tests=result.get("total_tests"),
+#             tests=paginated_tests,
+#             last_updated=result["last_updated"],
+#             page=page,
+#             page_size=size,
+#             total_pages=total_pages,
+#         )
+#     except Exception as e:
+#         logger.error(f"Error retrieving atomic tests: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Error retrieving atomic tests: {str(e)}")
+
 @wazuh_manager_mitre_router.get(
     "/atomic-tests",
     response_model=AtomicTestsListResponse,
@@ -230,6 +283,7 @@ async def list_mitre_techniques(
 async def list_atomic_tests(
     size: int = Query(25, description="Maximum number of techniques to return per page"),
     page: int = Query(1, description="Page number for pagination", gt=0),
+    os_category: Optional[str] = Query(None, description="Filter by operating system category (windows, linux, macos)"),
 ):
     """
     List all available Atomic Red Team tests across all techniques.
@@ -237,19 +291,32 @@ async def list_atomic_tests(
     Args:
         size: Maximum number of techniques to return per page
         page: Page number for pagination
+        os_category: Optional filter for operating system category
 
     Returns:
         AtomicTestsListResponse: A paginated list of techniques with Atomic Red Team tests.
     """
-    logger.info(f"Request for list of all Atomic Red Team tests (page {page}, size {size})")
+    logger.info(f"Request for list of all Atomic Red Team tests (page {page}, size {size}, os_category: {os_category})")
 
     try:
         # Get the list of all atomic tests
         result = await AtomicRedTeamService.list_all_atomic_tests()
 
-        # Apply pagination to the results
-        total_techniques = result["total_techniques"]
+        # Filter by OS category if provided
         all_tests = result["tests"]
+        if os_category:
+            os_category_lower = os_category.lower()
+            # Filter tests that have the specified OS category in their categories list
+            filtered_tests = [
+                test for test in all_tests
+                if os_category_lower in [cat.lower() for cat in test.get("categories", [])]
+            ]
+            logger.info(f"Filtered {len(all_tests)} tests down to {len(filtered_tests)} tests for OS category '{os_category}'")
+        else:
+            filtered_tests = all_tests
+
+        # Apply pagination to the filtered results
+        total_techniques = len(filtered_tests)
 
         # Calculate total pages
         total_pages = (total_techniques + size - 1) // size if total_techniques > 0 else 1
@@ -257,11 +324,17 @@ async def list_atomic_tests(
         # Apply pagination
         start_idx = (page - 1) * size
         end_idx = start_idx + size
-        paginated_tests = all_tests[start_idx:end_idx]
+        paginated_tests = filtered_tests[start_idx:end_idx]
+
+        # Build the message
+        if os_category:
+            message = f"Found {total_techniques} MITRE techniques for OS '{os_category}' (page {page} of {total_pages})"
+        else:
+            message = f"Found {total_techniques} MITRE techniques (page {page} of {total_pages})"
 
         return AtomicTestsListResponse(
             success=True,
-            message=f"Found {total_techniques} MITRE techniques in {result['total_techniques']} alerts (page {page} of {total_pages},)",
+            message=message,
             total_techniques=total_techniques,
             total_tests=result.get("total_tests"),
             tests=paginated_tests,
