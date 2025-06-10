@@ -325,7 +325,7 @@ function prev() {
 
 function agentsListFilter(agent: Agent) {
 	for (const os of osList) {
-		if (agent.os.toLowerCase().includes(os.toLowerCase())) {
+		if (getOS(agent.os) === getOS(os)) {
 			return true
 		}
 	}

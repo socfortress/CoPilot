@@ -69,6 +69,7 @@ export function getOS(os: string): OsTypesFull {
 	}
 	if (
 		test.includes("linux") ||
+		test.includes("ubuntu") ||
 		test.includes("unix") ||
 		test.includes("x11") ||
 		test.includes("debian") ||
