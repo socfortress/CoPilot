@@ -3,7 +3,7 @@ from shufflepy import Singul
 
 from app.connectors.shuffle.schema.singul import SingulRequest
 
-singul = Singul(auth="REPLACE", url="https://shuffler.io")
+singul = Singul(auth="REPLACE_ME", url="https://california.shuffler.io")
 
 
 async def execute_singul(
@@ -21,10 +21,8 @@ async def execute_singul(
     logger.info("Executing Singul integration")
     response = singul.communication.send_message(
         app=request.app,
-        # org_id="REPLACE",
-        auth_id="REPLACE",
         fields=[
-            {"key": "to", "value": "REPLACE"},
+            {"key": "to", "value": "walton.taylor23@gmail.com"},
             {"key": "subject", "value": "Test Email from Singul"},
             {"key": "body", "value": "This is a test email sent from Singul."},
         ],
