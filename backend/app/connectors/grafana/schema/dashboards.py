@@ -25,7 +25,7 @@ class GrafanaDashboardResponse(BaseModel):
 class WazuhDashboard(Enum):
     WAZUH_SUMMARY = ("Wazuh", "summary.json")
     EDR_WINDOWS_EVENT_LOGS = ("Wazuh", "edr_windows_event_logs.json")
-    EDR_WAZUH_INVENOTRY = ("Wazuh", "edr_wazuh_inventory.json")
+    #EDR_WAZUH_INVENOTRY = ("Wazuh", "edr_wazuh_inventory.json")
     EDR_USERS_AND_GROUPS = ("Wazuh", "edr_users_and_groups.json")
     EDR_SYSTEM_VULNERABILITIES = ("Wazuh", "edr_system_vulnerabilities.json")
     EDR_SYSTEM_SECURITY_AUDIT = ("Wazuh", "edr_system_security_audit.json")
