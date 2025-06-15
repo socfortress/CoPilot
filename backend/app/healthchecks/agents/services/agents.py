@@ -33,6 +33,13 @@ def is_wazuh_agent_unhealthy(
     Returns:
         ExtendedAgentModel: An extended agent model with the unhealthy status updated.
     """
+    # If wazuh_last_seen is None, consider it unhealthy
+    if agent.wazuh_last_seen is None:
+        logger.info(
+            f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Wazuh last seen time - marking as unhealthy"
+        )
+        return ExtendedAgentModel(**agent.dict(), unhealthy_wazuh_agent=True)
+
     current_time = datetime.now()
     wazuh_last_seen = agent.wazuh_last_seen
 
@@ -64,6 +71,13 @@ def is_velociraptor_agent_unhealthy(
     Returns:
         ExtendedAgentModel: An extended agent model with the unhealthy_velociraptor_agent flag set.
     """
+    # If velociraptor_id is None or velociraptor_last_seen is None, consider it unhealthy
+    if agent.velociraptor_id is None or agent.velociraptor_last_seen is None:
+        logger.info(
+            f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Velociraptor ID or last seen time - marking as unhealthy"
+        )
+        return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=True)
+
     current_time = datetime.now()
     velociraptor_last_seen = agent.velociraptor_last_seen
 
