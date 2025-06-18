@@ -5,8 +5,9 @@ from fastapi import Query
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.shuffle.schema.organizations import DetailedOrganizationResponse
 from app.connectors.shuffle.schema.organizations import OrganizationResponse
-from app.connectors.shuffle.schema.organizations import OrganizationsListResponse, DetailedOrganizationResponse
+from app.connectors.shuffle.schema.organizations import OrganizationsListResponse
 from app.connectors.shuffle.services.organizations import OrganizationsService
 
 # Router Configuration
@@ -69,7 +70,7 @@ async def get_organization_by_id(org_id: str, connector_name: str = Query("Shuff
         return DetailedOrganizationResponse(
             success=True,
             message=f"Successfully retrieved organization: {organization.name}",
-            data=organization
+            data=organization,
         )
     except HTTPException:
         raise

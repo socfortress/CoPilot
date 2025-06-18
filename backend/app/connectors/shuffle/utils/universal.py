@@ -68,6 +68,7 @@ async def verify_shuffle_connection(connector_name: str) -> str:
         return None
     return await verify_shuffle_credentials(attributes)
 
+
 async def get_shuffle_org_id() -> Optional[str]:
     """
     Retrieves the organization ID from the Shuffle service.
@@ -83,6 +84,7 @@ async def get_shuffle_org_id() -> Optional[str]:
         return None
 
     return attributes.get("connector_extra_data", None)
+
 
 async def send_get_request(
     endpoint: str,

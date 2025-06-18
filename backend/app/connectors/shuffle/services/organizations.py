@@ -1,8 +1,9 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.shuffle.schema.organizations import DetailedOrganization
 from app.connectors.shuffle.schema.organizations import Organization
-from app.connectors.shuffle.schema.organizations import OrganizationsListResponse, DetailedOrganization
+from app.connectors.shuffle.schema.organizations import OrganizationsListResponse
 from app.connectors.shuffle.utils.universal import send_get_request
 
 
@@ -79,16 +80,13 @@ class OrganizationsService:
 
         try:
             # Send GET request to Shuffle API for specific organization
-            response = await send_get_request(
-                endpoint=f"/api/v1/orgs/{org_id}",
-                connector_name=connector_name
-            )
+            response = await send_get_request(endpoint=f"/api/v1/orgs/{org_id}", connector_name=connector_name)
 
             if not response.get("success", False):
                 logger.error(f"Failed to fetch organization {org_id}: {response.get('message', 'Unknown error')}")
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to fetch organization {org_id}: {response.get('message', 'Unknown error')}"
+                    detail=f"Failed to fetch organization {org_id}: {response.get('message', 'Unknown error')}",
                 )
 
             # Parse the response data
@@ -96,10 +94,7 @@ class OrganizationsService:
 
             if not organization_data:
                 logger.error(f"Organization with ID {org_id} not found")
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Organization with ID {org_id} not found"
-                )
+                raise HTTPException(status_code=404, detail=f"Organization with ID {org_id} not found")
 
             try:
                 organization = DetailedOrganization(**organization_data)
@@ -107,20 +102,14 @@ class OrganizationsService:
                 return organization
             except Exception as e:
                 logger.error(f"Failed to parse organization data for ID {org_id}: {e}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to parse organization data: {str(e)}"
-                )
+                raise HTTPException(status_code=500, detail=f"Failed to parse organization data: {str(e)}")
 
         except HTTPException:
             # Re-raise HTTPExceptions as-is
             raise
         except Exception as e:
             logger.error(f"Unexpected error while fetching organization {org_id}: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unexpected error while fetching organization {org_id}: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Unexpected error while fetching organization {org_id}: {str(e)}")
 
     @staticmethod
     async def get_organization_by_name(org_name: str, connector_name: str = "Shuffle") -> Organization:

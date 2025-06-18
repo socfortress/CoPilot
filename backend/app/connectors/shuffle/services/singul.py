@@ -1,7 +1,8 @@
 from loguru import logger
 
 from app.connectors.shuffle.schema.singul import SingulRequest
-from app.connectors.shuffle.utils.universal import get_singul_client, get_shuffle_org_id
+from app.connectors.shuffle.utils.universal import get_shuffle_org_id
+from app.connectors.shuffle.utils.universal import get_singul_client
 
 
 async def execute_singul(

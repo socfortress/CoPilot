@@ -1,9 +1,8 @@
+from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from datetime import datetime
-
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -28,6 +27,7 @@ class SSOConfig(BaseModel):
     openid_authorization: str = ""
     openid_token: str = ""
 
+
 class OrgAuth(BaseModel):
     token: str = ""
     expires: Optional[datetime] = None
@@ -37,7 +37,7 @@ class Organization(BaseModel):
     name: str
     description: Optional[str] = None
     company_type: str = ""
-    #image: str = ""
+    # image: str = ""
     id: str
     org: Optional[str] = None
     org_auth: OrgAuth = Field(default_factory=OrgAuth)
@@ -73,8 +73,6 @@ class OrganizationResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Organization] = None
-
-
 
 
 class DetailedOrganization(BaseModel):
