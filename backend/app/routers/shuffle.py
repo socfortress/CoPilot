@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.connectors.shuffle.routes.integrations import shuffle_integrations_router
+from app.connectors.shuffle.routes.organizations import shuffle_organizations_router
 from app.connectors.shuffle.routes.singul import shuffle_singul_router
 from app.connectors.shuffle.routes.workflows import shuffle_workflows_router
 
@@ -24,4 +25,10 @@ router.include_router(
     shuffle_singul_router,
     prefix="/shuffle/singul",
     tags=["shuffle-singul"],
+)
+
+router.include_router(
+    shuffle_organizations_router,
+    prefix="/shuffle/organizations",
+    tags=["shuffle-organizations"],
 )
