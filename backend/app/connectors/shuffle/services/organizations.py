@@ -1,6 +1,3 @@
-from typing import Dict
-from typing import List
-
 from fastapi import HTTPException
 from loguru import logger
 
@@ -27,27 +24,18 @@ class OrganizationsService:
 
         try:
             # Send GET request to Shuffle API
-            response = await send_get_request(
-                endpoint="/api/v1/orgs",
-                connector_name=connector_name
-            )
+            response = await send_get_request(endpoint="/api/v1/orgs", connector_name=connector_name)
 
             if not response.get("success", False):
                 logger.error(f"Failed to fetch organizations: {response.get('message', 'Unknown error')}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to fetch organizations: {response.get('message', 'Unknown error')}"
-                )
+                raise HTTPException(status_code=500, detail=f"Failed to fetch organizations: {response.get('message', 'Unknown error')}")
 
             # Parse the response data
             organizations_data = response.get("data", [])
 
             if not isinstance(organizations_data, list):
                 logger.error("Invalid response format: expected list of organizations")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Invalid response format from Shuffle API"
-                )
+                raise HTTPException(status_code=500, detail="Invalid response format from Shuffle API")
 
             # Convert to Organization models
             organizations = []
@@ -65,7 +53,7 @@ class OrganizationsService:
                 success=True,
                 message=f"Successfully retrieved {len(organizations)} organizations",
                 data=organizations,
-                total_count=len(organizations)
+                total_count=len(organizations),
             )
 
         except HTTPException:
@@ -73,10 +61,7 @@ class OrganizationsService:
             raise
         except Exception as e:
             logger.error(f"Unexpected error while fetching organizations: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unexpected error while fetching organizations: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Unexpected error while fetching organizations: {str(e)}")
 
     @staticmethod
     async def get_organization_by_id(org_id: str, connector_name: str = "Shuffle") -> Organization:
@@ -101,10 +86,7 @@ class OrganizationsService:
                 return org
 
         logger.error(f"Organization with ID {org_id} not found")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Organization with ID {org_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Organization with ID {org_id} not found")
 
     @staticmethod
     async def get_organization_by_name(org_name: str, connector_name: str = "Shuffle") -> Organization:
@@ -129,7 +111,4 @@ class OrganizationsService:
                 return org
 
         logger.error(f"Organization with name '{org_name}' not found")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Organization with name '{org_name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Organization with name '{org_name}' not found")

@@ -22,9 +22,7 @@ auth_handler = AuthHandler()
     description="Retrieve all organizations from Shuffle",
     dependencies=[Depends(auth_handler.require_any_scope("admin", "analyst"))],
 )
-async def list_organizations(
-    connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use")
-):
+async def list_organizations(connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use")):
     """
     Retrieve all organizations from Shuffle.
 
@@ -44,10 +42,7 @@ async def list_organizations(
         raise
     except Exception as e:
         logger.error(f"Unexpected error in list_organizations endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @shuffle_organizations_router.get(
@@ -56,10 +51,7 @@ async def list_organizations(
     description="Retrieve a specific organization by ID",
     dependencies=[Depends(auth_handler.require_any_scope("admin", "analyst"))],
 )
-async def get_organization_by_id(
-    org_id: str,
-    connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use")
-):
+async def get_organization_by_id(org_id: str, connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use")):
     """
     Retrieve a specific organization by ID.
 
@@ -74,19 +66,12 @@ async def get_organization_by_id(
 
     try:
         organization = await OrganizationsService.get_organization_by_id(org_id, connector_name)
-        return OrganizationResponse(
-            success=True,
-            message=f"Successfully retrieved organization: {organization.name}",
-            data=organization
-        )
+        return OrganizationResponse(success=True, message=f"Successfully retrieved organization: {organization.name}", data=organization)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Unexpected error in get_organization_by_id endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @shuffle_organizations_router.get(
@@ -97,7 +82,7 @@ async def get_organization_by_id(
 )
 async def get_organization_by_name(
     org_name: str,
-    connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use")
+    connector_name: str = Query("Shuffle", description="Name of the Shuffle connector to use"),
 ):
     """
     Retrieve a specific organization by name.
@@ -113,16 +98,9 @@ async def get_organization_by_name(
 
     try:
         organization = await OrganizationsService.get_organization_by_name(org_name, connector_name)
-        return OrganizationResponse(
-            success=True,
-            message=f"Successfully retrieved organization: {organization.name}",
-            data=organization
-        )
+        return OrganizationResponse(success=True, message=f"Successfully retrieved organization: {organization.name}", data=organization)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Unexpected error in get_organization_by_name endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
