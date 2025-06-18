@@ -1,7 +1,7 @@
 from loguru import logger
 
 from app.connectors.shuffle.schema.singul import SingulRequest
-from app.connectors.shuffle.utils.universal import get_singul_client
+from app.connectors.shuffle.utils.universal import get_singul_client, get_shuffle_org_id
 
 
 async def execute_singul(
@@ -24,7 +24,7 @@ async def execute_singul(
     try:
         response = singul.communication.send_message(
             app=request.app,
-            org_id=request.org_id,
+            org_id=await get_shuffle_org_id(),
             fields=[
                 {"key": "to", "value": "walton.taylor23@gmail.com"},
                 {"key": "subject", "value": "Test Email from Singul"},
