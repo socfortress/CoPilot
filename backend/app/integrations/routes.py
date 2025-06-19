@@ -35,7 +35,7 @@ from app.integrations.models.customer_integration_settings import IntegrationSer
 from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
-from app.integrations.schema import AuthKey, UpdateMetaAutoRequest, UpdateMetaResponse
+from app.integrations.schema import AuthKey
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -49,6 +49,8 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
+from app.integrations.schema import UpdateMetaAutoRequest
+from app.integrations.schema import UpdateMetaResponse
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
@@ -1222,6 +1224,7 @@ async def get_customer_by_auth_key(
 #             success=False,
 #         )
 
+
 @integration_settings_router.get(
     "/meta_auto/{customer_code}/{integration_name}",
     description="Get integration or network connector metadata automatically based on integration name",
@@ -1263,7 +1266,7 @@ async def get_meta_auto(
             if not meta_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Network connector metadata not found for customer {customer_code} and connector {integration_name}"
+                    detail=f"Network connector metadata not found for customer {customer_code} and connector {integration_name}",
                 )
 
             logger.info(f"Successfully retrieved network connector metadata for {customer_code}/{integration_name}")
@@ -1280,7 +1283,7 @@ async def get_meta_auto(
             if not meta_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Integration metadata not found for customer {customer_code} and integration {integration_name}"
+                    detail=f"Integration metadata not found for customer {customer_code} and integration {integration_name}",
                 )
 
             logger.info(f"Successfully retrieved integration metadata for {customer_code}/{integration_name}")
@@ -1289,18 +1292,16 @@ async def get_meta_auto(
         return {
             "success": True,
             "message": f"Successfully retrieved metadata for {customer_code}/{integration_name}",
-            "data": meta_record.dict() if hasattr(meta_record, 'dict') else meta_record.__dict__,
-            "table_type": "network_connector" if is_network_integration else "integration"
+            "data": meta_record.dict() if hasattr(meta_record, "dict") else meta_record.__dict__,
+            "table_type": "network_connector" if is_network_integration else "integration",
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error retrieving metadata: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 @integration_settings_router.put(
     "/update_meta_auto",
@@ -1333,7 +1334,7 @@ async def update_meta_auto(
             if not existing_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Network connector metadata not found for customer {update_request.customer_code} and connector {update_request.integration_name}"
+                    detail=f"Network connector metadata not found for customer {update_request.customer_code} and connector {update_request.integration_name}",
                 )
 
             # Update network connector metadata
@@ -1380,7 +1381,7 @@ async def update_meta_auto(
             if not existing_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Integration metadata not found for customer {update_request.customer_code} and integration {update_request.integration_name}"
+                    detail=f"Integration metadata not found for customer {update_request.customer_code} and integration {update_request.integration_name}",
                 )
 
             # Update regular integration metadata
@@ -1408,19 +1409,18 @@ async def update_meta_auto(
                 await session.execute(update_stmt)
 
         if not update_data:
-            return UpdateMetaResponse(
-                success=False,
-                message="No fields provided for update"
-            )
+            return UpdateMetaResponse(success=False, message="No fields provided for update")
 
         await session.commit()
 
         table_type = "network connector" if is_network_integration else "integration"
-        logger.info(f"Updated {table_type} metadata for customer {update_request.customer_code}, {table_type} {update_request.integration_name}")
+        logger.info(
+            f"Updated {table_type} metadata for customer {update_request.customer_code}, {table_type} {update_request.integration_name}",
+        )
 
         return UpdateMetaResponse(
             success=True,
-            message=f"Successfully updated {table_type} metadata for {update_request.customer_code}/{update_request.integration_name}"
+            message=f"Successfully updated {table_type} metadata for {update_request.customer_code}/{update_request.integration_name}",
         )
 
     except HTTPException:
@@ -1428,7 +1428,4 @@ async def update_meta_auto(
     except Exception as e:
         await session.rollback()
         logger.error(f"Error updating metadata: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

@@ -252,6 +252,7 @@ class CustomerByAuthKeyResponse(BaseModel):
     success: bool = True
     message: str = "Customer found successfully."
 
+
 class UpdateMetaAutoRequest(BaseModel):
     customer_code: str = Field(..., description="Customer code identifier")
     integration_name: str = Field(..., description="Integration or network connector name")
@@ -264,6 +265,7 @@ class UpdateMetaAutoRequest(BaseModel):
     grafana_org_id: Optional[str] = Field(None, description="Grafana organization ID")
     grafana_dashboard_folder_id: Optional[str] = Field(None, description="Grafana dashboard folder ID")
     grafana_datasource_uid: Optional[str] = Field(None, description="Grafana datasource UID (network connectors only)")
+
 
 class UpdateMetaResponse(BaseModel):
     success: bool
