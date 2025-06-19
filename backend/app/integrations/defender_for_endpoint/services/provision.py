@@ -367,7 +367,7 @@ async def provision_defender_for_endpoint(
             datasourceUid=customer_network_connector_meta.grafana_datasource_uid,
         ),
     )
-    customer_network_connector_meta.grafana_dashboard_folder_id = grafana_folder.uid
+    customer_network_connector_meta.grafana_dashboard_folder_id = grafana_folder.id
     await insert_into_customer_network_connectors_meta_table(
         customer_network_connectors_meta=customer_network_connector_meta,
         session=session,
