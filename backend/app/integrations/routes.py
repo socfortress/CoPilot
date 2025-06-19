@@ -1192,38 +1192,6 @@ async def get_customer_by_auth_key(
         raise HTTPException(status_code=500, detail=f"Failed to look up customer: {str(e)}")
 
 
-# @integration_settings_router.delete(
-#     "/delete_integration_meta",
-#     response_model=CustomerIntegrationsMetaResponse,
-#     description="Delete a customer integration metadata.",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def delete_integration_meta(
-#     customer_integration_meta: CustomerIntegrationsMetaSchema,
-#     session: AsyncSession = Depends(get_db),
-# ):
-#     """
-#     Endpoint to delete a customer integration metadata.
-#     """
-#     try:
-#         stmt = delete(CustomerIntegrationsMeta).where(
-#             CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
-#             CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
-#         )
-#         await session.execute(stmt)
-#         await session.commit()
-#         return CustomerIntegrationsMetaResponse(
-#             message="Customer integration metadata successfully deleted.",
-#             success=True,
-#         )
-#     except Exception as e:
-#         logger.error(f"Error while deleting customer integration metadata: {e}")
-#         return CustomerIntegrationsMetaResponse(
-#             customer_integrations_meta=None,
-#             message="Error while deleting customer integration metadata.",
-#             success=False,
-#         )
-
 
 @integration_settings_router.get(
     "/meta_auto/{customer_code}/{integration_name}",
