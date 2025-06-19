@@ -1192,7 +1192,6 @@ async def get_customer_by_auth_key(
         raise HTTPException(status_code=500, detail=f"Failed to look up customer: {str(e)}")
 
 
-
 @integration_settings_router.get(
     "/meta_auto/{customer_code}/{integration_name}",
     description="Get integration or network connector metadata automatically based on integration name",
