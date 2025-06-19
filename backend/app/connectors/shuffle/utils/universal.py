@@ -69,6 +69,23 @@ async def verify_shuffle_connection(connector_name: str) -> str:
     return await verify_shuffle_credentials(attributes)
 
 
+async def get_shuffle_org_id() -> Optional[str]:
+    """
+    Retrieves the organization ID from the Shuffle service.
+
+    Returns:
+        Optional[str]: The organization ID if found, otherwise None.
+    """
+    logger.info("Retrieving Shuffle organization ID")
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db("Shuffle", session)
+    if attributes is None:
+        logger.error("No Shuffle connector found in the database")
+        return None
+
+    return attributes.get("connector_extra_data", None)
+
+
 async def send_get_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,

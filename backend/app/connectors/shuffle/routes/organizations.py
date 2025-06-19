@@ -5,6 +5,7 @@ from fastapi import Query
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.shuffle.schema.organizations import DetailedOrganizationResponse
 from app.connectors.shuffle.schema.organizations import OrganizationResponse
 from app.connectors.shuffle.schema.organizations import OrganizationsListResponse
 from app.connectors.shuffle.services.organizations import OrganizationsService
@@ -47,7 +48,7 @@ async def list_organizations(connector_name: str = Query("Shuffle", description=
 
 @shuffle_organizations_router.get(
     "/organizations/{org_id}",
-    response_model=OrganizationResponse,
+    response_model=DetailedOrganizationResponse,
     description="Retrieve a specific organization by ID",
     dependencies=[Depends(auth_handler.require_any_scope("admin", "analyst"))],
 )
@@ -60,13 +61,17 @@ async def get_organization_by_id(org_id: str, connector_name: str = Query("Shuff
         connector_name (str): Name of the Shuffle connector to use.
 
     Returns:
-        OrganizationResponse: The organization data.
+        DetailedOrganizationResponse: The detailed organization data.
     """
     logger.info(f"Request to get organization with ID: {org_id} using connector: {connector_name}")
 
     try:
         organization = await OrganizationsService.get_organization_by_id(org_id, connector_name)
-        return OrganizationResponse(success=True, message=f"Successfully retrieved organization: {organization.name}", data=organization)
+        return DetailedOrganizationResponse(
+            success=True,
+            message=f"Successfully retrieved organization: {organization.name}",
+            data=organization,
+        )
     except HTTPException:
         raise
     except Exception as e:
