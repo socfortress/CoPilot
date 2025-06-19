@@ -4,7 +4,6 @@ from app.connectors.shuffle.schema.singul import SingulRequest
 from app.connectors.shuffle.utils.universal import get_shuffle_org_id
 from app.connectors.shuffle.utils.universal import get_singul_client
 
-
 # async def execute_singul(
 #     request: SingulRequest,
 # ) -> dict:
@@ -43,6 +42,7 @@ from app.connectors.shuffle.utils.universal import get_singul_client
 #         logger.error(f"Failed to execute Singul integration: {e}")
 #         return {"executionId": "unknown", "message": f"Singul integration failed: {e}", "success": False}
 
+
 async def execute_singul(
     request: SingulRequest,
 ) -> dict:
@@ -62,11 +62,9 @@ async def execute_singul(
 
     try:
         response = singul.intel.get_ioc(
-            app='opencti_dcon',
+            app="opencti_dcon",
             org_id=await get_shuffle_org_id(),
-            fields=[
-                {"key": "ip", "value": "8.8.8.8"}
-            ],
+            fields=[{"key": "ip", "value": "8.8.8.8"}],
         )
         logger.info(f"Singul response: {response}")
         logger.info(f"Singul response success: {response.get('success', 'unknown')}")

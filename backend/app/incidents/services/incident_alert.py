@@ -692,6 +692,7 @@ async def handle_customer_notifications(
 
 #     return alert_id
 
+
 # ! NEW FUNCTION ! #
 async def create_alert_full(
     alert_payload: CreatedAlertPayload,
