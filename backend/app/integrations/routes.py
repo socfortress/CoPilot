@@ -17,6 +17,7 @@ from sqlalchemy.orm import joinedload
 from app.auth.utils import AuthHandler
 from app.connectors.grafana.services.folders import delete_folder
 from app.connectors.graylog.services.management import delete_index_by_id
+from app.customer_provisioning.services.grafana import delete_grafana_datasource
 from app.connectors.graylog.services.streams import delete_stream
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
@@ -1095,6 +1096,12 @@ async def delete_integration(
     grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
 
     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
+
+    # Delete the grafana datasource
+    await delete_grafana_datasource(
+        organization_id=grafana_org_id,
+        datasource_uid=meta_data.grafana_datasource_uid,
+    )
 
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
