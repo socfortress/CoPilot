@@ -10,15 +10,14 @@ from sqlalchemy import delete
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.auth.utils import AuthHandler
 from app.connectors.grafana.services.folders import delete_folder
 from app.connectors.graylog.services.management import delete_index_by_id
-from app.customer_provisioning.services.grafana import delete_grafana_datasource
 from app.connectors.graylog.services.streams import delete_stream
+from app.customer_provisioning.services.grafana import delete_grafana_datasource
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -50,6 +49,9 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
 
 integration_settings_router = APIRouter()
 
@@ -943,6 +945,7 @@ async def delete_customer_integration_meta(session: AsyncSession, customer_code:
         ),
     )
 
+
 async def fetch_customer_network_connectors_meta(session: AsyncSession, customer_code: str, network_connector_name: str):
     """
     Fetches customer network connectors metadata from the database.
@@ -953,6 +956,7 @@ async def fetch_customer_network_connectors_meta(session: AsyncSession, customer
     )
     result = await session.execute(stmt)
     return result.scalars().first()
+
 
 async def delete_customer_network_connectors_meta(session: AsyncSession, customer_code: str, network_connector_name: str):
     """
@@ -1030,6 +1034,7 @@ async def delete_customer_network_connectors_meta(session: AsyncSession, custome
 
 #     return generate_decommission_response(customer_code, integration_name)
 
+
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -1077,10 +1082,7 @@ async def delete_integration(
         meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
 
     if not meta_data:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Metadata not found for {integration_name} integration"
-        )
+        raise HTTPException(status_code=404, detail=f"Metadata not found for {integration_name} integration")
 
     # Delete stream and index using metadata
     stream_id = meta_data.graylog_stream_id
