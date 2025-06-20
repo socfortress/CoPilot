@@ -338,6 +338,7 @@ async def provision_duo(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_duo_folder_id,
+            grafana_datasource_uid=duo_datasource_uid,
         ),
         session,
     )
