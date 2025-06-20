@@ -338,6 +338,7 @@ async def provision_carbonblack(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_carbonblack_folder_id,
+            grafana_datasource_uid=carbonblack_datasource_uid,
         ),
         session,
     )
