@@ -17,6 +17,7 @@ from app.auth.utils import AuthHandler
 from app.connectors.grafana.services.folders import delete_folder
 from app.connectors.graylog.services.management import delete_index_by_id
 from app.connectors.graylog.services.streams import delete_stream
+from app.customer_provisioning.services.grafana import delete_grafana_datasource
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -48,8 +49,20 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
+from app.integrations.schema import UpdateMetaAutoRequest
+from app.integrations.schema import UpdateMetaResponse
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
 
 integration_settings_router = APIRouter()
+
+NETWORK_INTEGRATIONS = [
+    "DefenderForEndpoint",
+    "BITDEFENDER",
+    "CROWDSTRIKE",
+    # Add other network integrations as needed
+]
 
 
 async def fetch_available_integrations(session: AsyncSession):
@@ -937,6 +950,95 @@ async def delete_customer_integration_meta(session: AsyncSession, customer_code:
     )
 
 
+async def fetch_customer_network_connectors_meta(session: AsyncSession, customer_code: str, network_connector_name: str):
+    """
+    Fetches customer network connectors metadata from the database.
+    """
+    stmt = select(CustomerNetworkConnectorsMeta).where(
+        CustomerNetworkConnectorsMeta.customer_code == customer_code,
+        CustomerNetworkConnectorsMeta.network_connector_name == network_connector_name,
+    )
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+
+async def delete_customer_network_connectors_meta(session: AsyncSession, customer_code: str, network_connector_name: str):
+    """
+    Deletes customer network connectors metadata from the database.
+    """
+    await session.execute(
+        delete(CustomerNetworkConnectorsMeta).where(
+            CustomerNetworkConnectorsMeta.customer_code == customer_code,
+            CustomerNetworkConnectorsMeta.network_connector_name == network_connector_name,
+        ),
+    )
+
+
+# @integration_settings_router.delete(
+#     "/delete_integration",
+#     response_model=CustomerIntegrationDeleteResponse,
+#     description="Delete a customer integration.",
+#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+# )
+# async def delete_integration(
+#     delete_customer_integration: DeleteCustomerIntegration,
+#     session: AsyncSession = Depends(get_db),
+# ):
+#     customer_code = delete_customer_integration.customer_code
+#     integration_name = delete_customer_integration.integration_name
+
+#     results = await get_customer_and_service_ids(
+#         session,
+#         customer_code,
+#         integration_name,
+#     )
+#     # Check if results is not empty
+#     if results:
+#         # Unpack the first tuple in results
+#         customer_id, integration_service_id = results[0]
+#     else:
+#         # Handle the case where results is empty
+#         raise HTTPException(status_code=404, detail="Customer integration not found")
+
+#     subscription_ids = await get_subscription_ids(
+#         session,
+#         customer_id,
+#         integration_service_id,
+#     )
+#     if not subscription_ids:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="No subscriptions found for customer integration",
+#         )
+
+#     stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
+#     logger.info(f"stream_id: {stream_id}")
+#     await delete_stream(stream_id=stream_id)
+
+#     index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
+#     logger.info(f"index_id: {index_id}")
+#     await delete_index_by_id(index_id=index_id)
+
+#     # Delete the folder in Grafana
+#     grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
+#     grafana_dashboard_folder_id = (
+#         await fetch_customer_integration_meta(session, customer_code, integration_name)
+#     ).grafana_dashboard_folder_id
+
+#     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
+
+#     await delete_metadata(session, subscription_ids)
+#     await delete_subscriptions(session, subscription_ids)
+#     await delete_configs(session, integration_service_id)
+#     await delete_integration_service(session, integration_service_id)
+#     await delete_customer_integration_record(session, customer_id)
+#     await delete_customer_integration_meta(session, customer_code, integration_name)
+
+#     await session.commit()
+
+#     return generate_decommission_response(customer_code, integration_name)
+
+
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -949,6 +1051,9 @@ async def delete_integration(
 ):
     customer_code = delete_customer_integration.customer_code
     integration_name = delete_customer_integration.integration_name
+
+    # Check if this is a network integration
+    is_network_integration = integration_name in NETWORK_INTEGRATIONS
 
     results = await get_customer_and_service_ids(
         session,
@@ -974,28 +1079,48 @@ async def delete_integration(
             detail="No subscriptions found for customer integration",
         )
 
-    stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
+    # Fetch metadata from appropriate table based on integration type
+    if is_network_integration:
+        meta_data = await fetch_customer_network_connectors_meta(session, customer_code, integration_name)
+    else:
+        meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
+
+    if not meta_data:
+        raise HTTPException(status_code=404, detail=f"Metadata not found for {integration_name} integration")
+
+    # Delete stream and index using metadata
+    stream_id = meta_data.graylog_stream_id
     logger.info(f"stream_id: {stream_id}")
     await delete_stream(stream_id=stream_id)
 
-    index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
+    index_id = meta_data.graylog_index_id
     logger.info(f"index_id: {index_id}")
     await delete_index_by_id(index_id=index_id)
 
     # Delete the folder in Grafana
-    grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
-    grafana_dashboard_folder_id = (
-        await fetch_customer_integration_meta(session, customer_code, integration_name)
-    ).grafana_dashboard_folder_id
+    grafana_org_id = meta_data.grafana_org_id
+    grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
 
     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
+
+    # Delete the grafana datasource
+    if is_network_integration:
+        await delete_grafana_datasource(
+            organization_id=grafana_org_id,
+            datasource_uid=meta_data.grafana_datasource_uid,
+        )
 
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
     await delete_configs(session, integration_service_id)
     await delete_integration_service(session, integration_service_id)
     await delete_customer_integration_record(session, customer_id)
-    await delete_customer_integration_meta(session, customer_code, integration_name)
+
+    # Delete metadata from appropriate table
+    if is_network_integration:
+        await delete_customer_network_connectors_meta(session, customer_code, integration_name)
+    else:
+        await delete_customer_integration_meta(session, customer_code, integration_name)
 
     await session.commit()
 
@@ -1067,34 +1192,207 @@ async def get_customer_by_auth_key(
         raise HTTPException(status_code=500, detail=f"Failed to look up customer: {str(e)}")
 
 
-# @integration_settings_router.delete(
-#     "/delete_integration_meta",
-#     response_model=CustomerIntegrationsMetaResponse,
-#     description="Delete a customer integration metadata.",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def delete_integration_meta(
-#     customer_integration_meta: CustomerIntegrationsMetaSchema,
-#     session: AsyncSession = Depends(get_db),
-# ):
-#     """
-#     Endpoint to delete a customer integration metadata.
-#     """
-#     try:
-#         stmt = delete(CustomerIntegrationsMeta).where(
-#             CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
-#             CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
-#         )
-#         await session.execute(stmt)
-#         await session.commit()
-#         return CustomerIntegrationsMetaResponse(
-#             message="Customer integration metadata successfully deleted.",
-#             success=True,
-#         )
-#     except Exception as e:
-#         logger.error(f"Error while deleting customer integration metadata: {e}")
-#         return CustomerIntegrationsMetaResponse(
-#             customer_integrations_meta=None,
-#             message="Error while deleting customer integration metadata.",
-#             success=False,
-#         )
+@integration_settings_router.get(
+    "/meta_auto/{customer_code}/{integration_name}",
+    description="Get integration or network connector metadata automatically based on integration name",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_meta_auto(
+    customer_code: str,
+    integration_name: str,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Automatically retrieve metadata from the appropriate table based on integration name.
+
+    This route checks if the integration is in the NETWORK_INTEGRATIONS list and
+    fetches from the appropriate table accordingly.
+
+    Args:
+        customer_code (str): The customer code to filter by
+        integration_name (str): The integration/connector name to filter by
+        session (AsyncSession): Database session
+
+    Returns:
+        dict: The metadata record from the appropriate table
+    """
+    logger.info(f"Fetching metadata for customer {customer_code} and integration {integration_name}")
+
+    is_network_integration = integration_name in NETWORK_INTEGRATIONS
+
+    try:
+        if is_network_integration:
+            # Fetch from network connectors table
+            stmt = select(CustomerNetworkConnectorsMeta).where(
+                CustomerNetworkConnectorsMeta.customer_code == customer_code,
+                CustomerNetworkConnectorsMeta.network_connector_name == integration_name,
+            )
+            result = await session.execute(stmt)
+            meta_record = result.scalars().first()
+
+            if not meta_record:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Network connector metadata not found for customer {customer_code} and connector {integration_name}",
+                )
+
+            logger.info(f"Successfully retrieved network connector metadata for {customer_code}/{integration_name}")
+
+        else:
+            # Fetch from regular integrations table
+            stmt = select(CustomerIntegrationsMeta).where(
+                CustomerIntegrationsMeta.customer_code == customer_code,
+                CustomerIntegrationsMeta.integration_name == integration_name,
+            )
+            result = await session.execute(stmt)
+            meta_record = result.scalars().first()
+
+            if not meta_record:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Integration metadata not found for customer {customer_code} and integration {integration_name}",
+                )
+
+            logger.info(f"Successfully retrieved integration metadata for {customer_code}/{integration_name}")
+
+        # Convert SQLModel to dict for response
+        return {
+            "success": True,
+            "message": f"Successfully retrieved metadata for {customer_code}/{integration_name}",
+            "data": meta_record.dict() if hasattr(meta_record, "dict") else meta_record.__dict__,
+            "table_type": "network_connector" if is_network_integration else "integration",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@integration_settings_router.put(
+    "/update_meta_auto",
+    response_model=UpdateMetaResponse,
+    description="Automatically update integration or network connector metadata based on integration name",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_meta_auto(
+    update_request: UpdateMetaAutoRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Automatically determine which table to update based on integration name.
+
+    This route checks if the integration is in the NETWORK_INTEGRATIONS list and
+    updates the appropriate table accordingly.
+    """
+    is_network_integration = update_request.integration_name in NETWORK_INTEGRATIONS
+
+    try:
+        if is_network_integration:
+            # Check if record exists in network connectors table
+            stmt = select(CustomerNetworkConnectorsMeta).where(
+                CustomerNetworkConnectorsMeta.customer_code == update_request.customer_code,
+                CustomerNetworkConnectorsMeta.network_connector_name == update_request.integration_name,
+            )
+            result = await session.execute(stmt)
+            existing_record = result.scalars().first()
+
+            if not existing_record:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Network connector metadata not found for customer {update_request.customer_code} and connector {update_request.integration_name}",
+                )
+
+            # Update network connector metadata
+            update_data = {}
+            if update_request.graylog_input_id is not None:
+                update_data["graylog_input_id"] = update_request.graylog_input_id
+            if update_request.graylog_index_id is not None:
+                update_data["graylog_index_id"] = update_request.graylog_index_id
+            if update_request.graylog_stream_id is not None:
+                update_data["graylog_stream_id"] = update_request.graylog_stream_id
+            if update_request.graylog_pipeline_id is not None:
+                update_data["graylog_pipeline_id"] = update_request.graylog_pipeline_id
+            if update_request.graylog_content_pack_input_id is not None:
+                update_data["graylog_content_pack_input_id"] = update_request.graylog_content_pack_input_id
+            if update_request.graylog_content_pack_stream_id is not None:
+                update_data["graylog_content_pack_stream_id"] = update_request.graylog_content_pack_stream_id
+            if update_request.grafana_org_id is not None:
+                update_data["grafana_org_id"] = update_request.grafana_org_id
+            if update_request.grafana_dashboard_folder_id is not None:
+                update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
+            if update_request.grafana_datasource_uid is not None:
+                update_data["grafana_datasource_uid"] = update_request.grafana_datasource_uid
+
+            if update_data:
+                update_stmt = (
+                    update(CustomerNetworkConnectorsMeta)
+                    .where(
+                        CustomerNetworkConnectorsMeta.customer_code == update_request.customer_code,
+                        CustomerNetworkConnectorsMeta.network_connector_name == update_request.integration_name,
+                    )
+                    .values(**update_data)
+                )
+                await session.execute(update_stmt)
+
+        else:
+            # Check if record exists in integrations table
+            stmt = select(CustomerIntegrationsMeta).where(
+                CustomerIntegrationsMeta.customer_code == update_request.customer_code,
+                CustomerIntegrationsMeta.integration_name == update_request.integration_name,
+            )
+            result = await session.execute(stmt)
+            existing_record = result.scalars().first()
+
+            if not existing_record:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Integration metadata not found for customer {update_request.customer_code} and integration {update_request.integration_name}",
+                )
+
+            # Update regular integration metadata
+            update_data = {}
+            if update_request.graylog_input_id is not None:
+                update_data["graylog_input_id"] = update_request.graylog_input_id
+            if update_request.graylog_index_id is not None:
+                update_data["graylog_index_id"] = update_request.graylog_index_id
+            if update_request.graylog_stream_id is not None:
+                update_data["graylog_stream_id"] = update_request.graylog_stream_id
+            if update_request.grafana_org_id is not None:
+                update_data["grafana_org_id"] = update_request.grafana_org_id
+            if update_request.grafana_dashboard_folder_id is not None:
+                update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
+
+            if update_data:
+                update_stmt = (
+                    update(CustomerIntegrationsMeta)
+                    .where(
+                        CustomerIntegrationsMeta.customer_code == update_request.customer_code,
+                        CustomerIntegrationsMeta.integration_name == update_request.integration_name,
+                    )
+                    .values(**update_data)
+                )
+                await session.execute(update_stmt)
+
+        if not update_data:
+            return UpdateMetaResponse(success=False, message="No fields provided for update")
+
+        await session.commit()
+
+        table_type = "network connector" if is_network_integration else "integration"
+        logger.info(
+            f"Updated {table_type} metadata for customer {update_request.customer_code}, {table_type} {update_request.integration_name}",
+        )
+
+        return UpdateMetaResponse(
+            success=True,
+            message=f"Successfully updated {table_type} metadata for {update_request.customer_code}/{update_request.integration_name}",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        logger.error(f"Error updating metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
