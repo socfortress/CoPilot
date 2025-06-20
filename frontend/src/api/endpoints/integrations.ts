@@ -22,6 +22,20 @@ export interface NewIntegrationPayload extends NewIntegration {
 	}
 }
 
+export interface UpdateMetaAutoRequest {
+    customer_code: string
+    integration_name: string
+    graylog_input_id?: string
+    graylog_index_id?: string
+    graylog_stream_id?: string
+    graylog_pipeline_id?: string
+    graylog_content_pack_input_id?: string
+    graylog_content_pack_stream_id?: string
+    grafana_org_id?: string
+    grafana_dashboard_folder_id?: string
+    grafana_datasource_uid?: string
+}
+
 export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
 
 export default {
@@ -58,6 +72,9 @@ export default {
 			payload
 		)
 	},
+    updateMetaAuto(payload: UpdateMetaAutoRequest) {
+        return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
+    },
 	deleteIntegration(customerCode: string, integrationName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
 			data: { customer_code: customerCode, integration_name: integrationName }
