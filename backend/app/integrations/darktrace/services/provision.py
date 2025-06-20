@@ -338,6 +338,7 @@ async def provision_darktrace(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_darktrace_folder_id,
+            grafana_datasource_uid=darktrace_datasource_uid,
         ),
         session,
     )
