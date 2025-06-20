@@ -345,6 +345,7 @@ async def provision_mimecast(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_mimecast_folder_id,
+            grafana_datasource_uid=mimecast_datasource_uid,
         ),
         session,
     )
