@@ -1,5 +1,5 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AvailableIntegration, CustomerIntegration } from "@/types/integrations.d"
+import type { AvailableIntegration, CustomerIntegration, CustomerIntegrationMetaResponse } from "@/types/integrations.d"
 import { HttpClient } from "../httpClient"
 
 export interface IntegrationAuthKeyPairs {
@@ -31,6 +31,11 @@ export default {
 			`/integrations/available_integrations`
 		)
 	},
+    getMetaAuto(customerCode: string, integrationName: string) {
+        return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
+            `/integrations/meta_auto/${customerCode}/${integrationName}`
+        )
+    },
 	getCustomerIntegrations(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: CustomerIntegration[] }>(
 			`/integrations/customer_integrations/${customerCode}`
