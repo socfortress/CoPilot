@@ -1363,6 +1363,8 @@ async def update_meta_auto(
                 update_data["grafana_org_id"] = update_request.grafana_org_id
             if update_request.grafana_dashboard_folder_id is not None:
                 update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
+            if update_request.grafana_datasource_uid is not None:
+                update_data["grafana_datasource_uid"] = update_request.grafana_datasource_uid
 
             if update_data:
                 update_stmt = (
