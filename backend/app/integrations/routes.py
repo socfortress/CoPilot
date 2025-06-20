@@ -1104,11 +1104,14 @@ async def delete_integration(
     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
 
     # Delete the grafana datasource
-    if is_network_integration:
+    if meta_data.grafana_datasource_uid is not None:
+        logger.info(f"Deleting Grafana datasource with UID: {meta_data.grafana_datasource_uid}")
         await delete_grafana_datasource(
             organization_id=grafana_org_id,
             datasource_uid=meta_data.grafana_datasource_uid,
         )
+    else:
+        logger.info("No Grafana datasource UID found, skipping deletion.")
 
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
