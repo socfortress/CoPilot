@@ -226,6 +226,7 @@ class CustomerIntegrationsMetaSchema(BaseModel):
     graylog_stream_id: str
     grafana_org_id: str
     grafana_dashboard_folder_id: str
+    grafana_datasource_uid: Optional[str] = None
 
     class Config:
         orm_mode = True
