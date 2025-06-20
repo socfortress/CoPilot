@@ -109,6 +109,12 @@ export default {
 			integration_name: integrationName || "Cato",
 			time_interval: 15
 		})
-	}
+	},
+    defenderForEndpointProvision(customerCode: string, integrationName: string) {
+        return HttpClient.post<FlaskBaseResponse>(`/defender_for_endpoint/provision`, {
+            customer_code: customerCode,
+            integration_name: integrationName || "DefenderForEndpoint"
+        })
+    }
 	// #endregion
 }

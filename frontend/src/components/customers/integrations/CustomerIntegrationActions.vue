@@ -57,6 +57,7 @@ const isDuo = computed(() => serviceName.value === "DUO")
 const isDarktrace = computed(() => serviceName.value === "Darktrace")
 const isBitdefender = computed(() => serviceName.value === "BitDefender")
 const isCato = computed(() => serviceName.value === "CATO")
+const isDefenderForEndpoint = computed(() => serviceName.value === "DefenderForEndpoint")
 const isDeployEnabled = computed(
 	() =>
 		(isOffice365.value ||
@@ -65,7 +66,8 @@ const isDeployEnabled = computed(
 			isDuo.value ||
 			isDarktrace.value ||
 			isBitdefender.value ||
-			isCato.value) &&
+			isCato.value ||
+      isDefenderForEndpoint.value) &&
 		!integration.deployed
 )
 
@@ -101,6 +103,9 @@ function provision() {
 	if (isCato.value) {
 		apiCall = Api.integrations.catoProvision(customerCode.value, serviceName.value)
 	}
+  if (isDefenderForEndpoint.value) {
+    apiCall = Api.integrations.defenderForEndpointProvision(customerCode.value, serviceName.value)
+  }
 
 	if (!apiCall) {
 		return
