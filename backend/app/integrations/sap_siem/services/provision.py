@@ -345,6 +345,7 @@ async def provision_sap_siem(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_sap_siem_folder_id,
+            grafana_datasource_uid=sap_siem_datasource_uid,
         ),
         session,
     )
