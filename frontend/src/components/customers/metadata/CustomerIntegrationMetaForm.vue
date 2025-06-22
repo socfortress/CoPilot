@@ -123,8 +123,7 @@ function save() {
 
 		const payload: UpdateMetaAutoRequest = { ...model.value }
 		for (const key in payload) {
-			// @ts-expect-error: key is keyof UpdateMetaAutoRequest
-			if (!payload[key]) payload[key] = ""
+			if (!payload[key as keyof UpdateMetaAutoRequest]) payload[key as keyof UpdateMetaAutoRequest] = ""
 		}
 
 		Api.integrations
