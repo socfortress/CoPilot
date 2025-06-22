@@ -22,13 +22,11 @@
 						Details
 					</n-button>
 
-					<!-- Add this new Meta Details button -->
-					<n-button size="small" @click.stop="showMetaDetails = true">
-						<template #icon>
-							<Icon :name="MetaIcon"></Icon>
-						</template>
-						Meta Details
-					</n-button>
+					<CustomerIntegrationMetaButton
+						size="small"
+						:customer-code="integration.customer_code"
+						:integration-name="serviceName"
+					/>
 
 					<CustomerIntegrationActions
 						class="flex flex-wrap gap-3"
@@ -53,23 +51,6 @@
 		>
 			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="integration = $event" />
 		</n-modal>
-
-		<!-- Add this new Meta Details Modal -->
-		<n-modal
-			v-model:show="showMetaDetails"
-			preset="card"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(411px, 90vh)', overflow: 'hidden' }"
-			content-class="flex flex-col"
-			:title="`${serviceName}  —  Meta Details`"
-			:bordered="false"
-			segmented
-			display-directive="show"
-		>
-			<CustomerIntegrationMetaDetails
-				:customer-code="integration.customer_code"
-				:integration-name="serviceName"
-			/>
-		</n-modal>
 	</div>
 </template>
 
@@ -80,6 +61,7 @@ import { computed, defineAsyncComponent, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerIntegrationMetaButton from "../metadata/CustomerIntegrationMetaButton.vue"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
 const { integration: customerIntegration, embedded } = defineProps<{
@@ -93,13 +75,10 @@ const emit = defineEmits<{
 }>()
 
 const CustomerIntegrationDetails = defineAsyncComponent(() => import("./CustomerIntegrationDetails.vue"))
-const CustomerIntegrationMetaDetails = defineAsyncComponent(() => import("./CustomerIntegrationMetaDetails.vue"))
 
 const DeployIcon = "carbon:deploy"
 const DetailsIcon = "carbon:settings-adjust"
-const MetaIcon = "carbon:data-base" // Add new icon for Meta Details
 const integration = ref(customerIntegration)
 const showDetails = ref(false)
-const showMetaDetails = ref(false) // Add new ref for Meta Details modal
 const serviceName = computed(() => integration.value.integration_service_name)
 </script>

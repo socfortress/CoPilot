@@ -22,6 +22,12 @@
 						Details
 					</n-button>
 
+					<CustomerIntegrationMetaButton
+						size="small"
+						:customer-code="networkConnector.customer_code"
+						:integration-name="serviceName"
+					/>
+
 					<CustomerNetworkConnectorActions
 						class="flex flex-wrap gap-3"
 						:network-connector
@@ -66,6 +72,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerIntegrationMetaButton from "../metadata/CustomerIntegrationMetaButton.vue"
 import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
 
 const props = defineProps<{
