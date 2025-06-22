@@ -61,6 +61,7 @@ NETWORK_INTEGRATIONS = [
     "DefenderForEndpoint",
     "BITDEFENDER",
     "CROWDSTRIKE",
+    "Fortinet"
     # Add other network integrations as needed
 ]
 
