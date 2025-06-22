@@ -121,8 +121,14 @@ function save() {
 
 		loading.value = true
 
+		const payload: UpdateMetaAutoRequest = { ...model.value }
+		for (const key in payload) {
+			// @ts-expect-error: key is keyof UpdateMetaAutoRequest
+			if (!payload[key]) payload[key] = ""
+		}
+
 		Api.integrations
-			.updateMetaAuto(model.value)
+			.updateMetaAuto(payload)
 			.then(res => {
 				if (res.data.success) {
 					message.success(res.data?.message || "Metadata updated successfully")
