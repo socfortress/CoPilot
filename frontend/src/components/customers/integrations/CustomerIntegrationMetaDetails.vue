@@ -1,124 +1,125 @@
 <template>
-    <div class="flex flex-col">
-        <n-spin :show="loading" content-class="flex grow flex-col">
-            <div v-if="metaData" class="flex min-h-80 grow flex-col justify-between gap-5">
-                <!-- Edit Form (when editing) -->
-                <div v-if="isEditing" class="flex flex-col gap-4">
-                    <n-form ref="formRef" :model="editForm" :rules="rules" label-placement="left" label-width="auto">
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <!-- Customer Code (readonly) -->
-                            <n-form-item label="Customer Code" path="customer_code">
-                                <n-input v-model:value="editForm.customer_code" readonly />
-                            </n-form-item>
+	<div class="flex flex-col">
+		<n-spin :show="loading" content-class="flex grow flex-col">
+			<div v-if="metaData" class="flex min-h-80 grow flex-col justify-between gap-5">
+				<!-- Edit Form (when editing) -->
+				<div v-if="isEditing" class="flex flex-col gap-4">
+					<n-form ref="formRef" :model="editForm" :rules="rules" label-placement="left" label-width="auto">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<!-- Customer Code (readonly) -->
+							<n-form-item label="Customer Code" path="customer_code">
+								<n-input v-model:value="editForm.customer_code" readonly />
+							</n-form-item>
 
-                            <!-- Integration Name (readonly) -->
-                            <n-form-item label="Integration Name" path="integration_name">
-                                <n-input v-model:value="editForm.integration_name" readonly />
-                            </n-form-item>
+							<!-- Integration Name (readonly) -->
+							<n-form-item label="Integration Name" path="integration_name">
+								<n-input v-model:value="editForm.integration_name" readonly />
+							</n-form-item>
 
-                            <!-- Graylog Fields -->
-                            <n-form-item label="Graylog Input ID" path="graylog_input_id">
-                                <n-input v-model:value="editForm.graylog_input_id" placeholder="Optional" />
-                            </n-form-item>
+							<!-- Graylog Fields -->
+							<n-form-item label="Graylog Input ID" path="graylog_input_id">
+								<n-input v-model:value="editForm.graylog_input_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Graylog Index ID" path="graylog_index_id">
-                                <n-input v-model:value="editForm.graylog_index_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Graylog Index ID" path="graylog_index_id">
+								<n-input v-model:value="editForm.graylog_index_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Graylog Stream ID" path="graylog_stream_id">
-                                <n-input v-model:value="editForm.graylog_stream_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Graylog Stream ID" path="graylog_stream_id">
+								<n-input v-model:value="editForm.graylog_stream_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Graylog Pipeline ID" path="graylog_pipeline_id">
-                                <n-input v-model:value="editForm.graylog_pipeline_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Graylog Pipeline ID" path="graylog_pipeline_id">
+								<n-input v-model:value="editForm.graylog_pipeline_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Graylog Content Pack Input ID" path="graylog_content_pack_input_id">
-                                <n-input v-model:value="editForm.graylog_content_pack_input_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Graylog Content Pack Input ID" path="graylog_content_pack_input_id">
+								<n-input v-model:value="editForm.graylog_content_pack_input_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Graylog Content Pack Stream ID" path="graylog_content_pack_stream_id">
-                                <n-input v-model:value="editForm.graylog_content_pack_stream_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Graylog Content Pack Stream ID" path="graylog_content_pack_stream_id">
+								<n-input v-model:value="editForm.graylog_content_pack_stream_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <!-- Grafana Fields -->
-                            <n-form-item label="Grafana Org ID" path="grafana_org_id">
-                                <n-input v-model:value="editForm.grafana_org_id" placeholder="Optional" />
-                            </n-form-item>
+							<!-- Grafana Fields -->
+							<n-form-item label="Grafana Org ID" path="grafana_org_id">
+								<n-input v-model:value="editForm.grafana_org_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Grafana Dashboard Folder ID" path="grafana_dashboard_folder_id">
-                                <n-input v-model:value="editForm.grafana_dashboard_folder_id" placeholder="Optional" />
-                            </n-form-item>
+							<n-form-item label="Grafana Dashboard Folder ID" path="grafana_dashboard_folder_id">
+								<n-input v-model:value="editForm.grafana_dashboard_folder_id" placeholder="Optional" />
+							</n-form-item>
 
-                            <n-form-item label="Grafana Datasource UID" path="grafana_datasource_uid">
-                                <n-input v-model:value="editForm.grafana_datasource_uid" placeholder="Optional" />
-                            </n-form-item>
-                        </div>
-                    </n-form>
+							<n-form-item label="Grafana Datasource UID" path="grafana_datasource_uid">
+								<n-input v-model:value="editForm.grafana_datasource_uid" placeholder="Optional" />
+							</n-form-item>
+						</div>
+					</n-form>
 
-                    <!-- Edit Form Actions -->
-                    <div class="flex justify-end gap-3">
-                        <n-button @click="cancelEdit">Cancel</n-button>
-                        <n-button type="primary" :loading="updating" @click="saveChanges">
-                            <template #icon>
-                                <Icon :name="SaveIcon"></Icon>
-                            </template>
-                            Save Changes
-                        </n-button>
-                    </div>
-                </div>
+					<!-- Edit Form Actions -->
+					<div class="flex justify-end gap-3">
+						<n-button @click="cancelEdit">Cancel</n-button>
+						<n-button type="primary" :loading="updating" @click="saveChanges">
+							<template #icon>
+								<Icon :name="SaveIcon"></Icon>
+							</template>
+							Save Changes
+						</n-button>
+					</div>
+				</div>
 
-                <!-- Read-only View (when not editing) -->
-                <div v-else class="grid-auto-fit-200 grid gap-2">
-                    <CardKV v-for="item of metaItems" :key="item.key">
-                        <template #key>
-                            {{ item.label }}
-                        </template>
-                        <template #value>
-                            <code class="text-xs">{{ item.value || "-" }}</code>
-                        </template>
-                    </CardKV>
-                </div>
+				<!-- Read-only View (when not editing) -->
+				<div v-else class="grid-auto-fit-200 grid gap-2">
+					<CardKV v-for="item of metaItems" :key="item.key">
+						<template #key>
+							{{ item.label }}
+						</template>
+						<template #value>
+							<code class="text-xs">{{ item.value || "-" }}</code>
+						</template>
+					</CardKV>
+				</div>
 
-                <!-- Bottom Actions -->
-                <div class="flex items-center justify-between">
-                    <Badge :type="metaData.table_type === 'network_connector' ? 'info' : 'success'">
-                        <template #value>
-                            {{ metaData.table_type === 'network_connector' ? 'Network Connector' : 'Integration' }}
-                        </template>
-                    </Badge>
+				<!-- Bottom Actions -->
+				<div class="flex items-center justify-between">
+					<Badge :type="metaData.table_type === 'network_connector' ? 'info' : 'success'">
+						<template #value>
+							{{ metaData.table_type === 'network_connector' ? 'Network Connector' : 'Integration' }}
+						</template>
+					</Badge>
 
-                    <div class="flex gap-3">
-                        <n-button v-if="!isEditing" secondary @click="startEdit">
-                            <template #icon>
-                                <Icon :name="EditIcon"></Icon>
-                            </template>
-                            Edit
-                        </n-button>
+					<div class="flex gap-3">
+						<n-button v-if="!isEditing" secondary @click="startEdit">
+							<template #icon>
+								<Icon :name="EditIcon"></Icon>
+							</template>
+							Edit
+						</n-button>
 
-                        <n-button secondary @click="loadMetaData()">
-                            <template #icon>
-                                <Icon :name="RefreshIcon"></Icon>
-                            </template>
-                            Refresh
-                        </n-button>
-                    </div>
-                </div>
-            </div>
+						<n-button secondary @click="loadMetaData()">
+							<template #icon>
+								<Icon :name="RefreshIcon"></Icon>
+							</template>
+							Refresh
+						</n-button>
+					</div>
+				</div>
+			</div>
 
-            <div v-else-if="!loading" class="flex min-h-80 items-center justify-center">
-                <n-empty description="No metadata found" />
-            </div>
-        </n-spin>
-    </div>
+			<div v-else-if="!loading" class="flex min-h-80 items-center justify-center">
+				<n-empty description="No metadata found" />
+			</div>
+		</n-spin>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, NEmpty, NForm, NFormItem, NInput, NSpin, useMessage, type FormInst, type FormRules } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
-import Api from "@/api"
+import type { FormInst, FormRules } from "naive-ui"
 import type { UpdateMetaAutoRequest } from "@/api/endpoints/integrations"
 import type { CustomerIntegrationMetaResponse } from "@/types/integrations.d"
+import { NButton, NEmpty, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
+import { computed, onMounted, ref } from "vue"
+import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
