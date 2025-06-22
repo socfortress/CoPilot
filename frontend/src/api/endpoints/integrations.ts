@@ -1,5 +1,10 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AvailableIntegration, CustomerIntegration, CustomerIntegrationMetaResponse } from "@/types/integrations.d"
+import type {
+	AvailableIntegration,
+	CustomerIntegration,
+	CustomerIntegrationMetaCommon,
+	CustomerIntegrationMetaResponse
+} from "@/types/integrations.d"
 import { HttpClient } from "../httpClient"
 
 export interface IntegrationAuthKeyPairs {
@@ -22,18 +27,8 @@ export interface NewIntegrationPayload extends NewIntegration {
 	}
 }
 
-export interface UpdateMetaAutoRequest {
-    customer_code: string
-    integration_name: string
-    graylog_input_id?: string
-    graylog_index_id?: string
-    graylog_stream_id?: string
-    graylog_pipeline_id?: string
-    graylog_content_pack_input_id?: string
-    graylog_content_pack_stream_id?: string
-    grafana_org_id?: string
-    grafana_dashboard_folder_id?: string
-    grafana_datasource_uid?: string
+export interface UpdateMetaAutoRequest extends Omit<CustomerIntegrationMetaCommon, "id"> {
+	integration_name: string
 }
 
 export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
@@ -45,11 +40,11 @@ export default {
 			`/integrations/available_integrations`
 		)
 	},
-    getMetaAuto(customerCode: string, integrationName: string) {
-        return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
-            `/integrations/meta_auto/${customerCode}/${integrationName}`
-        )
-    },
+	getMetaAuto(customerCode: string, integrationName: string) {
+		return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
+			`/integrations/meta_auto/${customerCode}/${integrationName}`
+		)
+	},
 	getCustomerIntegrations(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: CustomerIntegration[] }>(
 			`/integrations/customer_integrations/${customerCode}`
@@ -72,9 +67,9 @@ export default {
 			payload
 		)
 	},
-    updateMetaAuto(payload: UpdateMetaAutoRequest) {
-        return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
-    },
+	updateMetaAuto(payload: UpdateMetaAutoRequest) {
+		return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
+	},
 	deleteIntegration(customerCode: string, integrationName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
 			data: { customer_code: customerCode, integration_name: integrationName }
@@ -132,11 +127,11 @@ export default {
 			time_interval: 15
 		})
 	},
-    defenderForEndpointProvision(customerCode: string, integrationName: string) {
-        return HttpClient.post<FlaskBaseResponse>(`/defender_for_endpoint/provision`, {
-            customer_code: customerCode,
-            integration_name: integrationName || "DefenderForEndpoint"
-        })
-    }
+	defenderForEndpointProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/defender_for_endpoint/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName || "DefenderForEndpoint"
+		})
+	}
 	// #endregion
 }

@@ -1,75 +1,76 @@
 <template>
-    <div>
-        <CardEntity hoverable :embedded>
-            <template #default>
-                {{ serviceName }}
-            </template>
+	<div>
+		<CardEntity hoverable :embedded>
+			<template #default>
+				{{ serviceName }}
+			</template>
 
-            <template v-if="integration.deployed" #footerMain>
-                <Badge type="active">
-                    <template #iconLeft>
-                        <Icon :name="DeployIcon" :size="13"></Icon>
-                    </template>
-                    <template #value>Deployed</template>
-                </Badge>
-            </template>
-            <template #footerExtra>
-                <div class="flex flex-wrap gap-3">
-                    <n-button size="small" @click.stop="showDetails = true">
-                        <template #icon>
-                            <Icon :name="DetailsIcon"></Icon>
-                        </template>
-                        Details
-                    </n-button>
+			<template v-if="integration.deployed" #footerMain>
+				<Badge type="active">
+					<template #iconLeft>
+						<Icon :name="DeployIcon" :size="13"></Icon>
+					</template>
+					<template #value>Deployed</template>
+				</Badge>
+			</template>
+			<template #footerExtra>
+				<div class="flex flex-wrap gap-3">
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="DetailsIcon"></Icon>
+						</template>
+						Details
+					</n-button>
 
-                    <!-- Add this new Meta Details button -->
-                    <n-button size="small" @click.stop="showMetaDetails = true">
-                        <template #icon>
-                            <Icon :name="MetaIcon"></Icon>
-                        </template>
-                        Meta Details
-                    </n-button>
+					<!-- Add this new Meta Details button -->
+					<n-button size="small" @click.stop="showMetaDetails = true">
+						<template #icon>
+							<Icon :name="MetaIcon"></Icon>
+						</template>
+						Meta Details
+					</n-button>
 
-                    <CustomerIntegrationActions
-                        class="flex flex-wrap gap-3"
-                        :integration
-                        size="small"
-                        @deployed="emit('deployed')"
-                        @deleted="emit('deleted')"
-                    />
-                </div>
-            </template>
-        </CardEntity>
+					<CustomerIntegrationActions
+						class="flex flex-wrap gap-3"
+						:integration
+						size="small"
+						@deployed="emit('deployed')"
+						@deleted="emit('deleted')"
+					/>
+				</div>
+			</template>
+		</CardEntity>
 
-        <!-- Existing Details Modal -->
-        <n-modal
-            v-model:show="showDetails"
-            preset="card"
-            :style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(404px, 90vh)', overflow: 'hidden' }"
-            :title="serviceName"
-            :bordered="false"
-            segmented
-            display-directive="show"
-        >
-            <CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="integration = $event" />
-        </n-modal>
+		<!-- Existing Details Modal -->
+		<n-modal
+			v-model:show="showDetails"
+			preset="card"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(404px, 90vh)', overflow: 'hidden' }"
+			:title="serviceName"
+			:bordered="false"
+			segmented
+			display-directive="show"
+		>
+			<CustomerIntegrationDetails :integration @deleted="emit('deleted')" @updated="integration = $event" />
+		</n-modal>
 
-        <!-- Add this new Meta Details Modal -->
-        <n-modal
-            v-model:show="showMetaDetails"
-            preset="card"
-            :style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(404px, 90vh)', overflow: 'hidden' }"
-            :title="`${serviceName} - Meta Details`"
-            :bordered="false"
-            segmented
-            display-directive="show"
-        >
-            <CustomerIntegrationMetaDetails
-                :customer-code="integration.customer_code"
-                :integration-name="serviceName"
-            />
-        </n-modal>
-    </div>
+		<!-- Add this new Meta Details Modal -->
+		<n-modal
+			v-model:show="showMetaDetails"
+			preset="card"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(411px, 90vh)', overflow: 'hidden' }"
+			content-class="flex flex-col"
+			:title="`${serviceName}  —  Meta Details`"
+			:bordered="false"
+			segmented
+			display-directive="show"
+		>
+			<CustomerIntegrationMetaDetails
+				:customer-code="integration.customer_code"
+				:integration-name="serviceName"
+			/>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -82,13 +83,13 @@ import Icon from "@/components/common/Icon.vue"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
 const { integration: customerIntegration, embedded } = defineProps<{
-    integration: CustomerIntegration
-    embedded?: boolean
+	integration: CustomerIntegration
+	embedded?: boolean
 }>()
 
 const emit = defineEmits<{
-    (e: "deployed"): void
-    (e: "deleted"): void
+	(e: "deployed"): void
+	(e: "deleted"): void
 }>()
 
 const CustomerIntegrationDetails = defineAsyncComponent(() => import("./CustomerIntegrationDetails.vue"))

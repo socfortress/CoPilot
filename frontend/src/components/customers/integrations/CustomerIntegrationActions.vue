@@ -67,7 +67,7 @@ const isDeployEnabled = computed(
 			isDarktrace.value ||
 			isBitdefender.value ||
 			isCato.value ||
-      isDefenderForEndpoint.value) &&
+			isDefenderForEndpoint.value) &&
 		!integration.deployed
 )
 
@@ -103,9 +103,9 @@ function provision() {
 	if (isCato.value) {
 		apiCall = Api.integrations.catoProvision(customerCode.value, serviceName.value)
 	}
-  if (isDefenderForEndpoint.value) {
-    apiCall = Api.integrations.defenderForEndpointProvision(customerCode.value, serviceName.value)
-  }
+	if (isDefenderForEndpoint.value) {
+		apiCall = Api.integrations.defenderForEndpointProvision(customerCode.value, serviceName.value)
+	}
 
 	if (!apiCall) {
 		return

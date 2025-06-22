@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"composite": true,
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo",
-		"lib": [],
+		"lib": ["es2023"],
 		"types": ["node", "jsdom"],
 		"allowImportingTsExtensions": true
 	},
