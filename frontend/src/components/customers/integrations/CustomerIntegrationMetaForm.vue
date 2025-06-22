@@ -19,7 +19,7 @@
 							:label="getMetaFieldLabel(key)"
 							:path="key"
 						>
-							<n-input v-model:value="model[key]" placeholder="Optional" clearable />
+							<n-input v-model:value.trim="model[key]" placeholder="Optional" clearable />
 						</n-form-item>
 					</template>
 				</div>
