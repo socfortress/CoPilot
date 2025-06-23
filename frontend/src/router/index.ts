@@ -287,6 +287,12 @@ const router = createRouter({
 				}
 			]
 		},
+		{
+			path: "/app-auth-search",
+			name: "AppAuthSearch",
+			component: () => import("@/views/AppAuthSearch.vue"),
+			meta: { title: "App Auth Search", auth: true, roles: RouteRole.All, skipPin: true }
+		},
 
 		{
 			path: "/profile",
