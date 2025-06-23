@@ -338,6 +338,7 @@ async def provision_huntress(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_huntress_folder_id,
+            grafana_datasource_uid=huntress_datasource_uid,
         ),
         session,
     )

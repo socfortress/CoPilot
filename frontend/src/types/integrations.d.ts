@@ -40,3 +40,35 @@ export interface IntegrationService {
 	service_name: string
 	id: number
 }
+
+export interface CustomerIntegrationMetaCommon {
+	id: number
+	customer_code: string
+	graylog_input_id?: string
+	graylog_index_id?: string
+	graylog_stream_id?: string
+	graylog_pipeline_id?: string
+	graylog_content_pack_input_id?: string
+	graylog_content_pack_stream_id?: string
+	grafana_org_id?: string
+	grafana_dashboard_folder_id?: string
+	grafana_datasource_uid?: string
+}
+
+export interface CustomerIntegrationMetaThirdParty extends CustomerIntegrationMetaCommon {
+	integration_name: string
+}
+
+export interface CustomerIntegrationMetaNetwork extends CustomerIntegrationMetaCommon {
+	network_connector_name: string
+}
+
+export type CustomerIntegrationMetaResponse =
+	| {
+			data: CustomerIntegrationMetaThirdParty
+			table_type: "integration"
+	  }
+	| {
+			data: CustomerIntegrationMetaNetwork
+			table_type: "network_connector"
+	  }

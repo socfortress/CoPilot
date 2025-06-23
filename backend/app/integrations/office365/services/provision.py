@@ -969,6 +969,7 @@ async def provision_office365(
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_o365_folder_id,
+            grafana_datasource_uid=office365_datasource_uid,
         ),
         session,
     )

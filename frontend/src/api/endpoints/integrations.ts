@@ -1,5 +1,10 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AvailableIntegration, CustomerIntegration } from "@/types/integrations.d"
+import type {
+	AvailableIntegration,
+	CustomerIntegration,
+	CustomerIntegrationMetaCommon,
+	CustomerIntegrationMetaResponse
+} from "@/types/integrations.d"
 import { HttpClient } from "../httpClient"
 
 export interface IntegrationAuthKeyPairs {
@@ -22,6 +27,10 @@ export interface NewIntegrationPayload extends NewIntegration {
 	}
 }
 
+export interface UpdateMetaAutoRequest extends Omit<CustomerIntegrationMetaCommon, "id"> {
+	integration_name: string
+}
+
 export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
 
 export default {
@@ -29,6 +38,11 @@ export default {
 	getAvailableIntegrations() {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: AvailableIntegration[] }>(
 			`/integrations/available_integrations`
+		)
+	},
+	getMetaAuto(customerCode: string, integrationName: string) {
+		return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
+			`/integrations/meta_auto/${customerCode}/${integrationName}`
 		)
 	},
 	getCustomerIntegrations(customerCode: string) {
@@ -52,6 +66,9 @@ export default {
 			`/integrations/update_integration/${payload.customer_code}`,
 			payload
 		)
+	},
+	updateMetaAuto(payload: UpdateMetaAutoRequest) {
+		return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
 	},
 	deleteIntegration(customerCode: string, integrationName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
@@ -110,11 +127,11 @@ export default {
 			time_interval: 15
 		})
 	},
-    defenderForEndpointProvision(customerCode: string, integrationName: string) {
-        return HttpClient.post<FlaskBaseResponse>(`/defender_for_endpoint/provision`, {
-            customer_code: customerCode,
-            integration_name: integrationName || "DefenderForEndpoint"
-        })
-    }
+	defenderForEndpointProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/defender_for_endpoint/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName || "DefenderForEndpoint"
+		})
+	}
 	// #endregion
 }

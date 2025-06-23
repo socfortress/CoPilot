@@ -61,6 +61,8 @@ NETWORK_INTEGRATIONS = [
     "DefenderForEndpoint",
     "BITDEFENDER",
     "CROWDSTRIKE",
+    "FORTINET",
+    "Fortinet",
     # Add other network integrations as needed
 ]
 
@@ -974,71 +976,6 @@ async def delete_customer_network_connectors_meta(session: AsyncSession, custome
     )
 
 
-# @integration_settings_router.delete(
-#     "/delete_integration",
-#     response_model=CustomerIntegrationDeleteResponse,
-#     description="Delete a customer integration.",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def delete_integration(
-#     delete_customer_integration: DeleteCustomerIntegration,
-#     session: AsyncSession = Depends(get_db),
-# ):
-#     customer_code = delete_customer_integration.customer_code
-#     integration_name = delete_customer_integration.integration_name
-
-#     results = await get_customer_and_service_ids(
-#         session,
-#         customer_code,
-#         integration_name,
-#     )
-#     # Check if results is not empty
-#     if results:
-#         # Unpack the first tuple in results
-#         customer_id, integration_service_id = results[0]
-#     else:
-#         # Handle the case where results is empty
-#         raise HTTPException(status_code=404, detail="Customer integration not found")
-
-#     subscription_ids = await get_subscription_ids(
-#         session,
-#         customer_id,
-#         integration_service_id,
-#     )
-#     if not subscription_ids:
-#         raise HTTPException(
-#             status_code=404,
-#             detail="No subscriptions found for customer integration",
-#         )
-
-#     stream_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_stream_id
-#     logger.info(f"stream_id: {stream_id}")
-#     await delete_stream(stream_id=stream_id)
-
-#     index_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).graylog_index_id
-#     logger.info(f"index_id: {index_id}")
-#     await delete_index_by_id(index_id=index_id)
-
-#     # Delete the folder in Grafana
-#     grafana_org_id = (await fetch_customer_integration_meta(session, customer_code, integration_name)).grafana_org_id
-#     grafana_dashboard_folder_id = (
-#         await fetch_customer_integration_meta(session, customer_code, integration_name)
-#     ).grafana_dashboard_folder_id
-
-#     await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
-
-#     await delete_metadata(session, subscription_ids)
-#     await delete_subscriptions(session, subscription_ids)
-#     await delete_configs(session, integration_service_id)
-#     await delete_integration_service(session, integration_service_id)
-#     await delete_customer_integration_record(session, customer_id)
-#     await delete_customer_integration_meta(session, customer_code, integration_name)
-
-#     await session.commit()
-
-#     return generate_decommission_response(customer_code, integration_name)
-
-
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -1068,6 +1005,13 @@ async def delete_integration(
         # Handle the case where results is empty
         raise HTTPException(status_code=404, detail="Customer integration not found")
 
+    # Check if the integration is deployed before proceeding with metadata cleanup
+    stmt = select(CustomerIntegrations.deployed).where(CustomerIntegrations.id == customer_id)
+    result = await session.execute(stmt)
+    is_deployed = result.scalar()
+
+    logger.info(f"Integration {integration_name} for customer {customer_code} deployment status: {is_deployed}")
+
     subscription_ids = await get_subscription_ids(
         session,
         customer_id,
@@ -1079,48 +1023,62 @@ async def delete_integration(
             detail="No subscriptions found for customer integration",
         )
 
-    # Fetch metadata from appropriate table based on integration type
-    if is_network_integration:
-        meta_data = await fetch_customer_network_connectors_meta(session, customer_code, integration_name)
+    # Only proceed with infrastructure cleanup if the integration is deployed
+    if is_deployed:
+        logger.info("Integration is deployed, proceeding with full cleanup including infrastructure components")
+
+        # Fetch metadata from appropriate table based on integration type
+        if is_network_integration:
+            meta_data = await fetch_customer_network_connectors_meta(session, customer_code, integration_name)
+        else:
+            meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
+
+        if not meta_data:
+            raise HTTPException(status_code=404, detail=f"Metadata not found for {integration_name} integration")
+
+        # Delete stream and index using metadata
+        stream_id = meta_data.graylog_stream_id
+        logger.info(f"stream_id: {stream_id}")
+        await delete_stream(stream_id=stream_id)
+
+        index_id = meta_data.graylog_index_id
+        logger.info(f"index_id: {index_id}")
+        await delete_index_by_id(index_id=index_id)
+
+        # Delete the folder in Grafana
+        grafana_org_id = meta_data.grafana_org_id
+        grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
+
+        await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
+
+        # Delete the grafana datasource
+        if meta_data.grafana_datasource_uid is not None:
+            logger.info(f"Deleting Grafana datasource with UID: {meta_data.grafana_datasource_uid}")
+            await delete_grafana_datasource(
+                organization_id=grafana_org_id,
+                datasource_uid=meta_data.grafana_datasource_uid,
+            )
+        else:
+            logger.info("No Grafana datasource UID found, skipping deletion.")
+
+        # Delete metadata from appropriate table
+        if is_network_integration:
+            await delete_customer_network_connectors_meta(session, customer_code, integration_name)
+        else:
+            await delete_customer_integration_meta(session, customer_code, integration_name)
+
     else:
-        meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
-
-    if not meta_data:
-        raise HTTPException(status_code=404, detail=f"Metadata not found for {integration_name} integration")
-
-    # Delete stream and index using metadata
-    stream_id = meta_data.graylog_stream_id
-    logger.info(f"stream_id: {stream_id}")
-    await delete_stream(stream_id=stream_id)
-
-    index_id = meta_data.graylog_index_id
-    logger.info(f"index_id: {index_id}")
-    await delete_index_by_id(index_id=index_id)
-
-    # Delete the folder in Grafana
-    grafana_org_id = meta_data.grafana_org_id
-    grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
-
-    await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
-
-    # Delete the grafana datasource
-    if is_network_integration:
-        await delete_grafana_datasource(
-            organization_id=grafana_org_id,
-            datasource_uid=meta_data.grafana_datasource_uid,
+        logger.info(
+            "Integration is not deployed, skipping infrastructure cleanup (Graylog streams/indexes, Grafana folders/datasources, metadata)",
         )
 
-    await delete_metadata(session, subscription_ids)
+    # Always delete the integration settings (auth keys, configs, subscriptions, etc.)
+    logger.info(f"Deleting integration settings for {integration_name}")
+    await delete_metadata(session, subscription_ids)  # This deletes auth keys
     await delete_subscriptions(session, subscription_ids)
     await delete_configs(session, integration_service_id)
     await delete_integration_service(session, integration_service_id)
     await delete_customer_integration_record(session, customer_id)
-
-    # Delete metadata from appropriate table
-    if is_network_integration:
-        await delete_customer_network_connectors_meta(session, customer_code, integration_name)
-    else:
-        await delete_customer_integration_meta(session, customer_code, integration_name)
 
     await session.commit()
 
@@ -1363,6 +1321,8 @@ async def update_meta_auto(
                 update_data["grafana_org_id"] = update_request.grafana_org_id
             if update_request.grafana_dashboard_folder_id is not None:
                 update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
+            if update_request.grafana_datasource_uid is not None:
+                update_data["grafana_datasource_uid"] = update_request.grafana_datasource_uid
 
             if update_data:
                 update_stmt = (

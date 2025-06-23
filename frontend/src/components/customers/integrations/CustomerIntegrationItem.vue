@@ -22,6 +22,12 @@
 						Details
 					</n-button>
 
+					<CustomerIntegrationMetaButton
+						size="small"
+						:customer-code="integration.customer_code"
+						:integration-name="serviceName"
+					/>
+
 					<CustomerIntegrationActions
 						class="flex flex-wrap gap-3"
 						:integration
@@ -33,6 +39,7 @@
 			</template>
 		</CardEntity>
 
+		<!-- Existing Details Modal -->
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
@@ -54,6 +61,7 @@ import { computed, defineAsyncComponent, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerIntegrationMetaButton from "../metadata/CustomerIntegrationMetaButton.vue"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 
 const { integration: customerIntegration, embedded } = defineProps<{
