@@ -62,7 +62,7 @@ NETWORK_INTEGRATIONS = [
     "BITDEFENDER",
     "CROWDSTRIKE",
     "FORTINET",
-    "Fortinet"
+    "Fortinet",
     # Add other network integrations as needed
 ]
 
@@ -1068,7 +1068,9 @@ async def delete_integration(
             await delete_customer_integration_meta(session, customer_code, integration_name)
 
     else:
-        logger.info("Integration is not deployed, skipping infrastructure cleanup (Graylog streams/indexes, Grafana folders/datasources, metadata)")
+        logger.info(
+            "Integration is not deployed, skipping infrastructure cleanup (Graylog streams/indexes, Grafana folders/datasources, metadata)",
+        )
 
     # Always delete the integration settings (auth keys, configs, subscriptions, etc.)
     logger.info(f"Deleting integration settings for {integration_name}")
