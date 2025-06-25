@@ -2,8 +2,11 @@ from datetime import datetime
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +36,10 @@ from app.threat_intel.schema.socfortress import (
     VelociraptorArtifactRecommendationResponse,
 )
 from app.threat_intel.schema.socfortress import VirusTotalThreatIntelRequest
+from app.threat_intel.schema.virustotal import FileAnalysisResponse
+from app.threat_intel.schema.virustotal import FileReportResponse
+from app.threat_intel.schema.virustotal import FileSubmissionRequest
+from app.threat_intel.schema.virustotal import FileSubmissionResponse
 from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
 from app.threat_intel.services.socfortress import invoke_virustotal_api
 from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
@@ -44,6 +51,10 @@ from app.threat_intel.services.socfortress import (
 from app.threat_intel.services.socfortress import (
     socfortress_wazuh_exclusion_rule_lookup,
 )
+from app.threat_intel.services.virustotal_file import get_file_analysis_status
+from app.threat_intel.services.virustotal_file import get_file_report
+from app.threat_intel.services.virustotal_file import submit_and_wait_for_analysis
+from app.threat_intel.services.virustotal_file import submit_file_to_virustotal
 from app.utils import get_connector_attribute
 
 # App specific imports
@@ -77,6 +88,50 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
             detail="SocFortress API key not found in the database.",
         )
     return True
+
+async def ensure_virustotal_connector(session: AsyncSession = Depends(get_db)) -> dict:
+    """
+    Ensures that the VirusTotal connector is properly configured.
+
+    Args:
+        session (AsyncSession): The database session dependency
+
+    Returns:
+        dict: Dictionary containing API key and URL
+
+    Raises:
+        HTTPException: If connector is not configured or verified
+    """
+    # Check if the connector is verified
+    if not await get_connector_attribute(
+        connector_name="VirusTotal",
+        column_name="connector_verified",
+        session=session,
+    ):
+        raise HTTPException(
+            status_code=500,
+            detail="VirusTotal connector is not verified.",
+        )
+
+    api_key = await get_connector_attribute(
+        connector_name="VirusTotal",
+        column_name="connector_api_key",
+        session=session,
+    )
+
+    url = await get_connector_attribute(
+        connector_name="VirusTotal",
+        column_name="connector_url",
+        session=session,
+    )
+
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="VirusTotal API key not found in the database.",
+        )
+
+    return {"api_key": api_key, "url": url}
 
 
 @threat_intel_socfortress_router.post(
@@ -168,6 +223,170 @@ async def threat_intel_virustotal(
         message="VirusTotal threat intelligence lookup was successful.",
     )
 
+
+@threat_intel_socfortress_router.post(
+    "/virustotal/file/submit",
+    response_model=FileSubmissionResponse,
+    description="Submit a file to VirusTotal for analysis",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def submit_file_for_analysis(
+    file: UploadFile = File(..., description="File to analyze (max 32MB for free API)"),
+    password: str = Form(None, description="Password for encrypted files"),
+    vt_config: dict = Depends(ensure_virustotal_connector),
+):
+    """
+    Submit a file to VirusTotal for malware analysis.
+
+    This endpoint allows authorized users to upload files for analysis.
+    The file will be submitted to VirusTotal and an analysis ID will be returned.
+
+    Parameters:
+    - file: UploadFile - The file to be analyzed
+    - password: str (optional) - Password for encrypted files
+    - vt_config: dict - VirusTotal connector configuration (injected dependency)
+
+    Returns:
+    - FileSubmissionResponse: Contains the analysis ID for tracking
+    """
+    logger.info(f"Submitting file {file.filename} to VirusTotal for analysis")
+
+    # Validate file size (32MB limit for free API)
+    if file.size and file.size > 32 * 1024 * 1024:  # 32MB
+        raise HTTPException(
+            status_code=413,
+            detail="File too large. Maximum file size is 32MB for free API keys."
+        )
+
+    # Create request object
+    request = FileSubmissionRequest(password=password)
+
+    # Submit the file
+    return await submit_file_to_virustotal(
+        api_key=vt_config["api_key"],
+        file=file,
+        request=request
+    )
+
+
+@threat_intel_socfortress_router.get(
+    "/virustotal/analysis/{analysis_id}",
+    response_model=FileAnalysisResponse,
+    description="Get the status of a file analysis",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_analysis_status(
+    analysis_id: str,
+    vt_config: dict = Depends(ensure_virustotal_connector),
+):
+    """
+    Get the current status of a file analysis.
+
+    Parameters:
+    - analysis_id: str - The analysis ID returned from file submission
+    - vt_config: dict - VirusTotal connector configuration (injected dependency)
+
+    Returns:
+    - FileAnalysisResponse: Current analysis status and results
+    """
+    logger.info(f"Getting analysis status for ID: {analysis_id}")
+
+    return await get_file_analysis_status(
+        api_key=vt_config["api_key"],
+        analysis_id=analysis_id
+    )
+
+
+@threat_intel_socfortress_router.get(
+    "/virustotal/file/{file_id}",
+    response_model=FileReportResponse,
+    description="Get detailed analysis report for a file",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_file_analysis_report(
+    file_id: str,
+    vt_config: dict = Depends(ensure_virustotal_connector),
+):
+    """
+    Get the detailed analysis report for a file.
+
+    Parameters:
+    - file_id: str - The file ID (hash) to get the report for
+    - vt_config: dict - VirusTotal connector configuration (injected dependency)
+
+    Returns:
+    - FileReportResponse: Detailed analysis report
+    """
+    logger.info(f"Getting file report for ID: {file_id}")
+
+    return await get_file_report(
+        api_key=vt_config["api_key"],
+        file_id=file_id
+    )
+
+
+@threat_intel_socfortress_router.post(
+    "/virustotal/file/analyze",
+    response_model=FileReportResponse,
+    description="Submit a file and wait for analysis completion",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def analyze_file_complete(
+    file: UploadFile = File(..., description="File to analyze (max 32MB for free API)"),
+    password: str = Form(None, description="Password for encrypted files"),
+    max_wait_time: int = Form(300, description="Maximum wait time in seconds (default: 300)"),
+    poll_interval: int = Form(10, description="Polling interval in seconds (default: 10)"),
+    vt_config: dict = Depends(ensure_virustotal_connector),
+):
+    """
+    Submit a file to VirusTotal and wait for the analysis to complete.
+
+    This endpoint combines file submission and result retrieval into a single call.
+    It will wait for the analysis to complete before returning the results.
+
+    Parameters:
+    - file: UploadFile - The file to be analyzed
+    - password: str (optional) - Password for encrypted files
+    - max_wait_time: int - Maximum time to wait for analysis completion (seconds)
+    - poll_interval: int - Time between status checks (seconds)
+    - vt_config: dict - VirusTotal connector configuration (injected dependency)
+
+    Returns:
+    - FileReportResponse: Complete analysis report
+    """
+    logger.info(f"Starting complete analysis for file {file.filename}")
+
+    # Validate file size
+    if file.size and file.size > 32 * 1024 * 1024:  # 32MB
+        raise HTTPException(
+            status_code=413,
+            detail="File too large. Maximum file size is 32MB for free API keys."
+        )
+
+    # Validate wait time parameters
+    if max_wait_time < 30 or max_wait_time > 600:  # 30 seconds to 10 minutes
+        raise HTTPException(
+            status_code=400,
+            detail="max_wait_time must be between 30 and 600 seconds"
+        )
+
+    if poll_interval < 5 or poll_interval > 60:  # 5 seconds to 1 minute
+        raise HTTPException(
+            status_code=400,
+            detail="poll_interval must be between 5 and 60 seconds"
+        )
+
+    # Create request object
+    request = FileSubmissionRequest(password=password)
+
+    # Submit and wait for analysis
+    return await submit_and_wait_for_analysis(
+        api_key=vt_config["api_key"],
+        file=file,
+        request=request,
+        max_wait_time=max_wait_time,
+        poll_interval=poll_interval
+    )
 
 @threat_intel_socfortress_router.post(
     "/process_name",
