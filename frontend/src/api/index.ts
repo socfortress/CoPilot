@@ -21,6 +21,7 @@ import networkConnectors from "./endpoints/networkConnectors"
 import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
 import scheduler from "./endpoints/scheduler"
+import shuffle from "./endpoints/shuffle"
 import sigma from "./endpoints/sigma"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
@@ -59,5 +60,6 @@ export default {
 	users,
 	sysmonConfig,
 	mitre,
-	portainer
+	portainer,
+	shuffle
 }

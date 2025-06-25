@@ -21,6 +21,11 @@ export default defineConfig(({ mode }) => {
 			vue({
 				script: {
 					defineModel: true
+				},
+				template: {
+					compilerOptions: {
+						isCustomElement: (tag: string) => tag === "app-search-bar"
+					}
 				}
 			}),
 			vueJsx(),

@@ -380,6 +380,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Network Connectors" }
 						),
 					key: "ExternalServices-NetworkConnectors"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "ExternalServices-SingulAppAuth"
+								}
+							},
+							{ default: () => "Singul App Auth" }
+						),
+					key: "ExternalServices-SingulAppAuth"
 				}
 			]
 		},

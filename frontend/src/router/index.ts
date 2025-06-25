@@ -233,6 +233,12 @@ const router = createRouter({
 					name: "ExternalServices-NetworkConnectors",
 					component: () => import("@/views/externalServices/NetworkConnectors.vue"),
 					meta: { title: "Network Connectors" }
+				},
+				{
+					path: "singul-app-auth",
+					name: "ExternalServices-SingulAppAuth",
+					component: () => import("@/views/externalServices/SingulAppAuth.vue"),
+					meta: { title: "Singul App Auth" }
 				}
 			]
 		},
