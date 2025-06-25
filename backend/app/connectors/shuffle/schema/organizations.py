@@ -6,6 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
 
 
 class SyncConfig(BaseModel):
@@ -101,6 +102,29 @@ class DetailedOrganization(BaseModel):
     region: str = ""
     region_url: str = ""
     tutorials: List[Any] = []
+
+    @validator("manager_orgs", pre=True, always=True)
+    def validate_manager_orgs(cls, v):
+        """
+        Validate and normalize manager_orgs field.
+        Handles various input types and converts them to proper format or None.
+        """
+        if v is None:
+            return None
+
+        # If it's already a list, validate each item is a string
+        if isinstance(v, list):
+            try:
+                return [str(item) for item in v if item is not None]
+            except Exception:
+                return None
+
+        # If it's a single value, convert to list
+        if isinstance(v, (str, int)):
+            return [str(v)]
+
+        # For any other type, return None
+        return None
 
 
 class DetailedOrganizationResponse(BaseModel):
