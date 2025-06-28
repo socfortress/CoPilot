@@ -75,7 +75,7 @@
 					<Icon :name="LoadingIcon" :size="16" class="relative top-0.5" />
 					analyzing...
 				</div>
-				<n-spin :show="loading" v-if="analysisResponse">
+				<n-spin v-if="analysisResponse" :show="loading">
 					<div class="response bg-secondary overflow-hidden">
 						<div class="bg-default flex items-center justify-between p-4">
 							<div>Analysis</div>
@@ -107,7 +107,7 @@
 									{{ analysisResponse.attributes.status }}
 								</div>
 							</div>
-							<div class="flex flex-col gap-1 p-4" v-if="!_isEmpty(analysisResponse.attributes.stats)">
+							<div v-if="!_isEmpty(analysisResponse.attributes.stats)" class="flex flex-col gap-1 p-4">
 								<div class="text-secondary text-xs">stats</div>
 								<div class="divide-border divide-y-1 flex flex-col gap-2">
 									<div
@@ -121,8 +121,8 @@
 								</div>
 							</div>
 							<div
-								class="flex flex-col gap-2 overflow-hidden p-4"
 								v-if="!_isEmpty(analysisResponse.attributes.results)"
+								class="flex flex-col gap-2 overflow-hidden p-4"
 							>
 								<div class="text-secondary flex items-center justify-between text-xs">
 									<div>results</div>
@@ -144,7 +144,7 @@
 										{{ analysisResultCollapsed ? "expand" : "collapse" }}
 									</n-button>
 								</div>
-								<div class="flex flex-col gap-4" v-if="!analysisResultCollapsed">
+								<div v-if="!analysisResultCollapsed" class="flex flex-col gap-4">
 									<div
 										v-for="(resultVal, resultKey) of analysisResponse.attributes.results"
 										:key="resultKey"
@@ -164,7 +164,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-col gap-1 p-4" v-if="!_isEmpty(analysisResponse.links)">
+							<div v-if="!_isEmpty(analysisResponse.links)" class="flex flex-col gap-1 p-4">
 								<div class="text-secondary text-xs">links</div>
 								<div class="divide-border divide-y-1 flex flex-col gap-2">
 									<div
@@ -199,11 +199,11 @@
 import type { UploadFileInfo } from "naive-ui"
 import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threatIntel.d"
 import { useClipboard } from "@vueuse/core"
+import _isEmpty from "lodash/isEmpty"
 import { NAlert, NButton, NSpin, NTooltip, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import _isEmpty from "lodash/isEmpty"
 
 const emit = defineEmits<{
 	(
