@@ -201,3 +201,47 @@ export interface VirusTotalLastHTTPSCertificateExtensions {
 	CA: boolean
 	"1.3.6.1.4.1.11129.2.4.2": string
 }
+
+export interface VirusTotalAnalysis {
+	type: string
+	id: string
+	attributes: VirusTotalAnalysisAttributes
+	links: Record<string, string>
+}
+
+export interface VirusTotalAnalysisAttributes {
+	date: number
+	status: "queued" | "completed"
+	stats: VirusTotalAnalysisStats
+	results: { [key: string]: VirusTotalAnalysisResult }
+}
+
+export interface VirusTotalAnalysisResult {
+	method: string
+	engine_name: string
+	engine_version: null | string
+	engine_update: string
+	category: string
+	result: null | string
+}
+
+export interface VirusTotalAnalysisStats {
+	harmless: number
+	malicious: number
+	suspicious: number
+	undetected: number
+	timeout: number
+	confirmed_timeout: number
+	failure: number
+	type_unsupported: number
+	"confirmed-timeout": number
+	"type-unsupported": number
+}
+
+export interface VirusTotalFileCheckResponse {
+	type: string
+	id: string
+	links: {
+		self: string
+	}
+}
