@@ -77,9 +77,13 @@ export default {
 			ioc_value: iocValue
 		})
 	},
-	virusTotalFileCheck(file: File) {
+	virusTotalFileCheck(file: File, password?: string) {
 		const form = new FormData()
 		form.append("file", new Blob([file], { type: file.type }), file.name)
+
+		if (password) {
+			form.append("password", password)
+		}
 
 		return HttpClient.post<FlaskBaseResponse & { data: VirusTotalFileCheckResponse }>(
 			`/threat_intel/virustotal/file/submit`,

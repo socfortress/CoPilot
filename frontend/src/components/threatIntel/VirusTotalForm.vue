@@ -10,6 +10,20 @@
 						<div class="font-medium">Click or drag a file to this area to upload</div>
 					</n-upload-dragger>
 				</n-upload>
+				<n-collapse-transition :show="!!newFile">
+					<div class="mt-1 flex justify-end">
+						<n-checkbox v-model:checked="isPasswordProtected">It is password protected</n-checkbox>
+					</div>
+				</n-collapse-transition>
+				<n-collapse-transition :show="!!newFile && isPasswordProtected">
+					<n-input
+						v-model:value="filePassword"
+						type="password"
+						show-password-on="click"
+						class="mt-3"
+						placeholder="File password"
+					/>
+				</n-collapse-transition>
 			</div>
 			<div class="mb-2 flex justify-end">
 				<n-button type="primary" :disabled="!isValid" :loading="uploading" @click="submit()">Submit</n-button>
@@ -200,8 +214,19 @@ import type { UploadFileInfo } from "naive-ui"
 import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threatIntel.d"
 import { useClipboard } from "@vueuse/core"
 import _isEmpty from "lodash/isEmpty"
-import { NAlert, NButton, NSpin, NTooltip, NUpload, NUploadDragger, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import {
+	NAlert,
+	NButton,
+	NCheckbox,
+	NCollapseTransition,
+	NInput,
+	NSpin,
+	NTooltip,
+	NUpload,
+	NUploadDragger,
+	useMessage
+} from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -228,12 +253,20 @@ const analysisResponse = ref<VirusTotalAnalysis | null>(null)
 const error = ref<string>("")
 const fileList = ref<UploadFileInfo[]>([])
 const newFile = computed<File | null>(() => fileList.value?.[0]?.file || null)
+const isPasswordProtected = ref(false)
+const filePassword = ref<string | null>(null)
 let abortController: AbortController | null = null
 
 const fileLink = computed(() => fileResponse.value?.links.self || "")
 const { copy: copyLink, copied: showCopyTooltip, isSupported: isCopySupported } = useClipboard({ source: fileLink })
 
-const isValid = computed(() => !!newFile.value)
+const isValid = computed(() => {
+	if (isPasswordProtected.value && !filePassword.value) {
+		return false
+	}
+
+	return !!newFile.value
+})
 
 function restore() {
 	fileList.value = []
@@ -251,7 +284,7 @@ function submit() {
 	uploading.value = true
 
 	Api.threatIntel
-		.virusTotalFileCheck(newFile.value)
+		.virusTotalFileCheck(newFile.value, filePassword.value || undefined)
 		.then(res => {
 			if (res.data.success) {
 				error.value = ""
@@ -302,6 +335,14 @@ function analysis() {
 			loading.value = false
 		})
 }
+
+watch(newFile, () => {
+	isPasswordProtected.value = false
+})
+
+watch(isPasswordProtected, () => {
+	filePassword.value = null
+})
 
 onMounted(() => {
 	emit("mounted", {
