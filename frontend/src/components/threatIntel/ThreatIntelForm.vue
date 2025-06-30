@@ -125,12 +125,12 @@ function create() {
 				message.success(res.data?.message || "SOCFortress Threat Intel submitted.")
 			} else {
 				error.value = res.data?.message || "An error occurred. Please try again later."
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
+				message.warning(error.value)
 			}
 		})
 		.catch(err => {
 			error.value = err.response?.data?.message || "An error occurred. Please try again later."
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(error.value)
 		})
 		.finally(() => {
 			loading.value = false

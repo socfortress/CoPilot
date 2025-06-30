@@ -6,6 +6,8 @@ import type {
 	EpssScore,
 	EvaluationData,
 	ThreatIntelResponse,
+	VirusTotalAnalysis,
+	VirusTotalFileCheckResponse,
 	VirusTotalResponse
 } from "@/types/threatIntel.d"
 import { HttpClient } from "../httpClient"
@@ -74,5 +76,20 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & VirusTotalResponse>(`/threat_intel/virustotal`, {
 			ioc_value: iocValue
 		})
+	},
+	virusTotalFileCheck(file: File) {
+		const form = new FormData()
+		form.append("file", new Blob([file], { type: file.type }), file.name)
+
+		return HttpClient.post<FlaskBaseResponse & { data: VirusTotalFileCheckResponse }>(
+			`/threat_intel/virustotal/file/submit`,
+			form
+		)
+	},
+	virusTotalAnalysis(id: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { data: VirusTotalAnalysis }>(
+			`/threat_intel/virustotal/analysis/${id}`,
+			signal ? { signal } : {}
+		)
 	}
 }
