@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional
 
 import httpx
 from fastapi import HTTPException
@@ -34,10 +33,7 @@ async def submit_file_to_virustotal(
     url = "https://www.virustotal.com/api/v3/files"
 
     # Headers - exactly match the working example
-    headers = {
-        "accept": "application/json",
-        "x-apikey": api_key
-    }
+    headers = {"accept": "application/json", "x-apikey": api_key}
 
     # Prepare the file for upload
     file_content = await file.read()
@@ -46,9 +42,7 @@ async def submit_file_to_virustotal(
     await file.seek(0)
 
     # Prepare the files dictionary - exactly match the working pattern
-    files = {
-        "file": (file.filename, file_content, "application/octet-stream")
-    }
+    files = {"file": (file.filename, file_content, "application/octet-stream")}
 
     # Prepare form data if password is provided
     data = {}
@@ -59,12 +53,7 @@ async def submit_file_to_virustotal(
 
     try:
         async with httpx.AsyncClient(timeout=300.0) as client:  # 5 minute timeout for file uploads
-            response = await client.post(
-                url,
-                headers=headers,
-                files=files,
-                data=data if data else None
-            )
+            response = await client.post(url, headers=headers, files=files, data=data if data else None)
 
             # Log the actual request headers for debugging
             logger.info(f"Request headers sent: {response.request.headers}")
@@ -76,7 +65,7 @@ async def submit_file_to_virustotal(
             return FileSubmissionResponse(
                 data=response_data["data"],
                 success=True,
-                message=f"File {file.filename} submitted successfully for analysis"
+                message=f"File {file.filename} submitted successfully for analysis",
             )
 
     except httpx.HTTPStatusError as e:
@@ -94,50 +83,33 @@ async def submit_file_to_virustotal(
             if "Invalid zip file" in error_message:
                 raise HTTPException(
                     status_code=400,
-                    detail="File format not supported or corrupted. VirusTotal accepts executables, documents, archives, and other common file types."
+                    detail="File format not supported or corrupted. VirusTotal accepts executables, documents, archives, and other common file types.",
                 )
             elif "File too large" in error_message:
                 raise HTTPException(
                     status_code=413,
-                    detail="File too large. Maximum file size is 32MB for free API keys, 650MB for premium."
+                    detail="File too large. Maximum file size is 32MB for free API keys, 650MB for premium.",
                 )
             elif "missing" in error_message.lower():
                 raise HTTPException(
                     status_code=400,
-                    detail="File upload failed. Please ensure the file is properly formatted and try again."
+                    detail="File upload failed. Please ensure the file is properly formatted and try again.",
                 )
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Bad request: {error_message}"
-                )
+                raise HTTPException(status_code=400, detail=f"Bad request: {error_message}")
         elif e.response.status_code == 429:
-            raise HTTPException(
-                status_code=429,
-                detail="Rate limit exceeded. Please try again later."
-            )
+            raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
         elif e.response.status_code == 413:
-            raise HTTPException(
-                status_code=413,
-                detail="File too large. Maximum file size is 32MB for free API keys."
-            )
+            raise HTTPException(status_code=413, detail="File too large. Maximum file size is 32MB for free API keys.")
         else:
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"Failed to submit file: {error_message}"
-            )
+            raise HTTPException(status_code=e.response.status_code, detail=f"Failed to submit file: {error_message}")
     except httpx.RequestError as e:
         logger.error(f"Request error submitting file to VirusTotal: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Network error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Network error occurred: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error submitting file to VirusTotal: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unexpected error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Unexpected error occurred: {str(e)}")
+
 
 async def get_file_analysis_status(
     api_key: str,
@@ -167,24 +139,14 @@ async def get_file_analysis_status(
             response.raise_for_status()
             response_data = response.json()
 
-            return FileAnalysisResponse(
-                data=response_data["data"],
-                success=True,
-                message="Analysis status retrieved successfully"
-            )
+            return FileAnalysisResponse(data=response_data["data"], success=True, message="Analysis status retrieved successfully")
 
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error getting analysis status: {e.response.status_code} - {e.response.text}")
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail=f"Failed to get analysis status: {e.response.text}"
-        )
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to get analysis status: {e.response.text}")
     except httpx.RequestError as e:
         logger.error(f"Request error getting analysis status: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Network error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Network error occurred: {str(e)}")
 
 
 async def get_file_report(
@@ -215,29 +177,16 @@ async def get_file_report(
             response.raise_for_status()
             response_data = response.json()
 
-            return FileReportResponse(
-                data=response_data["data"],
-                success=True,
-                message="File report retrieved successfully"
-            )
+            return FileReportResponse(data=response_data["data"], success=True, message="File report retrieved successfully")
 
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error getting file report: {e.response.status_code} - {e.response.text}")
         if e.response.status_code == 404:
-            raise HTTPException(
-                status_code=404,
-                detail="File not found or not yet analyzed"
-            )
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail=f"Failed to get file report: {e.response.text}"
-        )
+            raise HTTPException(status_code=404, detail="File not found or not yet analyzed")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to get file report: {e.response.text}")
     except httpx.RequestError as e:
         logger.error(f"Request error getting file report: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Network error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Network error occurred: {str(e)}")
 
 
 async def submit_and_wait_for_analysis(
@@ -245,7 +194,7 @@ async def submit_and_wait_for_analysis(
     file: UploadFile,
     request: FileSubmissionRequest,
     max_wait_time: int = 300,  # 5 minutes
-    poll_interval: int = 10,   # 10 seconds
+    poll_interval: int = 10,  # 10 seconds
 ) -> FileReportResponse:
     """
     Submit a file and wait for analysis to complete, then return the report.
@@ -281,11 +230,7 @@ async def submit_and_wait_for_analysis(
 
             # For now, we'll return the analysis status response
             # In a real implementation, you might want to extract the file hash and get the full report
-            return FileReportResponse(
-                data=status_response.data,
-                success=True,
-                message="File analysis completed successfully"
-            )
+            return FileReportResponse(data=status_response.data, success=True, message="File analysis completed successfully")
 
         logger.info(f"Analysis status: {status_response.data.attributes.status}. Waiting {poll_interval} seconds...")
         await asyncio.sleep(poll_interval)
@@ -294,5 +239,5 @@ async def submit_and_wait_for_analysis(
     # If we get here, the analysis timed out
     raise HTTPException(
         status_code=408,
-        detail=f"Analysis did not complete within {max_wait_time} seconds. You can check the status later using analysis ID: {analysis_id}"
+        detail=f"Analysis did not complete within {max_wait_time} seconds. You can check the status later using analysis ID: {analysis_id}",
     )

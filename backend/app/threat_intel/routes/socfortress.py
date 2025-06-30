@@ -89,6 +89,7 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
         )
     return True
 
+
 async def ensure_virustotal_connector(session: AsyncSession = Depends(get_db)) -> dict:
     """
     Ensures that the VirusTotal connector is properly configured.
@@ -253,20 +254,13 @@ async def submit_file_for_analysis(
 
     # Validate file size (32MB limit for free API)
     if file.size and file.size > 32 * 1024 * 1024:  # 32MB
-        raise HTTPException(
-            status_code=413,
-            detail="File too large. Maximum file size is 32MB for free API keys."
-        )
+        raise HTTPException(status_code=413, detail="File too large. Maximum file size is 32MB for free API keys.")
 
     # Create request object
     request = FileSubmissionRequest(password=password)
 
     # Submit the file
-    return await submit_file_to_virustotal(
-        api_key=vt_config["api_key"],
-        file=file,
-        request=request
-    )
+    return await submit_file_to_virustotal(api_key=vt_config["api_key"], file=file, request=request)
 
 
 @threat_intel_socfortress_router.get(
@@ -291,10 +285,7 @@ async def get_analysis_status(
     """
     logger.info(f"Getting analysis status for ID: {analysis_id}")
 
-    return await get_file_analysis_status(
-        api_key=vt_config["api_key"],
-        analysis_id=analysis_id
-    )
+    return await get_file_analysis_status(api_key=vt_config["api_key"], analysis_id=analysis_id)
 
 
 @threat_intel_socfortress_router.get(
@@ -319,10 +310,7 @@ async def get_file_analysis_report(
     """
     logger.info(f"Getting file report for ID: {file_id}")
 
-    return await get_file_report(
-        api_key=vt_config["api_key"],
-        file_id=file_id
-    )
+    return await get_file_report(api_key=vt_config["api_key"], file_id=file_id)
 
 
 @threat_intel_socfortress_router.post(
@@ -358,23 +346,14 @@ async def analyze_file_complete(
 
     # Validate file size
     if file.size and file.size > 32 * 1024 * 1024:  # 32MB
-        raise HTTPException(
-            status_code=413,
-            detail="File too large. Maximum file size is 32MB for free API keys."
-        )
+        raise HTTPException(status_code=413, detail="File too large. Maximum file size is 32MB for free API keys.")
 
     # Validate wait time parameters
     if max_wait_time < 30 or max_wait_time > 600:  # 30 seconds to 10 minutes
-        raise HTTPException(
-            status_code=400,
-            detail="max_wait_time must be between 30 and 600 seconds"
-        )
+        raise HTTPException(status_code=400, detail="max_wait_time must be between 30 and 600 seconds")
 
     if poll_interval < 5 or poll_interval > 60:  # 5 seconds to 1 minute
-        raise HTTPException(
-            status_code=400,
-            detail="poll_interval must be between 5 and 60 seconds"
-        )
+        raise HTTPException(status_code=400, detail="poll_interval must be between 5 and 60 seconds")
 
     # Create request object
     request = FileSubmissionRequest(password=password)
@@ -385,8 +364,9 @@ async def analyze_file_complete(
         file=file,
         request=request,
         max_wait_time=max_wait_time,
-        poll_interval=poll_interval
+        poll_interval=poll_interval,
     )
+
 
 @threat_intel_socfortress_router.post(
     "/process_name",
