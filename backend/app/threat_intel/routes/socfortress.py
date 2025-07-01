@@ -256,6 +256,31 @@ async def submit_file_for_analysis(
     if file.size and file.size > 32 * 1024 * 1024:  # 32MB
         raise HTTPException(status_code=413, detail="File too large. Maximum file size is 32MB for free API keys.")
 
+    # Validate password is only provided for zip files
+    if password:
+        # Check file extension
+        filename = file.filename or ""
+        file_extension = filename.lower().split(".")[-1] if "." in filename else ""
+
+        # Check MIME type
+        content_type = file.content_type or ""
+
+        # Define valid zip file indicators
+        zip_extensions = ["zip", "zipx"]
+        zip_mime_types = ["application/zip", "application/x-zip-compressed", "application/x-zip", "multipart/x-zip"]
+
+        # Validate that it's a zip file
+        is_zip_extension = file_extension in zip_extensions
+        is_zip_mime = content_type in zip_mime_types
+
+        if not (is_zip_extension or is_zip_mime):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Password can only be provided for zip files. "
+                f"File '{filename}' has extension '{file_extension}' and MIME type '{content_type}', "
+                f"which are not recognized as zip file formats.",
+            )
+
     # Create request object
     request = FileSubmissionRequest(password=password)
 
