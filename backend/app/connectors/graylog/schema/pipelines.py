@@ -16,7 +16,7 @@ class StageWithRuleID(Stage):
 
 class Pipeline(BaseModel):
     created_at: str
-    description: str
+    description: Optional[str] = None  # Make description optional
     errors: Optional[None]
     id: str
     modified_at: str
@@ -33,7 +33,7 @@ class GraylogPipelinesResponse(BaseModel):
 
 class PipelineRule(BaseModel):
     created_at: str
-    description: str
+    description: Optional[str] = None  # Make description optional
     errors: Optional[None]
     id: str
     modified_at: str
