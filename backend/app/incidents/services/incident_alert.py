@@ -98,6 +98,34 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> A
     )
 
 
+def clean_alert_title(title: str) -> str:
+    """
+    Clean the alert title by removing BOM characters and normalizing encoding.
+
+    Args:
+        title (str): The raw alert title
+
+    Returns:
+        str: The cleaned alert title
+    """
+    if not title:
+        return title
+
+    # Remove BOM characters
+    title = title.replace("\ufeff", "")  # UTF-8 BOM
+    title = title.replace("\ufffe", "")  # UTF-16 BE BOM
+    title = title.replace("\xff\xfe", "")  # UTF-16 LE BOM
+
+    # Strip whitespace and normalize
+    title = title.strip()
+
+    # Ensure proper UTF-8 encoding
+    if isinstance(title, str):
+        title = title.encode("utf-8", "ignore").decode("utf-8")
+
+    return title
+
+
 async def get_single_alert_details(
     alert_details: CreateAlertRequest,
 ) -> GenericAlertModel:
@@ -516,11 +544,15 @@ async def build_alert_payload(
                 detail=f"Field name {field_name} not found in alert payload",
             )
 
+    # Clean the alert title to remove BOM and normalize encoding
+    raw_alert_title = alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None
+    cleaned_alert_title = clean_alert_title(raw_alert_title) if raw_alert_title else None
+
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
         timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
-        alert_title_payload=alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None,
+        alert_title_payload=cleaned_alert_title,
         ioc_payload=await build_ioc_payload(alert_payload, field_names),
         source=syslog_type,
         index_name=index_name,
