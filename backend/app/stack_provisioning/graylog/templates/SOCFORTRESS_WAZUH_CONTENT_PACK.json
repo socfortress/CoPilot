@@ -4111,6 +4111,34 @@
           }
       ]
 		},
+    {
+      "v": "1",
+      "type": {
+          "name": "pipeline_rule",
+          "version": "1"
+      },
+      "id": "88483f85-30fe-47bf-b834-a72a6101d754",
+      "data": {
+          "title": {
+              "@type": "string",
+              "@value": "Tetragon - Set process_id from parent"
+          },
+          "description": {
+              "@type": "string",
+              "@value": "Tetragon - Set process_id from parent"
+          },
+          "source": {
+              "@type": "string",
+              "@value": "rule \"Tetragon - Set process_id from parent\"\nwhen\n    has_field(\"data_process_exec_process_parent_exec_id\") &&\n    to_string($message.data_process_exec_process_parent_exec_id) != \"\"\nthen\n    set_field(\"process_id\", to_string($message.data_process_exec_process_parent_exec_id));\nend"
+          }
+      },
+      "constraints": [
+          {
+              "type": "server-version",
+              "version": ">=5.0.13+083613e"
+          }
+      ]
+		},
 		{
 			"v": "1",
 			"type": {
