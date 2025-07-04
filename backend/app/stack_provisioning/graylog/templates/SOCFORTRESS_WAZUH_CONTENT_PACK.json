@@ -4083,6 +4083,34 @@
 				}
 			]
 		},
+    {
+      "v": "1",
+      "type": {
+          "name": "pipeline_rule",
+          "version": "1"
+      },
+      "id": "273857f5-13cc-4845-8ba9-69fb4fe7bd15",
+      "data": {
+          "title": {
+              "@type": "string",
+              "@value": "Tetragon - Set process_id from exec_id"
+          },
+          "description": {
+              "@type": "string",
+              "@value": "Tetragon - Set process_id from exec_id"
+          },
+          "source": {
+              "@type": "string",
+              "@value": "rule \"Tetragon - Set process_id from exec_id\"\nwhen\n    has_field(\"data_process_exec_process_exec_id\") &&\n    (\n        !has_field(\"data_process_exec_process_parent_exec_id\") ||\n        to_string($message.data_process_exec_process_parent_exec_id) == \"\"\n    )\nthen\n    set_field(\"process_id\", to_string($message.data_process_exec_process_exec_id));\nend"
+          }
+      },
+      "constraints": [
+          {
+              "type": "server-version",
+              "version": ">=5.0.13+083613e"
+          }
+      ]
+		},
 		{
 			"v": "1",
 			"type": {
