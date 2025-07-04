@@ -1,9 +1,9 @@
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import Union
-from typing import Optional
 
 import httpx
 
@@ -18,13 +18,14 @@ from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
-from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileUploadResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
+
 
 async def get_wazuh_rules(**params) -> WazuhRulesResponse:
     """
@@ -70,6 +71,7 @@ async def get_wazuh_rules(**params) -> WazuhRulesResponse:
     except Exception as e:
         logger.error(f"Error fetching Wazuh rules: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching rules: {str(e)}")
+
 
 async def get_wazuh_rule_files(**params) -> WazuhRuleFilesResponse:
     """
@@ -124,6 +126,7 @@ async def get_wazuh_rule_files(**params) -> WazuhRuleFilesResponse:
     except Exception as e:
         logger.error(f"Error fetching Wazuh rule files: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching rule files: {str(e)}")
+
 
 async def get_wazuh_rule_file_content(filename: str, **params) -> WazuhRuleFileContentResponse:
     """
@@ -221,6 +224,7 @@ async def get_wazuh_rule_file_content(filename: str, **params) -> WazuhRuleFileC
     except Exception as e:
         logger.error(f"Error fetching Wazuh rule file content for '{filename}': {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching rule file content: {str(e)}")
+
 
 async def update_wazuh_rule_file(
     filename: str,

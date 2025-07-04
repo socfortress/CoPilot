@@ -1,12 +1,16 @@
 # App specific imports
+from typing import List
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
 from fastapi import HTTPException
+from fastapi import Path
+from fastapi import Query
 from fastapi import Security
+from fastapi import UploadFile
 from loguru import logger
-from typing import List, Optional
-from fastapi import Query, Path
-from fastapi import UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -16,20 +20,25 @@ from app.connectors.wazuh_manager.models.rules import DisabledRule
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
 from app.connectors.wazuh_manager.schema.rules import RuleDisable
-from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse, WazuhRulesResponse
+from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileUploadResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
-from app.connectors.wazuh_manager.services.rules import enable_rule, get_wazuh_rules, get_wazuh_rule_files
-from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module, get_wazuh_rule_file_content, update_wazuh_rule_file
+from app.connectors.wazuh_manager.services.rules import enable_rule
+from app.connectors.wazuh_manager.services.rules import get_wazuh_rule_file_content
+from app.connectors.wazuh_manager.services.rules import get_wazuh_rule_files
+from app.connectors.wazuh_manager.services.rules import get_wazuh_rules
+from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module
+from app.connectors.wazuh_manager.services.rules import update_wazuh_rule_file
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
@@ -209,8 +218,9 @@ async def list_wazuh_rules(
     filtering by various criteria including compliance frameworks and MITRE ATT&CK.
     """
     # Use **locals() to pass all parameters efficiently
-    params = {k: v for k, v in locals().items() if k not in ['auth_handler']}
+    params = {k: v for k, v in locals().items() if k not in ["auth_handler"]}
     return await get_wazuh_rules(**params)
+
 
 @wazuh_manager_rules_router.get(
     "/rules/files",
@@ -259,6 +269,7 @@ async def list_wazuh_rule_files(
     params = {k: v for k, v in locals().items()}
     return await get_wazuh_rule_files(**params)
 
+
 @wazuh_manager_rules_router.get(
     "/rules/files/{filename}",
     response_model=WazuhRuleFileContentResponse,
@@ -294,8 +305,9 @@ async def get_wazuh_rule_file_content_endpoint(
     - 500: If there's an error retrieving the file content
     """
     # Use locals() to capture all parameters, excluding the filename path parameter
-    params = {k: v for k, v in locals().items() if k != 'filename'}
+    params = {k: v for k, v in locals().items() if k != "filename"}
     return await get_wazuh_rule_file_content(filename, **params)
+
 
 @wazuh_manager_rules_router.put(
     "/rules/files/{filename}",
@@ -335,10 +347,7 @@ async def update_wazuh_rule_file_endpoint(
     - 500: If there's an error uploading the file
     """
     # Validate file content type (should be XML or octet-stream)
-    if file.content_type and not any(
-        ct in file.content_type.lower()
-        for ct in ["xml", "text", "octet-stream", "application/xml"]
-    ):
+    if file.content_type and not any(ct in file.content_type.lower() for ct in ["xml", "text", "octet-stream", "application/xml"]):
         logger.warning(f"Unexpected content type: {file.content_type}")
 
     try:
@@ -350,8 +359,8 @@ async def update_wazuh_rule_file_endpoint(
             raise HTTPException(status_code=400, detail="File content is empty")
 
         # Basic XML validation (check for XML tags)
-        file_content_str = file_content.decode('utf-8', errors='ignore')
-        if not file_content_str.strip().startswith('<'):
+        file_content_str = file_content.decode("utf-8", errors="ignore")
+        if not file_content_str.strip().startswith("<"):
             logger.warning("File does not appear to be XML format")
 
         logger.info(f"Received file upload: {filename}, size: {len(file_content)} bytes")
