@@ -3,6 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
+from typing import Optional
 
 import httpx
 
@@ -20,6 +21,7 @@ from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileUploadResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
@@ -219,6 +221,84 @@ async def get_wazuh_rule_file_content(filename: str, **params) -> WazuhRuleFileC
     except Exception as e:
         logger.error(f"Error fetching Wazuh rule file content for '{filename}': {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching rule file content: {str(e)}")
+
+async def update_wazuh_rule_file(
+    filename: str,
+    file_content: bytes,
+    pretty: Optional[bool] = False,
+    wait_for_complete: Optional[bool] = False,
+    overwrite: Optional[bool] = False,
+    relative_dirname: Optional[str] = None,
+) -> WazuhRuleFileUploadResponse:
+    """
+    Upload or update a Wazuh rule file.
+
+    Args:
+        filename: Name of the rule file
+        file_content: Binary content of the rule file
+        pretty: Show results in human-readable format
+        wait_for_complete: Disable timeout response
+        overwrite: Whether to overwrite the file if it exists
+        relative_dirname: Relative directory name
+
+    Returns:
+        WazuhRuleFileUploadResponse: Response indicating success/failure
+
+    Raises:
+        HTTPException: If there's an error uploading the file
+    """
+    # Prepare parameters
+    params = {}
+    if pretty is not None:
+        params["pretty"] = str(pretty).lower()
+    if wait_for_complete is not None:
+        params["wait_for_complete"] = str(wait_for_complete).lower()
+    if overwrite is not None:
+        params["overwrite"] = str(overwrite).lower()
+    if relative_dirname is not None:
+        params["relative_dirname"] = relative_dirname
+
+    logger.info(f"Uploading/updating rule file: {filename}")
+    logger.debug(f"Request params: {params}")
+
+    try:
+        # Send PUT request with binary data
+        response = await send_put_request(
+            endpoint=f"/rules/files/{filename}",
+            data=file_content,
+            params=params,
+            binary_data=True,
+            debug=True,
+        )
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", "Failed to upload rule file to Wazuh API")
+            status_code = response.get("status_code", 500)
+            logger.error(f"Wazuh API error: {error_detail}")
+            raise HTTPException(status_code=status_code, detail=error_detail)
+
+        # Extract data from response
+        wazuh_data = response.get("data", {}).get("data", {})
+        total_items = wazuh_data.get("total_affected_items", 1)
+
+        logger.info(f"Successfully uploaded/updated rule file: {filename}")
+
+        return WazuhRuleFileUploadResponse(
+            success=True,
+            message=f"Successfully uploaded/updated rule file: {filename}",
+            filename=filename,
+            details=wazuh_data,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading rule file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading rule file: {str(e)}")
+
 
 async def fetch_filename(rule_id: str) -> str:
     """

@@ -103,6 +103,14 @@ class WazuhRuleFileContentResponse(BaseModel):
     is_raw: bool = Field(False, description="Whether the content is raw text")
     total_items: Optional[int] = Field(None, description="Total affected items from API")
 
+class WazuhRuleFileUploadResponse(BaseModel):
+    """Response model for Wazuh rule file upload/update."""
+    success: bool = Field(..., description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    filename: str = Field(..., description="The uploaded/updated filename")
+    details: Optional[dict] = Field(None, description="Additional response details from API")
+    total_items: Optional[int] = Field(None, description="Total affected items from API")
+
 payload = {
     "data_win_system_eventRecordID": "521098",
     "data_win_eventdata_user": "WIN-HFOU106TD7K\\Administrator",

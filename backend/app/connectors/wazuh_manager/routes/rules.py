@@ -6,6 +6,7 @@ from fastapi import Security
 from loguru import logger
 from typing import List, Optional
 from fastapi import Query, Path
+from fastapi import UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -22,12 +23,13 @@ from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileUploadResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
 from app.connectors.wazuh_manager.services.rules import enable_rule, get_wazuh_rules, get_wazuh_rule_files
-from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module, get_wazuh_rule_file_content
+from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module, get_wazuh_rule_file_content, update_wazuh_rule_file
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
@@ -294,3 +296,78 @@ async def get_wazuh_rule_file_content_endpoint(
     # Use locals() to capture all parameters, excluding the filename path parameter
     params = {k: v for k, v in locals().items() if k != 'filename'}
     return await get_wazuh_rule_file_content(filename, **params)
+
+@wazuh_manager_rules_router.put(
+    "/rules/files/{filename}",
+    response_model=WazuhRuleFileUploadResponse,
+    description="Upload or update a Wazuh rule file",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def update_wazuh_rule_file_endpoint(
+    filename: str = Path(..., description="Name of the rule file to upload/update"),
+    file: UploadFile = File(..., description="Rule file content (XML format)"),
+    pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
+    wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
+    overwrite: Optional[bool] = Query(False, description="Whether to overwrite the file if it exists"),
+    relative_dirname: Optional[str] = Query(None, description="Relative directory name"),
+) -> WazuhRuleFileUploadResponse:
+    """
+    Upload or update a Wazuh rule file in the ruleset.
+
+    This endpoint allows you to upload a new rule file or update an existing one
+    in the Wazuh Manager ruleset. The file should be in XML format containing
+    valid Wazuh rule definitions.
+
+    Parameters:
+    - filename: The name of the rule file to upload/update (required)
+    - file: The rule file content as a binary upload (required, should be XML format)
+    - pretty: Format results for human readability
+    - wait_for_complete: Disable request timeout
+    - overwrite: Whether to overwrite the file if it already exists
+    - relative_dirname: Relative directory name where the file should be placed
+
+    Returns:
+    - WazuhRuleFileUploadResponse: Confirmation of successful upload/update with file details
+
+    Raises:
+    - 400: If the file format is invalid or parameters are incorrect
+    - 409: If the file already exists and overwrite is False
+    - 500: If there's an error uploading the file
+    """
+    # Validate file content type (should be XML or octet-stream)
+    if file.content_type and not any(
+        ct in file.content_type.lower()
+        for ct in ["xml", "text", "octet-stream", "application/xml"]
+    ):
+        logger.warning(f"Unexpected content type: {file.content_type}")
+
+    try:
+        # Read file content
+        file_content = await file.read()
+
+        # Validate that we have content
+        if not file_content:
+            raise HTTPException(status_code=400, detail="File content is empty")
+
+        # Basic XML validation (check for XML tags)
+        file_content_str = file_content.decode('utf-8', errors='ignore')
+        if not file_content_str.strip().startswith('<'):
+            logger.warning("File does not appear to be XML format")
+
+        logger.info(f"Received file upload: {filename}, size: {len(file_content)} bytes")
+
+        # Call service function
+        return await update_wazuh_rule_file(
+            filename=filename,
+            file_content=file_content,
+            pretty=pretty,
+            wait_for_complete=wait_for_complete,
+            overwrite=overwrite,
+            relative_dirname=relative_dirname,
+        )
+
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid file encoding. File must be UTF-8 encoded XML.")
+    except Exception as e:
+        logger.error(f"Error processing file upload for {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing file upload: {str(e)}")
