@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
+from typing import Union
 
 
 class RuleDisable(BaseModel):
@@ -93,6 +94,14 @@ class WazuhRuleFilesResponse(BaseModel):
     results: List[WazuhRuleFile] = Field(default=[], description="List of rule files")
     total_items: Optional[int] = Field(None, description="Total number of files")
 
+class WazuhRuleFileContentResponse(BaseModel):
+    """Response model for Wazuh rule file content."""
+    success: bool = Field(..., description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    filename: str = Field(..., description="The requested filename")
+    content: Union[dict, str] = Field(..., description="File content (structured or raw)")
+    is_raw: bool = Field(False, description="Whether the content is raw text")
+    total_items: Optional[int] = Field(None, description="Total affected items from API")
 
 payload = {
     "data_win_system_eventRecordID": "521098",

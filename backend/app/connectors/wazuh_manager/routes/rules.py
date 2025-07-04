@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from typing import List, Optional
-from fastapi import Query
+from fastapi import Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -21,12 +21,13 @@ from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
 from app.connectors.wazuh_manager.services.rules import enable_rule, get_wazuh_rules, get_wazuh_rule_files
-from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module
+from app.connectors.wazuh_manager.services.rules import post_to_copilot_ai_module, get_wazuh_rule_file_content
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
@@ -255,3 +256,41 @@ async def list_wazuh_rule_files(
     # Use locals() to capture all parameters, excluding non-parameter variables
     params = {k: v for k, v in locals().items()}
     return await get_wazuh_rule_files(**params)
+
+@wazuh_manager_rules_router.get(
+    "/rules/files/{filename}",
+    response_model=WazuhRuleFileContentResponse,
+    description="Get Wazuh rule file content",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_wazuh_rule_file_content_endpoint(
+    filename: str = Path(..., description="Filename (rule or decoder) to get content for"),
+    pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
+    wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
+    raw: Optional[bool] = Query(True, description="Format response in plain text"),
+    relative_dirname: Optional[str] = Query(None, description="Filter by relative directory name"),
+) -> WazuhRuleFileContentResponse:
+    """
+    Get the content of a specified rule file in the ruleset.
+
+    This endpoint retrieves the full content of a Wazuh rule file, which can contain
+    multiple rule groups and individual rules with their configurations.
+
+    Parameters:
+    - filename: The name of the rule file to retrieve (required)
+    - pretty: Format results for human readability
+    - wait_for_complete: Disable request timeout
+    - raw: Return content as plain text instead of structured data
+    - relative_dirname: Filter by relative directory name
+
+    Returns:
+    - WazuhRuleFileContentResponse: The content of the rule file, either as structured
+      data (default) or as raw text (when raw=true).
+
+    Raises:
+    - 404: If the specified rule file is not found
+    - 500: If there's an error retrieving the file content
+    """
+    # Use locals() to capture all parameters, excluding the filename path parameter
+    params = {k: v for k, v in locals().items() if k != 'filename'}
+    return await get_wazuh_rule_file_content(filename, **params)
