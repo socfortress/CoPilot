@@ -45,6 +45,55 @@ class AllDisabledRuleResponse(BaseModel):
     message: str
 
 
+# Simplified and more efficient rule models
+class WazuhRule(BaseModel):
+    """Represents a single Wazuh rule from the API."""
+    filename: str
+    relative_dirname: str
+    id: int
+    level: int
+    status: str
+    description: str
+    groups: List[str] = []
+    pci_dss: List[str] = []
+    gpg13: List[str] = []
+    gdpr: List[str] = []
+    hipaa: List[str] = []
+    nist_800_53: List[str] = Field(default=[], alias="nist-800-53")
+    tsc: List[str] = []
+    mitre: List[str] = []
+    details: Optional[dict] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = "ignore"  # Ignore extra fields from API
+
+
+class WazuhRulesResponse(BaseModel):
+    """Response model for Wazuh rules listing."""
+    success: bool
+    message: str
+    results: List[WazuhRule] = []
+    total_items: Optional[int] = None
+
+class WazuhRuleFile(BaseModel):
+    """Represents a single Wazuh rule file from the API."""
+    filename: str = Field(..., description="Rule file name")
+    relative_dirname: str = Field(..., description="Relative directory path")
+    status: str = Field(..., description="File status (enabled/disabled)")
+
+    class Config:
+        extra = "ignore"  # Ignore extra fields from API
+
+
+class WazuhRuleFilesResponse(BaseModel):
+    """Response model for Wazuh rule files listing."""
+    success: bool = Field(..., description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    results: List[WazuhRuleFile] = Field(default=[], description="List of rule files")
+    total_items: Optional[int] = Field(None, description="Total number of files")
+
+
 payload = {
     "data_win_system_eventRecordID": "521098",
     "data_win_eventdata_user": "WIN-HFOU106TD7K\\Administrator",

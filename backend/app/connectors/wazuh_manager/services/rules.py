@@ -17,10 +17,110 @@ from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 
+async def get_wazuh_rules(**params) -> WazuhRulesResponse:
+    """
+    Fetch Wazuh rules from the Wazuh Manager API.
+
+    Args:
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhRulesResponse: Structured response with rules data
+    """
+    # Filter out None values
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    # Handle list parameters
+    if "rule_ids" in clean_params and isinstance(clean_params["rule_ids"], list):
+        clean_params["rule_ids"] = ",".join(map(str, clean_params["rule_ids"]))
+    if "select" in clean_params and isinstance(clean_params["select"], list):
+        clean_params["select"] = ",".join(clean_params["select"])
+    if "filename" in clean_params and isinstance(clean_params["filename"], list):
+        clean_params["filename"] = ",".join(clean_params["filename"])
+
+    try:
+        response = await send_get_request(endpoint="/rules", params=clean_params)
+
+        if not response.get("success"):
+            raise HTTPException(status_code=500, detail="Failed to fetch rules from Wazuh API")
+
+        # Extract data from nested response structure
+        wazuh_data = response.get("data", {}).get("data", {})
+        rules = wazuh_data.get("affected_items", [])
+        total_items = wazuh_data.get("total_affected_items", len(rules))
+
+        logger.info(f"Retrieved {len(rules)} of {total_items} Wazuh rules")
+
+        return WazuhRulesResponse(
+            success=True,
+            message=f"Successfully retrieved {len(rules)} rules",
+            results=rules,
+            total_items=total_items,
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching Wazuh rules: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching rules: {str(e)}")
+
+async def get_wazuh_rule_files(**params) -> WazuhRuleFilesResponse:
+    """
+    Fetch Wazuh rule files from the Wazuh Manager API.
+
+    Args:
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhRuleFilesResponse: Structured response with rule files data
+
+    Raises:
+        HTTPException: If there's an error fetching the rule files
+    """
+    # Filter out None values and prepare parameters
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    # Handle list parameters that need to be joined as comma-separated strings
+    if "filename" in clean_params and isinstance(clean_params["filename"], list):
+        clean_params["filename"] = ",".join(clean_params["filename"])
+    if "select" in clean_params and isinstance(clean_params["select"], list):
+        clean_params["select"] = ",".join(clean_params["select"])
+
+    logger.debug(f"Requesting Wazuh rule files with params: {clean_params}")
+
+    try:
+        response = await send_get_request(endpoint="/rules/files", params=clean_params)
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", "Failed to fetch rule files from Wazuh API")
+            logger.error(f"Wazuh API error: {error_detail}")
+            raise HTTPException(status_code=500, detail=error_detail)
+
+        # Extract data from nested response structure
+        wazuh_data = response.get("data", {}).get("data", {})
+        rule_files = wazuh_data.get("affected_items", [])
+        total_items = wazuh_data.get("total_affected_items", len(rule_files))
+
+        logger.info(f"Retrieved {len(rule_files)} of {total_items} Wazuh rule files")
+
+        return WazuhRuleFilesResponse(
+            success=True,
+            message=f"Successfully retrieved {len(rule_files)} rule files",
+            results=rule_files,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching Wazuh rule files: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching rule files: {str(e)}")
 
 async def fetch_filename(rule_id: str) -> str:
     """
