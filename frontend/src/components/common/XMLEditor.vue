@@ -29,6 +29,8 @@ import { computed, onMounted, ref, shallowRef, watch } from "vue"
 import { Codemirror } from "vue-codemirror"
 import * as xmllint from "xmllint-wasm"
 import { useThemeStore } from "@/stores/theme"
+import _uniqWith from "lodash/uniqWith"
+import _isEqual from "lodash/isEqual"
 
 export interface XMLEditorCtx {
 	undo: () => void
@@ -324,9 +326,7 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 		}
 	}
 
-	console.log(errors)
-
-	return convertXMLErrorsToDiagnostics(errors, text)
+	return convertXMLErrorsToDiagnostics(_uniqWith(errors, _isEqual), text)
 }
 
 const extensions = computed(() => {
