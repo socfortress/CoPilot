@@ -80,7 +80,7 @@ function convertXMLErrorsToDiagnostics(errors: XMLError[], text: string): Diagno
 	return diagnostics
 }
 
-async function strategyXMLLint(text: string): Promise<XMLError[]> {
+async function _strategyXMLLint(text: string): Promise<XMLError[]> {
 	try {
 		const result = await xmllint.validateXML({
 			xml: text,
@@ -114,7 +114,7 @@ async function strategyXMLLint(text: string): Promise<XMLError[]> {
 	}
 }
 
-async function strategyFastXMLParser(text: string): Promise<XMLError[]> {
+async function _strategyFastXMLParser(text: string): Promise<XMLError[]> {
 	try {
 		const errors: XMLError[] = []
 
@@ -194,20 +194,24 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 		}
 
 		// Controllo per attributi non quotati
-		/*
-		const attrMatch = line.match(/\s+([a-z][\w:]*)\s*=\s*(?!["'])[^\s>]+/gi)
-		if (attrMatch) {
-			attrMatch.forEach(match => {
-				const index = line.indexOf(match)
-				errors.push({
-					line: lineNumber,
-					column: index + 1,
-					message: "Attributo deve essere racchiuso tra virgolette",
-					level: "error"
+		// Cerca attributi che iniziano con spazi, seguiti da un nome di attributo e = senza virgolette
+		// Esclude il contenuto del tag (dopo il > di chiusura)
+		const tagEndIndex = line.indexOf(">")
+		if (tagEndIndex !== -1) {
+			const beforeTagEnd = line.substring(0, tagEndIndex)
+			const attrMatch = beforeTagEnd.match(/\s+([a-z][\w:]*)\s*=\s*(?!["'])[^\s>]+/gi)
+			if (attrMatch) {
+				attrMatch.forEach(match => {
+					const index = line.indexOf(match)
+					errors.push({
+						line: lineNumber,
+						column: index + 1,
+						message: "Attributo deve essere racchiuso tra virgolette",
+						level: "error"
+					})
 				})
-			})
+			}
 		}
-			*/
 
 		// Controllo per commenti non chiusi
 		if (line.includes("<!--") && !line.includes("-->")) {
@@ -240,6 +244,52 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 		}
 	})
 
+	// Controllo per elementi root multipli
+	// Analizza il documento per trovare elementi root (non annidati)
+	const documentLines = text.split("\n")
+	let depth = 0
+	let rootElementsFound = 0
+	let secondRootLine = 0
+
+	for (let i = 0; i < documentLines.length; i++) {
+		const line = documentLines[i]
+
+		// Trova tutti i tag di apertura e chiusura nella riga
+		const openTags = line.match(/<[^!?/][^>]*>/g) || []
+		const closeTags = line.match(/<\/[^>]+>/g) || []
+
+		for (const _tag of openTags) {
+			depth++
+			if (depth === 1) {
+				rootElementsFound++
+				if (rootElementsFound === 2) {
+					secondRootLine = i + 1
+					break
+				}
+			}
+		}
+
+		for (const _tag of closeTags) {
+			depth--
+		}
+
+		if (rootElementsFound > 1) break
+	}
+
+	if (rootElementsFound > 1) {
+		// Calcola la colonna del secondo elemento root
+		const secondRootLineText = documentLines[secondRootLine - 1]
+		const secondRootTagMatch = secondRootLineText.match(/<[^!?/][^>]*>/)
+		const column = secondRootTagMatch ? secondRootLineText.indexOf(secondRootTagMatch[0]) + 1 : 1
+
+		errors.push({
+			line: secondRootLine,
+			column,
+			message: "Documento XML non può avere più di un elemento root",
+			level: "error"
+		})
+	}
+
 	return errors
 }
 
@@ -248,7 +298,7 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 
 	if (!errors.length) {
 		try {
-			errors = await strategyXMLLint(text)
+			// errors = await strategyXMLLint(text)
 		} catch (err) {
 			console.error(err)
 		}
@@ -256,7 +306,7 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 
 	if (!errors.length) {
 		try {
-			errors = await strategyFastXMLParser(text)
+			// errors = await strategyFastXMLParser(text)
 		} catch (err) {
 			console.error(err)
 		}
