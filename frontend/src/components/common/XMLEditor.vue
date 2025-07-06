@@ -156,8 +156,33 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 	const errors: XMLError[] = []
 	const lines = text.split("\n")
 
+	// Variabili per il controllo degli elementi root multipli
+	let depth = 0
+	let rootElementsFound = 0
+	let secondRootLine = 0
+	let secondRootColumn = 0
+
 	lines.forEach((line, lineIndex) => {
 		const lineNumber = lineIndex + 1
+
+		// Controllo per elementi root multipli (integrato nel loop)
+		const openTags = line.match(/<[^!?/][^>]*>/g) || []
+		const closeTags = line.match(/<\/[^>]+>/g) || []
+
+		for (const _tag of openTags) {
+			depth++
+			if (depth === 1) {
+				rootElementsFound++
+				if (rootElementsFound === 2) {
+					secondRootLine = lineNumber
+					secondRootColumn = line.indexOf(_tag) + 1
+				}
+			}
+		}
+
+		for (const _tag of closeTags) {
+			depth--
+		}
 
 		// Controllo per tag non chiusi
 		if (line.includes("<") && !line.includes(">")) {
@@ -213,6 +238,21 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 			}
 		}
 
+		// Controllo per attributi con virgolette non chiuse
+		// Cerca pattern come attributo="valore senza virgoletta di chiusura
+		const unclosedAttrMatch = line.match(/([a-z][\w:]*)\s*=\s*["'][^"']*$/gi)
+		if (unclosedAttrMatch) {
+			unclosedAttrMatch.forEach(match => {
+				const index = line.indexOf(match)
+				errors.push({
+					line: lineNumber,
+					column: index + 1,
+					message: "Attributo non chiuso correttamente - manca la virgoletta di chiusura",
+					level: "error"
+				})
+			})
+		}
+
 		// Controllo per commenti non chiusi
 		if (line.includes("<!--") && !line.includes("-->")) {
 			errors.push({
@@ -244,47 +284,11 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 		}
 	})
 
-	// Controllo per elementi root multipli
-	// Analizza il documento per trovare elementi root (non annidati)
-	const documentLines = text.split("\n")
-	let depth = 0
-	let rootElementsFound = 0
-	let secondRootLine = 0
-
-	for (let i = 0; i < documentLines.length; i++) {
-		const line = documentLines[i]
-
-		// Trova tutti i tag di apertura e chiusura nella riga
-		const openTags = line.match(/<[^!?/][^>]*>/g) || []
-		const closeTags = line.match(/<\/[^>]+>/g) || []
-
-		for (const _tag of openTags) {
-			depth++
-			if (depth === 1) {
-				rootElementsFound++
-				if (rootElementsFound === 2) {
-					secondRootLine = i + 1
-					break
-				}
-			}
-		}
-
-		for (const _tag of closeTags) {
-			depth--
-		}
-
-		if (rootElementsFound > 1) break
-	}
-
+	// Aggiungi l'errore per elementi root multipli se trovato
 	if (rootElementsFound > 1) {
-		// Calcola la colonna del secondo elemento root
-		const secondRootLineText = documentLines[secondRootLine - 1]
-		const secondRootTagMatch = secondRootLineText.match(/<[^!?/][^>]*>/)
-		const column = secondRootTagMatch ? secondRootLineText.indexOf(secondRootTagMatch[0]) + 1 : 1
-
 		errors.push({
 			line: secondRootLine,
-			column,
+			column: secondRootColumn,
 			message: "Documento XML non può avere più di un elemento root",
 			level: "error"
 		})
