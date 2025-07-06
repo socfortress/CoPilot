@@ -58,16 +58,16 @@ function convertXMLErrorsToDiagnostics(errors: XMLError[], text: string): Diagno
 	const lines = text.split("\n")
 
 	errors.forEach(error => {
-		// Calcola la posizione nel testo
+		// Calculate position in text
 		let from = 0
 		for (let i = 0; i < error.line - 1; i++) {
-			from += lines[i].length + 1 // +1 per il newline
+			from += lines[i].length + 1 // +1 for newline
 		}
 		from += error.column - 1
 
-		// Trova la fine dell'errore (fine della riga o fine del messaggio)
+		// Find the end of the error (end of line or end of message)
 		const lineText = lines[error.line - 1] || ""
-		const to = from + Math.min(lineText.length - (error.column - 1), 50) // Limita a 50 caratteri
+		const to = from + Math.min(lineText.length - (error.column - 1), 50) // Limit to 50 characters
 
 		diagnostics.push({
 			from,
@@ -80,7 +80,7 @@ function convertXMLErrorsToDiagnostics(errors: XMLError[], text: string): Diagno
 	return diagnostics
 }
 
-async function _strategyXMLLint(text: string): Promise<XMLError[]> {
+async function strategyXMLLint(text: string): Promise<XMLError[]> {
 	try {
 		const result = await xmllint.validateXML({
 			xml: text,
@@ -114,7 +114,7 @@ async function _strategyXMLLint(text: string): Promise<XMLError[]> {
 	}
 }
 
-async function _strategyFastXMLParser(text: string): Promise<XMLError[]> {
+async function strategyFastXMLParser(text: string): Promise<XMLError[]> {
 	try {
 		const errors: XMLError[] = []
 
@@ -156,7 +156,7 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 	const errors: XMLError[] = []
 	const lines = text.split("\n")
 
-	// Variabili per il controllo degli elementi root multipli
+	// Variables for multiple root elements check
 	let depth = 0
 	let rootElementsFound = 0
 	let secondRootLine = 0
@@ -165,7 +165,7 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 	lines.forEach((line, lineIndex) => {
 		const lineNumber = lineIndex + 1
 
-		// Controllo per elementi root multipli (integrato nel loop)
+		// Check for multiple root elements (integrated in the loop)
 		const openTags = line.match(/<[^!?/][^>]*>/g) || []
 		const closeTags = line.match(/<\/[^>]+>/g) || []
 
@@ -184,27 +184,27 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 			depth--
 		}
 
-		// Controllo per tag non chiusi
+		// Check for unclosed tags
 		if (line.includes("<") && !line.includes(">")) {
 			errors.push({
 				line: lineNumber,
 				column: line.indexOf("<") + 1,
-				message: "Tag non chiuso - manca il carattere '>'",
+				message: "Unclosed tag - missing '>' character",
 				level: "error"
 			})
 		}
 
-		// Controllo per tag non aperti
+		// Check for unopened tags
 		if (line.includes(">") && !line.includes("<")) {
 			errors.push({
 				line: lineNumber,
 				column: line.indexOf(">") + 1,
-				message: "Tag non aperto - manca il carattere '<'",
+				message: "Unopened tag - missing '<' character",
 				level: "error"
 			})
 		}
 
-		// Controllo per entità XML non valide
+		// Check for invalid XML entities
 		const entityMatch = line.match(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)[a-zA-Z]+/g)
 		if (entityMatch) {
 			entityMatch.forEach(match => {
@@ -212,15 +212,15 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 				errors.push({
 					line: lineNumber,
 					column: index + 1,
-					message: `Entità XML non valida: "${match}"`,
+					message: `Invalid XML entity: "${match}"`,
 					level: "error"
 				})
 			})
 		}
 
-		// Controllo per attributi non quotati
-		// Cerca attributi che iniziano con spazi, seguiti da un nome di attributo e = senza virgolette
-		// Esclude il contenuto del tag (dopo il > di chiusura)
+		// Check for unquoted attributes
+		// Look for attributes that start with spaces, followed by an attribute name and = without quotes
+		// Exclude tag content (after the closing >)
 		const tagEndIndex = line.indexOf(">")
 		if (tagEndIndex !== -1) {
 			const beforeTagEnd = line.substring(0, tagEndIndex)
@@ -231,15 +231,15 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 					errors.push({
 						line: lineNumber,
 						column: index + 1,
-						message: "Attributo deve essere racchiuso tra virgolette",
+						message: "Attribute must be enclosed in quotes",
 						level: "error"
 					})
 				})
 			}
 		}
 
-		// Controllo per attributi con virgolette non chiuse
-		// Cerca pattern come attributo="valore senza virgoletta di chiusura
+		// Check for unclosed attribute quotes
+		// Look for patterns like attribute="value without closing quote
 		const unclosedAttrMatch = line.match(/([a-z][\w:]*)\s*=\s*["'][^"']*$/gi)
 		if (unclosedAttrMatch) {
 			unclosedAttrMatch.forEach(match => {
@@ -247,49 +247,49 @@ function regexXMLAnalyzer(text: string): XMLError[] {
 				errors.push({
 					line: lineNumber,
 					column: index + 1,
-					message: "Attributo non chiuso correttamente - manca la virgoletta di chiusura",
+					message: "Attribute not properly closed - missing closing quote",
 					level: "error"
 				})
 			})
 		}
 
-		// Controllo per commenti non chiusi
+		// Check for unclosed comments
 		if (line.includes("<!--") && !line.includes("-->")) {
 			errors.push({
 				line: lineNumber,
 				column: line.indexOf("<!--") + 1,
-				message: "Commento XML non chiuso",
+				message: "Unclosed XML comment",
 				level: "error"
 			})
 		}
 
-		// Controllo per dichiarazioni XML non chiuse
+		// Check for unclosed XML declarations
 		if (line.includes("<?") && !line.includes("?>")) {
 			errors.push({
 				line: lineNumber,
 				column: line.indexOf("<?") + 1,
-				message: "Dichiarazione XML non chiusa",
+				message: "Unclosed XML declaration",
 				level: "error"
 			})
 		}
 
-		// Controllo per sezioni CDATA non chiuse
+		// Check for unclosed CDATA sections
 		if (line.includes("<![CDATA[") && !line.includes("]]>")) {
 			errors.push({
 				line: lineNumber,
 				column: line.indexOf("<![CDATA[") + 1,
-				message: "Sezione CDATA non chiusa",
+				message: "Unclosed CDATA section",
 				level: "error"
 			})
 		}
 	})
 
-	// Aggiungi l'errore per elementi root multipli se trovato
+	// Add error for multiple root elements if found
 	if (rootElementsFound > 1) {
 		errors.push({
 			line: secondRootLine,
 			column: secondRootColumn,
-			message: "Documento XML non può avere più di un elemento root",
+			message: "XML document cannot have more than one root element",
 			level: "error"
 		})
 	}
@@ -302,7 +302,7 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 
 	if (!errors.length) {
 		try {
-			// errors = await strategyXMLLint(text)
+			errors = await strategyXMLLint(text)
 		} catch (err) {
 			console.error(err)
 		}
@@ -310,7 +310,7 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 
 	if (!errors.length) {
 		try {
-			// errors = await strategyFastXMLParser(text)
+			errors = await strategyFastXMLParser(text)
 		} catch (err) {
 			console.error(err)
 		}
@@ -323,6 +323,8 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 			console.error(err)
 		}
 	}
+
+	console.log(errors)
 
 	return convertXMLErrorsToDiagnostics(errors, text)
 }
