@@ -57,6 +57,7 @@
 		"dayjs": "^1.11.13",
 		"detect-touch-device": "^1.1.6",
 		"echarts": "^5.6.0",
+		"fast-xml-parser": "^5.2.5",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.6.0",
 		"jose": "^6.0.11",
@@ -81,7 +82,9 @@
 		"vue-sjv": "^0.0.6",
 		"vue3-apexcharts": "^1.8.0",
 		"vue3-marquee": "^4.2.2",
-		"vuedraggable": "^4.1.0"
+		"vuedraggable": "^4.1.0",
+		"xmllint": "^0.1.1",
+		"xmllint-wasm": "^5.0.0"
 	},
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "^4.44.1",

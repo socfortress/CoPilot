@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
 			}
 		},
 		optimizeDeps: {
+			exclude: ["xmllint-wasm"],
 			include: ["fast-deep-equal"]
 		},
 		server: {

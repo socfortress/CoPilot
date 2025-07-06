@@ -1,5 +1,5 @@
 <template>
-	<div class="page page-wrapped page-without-footer flex flex-col">
+	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
 			main-content-class="!p-0 overflow-hidden grow flex h-full"
 			:use-main-scroll="false"
