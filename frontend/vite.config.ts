@@ -66,6 +66,17 @@ export default defineConfig(({ mode }) => {
 					api: "modern-compiler"
 				}
 			}
+		},
+		build: {
+			rollupOptions: {
+				onwarn(warning, warn) {
+					if (warning.code === "PLUGIN_WARNING" && warning.message.includes('Module "node:process"')) {
+						return
+					}
+
+					warn(warning)
+				}
+			}
 		}
 	}
 })
