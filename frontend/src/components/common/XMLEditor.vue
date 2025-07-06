@@ -24,13 +24,13 @@ import { xml } from "@codemirror/lang-xml"
 import { linter } from "@codemirror/lint"
 import { oneDark } from "@codemirror/theme-one-dark"
 import { XMLValidator } from "fast-xml-parser"
+import _isEqual from "lodash/isEqual"
+import _uniqWith from "lodash/uniqWith"
 import { tomorrow } from "thememirror"
 import { computed, onMounted, ref, shallowRef, watch } from "vue"
 import { Codemirror } from "vue-codemirror"
 import * as xmllint from "xmllint-wasm"
 import { useThemeStore } from "@/stores/theme"
-import _uniqWith from "lodash/uniqWith"
-import _isEqual from "lodash/isEqual"
 
 export interface XMLEditorCtx {
 	undo: () => void

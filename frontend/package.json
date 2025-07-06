@@ -48,7 +48,7 @@
 		"@shikijs/markdown-it": "^3.7.0",
 		"@singulio/app-auth-search": "^0.0.3",
 		"@types/codemirror": "^5.60.16",
-		"@vueuse/core": "^13.4.0",
+		"@vueuse/core": "^13.5.0",
 		"@vueuse/motion": "^3.0.3",
 		"axios": "^1.10.0",
 		"bytes": "^3.1.2",
@@ -77,7 +77,7 @@
 		"vue-advanced-cropper": "^2.8.9",
 		"vue-codemirror": "^6.1.1",
 		"vue-highlight-words": "^3.0.1",
-		"vue-i18n": "^11.1.7",
+		"vue-i18n": "^11.1.9",
 		"vue-router": "^4.5.1",
 		"vue-sjv": "^0.0.6",
 		"vue3-apexcharts": "^1.8.0",
@@ -92,7 +92,7 @@
 		"vueuc": "^0.4.64"
 	},
 	"devDependencies": {
-		"@antfu/eslint-config": "^4.16.1",
+		"@antfu/eslint-config": "^4.16.2",
 		"@clack/prompts": "^0.11.0",
 		"@iconify/vue": "^5.0.0",
 		"@tailwindcss/vite": "^4.1.11",
@@ -101,17 +101,17 @@
 		"@types/file-saver": "^2.0.7",
 		"@types/fs-extra": "^11.0.4",
 		"@types/jsdom": "^21.1.7",
-		"@types/lodash": "^4.17.19",
+		"@types/lodash": "^4.17.20",
 		"@types/markdown-it": "^14.1.2",
-		"@types/node": "^24.0.8",
+		"@types/node": "^24.0.10",
 		"@types/validator": "^13.15.2",
 		"@vitejs/plugin-vue": "^5.2.4",
 		"@vitejs/plugin-vue-jsx": "^4.2.0",
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.7.0",
-		"cypress": "^14.5.0",
+		"cypress": "^14.5.1",
 		"depcheck": "^1.4.7",
-		"eslint": "^9.30.0",
+		"eslint": "^9.30.1",
 		"flourite": "^1.3.0",
 		"fs-extra": "^11.3.0",
 		"jsdom": "^26.1.0",
@@ -129,7 +129,7 @@
 		"vite-plugin-vue-devtools": "^7.7.7",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^3.2.4",
-		"vue-tsc": "^2.2.10"
+		"vue-tsc": "^2.2.12"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
