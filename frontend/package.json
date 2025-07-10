@@ -3,7 +3,7 @@
 	"type": "module",
 	"version": "1.0.0",
 	"private": true,
-	"packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184",
+	"packageManager": "pnpm@10.13.1",
 	"engines": {
 		"node": ">=18.0.0"
 	},
@@ -88,7 +88,7 @@
 		"xmllint-wasm": "^5.0.0"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.44.1",
+		"@rollup/rollup-linux-x64-gnu": "^4.44.2",
 		"treemate": "^0.3.11",
 		"vueuc": "^0.4.64"
 	},
@@ -104,10 +104,10 @@
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.20",
 		"@types/markdown-it": "^14.1.2",
-		"@types/node": "^24.0.10",
+		"@types/node": "^24.0.12",
 		"@types/validator": "^13.15.2",
-		"@vitejs/plugin-vue": "^5.2.4",
-		"@vitejs/plugin-vue-jsx": "^4.2.0",
+		"@vitejs/plugin-vue": "^6.0.0",
+		"@vitejs/plugin-vue-jsx": "^5.0.1",
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.7.0",
 		"cypress": "^14.5.1",
@@ -118,21 +118,26 @@
 		"jsdom": "^26.1.0",
 		"npm-run-all2": "^8.0.4",
 		"prettier": "^3.6.2",
-		"prettier-plugin-tailwindcss": "^0.6.13",
+		"prettier-plugin-tailwindcss": "^0.6.14",
 		"sass": "^1.89.2",
 		"start-server-and-test": "^2.0.12",
 		"tailwindcss": "^4.1.11",
 		"taze": "^19.1.0",
 		"type-fest": "^4.41.0",
 		"typescript": "~5.8.3",
-		"vite": "^6.3.5",
+		"vite": "^7.0.4",
 		"vite-bundle-visualizer": "^1.2.1",
+		"vite-plugin-inspect": "^11.3.0",
 		"vite-plugin-vue-devtools": "^7.7.7",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^3.2.4",
-		"vue-tsc": "^2.2.12"
+		"vue-tsc": "^3.0.1"
 	},
 	"pnpm": {
+		"overrides": {
+			"vite-plugin-checker>vite-plugin-inspect": "$vite-plugin-inspect",
+			"vite-plugin-inspect>vite": "$vite"
+		},
 		"onlyBuiltDependencies": [
 			"@parcel/watcher",
 			"@tailwindcss/oxide",
