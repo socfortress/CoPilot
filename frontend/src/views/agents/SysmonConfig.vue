@@ -77,6 +77,30 @@
 						</n-button>
 					</div>
 					<div class="flex items-center gap-3 md:gap-4">
+						<n-popover v-if="xmlErrors.length && xmlEditorCTX" class="p-1!">
+							<template #trigger>
+								<Icon
+									name="carbon:warning-alt"
+									:size="20"
+									class="text-warning animate-fade cursor-help"
+								/>
+							</template>
+
+							<n-scrollbar class="max-h-100">
+								<div class="flex max-w-80 flex-col gap-1">
+									<div
+										v-for="item of xmlErrors"
+										:key="JSON.stringify(item)"
+										class="bg-secondary hover:bg-body flex cursor-pointer flex-col gap-0.5 rounded-sm p-1 font-mono"
+										@click="xmlEditorCTX.scrollToLine(item.line)"
+									>
+										<div class="text-secondary text-[8px]">line: {{ item.line }}</div>
+										<div class="text-xs">{{ item.message }}</div>
+									</div>
+								</div>
+							</n-scrollbar>
+						</n-popover>
+
 						<n-button
 							:loading="uploadingConfig"
 							size="small"
@@ -114,6 +138,7 @@
 						<XMLEditor
 							v-model="currentConfig.config_content"
 							class="scrollbar-styled text-sm"
+							@errors="xmlErrors = $event"
 							@mounted="xmlEditorCTX = $event"
 						/>
 					</template>
@@ -128,11 +153,11 @@
 
 <script setup lang="ts">
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
-import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
+import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import _clone from "lodash/cloneDeep"
-import { NButton, NDropdown, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -159,6 +184,7 @@ const UploadIcon = "carbon:cloud-upload"
 const NewConfigIcon = "carbon:document-add"
 
 const isDirty = computed(() => currentConfig.value?.config_content !== backupConfig.value?.config_content)
+const xmlErrors = ref<XMLError[]>([])
 
 const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])

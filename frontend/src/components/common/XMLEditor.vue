@@ -18,13 +18,14 @@
 
 import type { Diagnostic } from "@codemirror/lint"
 import type { Extension } from "@codemirror/state"
-import type { EditorView } from "@codemirror/view"
 import { redo, redoDepth, undo, undoDepth } from "@codemirror/commands"
 import { xml } from "@codemirror/lang-xml"
 import { linter } from "@codemirror/lint"
 import { oneDark } from "@codemirror/theme-one-dark"
+import { EditorView } from "@codemirror/view"
 import { XMLValidator } from "fast-xml-parser"
 import _isEqual from "lodash/isEqual"
+import _trim from "lodash/trim"
 import _uniqWith from "lodash/uniqWith"
 import { tomorrow } from "thememirror"
 import { computed, onMounted, ref, shallowRef, watch } from "vue"
@@ -35,12 +36,21 @@ import { useThemeStore } from "@/stores/theme"
 export interface XMLEditorCtx {
 	undo: () => void
 	redo: () => void
+	scrollToLine: (line: number) => void
 	canUndo: () => boolean
 	canRedo: () => boolean
 }
 
+export interface XMLError {
+	line: number
+	column: number
+	message: string
+	level: "error"
+}
+
 const emit = defineEmits<{
 	(e: "mounted", value: XMLEditorCtx): void
+	(e: "errors", value: XMLError[]): void
 }>()
 
 const code = defineModel<string>("code", { default: "" })
@@ -48,16 +58,17 @@ const code = defineModel<string>("code", { default: "" })
 const themeStore = useThemeStore()
 const isDark = computed<boolean>(() => themeStore.isThemeDark)
 
-interface XMLError {
-	line: number
-	column: number
-	message: string
-	level: "error"
-}
-
 function convertXMLErrorsToDiagnostics(errors: XMLError[], text: string): Diagnostic[] {
 	const diagnostics: Diagnostic[] = []
 	const lines = text.split("\n")
+
+	emit(
+		"errors",
+		errors
+			.map(o => ({ ...o, message: _trim(o.message) }))
+			.filter(o => o.message !== "^")
+			.sort((a, b) => a.line - b.line)
+	)
 
 	errors.forEach(error => {
 		// Calculate position in text
@@ -384,6 +395,16 @@ function handleRedo() {
 	}
 }
 
+function scrollToLine(line: number) {
+	if (cmView.value) {
+		const view = cmView.value
+		const lineInfo = view.state.doc.line(line)
+		view.dispatch({
+			effects: EditorView.scrollIntoView(lineInfo.from, { y: "center" })
+		})
+	}
+}
+
 watch(code, () => {
 	updateHistoryState()
 })
@@ -392,6 +413,7 @@ onMounted(() => {
 	emit("mounted", {
 		undo: handleUndo,
 		redo: handleRedo,
+		scrollToLine,
 		canRedo: () => canRedo.value,
 		canUndo: () => canUndo.value
 	})
