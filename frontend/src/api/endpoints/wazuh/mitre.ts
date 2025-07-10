@@ -10,7 +10,7 @@ import type {
 	MitreTechnique,
 	MitreTechniquesDetails
 } from "@/types/mitre.d"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../../httpClient"
 
 export type MitreTechniquesAlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 

@@ -125,11 +125,5 @@ export default {
 			`/soc/general_alert/create`,
 			body
 		)
-	},
-	wazuhManagerRuleExclude(source: AlertSourceContent) {
-		return HttpClient.post<FlaskBaseResponse & WazuhRuleExclude>(`/wazuh_manager/rule/exclude`, {
-			integration: "wazuh-rule-exclusion",
-			prompt: source
-		})
 	}
 }

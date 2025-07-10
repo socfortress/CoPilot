@@ -73,7 +73,7 @@ function sanitizeLabel(label: string) {
 
 function getClusterHealth() {
 	loading.value = true
-	Api.indices
+	Api.wazuh.indices
 		.getClusterHealth()
 		.then(res => {
 			if (res.data.success) {

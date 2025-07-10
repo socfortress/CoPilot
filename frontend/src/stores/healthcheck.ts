@@ -33,7 +33,7 @@ export const usHealthcheckStore = defineStore("healthcheck", {
 				})
 		},
 		getClusterHealth() {
-			Api.indices
+			Api.wazuh.indices
 				.getClusterHealth()
 				.then(res => {
 					if (res.data.success) {

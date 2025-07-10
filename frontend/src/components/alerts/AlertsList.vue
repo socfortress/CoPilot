@@ -245,7 +245,7 @@ function getData() {
 function getIndices() {
 	loadingIndex.value = true
 
-	Api.indices
+	Api.wazuh.indices
 		.getIndices()
 		.then(res => {
 			if (res.data.success) {

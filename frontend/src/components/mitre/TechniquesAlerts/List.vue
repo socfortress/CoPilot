@@ -182,7 +182,7 @@ function getList() {
 		index_pattern: filters.value?.find(o => o.type === "index_pattern")?.value
 	}
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreTechniquesAlerts(query, abortController.signal)
 		.then(res => {
 			loading.value = false

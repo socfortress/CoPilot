@@ -68,7 +68,7 @@ const loading = ref(false)
 function getIndices() {
 	loading.value = true
 
-	Api.indices
+	Api.wazuh.indices
 		.getIndices()
 		.then(res => {
 			if (res.data.success) {

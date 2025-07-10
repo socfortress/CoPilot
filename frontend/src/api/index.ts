@@ -15,7 +15,6 @@ import indices from "./endpoints/indices"
 import integrations from "./endpoints/integrations"
 import license from "./endpoints/license"
 import logs from "./endpoints/logs"
-import mitre from "./endpoints/mitre"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
 import portainer from "./endpoints/portainer"
@@ -28,6 +27,7 @@ import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
 import threatIntel from "./endpoints/threatIntel"
 import users from "./endpoints/users"
+import wazuh from "./endpoints/wazuh"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
 
 export default {
@@ -59,7 +59,7 @@ export default {
 	sigma,
 	users,
 	sysmonConfig,
-	mitre,
+	wazuh,
 	portainer,
 	shuffle
 }

@@ -109,7 +109,7 @@ function getList() {
 		os_category: osCategory.value || undefined
 	}
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreAtomicTests(query, abortController.signal)
 		.then(res => {
 			loading.value = false

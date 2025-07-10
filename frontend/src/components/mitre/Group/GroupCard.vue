@@ -94,7 +94,7 @@ const groupDetails = ref<MitreGroupDetails | undefined>(undefined)
 function getDetails(id: string) {
 	loadingDetails.value = true
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreGroups({ id })
 		.then(res => {
 			if (res.data.success) {
