@@ -21,32 +21,6 @@
 							<Icon :name="SearchIcon" :size="16" />
 						</template>
 					</n-input>
-					<n-popover overlap placement="right" class="!px-0">
-						<template #trigger>
-							<div class="bg-default rounded-lg">
-								<n-button size="small">
-									<template #icon>
-										<Icon :name="FilterIcon"></Icon>
-									</template>
-								</n-button>
-							</div>
-						</template>
-						<div class="py-1">
-							<div class="px-3">
-								<div class="text-secondary mb-1 text-sm">Result:</div>
-								<!--
-							<n-select
-							v-model:value="resultFilter"
-							size="small"
-							:options="resultOptions"
-							clearable
-							placeholder="All"
-							class="!w-40"
-							/>
-							-->
-							</div>
-						</div>
-					</n-popover>
 				</div>
 			</template>
 			<template #sidebar-content>
@@ -69,7 +43,7 @@
 					</template>
 				</n-spin>
 			</template>
-			<template #sidebar-footer>
+			<template v-if="pagination.total" #sidebar-footer>
 				<div class="flex w-full items-center justify-center">
 					<n-pagination
 						v-model:page="pagination.current"
@@ -80,8 +54,8 @@
 					/>
 				</div>
 			</template>
-			<template #main-toolbar>
-				<div v-if="currentFile" class="@container flex items-center justify-between">
+			<template v-if="currentFile" #main-toolbar>
+				<div class="@container flex items-center justify-between">
 					<div class="flex items-center gap-2 md:gap-3">
 						<n-button
 							v-if="xmlEditorCTX"
@@ -199,7 +173,6 @@ const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
 const SearchIcon = "ion:search-outline"
-const FilterIcon = "carbon:filter-edit"
 const UploadIcon = "carbon:cloud-upload"
 
 const filters = ref({
