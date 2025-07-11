@@ -21,6 +21,17 @@
 							<Icon :name="SearchIcon" :size="16" />
 						</template>
 					</n-input>
+
+					<n-tooltip>
+						<template #trigger>
+							<n-button secondary :loading="loadingManager" size="small" @click="reloadManager()">
+								<template #icon>
+									<Icon :name="RefreshIcon"></Icon>
+								</template>
+							</n-button>
+						</template>
+						<div>Restart Wazuh</div>
+					</n-tooltip>
 				</div>
 			</template>
 			<template #sidebar-content>
@@ -155,7 +166,7 @@ import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _clone from "lodash/cloneDeep"
-import { NButton, NEmpty, NInput, NPagination, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NInput, NPagination, NPopover, NScrollbar, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -163,6 +174,7 @@ import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 
 const message = useMessage()
+const loadingManager = ref(false)
 const loadingList = ref(false)
 const loadingFile = ref(false)
 const uploadingFile = ref(false)
@@ -173,6 +185,7 @@ const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
 const SearchIcon = "ion:search-outline"
+const RefreshIcon = "carbon:renew"
 const UploadIcon = "carbon:cloud-upload"
 
 const filters = ref({
@@ -193,6 +206,29 @@ function loadFile(filename: string) {
 	if (filename !== currentFile.value?.filename) {
 		getFile(filename)
 	}
+}
+
+function reloadManager() {
+	abortController?.abort()
+
+	loadingManager.value = true
+
+	Api.wazuh.rules
+		.restartManager()
+		.then(res => {
+			if (res.data.success) {
+				message.success(res.data?.message || "Wazuh Manager cluster restarted successfully")
+				getList()
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingManager.value = false
+		})
 }
 
 function getList() {

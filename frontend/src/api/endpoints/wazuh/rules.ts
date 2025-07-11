@@ -57,5 +57,8 @@ export default {
 		form.append("file", new Blob([rules], { type: rules.type }), rules.name)
 
 		return HttpClient.put<FlaskBaseResponse & WazuhFileDetails>(`/wazuh_manager/rules/files/${filename}`, form)
+	},
+	restartManager() {
+		return HttpClient.post<FlaskBaseResponse>(`/wazuh_manager/management/restart`)
 	}
 }
