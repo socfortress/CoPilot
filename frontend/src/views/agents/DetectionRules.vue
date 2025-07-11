@@ -1,11 +1,12 @@
 <template>
 	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
-			main-content-class="!p-0 overflow-hidden grow flex h-full"
+			main-content-class="!p-0 overflow-hidden grow flex flex-col h-full"
 			:use-main-scroll="false"
 			padding="18px"
 			enable-resize
 			toolbar-height="54px"
+			sidebar-content-class="p-0!"
 		>
 			<template #sidebar-header>
 				<div class="flex w-full items-center justify-between gap-3">
@@ -51,19 +52,16 @@
 			<template #sidebar-content>
 				<n-spin :show="loadingList">
 					<template v-if="fileList.length">
-						<div class="flex flex-col gap-4">
-							<CardEntity
+						<div class="divide-border divide-y-1 flex flex-col">
+							<div
 								v-for="item of fileList"
 								:key="item.filename"
-								hoverable
-								clickable
-								:highlighted="item.filename === currentFile?.filename"
+								class="hover:text-warning px-4.5 cursor-pointer break-all py-2.5 font-mono text-sm"
+								:class="{ 'bg-warning/10': item.filename === currentFile?.filename }"
 								@click.stop="loadFile(item.filename)"
 							>
-								<div class="flex items-center justify-between">
-									<div>{{ item.filename }}</div>
-								</div>
-							</CardEntity>
+								{{ item.filename }}
+							</div>
 						</div>
 					</template>
 					<template v-else>
@@ -152,6 +150,9 @@
 				</div>
 			</template>
 			<template #main-content>
+				<div v-if="currentFile" class="px-4.5 break-all py-2.5 font-mono text-sm">
+					current file: {{ currentFile?.filename }}
+				</div>
 				<n-spin
 					:show="loadingFile || uploadingFile"
 					class="flex h-full w-full overflow-hidden"
@@ -183,7 +184,6 @@ import _clone from "lodash/cloneDeep"
 import { NButton, NEmpty, NInput, NPagination, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
@@ -207,7 +207,7 @@ const filters = ref({
 })
 const pagination = ref({
 	current: 1,
-	size: 20,
+	size: 30,
 	total: 0
 })
 
@@ -235,7 +235,7 @@ function getList() {
 				pretty: false,
 				wait_for_complete: false,
 				distinct: false,
-				offset: pagination.value.current * pagination.value.size,
+				offset: (pagination.value.current - 1) * pagination.value.size,
 				limit: pagination.value.size
 			},
 			abortController.signal

@@ -154,190 +154,20 @@ async function strategyFastXMLParser(text: string): Promise<XMLError[]> {
 	}
 }
 
-async function strategyFallback(text: string): Promise<XMLError[]> {
-	try {
-		const errors = regexXMLAnalyzer(text)
-
-		return errors
-	} catch (err) {
-		console.error(err)
-		return []
-	}
-}
-
-function regexXMLAnalyzer(text: string): XMLError[] {
-	const errors: XMLError[] = []
-	const lines = text.split("\n")
-
-	// Variables for multiple root elements check
-	let depth = 0
-	let rootElementsFound = 0
-	let secondRootLine = 0
-	let secondRootColumn = 0
-
-	lines.forEach((line, lineIndex) => {
-		const lineNumber = lineIndex + 1
-
-		// Check for multiple root elements (integrated in the loop)
-		const openTags = line.match(/<[^!?/][^>]*>/g) || []
-		const closeTags = line.match(/<\/[^>]+>/g) || []
-
-		for (const _tag of openTags) {
-			depth++
-			if (depth === 1) {
-				rootElementsFound++
-				if (rootElementsFound === 2) {
-					secondRootLine = lineNumber
-					secondRootColumn = line.indexOf(_tag) + 1
-				}
-			}
-		}
-
-		for (const _tag of closeTags) {
-			depth--
-		}
-
-		// Check for unclosed tags
-		if (line.includes("<") && !line.includes(">")) {
-			errors.push({
-				line: lineNumber,
-				column: line.indexOf("<") + 1,
-				message: "Unclosed tag - missing '>' character",
-				level: "error"
-			})
-		}
-
-		// Check for unopened tags
-		if (line.includes(">") && !line.includes("<")) {
-			errors.push({
-				line: lineNumber,
-				column: line.indexOf(">") + 1,
-				message: "Unopened tag - missing '<' character",
-				level: "error"
-			})
-		}
-
-		// Check for invalid XML entities
-		const entityMatch = line.match(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)[a-zA-Z]+/g)
-		if (entityMatch) {
-			entityMatch.forEach(match => {
-				const index = line.indexOf(match)
-				errors.push({
-					line: lineNumber,
-					column: index + 1,
-					message: `Invalid XML entity: "${match}"`,
-					level: "error"
-				})
-			})
-		}
-
-		// Check for unquoted attributes
-		// Look for attributes that start with spaces, followed by an attribute name and = without quotes
-		// Exclude tag content (after the closing >)
-		const tagEndIndex = line.indexOf(">")
-		if (tagEndIndex !== -1) {
-			const beforeTagEnd = line.substring(0, tagEndIndex)
-			const attrMatch = beforeTagEnd.match(/\s+([a-z][\w:]*)\s*=\s*(?!["'])[^\s>]+/gi)
-			if (attrMatch) {
-				attrMatch.forEach(match => {
-					const index = line.indexOf(match)
-					errors.push({
-						line: lineNumber,
-						column: index + 1,
-						message: "Attribute must be enclosed in quotes",
-						level: "error"
-					})
-				})
-			}
-		}
-
-		// Check for unclosed attribute quotes
-		// Look for patterns like attribute="value without closing quote
-		const unclosedAttrMatch = line.match(/([a-z][\w:]*)\s*=\s*["'][^"']*$/gi)
-		if (unclosedAttrMatch) {
-			unclosedAttrMatch.forEach(match => {
-				const index = line.indexOf(match)
-				errors.push({
-					line: lineNumber,
-					column: index + 1,
-					message: "Attribute not properly closed - missing closing quote",
-					level: "error"
-				})
-			})
-		}
-
-		// Check for unclosed comments
-		if (line.includes("<!--") && !line.includes("-->")) {
-			errors.push({
-				line: lineNumber,
-				column: line.indexOf("<!--") + 1,
-				message: "Unclosed XML comment",
-				level: "error"
-			})
-		}
-
-		// Check for unclosed XML declarations
-		if (line.includes("<?") && !line.includes("?>")) {
-			errors.push({
-				line: lineNumber,
-				column: line.indexOf("<?") + 1,
-				message: "Unclosed XML declaration",
-				level: "error"
-			})
-		}
-
-		// Check for unclosed CDATA sections
-		if (line.includes("<![CDATA[") && !line.includes("]]>")) {
-			errors.push({
-				line: lineNumber,
-				column: line.indexOf("<![CDATA[") + 1,
-				message: "Unclosed CDATA section",
-				level: "error"
-			})
-		}
-	})
-
-	// Add error for multiple root elements if found
-	if (rootElementsFound > 1) {
-		errors.push({
-			line: secondRootLine,
-			column: secondRootColumn,
-			message: "XML document cannot have more than one root element",
-			level: "error"
-		})
-	}
-
-	return errors
-}
-
 async function validateXML(text: string): Promise<Diagnostic[]> {
 	let errors: XMLError[] = []
 
-	if (!errors.length) {
-		try {
-			errors = await strategyXMLLint(text)
-		} catch (err) {
-			console.error(err)
-		}
-	}
+	try {
+		errors = await strategyXMLLint(text)
+	} catch (err) {
+		console.error(err)
 
-	if (!errors.length) {
 		try {
 			errors = await strategyFastXMLParser(text)
 		} catch (err) {
 			console.error(err)
 		}
 	}
-
-	if (!errors.length) {
-		try {
-			errors = await strategyFallback(text)
-		} catch (err) {
-			console.error(err)
-		}
-	}
-
-	console.log(errors)
 
 	return convertXMLErrorsToDiagnostics(_uniqWith(errors, _isEqual), text)
 }
