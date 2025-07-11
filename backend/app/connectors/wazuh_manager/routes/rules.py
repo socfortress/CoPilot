@@ -320,7 +320,7 @@ async def update_wazuh_rule_file_endpoint(
     file: UploadFile = File(..., description="Rule file content (XML format)"),
     pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
     wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
-    overwrite: Optional[bool] = Query(False, description="Whether to overwrite the file if it exists"),
+    overwrite: Optional[bool] = Query(True, description="Whether to overwrite the file if it exists"),
     relative_dirname: Optional[str] = Query(None, description="Relative directory name"),
 ) -> WazuhRuleFileUploadResponse:
     """
