@@ -79,6 +79,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Sysmon Config" }
 						),
 					key: "SysmonConfig"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "DetectionRules"
+								}
+							},
+							{ default: () => "Detection Rules" }
+						),
+					key: "DetectionRules"
 				}
 			]
 		},

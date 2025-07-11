@@ -2,9 +2,7 @@ import type {
 	AlertsByHost,
 	AlertsByRule,
 	AlertsByRulePerHost,
-	AlertSourceContent,
-	AlertsSummary,
-	WazuhRuleExclude
+	AlertsSummary
 } from "@/types/alerts.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"

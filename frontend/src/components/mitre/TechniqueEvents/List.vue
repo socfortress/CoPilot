@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/mitre"
+import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { MitreEventDetails } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"

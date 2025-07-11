@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/mitre"
+import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { MitreTechnique } from "@/types/mitre.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"

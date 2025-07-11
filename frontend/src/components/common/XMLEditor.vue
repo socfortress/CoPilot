@@ -337,6 +337,8 @@ async function validateXML(text: string): Promise<Diagnostic[]> {
 		}
 	}
 
+	console.log(errors)
+
 	return convertXMLErrorsToDiagnostics(_uniqWith(errors, _isEqual), text)
 }
 

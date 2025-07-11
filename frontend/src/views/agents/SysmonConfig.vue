@@ -45,14 +45,14 @@
 							<template #icon>
 								<Icon :size="18" :name="NewConfigIcon" />
 							</template>
-							<span class="ml-2">Add new Configuration</span>
+							<span class="ml-1.5 truncate">Add new Configuration</span>
 						</n-button>
 					</n-dropdown>
 				</n-spin>
 			</template>
 			<template #main-toolbar>
 				<div v-if="currentConfig" class="@container flex items-center justify-between">
-					<div class="flex items-center gap-3 md:gap-4">
+					<div class="flex items-center gap-2 md:gap-3">
 						<n-button
 							v-if="xmlEditorCTX"
 							size="small"
@@ -76,14 +76,17 @@
 							</div>
 						</n-button>
 					</div>
-					<div class="flex items-center gap-3 md:gap-4">
+					<div class="flex items-center gap-2 md:gap-3">
 						<n-popover v-if="xmlErrors.length && xmlEditorCTX" class="p-1!">
 							<template #trigger>
-								<Icon
-									name="carbon:warning-alt"
-									:size="20"
-									class="text-warning animate-fade cursor-help"
-								/>
+								<div class="flex items-center justify-end gap-2">
+									<Icon
+										name="carbon:warning-alt"
+										:size="20"
+										class="text-warning animate-fade cursor-help"
+									/>
+									<span class="text-warning @lg:flex hidden font-mono text-xs">Errors detected</span>
+								</div>
 							</template>
 
 							<n-scrollbar class="max-h-100">

@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/mitre"
+import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
 import type { MitreAtomicTest } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
