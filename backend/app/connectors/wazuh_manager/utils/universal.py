@@ -470,6 +470,7 @@ async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, An
             "message": f"Failed to restart Wazuh Manager service with error: {e}",
         }
 
+
 async def get_cluster_status(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Retrieves the cluster status of the Wazuh Manager service.
@@ -485,6 +486,7 @@ async def get_cluster_status(connector_name: str = "Wazuh-Manager") -> Dict[str,
         endpoint="/cluster/status",
         connector_name=connector_name,
     )
+
 
 async def restart_wazuh_manager_service() -> Dict[str, Any]:
     """

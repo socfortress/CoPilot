@@ -1,17 +1,9 @@
 from fastapi import APIRouter
-
 from fastapi import Security
-from app.auth.routes.auth import AuthHandler
 from loguru import logger
 
-
-
-
-
+from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import restart_wazuh_manager_service
-
-
-
 
 wazuh_manager_management_router = APIRouter()
 auth_handler = AuthHandler()
@@ -28,4 +20,3 @@ async def restart_wazuh_manager() -> dict:
     """
     logger.info("Restarting Wazuh Manager service.")
     return await restart_wazuh_manager_service()
-
