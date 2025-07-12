@@ -88,7 +88,7 @@ function getStatusPercent(percent: string | number | undefined | null) {
 
 function getIndicesAllocation() {
 	loading.value = true
-	Api.indices
+	Api.wazuh.indices
 		.getAllocation()
 		.then(res => {
 			if (res.data.success) {

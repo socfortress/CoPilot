@@ -158,7 +158,7 @@ watch(sidebarTop, () => {
 function getDetails(query: { external_id: string } | { id: string }) {
 	loadingDetails.value = true
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreTechniques(query)
 		.then(res => {
 			if (res.data.success) {

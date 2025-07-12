@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/mitre"
+import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { MitreEventDetails } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -115,7 +115,7 @@ function getList() {
 		index_pattern: filters.value?.find(o => o.type === "index_pattern")?.value
 	}
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreEvents(query, abortController.signal)
 		.then(res => {
 			loading.value = false

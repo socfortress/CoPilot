@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -17,9 +18,290 @@ from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileContentResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFilesResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRuleFileUploadResponse
+from app.connectors.wazuh_manager.schema.rules import WazuhRulesResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
+
+
+async def get_wazuh_rules(**params) -> WazuhRulesResponse:
+    """
+    Fetch Wazuh rules from the Wazuh Manager API.
+
+    Args:
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhRulesResponse: Structured response with rules data
+    """
+    # Filter out None values
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    # Handle list parameters
+    if "rule_ids" in clean_params and isinstance(clean_params["rule_ids"], list):
+        clean_params["rule_ids"] = ",".join(map(str, clean_params["rule_ids"]))
+    if "select" in clean_params and isinstance(clean_params["select"], list):
+        clean_params["select"] = ",".join(clean_params["select"])
+    if "filename" in clean_params and isinstance(clean_params["filename"], list):
+        clean_params["filename"] = ",".join(clean_params["filename"])
+
+    try:
+        response = await send_get_request(endpoint="/rules", params=clean_params)
+
+        if not response.get("success"):
+            raise HTTPException(status_code=500, detail="Failed to fetch rules from Wazuh API")
+
+        # Extract data from nested response structure
+        wazuh_data = response.get("data", {}).get("data", {})
+        rules = wazuh_data.get("affected_items", [])
+        total_items = wazuh_data.get("total_affected_items", len(rules))
+
+        logger.info(f"Retrieved {len(rules)} of {total_items} Wazuh rules")
+
+        return WazuhRulesResponse(
+            success=True,
+            message=f"Successfully retrieved {len(rules)} rules",
+            results=rules,
+            total_items=total_items,
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching Wazuh rules: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching rules: {str(e)}")
+
+
+async def get_wazuh_rule_files(**params) -> WazuhRuleFilesResponse:
+    """
+    Fetch Wazuh rule files from the Wazuh Manager API.
+
+    Args:
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhRuleFilesResponse: Structured response with rule files data
+
+    Raises:
+        HTTPException: If there's an error fetching the rule files
+    """
+    # Filter out None values and prepare parameters
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    # Handle list parameters that need to be joined as comma-separated strings
+    if "filename" in clean_params and isinstance(clean_params["filename"], list):
+        clean_params["filename"] = ",".join(clean_params["filename"])
+    if "select" in clean_params and isinstance(clean_params["select"], list):
+        clean_params["select"] = ",".join(clean_params["select"])
+
+    logger.debug(f"Requesting Wazuh rule files with params: {clean_params}")
+
+    try:
+        response = await send_get_request(endpoint="/rules/files", params=clean_params)
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", "Failed to fetch rule files from Wazuh API")
+            logger.error(f"Wazuh API error: {error_detail}")
+            raise HTTPException(status_code=500, detail=error_detail)
+
+        # Extract data from nested response structure
+        wazuh_data = response.get("data", {}).get("data", {})
+        rule_files = wazuh_data.get("affected_items", [])
+        total_items = wazuh_data.get("total_affected_items", len(rule_files))
+
+        logger.info(f"Retrieved {len(rule_files)} of {total_items} Wazuh rule files")
+
+        return WazuhRuleFilesResponse(
+            success=True,
+            message=f"Successfully retrieved {len(rule_files)} rule files",
+            results=rule_files,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching Wazuh rule files: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching rule files: {str(e)}")
+
+
+async def get_wazuh_rule_file_content(filename: str, **params) -> WazuhRuleFileContentResponse:
+    """
+    Fetch the content of a specific Wazuh rule file from the Wazuh Manager API.
+
+    Args:
+        filename: The name of the rule file to fetch content for
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhRuleFileContentResponse: Structured response with rule file content
+
+    Raises:
+        HTTPException: If there's an error fetching the rule file content
+    """
+    # Filter out None values and prepare parameters
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    # Check if raw content is requested
+    is_raw = clean_params.get("raw", False)
+
+    logger.debug(f"Requesting Wazuh rule file content for '{filename}' with params: {clean_params}")
+
+    try:
+        # Handle raw response differently
+        if is_raw:
+            # For raw requests, we need to use a modified approach
+            # Use only the raw parameter to trigger the special handling in send_get_request
+            raw_params = {"raw": True}
+            response = await send_get_request(endpoint=f"/rules/files/{filename}", params=raw_params)
+
+            # Check if the API request was successful
+            if not response.get("success"):
+                error_detail = response.get("message", f"Failed to fetch raw rule file content for {filename}")
+                logger.error(f"Wazuh API error: {error_detail}")
+
+                # Handle specific errors
+                if "not found" in error_detail.lower():
+                    raise HTTPException(status_code=404, detail=f"Rule file '{filename}' not found")
+                else:
+                    raise HTTPException(status_code=500, detail=error_detail)
+
+            # For raw responses, the content is in response["data"]
+            content = response.get("data", "")
+            logger.info(f"Retrieved raw content for rule file '{filename}' ({len(content)} characters)")
+
+            return WazuhRuleFileContentResponse(
+                success=True,
+                message=f"Successfully retrieved raw content for rule file '{filename}'",
+                filename=filename,
+                content=content,
+                is_raw=True,
+                total_items=None,
+            )
+
+        # Handle structured response (non-raw)
+        response = await send_get_request(endpoint=f"/rules/files/{filename}", params=clean_params)
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", f"Failed to fetch rule file content for {filename}")
+            logger.error(f"Wazuh API error: {error_detail}")
+
+            # Handle specific errors
+            if "not found" in error_detail.lower():
+                raise HTTPException(status_code=404, detail=f"Rule file '{filename}' not found")
+            else:
+                raise HTTPException(status_code=500, detail=error_detail)
+
+        # Handle structured response
+        wazuh_data = response.get("data", {}).get("data", {})
+        affected_items = wazuh_data.get("affected_items", [])
+        total_items = wazuh_data.get("total_affected_items", len(affected_items))
+
+        if not affected_items:
+            raise HTTPException(status_code=404, detail=f"No content found for rule file '{filename}'")
+
+        # Extract the content from the first affected item
+        content = affected_items[0] if affected_items else {}
+
+        logger.info(f"Retrieved structured content for rule file '{filename}' with {total_items} affected items")
+
+        return WazuhRuleFileContentResponse(
+            success=True,
+            message=f"Successfully retrieved content for rule file '{filename}'",
+            filename=filename,
+            content=content,
+            is_raw=False,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching Wazuh rule file content for '{filename}': {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching rule file content: {str(e)}")
+
+
+async def update_wazuh_rule_file(
+    filename: str,
+    file_content: bytes,
+    pretty: Optional[bool] = False,
+    wait_for_complete: Optional[bool] = False,
+    overwrite: Optional[bool] = False,
+    relative_dirname: Optional[str] = None,
+) -> WazuhRuleFileUploadResponse:
+    """
+    Upload or update a Wazuh rule file.
+
+    Args:
+        filename: Name of the rule file
+        file_content: Binary content of the rule file
+        pretty: Show results in human-readable format
+        wait_for_complete: Disable timeout response
+        overwrite: Whether to overwrite the file if it exists
+        relative_dirname: Relative directory name
+
+    Returns:
+        WazuhRuleFileUploadResponse: Response indicating success/failure
+
+    Raises:
+        HTTPException: If there's an error uploading the file
+    """
+    # Prepare parameters
+    params = {}
+    if pretty is not None:
+        params["pretty"] = str(pretty).lower()
+    if wait_for_complete is not None:
+        params["wait_for_complete"] = str(wait_for_complete).lower()
+    if overwrite is not None:
+        params["overwrite"] = str(overwrite).lower()
+    if relative_dirname is not None:
+        params["relative_dirname"] = relative_dirname
+
+    logger.info(f"Uploading/updating rule file: {filename}")
+    logger.debug(f"Request params: {params}")
+
+    try:
+        # Send PUT request with binary data
+        response = await send_put_request(
+            endpoint=f"/rules/files/{filename}",
+            data=file_content,
+            params=params,
+            binary_data=True,
+            debug=True,
+        )
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", "Failed to upload rule file to Wazuh API")
+            status_code = response.get("status_code", 500)
+            logger.error(f"Wazuh API error: {error_detail}")
+            raise HTTPException(status_code=status_code, detail=error_detail)
+
+        # Extract data from response
+        wazuh_data = response.get("data", {}).get("data", {})
+        total_items = wazuh_data.get("total_affected_items", 1)
+
+        logger.info(f"Successfully uploaded/updated rule file: {filename}")
+
+        return WazuhRuleFileUploadResponse(
+            success=True,
+            message=f"Successfully uploaded/updated rule file: {filename}",
+            filename=filename,
+            details=wazuh_data,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading rule file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading rule file: {str(e)}")
 
 
 async def fetch_filename(rule_id: str) -> str:

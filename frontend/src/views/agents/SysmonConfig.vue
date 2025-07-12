@@ -1,5 +1,5 @@
 <template>
-	<div class="page page-wrapped page-without-footer flex flex-col">
+	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
 			main-content-class="!p-0 overflow-hidden grow flex h-full"
 			:use-main-scroll="false"
@@ -45,14 +45,14 @@
 							<template #icon>
 								<Icon :size="18" :name="NewConfigIcon" />
 							</template>
-							<span class="ml-2">Add new Configuration</span>
+							<span class="ml-1.5 truncate">Add new Configuration</span>
 						</n-button>
 					</n-dropdown>
 				</n-spin>
 			</template>
 			<template #main-toolbar>
 				<div v-if="currentConfig" class="@container flex items-center justify-between">
-					<div class="flex items-center gap-3 md:gap-4">
+					<div class="flex items-center gap-2 md:gap-3">
 						<n-button
 							v-if="xmlEditorCTX"
 							size="small"
@@ -76,7 +76,34 @@
 							</div>
 						</n-button>
 					</div>
-					<div class="flex items-center gap-3 md:gap-4">
+					<div class="flex items-center gap-2 md:gap-3">
+						<n-popover v-if="xmlErrors.length && xmlEditorCTX" class="p-1!">
+							<template #trigger>
+								<div class="flex items-center justify-end gap-2">
+									<Icon
+										name="carbon:warning-alt"
+										:size="20"
+										class="text-warning animate-fade cursor-help"
+									/>
+									<span class="text-warning @lg:flex hidden font-mono text-xs">Errors detected</span>
+								</div>
+							</template>
+
+							<n-scrollbar class="max-h-100">
+								<div class="flex max-w-80 flex-col gap-1">
+									<div
+										v-for="item of xmlErrors"
+										:key="JSON.stringify(item)"
+										class="bg-secondary hover:bg-body flex cursor-pointer flex-col gap-0.5 rounded-sm p-1 font-mono"
+										@click="xmlEditorCTX.scrollToLine(item.line)"
+									>
+										<div class="text-secondary text-[8px]">line: {{ item.line }}</div>
+										<div class="text-xs">{{ item.message }}</div>
+									</div>
+								</div>
+							</n-scrollbar>
+						</n-popover>
+
 						<n-button
 							:loading="uploadingConfig"
 							size="small"
@@ -114,6 +141,7 @@
 						<XMLEditor
 							v-model="currentConfig.config_content"
 							class="scrollbar-styled text-sm"
+							@errors="xmlErrors = $event"
 							@mounted="xmlEditorCTX = $event"
 						/>
 					</template>
@@ -128,11 +156,11 @@
 
 <script setup lang="ts">
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
-import type { XMLEditorCtx } from "@/components/common/XMLEditor.vue"
+import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import _clone from "lodash/cloneDeep"
-import { NButton, NDropdown, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -159,6 +187,7 @@ const UploadIcon = "carbon:cloud-upload"
 const NewConfigIcon = "carbon:document-add"
 
 const isDirty = computed(() => currentConfig.value?.config_content !== backupConfig.value?.config_content)
+const xmlErrors = ref<XMLError[]>([])
 
 const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])

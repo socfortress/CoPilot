@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
 			}
 		},
 		optimizeDeps: {
+			exclude: ["xmllint-wasm"],
 			include: ["fast-deep-equal"]
 		},
 		server: {
@@ -63,6 +64,17 @@ export default defineConfig(({ mode }) => {
 				scss: {
 					silenceDeprecations: ["legacy-js-api", "import"],
 					api: "modern-compiler"
+				}
+			}
+		},
+		build: {
+			rollupOptions: {
+				onwarn(warning, warn) {
+					if (warning.code === "PLUGIN_WARNING" && warning.message.includes('Module "node:process"')) {
+						return
+					}
+
+					warn(warning)
 				}
 			}
 		}

@@ -7,6 +7,6 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { alerts: InfluxDBAlert[] }>(`/influxdb/alerts`)
 	}
 
-	//   index health : Api.indices.getClusterHealth()
+	//   index health : Api.wazuh.indices.getClusterHealth()
 	// graylog health : Api.graylog.getMetrics()
 }

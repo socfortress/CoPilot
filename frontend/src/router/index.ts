@@ -55,6 +55,12 @@ const router = createRouter({
 					name: "SysmonConfig",
 					component: () => import("@/views/agents/SysmonConfig.vue"),
 					meta: { title: "Sysmon Config" }
+				},
+				{
+					path: "detection-rules",
+					name: "DetectionRules",
+					component: () => import("@/views/agents/DetectionRules.vue"),
+					meta: { title: "Detection Rules" }
 				}
 			]
 		},

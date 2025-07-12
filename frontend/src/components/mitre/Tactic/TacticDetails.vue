@@ -112,7 +112,7 @@ watch(sidebarTop, () => {
 function getDetails(id: string) {
 	loadingDetails.value = true
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreTactics({ id })
 		.then(res => {
 			if (res.data.success) {

@@ -31,7 +31,7 @@ const content = ref<string>()
 function getContent() {
 	loading.value = true
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreAtomicTestContent(techniqueId)
 		.then(res => {
 			if (res.data.success) {

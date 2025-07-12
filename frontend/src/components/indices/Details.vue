@@ -115,7 +115,7 @@ function clearCurrentIndex() {
 
 function getShards() {
 	loadingShards.value = true
-	Api.indices
+	Api.wazuh.indices
 		.getShards()
 		.then(res => {
 			if (res.data.success) {

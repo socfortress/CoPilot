@@ -80,7 +80,7 @@ const techniqueDetails = ref<MitreTechniqueDetails | undefined>(undefined)
 function getDetails(id: string) {
 	loadingDetails.value = true
 
-	Api.mitre
+	Api.wazuh.mitre
 		.getMitreTechniques({ external_id: id })
 		.then(res => {
 			if (res.data.success) {

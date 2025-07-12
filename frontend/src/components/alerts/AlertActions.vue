@@ -196,7 +196,7 @@ function wazuhManagerRuleExclude() {
 
 	loadingWazuhRuleExclude.value = true
 
-	Api.alerts
+	Api.wazuh.rules
 		.wazuhManagerRuleExclude(alert._source)
 		.then(res => {
 			if (res.data.success) {

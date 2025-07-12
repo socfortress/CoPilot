@@ -469,3 +469,62 @@ async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, An
             "success": False,
             "message": f"Failed to restart Wazuh Manager service with error: {e}",
         }
+
+
+async def get_cluster_status(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+    """
+    Retrieves the cluster status of the Wazuh Manager service.
+
+    Args:
+        connector_name (str, optional): The name of the connector to use. Defaults to "Wazuh-Manager".
+
+    Returns:
+        Dict[str, Any]: The response from the GET request.
+    """
+    logger.info("Getting Wazuh Manager cluster status")
+    return await send_get_request(
+        endpoint="/cluster/status",
+        connector_name=connector_name,
+    )
+
+
+async def restart_wazuh_manager_service() -> Dict[str, Any]:
+    """
+    Restarts the Wazuh Manager service.
+
+    Returns:
+        Dict[str, Any]: The response from the restart request.
+    """
+    logger.info("Restarting Wazuh Manager service")
+    status_response = await get_cluster_status()
+
+    # Check if the request was successful first
+    if not status_response.get("success"):
+        logger.error("Failed to get cluster status")
+        return {
+            "success": False,
+            "message": "Failed to get cluster status before restart",
+        }
+
+    # Access the nested data structure correctly
+    cluster_enabled = status_response.get("data", {}).get("data", {}).get("enabled", "unknown")
+
+    if cluster_enabled == "no":
+        logger.info("Wazuh Manager cluster is not enabled, restarting service")
+        return await restart_service()
+    elif cluster_enabled == "yes":
+        logger.info("Wazuh Manager cluster is enabled, restarting cluster")
+        response = await send_put_request(
+            endpoint="/cluster/restart",
+            data={},
+        )
+        if response.get("success"):
+            return {
+                "success": True,
+                "message": "Wazuh Manager cluster restarted successfully",
+            }
+        else:
+            return response
+    else:
+        logger.warning(f"Unknown cluster status: {cluster_enabled}, defaulting to service restart")
+        return await restart_service()
