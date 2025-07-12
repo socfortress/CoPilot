@@ -185,6 +185,7 @@ const props = defineProps<{
 	disableSourceField?: boolean
 	showIndexNameField?: boolean
 	disableIndexNameField?: boolean
+	applyFieldsSanitize?: boolean
 	disabledSources?: SourceName[]
 }>()
 
@@ -206,6 +207,7 @@ const {
 	disableSourceField,
 	showIndexNameField,
 	disableIndexNameField,
+	applyFieldsSanitize,
 	disabledSources
 } = toRefs(props)
 
@@ -445,7 +447,9 @@ function getAvailableMappings(indexName: string) {
 					label: o,
 					value: o
 				}))
-				sanitizeFields()
+				if (applyFieldsSanitize.value) {
+					sanitizeFields()
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
