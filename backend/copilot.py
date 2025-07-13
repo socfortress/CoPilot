@@ -50,6 +50,7 @@ from app.routers import duo
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
+from app.routers import copilot_mcp
 from app.routers import huntress
 from app.routers import incidents
 from app.routers import influxdb
@@ -144,6 +145,7 @@ api_router.include_router(threat_intel.router)
 api_router.include_router(alert_creation_settings.router)
 api_router.include_router(integrations.router)
 api_router.include_router(office365.router)
+api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
