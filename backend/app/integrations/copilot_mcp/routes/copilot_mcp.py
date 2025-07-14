@@ -8,12 +8,105 @@ from app.integrations.copilot_mcp.schema.copilot_mcp import (
     MCPQueryRequest,
     MCPQueryResponse,
     MCPServerType,
-    ExampleQuestionsResponse
+    ExampleQuestionsResponse,
+    AvailableMCPServersResponse,
+
 )
 from app.integrations.copilot_mcp.services.example_questions import ExampleQuestionsService
 
+
 copilot_mcp_router = APIRouter()
 auth_handler = AuthHandler()
+
+@copilot_mcp_router.get(
+    "/servers",
+    response_model=AvailableMCPServersResponse,
+    description="Get list of available MCP servers",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_available_mcp_servers() -> AvailableMCPServersResponse:
+    """
+    Retrieve a list of all available MCP servers with their capabilities.
+
+    This endpoint provides information about all MCP servers that can be
+    queried, including their descriptions and capabilities to help users
+    understand what each server can do.
+
+    Returns:
+        AvailableMCPServersResponse: List of available MCP servers with metadata
+    """
+    logger.info("Fetching available MCP servers")
+
+    try:
+        servers = ExampleQuestionsService.get_available_servers()
+
+        logger.info(f"Found {len(servers)} available MCP servers")
+
+        return AvailableMCPServersResponse(
+            servers=servers,
+            total_servers=len(servers),
+            message="Successfully retrieved available MCP servers",
+            success=True
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching available MCP servers: {str(e)}")
+        return AvailableMCPServersResponse(
+            servers=[],
+            total_servers=0,
+            message=f"Error retrieving MCP servers: {str(e)}",
+            success=False
+        )
+
+@copilot_mcp_router.get(
+    "/servers/{mcp_server}",
+    response_model=dict,
+    description="Get detailed information about a specific MCP server",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_mcp_server_details(
+    mcp_server: MCPServerType
+) -> dict:
+    """
+    Get detailed information about a specific MCP server.
+
+    Args:
+        mcp_server: The MCP server to get details for
+
+    Returns:
+        Dictionary containing detailed server information
+    """
+    logger.info(f"Fetching details for MCP server: {mcp_server.value}")
+
+    try:
+        server_info = ExampleQuestionsService.get_server_info(mcp_server)
+
+        if not server_info:
+            return {
+                "server": mcp_server.value,
+                "message": f"Server information not found for {mcp_server.value}",
+                "success": False
+            }
+
+        # Get additional context like available categories and question count
+        categories = ExampleQuestionsService.get_available_categories(mcp_server)
+        total_questions = len(ExampleQuestionsService.get_example_questions(mcp_server))
+
+        return {
+            "server": server_info.dict(),
+            "available_categories": categories,
+            "total_example_questions": total_questions,
+            "message": f"Successfully retrieved details for {mcp_server.value}",
+            "success": True
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching details for {mcp_server.value}: {str(e)}")
+        return {
+            "server": mcp_server.value,
+            "message": f"Error retrieving server details: {str(e)}",
+            "success": False
+        }
 
 @copilot_mcp_router.get(
     "/example-questions",

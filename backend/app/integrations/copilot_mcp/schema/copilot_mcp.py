@@ -147,6 +147,22 @@ class MCPQueryResponse(BaseModel):
     )
 
 
+class MCPServerInfo(BaseModel):
+    """Information about an available MCP server"""
+
+    name: str = Field(..., description="The server name/identifier")
+    value: str = Field(..., description="The server enum value")
+    description: str = Field(..., description="Description of what this server does")
+    capabilities: List[str] = Field(default=[], description="List of server capabilities")
+
+class AvailableMCPServersResponse(BaseModel):
+    """Response containing available MCP servers"""
+
+    servers: List[MCPServerInfo] = Field(..., description="List of available MCP servers")
+    total_servers: int = Field(..., description="Total number of available servers")
+    message: str = Field(..., description="Response message")
+    success: bool = Field(default=True, description="Whether the request was successful")
+
 class ExampleQuestion(BaseModel):
     """Single example question with metadata"""
 

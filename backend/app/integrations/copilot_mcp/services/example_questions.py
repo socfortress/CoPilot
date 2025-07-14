@@ -1,5 +1,5 @@
 from typing import Dict, List
-from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType, ExampleQuestion
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType, ExampleQuestion, MCPServerInfo
 
 class ExampleQuestionsService:
     """Service for managing example questions for different MCP servers"""
@@ -111,6 +111,48 @@ class ExampleQuestionsService:
         ],
     }
 
+    # Define server information with descriptions and capabilities
+    _SERVER_INFO: Dict[MCPServerType, MCPServerInfo] = {
+        MCPServerType.COPILOT: MCPServerInfo(
+            name="CoPilot",
+            value=MCPServerType.COPILOT.value,
+            description="Query customer data, alerts, incidents, and analytics from the CoPilot platform",
+            capabilities=[
+                "Customer management queries",
+                "Alert analysis and filtering",
+                "Incident tracking and trends",
+                "Security analytics and reporting",
+                "Dashboard data retrieval"
+            ]
+        ),
+        MCPServerType.WAZUH_MANAGER: MCPServerInfo(
+            name="Wazuh Manager",
+            value=MCPServerType.WAZUH_MANAGER.value,
+            description="Interact with Wazuh Manager for agent management, security monitoring, and endpoint analysis",
+            capabilities=[
+                "Agent status monitoring",
+                "Endpoint security scanning",
+                "Software inventory management",
+                "Network port analysis",
+                "Vulnerability assessment",
+                "Security event investigation"
+            ]
+        ),
+        MCPServerType.WAZUH_INDEXER: MCPServerInfo(
+            name="Wazuh Indexer",
+            value=MCPServerType.WAZUH_INDEXER.value,
+            description="Query the Wazuh Indexer for log analysis, search operations, and cluster health monitoring",
+            capabilities=[
+                "Log data search and analysis",
+                "Index management and statistics",
+                "Cluster health monitoring",
+                "Document count and storage metrics",
+                "Search performance analysis",
+                "Data source analytics"
+            ]
+        )
+    }
+
     @classmethod
     def get_example_questions(cls, mcp_server: MCPServerType) -> List[ExampleQuestion]:
         """
@@ -166,3 +208,26 @@ class ExampleQuestionsService:
         if mcp_server not in cls._EXAMPLE_QUESTIONS:
             cls._EXAMPLE_QUESTIONS[mcp_server] = []
         cls._EXAMPLE_QUESTIONS[mcp_server].append(question)
+
+    @classmethod
+    def get_available_servers(cls) -> List[MCPServerInfo]:
+        """
+        Get information about all available MCP servers.
+
+        Returns:
+            List of MCPServerInfo objects containing server details
+        """
+        return list(cls._SERVER_INFO.values())
+
+    @classmethod
+    def get_server_info(cls, mcp_server: MCPServerType) -> MCPServerInfo:
+        """
+        Get detailed information about a specific MCP server.
+
+        Args:
+            mcp_server: The MCP server type to get information for
+
+        Returns:
+            MCPServerInfo object with server details
+        """
+        return cls._SERVER_INFO.get(mcp_server)
