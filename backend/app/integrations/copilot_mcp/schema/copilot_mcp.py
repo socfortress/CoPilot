@@ -2,10 +2,18 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from enum import Enum
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
+from fastapi import HTTPException
 
+class MCPServerType(str, Enum):
+    """Enumeration of available MCP servers"""
+    WAZUH_INDEXER = "wazuh-indexer"
+    WAZUH_MANAGER = "wazuh-manager"
+    COPILOT = "copilot"
 
 class MCPServerConfig(BaseModel):
     """Configuration for MCP server connection"""
@@ -48,8 +56,22 @@ class MCPQuery(BaseModel):
 class MCPQueryRequest(BaseModel):
     """Complete MCP query request"""
 
-    query: MCPQuery
-    integration: str = Field(..., example="opensearch")
+    input: str = Field(..., description="The query/input to send to the MCP server")
+    mcp_server: MCPServerType = Field(..., description="MCP server to use for the query")
+    verbose: Optional[bool] = Field(default=True, description="Enable verbose output")
+
+    @validator('mcp_server', pre=True)
+    def validate_mcp_server(cls, v):
+        """Validate that the MCP server type is one of the allowed values"""
+        if isinstance(v, str):
+            # Check if the string value is valid
+            valid_values = [server.value for server in MCPServerType]
+            if v not in valid_values:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid MCP server type: '{v}'. Must be one of: {', '.join(valid_values)}"
+                )
+        return v
 
 
 class VulnerabilityInfo(BaseModel):
@@ -123,3 +145,20 @@ class MCPQueryResponse(BaseModel):
         None,
         description="Time taken to execute the query",
     )
+
+
+class ExampleQuestion(BaseModel):
+    """Single example question with metadata"""
+
+    question: str = Field(..., description="The example question text")
+    description: Optional[str] = Field(None, description="Brief description of what this question does")
+    category: Optional[str] = Field(None, description="Category of the question (e.g., 'alerts', 'agents', 'health')")
+
+class ExampleQuestionsResponse(BaseModel):
+    """Response containing example questions for a specific MCP server"""
+
+    mcp_server: MCPServerType = Field(..., description="The MCP server these questions are for")
+    questions: List[ExampleQuestion] = Field(..., description="List of example questions")
+    total_questions: int = Field(..., description="Total number of example questions")
+    message: str = Field(..., description="Response message")
+    success: bool = Field(default=True, description="Whether the request was successful")
