@@ -21,28 +21,37 @@
 						:consistent-menu-width="false"
 						class="w-auto!"
 					/>
-					<n-popover v-if="selectedServer && selectedServerDetails" trigger="hover">
+					<n-popover v-if="selectedServer && selectedServerDetails" trigger="hover" class="p-0!">
 						<template #trigger>
 							<Icon name="carbon:help" :size="14" class="cursor-help" />
 						</template>
-						<div class="flex flex-col gap-1 text-sm">
-							<div>{{ selectedServerDetails.name }}</div>
-							<div class="text-secondary text-xs">{{ selectedServerDetails.description }}</div>
-							<div v-if="selectedServerDetails.capabilities.length" class="my-1 flex flex-wrap gap-1">
-								<n-tag
-									v-for="item of selectedServerDetails.capabilities"
-									:key="item"
-									size="small"
-									class="[&_.n-tag\_\_content]:leading-0 text-[10px] [&_.n-tag\_\_content]:pb-0.5"
-								>
-									{{ item }}
-								</n-tag>
+						<div class="divide-border divide-y-1 flex flex-col">
+							<div class="flex flex-col gap-1 px-3 py-2 text-sm">
+								<div>{{ selectedServerDetails.name }}</div>
+								<div class="text-secondary text-xs">{{ selectedServerDetails.description }}</div>
+								<div v-if="selectedServerDetails.capabilities.length" class="my-1 flex flex-wrap gap-1">
+									<n-tag
+										v-for="item of selectedServerDetails.capabilities"
+										:key="item"
+										size="small"
+										class="[&_.n-tag\_\_content]:leading-0 text-[10px] [&_.n-tag\_\_content]:pb-0.5"
+									>
+										{{ item }}
+									</n-tag>
+								</div>
+							</div>
+							<div class="px-3 py-2">
+								<div class="flex items-center gap-2 text-sm">
+									<div>verbose response</div>
+									<n-switch v-model:value="verbose" size="small" />
+								</div>
 							</div>
 						</div>
 					</n-popover>
 				</div>
-				<n-button circle size="small" secondary :disabled="!isFormValid">
+				<n-button circle size="small" secondary :disabled="!isFormValid" @click="send()">
 					<Icon name="carbon:arrow-up" />
+					{{ loading }}
 				</n-button>
 			</div>
 		</div>
@@ -56,13 +65,28 @@ import type { VNode } from "vue"
 import type { MCPServer } from "@/types/copilotMCP.d"
 import { useStorage } from "@vueuse/core"
 import _trim from "lodash/trim"
-import { NButton, NCollapseTransition, NInput, NPopover, NSelect, NTag, NTooltip, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { NButton, NCollapseTransition, NInput, NPopover, NSelect, NSwitch, NTag, NTooltip, useMessage } from "naive-ui"
+import { computed, h, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
+export interface Message {
+	input: string
+	verbose: boolean
+	server: string
+}
+
+const props = defineProps<{ loading?: boolean }>()
+
+const emit = defineEmits<{
+	(e: "message", value: Message): void
+	(e: "server-loaded"): void
+}>()
+
+const { loading } = toRefs(props)
 const input = ref<string | null>(null)
-const loading = ref(false)
+const verbose = ref<boolean>(false)
+const loadingServers = ref(false)
 const message = useMessage()
 const servers = ref<MCPServer[]>([])
 const selectedServer: RemovableRef<string | null> = useStorage<string | null>(
@@ -86,7 +110,7 @@ function renderOption({ node, option }: { node: VNode; option: SelectOption }) {
 }
 
 function getList() {
-	loading.value = true
+	loadingServers.value = true
 
 	Api.copilotMCP
 		.getAvailableServers()
@@ -96,6 +120,7 @@ function getList() {
 				if (servers.value.length && !selectedServer.value) {
 					selectedServer.value = servers.value[0].value
 				}
+				emit("server-loaded")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -104,8 +129,24 @@ function getList() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loading.value = false
+			loadingServers.value = false
 		})
+}
+
+function reset() {
+	input.value = null
+}
+
+function send() {
+	if (input.value && selectedServer.value) {
+		emit("message", {
+			input: input.value,
+			server: selectedServer.value,
+			verbose: verbose.value
+		})
+
+		reset()
+	}
 }
 
 onBeforeMount(() => {
