@@ -4,8 +4,9 @@ import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
 import { IndexHealth } from "@/types/indices.d"
+import { useAuthStore } from "./auth"
 
-export const usHealthcheckStore = defineStore("healthcheck", {
+export const useHealthcheckStore = defineStore("healthcheck", {
 	state: () => ({
 		uncommittedJournalEntriesThreshold: _toNumber(
 			import.meta.env.VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
@@ -65,11 +66,15 @@ export const usHealthcheckStore = defineStore("healthcheck", {
 		},
 
 		getData() {
-			if (this.uncommittedJournalEntriesThreshold) {
-				this.getGraylogCheck()
+			const authStore = useAuthStore()
+
+			if (authStore.isLogged) {
+				if (this.uncommittedJournalEntriesThreshold) {
+					this.getGraylogCheck()
+				}
+				this.getClusterHealth()
+				this.getHealthchecks()
 			}
-			this.getClusterHealth()
-			this.getHealthchecks()
 		},
 
 		stop() {
@@ -89,5 +94,5 @@ export const usHealthcheckStore = defineStore("healthcheck", {
 })
 
 if (import.meta.hot) {
-	import.meta.hot.accept(acceptHMRUpdate(usHealthcheckStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useHealthcheckStore, import.meta.hot))
 }
