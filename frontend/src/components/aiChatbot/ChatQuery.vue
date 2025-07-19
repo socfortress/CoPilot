@@ -49,9 +49,15 @@
 						</div>
 					</n-popover>
 				</div>
-				<n-button circle size="small" secondary :disabled="!isFormValid" @click="send()">
-					<Icon name="carbon:arrow-up" />
-					{{ loading }}
+				<n-button
+					circle
+					size="small"
+					secondary
+					:type="isFormValid ? 'primary' : undefined"
+					:disabled="!isFormValid && !loading"
+					@click="loading ? stop() : send()"
+				>
+					<Icon :name="loading ? 'carbon:stop-filled-alt' : 'carbon:arrow-up'" />
 				</n-button>
 			</div>
 		</div>
@@ -80,12 +86,13 @@ const props = defineProps<{ loading?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "message", value: Message): void
+	(e: "stop"): void
 	(e: "server-loaded"): void
 }>()
 
 const { loading } = toRefs(props)
 const input = ref<string | null>(null)
-const verbose = ref<boolean>(false)
+const verbose: RemovableRef<boolean> = useStorage<boolean>("ai-chatbot-option-verbose", false, localStorage)
 const loadingServers = ref(false)
 const message = useMessage()
 const servers = ref<MCPServer[]>([])
@@ -147,6 +154,10 @@ function send() {
 
 		reset()
 	}
+}
+
+function stop() {
+	emit("stop")
 }
 
 onBeforeMount(() => {

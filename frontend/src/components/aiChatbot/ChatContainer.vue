@@ -3,12 +3,12 @@
 		<div class="grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
 				<div class="p-4">
-					<pre>{{ list }}</pre>
+					<ChatBubbleBlock class="animate-fade" v-for="item of list" :key="item.id" :entity="item" />
 				</div>
 			</n-scrollbar>
 		</div>
 		<div class="flex flex-col p-4">
-			<ChatQuery :loading @message="sendQuery" @server-loaded="serverLoadedHandler()" />
+			<ChatQuery :loading @message="sendQuery" @server-loaded="serverLoadedHandler()" @stop="stopQuery()" />
 		</div>
 	</div>
 </template>
@@ -23,16 +23,17 @@ import { NScrollbar, useMessage } from "naive-ui"
 import { nextTick, onMounted, ref } from "vue"
 import Api from "@/api"
 import ChatQuery from "./ChatQuery.vue"
-
-interface ChatBubble {
-	body: string
-	thought?: string
-	server: string
-	sender: "user" | "server"
-}
+import ChatBubbleBlock, { type ChatBubble } from "./ChatBubble.vue"
+import { secureLocalStorage } from "@/utils/secure-storage"
+import { nanoid } from "nanoid"
 
 const message = useMessage()
-const list: RemovableRef<ChatBubble[]> = useStorage<ChatBubble[]>("ai-chatbot-list-messages", [], localStorage)
+
+const list: RemovableRef<ChatBubble[]> = useStorage<ChatBubble[]>(
+	"ai-chatbot-list-messages",
+	[],
+	secureLocalStorage({ session: true })
+)
 const loading = ref(false)
 const scrollbar = ref<ScrollbarInst | null>(null)
 
@@ -50,9 +51,13 @@ function serverLoadedHandler() {
 	}, 500)
 }
 
-function addBubble(payload: ChatBubble) {
-	list.value.push(payload)
+function addBubble(payload: Omit<ChatBubble, "datetime" | "id">) {
+	list.value.push({ ...payload, datetime: new Date(), id: nanoid() })
 	scrollChat()
+}
+
+function stopQuery() {
+	abortController?.abort()
 }
 
 function sendQuery(payload: Message) {
