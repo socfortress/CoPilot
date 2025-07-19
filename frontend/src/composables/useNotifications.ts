@@ -6,6 +6,7 @@ import { computed, h } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { useGlobalActions } from "./useGlobalActions"
+import { secureLocalStorage } from "@/utils/secure-storage"
 
 export type NotificationCategory = "alert"
 export type NotificationType = "success" | "info" | "warning" | "error" | "default" | undefined
@@ -28,7 +29,7 @@ export interface PrependOptions {
 	autoNotify?: boolean
 }
 
-const list = useStorage<Notification[]>("notifications-list", [], localStorage)
+const list = useStorage<Notification[]>("notifications-list", [], secureLocalStorage({ session: true }))
 
 export function useNotifications() {
 	const hasUnread = computed(() => list.value.filter(o => !o.read).length !== 0)

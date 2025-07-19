@@ -12,11 +12,7 @@ meta.name = "naive-ui-style"
 document.head.appendChild(meta)
 
 const pinia = createPinia()
-pinia.use(
-	createPersistedState({
-		key: id => `__persisted__${id}`
-	})
-)
+pinia.use(createPersistedState())
 
 const app = createApp(App)
 app.use(pinia)
