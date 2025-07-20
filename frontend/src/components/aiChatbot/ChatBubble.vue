@@ -5,71 +5,87 @@
 			'items-end text-right': entity.sender === 'user'
 		}"
 	>
-		<div
-			class="text-secondary inline-flex items-center gap-1 text-sm font-semibold"
-			v-if="entity.sender === 'server'"
-		>
-			<span>{{ entity.server }}:</span>
+		<template v-if="entity.sender === 'server'">
+			<div class="text-secondary inline-flex items-center gap-1 text-sm font-semibold">
+				<span>{{ entity.server }}:</span>
 
-			<span
-				class="text-tertiary inline-flex cursor-pointer items-center gap-1"
-				v-if="thought && isThoughtVisible"
-				@click="isThoughtCollapsed = !isThoughtCollapsed"
-			>
-				{{ isThinking ? "thinking..." : "thought" }}
+				<span
+					class="text-tertiary inline-flex cursor-pointer items-center gap-1"
+					v-if="thought && isThoughtVisible"
+					@click="isThoughtCollapsed = !isThoughtCollapsed"
+				>
+					{{ isThinking ? "thinking..." : "thought" }}
 
-				<Icon
-					name="carbon:chevron-right"
-					:size="14"
-					class="transition-transform"
-					:class="{ 'rotate-90': !isThoughtCollapsed }"
-				/>
-			</span>
+					<Icon
+						name="carbon:chevron-right"
+						:size="14"
+						class="transition-transform"
+						:class="{ 'rotate-90': !isThoughtCollapsed }"
+					/>
+				</span>
 
-			<div v-if="isCopySupported" class="flex justify-end">
-				<n-tooltip>
-					<template #trigger>
-						<n-button size="tiny" text @click="copyLink()">
-							<template #icon>
-								<Icon name="carbon:copy" :size="12" />
-							</template>
-						</n-button>
-					</template>
-					<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
-				</n-tooltip>
-			</div>
-		</div>
-		<div
-			class="[&_>*:last-child]:mb-2! [&_*]:text-sm"
-			:class="{
-				'bg-secondary max-w-11/12 rounded-lg px-2 py-1 text-sm': entity.sender === 'user'
-			}"
-		>
-			<template v-if="entity.sender === 'user'">
-				{{ entity.body }}
-			</template>
-			<template v-else>
-				<div v-if="thought && isThoughtVisible">
-					<CollapseKeepAlive :show="!isThoughtCollapsed">
-						<div class="text-secondary bg-secondary mb-2 rounded-md px-1 py-2 [&_*]:text-[10px]">
-							<Suspense>
-								<Markdown :source="thought" class="animate-fade" @mounted="isThoughtMounted = true" />
-							</Suspense>
-							<div v-if="!isThoughtMounted">
-								{{ thought }}
-							</div>
-						</div>
-					</CollapseKeepAlive>
+				<div v-if="isCopySupported" class="flex items-center">
+					<n-tooltip>
+						<template #trigger>
+							<n-button size="tiny" text @click="copyLink()">
+								<template #icon>
+									<Icon name="carbon:copy" :size="12" />
+								</template>
+							</n-button>
+						</template>
+						<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
+					</n-tooltip>
 				</div>
-				<Suspense v-if="body && isBodyVisible">
+			</div>
+
+			<div v-if="thought && isThoughtVisible">
+				<CollapseKeepAlive :show="!isThoughtCollapsed">
+					<div class="text-secondary bg-secondary mb-2 rounded-md px-1 py-2 [&_*]:text-[10px]">
+						<Suspense>
+							<Markdown :source="thought" class="animate-fade" @mounted="isThoughtMounted = true" />
+						</Suspense>
+						<div v-if="!isThoughtMounted">
+							{{ thought }}
+						</div>
+					</div>
+				</CollapseKeepAlive>
+			</div>
+			<div class="[&_*:last-child]:mb-0! [&_*]:text-sm" v-if="body && isBodyVisible">
+				<Suspense>
 					<Markdown :source="body" class="animate-fade" @mounted="isBodyMounted = true" />
 				</Suspense>
 				<div v-if="!isBodyMounted">
 					{{ body }}
 				</div>
-			</template>
-		</div>
-		<div class="text-tertiary text-xs">
+			</div>
+		</template>
+
+		<template v-if="entity.sender === 'user'">
+			<div class="flex items-end gap-2">
+				<div v-if="isCopySupported" class="mb-1 flex items-center">
+					<n-tooltip>
+						<template #trigger>
+							<n-button size="tiny" text @click="copyLink()">
+								<template #icon>
+									<Icon name="carbon:copy" :size="12" />
+								</template>
+							</n-button>
+						</template>
+						<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
+					</n-tooltip>
+				</div>
+				<div class="bg-secondary max-w-11/12 [&_*:last-child]:mb-0! rounded-lg px-2 py-1 text-sm">
+					<Suspense>
+						<Markdown :source="body" class="animate-fade" @mounted="isBodyMounted = true" />
+					</Suspense>
+					<div v-if="!isBodyMounted">
+						{{ body }}
+					</div>
+				</div>
+			</div>
+		</template>
+
+		<div class="text-tertiary mt-1 text-xs">
 			{{ formatDate(entity.datetime, dFormats.datetime) }}
 		</div>
 	</div>
