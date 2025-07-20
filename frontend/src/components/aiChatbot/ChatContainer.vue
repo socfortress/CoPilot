@@ -2,7 +2,7 @@
 	<div class="flex flex-col overflow-hidden">
 		<div class="grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
-				<div class="p-4">
+				<div class="flex flex-col gap-6 p-4">
 					<ChatBubbleBlock class="animate-fade" v-for="item of list" :key="item.id" :entity="item" />
 				</div>
 			</n-scrollbar>
