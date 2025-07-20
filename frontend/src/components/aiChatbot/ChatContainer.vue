@@ -2,8 +2,21 @@
 	<div class="flex flex-col overflow-hidden">
 		<div class="grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
-				<div class="flex flex-col gap-6 p-4">
-					<ChatBubbleBlock class="animate-fade" v-for="item of list" :key="item.id" :entity="item" />
+				<div class="flex flex-col gap-6 p-4 pb-20" v-if="list.length">
+					<ChatBubbleBlock
+						class="animate-fade"
+						v-for="item of list"
+						:key="item.id"
+						:entity="item"
+						@update="scrollChat()"
+					/>
+				</div>
+				<div class="text-secondary flex flex-col items-center justify-center py-12 text-center" v-else>
+					<p class="text-lg">
+						Your chat is empty.
+						<br />
+						Ask your first question!
+					</p>
 				</div>
 			</n-scrollbar>
 		</div>
@@ -20,7 +33,7 @@ import type { Message } from "./ChatQuery.vue"
 import { useStorage } from "@vueuse/core"
 import axios from "axios"
 import { NScrollbar, useMessage } from "naive-ui"
-import { nextTick, onMounted, ref } from "vue"
+import { nextTick, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import ChatQuery from "./ChatQuery.vue"
 import ChatBubbleBlock, { type ChatBubble } from "./ChatBubble.vue"
@@ -51,8 +64,13 @@ function serverLoadedHandler() {
 	}, 500)
 }
 
+function setAllOld() {
+	list.value.forEach(o => (o.new = false))
+}
+
 function addBubble(payload: Omit<ChatBubble, "datetime" | "id">) {
-	list.value.push({ ...payload, datetime: new Date(), id: nanoid() })
+	setAllOld()
+	list.value.push({ ...payload, datetime: new Date(), id: nanoid(), new: true })
 	scrollChat()
 }
 
@@ -101,6 +119,10 @@ function sendQuery(payload: Message) {
 			loading.value = false
 		})
 }
+
+onBeforeMount(() => {
+	setAllOld()
+})
 
 onMounted(() => {
 	scrollChat()
