@@ -1,11 +1,18 @@
+import type { BundledLanguage, BundledTheme, HighlighterGeneric } from "shiki"
 import { createHighlighter } from "shiki"
 import { createOnigurumaEngine } from "shiki/engine/oniguruma"
 
 const THEME_LIGHT = "slack-ochin"
 const THEME_DARK = "aurora-x"
 
+let highlighterInstance: HighlighterGeneric<BundledLanguage, BundledTheme> | null = null
+
 export async function getHighlighter() {
-	return await createHighlighter({
+	if (highlighterInstance) {
+		return highlighterInstance
+	}
+
+	highlighterInstance = await createHighlighter({
 		themes: [import("shiki/themes/slack-ochin.mjs"), import("shiki/themes/aurora-x.mjs")],
 		langs: [
 			import("shiki/langs/javascript.mjs"),
@@ -27,6 +34,8 @@ export async function getHighlighter() {
 		],
 		engine: createOnigurumaEngine(() => import("shiki/wasm"))
 	})
+
+	return highlighterInstance
 }
 
 export const codeThemes = {

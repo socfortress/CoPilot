@@ -16,9 +16,7 @@
 			</template>
 			<template #footer>
 				<p v-if="groupDetails" class="cursor-text" @click.stop="() => {}">
-					<Suspense>
-						<Markdown :source="groupDetails.description" />
-					</Suspense>
+					<Markdown :source="groupDetails.description" />
 				</p>
 				<div v-else>
 					<n-skeleton text :repeat="2" :height="16" />

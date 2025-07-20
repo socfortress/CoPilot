@@ -41,22 +41,12 @@
 			<div v-if="thought && isThoughtVisible">
 				<CollapseKeepAlive :show="!isThoughtCollapsed">
 					<div class="text-secondary bg-secondary mb-2 rounded-md px-1 py-2 [&_*]:text-[10px]">
-						<Suspense>
-							<Markdown :source="thought" class="animate-fade" @mounted="isThoughtMounted = true" />
-						</Suspense>
-						<div v-if="!isThoughtMounted">
-							{{ thought }}
-						</div>
+						<Markdown :source="thought" class="animate-fade" />
 					</div>
 				</CollapseKeepAlive>
 			</div>
 			<div class="[&_*:last-child]:mb-0! [&_*]:text-sm" v-if="body && isBodyVisible">
-				<Suspense>
-					<Markdown :source="body" class="animate-fade" @mounted="isBodyMounted = true" />
-				</Suspense>
-				<div v-if="!isBodyMounted">
-					{{ body }}
-				</div>
+				<Markdown :source="body" class="animate-fade" />
 			</div>
 		</template>
 
@@ -75,12 +65,7 @@
 					</n-tooltip>
 				</div>
 				<div class="bg-secondary max-w-11/12 [&_*:last-child]:mb-0! rounded-lg px-2 py-1 text-sm">
-					<Suspense>
-						<Markdown :source="body" class="animate-fade" @mounted="isBodyMounted = true" />
-					</Suspense>
-					<div v-if="!isBodyMounted">
-						{{ body }}
-					</div>
+					<Markdown :source="entity.body" class="animate-fade" />
 				</div>
 			</div>
 		</template>

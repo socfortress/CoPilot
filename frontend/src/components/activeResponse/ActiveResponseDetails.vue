@@ -2,9 +2,7 @@
 	<div class="active-response-details">
 		<n-spin :show="loadingActiveResponse" class="min-h-48">
 			<template v-if="activeResponseDetails?.markdown_content">
-				<Suspense>
-					<Markdown :source="activeResponseDetails.markdown_content" />
-				</Suspense>
+				<Markdown :source="activeResponseDetails.markdown_content" />
 			</template>
 			<template v-else>
 				<n-empty v-if="!loadingActiveResponse" description="No description found" class="h-48 justify-center" />

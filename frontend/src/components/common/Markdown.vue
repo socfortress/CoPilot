@@ -1,6 +1,7 @@
 <template>
 	<div>
 		<vue-markdown-it
+			v-if="highlighter"
 			:source
 			:plugins="[
 				[
@@ -14,7 +15,7 @@
 			:class="{ 'code-bg-transparent': codeBgTransparent }"
 			@click="emit('click', $event)"
 		/>
-		<div v-if="!mounted">
+		<div v-else>
 			{{ source }}
 		</div>
 	</div>
@@ -40,12 +41,7 @@ const emit = defineEmits<{
 	(e: "mounted"): void
 }>()
 
-const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
-	string,
-	string
->
-
-const mounted = ref(false)
+const highlighter = ref<HighlighterGeneric<string, string> | null>(null)
 
 function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	const defaultRender =
@@ -79,8 +75,8 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 
 const { source, codeBgTransparent } = toRefs(props)
 
-onMounted(() => {
-	mounted.value = true
+onMounted(async () => {
+	highlighter.value = (await getHighlighter()) as unknown as HighlighterGeneric<string, string>
 	emit("mounted")
 })
 </script>

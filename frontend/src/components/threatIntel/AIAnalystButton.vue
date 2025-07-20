@@ -65,9 +65,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="analysisResponse?.analysis" name="Analysis" tab="Analysis" display-directive="show">
 					<div class="p-7 pt-4">
-						<Suspense>
-							<Markdown :source="analysisResponse.analysis" />
-						</Suspense>
+						<Markdown :source="analysisResponse.analysis" />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -87,9 +85,7 @@
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
-						<Suspense>
-							<Markdown :source="analysisResponse.threat_indicators" />
-						</Suspense>
+						<Markdown :source="analysisResponse.threat_indicators" />
 					</div>
 				</n-tab-pane>
 			</n-tabs>
