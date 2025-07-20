@@ -20,7 +20,7 @@
 				</div>
 			</n-scrollbar>
 		</div>
-		<div class="flex flex-col p-4">
+		<div class="flex flex-col">
 			<ChatQuery :loading @message="sendQuery" @server-loaded="serverLoadedHandler()" @stop="stopQuery()" />
 		</div>
 	</div>

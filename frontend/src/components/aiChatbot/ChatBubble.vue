@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="flex flex-col gap-0.5"
+		class="group flex flex-col gap-0.5"
 		:class="{
 			'items-end text-right': entity.sender === 'user'
 		}"
@@ -24,12 +24,15 @@
 					/>
 				</span>
 
-				<div v-if="isCopySupported" class="flex items-center">
+				<div
+					v-if="isCopySupported"
+					class="pointer-events-none flex items-center opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100"
+				>
 					<n-tooltip>
 						<template #trigger>
 							<n-button size="tiny" text @click="copyLink()">
 								<template #icon>
-									<Icon name="carbon:copy" :size="12" />
+									<Icon name="carbon:copy" :size="13" />
 								</template>
 							</n-button>
 						</template>
@@ -51,22 +54,36 @@
 		</template>
 
 		<template v-if="entity.sender === 'user'">
-			<div class="flex items-end gap-2">
-				<div v-if="isCopySupported" class="mb-1 flex items-center">
-					<n-tooltip>
-						<template #trigger>
-							<n-button size="tiny" text @click="copyLink()">
-								<template #icon>
-									<Icon name="carbon:copy" :size="12" />
-								</template>
-							</n-button>
-						</template>
-						<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
-					</n-tooltip>
-				</div>
+			<div class="flex items-end justify-end gap-3 pl-6">
 				<div
-					class="bg-secondary max-w-11/12 [&_*:last-child]:mb-0! [&_*]:text-white! rounded-lg px-2 py-1 text-sm"
+					class="pointer-events-none mb-1 flex items-center gap-3 opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100"
 				>
+					<div v-if="isCopySupported" class="flex items-center">
+						<n-tooltip>
+							<template #trigger>
+								<n-button size="tiny" text @click="copyLink()">
+									<template #icon>
+										<Icon name="carbon:copy" :size="13" />
+									</template>
+								</n-button>
+							</template>
+							<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
+						</n-tooltip>
+					</div>
+					<div class="flex items-center">
+						<n-tooltip>
+							<template #trigger>
+								<n-button size="tiny" text @click="copyLink()">
+									<template #icon>
+										<Icon name="carbon:edit" :size="13" />
+									</template>
+								</n-button>
+							</template>
+							<div class="text-xs">Edit</div>
+						</n-tooltip>
+					</div>
+				</div>
+				<div class="bg-secondary [&_*:last-child]:mb-0! [&_*]:text-white! rounded-lg px-2 py-1 text-sm">
 					<Markdown :source="entity.body" class="animate-fade" />
 				</div>
 			</div>
@@ -110,9 +127,7 @@ const { copy: copyLink, copied: showCopyTooltip, isSupported: isCopySupported } 
 const isThinking = ref(false)
 const isThoughtCollapsed = ref(false)
 const isThoughtVisible = ref(false)
-const isThoughtMounted = ref(false)
 const isBodyVisible = ref(false)
-const isBodyMounted = ref(false)
 
 const thought = ref("")
 const body = ref("")
@@ -137,7 +152,7 @@ function startTypingEffect(text: string, variable: Ref<string>, duration = 2000)
 	}, delay)
 }
 
-onMounted(() => {
+function setAnimation() {
 	if (entity.new) {
 		if (entity.thought) {
 			isThinking.value = true
@@ -162,5 +177,9 @@ onMounted(() => {
 		isBodyVisible.value = true
 		body.value = entity.body
 	}
+}
+
+onMounted(() => {
+	setAnimation()
 })
 </script>
