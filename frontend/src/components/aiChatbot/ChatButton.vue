@@ -12,7 +12,13 @@
 			</n-tooltip>
 		</div>
 
-		<n-drawer v-model:show="showDrawer" :width="400" class="max-w-[90vw]" :trap-focus="false">
+		<n-drawer
+			v-model:show="showDrawer"
+			:width="400"
+			class="max-w-[90vw]"
+			display-directive="show"
+			:trap-focus="false"
+		>
 			<n-drawer-content title="AI Chatbot" closable body-content-class="p-0! overflow-hidden! flex flex-col">
 				<ChatContainer class="grow" />
 			</n-drawer-content>

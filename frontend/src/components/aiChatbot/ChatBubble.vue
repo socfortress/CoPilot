@@ -64,7 +64,9 @@
 						<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
 					</n-tooltip>
 				</div>
-				<div class="bg-secondary max-w-11/12 [&_*:last-child]:mb-0! rounded-lg px-2 py-1 text-sm">
+				<div
+					class="bg-secondary max-w-11/12 [&_*:last-child]:mb-0! [&_*]:text-white! rounded-lg px-2 py-1 text-sm"
+				>
 					<Markdown :source="entity.body" class="animate-fade" />
 				</div>
 			</div>
