@@ -91,7 +91,7 @@
 			"backgroundSecondary": "rgb(29, 31, 37)",
 			"text": "rgb(255, 255, 255)",
 			"textSecondary": "rgb(172, 181, 190)",
-			"textTertiary": "rgb(172, 181, 190)",
+			"textTertiary": "rgb(116, 126, 136)",
 			"border": "rgb(67, 68, 76)",
 			"hover": "rgba(59, 61, 68, 0.5)",
 			"primary": "rgb(255, 182, 0)",

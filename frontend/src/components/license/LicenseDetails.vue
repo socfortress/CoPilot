@@ -84,9 +84,7 @@
 					</span>
 				</template>
 				<template #value>
-					<Suspense>
-						<Markdown :source="dockerCompose" code-bg-transparent />
-					</Suspense>
+					<Markdown :source="dockerCompose" code-bg-transparent />
 				</template>
 			</CardKV>
 		</div>

@@ -23,8 +23,8 @@ export default {
 			}
 		>(`/copilot_mcp/servers/${server}`)
 	},
-	query(payload: QueryPayload) {
-		return HttpClient.post<FlaskBaseResponse & QueryResult>(`/copilot_mcp/query`, payload)
+	query(payload: QueryPayload, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & QueryResult>(`/copilot_mcp/query`, payload, signal ? { signal } : {})
 	},
 	getExampleQuestions(server: string) {
 		return HttpClient.get<

@@ -17,9 +17,7 @@
 				<CardKV v-if="techniqueDetails.description" class="[&_p]:text-white">
 					<template #key>description</template>
 					<template #value>
-						<Suspense>
-							<Markdown :source="techniqueDetails.description" />
-						</Suspense>
+						<Markdown :source="techniqueDetails.description" />
 					</template>
 				</CardKV>
 				<CardKV>

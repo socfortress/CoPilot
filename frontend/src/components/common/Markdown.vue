@@ -1,6 +1,7 @@
 <template>
-	<Suspense>
+	<div>
 		<vue-markdown-it
+			v-if="highlighter"
 			:source
 			:plugins="[
 				[
@@ -14,7 +15,10 @@
 			:class="{ 'code-bg-transparent': codeBgTransparent }"
 			@click="emit('click', $event)"
 		/>
-	</Suspense>
+		<div v-else>
+			{{ source }}
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -23,7 +27,7 @@ import type Token from "markdown-it/lib/token.mjs"
 import type { HighlighterGeneric } from "shiki/core"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
-import { toRefs } from "vue"
+import { onMounted, ref, toRefs } from "vue"
 import { codeThemes, getHighlighter } from "@/utils/highlighter"
 import "@/assets/scss/overrides/vue-md-it-override.scss"
 
@@ -34,12 +38,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "click", value: PointerEvent): void
+	(e: "mounted"): void
 }>()
 
-const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
-	string,
-	string
->
+const highlighter = ref<HighlighterGeneric<string, string> | null>(null)
 
 function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	const defaultRender =
@@ -72,6 +74,11 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 }
 
 const { source, codeBgTransparent } = toRefs(props)
+
+onMounted(async () => {
+	highlighter.value = (await getHighlighter()) as unknown as HighlighterGeneric<string, string>
+	emit("mounted")
+})
 </script>
 
 <style lang="scss" scoped>
