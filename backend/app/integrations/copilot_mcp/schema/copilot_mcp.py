@@ -14,6 +14,7 @@ class MCPServerType(str, Enum):
     WAZUH_INDEXER = "wazuh-indexer"
     WAZUH_MANAGER = "wazuh-manager"
     COPILOT = "copilot"
+    VELOCIRAPTOR = "velociraptor"
 
 class MCPServerConfig(BaseModel):
     """Configuration for MCP server connection"""

@@ -12,6 +12,7 @@ from app.integrations.copilot_mcp.schema.copilot_mcp import (
     AvailableMCPServersResponse,
 
 )
+from app.integrations.copilot_mcp.services.copilot_mcp import MCPService
 from app.integrations.copilot_mcp.services.example_questions import ExampleQuestionsService
 
 
@@ -217,15 +218,21 @@ async def query_mcp(
 
     # Here you would typically call the MCP agent with the request data
     # For now, we will return a mock response
-    response = MCPQueryResponse(
-        message="MCP query executed successfully",
-        success=True,
-        result="### MCP Agent Response\n\n- **Query Processed**: Successfully\n- **Agent Status**: Active\n- **Response Type**: Mock Response\n- **Processing Time**: < 1ms\n\n### Analysis\nThis is a mock response from the MCP agent. The agent analyzed the incoming query and generated this structured response. In a production environment, this would contain actual analysis results from the MCP agent processing.",
-        structured_result={
-            "response": "### MCP Agent Response\n\n- **Query Processed**: Successfully\n- **Agent Status**: Active\n- **Response Type**: Mock Response\n- **Processing Time**: < 1ms\n\n### Analysis\nThis is a mock response from the MCP agent. The agent analyzed the incoming query and generated this structured response. In a production environment, this would contain actual analysis results from the MCP agent processing.",
-            "thinking_process": "1. Received the MCP query request with the specified parameters.\n2. Analyzed the query structure and determined the appropriate response format.\n3. Generated a mock response that demonstrates the expected output structure for future MCP agent integration."
-        },
-        execution_time=0.001
-    )
+    # ! COMMENTED OUT MOCK RESPONSE FOR TESTING ! #
+    # response = MCPQueryResponse(
+    #     message="MCP query executed successfully",
+    #     success=True,
+    #     result="### MCP Agent Response\n\n- **Query Processed**: Successfully\n- **Agent Status**: Active\n- **Response Type**: Mock Response\n- **Processing Time**: < 1ms\n\n### Analysis\nThis is a mock response from the MCP agent. The agent analyzed the incoming query and generated this structured response. In a production environment, this would contain actual analysis results from the MCP agent processing.",
+    #     structured_result={
+    #         "response": "### MCP Agent Response\n\n- **Query Processed**: Successfully\n- **Agent Status**: Active\n- **Response Type**: Mock Response\n- **Processing Time**: < 1ms\n\n### Analysis\nThis is a mock response from the MCP agent. The agent analyzed the incoming query and generated this structured response. In a production environment, this would contain actual analysis results from the MCP agent processing.",
+    #         "thinking_process": "1. Received the MCP query request with the specified parameters.\n2. Analyzed the query structure and determined the appropriate response format.\n3. Generated a mock response that demonstrates the expected output structure for future MCP agent integration."
+    #     },
+    #     execution_time=0.001
+    # )
 
-    return response
+    # return response
+
+    logger.info(f"Processing MCP query for server: {request.mcp_server.value}")
+
+    # Use the modular service to execute the query
+    return await MCPService.execute_query(request)
