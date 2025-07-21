@@ -10,8 +10,8 @@
 				<span>{{ entity.server }}:</span>
 
 				<span
-					class="text-tertiary inline-flex cursor-pointer items-center gap-1"
 					v-if="thought && isThoughtVisible"
+					class="text-tertiary inline-flex cursor-pointer items-center gap-1"
 					@click="isThoughtCollapsed = !isThoughtCollapsed"
 				>
 					{{ isThinking ? "thinking..." : "thought" }}
@@ -26,7 +26,7 @@
 
 				<div
 					v-if="isCopySupported"
-					class="pointer-events-none flex items-center opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100"
+					class="pointer-events-none ml-1 flex items-center opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100"
 				>
 					<n-tooltip>
 						<template #trigger>
@@ -48,7 +48,7 @@
 					</div>
 				</CollapseKeepAlive>
 			</div>
-			<div class="[&_*:last-child]:mb-0! [&_*]:text-sm" v-if="body && isBodyVisible">
+			<div v-if="body && isBodyVisible" class="[&_*:last-child]:mb-0! [&_*]:text-sm">
 				<Markdown :source="body" class="animate-fade" />
 			</div>
 		</template>
@@ -96,14 +96,15 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate } from "@/utils"
-import { useSettingsStore } from "@/stores/settings"
-import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
-import Markdown from "@/components/common/Markdown.vue"
-import Icon from "@/components/common/Icon.vue"
-import { onMounted, ref, type Ref } from "vue"
-import { NTooltip, NButton } from "naive-ui"
+import type { Ref } from "vue"
 import { useClipboard } from "@vueuse/core"
+import { NButton, NTooltip } from "naive-ui"
+import { onMounted, ref } from "vue"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import Icon from "@/components/common/Icon.vue"
+import Markdown from "@/components/common/Markdown.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 
 export interface ChatBubble {
 	id: string
@@ -115,11 +116,11 @@ export interface ChatBubble {
 	sender: "user" | "server"
 }
 
+const { entity } = defineProps<{ entity: ChatBubble }>()
+
 const emit = defineEmits<{
 	(e: "update"): void
 }>()
-
-const { entity } = defineProps<{ entity: ChatBubble }>()
 
 const dFormats = useSettingsStore().dateFormat
 const { copy: copyLink, copied: showCopyTooltip, isSupported: isCopySupported } = useClipboard({ source: entity.body })

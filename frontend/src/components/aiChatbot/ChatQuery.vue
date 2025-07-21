@@ -1,31 +1,22 @@
 <template>
 	<n-collapse-transition :show="!!servers.length">
 		<div class="flex flex-col gap-0">
-			<n-collapse-transition :show="!!selectedExampleQuestions.length && !input">
+			<n-collapse-transition :show="!!selectedExampleQuestions.length && !input && showQuestions">
 				<n-scrollbar
 					x-scrollable
-					class="-mb-3"
+					class="-mb-3 max-w-full"
 					trigger="none"
 					:theme-overrides="{
 						railInsetHorizontalBottom: `auto 16px 4px 16px`
 					}"
 				>
 					<div class="flex items-end gap-4 p-4">
-						<div
+						<ChatQuestion
 							v-for="item of selectedExampleQuestions"
 							:key="item.question"
-							class="bg-secondary flex w-80 flex-col gap-3 rounded-lg p-2 text-xs"
-						>
-							<div>{{ item.question }}</div>
-							<div>
-								<n-tag
-									size="small"
-									class="[&_.n-tag\_\_content]:leading-0 text-[10px]! [&_.n-tag\_\_content]:p-0!"
-								>
-									{{ item.category }}
-								</n-tag>
-							</div>
-						</div>
+							:entity="item"
+							@click="input = item.question"
+						/>
 					</div>
 				</n-scrollbar>
 			</n-collapse-transition>
@@ -42,7 +33,7 @@
 						}"
 					/>
 					<div class="absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 pr-3">
-						<div class="flex items-center gap-1.5">
+						<div class="flex items-center gap-2">
 							<n-select
 								v-model:value="selectedServer"
 								:options="serverOptions"
@@ -75,10 +66,23 @@
 											</n-tag>
 										</div>
 									</div>
+								</div>
+							</n-popover>
+							<n-popover trigger="hover" class="p-0!">
+								<template #trigger>
+									<Icon name="carbon:settings-adjust" :size="14" />
+								</template>
+								<div class="divide-border divide-y-1 flex flex-col">
 									<div class="px-3 py-2">
 										<div class="flex items-center gap-2 text-sm">
 											<div>verbose response</div>
 											<n-switch v-model:value="verbose" size="small" />
+										</div>
+									</div>
+									<div class="px-3 py-2">
+										<div class="flex items-center gap-2 text-sm">
+											<div>show example questions</div>
+											<n-switch v-model:value="showQuestions" size="small" />
 										</div>
 									</div>
 								</div>
@@ -113,16 +117,17 @@ import {
 	NCollapseTransition,
 	NInput,
 	NPopover,
+	NScrollbar,
 	NSelect,
 	NSwitch,
 	NTag,
 	NTooltip,
-	useMessage,
-	NScrollbar
+	useMessage
 } from "naive-ui"
 import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import ChatQuestion from "./ChatQuestion.vue"
 
 export interface Message {
 	input: string
@@ -141,6 +146,7 @@ const emit = defineEmits<{
 const { loading } = toRefs(props)
 const input = ref<string | null>(null)
 const verbose: RemovableRef<boolean> = useStorage<boolean>("ai-chatbot-option-verbose", false, localStorage)
+const showQuestions: RemovableRef<boolean> = useStorage<boolean>("ai-chatbot-option-questions", true, localStorage)
 const loadingServers = ref(false)
 const loadingExampleQuestions = ref(false)
 const message = useMessage()
