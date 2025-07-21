@@ -109,6 +109,69 @@ class ExampleQuestionsService:
                 category="errors"
             ),
         ],
+
+        MCPServerType.VELOCIRAPTOR: [
+            ExampleQuestion(
+                question="Show me all running processes on endpoint DESKTOP-ABC123",
+                description="List all currently running processes on a specific endpoint",
+                category="processes"
+            ),
+            ExampleQuestion(
+                question="What files were created in the last 24 hours on endpoint DESKTOP-ABC123?",
+                description="Find recently created files on a specific endpoint for forensic analysis",
+                category="filesystem"
+            ),
+            ExampleQuestion(
+                question="List all network connections on endpoint DESKTOP-ABC123",
+                description="Display active and recent network connections from an endpoint",
+                category="network"
+            ),
+            ExampleQuestion(
+                question="What artifacts are available for Windows.System.Users?",
+                description="Show available user account artifacts and information",
+                category="artifacts"
+            ),
+            ExampleQuestion(
+                question="Hunt for suspicious PowerShell executions across all endpoints",
+                description="Search for potentially malicious PowerShell activity across the fleet",
+                category="hunting"
+            ),
+            ExampleQuestion(
+                question="Show me the registry keys modified in the last week on endpoint DESKTOP-ABC123",
+                description="Track registry changes for security investigation",
+                category="registry"
+            ),
+            ExampleQuestion(
+                question="What scheduled tasks exist on endpoint DESKTOP-ABC123?",
+                description="List all scheduled tasks for persistence analysis",
+                category="persistence"
+            ),
+            ExampleQuestion(
+                question="Find all executables in the Downloads folder across all endpoints",
+                description="Hunt for potentially suspicious executable files in user download directories",
+                category="hunting"
+            ),
+            ExampleQuestion(
+                question="Show me the startup programs on endpoint DESKTOP-ABC123",
+                description="List programs that start automatically with the system",
+                category="persistence"
+            ),
+            ExampleQuestion(
+                question="What browser artifacts can I collect from endpoint DESKTOP-ABC123?",
+                description="Gather web browser history, downloads, and other forensic artifacts",
+                category="artifacts"
+            ),
+            ExampleQuestion(
+                question="Hunt for indicators of lateral movement across the network",
+                description="Search for signs of attackers moving between systems",
+                category="hunting"
+            ),
+            ExampleQuestion(
+                question="Show me all USB devices connected to endpoint DESKTOP-ABC123",
+                description="List USB device connection history for investigation",
+                category="hardware"
+            ),
+        ],
     }
 
     # Define server information with descriptions and capabilities
@@ -149,6 +212,23 @@ class ExampleQuestionsService:
                 "Document count and storage metrics",
                 "Search performance analysis",
                 "Data source analytics"
+            ]
+        ),
+        MCPServerType.VELOCIRAPTOR: MCPServerInfo(
+            name="Velociraptor",
+            value=MCPServerType.VELOCIRAPTOR.value,
+            description="Digital forensics and incident response platform for endpoint monitoring and threat hunting",
+            capabilities=[
+                "Live endpoint forensics",
+                "Artifact collection and analysis",
+                "Threat hunting across endpoints",
+                "Process and network monitoring",
+                "File system analysis",
+                "Registry investigation",
+                "Persistence mechanism detection",
+                "Lateral movement hunting",
+                "Browser artifact collection",
+                "Hardware device tracking"
             ]
         )
     }
