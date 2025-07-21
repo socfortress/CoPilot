@@ -20,7 +20,7 @@ class MCPService:
     }
 
     # Base URL for the copilot-mcp service
-    _BASE_URL = "http://copilot-mcp/mcp"
+    _BASE_URL = "http://10.255.255.5/mcp"
 
     @classmethod
     def get_endpoint_for_server(cls, mcp_server: MCPServerType) -> str:
