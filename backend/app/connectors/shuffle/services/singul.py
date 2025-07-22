@@ -27,7 +27,7 @@ async def execute_singul(
             app=request.app,
             action="send_message",
             org_id=await get_shuffle_org_id(),
-            environment="THREATINTEL",
+            environment="REPLACE_ME",
             fields=[
                 {"key": "to", "value": "walton.taylor23@gmail.com"},
                 {"key": "subject", "value": "Test Email from Singul"},
