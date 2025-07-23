@@ -2,16 +2,16 @@
 	<div class="flex flex-col overflow-hidden">
 		<div class="grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
-				<div class="flex flex-col gap-6 p-4 pb-20" v-if="list.length">
+				<div v-if="list.length" class="flex flex-col gap-6 p-4 pb-20">
 					<ChatBubbleBlock
-						class="animate-fade"
 						v-for="item of list"
 						:key="item.id"
+						class="animate-fade"
 						:entity="item"
 						@update="scrollChat()"
 					/>
 				</div>
-				<div class="text-secondary flex flex-col items-center justify-center py-12 text-center" v-else>
+				<div v-else class="text-secondary flex flex-col items-center justify-center py-12 text-center">
 					<p class="text-lg">
 						Your chat is empty.
 						<br />
@@ -29,16 +29,17 @@
 <script setup lang="ts">
 import type { RemovableRef } from "@vueuse/core"
 import type { ScrollbarInst } from "naive-ui"
+import type { ChatBubble } from "./ChatBubble.vue"
 import type { Message } from "./ChatQuery.vue"
 import { useStorage } from "@vueuse/core"
 import axios from "axios"
 import { NScrollbar, useMessage } from "naive-ui"
+import { nanoid } from "nanoid"
 import { nextTick, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
-import ChatQuery from "./ChatQuery.vue"
-import ChatBubbleBlock, { type ChatBubble } from "./ChatBubble.vue"
 import { secureLocalStorage } from "@/utils/secure-storage"
-import { nanoid } from "nanoid"
+import ChatBubbleBlock from "./ChatBubble.vue"
+import ChatQuery from "./ChatQuery.vue"
 
 const message = useMessage()
 

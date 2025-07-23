@@ -14,7 +14,6 @@ export function persistentKey(options?: { session?: boolean }) {
 }
 
 export function removePersistentSessionKey() {
-	console.log(secureLS.getAllKeys())
 	for (const key of secureLS.getAllKeys()) {
 		if (key.includes(PREFIX_SESSION)) {
 			secureLS.remove(key)

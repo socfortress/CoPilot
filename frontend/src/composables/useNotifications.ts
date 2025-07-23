@@ -5,8 +5,8 @@ import { NButton } from "naive-ui"
 import { computed, h } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import { useGlobalActions } from "./useGlobalActions"
 import { secureLocalStorage } from "@/utils/secure-storage"
+import { useGlobalActions } from "./useGlobalActions"
 
 export type NotificationCategory = "alert"
 export type NotificationType = "success" | "info" | "warning" | "error" | "default" | undefined
