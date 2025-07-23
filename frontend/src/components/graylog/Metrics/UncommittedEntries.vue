@@ -29,7 +29,7 @@ import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
-import { usHealthcheckStore } from "@/stores/healthcheck"
+import { useHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
 import "@/assets/scss/overrides/apexchart-override.scss"
@@ -38,7 +38,7 @@ const props = defineProps<{
 	value: number
 }>()
 
-const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
+const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = useHealthcheckStore().uncommittedJournalEntriesThreshold
 
 const { value } = toRefs(props)
 

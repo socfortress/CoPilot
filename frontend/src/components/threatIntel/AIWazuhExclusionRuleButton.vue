@@ -49,9 +49,7 @@
 					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
 				</div>
 				<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
-					<Suspense>
-						<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />
-					</Suspense>
+					<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />
 				</div>
 			</div>
 			<n-empty v-else description="No rules found" class="h-48 justify-center" />

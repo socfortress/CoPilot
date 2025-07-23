@@ -13,9 +13,7 @@
 				</div>
 			</div>
 			<div v-if="mode === 'view'" class="comment-message">
-				<Suspense>
-					<Markdown :source="comment.comment" />
-				</Suspense>
+				<Markdown :source="comment.comment" />
 			</div>
 
 			<n-input

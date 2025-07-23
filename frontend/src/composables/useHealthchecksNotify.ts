@@ -1,7 +1,7 @@
 import type { Notification } from "./useNotifications"
 import _capitalize from "lodash/capitalize"
 import { computed, watch } from "vue"
-import { usHealthcheckStore } from "@/stores/healthcheck"
+import { useHealthcheckStore } from "@/stores/healthcheck"
 import { IndexHealth } from "@/types/indices.d"
 import { useGoto } from "./useGoto"
 import { useNotifications } from "./useNotifications"
@@ -11,13 +11,13 @@ export function useHealthchecksNotify() {
 		init: () => {
 			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useGoto()
 
-			const uncommittedJournalEntriesThreshold = usHealthcheckStore().uncommittedJournalEntriesThreshold
-			const uncommittedJournalEntries = computed(() => usHealthcheckStore().uncommittedJournalEntries)
-			const clusterName = computed(() => usHealthcheckStore().clusterName)
-			const clusterStatus = computed(() => usHealthcheckStore().clusterStatus)
-			const alerts = computed(() => usHealthcheckStore().alerts)
+			const uncommittedJournalEntriesThreshold = useHealthcheckStore().uncommittedJournalEntriesThreshold
+			const uncommittedJournalEntries = computed(() => useHealthcheckStore().uncommittedJournalEntries)
+			const clusterName = computed(() => useHealthcheckStore().clusterName)
+			const clusterStatus = computed(() => useHealthcheckStore().clusterStatus)
+			const alerts = computed(() => useHealthcheckStore().alerts)
 
-			usHealthcheckStore().start()
+			useHealthcheckStore().start()
 
 			watch(uncommittedJournalEntries, (val, old) => {
 				if (val !== old) {

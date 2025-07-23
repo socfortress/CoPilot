@@ -13,6 +13,7 @@ services:
         env_file: .env
         depends_on:
             - copilot-mysql
+            - copilot-mcp
         restart: always
 
     copilot-frontend:
@@ -51,6 +52,82 @@ services:
 
     copilot-nuclei-module:
         image: ghcr.io/socfortress/copilot-nuclei-module:latest
+        restart: always
+
+    copilot-mcp:
+        image: ghcr.io/socfortress/copilot-mcp:latest
+        volumes:
+            # Mount the Velociraptor config file from host into container
+            - ./data/copilot-mcp/api.config.yaml:/app/velociraptor-config.yaml:ro
+        environment:
+            # Core OpenAI Configuration
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+
+            # Application Configuration
+            - APP_HOST=0.0.0.0
+            - APP_PORT=80
+            - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+            # MCP Server Process Management
+            - MCP_SERVER_ENABLED=${MCP_SERVER_ENABLED:-true}
+            - MCP_SERVER_HOST=0.0.0.0
+            - MCP_SERVER_PORT=9900
+
+            # External OpenSearch Configuration
+            - OPENSEARCH_URL=${OPENSEARCH_URL:-${WAZUH_INDEXER_URL}}
+            - OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME:-${WAZUH_INDEXER_USERNAME}}
+            - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD:-${WAZUH_INDEXER_PASSWORD}}
+            - OPENSEARCH_SSL_VERIFY=${OPENSEARCH_SSL_VERIFY:-false}
+            - OPENSEARCH_SSL_SHOW_WARN=${OPENSEARCH_SSL_SHOW_WARN:-false}
+
+            # OpenSearch MCP Server Configuration
+            - MCP_OPENSEARCH_URL=http://copilot-mcp:9900/sse
+            - MCP_OPENSEARCH_AUTH_TOKEN=${MCP_OPENSEARCH_AUTH_TOKEN:-secret-token}
+
+            # External MySQL Configuration
+            - MYSQL_ENABLED=${MYSQL_ENABLED:-true}
+            - MYSQL_HOST=${MYSQL_HOST:-copilot-mysql}
+            - MYSQL_PORT=${MYSQL_PORT:-3306}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE:-copilot}
+
+            # MySQL MCP Server Configuration
+            - MCP_MYSQL_URL=http://copilot-mcp:9901/sse
+            - MCP_MYSQL_AUTH_TOKEN=${MCP_MYSQL_AUTH_TOKEN:-mysql-token}
+            - MCP_MYSQL_SERVER_ENABLED=${MCP_MYSQL_SERVER_ENABLED:-true}
+            - MCP_MYSQL_SERVER_HOST=0.0.0.0
+            - MCP_MYSQL_SERVER_PORT=9901
+
+            # External Wazuh Configuration
+            - WAZUH_PROD_URL=${WAZUH_PROD_URL:-${WAZUH_MANAGER_URL}}
+            - WAZUH_PROD_USERNAME=${WAZUH_PROD_USERNAME:-${WAZUH_MANAGER_USERNAME}}
+            - WAZUH_PROD_PASSWORD=${WAZUH_PROD_PASSWORD:-${WAZUH_MANAGER_PASSWORD}}
+            - WAZUH_PROD_SSL_VERIFY=${WAZUH_PROD_SSL_VERIFY:-false}
+            - WAZUH_PROD_TIMEOUT=${WAZUH_PROD_TIMEOUT:-30}
+
+            # Wazuh MCP Server Configuration
+            - MCP_WAZUH_URL=http://copilot-mcp:8000/sse
+            - MCP_WAZUH_AUTH_TOKEN=${MCP_WAZUH_AUTH_TOKEN:-wazuh-token}
+            - MCP_WAZUH_SERVER_ENABLED=${MCP_WAZUH_SERVER_ENABLED:-true}
+            - MCP_WAZUH_HOST=0.0.0.0
+            - MCP_WAZUH_PORT=8000
+
+            # External Velociraptor Configuration
+            - VELOCIRAPTOR_API_KEY=/app/velociraptor-config.yaml
+            - VELOCIRAPTOR_SSL_VERIFY=${VELOCIRAPTOR_SSL_VERIFY:-false}
+            - VELOCIRAPTOR_TIMEOUT=${VELOCIRAPTOR_TIMEOUT:-30}
+
+            # Velociraptor MCP Server Configuration
+            - MCP_VELOCIRAPTOR_URL=http://copilot-mcp:8001/sse
+            - MCP_VELOCIRAPTOR_AUTH_TOKEN=${MCP_VELOCIRAPTOR_AUTH_TOKEN:-velociraptor-token}
+            - MCP_VELOCIRAPTOR_SERVER_ENABLED=${MCP_VELOCIRAPTOR_SERVER_ENABLED:-true}
+            - MCP_VELOCIRAPTOR_HOST=0.0.0.0
+            - MCP_VELOCIRAPTOR_PORT=8001
+
+        depends_on:
+            - copilot-mysql
         restart: always
 
 volumes:

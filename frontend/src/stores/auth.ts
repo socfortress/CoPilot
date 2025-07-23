@@ -5,13 +5,11 @@ import _castArray from "lodash/castArray"
 import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
-import SecureLS from "secure-ls"
 import Api from "@/api"
 import { AuthUserRole, RouteRole } from "@/types/auth.d"
 import { getAvatar, getNameInitials } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
-
-const ls = new SecureLS({ encodingType: "aes", isCompression: false })
+import { piniaStorage, removePersistentSessionKey } from "@/utils/secure-storage"
 
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
@@ -45,6 +43,8 @@ export const useAuthStore = defineStore("auth", {
 				email: "",
 				role: AuthUserRole.Unknown
 			}
+
+			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {
 			try {
@@ -134,10 +134,7 @@ export const useAuthStore = defineStore("auth", {
 		}
 	},
 	persist: {
-		storage: {
-			getItem: key => ls.get(key),
-			setItem: (key, value) => ls.set(key, value)
-		},
+		storage: piniaStorage({ session: true }),
 		pick: ["user"]
 	}
 })

@@ -24,12 +24,12 @@
 </template>
 
 <script lang="ts" setup>
+import BlurEffect from "@/components/common/BlurEffect.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useLoadingBarSetup } from "@/composables/useLoadingBarSetup"
 import { useThemeStore } from "@/stores/theme"
 import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
-import BlurEffect from "./BlurEffect.vue"
 import Breadcrumb from "./Breadcrumb.vue"
 import FullscreenSwitch from "./FullscreenSwitch.vue"
 import Notifications from "./Notifications.vue"

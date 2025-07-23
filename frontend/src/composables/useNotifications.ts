@@ -5,6 +5,7 @@ import { NButton } from "naive-ui"
 import { computed, h } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import { secureLocalStorage } from "@/utils/secure-storage"
 import { useGlobalActions } from "./useGlobalActions"
 
 export type NotificationCategory = "alert"
@@ -28,7 +29,7 @@ export interface PrependOptions {
 	autoNotify?: boolean
 }
 
-const list = useStorage<Notification[]>("notifications-list", [], localStorage)
+const list = useStorage<Notification[]>("notifications-list", [], secureLocalStorage({ session: true }))
 
 export function useNotifications() {
 	const hasUnread = computed(() => list.value.filter(o => !o.read).length !== 0)
