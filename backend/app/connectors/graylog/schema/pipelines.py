@@ -19,7 +19,7 @@ class Pipeline(BaseModel):
     description: Optional[str] = None  # Make description optional
     errors: Optional[None]
     id: str
-    modified_at: str
+    modified_at: Optional[str] = None  # Make modified_at optional
     source: str
     stages: List[Stage]
     title: str
@@ -36,7 +36,7 @@ class PipelineRule(BaseModel):
     description: Optional[str] = None  # Make description optional
     errors: Optional[None]
     id: str
-    modified_at: str
+    modified_at: Optional[str] = None # Make modified_at optional
     source: str
     title: str
 
