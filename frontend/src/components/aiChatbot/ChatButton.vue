@@ -14,10 +14,11 @@
 
 		<n-drawer
 			v-model:show="showDrawer"
-			:width="400"
-			class="max-w-[90vw]"
+			:default-width="400"
+			class="min-w-85 max-w-[90vw]"
 			display-directive="show"
 			:trap-focus="false"
+			resizable
 		>
 			<n-drawer-content title="AI Chatbot" closable body-content-class="p-0! overflow-hidden! flex flex-col">
 				<ChatContainer class="grow" />

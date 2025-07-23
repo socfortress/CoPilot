@@ -20,6 +20,35 @@
 	}
 }
 
+.n-drawer__resize-trigger {
+	&::before {
+		content: "::";
+		background-color: var(--bg-default-color);
+		width: 16px;
+		height: 26px;
+		display: flex;
+		position: absolute;
+		top: 50%;
+		right: 0px;
+		text-align: center;
+		justify-content: center;
+		align-items: center;
+		border-radius: 12px 0 0 12px;
+		letter-spacing: 1px;
+		padding-bottom: 2px;
+		padding-left: 4px;
+		line-height: 0;
+		transition: background-color 0.3s var(--n-bezier);
+	}
+
+	&.n-drawer__resize-trigger--hover {
+		&::before {
+			background-color: var(--primary-color);
+			color: var(--fg-tertiary-color);
+		}
+	}
+}
+
 .n-image-preview-container {
 	.n-image-preview-overlay {
 		backdrop-filter: blur(3px);
