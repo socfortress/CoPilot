@@ -6,8 +6,8 @@ export interface MCPServer {
 }
 
 export interface QueryResult {
-	result: string
-	structured_result: QueryStructuredResult
+	result: string | QueryStructuredResult
+	structured_result: QueryStructuredResult | null
 	execution_time: number
 }
 

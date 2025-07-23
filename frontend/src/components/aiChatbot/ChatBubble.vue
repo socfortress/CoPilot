@@ -43,12 +43,12 @@
 
 			<div v-if="thought && isThoughtVisible">
 				<CollapseKeepAlive :show="!isThoughtCollapsed">
-					<div class="text-secondary bg-secondary mb-2 rounded-md px-1 py-2 [&_*]:text-[10px]">
+					<div class="text-secondary bg-secondary mb-2 rounded-md p-2 [&_*]:text-[10px]">
 						<Markdown :source="thought" class="animate-fade" />
 					</div>
 				</CollapseKeepAlive>
 			</div>
-			<div v-if="body && isBodyVisible" class="[&_*:last-child]:mb-0! [&_*]:text-sm">
+			<div v-if="body && isBodyVisible" class="[&_*:last-child]:mb-0! [&_*]:text-sm [&_*]:text-white">
 				<Markdown :source="body" class="animate-fade" />
 			</div>
 		</template>
@@ -73,7 +73,7 @@
 					<div class="flex items-center">
 						<n-tooltip>
 							<template #trigger>
-								<n-button size="tiny" text @click="copyLink()">
+								<n-button size="tiny" text @click="handleEdit()">
 									<template #icon>
 										<Icon name="carbon:edit" :size="13" />
 									</template>
@@ -83,7 +83,7 @@
 						</n-tooltip>
 					</div>
 				</div>
-				<div class="bg-secondary [&_*:last-child]:mb-0! [&_*]:text-white! rounded-lg px-2 py-1 text-sm">
+				<div class="bg-secondary [&_*:last-child]:mb-0! rounded-lg px-2 py-1 text-sm [&_*]:text-white">
 					<Markdown :source="entity.body" class="animate-fade" />
 				</div>
 			</div>
@@ -120,6 +120,7 @@ const { entity } = defineProps<{ entity: ChatBubble }>()
 
 const emit = defineEmits<{
 	(e: "update"): void
+	(e: "edit"): void
 }>()
 
 const dFormats = useSettingsStore().dateFormat
@@ -178,6 +179,10 @@ function setAnimation() {
 		isBodyVisible.value = true
 		body.value = entity.body
 	}
+}
+
+function handleEdit() {
+	emit("edit")
 }
 
 onMounted(() => {

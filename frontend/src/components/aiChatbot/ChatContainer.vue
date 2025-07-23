@@ -9,6 +9,7 @@
 						class="animate-fade"
 						:entity="item"
 						@update="scrollChat()"
+						@edit="editMessage(item)"
 					/>
 					<div v-if="loading" class="animate-fade">
 						<Icon name="svg-spinners:pulse-rings-3" :size="20" />
@@ -29,7 +30,9 @@
 		<div class="flex flex-col">
 			<ChatQuery
 				v-model:input="input"
+				:edit-message-body="editMessageContext?.body || null"
 				:loading
+				@cancel-edit="handleCancelEdit()"
 				@update-options="options = $event"
 				@message="sendQuery"
 				@select-server="server = $event"
@@ -70,6 +73,7 @@ const server = ref<string | null>(null)
 const input = ref<string | null>(null)
 const options = ref<{ verbose: boolean; showQuestions: boolean }>({ verbose: false, showQuestions: false })
 const scrollbar = ref<ScrollbarInst | null>(null)
+const editMessageContext = ref<ChatBubble | null>(null)
 
 let abortController: AbortController | null = null
 
@@ -95,11 +99,32 @@ function addBubble(payload: Omit<ChatBubble, "datetime" | "id">) {
 	scrollChat()
 }
 
+function editMessage(item: ChatBubble) {
+	editMessageContext.value = item
+	input.value = item.body
+}
+
+function handleCancelEdit() {
+	editMessageContext.value = null
+}
+
 function stopQuery() {
 	abortController?.abort()
 }
 
+function updateChatFromEdit(id: string) {
+	const index = list.value.findIndex(item => item.id === id)
+	if (index !== -1) {
+		list.value.splice(index)
+	}
+}
+
 function sendQuery(payload: Message) {
+	if (editMessageContext.value) {
+		updateChatFromEdit(editMessageContext.value.id)
+		editMessageContext.value = null
+	}
+
 	addBubble({
 		body: payload.input,
 		server: payload.server,
@@ -121,9 +146,27 @@ function sendQuery(payload: Message) {
 		)
 		.then(res => {
 			if (res.data.success) {
+				let body = `${res.data.result}`
+
+				if (typeof res.data.result !== "string" && "response" in res.data.result) {
+					body = res.data.result.response
+				}
+				if (res.data.structured_result.response) {
+					body = res.data.structured_result.response
+				}
+
+				let thought
+
+				if (typeof res.data.result !== "string" && "thinking_process" in res.data.result) {
+					thought = res.data.result.thinking_process
+				}
+				if (res.data.structured_result.thinking_process) {
+					thought = res.data.structured_result.thinking_process
+				}
+
 				addBubble({
-					body: res.data.structured_result.response,
-					thought: res.data.structured_result.thinking_process,
+					body,
+					thought,
 					server: payload.server,
 					sender: "server"
 				})

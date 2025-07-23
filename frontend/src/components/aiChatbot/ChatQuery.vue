@@ -2,6 +2,14 @@
 	<n-collapse-transition :show="!!servers.length">
 		<div class="p-4">
 			<div class="relative flex flex-col overflow-hidden">
+				<div
+					v-if="!!editMessageBody"
+					class="bg-secondary hover:text-primary mb-2 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors duration-200"
+					@click="handleCancelEdit()"
+				>
+					<Icon name="carbon:close" :size="20" />
+					<div>Edit message</div>
+				</div>
 				<n-input
 					v-model:value.trim="input"
 					class="max-h-full min-h-20 pb-9"
@@ -102,7 +110,7 @@ export interface Message {
 	server: string
 }
 
-const props = defineProps<{ loading?: boolean }>()
+const props = defineProps<{ loading?: boolean; editMessageBody?: string | null }>()
 
 const emit = defineEmits<{
 	(e: "message", value: Message): void
@@ -110,9 +118,10 @@ const emit = defineEmits<{
 	(e: "update-options", value: { verbose: boolean; showQuestions: boolean }): void
 	(e: "stop"): void
 	(e: "server-loaded"): void
+	(e: "cancel-edit"): void
 }>()
 
-const { loading } = toRefs(props)
+const { loading, editMessageBody } = toRefs(props)
 const input = defineModel<string | null>("input", { default: null })
 const verbose: RemovableRef<boolean> = useStorage<boolean>("ai-chatbot-option-verbose", false, localStorage)
 const showQuestions: RemovableRef<boolean> = useStorage<boolean>("ai-chatbot-option-questions", true, localStorage)
@@ -181,6 +190,11 @@ function send() {
 
 function stop() {
 	emit("stop")
+}
+
+function handleCancelEdit() {
+	emit("cancel-edit")
+	reset()
 }
 
 watch(
