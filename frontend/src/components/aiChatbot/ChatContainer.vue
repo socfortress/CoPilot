@@ -151,7 +151,7 @@ function sendQuery(payload: Message) {
 				if (typeof res.data.result !== "string" && "response" in res.data.result) {
 					body = res.data.result.response
 				}
-				if (res.data.structured_result.response) {
+				if (res.data.structured_result?.response) {
 					body = res.data.structured_result.response
 				}
 
@@ -160,7 +160,7 @@ function sendQuery(payload: Message) {
 				if (typeof res.data.result !== "string" && "thinking_process" in res.data.result) {
 					thought = res.data.result.thinking_process
 				}
-				if (res.data.structured_result.thinking_process) {
+				if (res.data.structured_result?.thinking_process) {
 					thought = res.data.structured_result.thinking_process
 				}
 
