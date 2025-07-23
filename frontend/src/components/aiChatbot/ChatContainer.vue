@@ -1,8 +1,8 @@
 <template>
 	<div class="flex flex-col overflow-hidden">
-		<div class="grow overflow-hidden">
+		<div class="relative grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
-				<div v-if="list.length" class="flex flex-col gap-6 p-4 pb-20">
+				<div v-if="list.length" class="pb-50 flex flex-col gap-6 p-4">
 					<ChatBubbleBlock
 						v-for="item of list"
 						:key="item.id"
@@ -10,6 +10,9 @@
 						:entity="item"
 						@update="scrollChat()"
 					/>
+					<div v-if="loading" class="animate-fade">
+						<Icon name="svg-spinners:pulse-rings-3" :size="20" />
+					</div>
 				</div>
 				<div v-else class="text-secondary flex flex-col items-center justify-center py-12 text-center">
 					<p class="text-lg">
@@ -19,9 +22,20 @@
 					</p>
 				</div>
 			</n-scrollbar>
+			<CollapseKeepAlive :show="!input && options.showQuestions && !!server" class="absolute! bottom-0">
+				<ChatQuestions v-if="server" :server @select="input = $event" />
+			</CollapseKeepAlive>
 		</div>
 		<div class="flex flex-col">
-			<ChatQuery :loading @message="sendQuery" @server-loaded="serverLoadedHandler()" @stop="stopQuery()" />
+			<ChatQuery
+				v-model:input="input"
+				:loading
+				@update-options="options = $event"
+				@message="sendQuery"
+				@select-server="server = $event"
+				@server-loaded="serverLoadedHandler()"
+				@stop="stopQuery()"
+			/>
 		</div>
 	</div>
 </template>
@@ -37,9 +51,12 @@ import { NScrollbar, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { nextTick, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import Icon from "@/components/common/Icon.vue"
 import { secureLocalStorage } from "@/utils/secure-storage"
 import ChatBubbleBlock from "./ChatBubble.vue"
 import ChatQuery from "./ChatQuery.vue"
+import ChatQuestions from "./ChatQuestions.vue"
 
 const message = useMessage()
 
@@ -49,6 +66,9 @@ const list: RemovableRef<ChatBubble[]> = useStorage<ChatBubble[]>(
 	secureLocalStorage({ session: true })
 )
 const loading = ref(false)
+const server = ref<string | null>(null)
+const input = ref<string | null>(null)
+const options = ref<{ verbose: boolean; showQuestions: boolean }>({ verbose: false, showQuestions: false })
 const scrollbar = ref<ScrollbarInst | null>(null)
 
 let abortController: AbortController | null = null
