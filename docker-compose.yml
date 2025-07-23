@@ -13,7 +13,6 @@ services:
         env_file: .env
         depends_on:
             - copilot-mysql
-            - copilot-mcp
         restart: always
 
     copilot-frontend:
