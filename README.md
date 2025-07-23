@@ -92,6 +92,9 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.2/docker-compose
 # Create the path for storing your data
 mkdir data
 
+# Create the path for copilot-mcp configuration
+mkdir -p data/copilot-mcp
+
 # Create the .env file based on the .env.example
 nano .env
 

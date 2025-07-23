@@ -145,8 +145,9 @@ rich==13.6.0
 rsa==4.9
 ScoutSuite==5.14.0
 setuptools==65.5.0
-shufflepy==0.1.6
+shufflepy==0.1.8
 simplejson==3.19.1
+singul==0.1.8
 six==1.16.0
 sniffio==1.3.0
 SQLAlchemy==1.4.41
