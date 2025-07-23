@@ -1,12 +1,12 @@
-import httpx
 from typing import Dict
+
+import httpx
 from loguru import logger
 
-from app.integrations.copilot_mcp.schema.copilot_mcp import (
-    MCPQueryRequest,
-    MCPQueryResponse,
-    MCPServerType,
-)
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryRequest
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryResponse
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType
+
 
 class MCPService:
     """Service for handling MCP queries with modular server routing"""
@@ -20,7 +20,7 @@ class MCPService:
     }
 
     # Base URL for the copilot-mcp service
-    _BASE_URL = "http://10.255.255.5/mcp"
+    _BASE_URL = "http://copilot-mcp/mcp"
 
     @classmethod
     def get_endpoint_for_server(cls, mcp_server: MCPServerType) -> str:
@@ -92,13 +92,7 @@ class MCPService:
 
         except ValueError as e:
             logger.error(f"Invalid server type: {str(e)}")
-            return MCPQueryResponse(
-                message=f"Error: {str(e)}",
-                success=False,
-                result=None,
-                structured_result=None,
-                execution_time=0.0
-            )
+            return MCPQueryResponse(message=f"Error: {str(e)}", success=False, result=None, structured_result=None, execution_time=0.0)
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error when querying {data.mcp_server.value}: {str(e)}")
@@ -107,7 +101,7 @@ class MCPService:
                 success=False,
                 result=None,
                 structured_result=None,
-                execution_time=0.0
+                execution_time=0.0,
             )
 
         except Exception as e:
@@ -117,8 +111,9 @@ class MCPService:
                 success=False,
                 result=None,
                 structured_result=None,
-                execution_time=0.0
+                execution_time=0.0,
             )
+
 
 # Convenience function to maintain backward compatibility
 async def post_to_copilot_mcp(data: MCPQueryRequest) -> MCPQueryResponse:

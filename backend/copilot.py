@@ -38,6 +38,7 @@ from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import cato
 from app.routers import connectors
+from app.routers import copilot_mcp
 from app.routers import cortex
 from app.routers import crowdstrike
 from app.routers import customer_provisioning
@@ -50,7 +51,6 @@ from app.routers import duo
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
-from app.routers import copilot_mcp
 from app.routers import huntress
 from app.routers import incidents
 from app.routers import influxdb
