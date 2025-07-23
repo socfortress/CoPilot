@@ -10,13 +10,16 @@
 		--cell-padding: 8px 12px;
 
 		width: 100%;
+		max-width: 100%;
 		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius);
 		text-align: left;
 		font-variant-numeric: tabular-nums;
 		border-collapse: separate;
 		border-spacing: 0;
-		overflow: hidden;
+		overflow-x: scroll;
+		display: block;
+		white-space: nowrap;
 
 		thead {
 			tr {
