@@ -23,12 +23,12 @@ class ExampleQuestionsService:
                 category="alerts",
             ),
             ExampleQuestion(
-                question="Show me the latest critical alerts from the past 24 hours",
+                question="Show me spotted iocs for customerA",
                 description="Retrieve recent high-priority security alerts",
                 category="alerts",
             ),
             ExampleQuestion(
-                question="What are the top 5 most common alert types?",
+                question="What are the top 5 most common alert sources?",
                 description="Analyze alert patterns to identify frequent security events",
                 category="analytics",
             ),
@@ -38,15 +38,20 @@ class ExampleQuestionsService:
                 category="customers",
             ),
             ExampleQuestion(
-                question="Show me incident trends for the past week",
-                description="Display incident statistics and trends over time",
-                category="incidents",
+                question="Show me endpoint status for customerA",
+                description="Display endpoint status.",
+                category="endpoints",
             ),
         ],
         MCPServerType.WAZUH_MANAGER: [
             ExampleQuestion(
                 question="What is the status of agent endpoint123?",
                 description="Check the current operational status of a specific Wazuh agent",
+                category="agents",
+            ),
+            ExampleQuestion(
+                question="What are the SCA findings for endpoint123?",
+                description="Retrieve the Software Composition Analysis (SCA) findings for a specific endpoint",
                 category="agents",
             ),
             ExampleQuestion(
@@ -65,19 +70,9 @@ class ExampleQuestionsService:
                 category="agents",
             ),
             ExampleQuestion(
-                question="What are the latest security events from agent endpoint123?",
-                description="Retrieve recent security events and alerts from a specific agent",
-                category="security",
-            ),
-            ExampleQuestion(
-                question="How many agents are currently online?",
-                description="Get the count of active and connected Wazuh agents",
-                category="agents",
-            ),
-            ExampleQuestion(
-                question="What vulnerabilities were detected on endpoint123?",
-                description="List security vulnerabilities found during scans",
-                category="vulnerabilities",
+                question="Do I have any sysmon event 1 detection rules?",
+                description="Check for specific security rules related to Sysmon event 1",
+                category="rules",
             ),
         ],
         MCPServerType.WAZUH_INDEXER: [
@@ -87,64 +82,29 @@ class ExampleQuestionsService:
                 category="health",
             ),
             ExampleQuestion(
-                question="How many documents are indexed today?",
+                question="What are the most critical vulnerabilities for `agent_name`: endpoint123?",
                 description="Get the count of new documents added to the index",
                 category="indexing",
-            ),
-            ExampleQuestion(
-                question="What are the most frequent log sources?",
-                description="Analyze which systems are generating the most log data",
-                category="analytics",
-            ),
-            ExampleQuestion(
-                question="Show me index storage usage statistics",
-                description="Display disk usage and storage metrics for indices",
-                category="storage",
-            ),
-            ExampleQuestion(
-                question="What indices have the highest document count?",
-                description="List indices sorted by number of documents",
-                category="indexing",
-            ),
-            ExampleQuestion(
-                question="Are there any failed index operations?",
-                description="Check for indexing errors or failed operations",
-                category="errors",
             ),
         ],
         MCPServerType.VELOCIRAPTOR: [
             ExampleQuestion(
-                question="Show me all running processes on endpoint DESKTOP-ABC123",
-                description="List all currently running processes on a specific endpoint",
-                category="processes",
+                question="What users have logged onto endpoint123 in the last 30 days?",
+                description="List all users who have logged onto a specific endpoint within the last 30 days",
+                category="users",
             ),
             ExampleQuestion(
-                question="What files were created in the last 24 hours on endpoint DESKTOP-ABC123?",
-                description="Find recently created files on a specific endpoint for forensic analysis",
-                category="filesystem",
-            ),
-            ExampleQuestion(
-                question="List all network connections on endpoint DESKTOP-ABC123",
+                question="List all network connections on endpoint123",
                 description="Display active and recent network connections from an endpoint",
                 category="network",
             ),
             ExampleQuestion(
-                question="What artifacts are available for Windows.System.Users?",
-                description="Show available user account artifacts and information",
+                question="What artifacts are available for checking browser activity?",
+                description="Show available artifacts for browser activity analysis",
                 category="artifacts",
             ),
             ExampleQuestion(
-                question="Hunt for suspicious PowerShell executions across all endpoints",
-                description="Search for potentially malicious PowerShell activity across the fleet",
-                category="hunting",
-            ),
-            ExampleQuestion(
-                question="Show me the registry keys modified in the last week on endpoint DESKTOP-ABC123",
-                description="Track registry changes for security investigation",
-                category="registry",
-            ),
-            ExampleQuestion(
-                question="What scheduled tasks exist on endpoint DESKTOP-ABC123?",
+                question="What scheduled tasks exist on endpoint123?",
                 description="List all scheduled tasks for persistence analysis",
                 category="persistence",
             ),
@@ -199,8 +159,6 @@ class ExampleQuestionsService:
                 "Endpoint security scanning",
                 "Software inventory management",
                 "Network port analysis",
-                "Vulnerability assessment",
-                "Security event investigation",
             ],
         ),
         MCPServerType.WAZUH_INDEXER: MCPServerInfo(
@@ -211,9 +169,7 @@ class ExampleQuestionsService:
                 "Log data search and analysis",
                 "Index management and statistics",
                 "Cluster health monitoring",
-                "Document count and storage metrics",
-                "Search performance analysis",
-                "Data source analytics",
+                "Vulnerability assessment",
             ],
         ),
         MCPServerType.VELOCIRAPTOR: MCPServerInfo(
@@ -223,10 +179,7 @@ class ExampleQuestionsService:
             capabilities=[
                 "Live endpoint forensics",
                 "Artifact collection and analysis",
-                "Threat hunting across endpoints",
                 "Process and network monitoring",
-                "File system analysis",
-                "Registry investigation",
                 "Persistence mechanism detection",
                 "Lateral movement hunting",
                 "Browser artifact collection",
