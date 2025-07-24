@@ -82,9 +82,9 @@ class ExampleQuestionsService:
                 category="health",
             ),
             ExampleQuestion(
-                question="What are the most critical vulnerabilities for `agent_name`: endpoint123?",
-                description="Get the count of new documents added to the index",
-                category="indexing",
+                question="What are the most critical vulnerabilities for `agent_name`: endpoint123 from the index pattern `wazuh-states-vulnerabilities-*`??",
+                description="Get critical vulnerabilities for a specific agent from the Wazuh index",
+                category="vulnerabilities",
             ),
             ExampleQuestion(
                 question="Has the agent named `agent_name` made any dns requests to `evil.com` within the index pattern `wazuh-customerA*`?",
