@@ -86,6 +86,11 @@ class ExampleQuestionsService:
                 description="Get the count of new documents added to the index",
                 category="indexing",
             ),
+            ExampleQuestion(
+                question="How much diskspace is the `wazuh-customerA*` indices consuming?",
+                description="Get the disk space usage for all indices related to customerA",
+                category="indexing",
+            ),
         ],
         MCPServerType.VELOCIRAPTOR: [
             ExampleQuestion(
