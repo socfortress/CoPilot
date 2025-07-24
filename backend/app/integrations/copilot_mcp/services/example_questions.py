@@ -87,6 +87,11 @@ class ExampleQuestionsService:
                 category="indexing",
             ),
             ExampleQuestion(
+                question="Has the agent named `agent_name` made any dns requests to `evil.com` within the index pattern `wazuh-customerA*`?",
+                description="Search for DNS requests made by a specific agent to a known malicious domain",
+                category="search",
+            ),
+            ExampleQuestion(
                 question="How much diskspace is the `wazuh-customerA*` indices consuming?",
                 description="Get the disk space usage for all indices related to customerA",
                 category="indexing",
