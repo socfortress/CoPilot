@@ -38,9 +38,9 @@ class ExampleQuestionsService:
                 category="customers",
             ),
             ExampleQuestion(
-                question="Show me endpoint status for customerA",
-                description="Display endpoint status.",
-                category="endpoints",
+                question="Show me agents status for customerA",
+                description="Display agents status.",
+                category="agents",
             ),
         ],
         MCPServerType.WAZUH_MANAGER: [
