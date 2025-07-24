@@ -92,6 +92,11 @@ class ExampleQuestionsService:
                 category="search",
             ),
             ExampleQuestion(
+                question="Has the agent named `agent_name` had any rule_group3 `authentication_failed` within the index name: `wazuh-customerA*`?",
+                description="Check for authentication failures in a specific index for a given agent",
+                category="search",
+            ),
+            ExampleQuestion(
                 question="How much diskspace is the `wazuh-customerA*` indices consuming?",
                 description="Get the disk space usage for all indices related to customerA",
                 category="indexing",
