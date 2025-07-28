@@ -138,16 +138,6 @@ class ExampleQuestionsService:
                 description="Gather web browser history, downloads, and other forensic artifacts",
                 category="artifacts",
             ),
-            ExampleQuestion(
-                question="Hunt for indicators of lateral movement across the network",
-                description="Search for signs of attackers moving between systems",
-                category="hunting",
-            ),
-            ExampleQuestion(
-                question="Show me all USB devices connected to endpoint DESKTOP-ABC123",
-                description="List USB device connection history for investigation",
-                category="hardware",
-            ),
         ],
     }
 
