@@ -271,14 +271,13 @@ async def provision_custom_monitoring_alert_route(
     # Look up the provision function based on request.alert_name
     provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
 
+    logger.info(f"Provisioning custom alert {request}")
+
     if provision_function is None:
         raise HTTPException(
             status_code=400,
             detail=f"No provision function found for alert name {request.alert_name}",
         )
-
-    stream_ids = await return_stream_ids(request.streams)
-    request.streams = stream_ids
 
     # Invoke the provision function
     await provision_function(request)
