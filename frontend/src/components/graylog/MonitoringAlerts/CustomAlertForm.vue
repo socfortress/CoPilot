@@ -32,6 +32,18 @@
 							}"
 						/>
 					</n-form-item>
+					<n-form-item label="Streams" path="streams">
+						<n-select
+							v-model:value="form.streams"
+							:options="availableStreamsOptions"
+							:loading="loadingStreams"
+							:placeholder="loadingStreams ? 'Loading Streams...' : 'Select Streams'"
+							multiple
+							clearable
+							to="body"
+							class="grow"
+						/>
+					</n-form-item>
 					<n-form-item label="Search Query" path="search_query">
 						<n-input
 							v-model:value.trim="form.search_query"
@@ -145,11 +157,12 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
+import type { Stream } from "@/types/graylog/stream.d"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
@@ -166,6 +179,7 @@ interface CustomProvisionForm {
 	}[]
 	search_within_seconds: number
 	execute_every_seconds: number
+	streams: string[]
 }
 
 const emit = defineEmits<{
@@ -182,9 +196,13 @@ const RemoveIcon = "ph:trash"
 const AddIcon = "carbon:add-alt"
 const submittingCustomAlert = ref(false)
 const loading = computed(() => submittingCustomAlert.value)
+const loadingStreams = ref(false)
 const message = useMessage()
+const availableStreams = ref<Stream[]>([])
 const form = ref<CustomProvisionForm>(getClearForm())
 const formRef = ref<FormInst | null>(null)
+
+const availableStreamsOptions = computed(() => availableStreams.value.map(o => ({ label: o.title, value: o.id })))
 
 const areAllCustomerFieldsFilled = computed(() => {
 	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name && !!o.value)
@@ -355,7 +373,8 @@ function getClearForm(): CustomProvisionForm {
 		search_query: "",
 		custom_fields: [],
 		search_within_seconds: 1,
-		execute_every_seconds: 1
+		execute_every_seconds: 1,
+		streams: []
 	}
 }
 
@@ -381,7 +400,7 @@ function submit() {
 		custom_fields: form.value.custom_fields,
 		search_within_ms: _toSafeInteger(form.value.search_within_seconds) * 1000,
 		execute_every_ms: _toSafeInteger(form.value.execute_every_seconds) * 1000,
-		streams: []
+		streams: form.value.streams || []
 	}
 
 	Api.monitoringAlerts
@@ -404,8 +423,36 @@ function submit() {
 		})
 }
 
+function getStreams() {
+	if (availableStreams.value.length) {
+		return
+	}
+
+	loadingStreams.value = true
+
+	Api.graylog
+		.getStreams()
+		.then(res => {
+			if (res.data.success) {
+				availableStreams.value = res.data.streams || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingStreams.value = false
+		})
+}
+
 watch(loading, val => {
 	emit("update:loading", val)
+})
+
+onBeforeMount(() => {
+	getStreams()
 })
 
 onMounted(() => {
