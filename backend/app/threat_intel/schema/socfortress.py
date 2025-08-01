@@ -43,7 +43,7 @@ class IoCMapping(BaseModel):
         description="URL to the VirusTotal report",
     )
 
-    @validator('score', pre=True)
+    @validator("score", pre=True)
     def convert_score_to_int(cls, v):
         """Convert score from string to integer"""
         if v is None:
