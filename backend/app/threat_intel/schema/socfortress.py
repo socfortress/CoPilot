@@ -43,6 +43,22 @@ class IoCMapping(BaseModel):
         description="URL to the VirusTotal report",
     )
 
+    @validator('score', pre=True)
+    def convert_score_to_int(cls, v):
+        """Convert score from string to integer"""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Convert string to float first, then to int to handle "100.0" format
+                return int(float(v))
+            except (ValueError, TypeError):
+                # If conversion fails, return None or raise an error
+                return None
+        elif isinstance(v, (int, float)):
+            return int(v)
+        return v
+
     def to_dict(self):
         return self.dict()
 
