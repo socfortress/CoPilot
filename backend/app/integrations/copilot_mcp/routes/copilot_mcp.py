@@ -1,11 +1,15 @@
 from typing import Optional
 
 from fastapi import APIRouter
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routes.auth import AuthHandler
+from app.middleware.license import is_feature_enabled
+from app.middleware.license import get_license
+from app.db.db_session import get_db
 from app.integrations.copilot_mcp.schema.copilot_mcp import AvailableMCPServersResponse
 from app.integrations.copilot_mcp.schema.copilot_mcp import ExampleQuestionsResponse
 from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryRequest
@@ -192,16 +196,34 @@ async def get_question_categories(mcp_server: MCPServerType = Query(..., descrip
 
 @copilot_mcp_router.post(
     "/query",
-    description="Get all disabled rules",
+    description="Process a query to the appropriate MCP server",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def query_mcp(request: MCPQueryRequest) -> MCPQueryResponse:
+async def query_mcp(request: MCPQueryRequest, session: AsyncSession = Depends(get_db)) -> MCPQueryResponse:
     """
     Process a query to the MCP agent and return structured response.
+    Routes the query to the appropriate MCP server based on the selected server type.
     """
-    logger.info("Processing MCP query.")
-
     logger.info(f"Processing MCP query for server: {request.mcp_server.value}")
 
+    license_key = None
+
+    # Check if it's a cloud service and get license key if needed
+    if MCPService.is_cloud_service(request.mcp_server):
+        try:
+            await is_feature_enabled("SOCFORTRESS AI", session=session)
+            license_info = await get_license(session)
+            license_key = license_info.license_key
+            logger.info(f"Retrieved license key for cloud service {request.mcp_server.value}")
+        except Exception as e:
+            logger.error(f"Failed to get license key for cloud service: {str(e)}")
+            return MCPQueryResponse(
+                message=f"License validation failed: {str(e)}",
+                success=False,
+                result=None,
+                structured_result=None,
+                execution_time=0.0,
+            )
+
     # Use the modular service to execute the query
-    return await MCPService.execute_query(request)
+    return await MCPService.execute_query(request, license_key=license_key)

@@ -139,6 +139,23 @@ class ExampleQuestionsService:
                 category="artifacts",
             ),
         ],
+        MCPServerType.THREAT_INTEL: [
+            ExampleQuestion(
+                question="What is the IP reputation for 8.8.8.8?",
+                description="Retrieve the IP reputation for a specific IP address",
+                category="threat_intel",
+            ),
+            ExampleQuestion(
+                question="What is the domain analysis for example.com?",
+                description="Get threat intelligence data for a specific domain",
+                category="threat_intel",
+            ),
+            ExampleQuestion(
+                question="What is the file hash analysis for 1234567890abcdef1234567890abcdef?",
+                description="Analyze a file hash for malware or other threats",
+                category="threat_intel",
+            ),
+        ],
     }
 
     # Define server information with descriptions and capabilities
@@ -189,6 +206,16 @@ class ExampleQuestionsService:
                 "Lateral movement hunting",
                 "Browser artifact collection",
                 "Hardware device tracking",
+            ],
+        ),
+        MCPServerType.THREAT_INTEL: MCPServerInfo(
+            name="Threat Intel",
+            value=MCPServerType.THREAT_INTEL.value,
+            description="Access threat intelligence data, such as IP reputation scores and malware indicators",
+            capabilities=[
+                "Threat intelligence lookups",
+                "IP and domain reputation scoring",
+                "File hash and URL analysis",
             ],
         ),
     }

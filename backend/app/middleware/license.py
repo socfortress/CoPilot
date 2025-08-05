@@ -413,7 +413,7 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession, message: 
     if message:
         raise HTTPException(status_code=400, detail=message)
 
-    raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
+    raise HTTPException(status_code=400, detail=f"Feature is not enabled. You must purchase the {feature_name} license to use this feature.")
 
 
 async def send_get_request(endpoint: str) -> Dict[str, Any]:
