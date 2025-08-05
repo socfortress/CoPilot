@@ -1,14 +1,13 @@
 from typing import Optional
 
 from fastapi import APIRouter
-from fastapi import Query, Depends
+from fastapi import Depends
+from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routes.auth import AuthHandler
-from app.middleware.license import is_feature_enabled
-from app.middleware.license import get_license
 from app.db.db_session import get_db
 from app.integrations.copilot_mcp.schema.copilot_mcp import AvailableMCPServersResponse
 from app.integrations.copilot_mcp.schema.copilot_mcp import ExampleQuestionsResponse
@@ -19,6 +18,8 @@ from app.integrations.copilot_mcp.services.copilot_mcp import MCPService
 from app.integrations.copilot_mcp.services.example_questions import (
     ExampleQuestionsService,
 )
+from app.middleware.license import get_license
+from app.middleware.license import is_feature_enabled
 
 copilot_mcp_router = APIRouter()
 auth_handler = AuthHandler()

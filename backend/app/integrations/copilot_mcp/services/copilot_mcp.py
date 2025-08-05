@@ -1,5 +1,6 @@
-from typing import Dict, Optional
 from enum import Enum
+from typing import Dict
+from typing import Optional
 
 import httpx
 from loguru import logger
@@ -11,6 +12,7 @@ from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType
 
 class MCPServiceType(str, Enum):
     """Enumeration of MCP service deployment types"""
+
     LOCAL = "local"
     CLOUD = "cloud"
 
@@ -39,7 +41,6 @@ class MCPService:
         MCPServerType.WAZUH_MANAGER: MCPServerConfig(MCPServiceType.LOCAL, "wazuh-query"),
         MCPServerType.COPILOT: MCPServerConfig(MCPServiceType.LOCAL, "mysql-query"),
         MCPServerType.VELOCIRAPTOR: MCPServerConfig(MCPServiceType.LOCAL, "velociraptor-query"),
-
         # Cloud services
         MCPServerType.THREAT_INTEL: MCPServerConfig(MCPServiceType.CLOUD, "threat_intel"),
     }
@@ -145,13 +146,7 @@ class MCPService:
 
         except ValueError as e:
             logger.error(f"Invalid server type: {str(e)}")
-            return MCPQueryResponse(
-                message=f"Error: {str(e)}",
-                success=False,
-                result=None,
-                structured_result=None,
-                execution_time=0.0
-            )
+            return MCPQueryResponse(message=f"Error: {str(e)}", success=False, result=None, structured_result=None, execution_time=0.0)
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error when querying {data.mcp_server.value}: {str(e)}")
@@ -172,7 +167,6 @@ class MCPService:
                 structured_result=None,
                 execution_time=0.0,
             )
-
 
     @classmethod
     def add_local_service(cls, server_type: MCPServerType, endpoint: str) -> None:
@@ -208,20 +202,14 @@ class MCPService:
         cloud_services = {}
 
         for server_type, config in cls._SERVER_CONFIGS.items():
-            service_info = {
-                "endpoint": config.endpoint,
-                "full_url": cls.build_full_url(server_type)
-            }
+            service_info = {"endpoint": config.endpoint, "full_url": cls.build_full_url(server_type)}
 
             if config.service_type == MCPServiceType.LOCAL:
                 local_services[server_type.value] = service_info
             else:
                 cloud_services[server_type.value] = service_info
 
-        return {
-            "local": local_services,
-            "cloud": cloud_services
-        }
+        return {"local": local_services, "cloud": cloud_services}
 
 
 # Convenience function to maintain backward compatibility
