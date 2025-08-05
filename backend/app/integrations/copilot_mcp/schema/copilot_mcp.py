@@ -17,6 +17,7 @@ class MCPServerType(str, Enum):
     WAZUH_MANAGER = "wazuh-manager"
     COPILOT = "copilot"
     VELOCIRAPTOR = "velociraptor"
+    THREAT_INTEL = "threat-intel"
 
 
 class MCPServerConfig(BaseModel):
