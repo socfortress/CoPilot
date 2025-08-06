@@ -97,9 +97,10 @@ async def _prepare_template_variables(request: ProvisionNewCustomer, node_count:
     """
     formatted_customer_name = request.customer_name.replace(" ", "_")
     wazuh_manager_version = await get_wazuh_manager_version()
+    formatted_customer_code = request.customer_code.replace(" ", "_")
 
     return {
-        "{{ wazuh_worker_customer_code }}": formatted_customer_name,
+        "{{ wazuh_worker_customer_code }}": formatted_customer_code,
         "{{ wazuh_manager_version }}": wazuh_manager_version,
         "REPLACE_LOG": request.wazuh_logs_port,
         "REPLACE_REGISTRATION": request.wazuh_registration_port,
