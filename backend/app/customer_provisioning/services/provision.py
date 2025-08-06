@@ -148,6 +148,7 @@ async def provision_wazuh_customer(
         provision_worker = await provision_wazuh_worker(
             ProvisionWorkerRequest(
                 customer_name=request.customer_name,
+                customer_code=request.customer_code,
                 wazuh_auth_password=request.wazuh_auth_password,
                 wazuh_registration_port=request.wazuh_registration_port,
                 wazuh_logs_port=request.wazuh_logs_port,

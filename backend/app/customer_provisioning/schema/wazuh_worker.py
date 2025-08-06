@@ -11,6 +11,11 @@ class ProvisionWorkerRequest(BaseModel):
         example="SOCFortress",
         description="The name of the customer",
     )
+    customer_code: str = Field(
+        ...,
+        example="socfortress",
+        description="The code of the customer",
+    )
     wazuh_auth_password: str = Field(
         ...,
         example="password",
