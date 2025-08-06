@@ -146,7 +146,10 @@ async def decomission_wazuh_customer(
 
     # Decommission HAProxy
     await decommission_haproxy(
-        request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name),
+        request=DecommissionWorkerRequest(
+            customer_name=customer_meta.customer_name,
+            customer_code=customer_meta.customer_code,
+        ),
         session=session,
     )
 
