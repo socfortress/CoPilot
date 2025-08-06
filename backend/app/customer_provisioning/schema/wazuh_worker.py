@@ -97,6 +97,11 @@ class DecommissionWorkerRequest(BaseModel):
         example="SOCFortress",
         description="The name of the customer",
     )
+    customer_code: str = Field(
+        ...,
+        example="socfortress",
+        description="The code of the customer",
+    )
     portainer_deployment: Optional[bool] = Field(
         None,
         example=True,

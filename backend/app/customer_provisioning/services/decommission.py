@@ -137,7 +137,10 @@ async def decomission_wazuh_customer(
 
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(
-        request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name),
+        request=DecommissionWorkerRequest(
+            customer_name=customer_meta.customer_name,
+            customer_code=customer_meta.customer_code,
+        ),
         session=session,
     )
 
