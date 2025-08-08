@@ -24,9 +24,9 @@
 				<template #header>
 					<div class="mr-4 flex items-center justify-between gap-4">
 						<span>AI Chatbot</span>
-						<n-tooltip>
+						<n-tooltip v-if="chatContainerCTX">
 							<template #trigger>
-								<n-button v-if="chatContainerCTX" text @click="chatContainerCTX.clearHistory()">
+								<n-button text @click="chatContainerCTX.clearHistory()">
 									<Icon name="mdi:broom" :size="18" />
 								</n-button>
 							</template>
