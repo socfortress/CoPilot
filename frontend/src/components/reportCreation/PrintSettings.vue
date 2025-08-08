@@ -19,19 +19,21 @@
 			</div>
 		</div>
 
-		<div class="theme">
-			<n-form-item label="Theme" feedback="⊙ choose panels palette">
+		<div class="flex flex-col gap-2">
+			<n-form-item label="Theme" :show-feedback="false">
 				<n-radio-group v-model:value="theme">
 					<n-radio-button value="light">Light</n-radio-button>
 					<n-radio-button value="dark">Dark</n-radio-button>
 				</n-radio-group>
 			</n-form-item>
+			<div class="text-secondary text-sm">⊙ choose panels palette</div>
 		</div>
 
-		<div class="retina">
-			<n-form-item label="Retina" feedback="⊙ improve panels resolution; it will increase the report size">
+		<div class="flex flex-col gap-2">
+			<n-form-item label="Retina" :show-feedback="false">
 				<n-switch v-model:value="retina" />
 			</n-form-item>
+			<div class="text-secondary text-sm">⊙ improve panels resolution; it will increase the report size</div>
 		</div>
 	</div>
 </template>
