@@ -61,6 +61,10 @@ import ChatBubbleBlock from "./ChatBubble.vue"
 import ChatQuery from "./ChatQuery.vue"
 import ChatQuestions from "./ChatQuestions.vue"
 
+const emit = defineEmits<{
+	(e: "mounted", value: { clearHistory: () => void }): void
+}>()
+
 const message = useMessage()
 
 const list: RemovableRef<ChatBubble[]> = useStorage<ChatBubble[]>(
@@ -184,11 +188,17 @@ function sendQuery(payload: Message) {
 		})
 }
 
+function clearHistory() {
+	list.value = []
+}
+
 onBeforeMount(() => {
 	setAllOld()
 })
 
 onMounted(() => {
 	scrollChat()
+
+	emit("mounted", { clearHistory })
 })
 </script>

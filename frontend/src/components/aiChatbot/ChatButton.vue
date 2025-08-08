@@ -20,20 +20,34 @@
 			:trap-focus="false"
 			resizable
 		>
-			<n-drawer-content title="AI Chatbot" closable body-content-class="p-0! overflow-hidden! flex flex-col">
-				<ChatContainer class="grow" />
+			<n-drawer-content closable body-content-class="p-0! overflow-hidden! flex flex-col">
+				<template #header>
+					<div class="mr-4 flex items-center justify-between gap-4">
+						<span>AI Chatbot</span>
+						<n-tooltip>
+							<template #trigger>
+								<n-button v-if="chatContainerCTX" text @click="chatContainerCTX.clearHistory()">
+									<Icon name="mdi:broom" :size="18" />
+								</n-button>
+							</template>
+							Clear chat history
+						</n-tooltip>
+					</div>
+				</template>
+				<ChatContainer class="grow" @mounted="chatContainerCTX = $event" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NDrawer, NDrawerContent, NFloatButton, NTooltip } from "naive-ui"
+import { NButton, NDrawer, NDrawerContent, NFloatButton, NTooltip } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ChatContainer from "./ChatContainer.vue"
 
 const showDrawer = ref(false)
+const chatContainerCTX = ref<{ clearHistory: () => void } | null>(null)
 </script>
 
 <style lang="scss" scoped>
