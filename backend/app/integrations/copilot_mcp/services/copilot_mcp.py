@@ -43,6 +43,7 @@ class MCPService:
         MCPServerType.VELOCIRAPTOR: MCPServerConfig(MCPServiceType.LOCAL, "velociraptor-query"),
         # Cloud services
         MCPServerType.THREAT_INTEL: MCPServerConfig(MCPServiceType.CLOUD, "threat_intel"),
+        MCPServerType.CYBER_NEWS: MCPServerConfig(MCPServiceType.CLOUD, "cyber_news"),
     }
 
     @classmethod
@@ -118,7 +119,7 @@ class MCPService:
             logger.debug(f"Query data: {data.dict()}")
 
             # Set different timeout for cloud vs local services
-            timeout = 180 if is_cloud else 120
+            timeout = 300 if is_cloud else 300
 
             # Prepare headers
             headers = {"Content-Type": "application/json"}
