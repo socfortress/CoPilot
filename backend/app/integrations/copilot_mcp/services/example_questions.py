@@ -156,6 +156,23 @@ class ExampleQuestionsService:
                 category="threat_intel",
             ),
         ],
+        MCPServerType.CYBER_NEWS: [
+            ExampleQuestion(
+                question="What are the latest cyber threat headlines?",
+                description="Retrieve the most recent headlines related to cyber threats",
+                category="cyber_news",
+            ),
+            ExampleQuestion(
+                question="What vulnerabilities were disclosed this week?",
+                description="Get a list of vulnerabilities that were made public in the last week",
+                category="cyber_news",
+            ),
+            ExampleQuestion(
+                question="Who are the top threat actors currently?",
+                description="Identify the most active threat actors based on recent intelligence",
+                category="cyber_news",
+            ),
+        ],
     }
 
     # Define server information with descriptions and capabilities
@@ -216,6 +233,14 @@ class ExampleQuestionsService:
                 "Threat intelligence lookups",
                 "IP and domain reputation scoring",
                 "File hash and URL analysis",
+            ],
+        ),
+        MCPServerType.CYBER_NEWS: MCPServerInfo(
+            name="Cyber News",
+            value=MCPServerType.CYBER_NEWS.value,
+            description="Access the latest news and updates related to cyber threats and vulnerabilities",
+            capabilities=[
+                "Vulnerability disclosure tracking",
             ],
         ),
     }

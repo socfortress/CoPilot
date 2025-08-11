@@ -43,6 +43,7 @@ class MCPService:
         MCPServerType.VELOCIRAPTOR: MCPServerConfig(MCPServiceType.LOCAL, "velociraptor-query"),
         # Cloud services
         MCPServerType.THREAT_INTEL: MCPServerConfig(MCPServiceType.CLOUD, "threat_intel"),
+        MCPServerType.CYBER_NEWS: MCPServerConfig(MCPServiceType.CLOUD, "cyber_news"),
     }
 
     @classmethod

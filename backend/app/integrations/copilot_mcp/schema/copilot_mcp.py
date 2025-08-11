@@ -18,6 +18,7 @@ class MCPServerType(str, Enum):
     COPILOT = "copilot"
     VELOCIRAPTOR = "velociraptor"
     THREAT_INTEL = "threat-intel"
+    CYBER_NEWS = "cyber-news"
 
 
 class MCPServerConfig(BaseModel):
