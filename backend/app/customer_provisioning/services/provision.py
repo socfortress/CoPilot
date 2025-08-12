@@ -108,13 +108,14 @@ async def provision_wazuh_customer(
         )
     ).datasource.uid
     # ! CREATE THE VULNERABILITY DATASOURCE IF WAZUH VERSION 4.8.0 OR HIGHER ! #
-    if await check_wazuh_manager_version() is True:
-        logger.info("Creating vulnerability datasource since Wazuh version is 4.8.0 or higher")
-        await create_vulnerability_datasource(
-            request=request,
-            organization_id=provision_meta_data["grafana_organization_id"],
-            session=session,
-        )
+    # ! Commenting out because we use CoPilot dashboard for Vulns Now ! #
+    # if await check_wazuh_manager_version() is True:
+    #     logger.info("Creating vulnerability datasource since Wazuh version is 4.8.0 or higher")
+    #     await create_vulnerability_datasource(
+    #         request=request,
+    #         organization_id=provision_meta_data["grafana_organization_id"],
+    #         session=session,
+    #     )
     logger.info("Creating EDR folder and dashboards")
     provision_meta_data["grafana_edr_folder_id"] = (
         await create_grafana_folder(

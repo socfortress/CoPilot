@@ -27,7 +27,7 @@ class WazuhDashboard(Enum):
     EDR_WINDOWS_EVENT_LOGS = ("Wazuh", "edr_windows_event_logs.json")
     # EDR_WAZUH_INVENOTRY = ("Wazuh", "edr_wazuh_inventory.json")
     EDR_USERS_AND_GROUPS = ("Wazuh", "edr_users_and_groups.json")
-    EDR_SYSTEM_VULNERABILITIES = ("Wazuh", "edr_system_vulnerabilities.json")
+    # EDR_SYSTEM_VULNERABILITIES = ("Wazuh", "edr_system_vulnerabilities.json")
     EDR_SYSTEM_SECURITY_AUDIT = ("Wazuh", "edr_system_security_audit.json")
     EDR_SYSTEM_PROCESSES = ("Wazuh", "edr_system_processes.json")
     EDR_PROCESS_INJECTION = ("Wazuh", "edr_process_injection.json")
@@ -43,7 +43,7 @@ class WazuhDashboard(Enum):
     EDR_AV_MALWARE_IOC = ("Wazuh", "edr_av_malware_ioc.json")
     EDR_AGENT_INVENTORY = ("Wazuh", "edr_agent_inventory.json")
     EDR_AD_INVENTORY = ("Wazuh", "edr_ad_inventory.json")
-    EDR_SYSTEM_VULNERABILITIES_NEW = ("Wazuh", "edr_system_vulnerabilities_new.json")
+    # EDR_SYSTEM_VULNERABILITIES_NEW = ("Wazuh", "edr_system_vulnerabilities_new.json")
 
 
 class Office365Dashboard(Enum):
