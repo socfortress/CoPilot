@@ -7,7 +7,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.agents.routes.agents import check_wazuh_manager_version
+# from app.agents.routes.agents import check_wazuh_manager_version
 from app.agents.routes.agents import get_wazuh_manager_version
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
@@ -27,7 +27,8 @@ from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRespons
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
-from app.customer_provisioning.services.grafana import create_vulnerability_datasource
+
+# from app.customer_provisioning.services.grafana import create_vulnerability_datasource
 from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
 from app.customer_provisioning.services.graylog import create_event_stream
 from app.customer_provisioning.services.graylog import create_index_set
