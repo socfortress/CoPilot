@@ -761,6 +761,7 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
         'rule "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"\n'
         'rule "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING"\n'
         'rule "Office365 Timestamp - UTC"\n'
+        'rule "SYSLOG TYPE OFFICE365"\n'
         "end"
     )
     await create_pipeline_graylog(
