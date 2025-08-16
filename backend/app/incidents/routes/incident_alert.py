@@ -223,9 +223,12 @@ async def invoke_alert_threshold_graylog_route(
     1. CUSTOMER_CODE: str - the customer code
     2. SOURCE: str - the source of the alert
     3. ALERT_DESCRIPTION: str - the description of the alert
+    4. ASSET_NAME: str - the name of the asset
 
     # ! IMPORTANT: DO NOT ADD THE "COPILOT_ALERT_ID": "NONE" AS A CUSTOM FIELD WHEN CREATING THE ALERT IN GRAYLOG # !
         # ! THIS WILL BREAK THE AUTO-ALERT CREATION FUNCTIONALITY # !
+
+    # ! Make sure the Graylog Notification is just the standard HTTP Notification Type and not the Custom HTTP Notification Type !
 
     Args:
         request (InvokeActiveResponseRequest): The request object containing the command, custom, arguments, and alert.
@@ -238,7 +241,7 @@ async def invoke_alert_threshold_graylog_route(
     alert_id = await create_alert_full(
         alert_payload=CreatedAlertPayload(
             alert_context_payload=request.event.fields.dict(),
-            asset_payload=request.event.source,
+            asset_payload=request.event.fields.ASSET_NAME,
             timefield_payload=str(request.event.timestamp),
             alert_title_payload=request.event.message,
             source=request.event.fields.SOURCE,

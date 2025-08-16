@@ -33,6 +33,7 @@ class GraylogThresholdEventFields(BaseModel):
     CUSTOMER_CODE: str
     SOURCE: str
     ALERT_DESCRIPTION: str
+    ASSET_NAME: str
     # Allow additional fields
     additional_fields: Dict[str, Any] = Field(default_factory=dict, alias="__extra__")
 
