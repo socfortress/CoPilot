@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 from fastapi import Security
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -213,18 +214,24 @@ async def query_mcp(request: MCPQueryRequest, session: AsyncSession = Depends(ge
     if MCPService.is_cloud_service(request.mcp_server):
         try:
             await is_feature_enabled("SOCFORTRESS AI", session=session)
+
+            # Will raise HTTPException(404) if no license record exists
             license_info = await get_license(session)
             license_key = license_info.license_key
+
+            # If a license record exists but the key is missing, mirror get_license behavior
+            if not license_key:
+                raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
+
             logger.info(f"Retrieved license key for cloud service {request.mcp_server.value}")
+
+        except HTTPException as http_exc:
+            # Surface the HTTPException unchanged
+            raise http_exc
         except Exception as e:
+            # Unexpected errors -> 500
             logger.error(f"Failed to get license key for cloud service: {str(e)}")
-            return MCPQueryResponse(
-                message=f"License validation failed: {str(e)}",
-                success=False,
-                result=None,
-                structured_result=None,
-                execution_time=0.0,
-            )
+            raise HTTPException(status_code=500, detail=f"License validation failed: {str(e)}")
 
     # Use the modular service to execute the query
     return await MCPService.execute_query(request, license_key=license_key)
