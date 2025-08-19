@@ -173,6 +173,40 @@ class ExampleQuestionsService:
                 category="cyber_news",
             ),
         ],
+        MCPServerType.KNOWLEDGEBASE: [
+            ExampleQuestion(
+                question="How would I configure the Office365 API Integration?",
+                description="Configure the Office365 API Integration for optimal performance",
+                category="knowledgebase",
+            ),
+            ExampleQuestion(
+                question="How can I create a new index set in Graylog?",
+                description="Get best practices for creating index sets in Graylog",
+                category="knowledgebase",
+            ),
+            ExampleQuestion(
+                question="How do I upgrade CoPilot?",
+                description="Follow these steps to upgrade your CoPilot installation",
+                category="knowledgebase",
+            ),
+        ],
+        MCPServerType.ATTACK_SURFACE: [
+            ExampleQuestion(
+                question="Search for breaches related to email example@company.com",
+                description="Explore data breaches involving the specified email address",
+                category="attack_surface",
+            ),
+            ExampleQuestion(
+                question="Search for exposures regarding service.example.com",
+                description="Explore data exposures involving the specified service",
+                category="attack_surface",
+            ),
+            ExampleQuestion(
+                question="Has the password `password123` been exposed?",
+                description="Check if a specific password has been involved in any data breaches",
+                category="attack_surface",
+            ),
+        ],
     }
 
     # Define server information with descriptions and capabilities
@@ -241,6 +275,26 @@ class ExampleQuestionsService:
             description="Access the latest news and updates related to cyber threats and vulnerabilities",
             capabilities=[
                 "Vulnerability disclosure tracking",
+            ],
+        ),
+        MCPServerType.KNOWLEDGEBASE: MCPServerInfo(
+            name="Knowledgebase",
+            value=MCPServerType.KNOWLEDGEBASE.value,
+            description="Access documentation and guides for using CoPilot and its integrations",
+            capabilities=[
+                "Configuration guides",
+                "Best practices",
+                "Troubleshooting tips",
+            ],
+        ),
+        MCPServerType.ATTACK_SURFACE: MCPServerInfo(
+            name="Attack Surface",
+            value=MCPServerType.ATTACK_SURFACE.value,
+            description="Analyze and manage the attack surface of your organization",
+            capabilities=[
+                "Attack surface mapping",
+                "Exposure management",
+                "Risk assessment",
             ],
         ),
     }

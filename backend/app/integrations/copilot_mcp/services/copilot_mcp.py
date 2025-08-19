@@ -44,6 +44,8 @@ class MCPService:
         # Cloud services
         MCPServerType.THREAT_INTEL: MCPServerConfig(MCPServiceType.CLOUD, "threat_intel"),
         MCPServerType.CYBER_NEWS: MCPServerConfig(MCPServiceType.CLOUD, "cyber_news"),
+        MCPServerType.KNOWLEDGEBASE: MCPServerConfig(MCPServiceType.CLOUD, "knowledgebase"),
+        MCPServerType.ATTACK_SURFACE: MCPServerConfig(MCPServiceType.CLOUD, "attack_surface"),
     }
 
     @classmethod
