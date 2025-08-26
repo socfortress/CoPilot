@@ -151,7 +151,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -339,7 +339,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -527,7 +527,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -715,7 +715,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -903,7 +903,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -1091,7 +1091,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -1279,7 +1279,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -1467,7 +1467,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -1655,7 +1655,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -1843,7 +1843,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2031,7 +2031,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2219,7 +2219,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2407,7 +2407,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2595,7 +2595,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2783,7 +2783,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -2971,7 +2971,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -3159,7 +3159,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -3347,7 +3347,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -3535,7 +3535,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -3723,7 +3723,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -3911,7 +3911,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -4099,7 +4099,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -4287,7 +4287,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -4475,7 +4475,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -4663,7 +4663,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -4851,7 +4851,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5039,7 +5039,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5227,7 +5227,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5415,7 +5415,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5603,7 +5603,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5791,7 +5791,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -5979,7 +5979,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -6167,7 +6167,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -6355,7 +6355,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -6543,7 +6543,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -6731,7 +6731,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -6919,7 +6919,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -7107,7 +7107,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -7295,7 +7295,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -7483,7 +7483,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -7671,7 +7671,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -7859,7 +7859,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8047,7 +8047,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8235,7 +8235,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8423,7 +8423,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8611,7 +8611,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8799,7 +8799,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -8987,7 +8987,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -9175,7 +9175,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
@@ -9363,7 +9363,7 @@ export const alerts = [
 			severity_id: 5
 		},
 		alert_source_link:
-			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D",
+			"test.com/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22process_id:%5C%223608%5C%22%20AND%20agent_name:%5C%22ANSYDWDC01%5C%22%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:%22timestamp%22%7D%5D",
 		iocs: [],
 		alert_note: null,
 		alert_source: "SOCFORTRESS RULE",
