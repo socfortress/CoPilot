@@ -245,8 +245,8 @@ async def invoke_alert_threshold_graylog_route(
             timefield_payload=str(request.event.timestamp),
             alert_title_payload=request.event.message,
             source=request.event.fields.SOURCE,
-            index_name="gl-events_",
-            index_id=request.event.id,
+            index_name="not_applicable",
+            index_id="not_applicable"
         ),
         customer_code=request.event.fields.CUSTOMER_CODE,
         session=session,
