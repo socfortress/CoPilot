@@ -38,6 +38,7 @@ from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import cato
 from app.routers import connectors
+from app.routers import copilot_action
 from app.routers import copilot_mcp
 from app.routers import cortex
 from app.routers import crowdstrike
@@ -145,6 +146,7 @@ api_router.include_router(threat_intel.router)
 api_router.include_router(alert_creation_settings.router)
 api_router.include_router(integrations.router)
 api_router.include_router(office365.router)
+api_router.include_router(copilot_action.router)
 api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
