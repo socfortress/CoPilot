@@ -1,16 +1,19 @@
 import os
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Security
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import Security
 from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
+from app.integrations.copilot_action.schema.copilot_action import ActionDetailResponse
 from app.integrations.copilot_action.schema.copilot_action import (
-    InventoryResponse,
-    ActionDetailResponse,
     InventoryMetricsResponse,
-    Technology
 )
+from app.integrations.copilot_action.schema.copilot_action import InventoryResponse
+from app.integrations.copilot_action.schema.copilot_action import Technology
 from app.integrations.copilot_action.services.copilot_action import CopilotActionService
 
 copilot_action_router = APIRouter()
@@ -31,7 +34,7 @@ async def get_inventory(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     refresh: bool = Query(False, description="Force refresh cache"),
-    include: Optional[str] = Query(None, description="Comma-separated extra fields to include")
+    include: Optional[str] = Query(None, description="Comma-separated extra fields to include"),
 ) -> InventoryResponse:
     """
     Retrieve inventory of available active response scripts.
@@ -55,7 +58,7 @@ async def get_inventory(
     logger.info(f"Fetching active response inventory with filters: tech={technology}, category={category}, tag={tag}, q={q}")
 
     # Get license key from environment variable
-    license_key = os.getenv('COPILOT_API_KEY')
+    license_key = os.getenv("COPILOT_API_KEY")
     if not license_key:
         logger.error("COPILOT_API_KEY environment variable not set")
         raise HTTPException(status_code=500, detail="COPILOT_API_KEY environment variable not configured")
@@ -71,7 +74,7 @@ async def get_inventory(
             limit=limit,
             offset=offset,
             refresh=refresh,
-            include=include
+            include=include,
         )
 
         logger.info(f"Successfully fetched inventory: {len(response.copilot_actions)} actions")
@@ -88,9 +91,7 @@ async def get_inventory(
     description="Get details for a specific active response script",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_action_by_name(
-    copilot_action_name: str
-) -> ActionDetailResponse:
+async def get_action_by_name(copilot_action_name: str) -> ActionDetailResponse:
     """
     Get detailed information for a specific active response script.
 
@@ -103,17 +104,14 @@ async def get_action_by_name(
     logger.info(f"Fetching action details for: {copilot_action_name}")
 
     # Get license key from environment variable
-    license_key = os.getenv('COPILOT_API_KEY')
+    license_key = os.getenv("COPILOT_API_KEY")
     if not license_key:
         logger.error("COPILOT_API_KEY environment variable not set")
         raise HTTPException(status_code=500, detail="COPILOT_API_KEY environment variable not configured")
 
     # Fetch action details from service
     try:
-        response = await CopilotActionService.get_action_by_name(
-            license_key=license_key,
-            copilot_action_name=copilot_action_name
-        )
+        response = await CopilotActionService.get_action_by_name(license_key=license_key, copilot_action_name=copilot_action_name)
 
         if not response.success:
             if "not found" in response.message.lower():
@@ -147,7 +145,7 @@ async def get_metrics() -> InventoryMetricsResponse:
     logger.info("Fetching inventory metrics")
 
     # Get license key from environment variable
-    license_key = os.getenv('COPILOT_API_KEY')
+    license_key = os.getenv("COPILOT_API_KEY")
     if not license_key:
         logger.error("COPILOT_API_KEY environment variable not set")
         raise HTTPException(status_code=500, detail="COPILOT_API_KEY environment variable not configured")
@@ -182,5 +180,5 @@ async def get_technologies() -> dict:
         "technologies": technologies,
         "total": len(technologies),
         "message": "Successfully retrieved available technologies",
-        "success": True
+        "success": True,
     }

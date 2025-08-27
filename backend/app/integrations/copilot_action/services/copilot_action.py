@@ -1,14 +1,14 @@
-from typing import Optional, List
+from typing import Optional
+
 import httpx
 from loguru import logger
 
+from app.integrations.copilot_action.schema.copilot_action import ActionDetailResponse
 from app.integrations.copilot_action.schema.copilot_action import (
-    InventoryQueryRequest,
-    InventoryResponse,
-    ActionDetailResponse,
     InventoryMetricsResponse,
-    Technology
 )
+from app.integrations.copilot_action.schema.copilot_action import InventoryResponse
+from app.integrations.copilot_action.schema.copilot_action import Technology
 
 
 class CopilotActionService:
@@ -28,7 +28,7 @@ class CopilotActionService:
         limit: int = 100,
         offset: int = 0,
         refresh: bool = False,
-        include: Optional[str] = None
+        include: Optional[str] = None,
     ) -> InventoryResponse:
         """
         Fetch inventory from the Copilot Action service.
@@ -50,11 +50,7 @@ class CopilotActionService:
         try:
             url = f"{cls.BASE_URL}/inventory"
 
-            headers = {
-                "x-api-key": license_key,
-                "module-version": cls.MODULE_VERSION,
-                "Accept": "application/json"
-            }
+            headers = {"x-api-key": license_key, "module-version": cls.MODULE_VERSION, "Accept": "application/json"}
 
             params = {}
             if technology:
@@ -77,12 +73,7 @@ class CopilotActionService:
             logger.info(f"Fetching inventory from {url} with params: {params}")
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    url,
-                    headers=headers,
-                    params=params,
-                    timeout=30.0
-                )
+                response = await client.get(url, headers=headers, params=params, timeout=30.0)
 
                 response.raise_for_status()
 
@@ -90,36 +81,20 @@ class CopilotActionService:
                     data = response.json()
                 except ValueError:
                     logger.error(f"Non-JSON response from inventory API: {response.text[:200]}")
-                    return InventoryResponse(
-                        copilot_actions=[],
-                        message=f"Invalid response format from inventory API",
-                        success=False
-                    )
+                    return InventoryResponse(copilot_actions=[], message="Invalid response format from inventory API", success=False)
 
                 logger.info(f"Successfully fetched inventory: {len(data.get('copilot_actions', []))} actions")
                 return InventoryResponse(**data)
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error fetching inventory: {str(e)}")
-            return InventoryResponse(
-                copilot_actions=[],
-                message=f"HTTP error fetching inventory: {str(e)}",
-                success=False
-            )
+            return InventoryResponse(copilot_actions=[], message=f"HTTP error fetching inventory: {str(e)}", success=False)
         except Exception as e:
             logger.error(f"Unexpected error fetching inventory: {str(e)}")
-            return InventoryResponse(
-                copilot_actions=[],
-                message=f"Unexpected error: {str(e)}",
-                success=False
-            )
+            return InventoryResponse(copilot_actions=[], message=f"Unexpected error: {str(e)}", success=False)
 
     @classmethod
-    async def get_action_by_name(
-        cls,
-        license_key: str,
-        copilot_action_name: str
-    ) -> ActionDetailResponse:
+    async def get_action_by_name(cls, license_key: str, copilot_action_name: str) -> ActionDetailResponse:
         """
         Fetch details for a specific action by name.
 
@@ -133,20 +108,12 @@ class CopilotActionService:
         try:
             url = f"{cls.BASE_URL}/inventory/{copilot_action_name}"
 
-            headers = {
-                "x-api-key": license_key,
-                "module-version": cls.MODULE_VERSION,
-                "Accept": "application/json"
-            }
+            headers = {"x-api-key": license_key, "module-version": cls.MODULE_VERSION, "Accept": "application/json"}
 
             logger.info(f"Fetching action details for: {copilot_action_name}")
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    url,
-                    headers=headers,
-                    timeout=30.0
-                )
+                response = await client.get(url, headers=headers, timeout=30.0)
 
                 response.raise_for_status()
 
@@ -154,11 +121,7 @@ class CopilotActionService:
                     data = response.json()
                 except ValueError:
                     logger.error(f"Non-JSON response from action API: {response.text[:200]}")
-                    return ActionDetailResponse(
-                        active_response=None,
-                        message=f"Invalid response format from action API",
-                        success=False
-                    )
+                    return ActionDetailResponse(active_response=None, message="Invalid response format from action API", success=False)
 
                 logger.info(f"Successfully fetched action details for: {copilot_action_name}")
                 return ActionDetailResponse(**data)
@@ -166,24 +129,12 @@ class CopilotActionService:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 logger.warning(f"Action not found: {copilot_action_name}")
-                return ActionDetailResponse(
-                    active_response=None,
-                    message=f"Action '{copilot_action_name}' not found",
-                    success=False
-                )
+                return ActionDetailResponse(active_response=None, message=f"Action '{copilot_action_name}' not found", success=False)
             logger.error(f"HTTP error fetching action details: {str(e)}")
-            return ActionDetailResponse(
-                active_response=None,
-                message=f"HTTP error fetching action details: {str(e)}",
-                success=False
-            )
+            return ActionDetailResponse(active_response=None, message=f"HTTP error fetching action details: {str(e)}", success=False)
         except Exception as e:
             logger.error(f"Unexpected error fetching action details: {str(e)}")
-            return ActionDetailResponse(
-                active_response=None,
-                message=f"Unexpected error: {str(e)}",
-                success=False
-            )
+            return ActionDetailResponse(active_response=None, message=f"Unexpected error: {str(e)}", success=False)
 
     @classmethod
     async def get_metrics(cls, license_key: str) -> InventoryMetricsResponse:
@@ -199,20 +150,12 @@ class CopilotActionService:
         try:
             url = f"{cls.BASE_URL}/metrics"
 
-            headers = {
-                "x-api-key": license_key,
-                "module-version": cls.MODULE_VERSION,
-                "Accept": "application/json"
-            }
+            headers = {"x-api-key": license_key, "module-version": cls.MODULE_VERSION, "Accept": "application/json"}
 
             logger.info("Fetching inventory metrics")
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    url,
-                    headers=headers,
-                    timeout=30.0
-                )
+                response = await client.get(url, headers=headers, timeout=30.0)
 
                 response.raise_for_status()
 
@@ -224,7 +167,7 @@ class CopilotActionService:
                         status="error",
                         metrics={},
                         message="Invalid response format from metrics API",
-                        success=False
+                        success=False,
                     )
 
                 logger.info("Successfully fetched inventory metrics")
@@ -232,22 +175,12 @@ class CopilotActionService:
                     status=data.get("status", "unknown"),
                     metrics=data.get("metrics", {}),
                     message="Successfully retrieved inventory metrics",
-                    success=True
+                    success=True,
                 )
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error fetching metrics: {str(e)}")
-            return InventoryMetricsResponse(
-                status="error",
-                metrics={},
-                message=f"HTTP error fetching metrics: {str(e)}",
-                success=False
-            )
+            return InventoryMetricsResponse(status="error", metrics={}, message=f"HTTP error fetching metrics: {str(e)}", success=False)
         except Exception as e:
             logger.error(f"Unexpected error fetching metrics: {str(e)}")
-            return InventoryMetricsResponse(
-                status="error",
-                metrics={},
-                message=f"Unexpected error: {str(e)}",
-                success=False
-            )
+            return InventoryMetricsResponse(status="error", metrics={}, message=f"Unexpected error: {str(e)}", success=False)

@@ -1,12 +1,20 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import HttpUrl
+from pydantic import validator
 
 
 class Technology(str, Enum):
     """Technology types for active response scripts"""
+
     WAZUH = "Wazuh"
     LINUX = "Linux"
     WINDOWS = "Windows"
@@ -18,6 +26,7 @@ class Technology(str, Enum):
 
 class ScriptParameter(BaseModel):
     """Parameters required for script execution"""
+
     name: str
     type: str
     required: bool
@@ -35,6 +44,7 @@ class ScriptParameter(BaseModel):
 
 class ActiveResponseItem(BaseModel):
     """Individual active response script item"""
+
     copilot_action_name: str
     description: str
     technology: Technology
@@ -56,13 +66,14 @@ class ActiveResponseItem(BaseModel):
     @validator("repo_url")
     def ensure_repo_url_ends_with_main(cls, v):
         repo_str = str(v)
-        if not repo_str.endswith('/main'):
+        if not repo_str.endswith("/main"):
             return HttpUrl(f"{repo_str}/main")
         return v
 
 
 class InventoryQueryRequest(BaseModel):
     """Request model for inventory queries"""
+
     technology: Optional[Technology] = None
     category: Optional[str] = None
     tag: Optional[str] = None
@@ -75,6 +86,7 @@ class InventoryQueryRequest(BaseModel):
 
 class InventoryResponse(BaseModel):
     """Response model for inventory queries"""
+
     copilot_actions: List[ActiveResponseItem]
     message: str
     success: bool
@@ -82,6 +94,7 @@ class InventoryResponse(BaseModel):
 
 class ActionDetailResponse(BaseModel):
     """Response model for single action details"""
+
     active_response: ActiveResponseItem
     message: str
     success: bool
@@ -89,6 +102,7 @@ class ActionDetailResponse(BaseModel):
 
 class InventoryMetricsResponse(BaseModel):
     """Response model for inventory metrics"""
+
     status: str
     metrics: Dict[str, Any]
     message: str = "Successfully retrieved inventory metrics"

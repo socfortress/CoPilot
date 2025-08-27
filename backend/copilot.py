@@ -38,6 +38,7 @@ from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import cato
 from app.routers import connectors
+from app.routers import copilot_action
 from app.routers import copilot_mcp
 from app.routers import cortex
 from app.routers import crowdstrike
@@ -75,7 +76,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import copilot_action
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 
