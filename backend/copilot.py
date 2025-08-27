@@ -75,6 +75,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import copilot_action
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 
@@ -145,6 +146,7 @@ api_router.include_router(threat_intel.router)
 api_router.include_router(alert_creation_settings.router)
 api_router.include_router(integrations.router)
 api_router.include_router(office365.router)
+api_router.include_router(copilot_action.router)
 api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
