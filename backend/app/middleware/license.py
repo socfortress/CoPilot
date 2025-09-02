@@ -627,6 +627,7 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
             f"https://license.socfortress.co/{endpoint}",
             headers=HEADERS,
             verify=False,
+            timeout=10,
         )
 
         if response.status_code == 204:
