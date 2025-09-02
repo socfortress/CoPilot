@@ -623,7 +623,6 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "module-version": "1.0",
         }
-        logger.info(f"Request headers: {HEADERS}")
         response = requests.get(
             f"https://license.socfortress.co/{endpoint}",
             headers=HEADERS,
