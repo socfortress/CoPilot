@@ -948,6 +948,7 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
             headers=HEADERS,
             json=data,
             verify=False,
+            timeout=10,
         )
 
         if response.status_code == 204:
