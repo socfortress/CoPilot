@@ -238,6 +238,7 @@ class License(SQLModel, table=True):
     customer_email: str = Field(max_length=1024)
     company_name: str = Field(max_length=1024)
 
+
 class LicenseCache(SQLModel, table=True):
     __tablename__ = "license_cache"
     id: Optional[int] = Field(primary_key=True)

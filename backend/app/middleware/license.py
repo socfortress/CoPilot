@@ -1,24 +1,28 @@
-import os
 import json
-import requests
-from datetime import datetime as dt, timedelta
+import os
+from datetime import datetime as dt
+from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+
+import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
-from sqlalchemy import select, delete
+from sqlalchemy import delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.schema import UpdateConnector
 from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
-from app.db.universal_models import License, LicenseCache
+from app.db.universal_models import License
+from app.db.universal_models import LicenseCache
 
 
 class ThreatIntelRegisterRequest(BaseModel):
@@ -342,11 +346,7 @@ def normalize_api_response(response: Dict[str, Any]) -> Dict[str, Any]:
         return response
     else:
         # Response doesn't have data wrapper - wrap it
-        return {
-            "data": response,
-            "success": response.get("success", True),
-            "message": response.get("message", "Success")
-        }
+        return {"data": response, "success": response.get("success", True), "message": response.get("message", "Success")}
 
 
 async def check_if_license_exists(session: AsyncSession):
@@ -421,8 +421,8 @@ async def get_cached_feature(session: AsyncSession, license_key: str, feature_na
         select(LicenseCache).where(
             LicenseCache.license_key == license_key,
             LicenseCache.feature_name == feature_name,
-            LicenseCache.expires_at > current_time
-        )
+            LicenseCache.expires_at > current_time,
+        ),
     )
 
     cached_feature = result.scalars().first()
@@ -482,7 +482,7 @@ async def cache_license_features(session: AsyncSession, license_key: str, licens
                     is_enabled=is_enabled,
                     cached_at=current_time,
                     expires_at=expires_at,
-                    license_data=license_json
+                    license_data=license_json,
                 )
 
                 session.add(cache_entry)
@@ -602,10 +602,7 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession, message: 
     except Exception as e:
         logger.error(f"Error verifying license from API: {str(e)}")
         # If API fails, we can't verify - raise an error
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unable to verify license: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Unable to verify license: {str(e)}")
 
 
 async def send_get_request(endpoint: str) -> Dict[str, Any]:
@@ -856,10 +853,7 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
     # Check if we have a recent cache entry for any feature of this license
     current_time = dt.utcnow()
     result = await session.execute(
-        select(LicenseCache).where(
-            LicenseCache.license_key == license.license_key,
-            LicenseCache.expires_at > current_time
-        ).limit(1)
+        select(LicenseCache).where(LicenseCache.license_key == license.license_key, LicenseCache.expires_at > current_time).limit(1),
     )
 
     cached_entry = result.scalars().first()
@@ -1006,8 +1000,8 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
         select(LicenseCache).where(
             LicenseCache.license_key == license.license_key,
             LicenseCache.expires_at > current_time,
-            LicenseCache.is_enabled == True
-        )
+            LicenseCache.is_enabled == True,
+        ),
     )
 
     cached_features = result.scalars().all()
@@ -1033,11 +1027,9 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
     # For license-features endpoint, create a fake normalized response to cache the features
     fake_license_data = {
         "data": {
-            "license": {
-                "dataObjects": [{"name": feature, "intValue": 1} for feature in results.get("features", [])]
-            },
-            "success": True
-        }
+            "license": {"dataObjects": [{"name": feature, "intValue": 1} for feature in results.get("features", [])]},
+            "success": True,
+        },
     }
 
     # Cache the results
@@ -1064,7 +1056,7 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
     license.license_key = request.license_key
     await session.commit()
 
-    logger.info(f"License replaced successfully")
+    logger.info("License replaced successfully")
     return {"success": True, "message": "License replaced successfully"}
 
 
@@ -1101,10 +1093,7 @@ async def invalidate_cache_route(session: AsyncSession = Depends(get_db)):
     license = await get_license(session)
     await invalidate_license_cache(session, license.license_key)
 
-    return {
-        "success": True,
-        "message": "License cache invalidated successfully"
-    }
+    return {"success": True, "message": "License cache invalidated successfully"}
 
 
 def create_headers(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
