@@ -239,6 +239,17 @@ class License(SQLModel, table=True):
     company_name: str = Field(max_length=1024)
 
 
+class LicenseCache(SQLModel, table=True):
+    __tablename__ = "license_cache"
+    id: Optional[int] = Field(primary_key=True)
+    license_key: str = Field(max_length=1024, index=True)
+    feature_name: str = Field(max_length=256, index=True)
+    is_enabled: bool = Field(default=False)
+    cached_at: datetime = Field(default=datetime.utcnow, index=True)
+    expires_at: datetime = Field(index=True)
+    license_data: Optional[str] = Field(max_length=5000)  # Store full license JSON as string for reference
+
+
 class SchedulerJob(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True, nullable=False, max_length=255)
     next_run_time: float = Field(sa_column=Column(Float(), index=True))
