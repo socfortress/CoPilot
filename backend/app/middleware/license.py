@@ -1,24 +1,24 @@
 import os
-from datetime import datetime as dt
+import json
+import requests
+from datetime import datetime as dt, timedelta
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-
-import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.schema import UpdateConnector
 from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
-from app.db.universal_models import License
+from app.db.universal_models import License, LicenseCache
 
 
 class ThreatIntelRegisterRequest(BaseModel):
@@ -322,6 +322,32 @@ class RetrieveDockerCompose(BaseModel):
 
 license_router = APIRouter()
 
+# Cache duration in hours
+CACHE_DURATION_HOURS = 1
+
+
+def normalize_api_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize API responses to handle different response structures.
+    Some endpoints return data wrapped in 'data' key, others don't.
+
+    Args:
+        response: Raw API response
+
+    Returns:
+        Normalized response with consistent structure
+    """
+    if "data" in response:
+        # Response has data wrapper - return as is
+        return response
+    else:
+        # Response doesn't have data wrapper - wrap it
+        return {
+            "data": response,
+            "success": response.get("success", True),
+            "message": response.get("message", "Success")
+        }
+
 
 async def check_if_license_exists(session: AsyncSession):
     # Get the first row and raise HTTPException stating license already exists
@@ -377,6 +403,122 @@ async def get_license(session: AsyncSession) -> License:
         return license
 
 
+async def get_cached_feature(session: AsyncSession, license_key: str, feature_name: str) -> Optional[LicenseCache]:
+    """
+    Get cached feature information if it exists and is not expired.
+
+    Args:
+        session: Database session
+        license_key: The license key
+        feature_name: The feature name to check
+
+    Returns:
+        LicenseCache object if valid cache exists, None otherwise
+    """
+    current_time = dt.utcnow()
+
+    result = await session.execute(
+        select(LicenseCache).where(
+            LicenseCache.license_key == license_key,
+            LicenseCache.feature_name == feature_name,
+            LicenseCache.expires_at > current_time
+        )
+    )
+
+    cached_feature = result.scalars().first()
+
+    if cached_feature:
+        logger.info(f"Found valid cache for feature '{feature_name}' (expires at {cached_feature.expires_at})")
+        return cached_feature
+    else:
+        logger.info(f"No valid cache found for feature '{feature_name}'")
+        return None
+
+
+async def cache_license_features(session: AsyncSession, license_key: str, license_data: Dict[str, Any]) -> None:
+    """
+    Cache license features from license verification response.
+
+    Args:
+        session: Database session
+        license_key: The license key
+        license_data: The license verification response data
+    """
+    try:
+        # Clear existing cache for this license key
+        await session.execute(delete(LicenseCache).where(LicenseCache.license_key == license_key))
+
+        current_time = dt.utcnow()
+        expires_at = current_time + timedelta(hours=CACHE_DURATION_HOURS)
+
+        # Store the full license data as JSON string for reference
+        license_json = json.dumps(license_data)
+
+        # Extract features from dataObjects - handle both response formats
+        if "data" in license_data and "license" in license_data["data"]:
+            # Wrapped format: {"data": {"license": {"dataObjects": [...]}}}
+            data_objects = license_data["data"]["license"].get("dataObjects", [])
+        elif "license" in license_data:
+            # Direct format: {"license": {"dataObjects": [...]}}
+            data_objects = license_data["license"].get("dataObjects", [])
+        elif "dataObjects" in license_data:
+            # Bare format: {"dataObjects": [...]}
+            data_objects = license_data.get("dataObjects", [])
+        else:
+            logger.warning("Could not find dataObjects in license response")
+            data_objects = []
+
+        # Track which features we've processed
+        processed_features = set()
+
+        for data_object in data_objects:
+            feature_name = data_object.get("name")
+            is_enabled = data_object.get("intValue") == 1
+
+            if feature_name:
+                cache_entry = LicenseCache(
+                    license_key=license_key,
+                    feature_name=feature_name,
+                    is_enabled=is_enabled,
+                    cached_at=current_time,
+                    expires_at=expires_at,
+                    license_data=license_json
+                )
+
+                session.add(cache_entry)
+                processed_features.add(feature_name)
+
+                logger.info(f"Cached feature '{feature_name}': {'enabled' if is_enabled else 'disabled'}")
+
+        await session.commit()
+        logger.info(f"Successfully cached {len(processed_features)} features for license {license_key[:8]}...")
+
+    except Exception as e:
+        logger.error(f"Error caching license features: {str(e)}")
+        await session.rollback()
+        raise
+
+
+async def invalidate_license_cache(session: AsyncSession, license_key: str) -> None:
+    """
+    Invalidate (delete) all cached entries for a specific license key.
+
+    Args:
+        session: Database session
+        license_key: The license key to invalidate cache for
+    """
+    try:
+        result = await session.execute(delete(LicenseCache).where(LicenseCache.license_key == license_key))
+        deleted_count = result.rowcount
+        await session.commit()
+
+        logger.info(f"Invalidated {deleted_count} cache entries for license {license_key[:8]}...")
+
+    except Exception as e:
+        logger.error(f"Error invalidating license cache: {str(e)}")
+        await session.rollback()
+
+
 def is_license_expired(license: dict) -> bool:
     """
     Check if a license is expired.
@@ -395,28 +537,75 @@ def is_license_expired(license: dict) -> bool:
 async def is_feature_enabled(feature_name: str, session: AsyncSession, message: str = None) -> bool:
     """
     Check if a feature is enabled in a license.
+    Uses cache first, falls back to API if cache miss or expired.
 
     Args:
-        license (License): The license to check.
         feature_name (str): The feature name to check.
         session (AsyncSession): The database session.
+        message (str, optional): Custom error message.
 
     Returns:
         bool: True if the feature is enabled, False otherwise.
     """
     license = await get_license(session)
-    result = await send_post_request("verify-license", data={"license_key": license.license_key})
-    for data_object in result["data"]["license"]["dataObjects"]:
-        if data_object["name"] == feature_name and data_object["intValue"] == 1:
+
+    # Check cache first
+    cached_feature = await get_cached_feature(session, license.license_key, feature_name)
+
+    if cached_feature:
+        logger.info(f"Using cached result for feature '{feature_name}': {'enabled' if cached_feature.is_enabled else 'disabled'}")
+
+        if cached_feature.is_enabled:
             return True
+        else:
+            # Feature is disabled according to cache
+            if message:
+                raise HTTPException(status_code=400, detail=message)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Feature is not enabled. You must purchase the {feature_name} license to use this feature.",
+            )
 
-    if message:
-        raise HTTPException(status_code=400, detail=message)
+    # Cache miss - fetch from API
+    logger.info(f"Cache miss for feature '{feature_name}', fetching from API")
 
-    raise HTTPException(
-        status_code=400,
-        detail=f"Feature is not enabled. You must purchase the {feature_name} license to use this feature.",
-    )
+    try:
+        result = await send_post_request("verify-license", data={"license_key": license.license_key})
+
+        # Normalize response format
+        normalized_result = normalize_api_response(result)
+
+        # Cache the results
+        await cache_license_features(session, license.license_key, normalized_result)
+
+        # Check if feature is enabled
+        data_objects = normalized_result["data"]["license"].get("dataObjects", [])
+        for data_object in data_objects:
+            if data_object["name"] == feature_name and data_object["intValue"] == 1:
+                logger.info(f"Feature '{feature_name}' is enabled (from API)")
+                return True
+
+        # Feature not found or not enabled
+        logger.info(f"Feature '{feature_name}' is not enabled (from API)")
+
+        if message:
+            raise HTTPException(status_code=400, detail=message)
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Feature is not enabled. You must purchase the {feature_name} license to use this feature.",
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (like feature not enabled)
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying license from API: {str(e)}")
+        # If API fails, we can't verify - raise an error
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to verify license: {str(e)}"
+        )
 
 
 async def send_get_request(endpoint: str) -> Dict[str, Any]:
@@ -437,6 +626,7 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "module-version": "1.0",
         }
+        logger.info(f"Request headers: {HEADERS}")
         response = requests.get(
             f"https://license.socfortress.co/{endpoint}",
             headers=HEADERS,
@@ -444,17 +634,9 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
         )
 
         if response.status_code == 204:
-            return {
-                "data": None,
-                "success": True,
-                "message": "Successfully completed request with no content",
-            }
+            return {"success": True, "message": "No content"}
         else:
-            return {
-                "data": response.json(),
-                "success": False if response.status_code >= 400 else True,
-                "message": "Successfully retrieved data",
-            }
+            return response.json()
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
         raise HTTPException(
@@ -476,15 +658,31 @@ async def get_subscription_catalog():
         dict: A dictionary containing the subscription catalog.
     """
     try:
-        results = await send_get_request("features")
+        result = await send_get_request("features")
+        normalized_result = normalize_api_response(result)
+
+        # Handle different response structures for subscription features
+        features = []
+        if "data" in normalized_result and "features" in normalized_result["data"]:
+            features = normalized_result["data"]["features"]
+        elif "features" in normalized_result:
+            features = normalized_result["features"]
+        else:
+            logger.warning(f"No features found in response: {normalized_result}")
+            features = []
+
         return GetSubscriptionCatalogFeaturesResponse(
-            features=results["data"]["features"],
-            success=results["success"],
-            message=results["message"],
+            features=features,
+            success=normalized_result.get("success", True),
+            message=normalized_result.get("message", "Subscription features retrieved successfully"),
         )
     except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="Failed to get subscription features")
+        logger.error(f"Error getting subscription catalog: {str(e)}")
+        return GetSubscriptionCatalogFeaturesResponse(
+            features=[],
+            success=False,
+            message=f"Error getting subscription catalog: {str(e)}",
+        )
 
 
 @license_router.post(
@@ -510,28 +708,29 @@ async def retrieve_license_by_email(request: GetLicenseByEmailRequest, session: 
         return GetLicenseResponse(
             license_key=existing_license.license_key,
             success=True,
-            message="License retrieved successfully",
+            message="License already exists in database",
         )
 
     results = await send_post_request("retrieve-license-by-email", data={"email": request.email})
-    logger.info(f"Results: {results}")
-    if results["data"]["success"] is False:
-        raise HTTPException(status_code=400, detail=f"Failed to retrieve license by email: {results['data']['message']}")
+    normalized_results = normalize_api_response(results)
+    logger.info(f"Results: {normalized_results}")
+    if normalized_results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=normalized_results["data"]["message"])
 
     # Add the license to the database
     await add_license_to_db(
         session,
-        results["data"]["license"]["key"],
+        normalized_results["data"]["license"]["key"],
         AddLicenseToDB(
-            customer_email=results["data"]["license"]["customer"]["email"],
-            customer_name=results["data"]["license"]["customer"]["name"],
-            company_name=results["data"]["license"]["customer"]["companyName"],
+            customer_email=normalized_results["data"]["license"]["customer"]["email"],
+            customer_name=normalized_results["data"]["license"]["customer"]["name"],
+            company_name=normalized_results["data"]["license"]["customer"]["companyName"],
         ),
     )
     return GetLicenseResponse(
-        license_key=results["data"]["license"]["key"],
-        success=results["data"]["success"],
-        message=results["data"]["message"],
+        license_key=normalized_results["data"]["license"]["key"],
+        success=normalized_results["data"]["success"],
+        message=normalized_results["data"]["message"],
     )
 
 
@@ -560,13 +759,14 @@ async def create_checkout_session(request: FeatureSubscriptionRequest):
             "company_name": request.company_name,
         },
     )
-    logger.info(f"Results: {results}")
-    if results["data"]["success"] is False:
-        raise HTTPException(status_code=400, detail=f"Failed to create checkout session: {results['data']['message']}")
+    normalized_results = normalize_api_response(results)
+    logger.info(f"Results: {normalized_results}")
+    if normalized_results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=normalized_results["data"]["message"])
     return CheckoutSessionResponse(
-        session=results["data"]["session"],
-        success=results["data"]["success"],
-        message=results["data"]["message"],
+        session=normalized_results["data"]["session"],
+        success=normalized_results["data"]["success"],
+        message=normalized_results["data"]["message"],
     )
 
 
@@ -587,32 +787,37 @@ async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncS
         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
     """
     await check_if_license_exists(session)
+
     results = await send_post_request(
         "trial-license",
         data={
+            "period": request.period,
             "email": request.email,
             "feature_name": request.feature_name,
             "customer_name": request.customer_name,
-            "period": request.period,
             "company_name": request.company_name,
         },
     )
-    logger.info(f"Results: {results}")
-    if results["data"]["success"] is False:
-        raise HTTPException(status_code=400, detail=f"Failed to create trial license: {results['data']['message']}")
+    normalized_results = normalize_api_response(results)
+    logger.info(f"Results: {normalized_results}")
+    if normalized_results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=normalized_results["data"]["message"])
+
+    # Add the license to the database
     await add_license_to_db(
         session,
-        results["data"]["license_key"],
+        normalized_results["data"]["license_key"],
         AddLicenseToDB(
             customer_email=request.email,
             customer_name=request.customer_name,
             company_name=request.company_name,
         ),
     )
+
     return TrialLicenseResponse(
-        license_key=results["data"]["license_key"],
-        success=results["data"]["success"],
-        message=results["data"]["message"],
+        license_key=normalized_results["data"]["license_key"],
+        success=normalized_results["data"]["success"],
+        message=normalized_results["data"]["message"],
     )
 
 
@@ -622,15 +827,6 @@ async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncS
     response_model=CancelSubscriptionResponse,
 )
 async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubscriptionResponse:
-    """
-    Cancel a subscription.
-
-    Args:
-        request (CancelSubscriptionRequest): The request containing the customer email, subscription price id, and feature name.
-
-    Returns:
-        dict: A dictionary containing the cancellation status.
-    """
     results = await send_post_request(
         "cancel-subscription",
         data={
@@ -639,12 +835,13 @@ async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubsc
             "feature_name": request.feature_name,
         },
     )
-    logger.info(f"Results: {results}")
-    if results["data"]["success"] is False:
-        raise HTTPException(status_code=400, detail=f"Failed to cancel subscription: {results['data']['message']}")
+    normalized_results = normalize_api_response(results)
+    logger.info(f"Results: {normalized_results}")
+    if normalized_results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=normalized_results["data"]["message"])
     return CancelSubscriptionResponse(
-        success=results["data"]["success"],
-        message=results["data"]["message"],
+        success=normalized_results["data"]["success"],
+        message=normalized_results["data"]["message"],
     )
 
 
@@ -654,24 +851,70 @@ async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubsc
     description="Verify a license key",
 )
 async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyLicenseResponse:
-    """ "
-    Verify a license key.
-
-    Args:
-        license_key (str): The license key to verify.
-
-    Returns:
-        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
-    """
     license = await get_license(session)
-    try:
-        result = await send_post_request("verify-license", data={"license_key": license.license_key})
-        if is_license_expired(result):
-            raise HTTPException(status_code=400, detail="License is expired")
-        return VerifyLicenseResponse(license=result["data"]["license"], success=True, message="License verified successfully")
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="License verification failed")
+
+    # Check if we have a recent cache entry for any feature of this license
+    current_time = dt.utcnow()
+    result = await session.execute(
+        select(LicenseCache).where(
+            LicenseCache.license_key == license.license_key,
+            LicenseCache.expires_at > current_time
+        ).limit(1)
+    )
+
+    cached_entry = result.scalars().first()
+
+    if cached_entry and cached_entry.license_data:
+        logger.info("Using cached license verification data")
+        try:
+            license_data = json.loads(cached_entry.license_data)
+            # Handle both wrapped and unwrapped formats
+            if "data" in license_data and "license" in license_data["data"]:
+                license_obj = license_data["data"]["license"]
+                success = license_data["data"]["success"]
+            elif "license" in license_data:
+                license_obj = license_data["license"]
+                success = license_data.get("success", True)
+            else:
+                raise ValueError("Invalid cached license data format")
+
+            return VerifyLicenseResponse(
+                license=license_obj,
+                success=success,
+                message="License verified successfully (from cache)",
+            )
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.warning(f"Error parsing cached license data: {e}, falling back to API")
+
+    # No valid cache, fetch from API
+    logger.info("No valid cache found, verifying license via API")
+    results = await send_post_request("verify-license", data={"license_key": license.license_key})
+
+    # Normalize response format
+    normalized_results = normalize_api_response(results)
+
+    # Cache the results
+    await cache_license_features(session, license.license_key, normalized_results)
+
+    logger.info(f"Results: {normalized_results}")
+    if not normalized_results.get("success", True):
+        raise HTTPException(status_code=400, detail=normalized_results.get("message", "License verification failed"))
+
+    # Handle both response formats for return value
+    if "data" in normalized_results and "license" in normalized_results["data"]:
+        license_obj = normalized_results["data"]["license"]
+        success = normalized_results["data"]["success"]
+        message = normalized_results["data"]["message"]
+    else:
+        license_obj = normalized_results["license"]
+        success = normalized_results.get("success", True)
+        message = normalized_results.get("message", "License verified successfully")
+
+    return VerifyLicenseResponse(
+        license=license_obj,
+        success=success,
+        message=message,
+    )
 
 
 @license_router.get(
@@ -679,17 +922,12 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
     description="Get a license",
 )
 async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
-    """ "
-    Get a license key.
-
-    Args:
-        license_key (str): The license key to verify.
-
-    Returns:
-        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
-    """
     license = await get_license(session)
-    return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
+    return GetLicenseResponse(
+        license_key=license.license_key,
+        success=True,
+        message="License retrieved successfully",
+    )
 
 
 async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -699,7 +937,6 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
     Args:
         endpoint (str): The endpoint to send the POST request to.
         data (Dict[str, Any]): The data to send with the POST request.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
 
     Returns:
         Dict[str, Any]: The response from the POST request.
@@ -719,17 +956,10 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
             verify=False,
         )
 
-        if response.status_code == 200:
-            return {
-                "data": response.json(),
-                "success": True,
-                "message": "Successfully retrieved data",
-            }
+        if response.status_code == 204:
+            return {"success": True, "message": "No content"}
         else:
-            return {
-                "success": False,
-                "message": f"Failed to send POST request to {endpoint}",
-            }
+            return response.json()
     except Exception as e:
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         raise HTTPException(
@@ -744,28 +974,22 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
     description="Check if a feature is enabled in a license",
 )
 async def is_feature_enabled_route(feature_name: str, session: AsyncSession = Depends(get_db)) -> IsFeatureEnabledResponse:
-    """
-    Check if a feature is enabled in a license.
-
-    Args:
-        feature_name (str): The feature name to check.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
-
-    Returns:
-        bool: True if the feature is enabled, False otherwise.
-    """
-    if await is_feature_enabled(feature_name, session):
+    try:
+        await is_feature_enabled(feature_name, session)
         return IsFeatureEnabledResponse(
             enabled=True,
             success=True,
-            message="Feature is enabled",
+            message=f"Feature '{feature_name}' is enabled",
         )
-    else:
-        return IsFeatureEnabledResponse(
-            enabled=False,
-            success=True,
-            message="Feature is not enabled",
-        )
+    except HTTPException as e:
+        if e.status_code == 400:  # Feature not enabled
+            return IsFeatureEnabledResponse(
+                enabled=False,
+                success=True,
+                message=e.detail,
+            )
+        else:
+            raise
 
 
 @license_router.get(
@@ -774,26 +998,56 @@ async def is_feature_enabled_route(feature_name: str, session: AsyncSession = De
     description="Get license features",
 )
 async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLicenseFeaturesResponse:
-    """
-    Get the features enabled in a license.
-
-    Args:
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
-
-    Returns:
-        dict: A dictionary containing the features enabled in the license.
-    """
     license = await get_license(session)
-    try:
-        results = await send_post_request("license-features", data={"license_key": license.license_key})
-        return GetLicenseFeaturesResponse(
-            features=results["data"]["features"],
-            success=results["success"],
-            message=results["message"],
+
+    # Try to get features from cache first
+    current_time = dt.utcnow()
+    result = await session.execute(
+        select(LicenseCache).where(
+            LicenseCache.license_key == license.license_key,
+            LicenseCache.expires_at > current_time,
+            LicenseCache.is_enabled == True
         )
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="Failed to get license features")
+    )
+
+    cached_features = result.scalars().all()
+
+    if cached_features:
+        logger.info(f"Using cached license features ({len(cached_features)} features)")
+        features = [cache.feature_name for cache in cached_features]
+        return GetLicenseFeaturesResponse(
+            features=features,
+            success=True,
+            message="License features retrieved successfully (from cache)",
+        )
+
+    # No cache, fetch from API
+    logger.info("No cached features found, fetching from API")
+    results = await send_post_request("license-features", data={"license_key": license.license_key})
+
+    # This endpoint returns features directly without data wrapper
+    logger.info(f"Results: {results}")
+    if not results.get("success", True):
+        raise HTTPException(status_code=400, detail=results.get("message", "Failed to get license features"))
+
+    # For license-features endpoint, create a fake normalized response to cache the features
+    fake_license_data = {
+        "data": {
+            "license": {
+                "dataObjects": [{"name": feature, "intValue": 1} for feature in results.get("features", [])]
+            },
+            "success": True
+        }
+    }
+
+    # Cache the results
+    await cache_license_features(session, license.license_key, fake_license_data)
+
+    return GetLicenseFeaturesResponse(
+        features=results.get("features", []),
+        success=results.get("success", True),
+        message=results.get("message", "License features retrieved successfully"),
+    )
 
 
 @license_router.post(
@@ -801,39 +1055,17 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
     description="Replace a license",
 )
 async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSession = Depends(get_db)):
-    """
-    Replace a license in the database.
+    license = await get_license(session)
 
-    Args:
-        request (ReplaceLicenseRequest): The request containing the license key to replace.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+    # Invalidate cache for old license
+    await invalidate_license_cache(session, license.license_key)
 
-    Returns:
-        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
-    """
-    try:
-        # Update the license in the database
-        result = await session.execute(select(License))
-        license = result.scalars().first()
-        if not license:
-            # Verify the license key
-            license_data = await send_post_request("verify-license", data={"license_key": request.license_key})
-            if is_license_expired(license_data):
-                raise HTTPException(status_code=400, detail="License is expired")
-            # Create a new License object with the data from the dictionary
-            license = License(
-                license_key=license_data["data"]["license"]["key"],
-                customer_name=license_data["data"]["license"]["customer"]["name"],
-                customer_email=license_data["data"]["license"]["customer"]["email"],
-                company_name=license_data["data"]["license"]["customer"]["companyName"],
-            )
-            session.add(license)
-        license.license_key = request.license_key
-        await session.commit()
-        return {"message": "License replaced successfully", "success": True}
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="License replacement failed")
+    # Update license key
+    license.license_key = request.license_key
+    await session.commit()
+
+    logger.info(f"License replaced successfully")
+    return {"success": True, "message": "License replaced successfully"}
 
 
 @license_router.post(
@@ -842,34 +1074,37 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
     description="Retrieve Docker Compose for features enabled",
 )
 async def retrieve_docker_compose(session: AsyncSession = Depends(get_db)) -> RetrieveDockerCompose:
-    """
-    Retrieve the Docker Compose for features enabled in the license.
+    license = await get_license(session)
+    results = await send_post_request("retrieve-docker-compose", data={"license_key": license.license_key})
 
-    Args:
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+    # This endpoint returns data directly without wrapper
+    logger.info(f"Results: {results}")
+    if not results.get("success", True):
+        raise HTTPException(status_code=400, detail=results.get("message", "Failed to retrieve Docker Compose"))
 
-    Returns:
-        RetrieveDockerCompose: A Pydantic model containing the Docker Compose for features enabled.
+    return RetrieveDockerCompose(
+        docker_compose=results.get("docker_compose", ""),
+        success=results.get("success", True),
+        message=results.get("message", "Docker Compose retrieved successfully"),
+    )
+
+
+@license_router.post(
+    "/invalidate_cache",
+    description="Manually invalidate license cache",
+)
+async def invalidate_cache_route(session: AsyncSession = Depends(get_db)):
     """
-    try:
-        license = await get_license(session)
-        if license.license_key:
-            results = await send_post_request("retrieve-docker-compose", data={"license_key": license.license_key})
-            logger.info(f"Results: {results}")
-            return RetrieveDockerCompose(
-                docker_compose=results["data"]["docker_compose"],
-                success=results["success"],
-                message=results["message"],
-            )
-        else:
-            return RetrieveDockerCompose(
-                docker_compose="",
-                success=False,
-                message="License key not found",
-            )
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="Failed to retrieve Docker Compose")
+    Manually invalidate the license cache.
+    Useful for testing or when you want to force a fresh license check.
+    """
+    license = await get_license(session)
+    await invalidate_license_cache(session, license.license_key)
+
+    return {
+        "success": True,
+        "message": "License cache invalidated successfully"
+    }
 
 
 def create_headers(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
