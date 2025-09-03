@@ -2,36 +2,34 @@ import os
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
-
-
 from sqlalchemy.future import select
 
-from app.db.universal_models import Agents
-
 from app.auth.routes.auth import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import InvokeCopilotActionBody
+from app.connectors.velociraptor.services.artifacts import run_artifact_collection
+from app.db.db_session import get_db
+from app.db.universal_models import Agents
 from app.integrations.copilot_action.schema.copilot_action import ActionDetailResponse
 from app.integrations.copilot_action.schema.copilot_action import (
     InventoryMetricsResponse,
 )
-from app.db.db_session import get_db
 from app.integrations.copilot_action.schema.copilot_action import InventoryResponse
 from app.integrations.copilot_action.schema.copilot_action import Technology
 from app.integrations.copilot_action.services.copilot_action import CopilotActionService
-from app.connectors.velociraptor.services.artifacts import run_artifact_collection
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody, InvokeCopilotActionBody
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.routes.artifacts import get_velociraptor_id, get_velociraptor_org, get_all_artifacts_for_hostname
 
 copilot_action_router = APIRouter()
 auth_handler = AuthHandler()
 
 # Helper functions for better modularity
+
 
 def get_license_key() -> str:
     """Get and validate the COPILOT_API_KEY environment variable."""
@@ -61,9 +59,9 @@ async def get_agent_by_hostname(session: AsyncSession, hostname: str) -> Agents:
 
 def determine_artifact_name(agent_os: str) -> str:
     """Determine the appropriate Velociraptor artifact based on OS."""
-    if 'Windows' in agent_os:
+    if "Windows" in agent_os:
         return "Windows.Execute.RemotePowerShellScript"
-    elif 'Linux' in agent_os:
+    elif "Linux" in agent_os:
         return "Linux.Execute.RemoteBashScript"
     else:
         raise HTTPException(
@@ -77,10 +75,7 @@ def build_velociraptor_parameters(copilot_params: dict) -> dict:
     if not copilot_params:
         return {}
 
-    env_array = [
-        {"key": key, "value": str(value)}
-        for key, value in copilot_params.items()
-    ]
+    env_array = [{"key": key, "value": str(value)} for key, value in copilot_params.items()]
 
     return {"env": env_array}
 
@@ -116,37 +111,31 @@ async def validate_parameters(provided_params: dict, script_params: list) -> Non
         logger.error(f"Invalid parameters provided: {invalid_params}")
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid parameters provided: {list(invalid_params)}. Valid parameters are: {list(valid_param_names)}"
+            detail=f"Invalid parameters provided: {list(invalid_params)}. Valid parameters are: {list(valid_param_names)}",
         )
 
     # Validate: all required parameters present
     missing_params = required_params - provided_param_keys
     if missing_params:
         logger.error(f"Missing required parameters: {missing_params}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Missing required parameters: {list(missing_params)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Missing required parameters: {list(missing_params)}")
 
     logger.info("Parameter validation successful")
 
 
-async def build_artifact_collection_body(
-    agent: Agents,
-    artifact_name: str,
-    velociraptor_params: dict
-) -> CollectArtifactBody:
+async def build_artifact_collection_body(agent: Agents, artifact_name: str, velociraptor_params: dict) -> CollectArtifactBody:
     """Build the artifact collection request body for Velociraptor."""
     return CollectArtifactBody(
         hostname=agent.hostname,
         velociraptor_id=agent.velociraptor_id,
         velociraptor_org=agent.velociraptor_org,
         artifact_name=artifact_name,
-        parameters=velociraptor_params
+        parameters=velociraptor_params,
     )
 
 
 # Route handlers (keeping existing routes but updating invoke_action)
+
 
 @copilot_action_router.get(
     "/inventory",
@@ -203,10 +192,7 @@ async def get_action_by_name(copilot_action_name: str) -> ActionDetailResponse:
     license_key = get_license_key()
 
     try:
-        response = await CopilotActionService.get_action_by_name(
-            license_key=license_key,
-            copilot_action_name=copilot_action_name
-        )
+        response = await CopilotActionService.get_action_by_name(license_key=license_key, copilot_action_name=copilot_action_name)
 
         if not response.success:
             if "not found" in response.message.lower():
@@ -269,10 +255,7 @@ async def get_technologies() -> dict:
     description="Invoke a Copilot Action on a target agent",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def invoke_action(
-    body: InvokeCopilotActionBody,
-    session: AsyncSession = Depends(get_db)
-) -> CollectArtifactResponse:
+async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> CollectArtifactResponse:
     """
     Invoke a Copilot Action on a target agent.
 
@@ -304,18 +287,13 @@ async def invoke_action(
         logger.info(f"Found action details for: {body.copilot_action_name}")
 
         # Step 4: Validate parameters
-        await validate_parameters(
-            body.parameters or {},
-            copilot_action_details.copilot_action.script_parameters
-        )
+        await validate_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
 
         # Step 5: Build Velociraptor parameters
         velociraptor_params = build_velociraptor_parameters(body.parameters or {})
 
         # Step 6: Build artifact collection request
-        artifact_body = await build_artifact_collection_body(
-            agent, artifact_name, velociraptor_params
-        )
+        artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)
         logger.info(f"Built artifact collection request for {agent.hostname}")
 
         # Step 7: Execute the collection

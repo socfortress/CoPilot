@@ -150,6 +150,7 @@ class CollectArtifactBody(BaseBody):
             },
         }
 
+
 class InvokeCopilotActionBody(BaseModel):
     """Request body for invoking a Copilot action."""
 

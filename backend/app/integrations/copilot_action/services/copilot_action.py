@@ -1,8 +1,8 @@
 from typing import Optional
 
 import httpx
-from loguru import logger
 from fastapi import HTTPException
+from loguru import logger
 
 from app.integrations.copilot_action.schema.copilot_action import ActionDetailResponse
 from app.integrations.copilot_action.schema.copilot_action import (
