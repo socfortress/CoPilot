@@ -95,7 +95,7 @@ class InventoryResponse(BaseModel):
 class ActionDetailResponse(BaseModel):
     """Response model for single action details"""
 
-    active_response: ActiveResponseItem
+    copilot_action: ActiveResponseItem
     message: str
     success: bool
 

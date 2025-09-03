@@ -2,6 +2,7 @@ from typing import Optional
 
 import httpx
 from loguru import logger
+from fastapi import HTTPException
 
 from app.integrations.copilot_action.schema.copilot_action import ActionDetailResponse
 from app.integrations.copilot_action.schema.copilot_action import (
@@ -121,7 +122,7 @@ class CopilotActionService:
                     data = response.json()
                 except ValueError:
                     logger.error(f"Non-JSON response from action API: {response.text[:200]}")
-                    return ActionDetailResponse(active_response=None, message="Invalid response format from action API", success=False)
+                    return ActionDetailResponse(copilot_action=None, message="Invalid response format from action API", success=False)
 
                 logger.info(f"Successfully fetched action details for: {copilot_action_name}")
                 return ActionDetailResponse(**data)
@@ -129,12 +130,12 @@ class CopilotActionService:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 logger.warning(f"Action not found: {copilot_action_name}")
-                return ActionDetailResponse(active_response=None, message=f"Action '{copilot_action_name}' not found", success=False)
+                raise HTTPException(status_code=404, detail=f"Action '{copilot_action_name}' not found")
             logger.error(f"HTTP error fetching action details: {str(e)}")
-            return ActionDetailResponse(active_response=None, message=f"HTTP error fetching action details: {str(e)}", success=False)
+            return ActionDetailResponse(copilot_action=None, message=f"HTTP error fetching action details: {str(e)}", success=False)
         except Exception as e:
             logger.error(f"Unexpected error fetching action details: {str(e)}")
-            return ActionDetailResponse(active_response=None, message=f"Unexpected error: {str(e)}", success=False)
+            return ActionDetailResponse(copilot_action=None, message=f"Unexpected error: {str(e)}", success=False)
 
     @classmethod
     async def get_metrics(cls, license_key: str) -> InventoryMetricsResponse:

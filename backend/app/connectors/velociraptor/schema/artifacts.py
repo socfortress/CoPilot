@@ -150,6 +150,17 @@ class CollectArtifactBody(BaseBody):
             },
         }
 
+class InvokeCopilotActionBody(BaseModel):
+    """Request body for invoking a Copilot action."""
+
+    copilot_action_name: str = Field(..., description="Name of the action to invoke")
+    agent_name: str = Field(..., description="Name of the agent to invoke the action on")
+    artifact_name: Optional[str] = Field(None, description="Name of the artifact to use")
+    parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]] = Field(
+        None,
+        description="Optional parameters for the action",
+    )
+
 
 class CollectFileBody(BaseBody):
     artifact_name: str = Field(
