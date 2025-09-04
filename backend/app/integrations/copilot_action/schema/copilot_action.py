@@ -33,6 +33,7 @@ class ScriptParameter(BaseModel):
     description: Optional[str] = None
     default: Optional[Union[str, int, float, bool, list, dict]] = None
     enum: Optional[List[str]] = None
+    arg_position: Optional[str] = None
 
     @validator("type")
     def validate_type(cls, v):
