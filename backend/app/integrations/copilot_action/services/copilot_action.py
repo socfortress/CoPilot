@@ -120,6 +120,7 @@ class CopilotActionService:
 
                 try:
                     data = response.json()
+                    logger.debug(f"Action detail response data: {data}")
                 except ValueError:
                     logger.error(f"Non-JSON response from action API: {response.text[:200]}")
                     return ActionDetailResponse(copilot_action=None, message="Invalid response format from action API", success=False)

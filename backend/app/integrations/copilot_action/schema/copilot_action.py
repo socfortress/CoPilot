@@ -50,7 +50,7 @@ class ActiveResponseItem(BaseModel):
     technology: Technology
     icon: Optional[str] = None
     script_parameters: List[ScriptParameter] = Field(default_factory=list)
-    repo_url: HttpUrl
+    repo_url: str  # Changed from HttpUrl to str
     script_name: Optional[str] = None
     version: Optional[str] = None
     last_updated: Optional[datetime] = None
@@ -65,11 +65,16 @@ class ActiveResponseItem(BaseModel):
 
     @validator("repo_url")
     def ensure_repo_url_ends_with_main(cls, v):
+        # Keep it as string, just ensure it ends with /main/
         repo_str = str(v)
-        if not repo_str.endswith("/main"):
-            return HttpUrl(f"{repo_str}/main")
-        return v
-
+        if not repo_str.endswith("/main/") and not repo_str.endswith("/main"):
+            if repo_str.endswith("/"):
+                return f"{repo_str}main/"
+            else:
+                return f"{repo_str}/main/"
+        elif repo_str.endswith("/main"):
+            return f"{repo_str}/"
+        return repo_str
 
 class InventoryQueryRequest(BaseModel):
     """Request model for inventory queries"""

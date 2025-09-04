@@ -101,6 +101,12 @@ async def validate_parameters(provided_params: dict, script_params: list) -> Non
     required_params = {param.name for param in script_params if param.required}
     provided_param_keys = set(provided_params.keys())
 
+    # Add RepoURL and ScriptName as required parameters for Copilot Actions
+    required_params.add("RepoURL")
+    required_params.add("ScriptName")
+    valid_param_names.add("RepoURL")
+    valid_param_names.add("ScriptName")
+
     logger.info(f"Valid parameters: {valid_param_names}")
     logger.info(f"Required parameters: {required_params}")
     logger.info(f"Provided parameters: {provided_param_keys}")
@@ -201,6 +207,7 @@ async def get_action_by_name(copilot_action_name: str) -> ActionDetailResponse:
                 raise HTTPException(status_code=500, detail=response.message)
 
         logger.info(f"Successfully fetched action details for: {copilot_action_name}")
+        logger.info(f"Raw action feteched: {response}")
         return response
 
     except HTTPException:
@@ -285,6 +292,18 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         # Step 3: Fetch action details
         copilot_action_details = await get_action_by_name(body.copilot_action_name)
         logger.info(f"Found action details for: {body.copilot_action_name}")
+
+        # Add the `repo_url` and the `script_name` to the parameters
+        if copilot_action_details.copilot_action.repo_url:
+            if not body.parameters:
+                body.parameters = {}
+            body.parameters["RepoURL"] = copilot_action_details.copilot_action.repo_url
+        if copilot_action_details.copilot_action.script_name:
+            if not body.parameters:
+                body.parameters = {}
+            body.parameters["ScriptName"] = copilot_action_details.copilot_action.script_name
+
+        logger.info(f"Parameters after adding repo and script: {body.parameters}")
 
         # Step 4: Validate parameters
         await validate_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
