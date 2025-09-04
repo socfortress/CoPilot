@@ -70,12 +70,45 @@ def determine_artifact_name(agent_os: str) -> str:
         )
 
 
-def build_velociraptor_parameters(copilot_params: dict) -> dict:
-    """Convert Copilot Action parameters to Velociraptor format."""
+def build_velociraptor_parameters(copilot_params: dict, script_params: list) -> dict:
+    """
+    Convert Copilot Action parameters to Velociraptor format.
+
+    Args:
+        copilot_params: Dictionary of parameters provided by the user
+        script_params: List of ScriptParameter objects from the action details
+
+    Returns:
+        Dictionary with env array for Velociraptor
+    """
     if not copilot_params:
         return {}
 
-    env_array = [{"key": key, "value": str(value)} for key, value in copilot_params.items()]
+    env_array = []
+
+    # Always add RepoURL and ScriptName first
+    if "RepoURL" in copilot_params:
+        env_array.append({"key": "RepoURL", "value": str(copilot_params["RepoURL"])})
+    if "ScriptName" in copilot_params:
+        env_array.append({"key": "ScriptName", "value": str(copilot_params["ScriptName"])})
+
+    # Create a mapping of parameter names to their arg_position
+    param_position_map = {}
+    for param in script_params:
+        if param.arg_position is not None:
+            param_position_map[param.name] = param.arg_position
+
+    # Add parameters with arg_position as Arg{position}
+    for param_name, param_value in copilot_params.items():
+        if param_name in param_position_map:
+            arg_key = f"Arg{param_position_map[param_name]}"
+            env_array.append({"key": arg_key, "value": str(param_value)})
+
+    # Add other parameters (those without arg_position and not RepoURL/ScriptName)
+    for param_name, param_value in copilot_params.items():
+        if (param_name not in param_position_map and
+            param_name not in ["RepoURL", "ScriptName"]):
+            env_array.append({"key": param_name, "value": str(param_value)})
 
     return {"env": env_array}
 
@@ -308,8 +341,11 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         # Step 4: Validate parameters
         await validate_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
 
-        # Step 5: Build Velociraptor parameters
-        velociraptor_params = build_velociraptor_parameters(body.parameters or {})
+        # Step 5: Build Velociraptor parameters (now includes script_params for arg_position mapping)
+        velociraptor_params = build_velociraptor_parameters(
+            body.parameters or {},
+            copilot_action_details.copilot_action.script_parameters
+        )
 
         # Step 6: Build artifact collection request
         artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)
