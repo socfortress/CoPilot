@@ -1,4 +1,5 @@
 import os
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -40,21 +41,22 @@ def get_license_key() -> str:
     return license_key
 
 
-async def get_agent_by_hostname(session: AsyncSession, hostname: str) -> Agents:
-    """Retrieve agent from database by hostname."""
-    agent_details = await session.execute(
-        select(Agents).filter(Agents.hostname == hostname),
-    )
-    agent = agent_details.scalars().first()
+async def get_agents_by_hostnames(session: AsyncSession, hostnames: List[str]) -> List[Agents]:
+    """Retrieve multiple agents from database by hostnames."""
+    agent_details = await session.execute(select(Agents).filter(Agents.hostname.in_(hostnames)))
+    agents = agent_details.scalars().all()
 
-    if not agent:
+    found_hostnames = {agent.hostname for agent in agents}
+    missing_hostnames = set(hostnames) - found_hostnames
+
+    if missing_hostnames:
         raise HTTPException(
             status_code=404,
-            detail=f"Agent with hostname {hostname} not found",
+            detail=f"Agents with hostnames {list(missing_hostnames)} not found",
         )
 
-    logger.info(f"Found agent: {agent.hostname} with OS: {agent.os}")
-    return agent
+    logger.info(f"Found {len(agents)} agents")
+    return agents
 
 
 def determine_artifact_name(agent_os: str) -> str:
@@ -288,70 +290,125 @@ async def get_technologies() -> dict:
     }
 
 
-@copilot_action_router.post(
-    "/invoke",
-    response_model=CollectArtifactResponse,
-    description="Invoke a Copilot Action on a target agent",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
-)
-async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> CollectArtifactResponse:
+async def invoke_action_on_agent(
+    agent: Agents,
+    copilot_action_name: str,
+    copilot_action_details: ActionDetailResponse,
+    parameters: dict,
+) -> CollectArtifactResponse:
     """
-    Invoke a Copilot Action on a target agent.
-
-    This endpoint orchestrates the process of:
-    1. Finding the target agent
-    2. Determining the appropriate Velociraptor artifact
-    3. Fetching action details and validating parameters
-    4. Building and executing the artifact collection request
+    Invoke a Copilot Action on a single agent.
 
     Args:
-        body: Request body containing action name, agent name, and parameters
-        session: Database session
+        agent: The agent to invoke the action on
+        copilot_action_name: Name of the action
+        copilot_action_details: Action details from the service
+        parameters: Parameters for the action
 
     Returns:
         CollectArtifactResponse: Response from the artifact collection
     """
-    logger.info(f"Invoking Copilot action '{body.copilot_action_name}' on agent '{body.agent_name}'")
-
     try:
-        # Step 1: Get the target agent
-        agent = await get_agent_by_hostname(session, body.agent_name)
-
-        # Step 2: Determine the appropriate artifact based on OS
+        # Determine the appropriate artifact based on OS
         artifact_name = determine_artifact_name(agent.os)
-        logger.info(f"Using artifact: {artifact_name} for OS: {agent.os}")
+        logger.info(f"Using artifact: {artifact_name} for OS: {agent.os} on agent {agent.hostname}")
 
-        # Step 3: Fetch action details
-        copilot_action_details = await get_action_by_name(body.copilot_action_name)
-        logger.info(f"Found action details for: {body.copilot_action_name}")
+        # Build Velociraptor parameters
+        velociraptor_params = build_velociraptor_parameters(parameters, copilot_action_details.copilot_action.script_parameters)
 
-        # Add the `repo_url` and the `script_name` to the parameters
-        if copilot_action_details.copilot_action.repo_url:
-            if not body.parameters:
-                body.parameters = {}
-            body.parameters["RepoURL"] = copilot_action_details.copilot_action.repo_url
-        if copilot_action_details.copilot_action.script_name:
-            if not body.parameters:
-                body.parameters = {}
-            body.parameters["ScriptName"] = copilot_action_details.copilot_action.script_name
-
-        logger.info(f"Parameters after adding repo and script: {body.parameters}")
-
-        # Step 4: Validate parameters
-        await validate_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
-
-        # Step 5: Build Velociraptor parameters (now includes script_params for arg_position mapping)
-        velociraptor_params = build_velociraptor_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
-
-        # Step 6: Build artifact collection request
+        # Build artifact collection request
         artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)
         logger.info(f"Built artifact collection request for {agent.hostname}")
 
-        # Step 7: Execute the collection
+        # Execute the collection
         response = await run_artifact_collection(artifact_body)
         logger.info(f"Successfully invoked Copilot action on {agent.hostname}")
 
         return response
+
+    except Exception as e:
+        logger.error(f"Error invoking action on agent {agent.hostname}: {str(e)}")
+        # You might want to return a failed response instead of raising
+        raise HTTPException(status_code=500, detail=f"Error invoking action on agent {agent.hostname}: {str(e)}")
+
+
+@copilot_action_router.post(
+    "/invoke",
+    response_model=List[CollectArtifactResponse],  # Now returns a list of responses
+    description="Invoke a Copilot Action on multiple target agents",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> List[CollectArtifactResponse]:
+    """
+    Invoke a Copilot Action on multiple target agents.
+
+    This endpoint orchestrates the process of:
+    1. Finding all target agents
+    2. Fetching action details and validating parameters once
+    3. Building and executing the artifact collection request for each agent
+
+    Args:
+        body: Request body containing action name, agent names, and parameters
+        session: Database session
+
+    Returns:
+        List[CollectArtifactResponse]: List of responses from the artifact collections
+    """
+    logger.info(f"Invoking Copilot action '{body.copilot_action_name}' on {len(body.agent_names)} agents")
+
+    try:
+        # Step 1: Get all target agents
+        agents = await get_agents_by_hostnames(session, body.agent_names)
+        logger.info(f"Found agents: {[agent.hostname for agent in agents]}")
+
+        # Step 2: Fetch action details (do this once for all agents)
+        copilot_action_details = await get_action_by_name(body.copilot_action_name)
+        logger.info(f"Found action details for: {body.copilot_action_name}")
+
+        # Step 3: Prepare parameters (do this once for all agents)
+        final_parameters = body.parameters or {}
+
+        # Add the `repo_url` and the `script_name` to the parameters
+        if copilot_action_details.copilot_action.repo_url:
+            final_parameters["RepoURL"] = copilot_action_details.copilot_action.repo_url
+        if copilot_action_details.copilot_action.script_name:
+            final_parameters["ScriptName"] = copilot_action_details.copilot_action.script_name
+
+        logger.info(f"Parameters after adding repo and script: {final_parameters}")
+
+        # Step 4: Validate parameters (do this once for all agents)
+        await validate_parameters(final_parameters, copilot_action_details.copilot_action.script_parameters)
+
+        # Step 5: Execute action on each agent
+        responses = []
+        successful_agents = []
+        failed_agents = []
+
+        for agent in agents:
+            try:
+                response = await invoke_action_on_agent(agent, body.copilot_action_name, copilot_action_details, final_parameters)
+                responses.append(response)
+                successful_agents.append(agent.hostname)
+
+            except Exception as e:
+                logger.error(f"Failed to invoke action on agent {agent.hostname}: {str(e)}")
+                failed_agents.append(agent.hostname)
+                # Add a failed response to maintain order
+                failed_response = CollectArtifactResponse(
+                    message=f"Failed to invoke action on {agent.hostname}: {str(e)}",
+                    success=False,
+                    results=[],
+                )
+                responses.append(failed_response)
+
+        # Log summary
+        logger.info(f"Action invocation complete. Successful: {len(successful_agents)}, Failed: {len(failed_agents)}")
+        if successful_agents:
+            logger.info(f"Successful agents: {successful_agents}")
+        if failed_agents:
+            logger.warning(f"Failed agents: {failed_agents}")
+
+        return responses
 
     except HTTPException:
         # Re-raise HTTP exceptions (validation errors, not found, etc.)

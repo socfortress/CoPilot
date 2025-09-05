@@ -155,7 +155,7 @@ class InvokeCopilotActionBody(BaseModel):
     """Request body for invoking a Copilot action."""
 
     copilot_action_name: str = Field(..., description="Name of the action to invoke")
-    agent_name: str = Field(..., description="Name of the agent to invoke the action on")
+    agent_names: List[str] = Field(..., description="List of agent names to invoke the action on")  # Changed from agent_name to agent_names
     artifact_name: Optional[str] = Field(None, description="Name of the artifact to use")
     parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]] = Field(
         None,
