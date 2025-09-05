@@ -8,7 +8,6 @@ from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import HttpUrl
 from pydantic import validator
 
 
@@ -33,6 +32,7 @@ class ScriptParameter(BaseModel):
     description: Optional[str] = None
     default: Optional[Union[str, int, float, bool, list, dict]] = None
     enum: Optional[List[str]] = None
+    arg_position: Optional[str] = None
 
     @validator("type")
     def validate_type(cls, v):
@@ -50,7 +50,7 @@ class ActiveResponseItem(BaseModel):
     technology: Technology
     icon: Optional[str] = None
     script_parameters: List[ScriptParameter] = Field(default_factory=list)
-    repo_url: HttpUrl
+    repo_url: str  # Changed from HttpUrl to str
     script_name: Optional[str] = None
     version: Optional[str] = None
     last_updated: Optional[datetime] = None
@@ -65,10 +65,16 @@ class ActiveResponseItem(BaseModel):
 
     @validator("repo_url")
     def ensure_repo_url_ends_with_main(cls, v):
+        # Keep it as string, just ensure it ends with /main/
         repo_str = str(v)
-        if not repo_str.endswith("/main"):
-            return HttpUrl(f"{repo_str}/main")
-        return v
+        if not repo_str.endswith("/main/") and not repo_str.endswith("/main"):
+            if repo_str.endswith("/"):
+                return f"{repo_str}main/"
+            else:
+                return f"{repo_str}/main/"
+        elif repo_str.endswith("/main"):
+            return f"{repo_str}/"
+        return repo_str
 
 
 class InventoryQueryRequest(BaseModel):
@@ -95,7 +101,7 @@ class InventoryResponse(BaseModel):
 class ActionDetailResponse(BaseModel):
     """Response model for single action details"""
 
-    active_response: ActiveResponseItem
+    copilot_action: ActiveResponseItem
     message: str
     success: bool
 
