@@ -106,8 +106,7 @@ def build_velociraptor_parameters(copilot_params: dict, script_params: list) -> 
 
     # Add other parameters (those without arg_position and not RepoURL/ScriptName)
     for param_name, param_value in copilot_params.items():
-        if (param_name not in param_position_map and
-            param_name not in ["RepoURL", "ScriptName"]):
+        if param_name not in param_position_map and param_name not in ["RepoURL", "ScriptName"]:
             env_array.append({"key": param_name, "value": str(param_value)})
 
     return {"env": env_array}
@@ -342,10 +341,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         await validate_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
 
         # Step 5: Build Velociraptor parameters (now includes script_params for arg_position mapping)
-        velociraptor_params = build_velociraptor_parameters(
-            body.parameters or {},
-            copilot_action_details.copilot_action.script_parameters
-        )
+        velociraptor_params = build_velociraptor_parameters(body.parameters or {}, copilot_action_details.copilot_action.script_parameters)
 
         # Step 6: Build artifact collection request
         artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)

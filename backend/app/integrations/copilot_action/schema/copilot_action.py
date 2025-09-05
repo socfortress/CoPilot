@@ -8,7 +8,6 @@ from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import HttpUrl
 from pydantic import validator
 
 
@@ -76,6 +75,7 @@ class ActiveResponseItem(BaseModel):
         elif repo_str.endswith("/main"):
             return f"{repo_str}/"
         return repo_str
+
 
 class InventoryQueryRequest(BaseModel):
     """Request model for inventory queries"""
