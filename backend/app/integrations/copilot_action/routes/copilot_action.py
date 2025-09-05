@@ -1,5 +1,6 @@
 import os
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -42,9 +43,7 @@ def get_license_key() -> str:
 
 async def get_agents_by_hostnames(session: AsyncSession, hostnames: List[str]) -> List[Agents]:
     """Retrieve multiple agents from database by hostnames."""
-    agent_details = await session.execute(
-        select(Agents).filter(Agents.hostname.in_(hostnames))
-    )
+    agent_details = await session.execute(select(Agents).filter(Agents.hostname.in_(hostnames)))
     agents = agent_details.scalars().all()
 
     found_hostnames = {agent.hostname for agent in agents}
@@ -291,31 +290,11 @@ async def get_technologies() -> dict:
     }
 
 
-async def get_agents_by_hostnames(session: AsyncSession, hostnames: List[str]) -> List[Agents]:
-    """Retrieve multiple agents from database by hostnames."""
-    agent_details = await session.execute(
-        select(Agents).filter(Agents.hostname.in_(hostnames))
-    )
-    agents = agent_details.scalars().all()
-
-    found_hostnames = {agent.hostname for agent in agents}
-    missing_hostnames = set(hostnames) - found_hostnames
-
-    if missing_hostnames:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Agents with hostnames {list(missing_hostnames)} not found",
-        )
-
-    logger.info(f"Found {len(agents)} agents")
-    return agents
-
-
 async def invoke_action_on_agent(
     agent: Agents,
     copilot_action_name: str,
     copilot_action_details: ActionDetailResponse,
-    parameters: dict
+    parameters: dict,
 ) -> CollectArtifactResponse:
     """
     Invoke a Copilot Action on a single agent.
@@ -335,10 +314,7 @@ async def invoke_action_on_agent(
         logger.info(f"Using artifact: {artifact_name} for OS: {agent.os} on agent {agent.hostname}")
 
         # Build Velociraptor parameters
-        velociraptor_params = build_velociraptor_parameters(
-            parameters,
-            copilot_action_details.copilot_action.script_parameters
-        )
+        velociraptor_params = build_velociraptor_parameters(parameters, copilot_action_details.copilot_action.script_parameters)
 
         # Build artifact collection request
         artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)
@@ -410,12 +386,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
 
         for agent in agents:
             try:
-                response = await invoke_action_on_agent(
-                    agent,
-                    body.copilot_action_name,
-                    copilot_action_details,
-                    final_parameters
-                )
+                response = await invoke_action_on_agent(agent, body.copilot_action_name, copilot_action_details, final_parameters)
                 responses.append(response)
                 successful_agents.append(agent.hostname)
 
@@ -426,7 +397,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
                 failed_response = CollectArtifactResponse(
                     message=f"Failed to invoke action on {agent.hostname}: {str(e)}",
                     success=False,
-                    results=[]
+                    results=[],
                 )
                 responses.append(failed_response)
 
