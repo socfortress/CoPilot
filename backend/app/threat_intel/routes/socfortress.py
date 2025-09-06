@@ -419,7 +419,10 @@ async def process_name_intel_socfortress(
     # await is_feature_enabled("PROCESS ANALYSIS", session=session)
     logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
 
-    raise HTTPException(status_code=501, detail="SOCFortress Process Name Analysis is currently disabled as the leveraged 3rd party service is unavailable.")
+    raise HTTPException(
+        status_code=501,
+        detail="SOCFortress Process Name Analysis is currently disabled as the leveraged 3rd party service is unavailable.",
+    )
 
     socfortress_lookup = await socfortress_process_analysis_lookup(
         lincense_key=(await get_license(session)).license_key,
