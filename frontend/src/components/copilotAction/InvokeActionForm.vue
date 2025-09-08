@@ -264,7 +264,7 @@ async function handleSubmit() {
 		const response = await Api.copilotAction.invokeAction(payload)
 
 		if (response.data.success) {
-			message.success(`Action invoked successfully on ${form.value.agent_names.length} agent(s)`)
+			message.success(`Action invoked successfully on ${form.value.agent_names.length} agent(s). Check the appropriate Grafana dashboard for results.`)
 			emit('success')
 		} else {
 			message.error(response.data.message || 'Failed to invoke action')

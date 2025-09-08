@@ -413,7 +413,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         if len(failed_agents) == 0:
             return InvokeCopilotActionResponse(
                 responses=[response.dict() for response in responses],
-                message=f"Successfully invoked action on all {len(successful_agents)} agent(s)",
+                message=f"Successfully invoked action on all {len(successful_agents)} agent(s). Check the appropriate Grafana dashboard for results.",
                 success=True
             )
         elif len(successful_agents) == 0:
