@@ -92,6 +92,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Detection Rules" }
 						),
 					key: "DetectionRules"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "CopilotActions"
+								}
+							},
+							{ default: () => "CoPilot Actions" }
+						),
+					key: "CopilotActions"
 				}
 			]
 		},
