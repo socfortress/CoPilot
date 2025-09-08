@@ -51,11 +51,11 @@
 							<div
 								v-for="param in action.script_parameters"
 								:key="param.name"
-								class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+								class="parameter-card border rounded-lg p-4 hover:shadow-sm transition-shadow"
 							>
 								<div class="flex items-start justify-between mb-2">
 									<div class="flex items-center gap-2">
-										<h4 class="font-mono text-sm font-semibold text-gray-900">{{ param.name }}</h4>
+										<h4 class="font-mono text-sm font-semibold">{{ param.name }}</h4>
 										<Badge :color="param.required ? 'danger' : 'success'" size="small">
 											<template #value>{{ param.required ? 'Required' : 'Optional' }}</template>
 										</Badge>
@@ -65,30 +65,30 @@
 									</Badge>
 								</div>
 
-								<div v-if="param.description" class="text-sm text-gray-600 mb-3">
+								<div v-if="param.description" class="text-sm opacity-75 mb-3">
 									{{ param.description }}
 								</div>
 
 								<div class="flex flex-col gap-1">
-									<div v-if="param.default !== null && param.default !== undefined" class="text-xs text-gray-500">
+									<div v-if="param.default !== null && param.default !== undefined" class="text-xs opacity-60">
 										<span class="font-medium">Default:</span>
-										<code class="bg-gray-200 px-1 py-0.5 rounded text-xs">{{ param.default }}</code>
+										<code class="code-block px-1 py-0.5 rounded text-xs ml-1">{{ param.default }}</code>
 									</div>
 
-									<div v-if="param.enum && param.enum.length > 0" class="text-xs text-gray-500">
+									<div v-if="param.enum && param.enum.length > 0" class="text-xs opacity-60">
 										<span class="font-medium">Options:</span>
 										<div class="flex flex-wrap gap-1 mt-1">
 											<code
 												v-for="option in param.enum"
 												:key="option"
-												class="bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-xs"
+												class="enum-option px-1 py-0.5 rounded text-xs"
 											>
 												{{ option }}
 											</code>
 										</div>
 									</div>
 
-									<div v-if="param.arg_position" class="text-xs text-gray-500">
+									<div v-if="param.arg_position" class="text-xs opacity-60">
 										<span class="font-medium">Position:</span> {{ param.arg_position }}
 									</div>
 								</div>
@@ -133,22 +133,49 @@ function formatDate(date: Date): string {
 }
 
 .action-details::-webkit-scrollbar-track {
-	background: #f1f1f1;
+	background: var(--border-color);
 	border-radius: 3px;
 }
 
 .action-details::-webkit-scrollbar-thumb {
-	background: #c1c1c1;
+	background: var(--text-color-3);
 	border-radius: 3px;
 }
 
 .action-details::-webkit-scrollbar-thumb:hover {
-	background: #a8a8a8;
+	background: var(--text-color-2);
 }
 
-/* Parameter card hover effects */
-.bg-white:hover {
-	background-color: #f9fafb;
-	border-color: #d1d5db;
+/* Parameter cards */
+.parameter-card {
+	background-color: var(--card-color);
+	border-color: var(--border-color);
+	transition: all 0.2s ease;
+}
+
+.parameter-card:hover {
+	background-color: var(--hover-color);
+	border-color: var(--border-color-hover);
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Code blocks */
+.code-block {
+	background-color: var(--code-color);
+	color: var(--text-color-1);
+	border: 1px solid var(--border-color);
+}
+
+.enum-option {
+	background-color: var(--primary-color-hover);
+	color: var(--primary-color);
+	border: 1px solid var(--primary-color-hover);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+	.parameter-card:hover {
+		box-shadow: 0 1px 3px 0 rgba(255, 255, 255, 0.1), 0 1px 2px 0 rgba(255, 255, 255, 0.06);
+	}
 }
 </style>
