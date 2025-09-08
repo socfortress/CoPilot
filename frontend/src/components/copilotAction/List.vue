@@ -63,9 +63,11 @@
 			</div>
 
 			<n-spin :show="loading">
-				<div class="my-3 flex min-h-28 flex-col gap-2">
+				<div class="my-3">
 					<template v-if="list.length">
-						<ActionCard v-for="item of list" :key="item.copilot_action_name" :action="item" />
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+							<ActionCard v-for="item of list" :key="item.copilot_action_name" :action="item" />
+						</div>
 					</template>
 					<template v-else>
 						<n-empty v-if="!loading" description="No actions found" class="h-48 justify-center" />
@@ -74,7 +76,7 @@
 			</n-spin>
 			<div class="flex justify-end">
 				<n-pagination
-					v-if="list.length > 3"
+					v-if="list.length > 8"
 					v-model:page="currentPage"
 					:page-size="pageSize"
 					:item-count="total"
