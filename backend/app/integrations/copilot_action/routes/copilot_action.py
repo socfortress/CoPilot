@@ -23,6 +23,7 @@ from app.integrations.copilot_action.schema.copilot_action import (
     InventoryMetricsResponse,
 )
 from app.integrations.copilot_action.schema.copilot_action import InventoryResponse
+from app.integrations.copilot_action.schema.copilot_action import InvokeCopilotActionResponse
 from app.integrations.copilot_action.schema.copilot_action import Technology
 from app.integrations.copilot_action.services.copilot_action import CopilotActionService
 
@@ -334,11 +335,11 @@ async def invoke_action_on_agent(
 
 @copilot_action_router.post(
     "/invoke",
-    response_model=List[CollectArtifactResponse],  # Now returns a list of responses
+    response_model=InvokeCopilotActionResponse,  # Updated to use structured response
     description="Invoke a Copilot Action on multiple target agents",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> List[CollectArtifactResponse]:
+async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> InvokeCopilotActionResponse:
     """
     Invoke a Copilot Action on multiple target agents.
 
@@ -352,7 +353,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         session: Database session
 
     Returns:
-        List[CollectArtifactResponse]: List of responses from the artifact collections
+        InvokeCopilotActionResponse: Structured response with list of results, message, and success status
     """
     logger.info(f"Invoking Copilot action '{body.copilot_action_name}' on {len(body.agent_names)} agents")
 
@@ -408,7 +409,25 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         if failed_agents:
             logger.warning(f"Failed agents: {failed_agents}")
 
-        return responses
+        # Return structured response
+        if len(failed_agents) == 0:
+            return InvokeCopilotActionResponse(
+                responses=[response.dict() for response in responses],
+                message=f"Successfully invoked action on all {len(successful_agents)} agent(s)",
+                success=True
+            )
+        elif len(successful_agents) == 0:
+            return InvokeCopilotActionResponse(
+                responses=[response.dict() for response in responses],
+                message=f"Failed to invoke action on all {len(failed_agents)} agent(s)",
+                success=False
+            )
+        else:
+            return InvokeCopilotActionResponse(
+                responses=[response.dict() for response in responses],
+                message=f"Partially successful: {len(successful_agents)} succeeded, {len(failed_agents)} failed",
+                success=True  # Consider partial success as success
+            )
 
     except HTTPException:
         # Re-raise HTTP exceptions (validation errors, not found, etc.)

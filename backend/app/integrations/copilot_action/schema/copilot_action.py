@@ -113,3 +113,11 @@ class InventoryMetricsResponse(BaseModel):
     metrics: Dict[str, Any]
     message: str = "Successfully retrieved inventory metrics"
     success: bool = True
+
+
+class InvokeCopilotActionResponse(BaseModel):
+    """Response model for invoking copilot actions"""
+
+    responses: List[Dict[str, Any]]  # List of CollectArtifactResponse-like objects
+    message: str
+    success: bool
