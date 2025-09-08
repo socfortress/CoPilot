@@ -51,15 +51,6 @@
 						</template>
 					</n-input>
 				</div>
-				<n-pagination
-					v-model:page="currentPage"
-					v-model:page-size="pageSize"
-					:item-count="total"
-					:page-slot="pageSlot"
-					:show-size-picker="showSizePicker"
-					:page-sizes="pageSizes"
-					:simple="simpleMode"
-				/>
 			</div>
 
 			<n-spin :show="loading">
@@ -74,15 +65,6 @@
 					</template>
 				</div>
 			</n-spin>
-			<div class="flex justify-end">
-				<n-pagination
-					v-if="list.length > 8"
-					v-model:page="currentPage"
-					:page-size="pageSize"
-					:item-count="total"
-					:page-slot="6"
-				/>
-			</div>
 		</div>
 	</div>
 </template>
@@ -90,9 +72,9 @@
 <script setup lang="ts">
 import type { CopilotActionInventoryQuery } from "@/api/endpoints/copilotAction"
 import type { ActiveResponseItem } from "@/types/copilotAction.d"
-import { useResizeObserver, watchDebounced } from "@vueuse/core"
+import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -103,14 +85,7 @@ const loading = ref(false)
 const message = useMessage()
 const list = ref<ActiveResponseItem[]>([])
 const header = ref()
-const currentPage = ref(1)
 const total = ref(0)
-const compactMode = ref(false)
-const simpleMode = ref(false)
-const showSizePicker = computed(() => !compactMode.value)
-const pageSizes = [25, 50, 100, 150, 200]
-const pageSize = ref(pageSizes[0])
-const pageSlot = ref(8)
 const selectedTechnology = ref<Technology | null>(null)
 const selectedCategory = ref<string | null>(null)
 const searchQuery = ref<string>("")
@@ -140,8 +115,8 @@ function getList() {
 	loading.value = true
 
 	const query: CopilotActionInventoryQuery = {
-		limit: pageSize.value,
-		offset: (currentPage.value - 1) * pageSize.value,
+		limit: 100,
+		offset: 0,
 		technology: selectedTechnology.value || undefined,
 		category: selectedCategory.value || undefined,
 		q: searchQuery.value || undefined
@@ -167,22 +142,7 @@ function getList() {
 		})
 }
 
-useResizeObserver(header, entries => {
-	const entry = entries[0]
-	const { width } = entry.contentRect
-
-	if (width < 650) {
-		compactMode.value = true
-		pageSlot.value = 5
-	} else {
-		compactMode.value = false
-		pageSlot.value = 8
-	}
-
-	simpleMode.value = width < 450
-})
-
-watchDebounced([currentPage, pageSize, selectedTechnology, selectedCategory, searchQuery], getList, {
+watchDebounced([selectedTechnology, selectedCategory, searchQuery], getList, {
 	deep: true,
 	debounce: 300,
 	immediate: true
