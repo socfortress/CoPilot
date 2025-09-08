@@ -23,7 +23,7 @@
 						<span class="required-indicator">*</span>
 					</div>
 					<n-select
-						v-model:value="form.hostnames"
+						v-model:value="form.agent_names"
 						:options="agentOptions"
 						multiple
 						filterable
@@ -151,10 +151,10 @@ const loadingAgents = ref(false)
 const agentOptions = ref<{ label: string; value: string }[]>([])
 
 const form = ref<{
-	hostnames: string[]
+	agent_names: string[]
 	parameters: Record<string, any>
 }>({
-	hostnames: [],
+	agent_names: [],
 	parameters: {}
 })
 
@@ -163,7 +163,7 @@ const requiredParameters = computed(() => action.script_parameters.filter(p => p
 const optionalParameters = computed(() => action.script_parameters.filter(p => !p.required))
 
 const isFormValid = computed(() => {
-	if (form.value.hostnames.length === 0) return false
+	if (form.value.agent_names.length === 0) return false
 
 	// Check all required parameters are filled
 	for (const param of requiredParameters.value) {
@@ -253,7 +253,7 @@ async function handleSubmit() {
 		// Prepare the payload
 		const payload: InvokeCopilotActionRequest = {
 			copilot_action_name: action.copilot_action_name,
-			hostnames: form.value.hostnames,
+			agent_names: form.value.agent_names,
 			parameters: {
 				RepoURL: action.repo_url,
 				ScriptName: action.script_name || action.copilot_action_name,
@@ -264,7 +264,7 @@ async function handleSubmit() {
 		const response = await Api.copilotAction.invokeAction(payload)
 
 		if (response.data.success) {
-			message.success(`Action invoked successfully on ${form.value.hostnames.length} agent(s)`)
+			message.success(`Action invoked successfully on ${form.value.agent_names.length} agent(s)`)
 			emit('success')
 		} else {
 			message.error(response.data.message || 'Failed to invoke action')

@@ -64,7 +64,7 @@ export interface InventoryMetricsResponse {
 
 export interface InvokeCopilotActionRequest {
 	copilot_action_name: string
-	hostnames: string[]
+	agent_names: string[]
 	parameters: Record<string, any>
 }
 
