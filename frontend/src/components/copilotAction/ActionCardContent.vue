@@ -31,7 +31,7 @@
 					<!-- Description -->
 					<div class="flex flex-col gap-2">
 						<h3 class="text-lg font-semibold">Description</h3>
-						<p class="text-gray-600">{{ action.description }}</p>
+						<p class="text-base font-medium opacity-90 leading-relaxed">{{ action.description }}</p>
 					</div>
 
 					<!-- Tags -->
