@@ -1,5 +1,23 @@
 <template>
 	<div class="flex flex-col gap-4">
+		<!-- Info Banner -->
+		<div class="info-banner p-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
+			<div class="flex items-start gap-3">
+				<Icon :name="InfoIcon" class="text-blue-600 dark:text-blue-400 mt-0.5" :size="16" />
+				<p class="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+					CoPilot Actions leverages Velociraptor to run actions and Grafana to view results. See
+					<a
+						href="https://github.com/socfortress/CoPilot-Action"
+						target="_blank"
+						class="underline hover:no-underline font-medium"
+					>
+						https://github.com/socfortress/CoPilot-Action
+					</a>
+					for details.
+				</p>
+			</div>
+		</div>
+
 		<div class="flex flex-col">
 			<div ref="header" class="header flex items-center justify-end gap-2">
 				<div class="info flex grow gap-2">
