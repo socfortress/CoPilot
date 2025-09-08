@@ -6,8 +6,8 @@
 				<div class="action-header p-4 rounded-lg border">
 					<div class="flex items-start justify-between mb-3">
 						<div class="flex-1">
-							<h4 class="text-lg font-semibold mb-1">{{ action.copilot_action_name }}</h4>
-							<p class="text-sm opacity-75">{{ action.description }}</p>
+							<h4 class="text-lg font-semibold mb-2">{{ action.copilot_action_name }}</h4>
+							<p class="text-base font-medium opacity-90 leading-relaxed">{{ action.description }}</p>
 						</div>
 						<Badge :color="getTechnologyColor(action.technology)" class="ml-3">
 							<template #iconLeft><Icon :name="getTechnologyIcon(action.technology)" :size="14" /></template>
