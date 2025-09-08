@@ -10,7 +10,7 @@
 			</template>
 			<template #default>
 				<div class="flex-1">
-					<p class="text-sm text-gray-600 line-clamp-3">{{ action.description }}</p>
+					<p class="text-base font-medium opacity-90 leading-relaxed line-clamp-3">{{ action.description }}</p>
 				</div>
 			</template>
 			<template #footerMain>
