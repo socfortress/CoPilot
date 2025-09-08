@@ -45,39 +45,54 @@
 					</div>
 
 					<!-- Parameters -->
-					<div v-if="action.script_parameters.length > 0" class="flex flex-col gap-2">
+					<div v-if="action.script_parameters.length > 0" class="flex flex-col gap-4">
 						<h3 class="text-lg font-semibold">Parameters</h3>
-						<div class="overflow-x-auto">
-							<table class="w-full border-collapse border border-gray-300">
-								<thead>
-									<tr class="bg-gray-50">
-										<th class="border border-gray-300 px-3 py-2 text-left">Name</th>
-										<th class="border border-gray-300 px-3 py-2 text-left">Type</th>
-										<th class="border border-gray-300 px-3 py-2 text-left">Required</th>
-										<th class="border border-gray-300 px-3 py-2 text-left">Description</th>
-										<th class="border border-gray-300 px-3 py-2 text-left">Default</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr v-for="param in action.script_parameters" :key="param.name">
-										<td class="border border-gray-300 px-3 py-2 font-mono text-sm">{{ param.name }}</td>
-										<td class="border border-gray-300 px-3 py-2">
-											<Badge color="primary">
-												<template #value>{{ param.type }}</template>
-											</Badge>
-										</td>
-										<td class="border border-gray-300 px-3 py-2">
-											<Badge :color="param.required ? 'danger' : 'success'">
-												<template #value>{{ param.required ? 'Yes' : 'No' }}</template>
-											</Badge>
-										</td>
-										<td class="border border-gray-300 px-3 py-2">{{ param.description || '-' }}</td>
-										<td class="border border-gray-300 px-3 py-2 font-mono text-sm">
-											{{ param.default !== null && param.default !== undefined ? param.default : '-' }}
-										</td>
-									</tr>
-								</tbody>
-							</table>
+						<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+							<div
+								v-for="param in action.script_parameters"
+								:key="param.name"
+								class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+							>
+								<div class="flex items-start justify-between mb-2">
+									<div class="flex items-center gap-2">
+										<h4 class="font-mono text-sm font-semibold text-gray-900">{{ param.name }}</h4>
+										<Badge :color="param.required ? 'danger' : 'success'" size="small">
+											<template #value>{{ param.required ? 'Required' : 'Optional' }}</template>
+										</Badge>
+									</div>
+									<Badge color="primary" size="small">
+										<template #value>{{ param.type }}</template>
+									</Badge>
+								</div>
+
+								<div v-if="param.description" class="text-sm text-gray-600 mb-3">
+									{{ param.description }}
+								</div>
+
+								<div class="flex flex-col gap-1">
+									<div v-if="param.default !== null && param.default !== undefined" class="text-xs text-gray-500">
+										<span class="font-medium">Default:</span>
+										<code class="bg-gray-200 px-1 py-0.5 rounded text-xs">{{ param.default }}</code>
+									</div>
+
+									<div v-if="param.enum && param.enum.length > 0" class="text-xs text-gray-500">
+										<span class="font-medium">Options:</span>
+										<div class="flex flex-wrap gap-1 mt-1">
+											<code
+												v-for="option in param.enum"
+												:key="option"
+												class="bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-xs"
+											>
+												{{ option }}
+											</code>
+										</div>
+									</div>
+
+									<div v-if="param.arg_position" class="text-xs text-gray-500">
+										<span class="font-medium">Position:</span> {{ param.arg_position }}
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -112,11 +127,27 @@ function formatDate(date: Date): string {
 	overflow-y: auto;
 }
 
-table {
-	font-size: 0.9em;
+/* Custom scrollbar for better UX */
+.action-details::-webkit-scrollbar {
+	width: 6px;
 }
 
-th {
-	font-weight: 600;
+.action-details::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 3px;
+}
+
+.action-details::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 3px;
+}
+
+.action-details::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}
+
+/* Parameter card hover effects */
+.bg-gray-50:hover {
+	background-color: #f8fafc;
 }
 </style>
