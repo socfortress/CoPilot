@@ -51,7 +51,7 @@
 							<div
 								v-for="param in action.script_parameters"
 								:key="param.name"
-								class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+								class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
 							>
 								<div class="flex items-start justify-between mb-2">
 									<div class="flex items-center gap-2">
@@ -147,7 +147,8 @@ function formatDate(date: Date): string {
 }
 
 /* Parameter card hover effects */
-.bg-gray-50:hover {
-	background-color: #f8fafc;
+.bg-white:hover {
+	background-color: #f9fafb;
+	border-color: #d1d5db;
 }
 </style>
