@@ -61,6 +61,12 @@ const router = createRouter({
 					name: "DetectionRules",
 					component: () => import("@/views/agents/DetectionRules.vue"),
 					meta: { title: "Detection Rules" }
+				},
+				{
+					path: "copilot-actions",
+					name: "CopilotActions",
+					component: () => import("@/views/agents/CopilotActions.vue"),
+					meta: { title: "CoPilot Actions" }
 				}
 			]
 		},

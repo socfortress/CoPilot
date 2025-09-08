@@ -6,6 +6,7 @@ import askSocfortress from "./endpoints/askSocfortress"
 import auth from "./endpoints/auth"
 import cloudSecurityAssessment from "./endpoints/cloudSecurityAssessment"
 import connectors from "./endpoints/connectors"
+import copilotAction from "./endpoints/copilotAction"
 import copilotMCP from "./endpoints/copilotMCP"
 import customers from "./endpoints/customers"
 import flow from "./endpoints/flow"
@@ -37,6 +38,7 @@ export default {
 	artifacts,
 	auth,
 	connectors,
+	copilotAction,
 	graylog,
 	indices,
 	soc,
