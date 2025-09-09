@@ -275,8 +275,9 @@ class AgentVulnerabilities(SQLModel, table=True):
     epss_percentile: Optional[str] = Field(default=None, max_length=50)
     package_name: Optional[str] = Field(default=None, max_length=255)
 
-    # Foreign key to link to the Agents table
+    # Foreign keys
     agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True)
+    customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=50, index=True)
 
     # Relationship back to the Agents model
     agent: Optional["Agents"] = Relationship(back_populates="vulnerabilities")
@@ -303,7 +304,7 @@ class AgentVulnerabilities(SQLModel, table=True):
             self.remediated_at = vulnerability_data.remediated_at
 
     @classmethod
-    def create_from_model(cls, vulnerability_data, agent_id):
+    def create_from_model(cls, vulnerability_data, agent_id, customer_code=None):
         """Create a new vulnerability record from external data"""
         return cls(
             cve_id=getattr(vulnerability_data, "cve_id", "UNKNOWN_CVE"),
@@ -315,4 +316,5 @@ class AgentVulnerabilities(SQLModel, table=True):
             epss_percentile=getattr(vulnerability_data, "epss_percentile", None),
             package_name=getattr(vulnerability_data, "package_name", None),
             agent_id=agent_id,
+            customer_code=customer_code,
         )
