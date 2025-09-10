@@ -590,17 +590,17 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 
 .epss-package-card.rank-1 {
 	border-color: rgb(234 179 8);
-	background-color: rgb(254 252 232);
+	background-color: rgb(255 255 255);
 }
 
 .epss-package-card.rank-2 {
 	border-color: rgb(156 163 175);
-	background-color: rgb(249 250 251);
+	background-color: rgb(255 255 255);
 }
 
 .epss-package-card.rank-3 {
 	border-color: rgb(217 119 6);
-	background-color: rgb(255 247 237);
+	background-color: rgb(255 255 255);
 }
 
 .epss-header {
@@ -713,7 +713,7 @@ html.dark .quick-stat {
 
 /* Dark mode for EPSS Package Cards */
 html.dark .epss-package-card {
-	background-color: rgb(31 41 55);
+	background-color: rgb(31 41 55) !important;
 	border-color: rgb(75 85 99);
 }
 
@@ -723,17 +723,17 @@ html.dark .epss-package-card:hover {
 
 html.dark .epss-package-card.rank-1 {
 	border-color: rgb(234 179 8);
-	background-color: rgb(120 113 108);
+	background-color: rgb(31 41 55) !important;
 }
 
 html.dark .epss-package-card.rank-2 {
 	border-color: rgb(156 163 175);
-	background-color: rgb(55 65 81);
+	background-color: rgb(31 41 55) !important;
 }
 
 html.dark .epss-package-card.rank-3 {
 	border-color: rgb(217 119 6);
-	background-color: rgb(124 45 18);
+	background-color: rgb(31 41 55) !important;
 }
 
 html.dark .rank-number {
@@ -809,26 +809,26 @@ html.dark .stat-value {
 /* EPSS Package Cards - Alternative dark mode selectors */
 .dark .epss-package-card,
 [data-theme="dark"] .epss-package-card {
-	background-color: rgb(31 41 55);
+	background-color: rgb(31 41 55) !important;
 	border-color: rgb(75 85 99);
 }
 
 .dark .epss-package-card.rank-1,
 [data-theme="dark"] .epss-package-card.rank-1 {
 	border-color: rgb(234 179 8);
-	background-color: rgb(120 113 108);
+	background-color: rgb(31 41 55) !important;
 }
 
 .dark .epss-package-card.rank-2,
 [data-theme="dark"] .epss-package-card.rank-2 {
 	border-color: rgb(156 163 175);
-	background-color: rgb(55 65 81);
+	background-color: rgb(31 41 55) !important;
 }
 
 .dark .epss-package-card.rank-3,
 [data-theme="dark"] .epss-package-card.rank-3 {
 	border-color: rgb(217 119 6);
-	background-color: rgb(124 45 18);
+	background-color: rgb(31 41 55) !important;
 }
 
 .dark .epss-package-card:hover,
@@ -908,7 +908,7 @@ html.dark .stat-value {
 	}
 
 	.epss-package-card {
-		background-color: rgb(31 41 55);
+		background-color: rgb(31 41 55) !important;
 		border-color: rgb(75 85 99);
 	}
 
