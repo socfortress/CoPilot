@@ -63,19 +63,6 @@ class ActiveResponseItem(BaseModel):
             return values["technology"].value.lower()
         return v
 
-    @validator("repo_url")
-    def ensure_repo_url_ends_with_main(cls, v):
-        # Keep it as string, just ensure it ends with /main/
-        repo_str = str(v)
-        if not repo_str.endswith("/main/") and not repo_str.endswith("/main"):
-            if repo_str.endswith("/"):
-                return f"{repo_str}main/"
-            else:
-                return f"{repo_str}/main/"
-        elif repo_str.endswith("/main"):
-            return f"{repo_str}/"
-        return repo_str
-
 
 class InventoryQueryRequest(BaseModel):
     """Request model for inventory queries"""
