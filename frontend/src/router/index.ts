@@ -67,6 +67,12 @@ const router = createRouter({
 					name: "CopilotActions",
 					component: () => import("@/views/agents/CopilotActions.vue"),
 					meta: { title: "CoPilot Actions" }
+				},
+				{
+					path: "vulnerability-overview",
+					name: "VulnerabilityOverview",
+					component: () => import("@/views/agents/VulnerabilityOverview.vue"),
+					meta: { title: "Vulnerability Overview" }
 				}
 			]
 		},

@@ -105,6 +105,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "CoPilot Actions" }
 						),
 					key: "CopilotActions"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "VulnerabilityOverview"
+								}
+							},
+							{ default: () => "Vulnerability Overview" }
+						),
+					key: "VulnerabilityOverview"
 				}
 			]
 		},

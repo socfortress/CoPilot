@@ -28,6 +28,7 @@ import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
 import threatIntel from "./endpoints/threatIntel"
 import users from "./endpoints/users"
+import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
@@ -62,6 +63,7 @@ export default {
 	sigma,
 	users,
 	sysmonConfig,
+	vulnerabilities,
 	wazuh,
 	portainer,
 	shuffle,
