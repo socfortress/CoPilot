@@ -9,14 +9,16 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilitySyncRequest,
     VulnerabilitySyncResponse,
     VulnerabilityStatsResponse,
-    VulnerabilityDeleteResponse
+    VulnerabilityDeleteResponse,
+    VulnerabilitySearchResponse
 )
 from app.agents.vulnerabilities.services.vulnerabilities import (
     sync_all_vulnerabilities,
     sync_vulnerabilities_for_agent,
     get_vulnerabilities_by_agent,
     get_vulnerability_statistics,
-    delete_vulnerabilities
+    delete_vulnerabilities,
+    search_vulnerabilities_from_indexer
 )
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db, get_db_session
@@ -359,4 +361,88 @@ async def delete_vulnerabilities_endpoint(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to delete vulnerabilities: {e}"
+        )
+
+
+@vulnerabilities_router.get(
+    "/search",
+    response_model=VulnerabilitySearchResponse,
+    description="Search vulnerabilities directly from Wazuh indexer with filtering and pagination",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def search_vulnerabilities(
+    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
+    severity: Optional[str] = Query(None, description="Filter by severity (Critical, High, Medium, Low)"),
+    cve_id: Optional[str] = Query(None, description="Filter by specific CVE ID"),
+    package_name: Optional[str] = Query(None, description="Filter by package name"),
+    page: int = Query(1, description="Page number for pagination", ge=1),
+    page_size: int = Query(50, description="Number of vulnerabilities per page", ge=1, le=1000),
+    db: AsyncSession = Depends(get_db),
+) -> VulnerabilitySearchResponse:
+    """
+    Search vulnerabilities directly from Wazuh indexer without storing them in database.
+
+    This endpoint provides fast, real-time vulnerability data with advanced filtering
+    and pagination capabilities. Perfect for exploring vulnerability data without
+    the overhead of database synchronization.
+
+    **Features:**
+    - Real-time data directly from Wazuh indexer
+    - Advanced filtering by customer, agent, severity, CVE, or package
+    - Efficient pagination for large result sets
+    - No database storage required
+
+    **Performance:**
+    - Handles large datasets efficiently with pagination
+    - Optimized Elasticsearch queries for fast response times
+    - Automatic sorting by detection date and severity
+
+    **Filtering Options:**
+    - **customer_code**: Filter by specific customer
+    - **agent_name**: Filter by specific agent hostname
+    - **severity**: Filter by vulnerability severity (Critical, High, Medium, Low)
+    - **cve_id**: Search for specific CVE identifier
+    - **package_name**: Filter by package name (supports partial matching)
+
+    **Pagination:**
+    - **page**: Page number (starts at 1)
+    - **page_size**: Results per page (1-1000, default: 50)
+
+    Args:
+        customer_code: Optional customer code filter
+        agent_name: Optional agent hostname filter
+        severity: Optional severity filter
+        cve_id: Optional CVE ID filter
+        package_name: Optional package name filter (partial matching)
+        page: Page number for pagination
+        page_size: Number of results per page
+        db: Database session
+
+    Returns:
+        VulnerabilitySearchResponse: Paginated vulnerability search results
+    """
+    logger.info(f"Searching vulnerabilities from indexer with filters: "
+               f"customer_code={customer_code}, agent_name={agent_name}, "
+               f"severity={severity}, cve_id={cve_id}, package_name={package_name}, "
+               f"page={page}, page_size={page_size}")
+
+    try:
+        result = await search_vulnerabilities_from_indexer(
+            db_session=db,
+            customer_code=customer_code,
+            agent_name=agent_name,
+            severity=severity,
+            cve_id=cve_id,
+            package_name=package_name,
+            page=page,
+            page_size=page_size
+        )
+        return result
+
+    except Exception as e:
+        logger.error(f"Error in vulnerability search endpoint: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to search vulnerabilities: {e}"
         )

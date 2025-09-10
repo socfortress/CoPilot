@@ -11,7 +11,9 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilityOut,
     AgentVulnerabilitiesResponse,
     VulnerabilitySyncResponse,
-    VulnerabilityStatsResponse
+    VulnerabilityStatsResponse,
+    VulnerabilitySearchResponse,
+    VulnerabilitySearchItem
 )
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -818,4 +820,265 @@ async def delete_vulnerabilities(
             message=f"Failed to delete vulnerabilities: {e}",
             deleted_count=0,
             errors=[str(e)]
+        )
+
+
+async def search_vulnerabilities_from_indexer(
+    db_session: AsyncSession,
+    customer_code: Optional[str] = None,
+    agent_name: Optional[str] = None,
+    severity: Optional[str] = None,
+    cve_id: Optional[str] = None,
+    package_name: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50
+) -> VulnerabilitySearchResponse:
+    """
+    Search vulnerabilities directly from Wazuh indexer with filtering and pagination
+
+    Args:
+        db_session: Database session for agent lookup
+        customer_code: Optional customer code filter
+        agent_name: Optional agent hostname filter
+        severity: Optional severity filter
+        cve_id: Optional CVE ID filter
+        package_name: Optional package name filter
+        page: Page number for pagination
+        page_size: Number of results per page
+
+    Returns:
+        VulnerabilitySearchResponse with paginated results
+    """
+    logger.info(f"Searching vulnerabilities with filters: customer_code={customer_code}, "
+               f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
+               f"package_name={package_name}, page={page}, page_size={page_size}")
+
+    # Build filters applied dict for response
+    filters_applied = {}
+    if customer_code:
+        filters_applied["customer_code"] = customer_code
+    if agent_name:
+        filters_applied["agent_name"] = agent_name
+    if severity:
+        filters_applied["severity"] = severity
+    if cve_id:
+        filters_applied["cve_id"] = cve_id
+    if package_name:
+        filters_applied["package_name"] = package_name
+
+    # Create Elasticsearch client
+    es_client = None
+    try:
+        # Initialize Elasticsearch client
+        es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+
+        # Get agent information if needed for filtering
+        agent_hostnames = []
+        customer_agent_map = {}
+
+        if customer_code or agent_name:
+            query = select(Agents)
+            if customer_code:
+                query = query.filter(Agents.customer_code == customer_code)
+            if agent_name:
+                query = query.filter(Agents.hostname == agent_name)
+
+            result = await db_session.execute(query)
+            agents = result.scalars().all()
+
+            if not agents and (customer_code or agent_name):
+                return VulnerabilitySearchResponse(
+                    vulnerabilities=[],
+                    total_count=0,
+                    page=page,
+                    page_size=page_size,
+                    total_pages=0,
+                    has_next=False,
+                    has_previous=False,
+                    success=True,
+                    message="No agents found matching the specified criteria",
+                    filters_applied=filters_applied
+                )
+
+            for agent in agents:
+                if agent.hostname:
+                    agent_hostnames.append(agent.hostname)
+                    customer_agent_map[agent.hostname] = agent.customer_code
+
+        # Get vulnerability indices
+        vuln_indices = await get_vulnerabilities_indices()
+        if not vuln_indices:
+            return VulnerabilitySearchResponse(
+                vulnerabilities=[],
+                total_count=0,
+                page=page,
+                page_size=page_size,
+                total_pages=0,
+                has_next=False,
+                has_previous=False,
+                success=True,
+                message="No vulnerability indices found",
+                filters_applied=filters_applied
+            )
+
+        # Build Elasticsearch query
+        es_query = {"bool": {"must": []}}
+
+        # Add agent filter if specified
+        if agent_hostnames:
+            es_query["bool"]["must"].append({
+                "terms": {"agent.name": agent_hostnames}
+            })
+
+        # Add severity filter
+        if severity:
+            es_query["bool"]["must"].append({
+                "term": {"vulnerability.severity": severity}
+            })
+
+        # Add CVE ID filter
+        if cve_id:
+            es_query["bool"]["must"].append({
+                "term": {"vulnerability.id": cve_id}
+            })
+
+        # Add package name filter
+        if package_name:
+            es_query["bool"]["must"].append({
+                "wildcard": {"package.name": f"*{package_name}*"}
+            })
+
+        # Calculate pagination
+        start_index = (page - 1) * page_size
+
+        # Create Elasticsearch client
+        es_client = None
+        try:
+            es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+
+            # First, get total count
+            count_response = await es_client.count(
+                index=",".join(vuln_indices),
+                body={"query": es_query}
+            )
+            total_count = count_response["count"]
+
+            # Calculate pagination info
+            total_pages = (total_count + page_size - 1) // page_size
+            has_next = page < total_pages
+            has_previous = page > 1
+
+            if total_count == 0:
+                return VulnerabilitySearchResponse(
+                    vulnerabilities=[],
+                    total_count=0,
+                    page=page,
+                    page_size=page_size,
+                    total_pages=0,
+                    has_next=False,
+                    has_previous=False,
+                    success=True,
+                    message="No vulnerabilities found matching the specified criteria",
+                    filters_applied=filters_applied
+                )
+
+            # Get the actual results with pagination
+            search_response = await es_client.search(
+                index=",".join(vuln_indices),
+                body={
+                    "query": es_query,
+                    "sort": [
+                        {"vulnerability.detected_at": {"order": "desc"}},
+                        {"vulnerability.severity": {"order": "asc"}}
+                    ],
+                    "from": start_index,
+                    "size": page_size
+                }
+            )
+
+            vulnerabilities = []
+            for hit in search_response["hits"]["hits"]:
+                try:
+                    source = hit["_source"]
+                    agent_data = source.get("agent", {})
+                    agent_hostname = agent_data.get("name", "unknown")
+
+                    # Get customer code from our mapping
+                    agent_customer_code = customer_agent_map.get(agent_hostname)
+
+                    # Process the vulnerability data
+                    vuln_data = process_wazuh_document(hit)
+
+                    vulnerability_item = VulnerabilitySearchItem(
+                        cve_id=vuln_data.cve_id,
+                        severity=vuln_data.severity,
+                        title=vuln_data.title,
+                        agent_name=agent_hostname,
+                        customer_code=agent_customer_code,
+                        references=vuln_data.references,
+                        detected_at=vuln_data.detected_at,
+                        published_at=vuln_data.published_at,
+                        base_score=vuln_data.base_score,
+                        package_name=vuln_data.package_name,
+                        package_version=vuln_data.package_version,
+                        package_architecture=vuln_data.package_architecture
+                    )
+                    vulnerabilities.append(vulnerability_item)
+
+                except Exception as e:
+                    logger.error(f"Error processing vulnerability document: {e}")
+                    continue
+
+            message = f"Found {len(vulnerabilities)} vulnerabilities on page {page} of {total_pages}"
+            if filters_applied:
+                message += f" with filters: {filters_applied}"
+
+            return VulnerabilitySearchResponse(
+                vulnerabilities=vulnerabilities,
+                total_count=total_count,
+                page=page,
+                page_size=page_size,
+                total_pages=total_pages,
+                has_next=has_next,
+                has_previous=has_previous,
+                success=True,
+                message=message,
+                filters_applied=filters_applied
+            )
+
+        except Exception as e:
+            logger.error(f"Error searching vulnerabilities from indexer: {e}")
+            return VulnerabilitySearchResponse(
+                vulnerabilities=[],
+                total_count=0,
+                page=page,
+                page_size=page_size,
+                total_pages=0,
+                has_next=False,
+                has_previous=False,
+                success=False,
+                message=f"Failed to search vulnerabilities: {e}",
+                filters_applied=filters_applied if 'filters_applied' in locals() else {}
+            )
+        finally:
+            # Ensure the Elasticsearch client session is properly closed
+            if es_client:
+                try:
+                    await es_client.close()
+                except Exception as close_error:
+                    logger.warning(f"Error closing Elasticsearch client: {close_error}")
+
+    except Exception as e:
+        logger.error(f"Unexpected error in search_vulnerabilities_from_indexer: {e}")
+        return VulnerabilitySearchResponse(
+            vulnerabilities=[],
+            total_count=0,
+            page=page,
+            page_size=page_size,
+            total_pages=0,
+            has_next=False,
+            has_previous=False,
+            success=False,
+            message=f"Unexpected error occurred: {e}",
+            filters_applied=filters_applied if 'filters_applied' in locals() else {}
         )

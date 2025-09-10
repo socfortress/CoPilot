@@ -78,3 +78,44 @@ class VulnerabilityDeleteResponse(BaseModel):
     message: str
     deleted_count: int
     errors: List[str] = []
+
+
+class VulnerabilitySearchRequest(BaseModel):
+    """Request schema for searching vulnerabilities from Wazuh indexer"""
+    customer_code: Optional[str] = Field(None, description="Filter by customer code")
+    agent_name: Optional[str] = Field(None, description="Filter by agent hostname")
+    severity: Optional[str] = Field(None, description="Filter by severity (Critical, High, Medium, Low)")
+    page: int = Field(1, description="Page number for pagination", ge=1)
+    page_size: int = Field(50, description="Number of vulnerabilities per page", ge=1, le=1000)
+    cve_id: Optional[str] = Field(None, description="Filter by specific CVE ID")
+    package_name: Optional[str] = Field(None, description="Filter by package name")
+
+
+class VulnerabilitySearchItem(BaseModel):
+    """Individual vulnerability item from search results"""
+    cve_id: str
+    severity: str
+    title: str
+    agent_name: str
+    customer_code: Optional[str] = None
+    references: Optional[str] = None
+    detected_at: datetime
+    published_at: Optional[datetime] = None
+    base_score: Optional[float] = None
+    package_name: Optional[str] = None
+    package_version: Optional[str] = None
+    package_architecture: Optional[str] = None
+
+
+class VulnerabilitySearchResponse(BaseModel):
+    """Response schema for vulnerability search results with pagination"""
+    vulnerabilities: List[VulnerabilitySearchItem]
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+    has_next: bool
+    has_previous: bool
+    success: bool
+    message: str
+    filters_applied: dict = {}
