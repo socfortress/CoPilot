@@ -126,6 +126,10 @@ class VulnerabilitySearchResponse(BaseModel):
 
     vulnerabilities: List[VulnerabilitySearchItem]
     total_count: int
+    critical_count: int
+    high_count: int
+    medium_count: int
+    low_count: int
     page: int
     page_size: int
     total_pages: int

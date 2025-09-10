@@ -18,6 +18,10 @@ export interface VulnerabilitySearchItem {
 export interface VulnerabilitySearchResponse {
 	vulnerabilities: VulnerabilitySearchItem[]
 	total_count: number
+	critical_count: number
+	high_count: number
+	medium_count: number
+	low_count: number
 	page: number
 	page_size: number
 	total_pages: number

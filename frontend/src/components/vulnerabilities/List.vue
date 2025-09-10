@@ -318,6 +318,12 @@ const searchCVE = ref<string>("")
 const searchAgent = ref<string>("")
 const searchPackage = ref<string>("")
 
+// Severity counts from API response
+const criticalCount = ref(0)
+const highCount = ref(0)
+const mediumCount = ref(0)
+const lowCount = ref(0)
+
 const InfoIcon = "carbon:information"
 const SearchIcon = "carbon:search"
 const HostIcon = "carbon:bare-metal-server"
@@ -337,11 +343,13 @@ const severityOptions = Object.values(VulnerabilitySeverity).map(severity => ({
 
 // Calculate statistics from current data
 const stats = computed(() => {
-	const critical = list.value.filter(v => v.severity === VulnerabilitySeverity.Critical).length
-	const high = list.value.filter(v => v.severity === VulnerabilitySeverity.High).length
-	const medium = list.value.filter(v => v.severity === VulnerabilitySeverity.Medium).length
-	const low = list.value.filter(v => v.severity === VulnerabilitySeverity.Low).length
+	// Use API response counts for global statistics across all pages
+	const critical = criticalCount.value
+	const high = highCount.value
+	const medium = mediumCount.value
+	const low = lowCount.value
 
+	// Calculate unique values from current page data for context
 	const uniqueAgents = new Set(list.value.map(v => v.agent_name)).size
 	const uniquePackages = new Set(list.value.map(v => v.package_name).filter(Boolean)).size
 	const uniqueCustomers = new Set(list.value.map(v => v.customer_code).filter(Boolean)).size
@@ -455,6 +463,12 @@ function getList() {
 				totalCount.value = res.data?.total_count || 0
 				totalPages.value = res.data?.total_pages || 0
 				currentPage.value = res.data?.page || 1
+
+				// Store severity counts from API response
+				criticalCount.value = res.data?.critical_count || 0
+				highCount.value = res.data?.high_count || 0
+				mediumCount.value = res.data?.medium_count || 0
+				lowCount.value = res.data?.low_count || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
