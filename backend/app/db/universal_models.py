@@ -106,6 +106,7 @@ class Agents(SQLModel, table=True):
     velociraptor_org: Optional[str] = Field(max_length=256)
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
+    vulnerabilities: Optional[list["AgentVulnerabilities"]] = Relationship(back_populates="agent")
 
     @classmethod
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
@@ -257,3 +258,66 @@ class SchedulerJob(SQLModel, table=True):
 
     def __repr__(self):
         return f"<SchedulerJob(id={self.id}, next_run_time={self.next_run_time})>"
+
+
+class AgentVulnerabilities(SQLModel, table=True):
+    __tablename__ = "agent_vulnerabilities"
+
+    id: Optional[int] = Field(primary_key=True)
+    cve_id: str = Field(default="UNKNOWN_CVE", max_length=50, index=True)
+    severity: str = Field(default="UNKNOWN", max_length=50, index=True)
+    title: str = Field(max_length=255)
+    references: str = Field(default=None, max_length=2048)
+    status: str = Field(default="Active", max_length=50, index=True)
+    discovered_at: datetime = Field(index=True)
+    remediated_at: Optional[datetime] = Field(default=None)
+    epss_score: Optional[str] = Field(default=None, max_length=50)
+    epss_percentile: Optional[str] = Field(default=None, max_length=50)
+    package_name: Optional[str] = Field(default=None, max_length=255)
+
+    # Foreign keys
+    agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True)
+    customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=50, index=True)
+
+    # Relationship back to the Agents model
+    agent: Optional["Agents"] = Relationship(back_populates="vulnerabilities")
+
+    def update_from_model(self, vulnerability_data):
+        """Update vulnerability from external data source"""
+        if hasattr(vulnerability_data, "cve_id"):
+            self.cve_id = vulnerability_data.cve_id
+        if hasattr(vulnerability_data, "severity"):
+            self.severity = vulnerability_data.severity
+        if hasattr(vulnerability_data, "title"):
+            self.title = vulnerability_data.title
+        if hasattr(vulnerability_data, "references"):
+            self.references = vulnerability_data.references
+        if hasattr(vulnerability_data, "detected_at"):
+            self.discovered_at = vulnerability_data.detected_at
+        if hasattr(vulnerability_data, "status"):
+            self.status = vulnerability_data.status
+        if hasattr(vulnerability_data, "epss_score"):
+            self.epss_score = vulnerability_data.epss_score
+        if hasattr(vulnerability_data, "epss_percentile"):
+            self.epss_percentile = vulnerability_data.epss_percentile
+        if hasattr(vulnerability_data, "package_name"):
+            self.package_name = vulnerability_data.package_name
+        if hasattr(vulnerability_data, "remediated_at"):
+            self.remediated_at = vulnerability_data.remediated_at
+
+    @classmethod
+    def create_from_model(cls, vulnerability_data, agent_id, customer_code=None):
+        """Create a new vulnerability record from external data"""
+        return cls(
+            cve_id=getattr(vulnerability_data, "cve_id", "UNKNOWN_CVE"),
+            severity=getattr(vulnerability_data, "severity", "UNKNOWN"),
+            title=getattr(vulnerability_data, "title", ""),
+            references=getattr(vulnerability_data, "references", None),
+            status=getattr(vulnerability_data, "status", "Active"),
+            epss_score=getattr(vulnerability_data, "epss_score", None),
+            epss_percentile=getattr(vulnerability_data, "epss_percentile", None),
+            package_name=getattr(vulnerability_data, "package_name", None),
+            discovered_at=getattr(vulnerability_data, "detected_at", datetime.utcnow()),
+            agent_id=agent_id,
+            customer_code=customer_code,
+        )
