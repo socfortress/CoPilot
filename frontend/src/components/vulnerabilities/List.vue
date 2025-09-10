@@ -295,13 +295,13 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import type { VulnerabilitySearchItem, VulnerabilitySearchQuery } from "@/types/vulnerabilities.d"
-import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 
 const loading = ref(false)
