@@ -76,6 +76,64 @@
 			</div>
 		</div>
 
+		<!-- Top 5 Packages by EPSS Score -->
+		<div v-if="topEpssPackages.length > 0" class="mb-4">
+			<h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 flex items-center gap-2">
+				<Icon :name="PackageIcon" :size="20" class="text-orange-600" />
+				Top 5 Packages by EPSS Score
+			</h3>
+			<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+				<div
+					v-for="(pkg, index) in topEpssPackages.slice(0, 5)"
+					:key="`${pkg.package_name}-${pkg.maxEpssScore}`"
+					class="epss-package-card"
+					:class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
+				>
+					<div class="epss-header">
+						<div class="epss-rank">
+							<Icon
+								:name="index < 3 ? 'carbon:trophy' : 'carbon:warning-alt'"
+								:size="16"
+								:class="index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-amber-600' : 'text-orange-500'"
+							/>
+							<span class="rank-number">#{{ index + 1 }}</span>
+						</div>
+						<Badge color="warning" type="splitted" size="small">
+							<template #label>EPSS</template>
+							<template #value>{{ pkg.maxEpssScore.toFixed(3) }}</template>
+						</Badge>
+					</div>
+
+					<div class="package-name">{{ pkg.package_name }}</div>
+
+					<div class="package-stats">
+						<div class="stat-row">
+							<span class="stat-label">Vulnerabilities:</span>
+							<span class="stat-value">{{ pkg.vulnCount.toLocaleString() }}</span>
+						</div>
+						<div class="stat-row">
+							<span class="stat-label">Affected Agents:</span>
+							<span class="stat-value">{{ pkg.affectedAgents.toLocaleString() }}</span>
+						</div>
+						<div class="stat-row">
+							<span class="stat-label">Max CVSS:</span>
+							<span class="stat-value">{{ pkg.maxCvssScore?.toFixed(1) || 'N/A' }}</span>
+						</div>
+					</div>
+
+					<!-- Critical/High severity indicator -->
+					<div v-if="pkg.criticalCount > 0 || pkg.highCount > 0" class="severity-indicator">
+						<Badge v-if="pkg.criticalCount > 0" color="danger" size="small">
+							<template #value>{{ pkg.criticalCount }} Critical</template>
+						</Badge>
+						<Badge v-if="pkg.highCount > 0" color="warning" size="small">
+							<template #value>{{ pkg.highCount }} High</template>
+						</Badge>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="flex flex-col">
 			<div ref="header" class="header flex items-center justify-end gap-2">
 				<div class="info flex grow gap-2">
@@ -293,6 +351,61 @@ const stats = computed(() => {
 	}
 })
 
+// Calculate top packages by EPSS score
+const topEpssPackages = computed(() => {
+	// Group vulnerabilities by package name
+	const packageMap = new Map<string, {
+		package_name: string
+		vulnCount: number
+		maxEpssScore: number
+		maxCvssScore: number | null
+		affectedAgents: Set<string>
+		criticalCount: number
+		highCount: number
+	}>()
+
+	list.value.forEach(vuln => {
+		if (!vuln.package_name || !vuln.epss_score) return
+
+		const epssScore = Number.parseFloat(vuln.epss_score)
+		if (Number.isNaN(epssScore)) return
+
+		const key = vuln.package_name
+		const existing = packageMap.get(key)
+
+		if (existing) {
+			existing.vulnCount++
+			existing.maxEpssScore = Math.max(existing.maxEpssScore, epssScore)
+			if (vuln.base_score) {
+				existing.maxCvssScore = Math.max(existing.maxCvssScore || 0, vuln.base_score)
+			}
+			existing.affectedAgents.add(vuln.agent_name)
+
+			if (vuln.severity === VulnerabilitySeverity.Critical) existing.criticalCount++
+			if (vuln.severity === VulnerabilitySeverity.High) existing.highCount++
+		} else {
+			packageMap.set(key, {
+				package_name: vuln.package_name,
+				vulnCount: 1,
+				maxEpssScore: epssScore,
+				maxCvssScore: vuln.base_score || null,
+				affectedAgents: new Set([vuln.agent_name]),
+				criticalCount: vuln.severity === VulnerabilitySeverity.Critical ? 1 : 0,
+				highCount: vuln.severity === VulnerabilitySeverity.High ? 1 : 0
+			})
+		}
+	})
+
+	// Convert to array and sort by max EPSS score
+	return Array.from(packageMap.values())
+		.map(pkg => ({
+			...pkg,
+			affectedAgents: pkg.affectedAgents.size
+		}))
+		.sort((a, b) => b.maxEpssScore - a.maxEpssScore)
+		.slice(0, 5)
+})
+
 function getPercentage(count: number): string {
 	if (totalCount.value === 0) return "0"
 	return ((count / totalCount.value) * 100).toFixed(1)
@@ -432,6 +545,92 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	border-radius: 0.5rem;
 }
 
+/* EPSS Package Cards */
+.epss-package-card {
+	background-color: white;
+	border: 1px solid rgb(229 231 235);
+	border-radius: 0.5rem;
+	padding: 1rem;
+	transition: all 0.2s ease;
+}
+
+.epss-package-card:hover {
+	border-color: rgb(156 163 175);
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.epss-package-card.rank-1 {
+	border-color: rgb(234 179 8);
+	background-color: rgb(254 252 232);
+}
+
+.epss-package-card.rank-2 {
+	border-color: rgb(156 163 175);
+	background-color: rgb(249 250 251);
+}
+
+.epss-package-card.rank-3 {
+	border-color: rgb(217 119 6);
+	background-color: rgb(255 247 237);
+}
+
+.epss-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+.epss-rank {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rank-number {
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: rgb(75 85 99);
+}
+
+.package-name {
+	font-weight: 600;
+	font-size: 1rem;
+	color: rgb(17 24 39);
+	margin-bottom: 0.75rem;
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.package-stats {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 0.75rem;
+}
+
+.stat-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.stat-label {
+	font-size: 0.75rem;
+	color: rgb(107 114 128);
+}
+
+.stat-value {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: rgb(17 24 39);
+}
+
+.severity-indicator {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
 /* Dark mode styles */
 html.dark .stat-card {
 	background-color: rgb(31 41 55);
@@ -472,6 +671,47 @@ html.dark .stat-percentage {
 
 html.dark .quick-stat {
 	background-color: rgb(31 41 55);
+	color: rgb(243 244 246);
+}
+
+/* Dark mode for EPSS Package Cards */
+html.dark .epss-package-card {
+	background-color: rgb(31 41 55);
+	border-color: rgb(75 85 99);
+}
+
+html.dark .epss-package-card:hover {
+	border-color: rgb(156 163 175);
+}
+
+html.dark .epss-package-card.rank-1 {
+	border-color: rgb(234 179 8);
+	background-color: rgb(120 113 108);
+}
+
+html.dark .epss-package-card.rank-2 {
+	border-color: rgb(156 163 175);
+	background-color: rgb(55 65 81);
+}
+
+html.dark .epss-package-card.rank-3 {
+	border-color: rgb(217 119 6);
+	background-color: rgb(124 45 18);
+}
+
+html.dark .rank-number {
+	color: rgb(209 213 219);
+}
+
+html.dark .package-name {
+	color: rgb(243 244 246);
+}
+
+html.dark .stat-label {
+	color: rgb(156 163 175);
+}
+
+html.dark .stat-value {
 	color: rgb(243 244 246);
 }
 
@@ -524,6 +764,46 @@ html.dark .quick-stat {
 .dark .quick-stat,
 [data-theme="dark"] .quick-stat {
 	background-color: rgb(31 41 55);
+	color: rgb(243 244 246);
+}
+
+/* EPSS Package Cards - Alternative dark mode selectors */
+.dark .epss-package-card,
+[data-theme="dark"] .epss-package-card {
+	background-color: rgb(31 41 55);
+	border-color: rgb(75 85 99);
+}
+
+.dark .epss-package-card.rank-1,
+[data-theme="dark"] .epss-package-card.rank-1 {
+	border-color: rgb(234 179 8);
+	background-color: rgb(120 113 108);
+}
+
+.dark .epss-package-card.rank-2,
+[data-theme="dark"] .epss-package-card.rank-2 {
+	border-color: rgb(156 163 175);
+	background-color: rgb(55 65 81);
+}
+
+.dark .epss-package-card.rank-3,
+[data-theme="dark"] .epss-package-card.rank-3 {
+	border-color: rgb(217 119 6);
+	background-color: rgb(124 45 18);
+}
+
+.dark .package-name,
+[data-theme="dark"] .package-name {
+	color: rgb(243 244 246);
+}
+
+.dark .stat-label,
+[data-theme="dark"] .stat-label {
+	color: rgb(156 163 175);
+}
+
+.dark .stat-value,
+[data-theme="dark"] .stat-value {
 	color: rgb(243 244 246);
 }
 
