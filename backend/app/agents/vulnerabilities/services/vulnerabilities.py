@@ -872,9 +872,20 @@ async def search_vulnerabilities_from_indexer(
         # Initialize Elasticsearch client
         es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-        # Get agent information if needed for filtering
-        agent_hostnames = []
+        # Always get all agents to build hostname to customer_code mapping
+        # This ensures we can always provide customer_code in the response
+        all_agents_query = select(Agents)
+        all_agents_result = await db_session.execute(all_agents_query)
+        all_agents = all_agents_result.scalars().all()
+
+        # Build complete agent hostname to customer code mapping
         customer_agent_map = {}
+        for agent in all_agents:
+            if agent.hostname:
+                customer_agent_map[agent.hostname] = agent.customer_code
+
+        # Get agent information for filtering (if filters are applied)
+        agent_hostnames = []
 
         if customer_code or agent_name:
             query = select(Agents)
@@ -900,10 +911,10 @@ async def search_vulnerabilities_from_indexer(
                     filters_applied=filters_applied
                 )
 
+            # Build list of agent hostnames for Elasticsearch filtering
             for agent in agents:
                 if agent.hostname:
                     agent_hostnames.append(agent.hostname)
-                    customer_agent_map[agent.hostname] = agent.customer_code
 
         # Get vulnerability indices
         vuln_indices = await get_vulnerabilities_indices()
