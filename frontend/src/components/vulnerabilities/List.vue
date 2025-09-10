@@ -91,7 +91,7 @@
 						</template>
 						<div class="flex flex-col gap-3 p-2 max-w-sm">
 							<div class="font-medium text-sm mb-2">Vulnerability Overview</div>
-							
+
 							<div class="grid grid-cols-2 gap-3 text-xs">
 								<div class="flex justify-between">
 									<span>Total Vulnerabilities:</span>
@@ -277,11 +277,11 @@ const stats = computed(() => {
 	const high = list.value.filter(v => v.severity === VulnerabilitySeverity.High).length
 	const medium = list.value.filter(v => v.severity === VulnerabilitySeverity.Medium).length
 	const low = list.value.filter(v => v.severity === VulnerabilitySeverity.Low).length
-	
+
 	const uniqueAgents = new Set(list.value.map(v => v.agent_name)).size
 	const uniquePackages = new Set(list.value.map(v => v.package_name).filter(Boolean)).size
 	const uniqueCustomers = new Set(list.value.map(v => v.customer_code).filter(Boolean)).size
-	
+
 	return {
 		critical,
 		high,
@@ -435,42 +435,140 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 /* Dark mode styles */
 html.dark .stat-card {
 	background-color: rgb(31 41 55);
-	border-color: rgb(55 65 81);
+	border-color: rgb(75 85 99);
 }
 
 html.dark .stat-card.critical {
-	border-color: rgb(127 29 29);
-	background-color: rgb(69 10 10 / 0.2);
+	border-color: rgb(220 38 38);
+	background-color: rgb(127 29 29);
 }
 
 html.dark .stat-card.high {
-	border-color: rgb(154 52 18);
-	background-color: rgb(67 20 7 / 0.2);
+	border-color: rgb(234 88 12);
+	background-color: rgb(154 52 18);
 }
 
 html.dark .stat-card.medium {
-	border-color: rgb(161 98 7);
-	background-color: rgb(69 39 2 / 0.2);
+	border-color: rgb(202 138 4);
+	background-color: rgb(161 98 7);
 }
 
 html.dark .stat-card.low {
-	border-color: rgb(30 64 175);
-	background-color: rgb(23 37 84 / 0.2);
+	border-color: rgb(59 130 246);
+	background-color: rgb(30 64 175);
 }
 
 html.dark .stat-title {
-	color: rgb(156 163 175);
+	color: rgb(209 213 219);
 }
 
 html.dark .stat-value {
-	color: rgb(243 244 246);
+	color: rgb(255 255 255);
 }
 
 html.dark .stat-percentage {
-	color: rgb(156 163 175);
+	color: rgb(209 213 219);
 }
 
 html.dark .quick-stat {
 	background-color: rgb(31 41 55);
+	color: rgb(243 244 246);
+}
+
+/* Alternative dark mode selectors for better compatibility */
+.dark .stat-card,
+[data-theme="dark"] .stat-card {
+	background-color: rgb(31 41 55);
+	border-color: rgb(75 85 99);
+}
+
+.dark .stat-card.critical,
+[data-theme="dark"] .stat-card.critical {
+	border-color: rgb(220 38 38);
+	background-color: rgb(127 29 29);
+}
+
+.dark .stat-card.high,
+[data-theme="dark"] .stat-card.high {
+	border-color: rgb(234 88 12);
+	background-color: rgb(154 52 18);
+}
+
+.dark .stat-card.medium,
+[data-theme="dark"] .stat-card.medium {
+	border-color: rgb(202 138 4);
+	background-color: rgb(161 98 7);
+}
+
+.dark .stat-card.low,
+[data-theme="dark"] .stat-card.low {
+	border-color: rgb(59 130 246);
+	background-color: rgb(30 64 175);
+}
+
+.dark .stat-title,
+[data-theme="dark"] .stat-title {
+	color: rgb(209 213 219);
+}
+
+.dark .stat-value,
+[data-theme="dark"] .stat-value {
+	color: rgb(255 255 255);
+}
+
+.dark .stat-percentage,
+[data-theme="dark"] .stat-percentage {
+	color: rgb(209 213 219);
+}
+
+.dark .quick-stat,
+[data-theme="dark"] .quick-stat {
+	background-color: rgb(31 41 55);
+	color: rgb(243 244 246);
+}
+
+/* Media query for system dark mode preference */
+@media (prefers-color-scheme: dark) {
+	.stat-card {
+		background-color: rgb(31 41 55);
+		border-color: rgb(75 85 99);
+	}
+
+	.stat-card.critical {
+		border-color: rgb(220 38 38);
+		background-color: rgb(127 29 29);
+	}
+
+	.stat-card.high {
+		border-color: rgb(234 88 12);
+		background-color: rgb(154 52 18);
+	}
+
+	.stat-card.medium {
+		border-color: rgb(202 138 4);
+		background-color: rgb(161 98 7);
+	}
+
+	.stat-card.low {
+		border-color: rgb(59 130 246);
+		background-color: rgb(30 64 175);
+	}
+
+	.stat-title {
+		color: rgb(209 213 219);
+	}
+
+	.stat-value {
+		color: rgb(255 255 255);
+	}
+
+	.stat-percentage {
+		color: rgb(209 213 219);
+	}
+
+	.quick-stat {
+		background-color: rgb(31 41 55);
+		color: rgb(243 244 246);
+	}
 }
 </style>
