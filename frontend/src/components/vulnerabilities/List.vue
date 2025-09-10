@@ -85,6 +85,7 @@
 						size="small"
 						placeholder="Customer"
 						class="max-w-32"
+						:loading="loadingCustomers"
 					/>
 
 					<n-select
@@ -277,6 +278,7 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { Customer } from "@/types/customers.d"
 import type { VulnerabilitySearchItem, VulnerabilitySearchQuery } from "@/types/vulnerabilities.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -310,6 +312,10 @@ const lowCount = ref(0)
 // Agents data for dropdown
 const agents = ref<Agent[]>([])
 const loadingAgents = ref(false)
+
+// Customers data for dropdown
+const customers = ref<Customer[]>([])
+const loadingCustomers = ref(false)
 
 const InfoIcon = "carbon:information"
 const SearchIcon = "carbon:search"
@@ -417,12 +423,11 @@ function getPercentage(count: number): string {
 	return ((count / totalCount.value) * 100).toFixed(1)
 }
 
-// Get unique customers from the loaded vulnerabilities
+// Customer options for dropdown
 const customerOptions = computed(() => {
-	const customers = [...new Set(list.value.map(vuln => vuln.customer_code).filter(Boolean))] as string[]
-	return customers.map(customer => ({
-		label: customer,
-		value: customer
+	return (customers.value || []).map(customer => ({
+		label: customer.customer_code,
+		value: customer.customer_code
 	}))
 })
 
@@ -493,6 +498,26 @@ function getAgents() {
 		})
 }
 
+function getCustomers() {
+	loadingCustomers.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customers.value = res.data.customers || []
+			} else {
+				message.warning(res.data?.message || "Failed to load customers.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "Failed to load customers.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+}
+
 function updatePage(page: number) {
 	currentPage.value = page
 	getList()
@@ -528,9 +553,10 @@ function selectSeverity(severity: VulnerabilitySeverity) {
 	currentPage.value = 1
 }
 
-// Load agents when component mounts
+// Load agents and customers when component mounts
 onMounted(() => {
 	getAgents()
+	getCustomers()
 })
 
 watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, searchPackage], () => {
