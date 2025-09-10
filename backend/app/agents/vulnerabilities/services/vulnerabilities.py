@@ -974,15 +974,8 @@ async def search_vulnerabilities_from_indexer(
                 body={
                     "query": es_query,
                     "size": 0,  # We don't need documents, just aggregations
-                    "aggs": {
-                        "severity_counts": {
-                            "terms": {
-                                "field": "vulnerability.severity",
-                                "size": 10
-                            }
-                        }
-                    }
-                }
+                    "aggs": {"severity_counts": {"terms": {"field": "vulnerability.severity", "size": 10}}},
+                },
             )
 
             # Extract severity counts from aggregation response
