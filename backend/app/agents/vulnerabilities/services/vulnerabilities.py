@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Any
 
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.vulnerabilities.schema.vulnerabilities import (
@@ -200,10 +200,142 @@ async def get_agent_by_name(db_session: AsyncSession, agent_name: str) -> Option
         return None
 
 
+async def _sync_vulnerabilities_bulk_mode(
+    db_session: AsyncSession,
+    agent_id: str,
+    agent_name: str,
+    customer_code: str,
+    vulnerability_docs: List[Dict[str, Any]]
+) -> "VulnerabilitySyncResponse":
+    """
+    Ultra-fast bulk mode for processing large numbers of vulnerabilities.
+    Uses SQLAlchemy bulk operations for maximum performance.
+    """
+    from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
+
+    try:
+        logger.info(f"BULK MODE: Processing {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
+
+        # Process all documents first
+        processed_vulns = []
+        errors = []
+
+        for doc in vulnerability_docs:
+            try:
+                vuln_data = process_wazuh_document(doc)
+                processed_vulns.append(vuln_data)
+            except Exception as doc_error:
+                error_msg = f"Error processing vulnerability {doc.get('_id', 'unknown')}: {doc_error}"
+                logger.error(error_msg)
+                errors.append(error_msg)
+
+        if not processed_vulns:
+            return VulnerabilitySyncResponse(
+                success=True,
+                message=f"No valid vulnerabilities to process for agent {agent_name}",
+                synced_count=0,
+                errors=errors
+            )
+
+        # Get existing vulnerabilities for comparison
+        existing_vulns_result = await db_session.execute(
+            select(AgentVulnerabilities).filter(
+                AgentVulnerabilities.agent_id == agent_id
+            )
+        )
+        existing_vulns = existing_vulns_result.scalars().all()
+
+        # Create lookup for existing vulnerabilities
+        existing_lookup = {}
+        for vuln in existing_vulns:
+            key = f"{vuln.cve_id}_{vuln.package_name or 'None'}"
+            existing_lookup[key] = vuln
+
+        # Prepare bulk operations
+        new_vulnerabilities = []
+        update_data = []
+
+        for vuln_data in processed_vulns:
+            key = f"{vuln_data.cve_id}_{vuln_data.package_name or 'None'}"
+
+            if key in existing_lookup:
+                # Prepare for bulk update
+                existing_vuln = existing_lookup[key]
+                update_data.append({
+                    'id': existing_vuln.id,
+                    'severity': vuln_data.severity,
+                    'title': vuln_data.title,
+                    'references': vuln_data.references,
+                    'discovered_at': vuln_data.detected_at,
+                    'epss_score': str(vuln_data.base_score) if hasattr(vuln_data, 'base_score') and vuln_data.base_score else existing_vuln.epss_score,
+                    'package_name': vuln_data.package_name
+                })
+            else:
+                # Prepare for bulk insert
+                new_vuln = AgentVulnerabilities.create_from_model(
+                    vulnerability_data=vuln_data,
+                    agent_id=agent_id,
+                    customer_code=customer_code
+                )
+                new_vulnerabilities.append(new_vuln)
+
+        # Execute bulk operations
+        inserted_count = 0
+        updated_count = 0
+
+        if new_vulnerabilities:
+            db_session.add_all(new_vulnerabilities)
+            inserted_count = len(new_vulnerabilities)
+            logger.info(f"BULK MODE: Prepared {inserted_count} new vulnerabilities for insertion")
+
+        if update_data:
+            # Use bulk update for existing vulnerabilities
+            from sqlalchemy import update
+            for data in update_data:
+                stmt = update(AgentVulnerabilities).where(
+                    AgentVulnerabilities.id == data['id']
+                ).values({
+                    'severity': data['severity'],
+                    'title': data['title'],
+                    'references': data['references'],
+                    'discovered_at': data['discovered_at'],
+                    'epss_score': data['epss_score'],
+                    'package_name': data['package_name']
+                })
+                await db_session.execute(stmt)
+            updated_count = len(update_data)
+            logger.info(f"BULK MODE: Executed {updated_count} vulnerability updates")
+
+        # Single commit for all operations
+        await db_session.commit()
+
+        total_synced = inserted_count + updated_count
+        logger.info(f"BULK MODE: Successfully synced {total_synced} vulnerabilities ({inserted_count} new, {updated_count} updated)")
+
+        return VulnerabilitySyncResponse(
+            success=True,
+            message=f"BULK MODE: Successfully synced {total_synced} vulnerabilities for agent {agent_name} ({inserted_count} new, {updated_count} updated)",
+            synced_count=total_synced,
+            errors=errors
+        )
+
+    except Exception as e:
+        await db_session.rollback()
+        logger.error(f"BULK MODE: Error syncing vulnerabilities for agent {agent_name}: {e}")
+        return VulnerabilitySyncResponse(
+            success=False,
+            message=f"BULK MODE: Failed to sync vulnerabilities for agent {agent_name}: {e}",
+            synced_count=0,
+            errors=[str(e)]
+        )
+
+
 async def sync_vulnerabilities_for_agent(
     db_session: AsyncSession,
     agent_name: str,
-    customer_code: Optional[str] = None
+    customer_code: Optional[str] = None,
+    batch_size: int = 100,
+    use_bulk_mode: bool = False
 ) -> VulnerabilitySyncResponse:
     """
     Sync vulnerabilities for a specific agent
@@ -212,6 +344,8 @@ async def sync_vulnerabilities_for_agent(
         db_session: Database session to use
         agent_name: Name of the agent to sync vulnerabilities for
         customer_code: Optional customer code override
+        batch_size: Number of vulnerabilities to process in each batch (default: 100)
+        use_bulk_mode: If True, use ultra-fast bulk operations (default: False)
 
     Returns:
         VulnerabilitySyncResponse with sync results
@@ -256,66 +390,106 @@ async def sync_vulnerabilities_for_agent(
         synced_count = 0
         errors = []
 
-        # Process and add each vulnerability immediately
-        for i, doc in enumerate(vulnerability_docs, 1):
+        # Choose processing mode based on use_bulk_mode flag
+        if use_bulk_mode:
+            logger.info(f"Using BULK MODE for {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
+            return await _sync_vulnerabilities_bulk_mode(
+                db_session, agent_id, agent_name, customer_code, vulnerability_docs
+            )
+
+        # OPTIMIZATION: Process vulnerabilities in batches for better performance
+        logger.info(f"Using BATCH MODE (batch_size={batch_size}) for {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
+
+        # First, get all existing vulnerabilities for this agent to do bulk comparison
+        logger.info(f"Fetching existing vulnerabilities for agent {agent_name} for comparison")
+        existing_vulns_result = await db_session.execute(
+            select(AgentVulnerabilities).filter(
+                AgentVulnerabilities.agent_id == agent_id
+            )
+        )
+        existing_vulns = existing_vulns_result.scalars().all()
+
+        # Create a lookup dictionary for fast comparison (agent_id + cve_id + package_name)
+        existing_vulns_lookup = {}
+        for vuln in existing_vulns:
+            key = f"{vuln.agent_id}_{vuln.cve_id}_{vuln.package_name or 'None'}"
+            existing_vulns_lookup[key] = vuln
+
+        logger.info(f"Found {len(existing_vulns_lookup)} existing vulnerabilities for agent {agent_name}")
+
+        # Process vulnerabilities in batches
+        for batch_start in range(0, len(vulnerability_docs), batch_size):
+            batch_end = min(batch_start + batch_size, len(vulnerability_docs))
+            batch_docs = vulnerability_docs[batch_start:batch_end]
+
+            logger.info(f"Processing batch {batch_start // batch_size + 1}: vulnerabilities {batch_start + 1}-{batch_end} of {len(vulnerability_docs)} for agent {agent_name}")
+
             try:
-                logger.info(f"Processing vulnerability {i}/{len(vulnerability_docs)} for agent {agent_name}")
+                batch_updates = []
+                batch_inserts = []
+                batch_errors = []
 
-                # Process the vulnerability document
-                vuln_data = process_wazuh_document(doc)
+                # Process each document in the batch
+                for i, doc in enumerate(batch_docs):
+                    try:
+                        # Process the vulnerability document
+                        vuln_data = process_wazuh_document(doc)
 
-                # Check if vulnerability already exists using the session
-                existing_vuln_result = await db_session.execute(
-                    select(AgentVulnerabilities).filter(
-                        and_(
-                            AgentVulnerabilities.agent_id == agent_id,
-                            AgentVulnerabilities.cve_id == vuln_data.cve_id,
-                            AgentVulnerabilities.package_name == vuln_data.package_name
-                        )
-                    )
-                )
+                        # Create lookup key
+                        lookup_key = f"{agent_id}_{vuln_data.cve_id}_{vuln_data.package_name or 'None'}"
 
-                existing_vuln_record = existing_vuln_result.scalars().first()
-                if existing_vuln_record:
-                    # Update existing vulnerability directly without triggering relationships
-                    existing_vuln_record.severity = vuln_data.severity
-                    existing_vuln_record.title = vuln_data.title
-                    existing_vuln_record.references = vuln_data.references
-                    existing_vuln_record.discovered_at = vuln_data.detected_at
-                    if hasattr(vuln_data, 'base_score') and vuln_data.base_score:
-                        existing_vuln_record.epss_score = str(vuln_data.base_score)
-                    if hasattr(vuln_data, 'package_name'):
-                        existing_vuln_record.package_name = vuln_data.package_name
+                        if lookup_key in existing_vulns_lookup:
+                            # Update existing vulnerability
+                            existing_vuln = existing_vulns_lookup[lookup_key]
+                            existing_vuln.severity = vuln_data.severity
+                            existing_vuln.title = vuln_data.title
+                            existing_vuln.references = vuln_data.references
+                            existing_vuln.discovered_at = vuln_data.detected_at
+                            if hasattr(vuln_data, 'base_score') and vuln_data.base_score:
+                                existing_vuln.epss_score = str(vuln_data.base_score)
+                            if hasattr(vuln_data, 'package_name'):
+                                existing_vuln.package_name = vuln_data.package_name
 
-                    # Mark the object as dirty so SQLAlchemy knows to update it
-                    db_session.add(existing_vuln_record)
-                    logger.info(f"Updated existing vulnerability {vuln_data.cve_id} for agent {agent_name}")
-                else:
-                    # Create new vulnerability record
-                    new_vuln = AgentVulnerabilities.create_from_model(
-                        vulnerability_data=vuln_data,
-                        agent_id=agent_id,
-                        customer_code=customer_code
-                    )
-                    db_session.add(new_vuln)
-                    logger.info(f"Added new vulnerability {vuln_data.cve_id} for agent {agent_name}")
+                            db_session.add(existing_vuln)
+                            batch_updates.append(vuln_data.cve_id)
+                        else:
+                            # Create new vulnerability record
+                            new_vuln = AgentVulnerabilities.create_from_model(
+                                vulnerability_data=vuln_data,
+                                agent_id=agent_id,
+                                customer_code=customer_code
+                            )
+                            db_session.add(new_vuln)
+                            batch_inserts.append(vuln_data.cve_id)
 
-                # Commit each vulnerability immediately to the database
+                            # Add to lookup to avoid duplicates within the same batch
+                            existing_vulns_lookup[lookup_key] = new_vuln
+
+                    except Exception as doc_error:
+                        error_msg = f"Error processing vulnerability {doc.get('_id', 'unknown')}: {doc_error}"
+                        logger.error(error_msg)
+                        batch_errors.append(error_msg)
+                        continue
+
+                # Commit the entire batch at once
                 await db_session.commit()
-                logger.info(f"Committed vulnerability {vuln_data.cve_id} to database")
 
-                synced_count += 1
+                batch_synced = len(batch_updates) + len(batch_inserts)
+                synced_count += batch_synced
+                errors.extend(batch_errors)
 
-            except Exception as vuln_error:
+                logger.info(f"Batch {batch_start // batch_size + 1} completed: {len(batch_updates)} updates, {len(batch_inserts)} inserts, {len(batch_errors)} errors")
+
+            except Exception as batch_error:
                 await db_session.rollback()
-                error_msg = f"Error processing vulnerability {doc.get('_id', 'unknown')}: {vuln_error}"
+                error_msg = f"Error processing batch {batch_start}-{batch_end}: {batch_error}"
                 logger.error(error_msg)
                 errors.append(error_msg)
                 continue
 
         return VulnerabilitySyncResponse(
             success=True,
-            message=f"Successfully synced {synced_count} vulnerabilities for agent {agent_name}",
+            message=f"Successfully synced {synced_count} vulnerabilities for agent {agent_name} (processed in batches of {batch_size})",
             synced_count=synced_count,
             errors=errors
         )
@@ -333,21 +507,26 @@ async def sync_vulnerabilities_for_agent(
 
 async def sync_all_vulnerabilities(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None
+    customer_code: Optional[str] = None,
+    batch_size: int = 100,
+    use_bulk_mode: bool = False
 ) -> VulnerabilitySyncResponse:
     """
-    Sync vulnerabilities for all agents or agents of a specific customer
+    Sync vulnerabilities for all agents or agents of a specific customer with performance options
 
     Args:
         db_session: Database session to use
         customer_code: Optional customer code to filter agents by.
                       If None, syncs vulnerabilities for all agents in database.
+        batch_size: Number of vulnerabilities to process in each batch (default: 100)
+        use_bulk_mode: Use ultra-fast bulk operations for large datasets (default: False)
 
     Returns:
         VulnerabilitySyncResponse with sync results
     """
     try:
-        logger.info(f"Starting bulk vulnerability sync for customer: {customer_code or 'all agents'}")
+        mode_info = "bulk mode" if use_bulk_mode else f"batch mode (size: {batch_size})"
+        logger.info(f"Starting bulk vulnerability sync for customer: {customer_code or 'all agents'} using {mode_info}")
 
         # Build query to get agents using the session
         if customer_code:
@@ -381,11 +560,13 @@ async def sync_all_vulnerabilities(
                 continue
 
             try:
-                logger.info(f"Starting sync for agent: {agent_hostname}")
+                logger.info(f"Starting sync for agent: {agent_hostname} using {mode_info}")
                 result = await sync_vulnerabilities_for_agent(
                     db_session=db_session,
                     agent_name=agent_hostname,
-                    customer_code=agent_customer_code
+                    customer_code=agent_customer_code,
+                    batch_size=batch_size,
+                    use_bulk_mode=use_bulk_mode
                 )
 
                 total_synced += result.synced_count
@@ -396,7 +577,7 @@ async def sync_all_vulnerabilities(
                 logger.error(error_msg)
                 all_errors.append(error_msg)
 
-        success_message = f"Completed vulnerability sync for {len(agents)} agents"
+        success_message = f"Completed vulnerability sync for {len(agents)} agents using {mode_info}"
         if customer_code:
             success_message += f" (customer: {customer_code})"
         else:

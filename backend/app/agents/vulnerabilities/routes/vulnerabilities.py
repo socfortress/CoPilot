@@ -28,35 +28,48 @@ vulnerabilities_router = APIRouter()
 @vulnerabilities_router.post(
     "/sync",
     response_model=VulnerabilitySyncResponse,
-    description="Sync vulnerabilities from Wazuh Indexer indices to database for all agents",
+    description="Sync vulnerabilities from Wazuh Indexer indices to database for all agents with performance options",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler"))],
 )
 async def sync_vulnerabilities(
     sync_request: Optional[VulnerabilitySyncRequest] = None,
+    batch_size: int = Query(100, description="Batch size for processing (1-1000)", ge=1, le=1000),
+    use_bulk_mode: bool = Query(False, description="Use ultra-fast bulk mode for large datasets"),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySyncResponse:
     """
-    Sync vulnerabilities from Wazuh Indexer indices to the database.
+    Sync vulnerabilities from Wazuh Indexer indices to the database for all agents.
 
     This endpoint fetches vulnerability data from the 'wazuh-states-vulnerabilities-*'
     indices for all agents in the database, processes them, and stores them in the
     agent_vulnerabilities table.
+
+    **Performance Modes:**
+    - **Batch Mode** (default): Processes vulnerabilities in configurable batches with individual error handling
+    - **Bulk Mode**: Ultra-fast processing using bulk database operations for large datasets
 
     The endpoint automatically discovers all agents from the database and syncs
     vulnerabilities for each one using their hostname and customer_code.
 
     Args:
         sync_request: Optional request parameters for vulnerability sync
+        batch_size: Number of vulnerabilities to process per batch (1-1000, default: 100)
+        use_bulk_mode: Enable ultra-fast bulk processing mode for large datasets
         db: Database session
 
     Returns:
         VulnerabilitySyncResponse: Status of the sync operation
     """
-    logger.info("Starting vulnerability sync for all agents from database")
+    logger.info(f"Starting vulnerability sync for all agents from database (batch_size={batch_size}, bulk_mode={use_bulk_mode})")
 
     try:
-        # Use the standalone function directly
-        result = await sync_all_vulnerabilities(db_session=db, customer_code=None)
+        # Use the standalone function directly with performance options
+        result = await sync_all_vulnerabilities(
+            db_session=db,
+            customer_code=None,
+            batch_size=batch_size,
+            use_bulk_mode=use_bulk_mode
+        )
         return result
 
     except Exception as e:
@@ -95,8 +108,13 @@ async def sync_vulnerabilities_background(
         try:
             # Create a new database session for the background task
             async with get_db_session() as bg_db:
-                # Use the standalone function directly
-                await sync_all_vulnerabilities(db_session=bg_db, customer_code=None)
+                # Use the standalone function directly with default performance settings
+                await sync_all_vulnerabilities(
+                    db_session=bg_db,
+                    customer_code=None,
+                    batch_size=100,
+                    use_bulk_mode=False
+                )
         except Exception as e:
             logger.error(f"Background vulnerability sync failed: {e}")
 
@@ -192,25 +210,34 @@ async def sync_customer_vulnerabilities(
     customer_code: str,
     background_tasks: BackgroundTasks,
     force_refresh: bool = Query(False, description="Force refresh of existing vulnerabilities"),
+    batch_size: int = Query(100, description="Batch size for processing vulnerabilities"),
+    use_bulk_mode: bool = Query(False, description="Use ultra-fast bulk operations for large datasets"),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySyncResponse:
     """
-    Sync vulnerabilities for all agents belonging to a specific customer.
+    Sync vulnerabilities for all agents belonging to a specific customer with performance options.
 
     Args:
         customer_code: Customer code to sync vulnerabilities for
         background_tasks: FastAPI background tasks
         force_refresh: Whether to force refresh of existing vulnerabilities
+        batch_size: Number of vulnerabilities to process in each batch
+        use_bulk_mode: Use ultra-fast bulk operations for large datasets
         db: Database session
 
     Returns:
         VulnerabilitySyncResponse: Status of the sync operation
     """
-    logger.info(f"Starting vulnerability sync for customer: {customer_code}")
+    logger.info(f"Starting vulnerability sync for customer: {customer_code} (batch_size={batch_size}, bulk_mode={use_bulk_mode})")
 
     try:
-        # Use the standalone function directly
-        result = await sync_all_vulnerabilities(db_session=db, customer_code=customer_code)
+        # Use the standalone function directly with performance options
+        result = await sync_all_vulnerabilities(
+            db_session=db,
+            customer_code=customer_code,
+            batch_size=batch_size,
+            use_bulk_mode=use_bulk_mode
+        )
         return result
 
     except Exception as e:
@@ -224,33 +251,43 @@ async def sync_customer_vulnerabilities(
 @vulnerabilities_router.post(
     "/sync/agent/{agent_name}",
     response_model=VulnerabilitySyncResponse,
-    description="Sync vulnerabilities for a specific agent",
+    description="Sync vulnerabilities for a specific agent with performance options",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def sync_agent_vulnerabilities(
     agent_name: str,
     customer_code: Optional[str] = Query(None, description="Override customer code"),
+    batch_size: int = Query(100, description="Batch size for processing (1-1000)", ge=1, le=1000),
+    use_bulk_mode: bool = Query(False, description="Use ultra-fast bulk mode for large datasets"),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySyncResponse:
     """
-    Sync vulnerabilities for a specific agent.
+    Sync vulnerabilities for a specific agent with performance optimization options.
+
+    **Performance Modes:**
+    - **Batch Mode** (default): Processes vulnerabilities in configurable batches with individual error handling
+    - **Bulk Mode**: Ultra-fast processing using bulk database operations for large datasets
 
     Args:
         agent_name: Name/hostname of the agent to sync vulnerabilities for
         customer_code: Optional customer code override
+        batch_size: Number of vulnerabilities to process per batch (1-1000, default: 100)
+        use_bulk_mode: Enable ultra-fast bulk processing mode for large datasets
         db: Database session
 
     Returns:
         VulnerabilitySyncResponse: Status of the sync operation
     """
-    logger.info(f"Starting vulnerability sync for agent: {agent_name}")
+    logger.info(f"Starting vulnerability sync for agent: {agent_name} (batch_size={batch_size}, bulk_mode={use_bulk_mode})")
 
     try:
-        # Use the standalone function directly
+        # Use the standalone function directly with performance options
         result = await sync_vulnerabilities_for_agent(
             db_session=db,
             agent_name=agent_name,
-            customer_code=customer_code
+            customer_code=customer_code,
+            batch_size=batch_size,
+            use_bulk_mode=use_bulk_mode
         )
         return result
 
