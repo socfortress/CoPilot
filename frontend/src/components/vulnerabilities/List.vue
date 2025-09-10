@@ -237,17 +237,16 @@
 						</template>
 					</n-input>
 
-					<n-input
+					<n-select
 						v-model:value="searchAgent"
+						:options="agentOptions"
 						size="small"
 						placeholder="Search agent..."
 						class="max-w-40"
 						clearable
-					>
-						<template #prefix>
-							<Icon :name="HostIcon"></Icon>
-						</template>
-					</n-input>
+						filterable
+						:loading="loadingAgents"
+					/>
 
 					<n-input
 						v-model:value="searchPackage"
@@ -294,14 +293,15 @@
 </template>
 
 <script setup lang="ts">
+import type { Agent } from "@/types/agents.d"
 import type { VulnerabilitySearchItem, VulnerabilitySearchQuery } from "@/types/vulnerabilities.d"
+import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 
 const loading = ref(false)
@@ -324,9 +324,12 @@ const highCount = ref(0)
 const mediumCount = ref(0)
 const lowCount = ref(0)
 
+// Agents data for dropdown
+const agents = ref<Agent[]>([])
+const loadingAgents = ref(false)
+
 const InfoIcon = "carbon:information"
 const SearchIcon = "carbon:search"
-const HostIcon = "carbon:bare-metal-server"
 const PackageIcon = "carbon:package"
 const TotalIcon = "carbon:result"
 const CriticalIcon = "carbon:warning-filled"
@@ -340,6 +343,14 @@ const severityOptions = Object.values(VulnerabilitySeverity).map(severity => ({
 	label: severity,
 	value: severity
 }))
+
+// Agent options for dropdown
+const agentOptions = computed(() => {
+	return (agents.value || []).map(agent => ({
+		label: agent.hostname,
+		value: agent.hostname
+	}))
+})
 
 // Calculate statistics from current data
 const stats = computed(() => {
@@ -481,6 +492,26 @@ function getList() {
 		})
 }
 
+function getAgents() {
+	loadingAgents.value = true
+
+	Api.agents
+		.getAgents()
+		.then(res => {
+			if (res.data.success) {
+				agents.value = res.data.agents || []
+			} else {
+				message.warning(res.data?.message || "Failed to load agents.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "Failed to load agents.")
+		})
+		.finally(() => {
+			loadingAgents.value = false
+		})
+}
+
 function updatePage(page: number) {
 	currentPage.value = page
 	getList()
@@ -515,6 +546,11 @@ function selectSeverity(severity: VulnerabilitySeverity) {
 	// Reset to first page when filtering
 	currentPage.value = 1
 }
+
+// Load agents when component mounts
+onMounted(() => {
+	getAgents()
+})
 
 watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, searchPackage], () => {
 	currentPage.value = 1
