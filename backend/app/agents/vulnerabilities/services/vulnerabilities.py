@@ -1,5 +1,8 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
@@ -7,21 +10,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.vulnerabilities.schema.vulnerabilities import (
-    WazuhVulnerabilityData,
-    AgentVulnerabilityOut,
     AgentVulnerabilitiesResponse,
-    VulnerabilitySyncResponse,
-    VulnerabilityStatsResponse,
-    VulnerabilitySearchResponse,
-    VulnerabilitySearchItem
 )
+from app.agents.vulnerabilities.schema.vulnerabilities import AgentVulnerabilityOut
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySearchItem
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilitySearchResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
+from app.agents.vulnerabilities.schema.vulnerabilities import WazuhVulnerabilityData
+from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
-    collect_indices
 )
-from app.threat_intel.services.epss import collect_epss_score
+from app.db.universal_models import Agents
+from app.db.universal_models import AgentVulnerabilities
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
-from app.db.universal_models import AgentVulnerabilities, Agents
+from app.threat_intel.services.epss import collect_epss_score
 
 
 async def get_epss_score_for_cve(cve_id: str) -> tuple[Optional[str], Optional[str]]:
@@ -70,14 +76,14 @@ def process_wazuh_document(document: Dict[str, Any]) -> WazuhVulnerabilityData:
 
         # Parse detected_at timestamp
         detected_at_str = vuln_data.get("detected_at")
-        detected_at = datetime.fromisoformat(detected_at_str.replace('Z', '+00:00')) if detected_at_str else datetime.utcnow()
+        detected_at = datetime.fromisoformat(detected_at_str.replace("Z", "+00:00")) if detected_at_str else datetime.utcnow()
 
         # Parse published_at timestamp if available
         published_at_str = vuln_data.get("published_at")
         published_at = None
         if published_at_str:
             try:
-                published_at = datetime.fromisoformat(published_at_str.replace('Z', '+00:00'))
+                published_at = datetime.fromisoformat(published_at_str.replace("Z", "+00:00"))
             except ValueError:
                 logger.warning(f"Could not parse published_at: {published_at_str}")
 
@@ -85,10 +91,10 @@ def process_wazuh_document(document: Dict[str, Any]) -> WazuhVulnerabilityData:
         references_raw = vuln_data.get("reference")
         references = None
         if references_raw:
-            if isinstance(references_raw, str) and ',' in references_raw:
+            if isinstance(references_raw, str) and "," in references_raw:
                 # Split by comma, take first 5 items, and rejoin
-                reference_list = [ref.strip() for ref in references_raw.split(',')]
-                references = ', '.join(reference_list[:5])
+                reference_list = [ref.strip() for ref in references_raw.split(",")]
+                references = ", ".join(reference_list[:5])
             else:
                 references = str(references_raw)
 
@@ -106,7 +112,7 @@ def process_wazuh_document(document: Dict[str, Any]) -> WazuhVulnerabilityData:
             base_score=score_data.get("base"),
             package_name=package_data.get("name"),
             package_version=package_data.get("version"),
-            package_architecture=package_data.get("architecture")
+            package_architecture=package_data.get("architecture"),
         )
     except Exception as e:
         logger.error(f"Error processing vulnerability document: {e}")
@@ -118,24 +124,18 @@ async def get_vulnerabilities_indices() -> List[str]:
     """Get all vulnerability indices from Wazuh Indexer"""
     try:
         indices = await collect_indices(all_indices=True)
-        vuln_indices = [
-            index for index in indices.indices_list
-            if index.startswith("wazuh-states-vulnerabilities")
-        ]
+        vuln_indices = [index for index in indices.indices_list if index.startswith("wazuh-states-vulnerabilities")]
         logger.info(f"Found {len(vuln_indices)} vulnerability indices")
         return vuln_indices
     except Exception as e:
         logger.error(f"Error collecting vulnerability indices: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect vulnerability indices: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to collect vulnerability indices: {e}")
 
 
 async def fetch_vulnerabilities_from_indexer(
     agent_name: Optional[str] = None,
     customer_code: Optional[str] = None,
-    severity_filter: Optional[List[str]] = None
+    severity_filter: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Fetch vulnerabilities from Wazuh Indexer indices
@@ -166,9 +166,7 @@ async def fetch_vulnerabilities_from_indexer(
             query["query"]["bool"]["must"].append({"match": {"agent.name": agent_name}})
 
         if severity_filter:
-            query["query"]["bool"]["must"].append(
-                {"terms": {"vulnerability.severity": severity_filter}}
-            )
+            query["query"]["bool"]["must"].append({"terms": {"vulnerability.severity": severity_filter}})
 
         # If no filters, match all
         if not query["query"]["bool"]["must"]:
@@ -206,10 +204,7 @@ async def fetch_vulnerabilities_from_indexer(
 
     except Exception as e:
         logger.error(f"Error fetching vulnerabilities from Indexer: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch vulnerabilities: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch vulnerabilities: {e}")
     finally:
         # Ensure the Elasticsearch client session is properly closed
         if es_client:
@@ -222,9 +217,7 @@ async def fetch_vulnerabilities_from_indexer(
 async def get_agent_by_name(db_session: AsyncSession, agent_name: str) -> Optional[Agents]:
     """Get agent from database by hostname/name"""
     try:
-        result = await db_session.execute(
-            select(Agents).filter(Agents.hostname == agent_name)
-        )
+        result = await db_session.execute(select(Agents).filter(Agents.hostname == agent_name))
         return result.scalars().first()
     except Exception as e:
         logger.error(f"Error fetching agent {agent_name}: {e}")
@@ -236,13 +229,15 @@ async def _sync_vulnerabilities_bulk_mode(
     agent_id: str,
     agent_name: str,
     customer_code: str,
-    vulnerability_docs: List[Dict[str, Any]]
+    vulnerability_docs: List[Dict[str, Any]],
 ) -> "VulnerabilitySyncResponse":
     """
     Ultra-fast bulk mode for processing large numbers of vulnerabilities.
     Uses SQLAlchemy bulk operations for maximum performance.
     """
-    from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
+    from app.agents.vulnerabilities.schema.vulnerabilities import (
+        VulnerabilitySyncResponse,
+    )
 
     try:
         logger.info(f"BULK MODE: Processing {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
@@ -265,15 +260,11 @@ async def _sync_vulnerabilities_bulk_mode(
                 success=True,
                 message=f"No valid vulnerabilities to process for agent {agent_name}",
                 synced_count=0,
-                errors=errors
+                errors=errors,
             )
 
         # Get existing vulnerabilities for comparison
-        existing_vulns_result = await db_session.execute(
-            select(AgentVulnerabilities).filter(
-                AgentVulnerabilities.agent_id == agent_id
-            )
-        )
+        existing_vulns_result = await db_session.execute(select(AgentVulnerabilities).filter(AgentVulnerabilities.agent_id == agent_id))
         existing_vulns = existing_vulns_result.scalars().all()
 
         # Create lookup for existing vulnerabilities
@@ -292,21 +283,25 @@ async def _sync_vulnerabilities_bulk_mode(
             if key in existing_lookup:
                 # Prepare for bulk update
                 existing_vuln = existing_lookup[key]
-                update_data.append({
-                    'id': existing_vuln.id,
-                    'severity': vuln_data.severity,
-                    'title': vuln_data.title,
-                    'references': vuln_data.references,
-                    'discovered_at': vuln_data.detected_at,
-                    'epss_score': str(vuln_data.base_score) if hasattr(vuln_data, 'base_score') and vuln_data.base_score else existing_vuln.epss_score,
-                    'package_name': vuln_data.package_name
-                })
+                update_data.append(
+                    {
+                        "id": existing_vuln.id,
+                        "severity": vuln_data.severity,
+                        "title": vuln_data.title,
+                        "references": vuln_data.references,
+                        "discovered_at": vuln_data.detected_at,
+                        "epss_score": str(vuln_data.base_score)
+                        if hasattr(vuln_data, "base_score") and vuln_data.base_score
+                        else existing_vuln.epss_score,
+                        "package_name": vuln_data.package_name,
+                    },
+                )
             else:
                 # Prepare for bulk insert
                 new_vuln = AgentVulnerabilities.create_from_model(
                     vulnerability_data=vuln_data,
                     agent_id=agent_id,
-                    customer_code=customer_code
+                    customer_code=customer_code,
                 )
                 new_vulnerabilities.append(new_vuln)
 
@@ -322,17 +317,22 @@ async def _sync_vulnerabilities_bulk_mode(
         if update_data:
             # Use bulk update for existing vulnerabilities
             from sqlalchemy import update
+
             for data in update_data:
-                stmt = update(AgentVulnerabilities).where(
-                    AgentVulnerabilities.id == data['id']
-                ).values({
-                    'severity': data['severity'],
-                    'title': data['title'],
-                    'references': data['references'],
-                    'discovered_at': data['discovered_at'],
-                    'epss_score': data['epss_score'],
-                    'package_name': data['package_name']
-                })
+                stmt = (
+                    update(AgentVulnerabilities)
+                    .where(AgentVulnerabilities.id == data["id"])
+                    .values(
+                        {
+                            "severity": data["severity"],
+                            "title": data["title"],
+                            "references": data["references"],
+                            "discovered_at": data["discovered_at"],
+                            "epss_score": data["epss_score"],
+                            "package_name": data["package_name"],
+                        },
+                    )
+                )
                 await db_session.execute(stmt)
             updated_count = len(update_data)
             logger.info(f"BULK MODE: Executed {updated_count} vulnerability updates")
@@ -347,7 +347,7 @@ async def _sync_vulnerabilities_bulk_mode(
             success=True,
             message=f"BULK MODE: Successfully synced {total_synced} vulnerabilities for agent {agent_name} ({inserted_count} new, {updated_count} updated)",
             synced_count=total_synced,
-            errors=errors
+            errors=errors,
         )
 
     except Exception as e:
@@ -357,7 +357,7 @@ async def _sync_vulnerabilities_bulk_mode(
             success=False,
             message=f"BULK MODE: Failed to sync vulnerabilities for agent {agent_name}: {e}",
             synced_count=0,
-            errors=[str(e)]
+            errors=[str(e)],
         )
 
 
@@ -366,7 +366,7 @@ async def sync_vulnerabilities_for_agent(
     agent_name: str,
     customer_code: Optional[str] = None,
     batch_size: int = 100,
-    use_bulk_mode: bool = False
+    use_bulk_mode: bool = False,
 ) -> VulnerabilitySyncResponse:
     """
     Sync vulnerabilities for a specific agent
@@ -383,9 +383,7 @@ async def sync_vulnerabilities_for_agent(
     """
     try:
         # Get agent from database using the session
-        result = await db_session.execute(
-            select(Agents).filter(Agents.hostname == agent_name)
-        )
+        result = await db_session.execute(select(Agents).filter(Agents.hostname == agent_name))
         agent = result.scalars().first()
 
         if not agent:
@@ -393,7 +391,7 @@ async def sync_vulnerabilities_for_agent(
                 success=False,
                 message=f"Agent {agent_name} not found in database",
                 synced_count=0,
-                errors=[f"Agent {agent_name} not found"]
+                errors=[f"Agent {agent_name} not found"],
             )
 
         # Use agent's customer code if not provided
@@ -404,9 +402,7 @@ async def sync_vulnerabilities_for_agent(
         agent_id = agent.agent_id
 
         # Fetch vulnerabilities from Indexer
-        vulnerability_docs = await fetch_vulnerabilities_from_indexer(
-            agent_name=agent_name
-        )
+        vulnerability_docs = await fetch_vulnerabilities_from_indexer(agent_name=agent_name)
 
         logger.info(f"Fetched {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
 
@@ -415,7 +411,7 @@ async def sync_vulnerabilities_for_agent(
                 success=True,
                 message=f"No vulnerabilities found for agent {agent_name}",
                 synced_count=0,
-                errors=[]
+                errors=[],
             )
 
         synced_count = 0
@@ -424,20 +420,14 @@ async def sync_vulnerabilities_for_agent(
         # Choose processing mode based on use_bulk_mode flag
         if use_bulk_mode:
             logger.info(f"Using BULK MODE for {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
-            return await _sync_vulnerabilities_bulk_mode(
-                db_session, agent_id, agent_name, customer_code, vulnerability_docs
-            )
+            return await _sync_vulnerabilities_bulk_mode(db_session, agent_id, agent_name, customer_code, vulnerability_docs)
 
         # OPTIMIZATION: Process vulnerabilities in batches for better performance
         logger.info(f"Using BATCH MODE (batch_size={batch_size}) for {len(vulnerability_docs)} vulnerabilities for agent {agent_name}")
 
         # First, get all existing vulnerabilities for this agent to do bulk comparison
         logger.info(f"Fetching existing vulnerabilities for agent {agent_name} for comparison")
-        existing_vulns_result = await db_session.execute(
-            select(AgentVulnerabilities).filter(
-                AgentVulnerabilities.agent_id == agent_id
-            )
-        )
+        existing_vulns_result = await db_session.execute(select(AgentVulnerabilities).filter(AgentVulnerabilities.agent_id == agent_id))
         existing_vulns = existing_vulns_result.scalars().all()
 
         # Create a lookup dictionary for fast comparison (agent_id + cve_id + package_name)
@@ -453,7 +443,9 @@ async def sync_vulnerabilities_for_agent(
             batch_end = min(batch_start + batch_size, len(vulnerability_docs))
             batch_docs = vulnerability_docs[batch_start:batch_end]
 
-            logger.info(f"Processing batch {batch_start // batch_size + 1}: vulnerabilities {batch_start + 1}-{batch_end} of {len(vulnerability_docs)} for agent {agent_name}")
+            logger.info(
+                f"Processing batch {batch_start // batch_size + 1}: vulnerabilities {batch_start + 1}-{batch_end} of {len(vulnerability_docs)} for agent {agent_name}",
+            )
 
             try:
                 batch_updates = []
@@ -476,9 +468,9 @@ async def sync_vulnerabilities_for_agent(
                             existing_vuln.title = vuln_data.title
                             existing_vuln.references = vuln_data.references
                             existing_vuln.discovered_at = vuln_data.detected_at
-                            if hasattr(vuln_data, 'base_score') and vuln_data.base_score:
+                            if hasattr(vuln_data, "base_score") and vuln_data.base_score:
                                 existing_vuln.epss_score = str(vuln_data.base_score)
-                            if hasattr(vuln_data, 'package_name'):
+                            if hasattr(vuln_data, "package_name"):
                                 existing_vuln.package_name = vuln_data.package_name
 
                             db_session.add(existing_vuln)
@@ -488,7 +480,7 @@ async def sync_vulnerabilities_for_agent(
                             new_vuln = AgentVulnerabilities.create_from_model(
                                 vulnerability_data=vuln_data,
                                 agent_id=agent_id,
-                                customer_code=customer_code
+                                customer_code=customer_code,
                             )
                             db_session.add(new_vuln)
                             batch_inserts.append(vuln_data.cve_id)
@@ -509,7 +501,9 @@ async def sync_vulnerabilities_for_agent(
                 synced_count += batch_synced
                 errors.extend(batch_errors)
 
-                logger.info(f"Batch {batch_start // batch_size + 1} completed: {len(batch_updates)} updates, {len(batch_inserts)} inserts, {len(batch_errors)} errors")
+                logger.info(
+                    f"Batch {batch_start // batch_size + 1} completed: {len(batch_updates)} updates, {len(batch_inserts)} inserts, {len(batch_errors)} errors",
+                )
 
             except Exception as batch_error:
                 await db_session.rollback()
@@ -520,9 +514,9 @@ async def sync_vulnerabilities_for_agent(
 
         return VulnerabilitySyncResponse(
             success=True,
-            message=f"Successfully synced {synced_count} vulnerabilities for agent {agent_name} (processed in batches of {batch_size})",
+            message=f"Successfully synced {synced_count} vulnerabilities for agent {agent_name} ({len(errors)}",
             synced_count=synced_count,
-            errors=errors
+            errors=errors,
         )
 
     except Exception as e:
@@ -532,7 +526,7 @@ async def sync_vulnerabilities_for_agent(
             success=False,
             message=f"Failed to sync vulnerabilities for agent {agent_name}: {e}",
             synced_count=0,
-            errors=[str(e)]
+            errors=[str(e)],
         )
 
 
@@ -540,7 +534,7 @@ async def sync_all_vulnerabilities(
     db_session: AsyncSession,
     customer_code: Optional[str] = None,
     batch_size: int = 100,
-    use_bulk_mode: bool = False
+    use_bulk_mode: bool = False,
 ) -> VulnerabilitySyncResponse:
     """
     Sync vulnerabilities for all agents or agents of a specific customer with performance options
@@ -571,12 +565,7 @@ async def sync_all_vulnerabilities(
 
         if not agents:
             message = "No agents found" + (f" for customer {customer_code}" if customer_code else " in database")
-            return VulnerabilitySyncResponse(
-                success=True,
-                message=message,
-                synced_count=0,
-                errors=[]
-            )
+            return VulnerabilitySyncResponse(success=True, message=message, synced_count=0, errors=[])
 
         total_synced = 0
         all_errors = []
@@ -597,7 +586,7 @@ async def sync_all_vulnerabilities(
                     agent_name=agent_hostname,
                     customer_code=agent_customer_code,
                     batch_size=batch_size,
-                    use_bulk_mode=use_bulk_mode
+                    use_bulk_mode=use_bulk_mode,
                 )
 
                 total_synced += result.synced_count
@@ -614,27 +603,17 @@ async def sync_all_vulnerabilities(
         else:
             success_message += " (all agents in database)"
 
-        return VulnerabilitySyncResponse(
-            success=True,
-            message=success_message,
-            synced_count=total_synced,
-            errors=all_errors
-        )
+        return VulnerabilitySyncResponse(success=True, message=success_message, synced_count=total_synced, errors=all_errors)
 
     except Exception as e:
         logger.error(f"Error in bulk vulnerability sync: {e}")
-        return VulnerabilitySyncResponse(
-            success=False,
-            message=f"Failed to sync vulnerabilities: {e}",
-            synced_count=0,
-            errors=[str(e)]
-        )
+        return VulnerabilitySyncResponse(success=False, message=f"Failed to sync vulnerabilities: {e}", synced_count=0, errors=[str(e)])
 
 
 async def get_vulnerabilities_by_agent(
     db_session: AsyncSession,
     agent_id: str,
-    severity_filter: Optional[List[str]] = None
+    severity_filter: Optional[List[str]] = None,
 ) -> AgentVulnerabilitiesResponse:
     """
     Get vulnerabilities for a specific agent from database
@@ -648,9 +627,7 @@ async def get_vulnerabilities_by_agent(
         AgentVulnerabilitiesResponse with vulnerabilities
     """
     try:
-        query = select(AgentVulnerabilities).filter(
-            AgentVulnerabilities.agent_id == agent_id
-        )
+        query = select(AgentVulnerabilities).filter(AgentVulnerabilities.agent_id == agent_id)
 
         if severity_filter:
             query = query.filter(AgentVulnerabilities.severity.in_(severity_filter))
@@ -672,7 +649,7 @@ async def get_vulnerabilities_by_agent(
                 epss_percentile=vuln.epss_percentile,
                 package_name=vuln.package_name,
                 agent_id=vuln.agent_id,
-                customer_code=vuln.customer_code
+                customer_code=vuln.customer_code,
             )
             for vuln in vulnerabilities
         ]
@@ -681,21 +658,15 @@ async def get_vulnerabilities_by_agent(
             vulnerabilities=vuln_list,
             success=True,
             message=f"Retrieved {len(vuln_list)} vulnerabilities for agent {agent_id}",
-            total_count=len(vuln_list)
+            total_count=len(vuln_list),
         )
 
     except Exception as e:
         logger.error(f"Error getting vulnerabilities for agent {agent_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get vulnerabilities for agent {agent_id}: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get vulnerabilities for agent {agent_id}: {e}")
 
 
-async def get_vulnerability_statistics(
-    db_session: AsyncSession,
-    customer_code: Optional[str] = None
-) -> VulnerabilityStatsResponse:
+async def get_vulnerability_statistics(db_session: AsyncSession, customer_code: Optional[str] = None) -> VulnerabilityStatsResponse:
     """
     Get vulnerability statistics
 
@@ -736,22 +707,15 @@ async def get_vulnerability_statistics(
             low_count=low,
             by_customer=by_customer,
             success=True,
-            message="Vulnerability statistics retrieved successfully"
+            message="Vulnerability statistics retrieved successfully",
         )
 
     except Exception as e:
         logger.error(f"Error getting vulnerability statistics: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get vulnerability statistics: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get vulnerability statistics: {e}")
 
 
-async def delete_vulnerabilities(
-    db_session: AsyncSession,
-    agent_name: Optional[str] = None,
-    customer_code: Optional[str] = None
-):
+async def delete_vulnerabilities(db_session: AsyncSession, agent_name: Optional[str] = None, customer_code: Optional[str] = None):
     """
     Delete vulnerabilities based on scope:
     - If neither agent_name nor customer_code provided: Delete ALL vulnerabilities
@@ -766,7 +730,9 @@ async def delete_vulnerabilities(
     Returns:
         VulnerabilityDeleteResponse with deletion results
     """
-    from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityDeleteResponse
+    from app.agents.vulnerabilities.schema.vulnerabilities import (
+        VulnerabilityDeleteResponse,
+    )
 
     try:
         deleted_count = 0
@@ -776,9 +742,7 @@ async def delete_vulnerabilities(
             logger.info(f"Deleting vulnerabilities for agent: {agent_name}")
 
             # First get the agent to validate it exists and get agent_id
-            agent_result = await db_session.execute(
-                select(Agents).filter(Agents.hostname == agent_name)
-            )
+            agent_result = await db_session.execute(select(Agents).filter(Agents.hostname == agent_name))
             agent = agent_result.scalars().first()
 
             if not agent:
@@ -786,14 +750,13 @@ async def delete_vulnerabilities(
                     success=False,
                     message=f"Agent {agent_name} not found in database",
                     deleted_count=0,
-                    errors=[f"Agent {agent_name} not found"]
+                    errors=[f"Agent {agent_name} not found"],
                 )
 
             # Delete vulnerabilities for this agent
             from sqlalchemy import delete
-            delete_stmt = delete(AgentVulnerabilities).where(
-                AgentVulnerabilities.agent_id == agent.agent_id
-            )
+
+            delete_stmt = delete(AgentVulnerabilities).where(AgentVulnerabilities.agent_id == agent.agent_id)
             result = await db_session.execute(delete_stmt)
             deleted_count = result.rowcount
             await db_session.commit()
@@ -802,7 +765,7 @@ async def delete_vulnerabilities(
                 success=True,
                 message=f"Successfully deleted {deleted_count} vulnerabilities for agent {agent_name}",
                 deleted_count=deleted_count,
-                errors=[]
+                errors=[],
             )
 
         elif customer_code:
@@ -810,9 +773,8 @@ async def delete_vulnerabilities(
             logger.info(f"Deleting vulnerabilities for customer: {customer_code}")
 
             from sqlalchemy import delete
-            delete_stmt = delete(AgentVulnerabilities).where(
-                AgentVulnerabilities.customer_code == customer_code
-            )
+
+            delete_stmt = delete(AgentVulnerabilities).where(AgentVulnerabilities.customer_code == customer_code)
             result = await db_session.execute(delete_stmt)
             deleted_count = result.rowcount
             await db_session.commit()
@@ -821,7 +783,7 @@ async def delete_vulnerabilities(
                 success=True,
                 message=f"Successfully deleted {deleted_count} vulnerabilities for customer {customer_code}",
                 deleted_count=deleted_count,
-                errors=[]
+                errors=[],
             )
 
         else:
@@ -829,6 +791,7 @@ async def delete_vulnerabilities(
             logger.warning("Deleting ALL vulnerabilities from database")
 
             from sqlalchemy import delete
+
             delete_stmt = delete(AgentVulnerabilities)
             result = await db_session.execute(delete_stmt)
             deleted_count = result.rowcount
@@ -838,7 +801,7 @@ async def delete_vulnerabilities(
                 success=True,
                 message=f"Successfully deleted ALL {deleted_count} vulnerabilities from database",
                 deleted_count=deleted_count,
-                errors=[]
+                errors=[],
             )
 
     except Exception as e:
@@ -848,7 +811,7 @@ async def delete_vulnerabilities(
             success=False,
             message=f"Failed to delete vulnerabilities: {e}",
             deleted_count=0,
-            errors=[str(e)]
+            errors=[str(e)],
         )
 
 
@@ -861,7 +824,7 @@ async def search_vulnerabilities_from_indexer(
     package_name: Optional[str] = None,
     page: int = 1,
     page_size: int = 50,
-    include_epss: bool = True
+    include_epss: bool = True,
 ) -> VulnerabilitySearchResponse:
     """
     Search vulnerabilities directly from Wazuh indexer with filtering and pagination
@@ -880,10 +843,12 @@ async def search_vulnerabilities_from_indexer(
     Returns:
         VulnerabilitySearchResponse with paginated results
     """
-    logger.info(f"Searching vulnerabilities with filters: customer_code={customer_code}, "
-               f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
-               f"package_name={package_name}, page={page}, page_size={page_size}, "
-               f"include_epss={include_epss}")
+    logger.info(
+        f"Searching vulnerabilities with filters: customer_code={customer_code}, "
+        f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
+        f"package_name={package_name}, page={page}, page_size={page_size}, "
+        f"include_epss={include_epss}",
+    )
 
     # Build filters applied dict for response
     filters_applied = {}
@@ -940,7 +905,7 @@ async def search_vulnerabilities_from_indexer(
                     has_previous=False,
                     success=True,
                     message="No agents found matching the specified criteria",
-                    filters_applied=filters_applied
+                    filters_applied=filters_applied,
                 )
 
             # Build list of agent hostnames for Elasticsearch filtering
@@ -961,7 +926,7 @@ async def search_vulnerabilities_from_indexer(
                 has_previous=False,
                 success=True,
                 message="No vulnerability indices found",
-                filters_applied=filters_applied
+                filters_applied=filters_applied,
             )
 
         # Build Elasticsearch query
@@ -969,27 +934,19 @@ async def search_vulnerabilities_from_indexer(
 
         # Add agent filter if specified
         if agent_hostnames:
-            es_query["bool"]["must"].append({
-                "terms": {"agent.name": agent_hostnames}
-            })
+            es_query["bool"]["must"].append({"terms": {"agent.name": agent_hostnames}})
 
         # Add severity filter
         if severity:
-            es_query["bool"]["must"].append({
-                "term": {"vulnerability.severity": severity}
-            })
+            es_query["bool"]["must"].append({"term": {"vulnerability.severity": severity}})
 
         # Add CVE ID filter
         if cve_id:
-            es_query["bool"]["must"].append({
-                "term": {"vulnerability.id": cve_id}
-            })
+            es_query["bool"]["must"].append({"term": {"vulnerability.id": cve_id}})
 
         # Add package name filter
         if package_name:
-            es_query["bool"]["must"].append({
-                "wildcard": {"package.name": f"*{package_name}*"}
-            })
+            es_query["bool"]["must"].append({"wildcard": {"package.name": f"*{package_name}*"}})
 
         # Calculate pagination
         start_index = (page - 1) * page_size
@@ -1000,10 +957,7 @@ async def search_vulnerabilities_from_indexer(
             es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
             # First, get total count
-            count_response = await es_client.count(
-                index=",".join(vuln_indices),
-                body={"query": es_query}
-            )
+            count_response = await es_client.count(index=",".join(vuln_indices), body={"query": es_query})
             total_count = count_response["count"]
 
             # Calculate pagination info
@@ -1022,7 +976,7 @@ async def search_vulnerabilities_from_indexer(
                     has_previous=False,
                     success=True,
                     message="No vulnerabilities found matching the specified criteria",
-                    filters_applied=filters_applied
+                    filters_applied=filters_applied,
                 )
 
             # Get the actual results with pagination
@@ -1030,13 +984,10 @@ async def search_vulnerabilities_from_indexer(
                 index=",".join(vuln_indices),
                 body={
                     "query": es_query,
-                    "sort": [
-                        {"vulnerability.detected_at": {"order": "desc"}},
-                        {"vulnerability.severity": {"order": "asc"}}
-                    ],
+                    "sort": [{"vulnerability.detected_at": {"order": "desc"}}, {"vulnerability.severity": {"order": "asc"}}],
                     "from": start_index,
-                    "size": page_size
-                }
+                    "size": page_size,
+                },
             )
 
             vulnerabilities = []
@@ -1071,7 +1022,7 @@ async def search_vulnerabilities_from_indexer(
                         package_version=vuln_data.package_version,
                         package_architecture=vuln_data.package_architecture,
                         epss_score=epss_score,
-                        epss_percentile=epss_percentile
+                        epss_percentile=epss_percentile,
                     )
                     vulnerabilities.append(vulnerability_item)
 
@@ -1093,7 +1044,7 @@ async def search_vulnerabilities_from_indexer(
                 has_previous=has_previous,
                 success=True,
                 message=message,
-                filters_applied=filters_applied
+                filters_applied=filters_applied,
             )
 
         except Exception as e:
@@ -1108,7 +1059,7 @@ async def search_vulnerabilities_from_indexer(
                 has_previous=False,
                 success=False,
                 message=f"Failed to search vulnerabilities: {e}",
-                filters_applied=filters_applied if 'filters_applied' in locals() else {}
+                filters_applied=filters_applied if "filters_applied" in locals() else {},
             )
         finally:
             # Ensure the Elasticsearch client session is properly closed
@@ -1130,5 +1081,5 @@ async def search_vulnerabilities_from_indexer(
             has_previous=False,
             success=False,
             message=f"Unexpected error occurred: {e}",
-            filters_applied=filters_applied if 'filters_applied' in locals() else {}
+            filters_applied=filters_applied if "filters_applied" in locals() else {},
         )

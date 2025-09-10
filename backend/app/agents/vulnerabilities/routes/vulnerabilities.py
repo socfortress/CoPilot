@@ -1,27 +1,44 @@
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security, Query
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilitiesResponse,
-    VulnerabilitySyncRequest,
-    VulnerabilitySyncResponse,
-    VulnerabilityStatsResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilityDeleteResponse,
-    VulnerabilitySearchResponse
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilitySearchResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncRequest
+from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
+from app.agents.vulnerabilities.services.vulnerabilities import delete_vulnerabilities
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    get_vulnerabilities_by_agent,
 )
 from app.agents.vulnerabilities.services.vulnerabilities import (
-    sync_all_vulnerabilities,
-    sync_vulnerabilities_for_agent,
-    get_vulnerabilities_by_agent,
     get_vulnerability_statistics,
-    delete_vulnerabilities,
-    search_vulnerabilities_from_indexer
+)
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    search_vulnerabilities_from_indexer,
+)
+from app.agents.vulnerabilities.services.vulnerabilities import sync_all_vulnerabilities
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    sync_vulnerabilities_for_agent,
 )
 from app.auth.routes.auth import AuthHandler
-from app.db.db_session import get_db, get_db_session
+from app.db.db_session import get_db
+from app.db.db_session import get_db_session
 
 # Create router for vulnerability endpoints
 vulnerabilities_router = APIRouter()
@@ -67,20 +84,13 @@ async def sync_vulnerabilities(
 
     try:
         # Use the standalone function directly with performance options
-        result = await sync_all_vulnerabilities(
-            db_session=db,
-            customer_code=None,
-            batch_size=batch_size,
-            use_bulk_mode=use_bulk_mode
-        )
+        result = await sync_all_vulnerabilities(db_session=db, customer_code=None, batch_size=batch_size, use_bulk_mode=use_bulk_mode)
         return result
 
     except Exception as e:
         logger.error(f"Error in vulnerability sync endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Vulnerability sync failed: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Vulnerability sync failed: {e}")
+
 
 @vulnerabilities_router.post(
     "/sync/background",
@@ -113,21 +123,13 @@ async def sync_vulnerabilities_background(
             # Create a new database session for the background task
             async with get_db_session() as bg_db:
                 # Use the standalone function directly with default performance settings
-                await sync_all_vulnerabilities(
-                    db_session=bg_db,
-                    customer_code=None,
-                    batch_size=100,
-                    use_bulk_mode=False
-                )
+                await sync_all_vulnerabilities(db_session=bg_db, customer_code=None, batch_size=100, use_bulk_mode=False)
         except Exception as e:
             logger.error(f"Background vulnerability sync failed: {e}")
 
     background_tasks.add_task(background_sync)
 
-    return {
-        "success": True,
-        "message": "Vulnerability sync started in background for all agents"
-    }
+    return {"success": True, "message": "Vulnerability sync started in background for all agents"}
 
 
 @vulnerabilities_router.get(
@@ -157,18 +159,11 @@ async def get_agent_vulnerabilities(
 
     try:
         # Use the standalone function directly
-        return await get_vulnerabilities_by_agent(
-            db_session=db,
-            agent_id=agent_id,
-            severity_filter=severity
-        )
+        return await get_vulnerabilities_by_agent(db_session=db, agent_id=agent_id, severity_filter=severity)
 
     except Exception as e:
         logger.error(f"Error getting vulnerabilities for agent {agent_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get vulnerabilities for agent {agent_id}: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get vulnerabilities for agent {agent_id}: {e}")
 
 
 @vulnerabilities_router.get(
@@ -200,10 +195,7 @@ async def get_vulnerability_stats(
 
     except Exception as e:
         logger.error(f"Error getting vulnerability statistics: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get vulnerability statistics: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get vulnerability statistics: {e}")
 
 
 @vulnerabilities_router.post(
@@ -243,16 +235,13 @@ async def sync_customer_vulnerabilities(
             db_session=db,
             customer_code=customer_code,
             batch_size=batch_size,
-            use_bulk_mode=use_bulk_mode
+            use_bulk_mode=use_bulk_mode,
         )
         return result
 
     except Exception as e:
         logger.error(f"Error syncing vulnerabilities for customer {customer_code}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to sync vulnerabilities for customer {customer_code}: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to sync vulnerabilities for customer {customer_code}: {e}")
 
 
 @vulnerabilities_router.post(
@@ -295,16 +284,13 @@ async def sync_agent_vulnerabilities(
             agent_name=agent_name,
             customer_code=customer_code,
             batch_size=batch_size,
-            use_bulk_mode=use_bulk_mode
+            use_bulk_mode=use_bulk_mode,
         )
         return result
 
     except Exception as e:
         logger.error(f"Error syncing vulnerabilities for agent {agent_name}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to sync vulnerabilities for agent {agent_name}: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to sync vulnerabilities for agent {agent_name}: {e}")
 
 
 @vulnerabilities_router.delete(
@@ -341,33 +327,20 @@ async def delete_vulnerabilities_endpoint(
     # Safety check for deleting all vulnerabilities
     if not agent_name and not customer_code:
         if not confirm_delete_all:
-            raise HTTPException(
-                status_code=400,
-                detail="To delete ALL vulnerabilities, you must set confirm_delete_all=true"
-            )
+            raise HTTPException(status_code=400, detail="To delete ALL vulnerabilities, you must set confirm_delete_all=true")
         logger.warning("Request to delete ALL vulnerabilities received with confirmation")
 
     # Validate that both agent_name and customer_code are not provided
     if agent_name and customer_code:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot specify both agent_name and customer_code. Choose one scope."
-        )
+        raise HTTPException(status_code=400, detail="Cannot specify both agent_name and customer_code. Choose one scope.")
 
     try:
-        result = await delete_vulnerabilities(
-            db_session=db,
-            agent_name=agent_name,
-            customer_code=customer_code
-        )
+        result = await delete_vulnerabilities(db_session=db, agent_name=agent_name, customer_code=customer_code)
         return result
 
     except Exception as e:
         logger.error(f"Error in delete vulnerabilities endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete vulnerabilities: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete vulnerabilities: {e}")
 
 
 @vulnerabilities_router.get(
@@ -436,10 +409,12 @@ async def search_vulnerabilities(
     Returns:
         VulnerabilitySearchResponse: Paginated vulnerability search results
     """
-    logger.info(f"Searching vulnerabilities from indexer with filters: "
-               f"customer_code={customer_code}, agent_name={agent_name}, "
-               f"severity={severity}, cve_id={cve_id}, package_name={package_name}, "
-               f"page={page}, page_size={page_size}, include_epss={include_epss}")
+    logger.info(
+        f"Searching vulnerabilities from indexer with filters: "
+        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"severity={severity}, cve_id={cve_id}, package_name={package_name}, "
+        f"page={page}, page_size={page_size}, include_epss={include_epss}",
+    )
 
     try:
         result = await search_vulnerabilities_from_indexer(
@@ -451,13 +426,10 @@ async def search_vulnerabilities(
             package_name=package_name,
             page=page,
             page_size=page_size,
-            include_epss=include_epss
+            include_epss=include_epss,
         )
         return result
 
     except Exception as e:
         logger.error(f"Error in vulnerability search endpoint: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to search vulnerabilities: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to search vulnerabilities: {e}")

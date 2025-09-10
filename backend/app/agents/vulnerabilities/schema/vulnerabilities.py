@@ -1,10 +1,14 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class WazuhVulnerabilityData(BaseModel):
     """Schema for processing raw Wazuh vulnerability data from Elasticsearch"""
+
     cve_id: str = Field(..., alias="id")
     severity: str
     title: str = Field(..., alias="description")
@@ -22,6 +26,7 @@ class WazuhVulnerabilityData(BaseModel):
 
 class AgentVulnerabilityOut(BaseModel):
     """Output schema for agent vulnerabilities"""
+
     id: int
     cve_id: str
     severity: str
@@ -39,6 +44,7 @@ class AgentVulnerabilityOut(BaseModel):
 
 class AgentVulnerabilitiesResponse(BaseModel):
     """Response schema for agent vulnerabilities"""
+
     vulnerabilities: List[AgentVulnerabilityOut]
     success: bool
     message: str
@@ -47,6 +53,7 @@ class AgentVulnerabilitiesResponse(BaseModel):
 
 class VulnerabilitySyncRequest(BaseModel):
     """Request schema for syncing vulnerabilities - all fields optional"""
+
     customer_code: Optional[str] = Field(None, description="Optional customer code filter")
     agent_name: Optional[str] = Field(None, description="Optional specific agent name")
     force_refresh: bool = Field(False, description="Force refresh of existing vulnerabilities")
@@ -54,6 +61,7 @@ class VulnerabilitySyncRequest(BaseModel):
 
 class VulnerabilitySyncResponse(BaseModel):
     """Response schema for vulnerability sync operations"""
+
     success: bool
     message: str
     synced_count: int
@@ -62,6 +70,7 @@ class VulnerabilitySyncResponse(BaseModel):
 
 class VulnerabilityStatsResponse(BaseModel):
     """Response schema for vulnerability statistics"""
+
     total_vulnerabilities: int
     critical_count: int
     high_count: int
@@ -74,6 +83,7 @@ class VulnerabilityStatsResponse(BaseModel):
 
 class VulnerabilityDeleteResponse(BaseModel):
     """Response schema for vulnerability delete operations"""
+
     success: bool
     message: str
     deleted_count: int
@@ -82,6 +92,7 @@ class VulnerabilityDeleteResponse(BaseModel):
 
 class VulnerabilitySearchRequest(BaseModel):
     """Request schema for searching vulnerabilities from Wazuh indexer"""
+
     customer_code: Optional[str] = Field(None, description="Filter by customer code")
     agent_name: Optional[str] = Field(None, description="Filter by agent hostname")
     severity: Optional[str] = Field(None, description="Filter by severity (Critical, High, Medium, Low)")
@@ -93,6 +104,7 @@ class VulnerabilitySearchRequest(BaseModel):
 
 class VulnerabilitySearchItem(BaseModel):
     """Individual vulnerability item from search results"""
+
     cve_id: str
     severity: str
     title: str
@@ -111,6 +123,7 @@ class VulnerabilitySearchItem(BaseModel):
 
 class VulnerabilitySearchResponse(BaseModel):
     """Response schema for vulnerability search results with pagination"""
+
     vulnerabilities: List[VulnerabilitySearchItem]
     total_count: int
     page: int
