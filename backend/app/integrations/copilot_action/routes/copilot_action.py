@@ -91,11 +91,9 @@ def build_velociraptor_parameters(copilot_params: dict, script_params: list) -> 
 
     env_array = []
 
-    # Always add RepoURL and ScriptName first
-    if "RepoURL" in copilot_params:
-        env_array.append({"key": "RepoURL", "value": str(copilot_params["RepoURL"])})
-    if "ScriptName" in copilot_params:
-        env_array.append({"key": "ScriptName", "value": str(copilot_params["ScriptName"])})
+    # Always add ScriptURL first
+    if "ScriptURL" in copilot_params:
+        env_array.append({"key": "ScriptURL", "value": str(copilot_params["ScriptURL"])})
 
     # Create a mapping of parameter names to their arg_position
     param_position_map = {}
@@ -109,9 +107,9 @@ def build_velociraptor_parameters(copilot_params: dict, script_params: list) -> 
             arg_key = f"Arg{param_position_map[param_name]}"
             env_array.append({"key": arg_key, "value": str(param_value)})
 
-    # Add other parameters (those without arg_position and not RepoURL/ScriptName)
+    # Add other parameters (those without arg_position and not ScriptURL)
     for param_name, param_value in copilot_params.items():
-        if param_name not in param_position_map and param_name not in ["RepoURL", "ScriptName"]:
+        if param_name not in param_position_map and param_name not in ["ScriptURL"]:
             env_array.append({"key": param_name, "value": str(param_value)})
 
     return {"env": env_array}
@@ -138,15 +136,9 @@ async def validate_parameters(provided_params: dict, script_params: list) -> Non
     required_params = {param.name for param in script_params if param.required}
     provided_param_keys = set(provided_params.keys())
 
-    # Add RepoURL and ScriptName as required parameters for Copilot Actions
-    required_params.add("RepoURL")
-    required_params.add("ScriptName")
-    valid_param_names.add("RepoURL")
-    valid_param_names.add("ScriptName")
-
-    logger.info(f"Valid parameters: {valid_param_names}")
-    logger.info(f"Required parameters: {required_params}")
-    logger.info(f"Provided parameters: {provided_param_keys}")
+    # Add ScriptURL as required parameters for Copilot Actions
+    required_params.add("ScriptURL")
+    valid_param_names.add("ScriptURL")
 
     # Validate: no invalid parameters
     invalid_params = provided_param_keys - valid_param_names
@@ -371,11 +363,9 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         # Step 3: Prepare parameters (do this once for all agents)
         final_parameters = body.parameters or {}
 
-        # Add the `repo_url` and the `script_name` to the parameters
+        # Add the `repo_url` and the to the parameters
         if copilot_action_details.copilot_action.repo_url:
-            final_parameters["RepoURL"] = copilot_action_details.copilot_action.repo_url
-        if copilot_action_details.copilot_action.script_name:
-            final_parameters["ScriptName"] = copilot_action_details.copilot_action.script_name
+            final_parameters["ScriptURL"] = copilot_action_details.copilot_action.repo_url
 
         logger.info(f"Parameters after adding repo and script: {final_parameters}")
 
