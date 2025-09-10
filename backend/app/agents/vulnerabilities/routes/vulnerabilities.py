@@ -32,6 +32,7 @@ vulnerabilities_router = APIRouter()
     response_model=VulnerabilitySyncResponse,
     description="Sync vulnerabilities from Wazuh Indexer indices to database for all agents with performance options",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_vulnerabilities(
     sync_request: Optional[VulnerabilitySyncRequest] = None,
@@ -86,6 +87,7 @@ async def sync_vulnerabilities(
     response_model=dict,
     description="Start background vulnerability sync for all agents",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_vulnerabilities_background(
     background_tasks: BackgroundTasks,
@@ -133,6 +135,7 @@ async def sync_vulnerabilities_background(
     response_model=AgentVulnerabilitiesResponse,
     description="Get vulnerabilities for a specific agent",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def get_agent_vulnerabilities(
     agent_id: str,
@@ -173,6 +176,7 @@ async def get_agent_vulnerabilities(
     response_model=VulnerabilityStatsResponse,
     description="Get vulnerability statistics",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def get_vulnerability_stats(
     customer_code: Optional[str] = Query(None, description="Filter by customer code"),
@@ -207,6 +211,7 @@ async def get_vulnerability_stats(
     response_model=VulnerabilitySyncResponse,
     description="Sync vulnerabilities for all agents of a specific customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_customer_vulnerabilities(
     customer_code: str,
@@ -255,6 +260,7 @@ async def sync_customer_vulnerabilities(
     response_model=VulnerabilitySyncResponse,
     description="Sync vulnerabilities for a specific agent with performance options",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_agent_vulnerabilities(
     agent_name: str,
