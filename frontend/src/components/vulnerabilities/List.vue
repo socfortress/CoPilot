@@ -181,25 +181,6 @@
 			</div>
 		</div>
 
-		<!-- Quick Stats Row -->
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-			<div class="quick-stat">
-				<Icon :name="AgentIcon" :size="16" class="text-gray-600" />
-				<span class="text-sm text-gray-600 dark:text-gray-400">Affected Agents:</span>
-				<span class="font-semibold">{{ stats.uniqueAgents.toLocaleString() }}</span>
-			</div>
-			<div class="quick-stat">
-				<Icon :name="PackageIcon" :size="16" class="text-gray-600" />
-				<span class="text-sm text-gray-600 dark:text-gray-400">Packages:</span>
-				<span class="font-semibold">{{ stats.uniquePackages.toLocaleString() }}</span>
-			</div>
-			<div class="quick-stat">
-				<Icon :name="CustomerIcon" :size="16" class="text-gray-600" />
-				<span class="text-sm text-gray-600 dark:text-gray-400">Customers:</span>
-				<span class="font-semibold">{{ stats.uniqueCustomers.toLocaleString() }}</span>
-			</div>
-		</div>
-
 		<!-- Top 5 Packages by EPSS Score -->
 		<div v-if="topEpssPackages.length > 0" class="mb-4">
 			<h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -338,8 +319,6 @@ const CriticalIcon = "carbon:warning-filled"
 const HighIcon = "carbon:warning"
 const MediumIcon = "carbon:warning-alt"
 const LowIcon = "carbon:information"
-const AgentIcon = "carbon:bare-metal-server"
-const CustomerIcon = "carbon:user-multiple"
 
 const severityOptions = Object.values(VulnerabilitySeverity).map(severity => ({
 	label: severity,
