@@ -8,11 +8,18 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilitiesResponse,
     VulnerabilitySyncRequest,
     VulnerabilitySyncResponse,
-    VulnerabilityStatsResponse
+    VulnerabilityStatsResponse,
+    VulnerabilityDeleteResponse
 )
-from app.agents.vulnerabilities.services.vulnerabilities import create_vulnerability_service
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    sync_all_vulnerabilities,
+    sync_vulnerabilities_for_agent,
+    get_vulnerabilities_by_agent,
+    get_vulnerability_statistics,
+    delete_vulnerabilities
+)
 from app.auth.routes.auth import AuthHandler
-from app.db.db_session import get_db
+from app.db.db_session import get_db, get_db_session
 
 # Create router for vulnerability endpoints
 vulnerabilities_router = APIRouter()
@@ -21,45 +28,35 @@ vulnerabilities_router = APIRouter()
 @vulnerabilities_router.post(
     "/sync",
     response_model=VulnerabilitySyncResponse,
-    description="Sync vulnerabilities from Wazuh Elasticsearch indices to database",
+    description="Sync vulnerabilities from Wazuh Indexer indices to database for all agents",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler"))],
 )
 async def sync_vulnerabilities(
-    sync_request: VulnerabilitySyncRequest,
-    background_tasks: BackgroundTasks,
+    sync_request: Optional[VulnerabilitySyncRequest] = None,
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySyncResponse:
     """
-    Sync vulnerabilities from Wazuh Elasticsearch indices to the database.
+    Sync vulnerabilities from Wazuh Indexer indices to the database.
 
     This endpoint fetches vulnerability data from the 'wazuh-states-vulnerabilities-*'
-    indices, processes them, and stores them in the agent_vulnerabilities table.
+    indices for all agents in the database, processes them, and stores them in the
+    agent_vulnerabilities table.
+
+    The endpoint automatically discovers all agents from the database and syncs
+    vulnerabilities for each one using their hostname and customer_code.
 
     Args:
-        sync_request: Request parameters for vulnerability sync
-        background_tasks: FastAPI background tasks for async processing
+        sync_request: Optional request parameters for vulnerability sync
         db: Database session
 
     Returns:
         VulnerabilitySyncResponse: Status of the sync operation
     """
-    logger.info(f"Starting vulnerability sync for customer: {sync_request.customer_code}")
+    logger.info("Starting vulnerability sync for all agents from database")
 
     try:
-        service = await create_vulnerability_service(db)
-
-        if sync_request.agent_name:
-            # Sync for specific agent
-            result = await service.sync_vulnerabilities_for_agent(
-                agent_name=sync_request.agent_name,
-                customer_code=sync_request.customer_code
-            )
-        else:
-            # Sync for all agents or customer agents
-            result = await service.sync_all_vulnerabilities(
-                customer_code=sync_request.customer_code
-            )
-
+        # Use the standalone function directly
+        result = await sync_all_vulnerabilities(db_session=db, customer_code=None)
         return result
 
     except Exception as e:
@@ -69,37 +66,37 @@ async def sync_vulnerabilities(
             detail=f"Vulnerability sync failed: {e}"
         )
 
-
 @vulnerabilities_router.post(
     "/sync/background",
     response_model=dict,
-    description="Start background vulnerability sync",
+    description="Start background vulnerability sync for all agents",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def sync_vulnerabilities_background(
-    sync_request: VulnerabilitySyncRequest,
     background_tasks: BackgroundTasks,
+    sync_request: Optional[VulnerabilitySyncRequest] = None,
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Start vulnerability sync as a background task.
+    Start vulnerability sync as a background task for all agents in the database.
 
-    This is useful for large sync operations that might take a long time.
+    This endpoint automatically discovers all agents from the database and starts
+    a background task to sync vulnerabilities for each one. This is useful for
+    large sync operations that might take a long time.
+
+    Args:
+        background_tasks: FastAPI background tasks
+        sync_request: Optional request parameters
+        db: Database session
     """
-    logger.info(f"Starting background vulnerability sync for customer: {sync_request.customer_code}")
+    logger.info("Starting background vulnerability sync for all agents from database")
 
     async def background_sync():
         try:
-            service = await create_vulnerability_service(db)
-            if sync_request.agent_name:
-                await service.sync_vulnerabilities_for_agent(
-                    agent_name=sync_request.agent_name,
-                    customer_code=sync_request.customer_code
-                )
-            else:
-                await service.sync_all_vulnerabilities(
-                    customer_code=sync_request.customer_code
-                )
+            # Create a new database session for the background task
+            async with get_db_session() as bg_db:
+                # Use the standalone function directly
+                await sync_all_vulnerabilities(db_session=bg_db, customer_code=None)
         except Exception as e:
             logger.error(f"Background vulnerability sync failed: {e}")
 
@@ -107,7 +104,7 @@ async def sync_vulnerabilities_background(
 
     return {
         "success": True,
-        "message": "Vulnerability sync started in background"
+        "message": "Vulnerability sync started in background for all agents"
     }
 
 
@@ -136,8 +133,9 @@ async def get_agent_vulnerabilities(
     logger.info(f"Getting vulnerabilities for agent: {agent_id}")
 
     try:
-        service = await create_vulnerability_service(db)
-        return await service.get_vulnerabilities_by_agent(
+        # Use the standalone function directly
+        return await get_vulnerabilities_by_agent(
+            db_session=db,
             agent_id=agent_id,
             severity_filter=severity
         )
@@ -156,7 +154,7 @@ async def get_agent_vulnerabilities(
     description="Get vulnerability statistics",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_vulnerability_statistics(
+async def get_vulnerability_stats(
     customer_code: Optional[str] = Query(None, description="Filter by customer code"),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilityStatsResponse:
@@ -173,8 +171,8 @@ async def get_vulnerability_statistics(
     logger.info(f"Getting vulnerability statistics for customer: {customer_code}")
 
     try:
-        service = await create_vulnerability_service(db)
-        return await service.get_vulnerability_statistics(customer_code=customer_code)
+        # Use the standalone function directly
+        return await get_vulnerability_statistics(db_session=db, customer_code=customer_code)
 
     except Exception as e:
         logger.error(f"Error getting vulnerability statistics: {e}")
@@ -211,8 +209,8 @@ async def sync_customer_vulnerabilities(
     logger.info(f"Starting vulnerability sync for customer: {customer_code}")
 
     try:
-        service = await create_vulnerability_service(db)
-        result = await service.sync_all_vulnerabilities(customer_code=customer_code)
+        # Use the standalone function directly
+        result = await sync_all_vulnerabilities(db_session=db, customer_code=customer_code)
         return result
 
     except Exception as e:
@@ -248,8 +246,9 @@ async def sync_agent_vulnerabilities(
     logger.info(f"Starting vulnerability sync for agent: {agent_name}")
 
     try:
-        service = await create_vulnerability_service(db)
-        result = await service.sync_vulnerabilities_for_agent(
+        # Use the standalone function directly
+        result = await sync_vulnerabilities_for_agent(
+            db_session=db,
             agent_name=agent_name,
             customer_code=customer_code
         )
@@ -260,4 +259,67 @@ async def sync_agent_vulnerabilities(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to sync vulnerabilities for agent {agent_name}: {e}"
+        )
+
+
+@vulnerabilities_router.delete(
+    "/delete",
+    response_model=VulnerabilityDeleteResponse,
+    description="Delete vulnerabilities based on scope",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_vulnerabilities_endpoint(
+    agent_name: Optional[str] = Query(None, description="Delete vulnerabilities for specific agent"),
+    customer_code: Optional[str] = Query(None, description="Delete vulnerabilities for specific customer"),
+    confirm_delete_all: bool = Query(False, description="Required confirmation to delete ALL vulnerabilities"),
+    db: AsyncSession = Depends(get_db),
+) -> VulnerabilityDeleteResponse:
+    """
+    Delete vulnerabilities based on scope:
+
+    - If neither agent_name nor customer_code provided: Delete ALL vulnerabilities (requires confirm_delete_all=true)
+    - If agent_name provided: Delete vulnerabilities for that specific agent
+    - If customer_code provided: Delete vulnerabilities for all agents of that customer
+
+    **WARNING**: Deleting all vulnerabilities is irreversible. Use with caution.
+
+    Args:
+        agent_name: Optional agent name to delete vulnerabilities for
+        customer_code: Optional customer code to delete vulnerabilities for
+        confirm_delete_all: Required confirmation when deleting ALL vulnerabilities
+        db: Database session
+
+    Returns:
+        VulnerabilityDeleteResponse: Status of the delete operation
+    """
+
+    # Safety check for deleting all vulnerabilities
+    if not agent_name and not customer_code:
+        if not confirm_delete_all:
+            raise HTTPException(
+                status_code=400,
+                detail="To delete ALL vulnerabilities, you must set confirm_delete_all=true"
+            )
+        logger.warning("Request to delete ALL vulnerabilities received with confirmation")
+
+    # Validate that both agent_name and customer_code are not provided
+    if agent_name and customer_code:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot specify both agent_name and customer_code. Choose one scope."
+        )
+
+    try:
+        result = await delete_vulnerabilities(
+            db_session=db,
+            agent_name=agent_name,
+            customer_code=customer_code
+        )
+        return result
+
+    except Exception as e:
+        logger.error(f"Error in delete vulnerabilities endpoint: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete vulnerabilities: {e}"
         )

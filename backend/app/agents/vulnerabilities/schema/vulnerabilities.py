@@ -46,10 +46,10 @@ class AgentVulnerabilitiesResponse(BaseModel):
 
 
 class VulnerabilitySyncRequest(BaseModel):
-    """Request schema for syncing vulnerabilities"""
-    customer_code: Optional[str] = None
-    agent_name: Optional[str] = None
-    force_refresh: bool = False
+    """Request schema for syncing vulnerabilities - all fields optional"""
+    customer_code: Optional[str] = Field(None, description="Optional customer code filter")
+    agent_name: Optional[str] = Field(None, description="Optional specific agent name")
+    force_refresh: bool = Field(False, description="Force refresh of existing vulnerabilities")
 
 
 class VulnerabilitySyncResponse(BaseModel):
@@ -70,3 +70,11 @@ class VulnerabilityStatsResponse(BaseModel):
     by_customer: dict = {}
     success: bool
     message: str
+
+
+class VulnerabilityDeleteResponse(BaseModel):
+    """Response schema for vulnerability delete operations"""
+    success: bool
+    message: str
+    deleted_count: int
+    errors: List[str] = []

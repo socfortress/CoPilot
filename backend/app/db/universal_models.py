@@ -269,7 +269,7 @@ class AgentVulnerabilities(SQLModel, table=True):
     title: str = Field(max_length=255)
     references: str = Field(default=None, max_length=2048)
     status: str = Field(default="Active", max_length=50, index=True)
-    discovered_at: datetime = Field(default=datetime.utcnow, index=True)
+    discovered_at: datetime = Field(index=True)
     remediated_at: Optional[datetime] = Field(default=None)
     epss_score: Optional[str] = Field(default=None, max_length=50)
     epss_percentile: Optional[str] = Field(default=None, max_length=50)
@@ -292,6 +292,8 @@ class AgentVulnerabilities(SQLModel, table=True):
             self.title = vulnerability_data.title
         if hasattr(vulnerability_data, "references"):
             self.references = vulnerability_data.references
+        if hasattr(vulnerability_data, "detected_at"):
+            self.discovered_at = vulnerability_data.detected_at
         if hasattr(vulnerability_data, "status"):
             self.status = vulnerability_data.status
         if hasattr(vulnerability_data, "epss_score"):
@@ -315,6 +317,7 @@ class AgentVulnerabilities(SQLModel, table=True):
             epss_score=getattr(vulnerability_data, "epss_score", None),
             epss_percentile=getattr(vulnerability_data, "epss_percentile", None),
             package_name=getattr(vulnerability_data, "package_name", None),
+            discovered_at=getattr(vulnerability_data, "detected_at", datetime.utcnow()),
             agent_id=agent_id,
             customer_code=customer_code,
         )
