@@ -898,6 +898,10 @@ async def search_vulnerabilities_from_indexer(
                 return VulnerabilitySearchResponse(
                     vulnerabilities=[],
                     total_count=0,
+                    critical_count=0,
+                    high_count=0,
+                    medium_count=0,
+                    low_count=0,
                     page=page,
                     page_size=page_size,
                     total_pages=0,
@@ -919,6 +923,10 @@ async def search_vulnerabilities_from_indexer(
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
+                critical_count=0,
+                high_count=0,
+                medium_count=0,
+                low_count=0,
                 page=page,
                 page_size=page_size,
                 total_pages=0,
@@ -956,9 +964,28 @@ async def search_vulnerabilities_from_indexer(
         try:
             es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-            # First, get total count
+            # First, get total count and severity aggregations
             count_response = await es_client.count(index=",".join(vuln_indices), body={"query": es_query})
             total_count = count_response["count"]
+
+            # Get severity aggregations
+            agg_response = await es_client.search(
+                index=",".join(vuln_indices),
+                body={
+                    "query": es_query,
+                    "size": 0,  # We don't need documents, just aggregations
+                    "aggs": {"severity_counts": {"terms": {"field": "vulnerability.severity", "size": 10}}},
+                },
+            )
+
+            # Extract severity counts from aggregation response
+            severity_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
+            if "aggregations" in agg_response and "severity_counts" in agg_response["aggregations"]:
+                for bucket in agg_response["aggregations"]["severity_counts"]["buckets"]:
+                    severity = bucket["key"]
+                    count = bucket["doc_count"]
+                    if severity in severity_counts:
+                        severity_counts[severity] = count
 
             # Calculate pagination info
             total_pages = (total_count + page_size - 1) // page_size
@@ -969,6 +996,10 @@ async def search_vulnerabilities_from_indexer(
                 return VulnerabilitySearchResponse(
                     vulnerabilities=[],
                     total_count=0,
+                    critical_count=0,
+                    high_count=0,
+                    medium_count=0,
+                    low_count=0,
                     page=page,
                     page_size=page_size,
                     total_pages=0,
@@ -1037,6 +1068,10 @@ async def search_vulnerabilities_from_indexer(
             return VulnerabilitySearchResponse(
                 vulnerabilities=vulnerabilities,
                 total_count=total_count,
+                critical_count=severity_counts["Critical"],
+                high_count=severity_counts["High"],
+                medium_count=severity_counts["Medium"],
+                low_count=severity_counts["Low"],
                 page=page,
                 page_size=page_size,
                 total_pages=total_pages,
@@ -1052,6 +1087,10 @@ async def search_vulnerabilities_from_indexer(
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
+                critical_count=0,
+                high_count=0,
+                medium_count=0,
+                low_count=0,
                 page=page,
                 page_size=page_size,
                 total_pages=0,
@@ -1074,6 +1113,10 @@ async def search_vulnerabilities_from_indexer(
         return VulnerabilitySearchResponse(
             vulnerabilities=[],
             total_count=0,
+            critical_count=0,
+            high_count=0,
+            medium_count=0,
+            low_count=0,
             page=page,
             page_size=page_size,
             total_pages=0,
