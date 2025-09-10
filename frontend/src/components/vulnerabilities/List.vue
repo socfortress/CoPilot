@@ -20,7 +20,7 @@
 				<div class="stat-value">{{ totalCount.toLocaleString() }}</div>
 			</div>
 
-			<div class="stat-card critical">
+			<div class="stat-card critical clickable" :class="{ selected: selectedSeverity === VulnerabilitySeverity.Critical }" @click="selectSeverity(VulnerabilitySeverity.Critical)">
 				<div class="stat-header">
 					<Icon :name="CriticalIcon" :size="20" class="text-red-600" />
 					<span class="stat-title">Critical</span>
@@ -29,7 +29,7 @@
 				<div class="stat-percentage">{{ getPercentage(stats.critical) }}%</div>
 			</div>
 
-			<div class="stat-card high">
+			<div class="stat-card high clickable" :class="{ selected: selectedSeverity === VulnerabilitySeverity.High }" @click="selectSeverity(VulnerabilitySeverity.High)">
 				<div class="stat-header">
 					<Icon :name="HighIcon" :size="20" class="text-orange-600" />
 					<span class="stat-title">High</span>
@@ -38,7 +38,7 @@
 				<div class="stat-percentage">{{ getPercentage(stats.high) }}%</div>
 			</div>
 
-			<div class="stat-card medium">
+			<div class="stat-card medium clickable" :class="{ selected: selectedSeverity === VulnerabilitySeverity.Medium }" @click="selectSeverity(VulnerabilitySeverity.Medium)">
 				<div class="stat-header">
 					<Icon :name="MediumIcon" :size="20" class="text-yellow-600" />
 					<span class="stat-title">Medium</span>
@@ -47,7 +47,7 @@
 				<div class="stat-percentage">{{ getPercentage(stats.medium) }}%</div>
 			</div>
 
-			<div class="stat-card low">
+			<div class="stat-card low clickable" :class="{ selected: selectedSeverity === VulnerabilitySeverity.Low }" @click="selectSeverity(VulnerabilitySeverity.Low)">
 				<div class="stat-header">
 					<Icon :name="LowIcon" :size="20" class="text-blue-600" />
 					<span class="stat-title">Low</span>
@@ -490,6 +490,18 @@ function selectPackage(packageName: string) {
 	currentPage.value = 1
 }
 
+function selectSeverity(severity: VulnerabilitySeverity) {
+	// If the same severity is already selected, clear the filter
+	if (selectedSeverity.value === severity) {
+		selectedSeverity.value = null
+	} else {
+		// Set the severity in the search filter
+		selectedSeverity.value = severity
+	}
+	// Reset to first page when filtering
+	currentPage.value = 1
+}
+
 watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, searchPackage], () => {
 	currentPage.value = 1
 	getList()
@@ -507,6 +519,21 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	padding: 1rem;
 	border: 1px solid rgb(229 231 235);
 	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	transition: all 0.2s ease;
+}
+
+.stat-card.clickable {
+	cursor: pointer;
+}
+
+.stat-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px 0 rgb(0 0 0 / 0.1);
+}
+
+.stat-card.selected {
+	border-width: 2px;
+	box-shadow: 0 4px 12px 0 rgb(59 130 246 / 0.3);
 }
 
 .stat-card.critical {
@@ -514,9 +541,19 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	background-color: rgb(254 242 242);
 }
 
+.stat-card.critical.selected {
+	border-color: rgb(220 38 38);
+	background-color: rgb(254 226 226);
+}
+
 .stat-card.high {
 	border-color: rgb(254 215 170);
 	background-color: rgb(255 247 237);
+}
+
+.stat-card.high.selected {
+	border-color: rgb(234 88 12);
+	background-color: rgb(255 237 213);
 }
 
 .stat-card.medium {
@@ -524,9 +561,19 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	background-color: rgb(254 252 232);
 }
 
+.stat-card.medium.selected {
+	border-color: rgb(202 138 4);
+	background-color: rgb(254 249 195);
+}
+
 .stat-card.low {
 	border-color: rgb(191 219 254);
 	background-color: rgb(239 246 255);
+}
+
+.stat-card.low.selected {
+	border-color: rgb(59 130 246);
+	background-color: rgb(219 234 254);
 }
 
 .stat-header {
@@ -797,10 +844,24 @@ html.dark .stat-value {
 	background-color: rgb(127 29 29);
 }
 
+.dark .stat-card.critical.selected,
+[data-theme="dark"] .stat-card.critical.selected {
+	border-color: rgb(248 113 113);
+	background-color: rgb(153 27 27);
+	box-shadow: 0 4px 12px 0 rgb(248 113 113 / 0.3);
+}
+
 .dark .stat-card.high,
 [data-theme="dark"] .stat-card.high {
 	border-color: rgb(234 88 12);
 	background-color: rgb(154 52 18);
+}
+
+.dark .stat-card.high.selected,
+[data-theme="dark"] .stat-card.high.selected {
+	border-color: rgb(251 146 60);
+	background-color: rgb(194 65 14);
+	box-shadow: 0 4px 12px 0 rgb(251 146 60 / 0.3);
 }
 
 .dark .stat-card.medium,
@@ -809,10 +870,24 @@ html.dark .stat-value {
 	background-color: rgb(161 98 7);
 }
 
+.dark .stat-card.medium.selected,
+[data-theme="dark"] .stat-card.medium.selected {
+	border-color: rgb(250 204 21);
+	background-color: rgb(180 83 9);
+	box-shadow: 0 4px 12px 0 rgb(250 204 21 / 0.3);
+}
+
 .dark .stat-card.low,
 [data-theme="dark"] .stat-card.low {
 	border-color: rgb(59 130 246);
 	background-color: rgb(30 64 175);
+}
+
+.dark .stat-card.low.selected,
+[data-theme="dark"] .stat-card.low.selected {
+	border-color: rgb(96 165 250);
+	background-color: rgb(37 99 235);
+	box-shadow: 0 4px 12px 0 rgb(96 165 250 / 0.3);
 }
 
 .dark .stat-title,
