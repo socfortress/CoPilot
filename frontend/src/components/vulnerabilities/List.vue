@@ -572,6 +572,14 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	transition: all 0.2s ease;
 }
 
+/* Light mode specific styles */
+:root .epss-package-card,
+html:not(.dark) .epss-package-card,
+[data-theme="light"] .epss-package-card {
+	background-color: white;
+	border-color: rgb(229 231 235);
+}
+
 .epss-package-card.clickable {
 	cursor: pointer;
 }
@@ -601,6 +609,28 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 .epss-package-card.rank-3 {
 	border-color: rgb(217 119 6);
 	background-color: rgb(255 255 255);
+}
+
+/* Light mode ranked cards */
+:root .epss-package-card.rank-1,
+html:not(.dark) .epss-package-card.rank-1,
+[data-theme="light"] .epss-package-card.rank-1 {
+	border-color: rgb(234 179 8);
+	background-color: white;
+}
+
+:root .epss-package-card.rank-2,
+html:not(.dark) .epss-package-card.rank-2,
+[data-theme="light"] .epss-package-card.rank-2 {
+	border-color: rgb(156 163 175);
+	background-color: white;
+}
+
+:root .epss-package-card.rank-3,
+html:not(.dark) .epss-package-card.rank-3,
+[data-theme="light"] .epss-package-card.rank-3 {
+	border-color: rgb(217 119 6);
+	background-color: white;
 }
 
 .epss-header {
