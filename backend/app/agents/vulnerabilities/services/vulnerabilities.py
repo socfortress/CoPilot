@@ -19,7 +19,36 @@ from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
     collect_indices
 )
+from app.threat_intel.services.epss import collect_epss_score
+from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.db.universal_models import AgentVulnerabilities, Agents
+
+
+async def get_epss_score_for_cve(cve_id: str) -> tuple[Optional[str], Optional[str]]:
+    """
+    Get EPSS score and percentile for a CVE ID
+
+    Args:
+        cve_id: CVE identifier to get EPSS score for
+
+    Returns:
+        Tuple of (epss_score, epss_percentile) or (None, None) if not found
+    """
+    try:
+        epss_request = EpssThreatIntelRequest(cve=cve_id)
+        epss_response = await collect_epss_score(epss_request)
+
+        if epss_response.success and epss_response.data:
+            # Get the first (and usually only) result
+            epss_data = epss_response.data[0]
+            return epss_data.epss, epss_data.percentile
+        else:
+            logger.debug(f"No EPSS data found for CVE: {cve_id}")
+            return None, None
+
+    except Exception as e:
+        logger.warning(f"Error fetching EPSS score for CVE {cve_id}: {e}")
+        return None, None
 
 
 def process_wazuh_document(document: Dict[str, Any]) -> WazuhVulnerabilityData:
@@ -831,7 +860,8 @@ async def search_vulnerabilities_from_indexer(
     cve_id: Optional[str] = None,
     package_name: Optional[str] = None,
     page: int = 1,
-    page_size: int = 50
+    page_size: int = 50,
+    include_epss: bool = True
 ) -> VulnerabilitySearchResponse:
     """
     Search vulnerabilities directly from Wazuh indexer with filtering and pagination
@@ -845,13 +875,15 @@ async def search_vulnerabilities_from_indexer(
         package_name: Optional package name filter
         page: Page number for pagination
         page_size: Number of results per page
+        include_epss: Whether to include EPSS scores (default: True, may impact performance)
 
     Returns:
         VulnerabilitySearchResponse with paginated results
     """
     logger.info(f"Searching vulnerabilities with filters: customer_code={customer_code}, "
                f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
-               f"package_name={package_name}, page={page}, page_size={page_size}")
+               f"package_name={package_name}, page={page}, page_size={page_size}, "
+               f"include_epss={include_epss}")
 
     # Build filters applied dict for response
     filters_applied = {}
@@ -1020,6 +1052,11 @@ async def search_vulnerabilities_from_indexer(
                     # Process the vulnerability data
                     vuln_data = process_wazuh_document(hit)
 
+                    # Get EPSS score for the CVE (if requested)
+                    epss_score, epss_percentile = None, None
+                    if include_epss:
+                        epss_score, epss_percentile = await get_epss_score_for_cve(vuln_data.cve_id)
+
                     vulnerability_item = VulnerabilitySearchItem(
                         cve_id=vuln_data.cve_id,
                         severity=vuln_data.severity,
@@ -1032,7 +1069,9 @@ async def search_vulnerabilities_from_indexer(
                         base_score=vuln_data.base_score,
                         package_name=vuln_data.package_name,
                         package_version=vuln_data.package_version,
-                        package_architecture=vuln_data.package_architecture
+                        package_architecture=vuln_data.package_architecture,
+                        epss_score=epss_score,
+                        epss_percentile=epss_percentile
                     )
                     vulnerabilities.append(vulnerability_item)
 

@@ -105,6 +105,8 @@ class VulnerabilitySearchItem(BaseModel):
     package_name: Optional[str] = None
     package_version: Optional[str] = None
     package_architecture: Optional[str] = None
+    epss_score: Optional[str] = None
+    epss_percentile: Optional[str] = None
 
 
 class VulnerabilitySearchResponse(BaseModel):

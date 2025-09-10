@@ -384,6 +384,7 @@ async def search_vulnerabilities(
     package_name: Optional[str] = Query(None, description="Filter by package name"),
     page: int = Query(1, description="Page number for pagination", ge=1),
     page_size: int = Query(50, description="Number of vulnerabilities per page", ge=1, le=1000),
+    include_epss: bool = Query(True, description="Include EPSS scores (may impact performance)"),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySearchResponse:
     """
@@ -398,11 +399,13 @@ async def search_vulnerabilities(
     - Advanced filtering by customer, agent, severity, CVE, or package
     - Efficient pagination for large result sets
     - No database storage required
+    - Optional EPSS scoring integration
 
     **Performance:**
     - Handles large datasets efficiently with pagination
     - Optimized Elasticsearch queries for fast response times
     - Automatic sorting by detection date and severity
+    - EPSS scoring can be disabled for faster response times
 
     **Filtering Options:**
     - **customer_code**: Filter by specific customer
@@ -410,6 +413,11 @@ async def search_vulnerabilities(
     - **severity**: Filter by vulnerability severity (Critical, High, Medium, Low)
     - **cve_id**: Search for specific CVE identifier
     - **package_name**: Filter by package name (supports partial matching)
+
+    **EPSS Integration:**
+    - **include_epss**: Include EPSS scores and percentiles for vulnerabilities
+    - Provides risk assessment data from FIRST.org
+    - May impact response time due to external API calls
 
     **Pagination:**
     - **page**: Page number (starts at 1)
@@ -431,7 +439,7 @@ async def search_vulnerabilities(
     logger.info(f"Searching vulnerabilities from indexer with filters: "
                f"customer_code={customer_code}, agent_name={agent_name}, "
                f"severity={severity}, cve_id={cve_id}, package_name={package_name}, "
-               f"page={page}, page_size={page_size}")
+               f"page={page}, page_size={page_size}, include_epss={include_epss}")
 
     try:
         result = await search_vulnerabilities_from_indexer(
@@ -442,7 +450,8 @@ async def search_vulnerabilities(
             cve_id=cve_id,
             package_name=package_name,
             page=page,
-            page_size=page_size
+            page_size=page_size,
+            include_epss=include_epss
         )
         return result
 
