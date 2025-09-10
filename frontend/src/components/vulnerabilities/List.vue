@@ -617,12 +617,20 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 .stat-label {
 	font-size: 0.75rem;
 	color: rgb(107 114 128);
+	font-weight: 500;
 }
 
 .stat-value {
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: rgb(17 24 39);
+	font-size: 1rem;
+	font-weight: 800;
+	color: rgb(255 255 255);
+	background-color: rgb(59 130 246);
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.5rem;
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	text-align: center;
+	min-width: 3rem;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
 .severity-indicator {
@@ -712,7 +720,9 @@ html.dark .stat-label {
 }
 
 html.dark .stat-value {
-	color: rgb(243 244 246);
+	color: rgb(255 255 255);
+	background-color: rgb(79 70 229);
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
 }
 
 /* Alternative dark mode selectors for better compatibility */
@@ -804,7 +814,9 @@ html.dark .stat-value {
 
 .dark .stat-value,
 [data-theme="dark"] .stat-value {
-	color: rgb(243 244 246);
+	color: rgb(255 255 255);
+	background-color: rgb(79 70 229);
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
 }
 
 /* Media query for system dark mode preference */
@@ -840,6 +852,8 @@ html.dark .stat-value {
 
 	.stat-value {
 		color: rgb(255 255 255);
+		background-color: rgb(79 70 229);
+		box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
 	}
 
 	.stat-percentage {
