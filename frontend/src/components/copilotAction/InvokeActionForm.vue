@@ -250,16 +250,15 @@ async function handleSubmit() {
 
 	loading.value = true
 	try {
-		// Prepare the payload
-		const payload: InvokeCopilotActionRequest = {
-			copilot_action_name: action.copilot_action_name,
-			agent_names: form.value.agent_names,
-			parameters: {
-				RepoURL: action.repo_url,
-				ScriptName: action.script_name || action.copilot_action_name,
-				...form.value.parameters
-			}
-		}
+		  // Prepare the payload
+      const payload: InvokeCopilotActionRequest = {
+          copilot_action_name: action.copilot_action_name,
+          agent_names: form.value.agent_names,
+          parameters: {
+              ScriptURL: action.repo_url,
+              ...form.value.parameters
+          }
+      }
 
 		const response = await Api.copilotAction.invokeAction(payload)
 
