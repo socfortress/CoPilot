@@ -86,8 +86,14 @@
 				<div
 					v-for="(pkg, index) in topEpssPackages.slice(0, 5)"
 					:key="`${pkg.package_name}-${pkg.maxEpssScore}`"
-					class="epss-package-card"
-					:class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
+					class="epss-package-card clickable"
+					:class="{
+						'rank-1': index === 0,
+						'rank-2': index === 1,
+						'rank-3': index === 2,
+						'selected': searchPackage === pkg.package_name
+					}"
+					@click="selectPackage(pkg.package_name)"
 				>
 					<div class="epss-header">
 						<div class="epss-rank">
@@ -472,6 +478,18 @@ function updatePageSize(size: number) {
 	getList()
 }
 
+function selectPackage(packageName: string) {
+	// If the same package is already selected, clear the filter
+	if (searchPackage.value === packageName) {
+		searchPackage.value = ""
+	} else {
+		// Set the package name in the search filter
+		searchPackage.value = packageName
+	}
+	// Reset to first page when filtering
+	currentPage.value = 1
+}
+
 watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, searchPackage], () => {
 	currentPage.value = 1
 	getList()
@@ -554,9 +572,20 @@ watchDebounced([selectedCustomer, selectedSeverity, searchCVE, searchAgent, sear
 	transition: all 0.2s ease;
 }
 
+.epss-package-card.clickable {
+	cursor: pointer;
+}
+
 .epss-package-card:hover {
 	border-color: rgb(156 163 175);
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+	transform: translateY(-2px);
+}
+
+.epss-package-card.selected {
+	border-color: rgb(59 130 246);
+	background-color: rgb(239 246 255);
+	box-shadow: 0 4px 12px -1px rgb(59 130 246 / 0.2);
 }
 
 .epss-package-card.rank-1 {
@@ -802,6 +831,19 @@ html.dark .stat-value {
 	background-color: rgb(124 45 18);
 }
 
+.dark .epss-package-card:hover,
+[data-theme="dark"] .epss-package-card:hover {
+	border-color: rgb(156 163 175);
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+}
+
+.dark .epss-package-card.selected,
+[data-theme="dark"] .epss-package-card.selected {
+	border-color: rgb(96 165 250);
+	background-color: rgb(30 58 138);
+	box-shadow: 0 4px 12px -1px rgb(96 165 250 / 0.3);
+}
+
 .dark .package-name,
 [data-theme="dark"] .package-name {
 	color: rgb(243 244 246);
@@ -863,6 +905,30 @@ html.dark .stat-value {
 	.quick-stat {
 		background-color: rgb(31 41 55);
 		color: rgb(243 244 246);
+	}
+
+	.epss-package-card {
+		background-color: rgb(31 41 55);
+		border-color: rgb(75 85 99);
+	}
+
+	.epss-package-card:hover {
+		border-color: rgb(156 163 175);
+		box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+	}
+
+	.epss-package-card.selected {
+		border-color: rgb(96 165 250);
+		background-color: rgb(30 58 138);
+		box-shadow: 0 4px 12px -1px rgb(96 165 250 / 0.3);
+	}
+
+	.package-name {
+		color: rgb(243 244 246);
+	}
+
+	.stat-label {
+		color: rgb(156 163 175);
 	}
 }
 </style>
