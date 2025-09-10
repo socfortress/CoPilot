@@ -10,6 +10,130 @@
 			</div>
 		</div>
 
+		<!-- Filters -->
+		<div class="flex flex-col">
+			<div ref="header" class="header flex items-center justify-end gap-2">
+				<div class="info flex grow gap-2">
+					<n-popover overlap placement="bottom-start">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-button size="small" class="!cursor-help">
+									<template #icon>
+										<Icon :name="InfoIcon"></Icon>
+									</template>
+								</n-button>
+							</div>
+						</template>
+						<div class="flex flex-col gap-3 p-2 max-w-sm">
+							<div class="font-medium text-sm mb-2">Vulnerability Overview</div>
+
+							<div class="grid grid-cols-2 gap-3 text-xs">
+								<div class="flex justify-between">
+									<span>Total Vulnerabilities:</span>
+									<code class="font-mono">{{ totalCount.toLocaleString() }}</code>
+								</div>
+								<div class="flex justify-between">
+									<span>Current Page:</span>
+									<code class="font-mono">{{ currentPage }} / {{ totalPages }}</code>
+								</div>
+							</div>
+
+							<div class="border-t pt-2">
+								<div class="text-xs font-medium mb-2">Severity Distribution</div>
+								<div class="grid grid-cols-2 gap-2 text-xs">
+									<div class="flex justify-between">
+										<span class="text-red-600">Critical:</span>
+										<span class="font-mono">{{ stats.critical.toLocaleString() }} ({{ getPercentage(stats.critical) }}%)</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-orange-600">High:</span>
+										<span class="font-mono">{{ stats.high.toLocaleString() }} ({{ getPercentage(stats.high) }}%)</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-yellow-600">Medium:</span>
+										<span class="font-mono">{{ stats.medium.toLocaleString() }} ({{ getPercentage(stats.medium) }}%)</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-blue-600">Low:</span>
+										<span class="font-mono">{{ stats.low.toLocaleString() }} ({{ getPercentage(stats.low) }}%)</span>
+									</div>
+								</div>
+							</div>
+
+							<div class="border-t pt-2">
+								<div class="text-xs font-medium mb-2">Coverage</div>
+								<div class="space-y-1 text-xs">
+									<div class="flex justify-between">
+										<span>Affected Agents:</span>
+										<span class="font-mono">{{ stats.uniqueAgents.toLocaleString() }}</span>
+									</div>
+									<div class="flex justify-between">
+										<span>Unique Packages:</span>
+										<span class="font-mono">{{ stats.uniquePackages.toLocaleString() }}</span>
+									</div>
+									<div class="flex justify-between">
+										<span>Customer Codes:</span>
+										<span class="font-mono">{{ stats.uniqueCustomers.toLocaleString() }}</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</n-popover>					<n-select
+						v-model:value="selectedCustomer"
+						:options="customerOptions"
+						clearable
+						size="small"
+						placeholder="Customer"
+						class="max-w-32"
+					/>
+
+					<n-select
+						v-model:value="selectedSeverity"
+						:options="severityOptions"
+						clearable
+						size="small"
+						placeholder="Severity"
+						class="max-w-32"
+					/>
+
+					<n-input
+						v-model:value="searchCVE"
+						size="small"
+						placeholder="Search CVE..."
+						class="max-w-40"
+						clearable
+					>
+						<template #prefix>
+							<Icon :name="SearchIcon"></Icon>
+						</template>
+					</n-input>
+
+					<n-select
+						v-model:value="searchAgent"
+						:options="agentOptions"
+						size="small"
+						placeholder="Search agent..."
+						class="max-w-40"
+						clearable
+						filterable
+						:loading="loadingAgents"
+					/>
+
+					<n-input
+						v-model:value="searchPackage"
+						size="small"
+						placeholder="Search package..."
+						class="max-w-40"
+						clearable
+					>
+						<template #prefix>
+							<Icon :name="PackageIcon"></Icon>
+						</template>
+					</n-input>
+				</div>
+			</div>
+		</div>
+
 		<!-- Statistics Cards -->
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
 			<div class="stat-card">
@@ -140,155 +264,33 @@
 			</div>
 		</div>
 
-		<div class="flex flex-col">
-			<div ref="header" class="header flex items-center justify-end gap-2">
-				<div class="info flex grow gap-2">
-					<n-popover overlap placement="bottom-start">
-						<template #trigger>
-							<div class="bg-default rounded-lg">
-								<n-button size="small" class="!cursor-help">
-									<template #icon>
-										<Icon :name="InfoIcon"></Icon>
-									</template>
-								</n-button>
-							</div>
-						</template>
-						<div class="flex flex-col gap-3 p-2 max-w-sm">
-							<div class="font-medium text-sm mb-2">Vulnerability Overview</div>
+		<!-- Vulnerability List -->
+		<n-spin :show="loading">
+			<div class="my-3">
+				<template v-if="list.length">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+						<VulnerabilityCard v-for="item of list" :key="`${item.cve_id}-${item.agent_name}`" :vulnerability="item" />
+					</div>
 
-							<div class="grid grid-cols-2 gap-3 text-xs">
-								<div class="flex justify-between">
-									<span>Total Vulnerabilities:</span>
-									<code class="font-mono">{{ totalCount.toLocaleString() }}</code>
-								</div>
-								<div class="flex justify-between">
-									<span>Current Page:</span>
-									<code class="font-mono">{{ currentPage }} / {{ totalPages }}</code>
-								</div>
-							</div>
-
-							<div class="border-t pt-2">
-								<div class="text-xs font-medium mb-2">Severity Distribution</div>
-								<div class="grid grid-cols-2 gap-2 text-xs">
-									<div class="flex justify-between">
-										<span class="text-red-600">Critical:</span>
-										<span class="font-mono">{{ stats.critical.toLocaleString() }} ({{ getPercentage(stats.critical) }}%)</span>
-									</div>
-									<div class="flex justify-between">
-										<span class="text-orange-600">High:</span>
-										<span class="font-mono">{{ stats.high.toLocaleString() }} ({{ getPercentage(stats.high) }}%)</span>
-									</div>
-									<div class="flex justify-between">
-										<span class="text-yellow-600">Medium:</span>
-										<span class="font-mono">{{ stats.medium.toLocaleString() }} ({{ getPercentage(stats.medium) }}%)</span>
-									</div>
-									<div class="flex justify-between">
-										<span class="text-blue-600">Low:</span>
-										<span class="font-mono">{{ stats.low.toLocaleString() }} ({{ getPercentage(stats.low) }}%)</span>
-									</div>
-								</div>
-							</div>
-
-							<div class="border-t pt-2">
-								<div class="text-xs font-medium mb-2">Coverage</div>
-								<div class="space-y-1 text-xs">
-									<div class="flex justify-between">
-										<span>Affected Agents:</span>
-										<span class="font-mono">{{ stats.uniqueAgents.toLocaleString() }}</span>
-									</div>
-									<div class="flex justify-between">
-										<span>Unique Packages:</span>
-										<span class="font-mono">{{ stats.uniquePackages.toLocaleString() }}</span>
-									</div>
-									<div class="flex justify-between">
-										<span>Customer Codes:</span>
-										<span class="font-mono">{{ stats.uniqueCustomers.toLocaleString() }}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</n-popover>					<n-select
-						v-model:value="selectedCustomer"
-						:options="customerOptions"
-						clearable
-						size="small"
-						placeholder="Customer"
-						class="max-w-32"
-					/>
-
-					<n-select
-						v-model:value="selectedSeverity"
-						:options="severityOptions"
-						clearable
-						size="small"
-						placeholder="Severity"
-						class="max-w-32"
-					/>
-
-					<n-input
-						v-model:value="searchCVE"
-						size="small"
-						placeholder="Search CVE..."
-						class="max-w-40"
-						clearable
-					>
-						<template #prefix>
-							<Icon :name="SearchIcon"></Icon>
-						</template>
-					</n-input>
-
-					<n-select
-						v-model:value="searchAgent"
-						:options="agentOptions"
-						size="small"
-						placeholder="Search agent..."
-						class="max-w-40"
-						clearable
-						filterable
-						:loading="loadingAgents"
-					/>
-
-					<n-input
-						v-model:value="searchPackage"
-						size="small"
-						placeholder="Search package..."
-						class="max-w-40"
-						clearable
-					>
-						<template #prefix>
-							<Icon :name="PackageIcon"></Icon>
-						</template>
-					</n-input>
-				</div>
+					<!-- Pagination -->
+					<div class="flex justify-center mt-6">
+						<n-pagination
+							v-model:page="currentPage"
+							:page-count="totalPages"
+							:page-size="pageSize"
+							:item-count="totalCount"
+							show-size-picker
+							:page-sizes="[25, 50, 100, 200]"
+							@update:page="updatePage"
+							@update:page-size="updatePageSize"
+						/>
+					</div>
+				</template>
+				<template v-else>
+					<n-empty v-if="!loading" description="No vulnerabilities found" class="h-48 justify-center" />
+				</template>
 			</div>
-
-			<n-spin :show="loading">
-				<div class="my-3">
-					<template v-if="list.length">
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							<VulnerabilityCard v-for="item of list" :key="`${item.cve_id}-${item.agent_name}`" :vulnerability="item" />
-						</div>
-
-						<!-- Pagination -->
-						<div class="flex justify-center mt-6">
-							<n-pagination
-								v-model:page="currentPage"
-								:page-count="totalPages"
-								:page-size="pageSize"
-								:item-count="totalCount"
-								show-size-picker
-								:page-sizes="[25, 50, 100, 200]"
-								@update:page="updatePage"
-								@update:page-size="updatePageSize"
-							/>
-						</div>
-					</template>
-					<template v-else>
-						<n-empty v-if="!loading" description="No vulnerabilities found" class="h-48 justify-center" />
-					</template>
-				</div>
-			</n-spin>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
