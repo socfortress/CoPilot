@@ -172,7 +172,7 @@ async def search_sca_overview(
     logger.info(
         f"Searching SCA overview with filters: customer_code={customer_code}, "
         f"agent_name={agent_name}, policy_id={policy_id}, policy_name={policy_name}, "
-        f"min_score={min_score}, max_score={max_score}, page={page}, page_size={page_size}"
+        f"min_score={min_score}, max_score={max_score}, page={page}, page_size={page_size}",
     )
 
     # Build filters applied dict for response

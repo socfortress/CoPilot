@@ -98,7 +98,7 @@ async def search_sca_results_overview(
         f"customer_code={customer_code}, agent_name={agent_name}, "
         f"policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}, "
-        f"page={page}, page_size={page_size}"
+        f"page={page}, page_size={page_size}",
     )
 
     try:
