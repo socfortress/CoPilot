@@ -118,7 +118,20 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Vulnerability Overview" }
 						),
 					key: "VulnerabilityOverview"
-				}
+				},
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "ScaOverview"
+                                }
+                            },
+                            { default: () => "SCA Overview" }
+                        ),
+                    key: "ScaOverview"
+                }
 			]
 		},
 		{
