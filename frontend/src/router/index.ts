@@ -73,6 +73,12 @@ const router = createRouter({
 					name: "VulnerabilityOverview",
 					component: () => import("@/views/agents/VulnerabilityOverview.vue"),
 					meta: { title: "Vulnerability Overview" }
+				},
+				{
+					path: "sca-overview",
+					name: "ScaOverview",
+					component: () => import("@/views/agents/ScaOverview.vue"),
+					meta: { title: "SCA Overview" }
 				}
 			]
 		},

@@ -20,6 +20,7 @@ import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
 import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
+import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
 import shuffle from "./endpoints/shuffle"
 import sigma from "./endpoints/sigma"
@@ -64,6 +65,7 @@ export default {
 	users,
 	sysmonConfig,
 	vulnerabilities,
+	sca,
 	wazuh,
 	portainer,
 	shuffle,
