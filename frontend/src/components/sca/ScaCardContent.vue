@@ -69,8 +69,8 @@
 						<Icon :name="PassIcon" :size="16" class="text-green-600" />
 						<span class="stat-title-small">Passed</span>
 					</div>
-					<div class="stat-value-small">{{ sca.pass_count }}</div>
-					<div class="stat-percentage-small">{{ getCheckPercentage(sca.pass_count) }}%</div>
+					<div class="stat-value-small">{{ sca.pass }}</div>
+					<div class="stat-percentage-small">{{ getCheckPercentage(sca.pass) }}%</div>
 				</div>
 
 				<div class="stat-card-small fail">
@@ -78,17 +78,17 @@
 						<Icon :name="FailIcon" :size="16" class="text-red-600" />
 						<span class="stat-title-small">Failed</span>
 					</div>
-					<div class="stat-value-small">{{ sca.fail_count }}</div>
-					<div class="stat-percentage-small">{{ getCheckPercentage(sca.fail_count) }}%</div>
+					<div class="stat-value-small">{{ sca.fail }}</div>
+					<div class="stat-percentage-small">{{ getCheckPercentage(sca.fail) }}%</div>
 				</div>
 
-				<div v-if="sca.invalid_count > 0" class="stat-card-small invalid">
+				<div v-if="sca.invalid > 0" class="stat-card-small invalid">
 					<div class="stat-header-small">
 						<Icon :name="InvalidIcon" :size="16" class="text-yellow-600" />
 						<span class="stat-title-small">Invalid</span>
 					</div>
-					<div class="stat-value-small">{{ sca.invalid_count }}</div>
-					<div class="stat-percentage-small">{{ getCheckPercentage(sca.invalid_count) }}%</div>
+					<div class="stat-value-small">{{ sca.invalid }}</div>
+					<div class="stat-percentage-small">{{ getCheckPercentage(sca.invalid) }}%</div>
 				</div>
 
 				<div class="stat-card-small total">

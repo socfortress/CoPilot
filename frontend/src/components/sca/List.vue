@@ -262,10 +262,10 @@
 					<!-- Pass/Fail indicator -->
 					<div class="compliance-indicator">
 						<Badge color="success" size="small">
-							<template #value>{{ policy.pass_count }} Pass</template>
+							<template #value>{{ policy.pass }} Pass</template>
 						</Badge>
-						<Badge v-if="policy.fail_count > 0" color="danger" size="small">
-							<template #value>{{ policy.fail_count }} Fail</template>
+						<Badge v-if="policy.fail > 0" color="danger" size="small">
+							<template #value>{{ policy.fail }} Fail</template>
 						</Badge>
 					</div>
 				</div>
@@ -396,8 +396,8 @@ const topPoliciesByScore = computed(() => {
 		score: number
 		agentCount: number
 		total_checks: number
-		pass_count: number
-		fail_count: number
+		pass: number
+		fail: number
 	}>()
 
 	list.value.forEach(item => {
@@ -409,8 +409,8 @@ const topPoliciesByScore = computed(() => {
 			existing.agentCount++
 			existing.score = Math.max(existing.score, item.score) // Use highest score for ranking
 			existing.total_checks += item.total_checks
-			existing.pass_count += item.pass_count
-			existing.fail_count += item.fail_count
+			existing.pass += item.pass
+			existing.fail += item.fail
 		} else {
 			policyMap.set(key, {
 				policy_id: item.policy_id,
@@ -418,8 +418,8 @@ const topPoliciesByScore = computed(() => {
 				score: item.score,
 				agentCount: 1,
 				total_checks: item.total_checks,
-				pass_count: item.pass_count,
-				fail_count: item.fail_count
+				pass: item.pass,
+				fail: item.fail
 			})
 		}
 	})

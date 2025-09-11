@@ -6,9 +6,9 @@ export interface AgentScaOverviewItem {
 	policy_name: string
 	description: string
 	total_checks: number
-	pass_count: number
-	fail_count: number
-	invalid_count: number
+	pass: number
+	fail: number
+	invalid: number
 	score: number
 	start_scan: string
 	end_scan: string

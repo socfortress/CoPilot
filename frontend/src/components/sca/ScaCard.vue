@@ -36,17 +36,17 @@
 
 					<Badge color="success" type="splitted" class="text-xs">
 						<template #label>Pass</template>
-						<template #value>{{ sca.pass_count }}</template>
+						<template #value>{{ sca.pass }}</template>
 					</Badge>
 
 					<Badge color="danger" type="splitted" class="text-xs">
 						<template #label>Fail</template>
-						<template #value>{{ sca.fail_count }}</template>
+						<template #value>{{ sca.fail }}</template>
 					</Badge>
 
-					<Badge v-if="sca.invalid_count > 0" color="warning" type="splitted" class="text-xs">
+					<Badge v-if="sca.invalid > 0" color="warning" type="splitted" class="text-xs">
 						<template #label>Invalid</template>
-						<template #value>{{ sca.invalid_count }}</template>
+						<template #value>{{ sca.invalid }}</template>
 					</Badge>
 
 					<Badge type="splitted" class="text-xs">
