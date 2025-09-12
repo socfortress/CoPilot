@@ -57,3 +57,34 @@ class WazuhGroupFilesResponse(BaseModel):
     group_id: str = Field(..., description="The group ID")
     results: List[WazuhGroupFile] = Field(default=[], description="List of files in the group")
     total_items: Optional[int] = Field(None, description="Total number of files")
+
+
+class WazuhGroupConfigurationUpdateRequest(BaseModel):
+    """Request model for updating group configuration."""
+
+    configuration: str = Field(..., description="Full valid XML configuration content")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "configuration": """<agent_config>
+    <labels>
+        <label key="customer">example</label>
+    </labels>
+    <client_buffer>
+        <disabled>no</disabled>
+        <queue_size>100000</queue_size>
+        <events_per_second>1000</events_per_second>
+    </client_buffer>
+</agent_config>""",
+            },
+        }
+
+
+class WazuhGroupConfigurationUpdateResponse(BaseModel):
+    """Response model for group configuration update."""
+
+    success: bool = Field(..., description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    group_id: str = Field(..., description="The group ID that was updated")
+    total_items: Optional[int] = Field(None, description="Total affected items from API")
