@@ -73,6 +73,19 @@ export default function getItems(): MenuMixedOption[] {
 							RouterLink,
 							{
 								to: {
+									name: "Groups"
+								}
+							},
+							{ default: () => "Groups" }
+						),
+					key: "Groups"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
 									name: "SysmonConfig"
 								}
 							},
