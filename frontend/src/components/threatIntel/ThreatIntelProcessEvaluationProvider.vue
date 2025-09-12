@@ -23,16 +23,6 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
-					v-if="mcpResponse.result"
-					name="RawResult"
-					tab="Raw Result"
-					display-directive="show:lazy"
-				>
-					<div class="p-7 pt-4">
-						<Markdown :source="mcpResponse.result" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
 					v-if="mcpResponse.structured_result?.thinking_process"
 					name="ThinkingProcess"
 					tab="Thinking Process"
