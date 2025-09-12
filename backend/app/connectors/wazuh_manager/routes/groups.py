@@ -2,15 +2,12 @@ from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
-from fastapi import Body
 from fastapi import Path
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 
 from app.auth.routes.auth import AuthHandler
-from app.connectors.wazuh_manager.schema.groups import (
-    WazuhGroupConfigurationUpdateRequest,
-)
 from app.connectors.wazuh_manager.schema.groups import (
     WazuhGroupConfigurationUpdateResponse,
 )
@@ -181,8 +178,8 @@ async def get_wazuh_group_file_endpoint(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def update_wazuh_group_configuration_endpoint(
+    request: Request,
     group_id: str = Path(..., description="Group ID (name of the group)"),
-    request: WazuhGroupConfigurationUpdateRequest = Body(..., description="Configuration update request"),
     pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
     wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
 ) -> WazuhGroupConfigurationUpdateResponse:
@@ -194,12 +191,12 @@ async def update_wazuh_group_configuration_endpoint(
 
     Parameters:
     - group_id: The ID (name) of the group to update (required)
-    - request: The configuration update request containing XML content (required)
+    - request: Raw XML configuration content in the request body
     - pretty: Format results for human readability
     - wait_for_complete: Disable request timeout
 
     Request Body:
-    - configuration: Full valid XML configuration content
+    - Raw XML configuration content (Content-Type: application/xml)
 
     Returns:
     - WazuhGroupConfigurationUpdateResponse: Confirmation of successful update
@@ -209,6 +206,10 @@ async def update_wazuh_group_configuration_endpoint(
     - 404: If the specified group is not found
     - 500: If there's an error updating the configuration
     """
+    # Read the raw XML content from the request body
+    configuration_content = await request.body()
+    configuration_xml = configuration_content.decode("utf-8")
+
     # Use locals() to capture all parameters, excluding path and body parameters
-    params = {k: v for k, v in locals().items() if k not in ["group_id", "request"]}
-    return await update_wazuh_group_configuration(group_id, request.configuration, **params)
+    params = {k: v for k, v in locals().items() if k not in ["group_id", "request", "configuration_content", "configuration_xml"]}
+    return await update_wazuh_group_configuration(group_id, configuration_xml, **params)
