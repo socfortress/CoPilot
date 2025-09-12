@@ -32,7 +32,11 @@ async def list_wazuh_groups(
     limit: Optional[int] = Query(500, ge=1, le=100000, description="Maximum number of elements to return"),
     sort: Optional[str] = Query(None, description="Sort the collection by a field or fields"),
     search: Optional[str] = Query(None, description="Look for elements containing the specified string"),
-    hash: Optional[str] = Query(None, description="Select algorithm to generate the returned checksums", regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$"),
+    hash: Optional[str] = Query(
+        None,
+        description="Select algorithm to generate the returned checksums",
+        regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
+    ),
     q: Optional[str] = Query(None, description="Query to filter results by"),
     select: Optional[List[str]] = Query(None, description="Select which fields to return"),
     distinct: Optional[bool] = Query(False, description="Look for distinct values"),
@@ -63,6 +67,7 @@ async def list_wazuh_groups(
     params = {k: v for k, v in locals().items() if k not in ["auth_handler"]}
     return await get_wazuh_groups(**params)
 
+
 @wazuh_manager_groups_router.get(
     "/groups/{group_id}/files",
     response_model=WazuhGroupFilesResponse,
@@ -77,7 +82,11 @@ async def get_wazuh_group_files_endpoint(
     limit: Optional[int] = Query(500, ge=1, le=100000, description="Maximum number of elements to return"),
     sort: Optional[str] = Query(None, description="Sort the collection by a field or fields"),
     search: Optional[str] = Query(None, description="Look for elements containing the specified string"),
-    hash: Optional[str] = Query(None, description="Select algorithm to generate the returned checksums", regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$"),
+    hash: Optional[str] = Query(
+        None,
+        description="Select algorithm to generate the returned checksums",
+        regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
+    ),
     q: Optional[str] = Query(None, description="Query to filter results by"),
     select: Optional[List[str]] = Query(None, description="Select which fields to return"),
     distinct: Optional[bool] = Query(False, description="Look for distinct values"),

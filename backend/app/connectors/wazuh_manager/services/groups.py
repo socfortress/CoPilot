@@ -90,10 +90,7 @@ async def get_wazuh_group_file(group_id: str, filename: str, **params) -> WazuhG
     logger.debug(f"Requesting Wazuh group file '{filename}' for group '{group_id}' with params: {clean_params}")
 
     try:
-        response = await send_get_request(
-            endpoint=f"/groups/{group_id}/files/{filename}",
-            params=clean_params
-        )
+        response = await send_get_request(endpoint=f"/groups/{group_id}/files/{filename}", params=clean_params)
         logger.info(f"Response: {response}")
 
         # Check if the API request was successful
@@ -103,10 +100,7 @@ async def get_wazuh_group_file(group_id: str, filename: str, **params) -> WazuhG
 
             # Handle specific errors
             if "not found" in error_detail.lower():
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Group file '{filename}' not found in group '{group_id}'"
-                )
+                raise HTTPException(status_code=404, detail=f"Group file '{filename}' not found in group '{group_id}'")
             else:
                 raise HTTPException(status_code=500, detail=error_detail)
 
@@ -132,10 +126,7 @@ async def get_wazuh_group_file(group_id: str, filename: str, **params) -> WazuhG
         total_items = wazuh_data.get("total_affected_items", len(affected_items))
 
         if not affected_items:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No content found for group file '{filename}' in group '{group_id}'"
-            )
+            raise HTTPException(status_code=404, detail=f"No content found for group file '{filename}' in group '{group_id}'")
 
         # Extract the content from the first affected item
         content = affected_items[0] if affected_items else {}
@@ -184,10 +175,7 @@ async def get_wazuh_group_files(group_id: str, **params) -> WazuhGroupFilesRespo
     logger.debug(f"Requesting Wazuh group files for group '{group_id}' with params: {clean_params}")
 
     try:
-        response = await send_get_request(
-            endpoint=f"/groups/{group_id}/files",
-            params=clean_params
-        )
+        response = await send_get_request(endpoint=f"/groups/{group_id}/files", params=clean_params)
 
         # Check if the API request was successful
         if not response.get("success"):
@@ -196,10 +184,7 @@ async def get_wazuh_group_files(group_id: str, **params) -> WazuhGroupFilesRespo
 
             # Handle specific errors
             if "not found" in error_detail.lower():
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Group '{group_id}' not found"
-                )
+                raise HTTPException(status_code=404, detail=f"Group '{group_id}' not found")
             else:
                 raise HTTPException(status_code=500, detail=error_detail)
 
