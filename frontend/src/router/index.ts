@@ -63,6 +63,12 @@ const router = createRouter({
 					meta: { title: "Detection Rules" }
 				},
 				{
+					path: "groups",
+					name: "Groups",
+					component: () => import("@/views/agents/Groups.vue"),
+					meta: { title: "Groups" }
+				},
+				{
 					path: "copilot-actions",
 					name: "CopilotActions",
 					component: () => import("@/views/agents/CopilotActions.vue"),
