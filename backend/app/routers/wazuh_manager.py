@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.connectors.wazuh_manager.routes.groups import wazuh_manager_groups_router
 from app.connectors.wazuh_manager.routes.management import (
     wazuh_manager_management_router,
 )
@@ -12,6 +13,12 @@ router = APIRouter()
 # Include the Wazuh Manager related routes
 router.include_router(
     wazuh_manager_rules_router,
+    prefix="/wazuh_manager",
+    tags=["wazuh-manager"],
+)
+
+router.include_router(
+    wazuh_manager_groups_router,
     prefix="/wazuh_manager",
     tags=["wazuh-manager"],
 )
