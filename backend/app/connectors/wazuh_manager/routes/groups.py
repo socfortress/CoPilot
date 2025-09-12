@@ -2,17 +2,21 @@ from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import Body
 from fastapi import Path
 from fastapi import Query
 from fastapi import Security
 
 from app.auth.routes.auth import AuthHandler
+from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateRequest
+from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFileResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFilesResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupsResponse
 from app.connectors.wazuh_manager.services.groups import get_wazuh_group_file
 from app.connectors.wazuh_manager.services.groups import get_wazuh_group_files
 from app.connectors.wazuh_manager.services.groups import get_wazuh_groups
+from app.connectors.wazuh_manager.services.groups import update_wazuh_group_configuration
 
 wazuh_manager_groups_router = APIRouter()
 auth_handler = AuthHandler()
@@ -162,3 +166,43 @@ async def get_wazuh_group_file_endpoint(
     # Use locals() to capture all parameters, excluding path parameters
     params = {k: v for k, v in locals().items() if k not in ["group_id", "filename"]}
     return await get_wazuh_group_file(group_id, filename, **params)
+
+
+@wazuh_manager_groups_router.put(
+    "/groups/{group_id}/configuration",
+    response_model=WazuhGroupConfigurationUpdateResponse,
+    description="Update group configuration",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def update_wazuh_group_configuration_endpoint(
+    group_id: str = Path(..., description="Group ID (name of the group)"),
+    request: WazuhGroupConfigurationUpdateRequest = Body(..., description="Configuration update request"),
+    pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
+    wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
+) -> WazuhGroupConfigurationUpdateResponse:
+    """
+    Update an specified group's configuration.
+
+    This API call expects a full valid XML file with the shared configuration tags/syntax.
+    The configuration will be applied to all agents belonging to the specified group.
+
+    Parameters:
+    - group_id: The ID (name) of the group to update (required)
+    - request: The configuration update request containing XML content (required)
+    - pretty: Format results for human readability
+    - wait_for_complete: Disable request timeout
+
+    Request Body:
+    - configuration: Full valid XML configuration content
+
+    Returns:
+    - WazuhGroupConfigurationUpdateResponse: Confirmation of successful update
+
+    Raises:
+    - 400: If the configuration content is invalid or malformed XML
+    - 404: If the specified group is not found
+    - 500: If there's an error updating the configuration
+    """
+    # Use locals() to capture all parameters, excluding path and body parameters
+    params = {k: v for k, v in locals().items() if k not in ["group_id", "request"]}
+    return await update_wazuh_group_configuration(group_id, request.configuration, **params)

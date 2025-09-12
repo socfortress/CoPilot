@@ -1,10 +1,12 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFileResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFilesResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupsResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
 async def get_wazuh_groups(**params) -> WazuhGroupsResponse:
@@ -209,3 +211,87 @@ async def get_wazuh_group_files(group_id: str, **params) -> WazuhGroupFilesRespo
     except Exception as e:
         logger.error(f"Error fetching Wazuh group files for group '{group_id}': {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching group files: {str(e)}")
+
+
+async def update_wazuh_group_configuration(
+    group_id: str,
+    configuration: str,
+    **params
+) -> WazuhGroupConfigurationUpdateResponse:
+    """
+    Update a Wazuh group's configuration.
+
+    Args:
+        group_id: The ID (name) of the group
+        configuration: The XML configuration content to update
+        **params: All query parameters passed directly to the API
+
+    Returns:
+        WazuhGroupConfigurationUpdateResponse: Structured response with update result
+
+    Raises:
+        HTTPException: If there's an error updating the group configuration
+    """
+    # Filter out None values
+    clean_params = {k: v for k, v in params.items() if v is not None}
+
+    logger.debug(f"Updating Wazuh group configuration for group '{group_id}' with params: {clean_params}")
+    logger.debug(f"Configuration content length: {len(configuration)} characters")
+
+    try:
+        # Validate that we have configuration content
+        if not configuration or not configuration.strip():
+            raise HTTPException(status_code=400, detail="Configuration content cannot be empty")
+
+        # Basic XML validation (check for XML tags)
+        if not configuration.strip().startswith("<"):
+            logger.warning("Configuration does not appear to be XML format")
+            raise HTTPException(status_code=400, detail="Configuration must be valid XML format")
+
+        # Send PUT request with XML data
+        response = await send_put_request(
+            endpoint=f"/groups/{group_id}/configuration",
+            data=configuration,
+            params=clean_params,
+            xml_data=True,
+        )
+
+        # Check if the API request was successful
+        if not response.get("success"):
+            error_detail = response.get("message", f"Failed to update group configuration for group '{group_id}'")
+            status_code = response.get("status_code", 500)
+            logger.error(f"Wazuh API error: {error_detail}")
+
+            # Handle specific errors
+            if "not found" in error_detail.lower():
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Group '{group_id}' not found"
+                )
+            elif status_code == 400:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid configuration data: {error_detail}"
+                )
+            else:
+                raise HTTPException(status_code=status_code, detail=error_detail)
+
+        # Extract data from response
+        wazuh_data = response.get("data", {}).get("data", {})
+        total_items = wazuh_data.get("total_affected_items", 1)
+
+        logger.info(f"Successfully updated configuration for group '{group_id}'")
+
+        return WazuhGroupConfigurationUpdateResponse(
+            success=True,
+            message=f"Successfully updated configuration for group '{group_id}'",
+            group_id=group_id,
+            total_items=total_items,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error updating Wazuh group configuration for group '{group_id}': {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating group configuration: {str(e)}")
