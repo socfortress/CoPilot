@@ -76,8 +76,8 @@ class WazuhGroupConfigurationUpdateRequest(BaseModel):
         <queue_size>100000</queue_size>
         <events_per_second>1000</events_per_second>
     </client_buffer>
-</agent_config>"""
-            }
+</agent_config>""",
+            },
         }
 
 

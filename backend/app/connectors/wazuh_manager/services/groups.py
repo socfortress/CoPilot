@@ -1,7 +1,9 @@
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateResponse
+from app.connectors.wazuh_manager.schema.groups import (
+    WazuhGroupConfigurationUpdateResponse,
+)
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFileResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFilesResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupsResponse
@@ -213,11 +215,7 @@ async def get_wazuh_group_files(group_id: str, **params) -> WazuhGroupFilesRespo
         raise HTTPException(status_code=500, detail=f"Error fetching group files: {str(e)}")
 
 
-async def update_wazuh_group_configuration(
-    group_id: str,
-    configuration: str,
-    **params
-) -> WazuhGroupConfigurationUpdateResponse:
+async def update_wazuh_group_configuration(group_id: str, configuration: str, **params) -> WazuhGroupConfigurationUpdateResponse:
     """
     Update a Wazuh group's configuration.
 
@@ -264,15 +262,9 @@ async def update_wazuh_group_configuration(
 
             # Handle specific errors
             if "not found" in error_detail.lower():
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Group '{group_id}' not found"
-                )
+                raise HTTPException(status_code=404, detail=f"Group '{group_id}' not found")
             elif status_code == 400:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid configuration data: {error_detail}"
-                )
+                raise HTTPException(status_code=400, detail=f"Invalid configuration data: {error_detail}")
             else:
                 raise HTTPException(status_code=status_code, detail=error_detail)
 

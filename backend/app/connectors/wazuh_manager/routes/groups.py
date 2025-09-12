@@ -8,15 +8,21 @@ from fastapi import Query
 from fastapi import Security
 
 from app.auth.routes.auth import AuthHandler
-from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateRequest
-from app.connectors.wazuh_manager.schema.groups import WazuhGroupConfigurationUpdateResponse
+from app.connectors.wazuh_manager.schema.groups import (
+    WazuhGroupConfigurationUpdateRequest,
+)
+from app.connectors.wazuh_manager.schema.groups import (
+    WazuhGroupConfigurationUpdateResponse,
+)
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFileResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupFilesResponse
 from app.connectors.wazuh_manager.schema.groups import WazuhGroupsResponse
 from app.connectors.wazuh_manager.services.groups import get_wazuh_group_file
 from app.connectors.wazuh_manager.services.groups import get_wazuh_group_files
 from app.connectors.wazuh_manager.services.groups import get_wazuh_groups
-from app.connectors.wazuh_manager.services.groups import update_wazuh_group_configuration
+from app.connectors.wazuh_manager.services.groups import (
+    update_wazuh_group_configuration,
+)
 
 wazuh_manager_groups_router = APIRouter()
 auth_handler = AuthHandler()
