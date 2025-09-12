@@ -9,6 +9,19 @@ export interface ThreatIntelResponse {
 	virustotal_url: string | null
 }
 
+export interface StructuredAgentResponse {
+	response: string
+	thinking_process: string | null
+}
+
+export interface MCPQueryResponse {
+	message: string
+	success: boolean
+	result?: any
+	structured_result?: StructuredAgentResponse
+	execution_time?: number
+}
+
 export interface EpssScore {
 	cve: string
 	/** a float (0.000680000) */
