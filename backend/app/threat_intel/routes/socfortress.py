@@ -56,6 +56,9 @@ from app.threat_intel.services.virustotal_file import get_file_report
 from app.threat_intel.services.virustotal_file import submit_and_wait_for_analysis
 from app.threat_intel.services.virustotal_file import submit_file_to_virustotal
 from app.utils import get_connector_attribute
+from app.integrations.copilot_mcp.routes.copilot_mcp import query_mcp
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryRequest
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryResponse
 
 # App specific imports
 
@@ -395,7 +398,7 @@ async def analyze_file_complete(
 
 @threat_intel_socfortress_router.post(
     "/process_name",
-    response_model=SocfortressProcessNameAnalysisResponse,
+    response_model=MCPQueryResponse,
     description="SocFortress Process Name Evaluation",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -414,22 +417,18 @@ async def process_name_intel_socfortress(
     - _key_exists: bool (optional) - A dependency to ensure the API key exists.
 
     Returns:
-    - SocfortressProcessNameAnalysisResponse: The response model containing the results of the SocFortress process name analysis lookup.
+    - MCPQueryResponse: The response model containing the results of the SocFortress process name analysis lookup.
     """
     # await is_feature_enabled("PROCESS ANALYSIS", session=session)
     logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
 
-    raise HTTPException(
-        status_code=501,
-        detail="SOCFortress Process Name Analysis is currently disabled as the leveraged 3rd party service is unavailable.",
+    return await query_mcp(
+        MCPQueryRequest(
+            mcp_server="cyber-news",
+            input=f'Analyze the process name: {request.process_name}. Provide a risk assessment and any relevant details.'
+        ), session=session
     )
 
-    socfortress_lookup = await socfortress_process_analysis_lookup(
-        lincense_key=(await get_license(session)).license_key,
-        request=request,
-        session=session,
-    )
-    return socfortress_lookup
 
 
 async def current_time():
