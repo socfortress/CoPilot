@@ -20,14 +20,18 @@ from app.incidents.schema.incident_alert import CreateAlertRequestRoute
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import get_single_alert_details
+from app.integrations.copilot_mcp.routes.copilot_mcp import query_mcp
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryRequest
+from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryResponse
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
+
+# from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressAiAlertRequest
 from app.threat_intel.schema.socfortress import SocfortressAiAlertResponse
 from app.threat_intel.schema.socfortress import SocfortressAiWazuhExclusionRuleResponse
 from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
-from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.schema.socfortress import (
     VelociraptorArtifactRecommendationRequest,
@@ -41,9 +45,10 @@ from app.threat_intel.schema.virustotal import FileReportResponse
 from app.threat_intel.schema.virustotal import FileSubmissionRequest
 from app.threat_intel.schema.virustotal import FileSubmissionResponse
 from app.threat_intel.schema.virustotal import VirusTotalRouteResponse
+
+# from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import invoke_virustotal_api
 from app.threat_intel.services.socfortress import socfortress_ai_alert_lookup
-from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
 from app.threat_intel.services.socfortress import (
     socfortress_velociraptor_recommendation_lookup,
@@ -395,7 +400,7 @@ async def analyze_file_complete(
 
 @threat_intel_socfortress_router.post(
     "/process_name",
-    response_model=SocfortressProcessNameAnalysisResponse,
+    response_model=MCPQueryResponse,
     description="SocFortress Process Name Evaluation",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -414,22 +419,18 @@ async def process_name_intel_socfortress(
     - _key_exists: bool (optional) - A dependency to ensure the API key exists.
 
     Returns:
-    - SocfortressProcessNameAnalysisResponse: The response model containing the results of the SocFortress process name analysis lookup.
+    - MCPQueryResponse: The response model containing the results of the SocFortress process name analysis lookup.
     """
     # await is_feature_enabled("PROCESS ANALYSIS", session=session)
     logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
 
-    raise HTTPException(
-        status_code=501,
-        detail="SOCFortress Process Name Analysis is currently disabled as the leveraged 3rd party service is unavailable.",
-    )
-
-    socfortress_lookup = await socfortress_process_analysis_lookup(
-        lincense_key=(await get_license(session)).license_key,
-        request=request,
+    return await query_mcp(
+        MCPQueryRequest(
+            mcp_server="cyber-news",
+            input=f"Analyze the process name: {request.process_name}. Provide a risk assessment and any relevant details.",
+        ),
         session=session,
     )
-    return socfortress_lookup
 
 
 async def current_time():

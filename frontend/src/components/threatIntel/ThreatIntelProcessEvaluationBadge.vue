@@ -1,8 +1,8 @@
 <template>
 	<ThreatIntelProcessEvaluationProvider v-slot="{ openEvaluation }" :process-name>
-		<code class="text-primary cursor-pointer" @click="openEvaluation()">
+		<code class="text-primary cursor-pointer hover:text-primary-hover transition-colors" @click="openEvaluation()">
 			{{ processName }}
-			<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+			<Icon :name="LinkIcon" :size="13" class="relative top-0.5 ml-1" />
 		</code>
 	</ThreatIntelProcessEvaluationProvider>
 </template>

@@ -5,6 +5,7 @@ import type {
 	AiWazuhExclusionRuleResponse,
 	EpssScore,
 	EvaluationData,
+	MCPQueryResponse,
 	ThreatIntelResponse,
 	VirusTotalAnalysis,
 	VirusTotalFileCheckResponse,
@@ -23,7 +24,7 @@ export default {
 		const body = {
 			process_name: processName
 		}
-		return HttpClient.post<FlaskBaseResponse & { data: EvaluationData }>(`/threat_intel/process_name`, body)
+		return HttpClient.post<(FlaskBaseResponse & { data: EvaluationData }) | MCPQueryResponse>(`/threat_intel/process_name`, body)
 	},
 	epssScore(cve: string) {
 		const body = {
