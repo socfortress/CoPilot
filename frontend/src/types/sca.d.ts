@@ -33,7 +33,7 @@ export interface ScaOverviewResponse {
 	has_previous: boolean
 	success: boolean
 	message: string
-	filters_applied: Record<string, any>
+	filters_applied: Record<string, string | number | boolean>
 }
 
 export interface ScaOverviewQuery {
@@ -55,15 +55,18 @@ export interface ScaStatsResponse {
 	total_passes_all_agents: number
 	total_fails_all_agents: number
 	total_invalid_all_agents: number
-	by_customer: Record<string, {
-		total_agents: number
-		total_policies: number
-		average_score: number
-		total_checks: number
-		total_passes: number
-		total_fails: number
-		total_invalid: number
-	}>
+	by_customer: Record<
+		string,
+		{
+			total_agents: number
+			total_policies: number
+			average_score: number
+			total_checks: number
+			total_passes: number
+			total_fails: number
+			total_invalid: number
+		}
+	>
 	success: boolean
 	message: string
 }

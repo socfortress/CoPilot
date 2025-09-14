@@ -1,17 +1,10 @@
-import type {
-	ActionDetailResponse,
-	InventoryMetricsResponse,
-	InventoryResponse,
-	InvokeCopilotActionRequest,
-	InvokeCopilotActionResponse,
-	TechnologiesResponse,
-	Technology
-} from "@/types/copilotAction.d"
+import type { ActiveResponseItem, CollectArtifactResponse, InvokeCopilotActionRequest } from "@/types/copilotAction.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 export interface CopilotActionInventoryQuery {
 	/** Filter by technology type */
-	technology?: Technology
+	technology?: string
 	/** Filter by category */
 	category?: string
 	/** Filter by tag */
@@ -33,44 +26,38 @@ export default {
 	 * Get inventory of available active response scripts
 	 */
 	getInventory(query?: CopilotActionInventoryQuery, signal?: AbortSignal) {
-		return HttpClient.get<InventoryResponse>(`/copilot_action/inventory`, {
-			params: {
-				technology: query?.technology,
-				category: query?.category,
-				tag: query?.tag,
-				q: query?.q,
-				limit: query?.limit || 100,
-				offset: query?.offset || 0,
-				refresh: query?.refresh || false,
-				include: query?.include
-			},
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { copilot_actions: ActiveResponseItem[] }>(
+			`/copilot_action/inventory`,
+			{
+				params: {
+					technology: query?.technology,
+					category: query?.category,
+					tag: query?.tag,
+					q: query?.q,
+					limit: query?.limit || 100,
+					offset: query?.offset || 0,
+					refresh: query?.refresh || false,
+					include: query?.include
+				},
+				signal
+			}
+		)
 	},
 
 	/**
 	 * Get details for a specific active response script
 	 */
-	getActionByName(copilotActionName: string, signal?: AbortSignal) {
-		return HttpClient.get<ActionDetailResponse>(`/copilot_action/inventory/${copilotActionName}`, {
-			signal
-		})
-	},
-
-	/**
-	 * Get inventory metrics and status
-	 */
-	getMetrics(signal?: AbortSignal) {
-		return HttpClient.get<InventoryMetricsResponse>(`/copilot_action/metrics`, {
-			signal
-		})
+	getActionByName(copilotActionName: string) {
+		return HttpClient.get<FlaskBaseResponse & { copilot_action: ActiveResponseItem }>(
+			`/copilot_action/inventory/${copilotActionName}`
+		)
 	},
 
 	/**
 	 * Get available technology types
 	 */
 	getTechnologies(signal?: AbortSignal) {
-		return HttpClient.get<TechnologiesResponse>(`/copilot_action/technologies`, {
+		return HttpClient.get<FlaskBaseResponse & { technologies: string[] }>(`/copilot_action/technologies`, {
 			signal
 		})
 	},
@@ -78,9 +65,10 @@ export default {
 	/**
 	 * Invoke a Copilot Action on multiple target agents
 	 */
-	invokeAction(payload: InvokeCopilotActionRequest, signal?: AbortSignal) {
-		return HttpClient.post<InvokeCopilotActionResponse>(`/copilot_action/invoke`, payload, {
-			signal
-		})
+	invokeAction(payload: InvokeCopilotActionRequest) {
+		return HttpClient.post<FlaskBaseResponse & { responses: CollectArtifactResponse[] }>(
+			`/copilot_action/invoke`,
+			payload
+		)
 	}
 }

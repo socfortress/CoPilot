@@ -24,7 +24,7 @@
 											ghost-class="ghost-panel"
 											:group="{
 												name: 'panels',
-												put(to: any) {
+												put(to: { el: HTMLElement }) {
 													return to.el.children.length < 4
 												},
 												pull: ['panels']
@@ -196,6 +196,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Ref } from "vue"
 import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"

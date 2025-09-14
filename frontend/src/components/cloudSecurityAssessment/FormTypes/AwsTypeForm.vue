@@ -2,11 +2,17 @@
 	<n-form ref="formRef" :model="form" :rules="rules">
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Access Key ID" path="access_key_id">
-				<n-input v-model:value.trim="form.access_key_id" placeholder="Please insert Access Key ID" clearable />
+				<n-input
+					v-model:value.trim="form.access_key_id"
+					placeholder="Please insert Access Key ID"
+					clearable
+					:input-props="{ autocomplete: 'new-password' }"
+				/>
 			</n-form-item>
 			<n-form-item label="Secret Access Key" path="secret_access_key">
 				<n-input
 					v-model:value.trim="form.secret_access_key"
+					:input-props="{ autocomplete: 'new-password' }"
 					placeholder="Please insert Secret Access Key"
 					type="password"
 					show-password-on="click"

@@ -17,6 +17,8 @@
 </template>
 
 <script setup lang="ts">
+export type BadgeColor = "danger" | "warning" | "success" | "primary"
+
 // TODO: refactor
 const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
@@ -24,7 +26,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	pointCursor?: boolean
 	fluid?: boolean
 	bright?: boolean
-	color?: "danger" | "warning" | "success" | "primary"
+	color?: BadgeColor
 	href?: string
 }>()
 </script>

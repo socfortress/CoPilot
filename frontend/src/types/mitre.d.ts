@@ -1,3 +1,5 @@
+import type { SafeAny } from "@/types/common.d"
+
 export interface MitreTechnique {
 	technique_id: string
 	technique_name: string
@@ -110,7 +112,7 @@ export interface MitreGroupDetails {
 	country: null | string
 }
 
-export type MitreTechniquesDetails = any
+export type MitreTechniquesDetails = SafeAny
 
 export interface MitreEventDetails {
 	data_source_ip: string

@@ -3,23 +3,20 @@
 		<n-spin :show="loading">
 			<div class="flex flex-col gap-6">
 				<!-- Action Information -->
-				<div class="action-header p-4 rounded-lg border">
-					<div class="flex items-start justify-between mb-3">
+				<div class="action-header rounded-lg border p-4">
+					<div class="mb-3 flex items-start justify-between">
 						<div class="flex-1">
-							<h4 class="text-lg font-semibold mb-2">{{ action.copilot_action_name }}</h4>
-							<p class="text-base font-medium opacity-90 leading-relaxed">{{ action.description }}</p>
+							<h4 class="mb-2 text-lg font-semibold">{{ action.copilot_action_name }}</h4>
+							<p class="text-base font-medium leading-relaxed opacity-90">{{ action.description }}</p>
 						</div>
-						<Badge :color="getTechnologyColor(action.technology)" class="ml-3">
-							<template #iconLeft><Icon :name="getTechnologyIcon(action.technology)" :size="14" /></template>
-							<template #value>{{ action.technology }}</template>
-						</Badge>
+						<TechnologyBadge :action />
 					</div>
 				</div>
 
 				<!-- Target Agents Selection -->
 				<div class="form-section">
 					<div class="section-header mb-3">
-						<h5 class="font-semibold text-base">Target Agents</h5>
+						<h5 class="text-base font-semibold">Target Agents</h5>
 						<span class="required-indicator">*</span>
 					</div>
 					<n-select
@@ -39,7 +36,7 @@
 				<!-- Parameters Form -->
 				<div v-if="action.script_parameters.length > 0" class="form-section">
 					<div class="section-header mb-4">
-						<h5 class="font-semibold text-base">Parameters</h5>
+						<h5 class="text-base font-semibold">Parameters</h5>
 					</div>
 
 					<!-- Required Parameters -->
@@ -51,7 +48,7 @@
 						<div class="grid grid-cols-1 gap-4">
 							<div v-for="param in requiredParameters" :key="param.name" class="parameter-field">
 								<div class="parameter-label mb-2">
-									<label class="font-medium text-sm">
+									<label class="text-sm font-medium">
 										{{ param.name }}
 										<span class="required-indicator">*</span>
 									</label>
@@ -82,7 +79,7 @@
 						<div class="grid grid-cols-1 gap-4">
 							<div v-for="param in optionalParameters" :key="param.name" class="parameter-field">
 								<div class="parameter-label mb-2">
-									<label class="font-medium text-sm">{{ param.name }}</label>
+									<label class="text-sm font-medium">{{ param.name }}</label>
 									<Badge v-if="param.type" color="primary" size="small" class="ml-2">
 										<template #value>{{ param.type }}</template>
 									</Badge>
@@ -100,11 +97,10 @@
 							</div>
 						</div>
 					</div>
-				</div>				<!-- Action Buttons -->
-				<div class="action-buttons flex justify-end gap-3 pt-6 mt-6 border-t border-opacity-20">
-					<n-button size="large" class="px-6" @click="$emit('close')">
-						Cancel
-					</n-button>
+				</div>
+				<!-- Action Buttons -->
+				<div class="action-buttons mt-6 flex justify-end gap-3 border-t border-opacity-20 pt-6">
+					<n-button size="large" class="px-6" @click="$emit('close')">Cancel</n-button>
 					<n-button
 						type="primary"
 						size="large"
@@ -114,11 +110,16 @@
 						@click="handleSubmit"
 					>
 						<template v-if="!loading" #icon>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 10V3L4 14h7v7l9-11h-7z"
+								/>
 							</svg>
 						</template>
-						{{ loading ? 'Invoking...' : 'Invoke Action' }}
+						{{ loading ? "Invoking..." : "Invoke Action" }}
 					</n-button>
 				</div>
 			</div>
@@ -132,8 +133,7 @@ import { NButton, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } fr
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
-import { Technology } from "@/types/copilotAction.d"
+import TechnologyBadge from "./TechnologyBadge.vue"
 
 const { action } = defineProps<{
 	action: ActiveResponseItem
@@ -152,7 +152,7 @@ const agentOptions = ref<{ label: string; value: string }[]>([])
 
 const form = ref<{
 	agent_names: string[]
-	parameters: Record<string, any>
+	parameters: Record<string, string | number | boolean>
 }>({
 	agent_names: [],
 	parameters: {}
@@ -168,7 +168,7 @@ const isFormValid = computed(() => {
 	// Check all required parameters are filled
 	for (const param of requiredParameters.value) {
 		const value = form.value.parameters[param.name]
-		if (value === null || value === undefined || value === '') {
+		if (value === null || value === undefined || value === "") {
 			return false
 		}
 	}
@@ -178,15 +178,15 @@ const isFormValid = computed(() => {
 
 function getInputComponent(type: string) {
 	switch (type.toLowerCase()) {
-		case 'int':
-		case 'integer':
-		case 'float':
-		case 'number':
+		case "int":
+		case "integer":
+		case "float":
+		case "number":
 			return NInputNumber
-		case 'bool':
-		case 'boolean':
+		case "bool":
+		case "boolean":
 			return NSwitch
-		case 'enum':
+		case "enum":
 			return NSelect
 		default:
 			return NInput
@@ -200,32 +200,6 @@ function getPlaceholder(param: ScriptParameter): string {
 	return `Enter ${param.name}...`
 }
 
-function getTechnologyIcon(technology: string): string {
-	const iconMap: Record<string, string> = {
-		[Technology.WINDOWS]: "carbon:logo-windows",
-		[Technology.LINUX]: "carbon:logo-linux",
-		[Technology.MACOS]: "carbon:logo-apple",
-		[Technology.WAZUH]: "carbon:security",
-		[Technology.VELOCIRAPTOR]: "carbon:eagle",
-		[Technology.NETWORK]: "carbon:network-3",
-		[Technology.CLOUD]: "carbon:cloud"
-	}
-	return iconMap[technology] || "carbon:application"
-}
-
-function getTechnologyColor(technology: string): "primary" | "warning" | "success" | "danger" | undefined {
-	const colorMap: Record<string, "primary" | "warning" | "success" | "danger"> = {
-		[Technology.WINDOWS]: "primary",
-		[Technology.LINUX]: "warning",
-		[Technology.MACOS]: "success",
-		[Technology.WAZUH]: "success",
-		[Technology.VELOCIRAPTOR]: "primary",
-		[Technology.NETWORK]: "primary",
-		[Technology.CLOUD]: "success"
-	}
-	return colorMap[technology]
-}
-
 async function loadAgents() {
 	loadingAgents.value = true
 	try {
@@ -236,10 +210,10 @@ async function loadAgents() {
 				value: agent.hostname
 			}))
 		} else {
-			message.error('Failed to load agents')
+			message.error("Failed to load agents")
 		}
 	} catch {
-		message.error('Error loading agents')
+		message.error("Error loading agents")
 	} finally {
 		loadingAgents.value = false
 	}
@@ -250,26 +224,29 @@ async function handleSubmit() {
 
 	loading.value = true
 	try {
-		  // Prepare the payload
-      const payload: InvokeCopilotActionRequest = {
-          copilot_action_name: action.copilot_action_name,
-          agent_names: form.value.agent_names,
-          parameters: {
-              ScriptURL: action.repo_url,
-              ...form.value.parameters
-          }
-      }
+		// Prepare the payload
+		const payload: InvokeCopilotActionRequest = {
+			copilot_action_name: action.copilot_action_name,
+			agent_names: form.value.agent_names,
+			parameters: {
+				ScriptURL: action.repo_url,
+				...form.value.parameters
+			}
+		}
 
 		const response = await Api.copilotAction.invokeAction(payload)
 
 		if (response.data.success) {
-			message.success(`Action invoked successfully on ${form.value.agent_names.length} agent(s). Check the appropriate Grafana dashboard for results.`)
-			emit('success')
+			message.success(
+				`Action invoked successfully on ${form.value.agent_names.length} agent(s). Check the appropriate Grafana dashboard for results.`
+			)
+			emit("success")
 		} else {
-			message.error(response.data.message || 'Failed to invoke action')
+			message.error(response.data.message || "Failed to invoke action")
 		}
 	} catch (error: any) {
-		message.error(error.response?.data?.message || 'Error invoking action')
+		// TODO: remove any
+		message.error(error.response?.data?.message || "Error invoking action")
 	} finally {
 		loading.value = false
 	}
@@ -277,7 +254,7 @@ async function handleSubmit() {
 
 // Initialize form with default values
 function initializeForm() {
-	const parameters: Record<string, any> = {}
+	const parameters: Record<string, string | number | boolean> = {}
 
 	action.script_parameters.forEach(param => {
 		if (param.default !== null && param.default !== undefined) {

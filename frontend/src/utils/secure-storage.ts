@@ -1,3 +1,4 @@
+import type { SafeAny } from "@/types/common.d"
 import SecureLS from "secure-ls"
 
 const secureLS = new SecureLS({
@@ -23,7 +24,7 @@ export function removePersistentSessionKey() {
 
 export function secureLocalStorage(options?: { session?: boolean }) {
 	return {
-		getItem(key: string): any {
+		getItem(key: string): SafeAny | null {
 			try {
 				return secureLS.get(persistentKey({ session: options?.session })(key))
 			} catch (err) {
@@ -32,7 +33,7 @@ export function secureLocalStorage(options?: { session?: boolean }) {
 			}
 		},
 
-		setItem(key: string, value: any): void {
+		setItem(key: string, value: SafeAny): void {
 			try {
 				secureLS.set(persistentKey({ session: options?.session })(key), value)
 			} catch (err) {
