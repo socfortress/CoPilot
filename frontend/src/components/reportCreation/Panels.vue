@@ -196,7 +196,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Ref } from "vue"
 import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"

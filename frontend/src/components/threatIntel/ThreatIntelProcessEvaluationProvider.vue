@@ -122,7 +122,6 @@
 </template>
 
 <script setup lang="ts">
-import type { SafeAny } from "@/types/common.d"
 import type { EvaluationData, MCPQueryResponse } from "@/types/threatIntel.d"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"

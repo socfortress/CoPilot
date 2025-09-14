@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import type { ActiveResponseItem } from "@/types/copilotAction.d"
-import { NEmpty, NSpin } from "naive-ui"
+import { NSpin } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 
