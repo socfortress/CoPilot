@@ -44,6 +44,7 @@ from app.agents.wazuh.services.vulnerabilities import sync_agent_vulnerabilities
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.auth.models.users import User
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
 
@@ -52,6 +53,7 @@ from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
+from app.middleware.customer_access import customer_access_handler
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
 
@@ -154,11 +156,15 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     "",
     response_model=AgentsResponse,
     description="Get all agents currently synced to the database",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
+async def get_agents(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> AgentsResponse:
     """
     Retrieve all agents currently synced to the database.
+    Results are filtered based on user's customer access permissions.
 
     Returns:
         AgentsResponse: The response containing the list of agents, success status, and message.
@@ -168,7 +174,13 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     """
     logger.info("Fetching all agents")
     try:
-        result = await db.execute(select(Agents))
+        # Apply customer access filtering
+        base_query = select(Agents)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, db, base_query, Agents.customer_code
+        )
+
+        result = await db.execute(filtered_query)
         agents = result.scalars().all()
         return AgentsResponse(
             agents=agents,
@@ -232,17 +244,20 @@ async def get_customer_agents_for_dashboard(
     "/{agent_id}",
     response_model=AgentsResponse,
     description="Get agent by agent_id",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_agent(
     agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Retrieve an agent by agent_id.
+    Results are filtered based on user's customer access permissions.
 
     Args:
         agent_id (str): The ID of the agent to retrieve.
+        current_user (User): The authenticated user.
         db (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -253,7 +268,13 @@ async def get_agent(
     """
     logger.info(f"Fetching agent with agent_id: {agent_id}")
     try:
-        result = await db.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        # Apply customer access filtering
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, db, base_query, Agents.customer_code
+        )
+
+        result = await db.execute(filtered_query)
         agent = result.scalars().first()
         if agent:
             return AgentsResponse(
@@ -264,7 +285,7 @@ async def get_agent(
         else:
             raise HTTPException(
                 status_code=404,
-                detail=f"Agent with agent_id {agent_id} not found",
+                detail=f"Agent with agent_id {agent_id} not found or access denied",
             )
     except Exception as e:
         logger.error(
@@ -280,17 +301,20 @@ async def get_agent(
     "/hostname/{hostname}",
     response_model=AgentsResponse,
     description="Get agent by hostname",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_agent_by_hostname(
     hostname: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Retrieve an agent by its hostname.
+    Results are filtered based on user's customer access permissions.
 
     Args:
         hostname (str): The hostname of the agent.
+        current_user (User): The authenticated user.
         db (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -301,7 +325,13 @@ async def get_agent_by_hostname(
     """
     logger.info(f"Fetching agent with hostname: {hostname}")
     try:
-        result = await db.execute(select(Agents).filter(Agents.hostname == hostname))
+        # Apply customer access filtering
+        base_query = select(Agents).filter(Agents.hostname == hostname)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, db, base_query, Agents.customer_code
+        )
+
+        result = await db.execute(filtered_query)
         agent = result.scalars().first()
         if agent:
             return AgentsResponse(
@@ -312,7 +342,7 @@ async def get_agent_by_hostname(
         else:
             raise HTTPException(
                 status_code=404,
-                detail=f"Agent with hostname {hostname} not found",
+                detail=f"Agent with hostname {hostname} not found or access denied",
             )
     except Exception as e:
         logger.error(f"Failed to fetch agent: {e}")
@@ -357,17 +387,20 @@ async def sync_all_agents() -> SyncedAgentsResponse:
     "/{agent_id}/critical",
     response_model=AgentModifyResponse,
     description="Mark agent as critical",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def mark_agent_as_critical(
     agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Marks the specified agent as critical.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent to mark as critical.
+        current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -375,16 +408,19 @@ async def mark_agent_as_critical(
     """
     logger.info(f"Marking agent {agent_id} as critical")
     try:
-        # Asynchronously fetch the agent by id
-        result = await session.execute(
-            select(Agents).filter(Agents.agent_id == agent_id),
+        # Check customer access - first find the agent
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, session, base_query, Agents.customer_code
         )
+
+        result = await session.execute(filtered_query)
         agent = result.scalars().first()
 
         if not agent:
             raise HTTPException(
                 status_code=404,
-                detail=f"Agent with agent_id {agent_id} not found",
+                detail=f"Agent with agent_id {agent_id} not found or access denied",
             )
 
         agent.critical_asset = True
@@ -406,17 +442,20 @@ async def mark_agent_as_critical(
     "/{agent_id}/noncritical",
     response_model=AgentModifyResponse,
     description="Mark agent as not critical",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def mark_agent_as_not_critical(
     agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Marks the specified agent as not critical.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent to mark as not critical.
+        current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -427,15 +466,19 @@ async def mark_agent_as_not_critical(
     """
     logger.info(f"Marking agent {agent_id} as not critical")
     try:
-        result = await session.execute(
-            select(Agents).filter(Agents.agent_id == agent_id),
+        # Check customer access - first find the agent
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, session, base_query, Agents.customer_code
         )
+
+        result = await session.execute(filtered_query)
         agent = result.scalars().first()
 
         if not agent:
             raise HTTPException(
                 status_code=404,
-                detail=f"Agent with agent_id {agent_id} not found",
+                detail=f"Agent with agent_id {agent_id} not found or access denied",
             )
 
         agent.critical_asset = False
@@ -461,13 +504,16 @@ async def mark_agent_as_not_critical(
 )
 async def upgrade_wazuh_agent_route(
     agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentWazuhUpgradeResponse:
     """
     Upgrade Wazuh agent.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent to be upgraded.
+        current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -475,10 +521,20 @@ async def upgrade_wazuh_agent_route(
     """
     logger.info(f"Upgrading Wazuh agent {agent_id}")
     try:
-        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        # Check customer access - first find the agent
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, session, base_query, Agents.customer_code
+        )
+
+        result = await session.execute(filtered_query)
         agent = result.scalars().first()
+
         if not agent:
-            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found or access denied"
+            )
         return await upgrade_wazuh_agent(agent_id)
         return AgentWazuhUpgradeResponse(
             success=True,
@@ -496,22 +552,44 @@ async def upgrade_wazuh_agent_route(
     "/{agent_id}/vulnerabilities/{vulnerability_severity}",
     response_model=WazuhAgentVulnerabilitiesResponse,
     description="Get agent vulnerabilities",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_agent_vulnerabilities(
     agent_id: str,
     vulnerability_severity: VulnSeverity = Path(..., description="The severity of the vulnerabilities to fetch."),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentVulnerabilitiesResponse:
     """
     Fetches the vulnerabilities of a specific agent.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent.
+        vulnerability_severity: The severity level filter.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         WazuhAgentVulnerabilitiesResponse: The response containing the agent vulnerabilities.
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
         logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
@@ -522,19 +600,44 @@ async def get_agent_vulnerabilities(
 @agents_router.get(
     "/{agent_id}/csv/vulnerabilities/{vulnerability_severity}",
     description="Get agent vulnerabilities as CSV",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agent_vulnerabilities_csv(agent_id: str, vulnerability_severity: VulnSeverity = Path(...)) -> StreamingResponse:
+async def get_agent_vulnerabilities_csv(
+    agent_id: str,
+    vulnerability_severity: VulnSeverity = Path(...),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
     """
     Fetches the vulnerabilities of a specific agent and returns them as a CSV file.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent.
+        vulnerability_severity: The severity level filter.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         StreamingResponse: The response containing the agent vulnerabilities in CSV format.
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities as CSV")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
         logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
@@ -601,19 +704,42 @@ async def get_agent_vulnerabilities_csv(agent_id: str, vulnerability_severity: V
     "/{agent_id}/sca",
     response_model=WazuhAgentScaResponse,
     description="Get agent sca results",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agent_sca(agent_id: str) -> WazuhAgentScaResponse:
+async def get_agent_sca(
+    agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAgentScaResponse:
     """
     Fetches the sca results of a specific agent.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         WazuhAgentScaResponse: The response containing the agent sca.
     """
     logger.info(f"Fetching agent {agent_id} sca")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     return await collect_agent_sca(agent_id)
 
 
@@ -621,38 +747,88 @@ async def get_agent_sca(agent_id: str) -> WazuhAgentScaResponse:
     "/{agent_id}/sca/{policy_id}",
     response_model=WazuhAgentScaPolicyResultsResponse,
     description="Get agent sca results",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAgentScaPolicyResultsResponse:
+async def get_agent_sca_policy_results(
+    agent_id: str,
+    policy_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAgentScaPolicyResultsResponse:
     """
     Fetches the sca results of a specific agent.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): The ID of the policy.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         WazuhAgentScaPolicyResultsResponse: The response containing the agent sca.
     """
     logger.info(f"Fetching agent {agent_id} sca policy results")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     return await collect_agent_sca_policy_results(agent_id, policy_id)
 
 
 @agents_router.get(
     "/{agent_id}/csv/sca/{policy_id}",
     description="Get agent sca results as CSV",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agent_sca_policy_results_csv(agent_id: str, policy_id: str) -> StreamingResponse:
+async def get_agent_sca_policy_results_csv(
+    agent_id: str,
+    policy_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
     """
     Fetches the sca results of a specific agent and returns them as a CSV file.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): The ID of the policy.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         StreamingResponse: The response containing the agent sca in CSV format.
     """
     logger.info(f"Fetching agent {agent_id} sca policy results as CSV")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     sca_results = (await collect_agent_sca_policy_results(agent_id, policy_id)).sca_policy_results
     # Create a CSV file
     logger.info(f"Creating CSV file for agent {agent_id} with {len(sca_results)} sca policy results")
@@ -706,19 +882,42 @@ async def get_agent_sca_policy_results_csv(agent_id: str, policy_id: str) -> Str
     "/{agent_hostname}/cases",
     response_model=CaseOutResponse,
     description="Get cases for agent",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agent_soc_cases(agent_hostname: str, session: AsyncSession = Depends(get_db)):
+async def get_agent_soc_cases(
+    agent_hostname: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db)
+):
     """
     Fetches the SOC cases of a specific agent.
+    User must have access to the agent's customer.
 
     Args:
-        agent_id (str): The ID of the agent.
+        agent_hostname (str): The hostname of the agent.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
 
     Returns:
         SocCasesResponse: The response containing the agent SOC cases.
     """
     logger.info(f"Fetching agent {agent_hostname} cases")
+
+    # Check customer access - first verify user has access to this agent
+    base_query = select(Agents).filter(Agents.hostname == agent_hostname)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with hostname {agent_hostname} not found or access denied"
+        )
+
     return CaseOutResponse(
         cases=await list_cases_by_asset_name(asset_name=agent_hostname, db=session),
         success=True,
@@ -778,14 +977,17 @@ async def get_outdated_velociraptor_agents(
 async def update_agent(
     agent_id: str,
     velociraptor_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Updates an agent's velociraptor_id
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent to be updated.
         velociraptor_id (str): The new velociraptor_id of the agent.
+        current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -793,10 +995,21 @@ async def update_agent(
     """
     logger.info(f"Updating agent {agent_id} with Velociraptor ID: {velociraptor_id}")
     try:
-        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        # Check customer access - first find the agent
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user, session, base_query, Agents.customer_code
+        )
+
+        result = await session.execute(filtered_query)
         agent = result.scalars().first()
+
         if not agent:
-            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found or access denied"
+            )
+
         agent.velociraptor_id = velociraptor_id
         await session.commit()
         logger.info(f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}")
@@ -805,8 +1018,6 @@ async def update_agent(
             message=f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}",
         )
     except Exception as e:
-        if not agent:
-            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
         logger.error(f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}")
         raise HTTPException(
             status_code=500,
@@ -822,19 +1033,38 @@ async def update_agent(
 )
 async def delete_agent(
     agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Delete an agent.
+    User must have access to the agent's customer.
 
     Args:
         agent_id (str): The ID of the agent to be deleted.
+        current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
         AgentModifyResponse: The response indicating the success or failure of the deletion.
     """
     logger.info(f"Deleting agent {agent_id}")
+
+    # Check customer access - first find the agent to verify access
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user, session, base_query, Agents.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found or access denied"
+        )
+
     await delete_agent_wazuh(agent_id)
     client_id = await fetch_velociraptor_id(db=session, agent_id=agent_id)
     logger.info(f"Client ID: {client_id}")
