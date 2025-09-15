@@ -3,7 +3,7 @@ import random
 import re
 import string
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 import bcrypt
 from pydantic import BaseModel
@@ -21,6 +21,15 @@ class Role(SQLModel, table=True):
 
     user: Optional["User"] = Relationship(back_populates="role")
 
+class UserCustomerAccess(SQLModel, table=True):
+    __tablename__ = "user_customer_access"
+    id: Optional[int] = Field(primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    customer_code: str = Field(foreign_key="customers.customer_code")
+    created_at: datetime.datetime = Field(default=datetime.datetime.now)
+
+    # Relationships
+    user: "User" = Relationship(back_populates="customer_access")
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
@@ -32,6 +41,7 @@ class User(SQLModel, table=True):
 
     smtp: "SMTP" = Relationship(back_populates="user")
     role: Optional["Role"] = Relationship(back_populates="user")
+    customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")
 
 
 # Enum class for role_id 1,2
@@ -39,6 +49,7 @@ class RoleEnum(int, Enum):
     admin = 1
     analyst = 2
     scheduler = 3
+    customer_user = 4
 
 
 class UserInput(SQLModel):
