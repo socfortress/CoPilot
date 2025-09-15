@@ -2031,7 +2031,11 @@ async def list_cases_for_user(
     """List cases filtered by user's customer access"""
 
     base_query = select(Case).options(
-        selectinload(Case.alerts).selectinload(CaseAlertLink.alert),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
     )
 
     # Apply customer filtering
@@ -2042,8 +2046,47 @@ async def list_cases_for_user(
     result = await session.execute(filtered_query)
     cases = result.scalars().all()
 
-    # Convert to CaseOut objects (use existing logic)
-    return await convert_cases_to_case_out(cases)  # You'll need to extract this logic
+    # Convert to CaseOut objects (using same logic as list_cases)
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+            iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+                linked_cases=linked_cases,
+                iocs=iocs,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+            case_creation_time=case.case_creation_time,
+            case_status=case.case_status,
+            customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
+        )
+        cases_out.append(case_out)
+    return cases_out
 
 
 async def delete_comments(alert_id: int, db: AsyncSession):

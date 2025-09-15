@@ -176,7 +176,6 @@ from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
 from app.incidents.services.db_operations import list_alerts_multiple_filters
 from app.incidents.services.db_operations import list_all_files
-from app.incidents.services.db_operations import list_cases
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_customer_code
@@ -1194,62 +1193,223 @@ async def list_alerts_multiple_filters_endpoint(
 
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
-async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=await list_cases(db), success=True, message="Cases retrieved successfully")
+async def list_cases_endpoint(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List cases with automatic customer filtering"""
+    logger.info(f"Listing cases for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    cases = await list_cases_for_user(current_user, db)
+    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
 
 
 @incidents_db_operations_router.put("/case/status", response_model=CaseOutResponse)
-async def update_case_status_endpoint(case_status: UpdateCaseStatus, db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=[await update_case_status(case_status, db)], success=True, message="Case status updated successfully")
+async def update_case_status_endpoint(
+    case_status: UpdateCaseStatus,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update case status with customer access validation"""
+    logger.info(f"Updating case {case_status.case_id} status for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_status.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions"
+        )
+
+    updated_case = await update_case_status(case_status, db)
+    return CaseOutResponse(cases=[updated_case], success=True, message="Case status updated successfully")
 
 
 @incidents_db_operations_router.put("/case/assigned-to", response_model=CaseOutResponse)
-async def update_case_assigned_to_endpoint(assigned_to: AssignedToCase, db: AsyncSession = Depends(get_db)):
+async def update_case_assigned_to_endpoint(
+    assigned_to: AssignedToCase,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update case assigned_to with customer access validation"""
+    logger.info(f"Updating case {assigned_to.case_id} assigned_to for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(assigned_to.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {assigned_to.case_id} - insufficient customer permissions"
+        )
+
     all_users = await select_all_users()
     user_names = [user.username for user in all_users]
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
+
+    updated_case = await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)
     return CaseOutResponse(
-        cases=[await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)],
+        cases=[updated_case],
         success=True,
         message="Case assigned to user successfully",
     )
 
 
 @incidents_db_operations_router.put("/case/customer-code", response_model=CaseOutResponse)
-async def update_case_customer_code_endpoint(case_id: int, customer_code: str, db: AsyncSession = Depends(get_db)):
+async def update_case_customer_code_endpoint(
+    case_id: int,
+    customer_code: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update case customer_code with customer access validation"""
+    logger.info(f"Updating case {case_id} customer_code for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check current customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to the current case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
+    # Also check if user has access to the new customer code (for non-admin users)
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    if "*" not in accessible_customers and customer_code not in accessible_customers:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied - cannot assign case to customer {customer_code}"
+        )
+
+    updated_case = await update_case_customer_code(case_id, customer_code, db)
     return CaseOutResponse(
-        cases=[await update_case_customer_code(case_id, customer_code, db)],
+        cases=[updated_case],
         success=True,
         message="Case customer code updated successfully",
     )
 
 
 @incidents_db_operations_router.delete("/case/{case_id}")
-async def delete_case_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_case_endpoint(
+    case_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete case with customer access validation"""
+    logger.info(f"Deleting case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
     await delete_case(case_id, db)
     return {"message": "Case deleted successfully", "success": True}
 
 
 @incidents_db_operations_router.get("/case/status/{status}", response_model=CaseOutResponse)
-async def list_cases_by_status_endpoint(status: AlertStatus, db: AsyncSession = Depends(get_db)):
+async def list_cases_by_status_endpoint(
+    status: AlertStatus,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List cases by status with customer access filtering"""
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
-    return CaseOutResponse(cases=await list_cases_by_status(status.value, db), success=True, message="Cases retrieved successfully")
+
+    logger.info(f"Listing cases by status {status} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get customer access filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        # Admin/analyst - no filtering needed
+        cases = await list_cases_by_status(status.value, db)
+    else:
+        # Customer user - we need to filter, but there's no direct function for this
+        # We'll need to get all cases for the user and then filter by status
+        all_user_cases = await list_cases_for_user(current_user, db)
+        cases = [case for case in all_user_cases if case.case_status == status.value]
+
+    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
 
 
 @incidents_db_operations_router.get("/case/assigned-to/{assigned_to}", response_model=CaseOutResponse)
-async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=await list_cases_by_assigned_to(assigned_to, db), success=True, message="Cases retrieved successfully")
+async def list_cases_by_assigned_to_endpoint(
+    assigned_to: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List cases by assigned user with customer access filtering"""
+    logger.info(f"Listing cases assigned to {assigned_to} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get customer access filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        # Admin/analyst - no filtering needed
+        cases = await list_cases_by_assigned_to(assigned_to, db)
+    else:
+        # Customer user - filter by accessible customers
+        all_user_cases = await list_cases_for_user(current_user, db)
+        cases = [case for case in all_user_cases if case.assigned_to == assigned_to]
+
+    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
 
 
 @incidents_db_operations_router.get("/case/asset/{asset_name}", response_model=CaseOutResponse)
-async def list_cases_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=await list_cases_by_asset_name(asset_name, db), success=True, message="Cases retrieved successfully")
+async def list_cases_by_asset_name_endpoint(
+    asset_name: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List cases by asset name with customer access filtering"""
+    logger.info(f"Listing cases by asset {asset_name} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get customer access filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        # Admin/analyst - no filtering needed
+        cases = await list_cases_by_asset_name(asset_name, db)
+    else:
+        # Customer user - filter by accessible customers and asset name
+        all_user_cases = await list_cases_for_user(current_user, db)
+        cases = []
+        for case in all_user_cases:
+            # Check if any alert in the case has the specified asset name
+            for alert in case.alerts:
+                if alert.assets and any(asset.asset_name == asset_name for asset in alert.assets):
+                    cases.append(case)
+                    break
+
+    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
 
 
 @incidents_db_operations_router.get("/case/customer/{customer_code}", response_model=CaseOutResponse)
-async def list_cases_by_customer_code_endpoint(customer_code: str, db: AsyncSession = Depends(get_db)):
+async def list_cases_by_customer_code_endpoint(
+    customer_code: str,
+    current_user: User = Depends(customer_access_handler.require_customer_access()),
+    db: AsyncSession = Depends(get_db)
+):
+    """List cases for specific customer (with access validation)"""
+    logger.info(f"Listing cases for customer {customer_code} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Verify user has access to this specific customer
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail="Access denied to this customer")
+
     return CaseOutResponse(cases=await list_cases_by_customer_code(customer_code, db), success=True, message="Cases retrieved successfully")
 
 
@@ -1260,8 +1420,24 @@ async def list_all_case_data_store_files_endpoint(db: AsyncSession = Depends(get
 
 
 @incidents_db_operations_router.get("/case/data-store/{case_id}", response_model=ListCaseDataStoreResponse)
-async def list_case_data_store_files_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
-    logger.info(f"Listing all files in the data store for case {case_id}")
+async def list_case_data_store_files_endpoint(
+    case_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List case data store files with customer access validation"""
+    logger.info(f"Listing files for case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
     return ListCaseDataStoreResponse(
         case_data_store=await list_files_by_case_id(case_id, db),
         success=True,
@@ -1270,7 +1446,25 @@ async def list_case_data_store_files_endpoint(case_id: int, db: AsyncSession = D
 
 
 @incidents_db_operations_router.get("/case/data-store/download/{case_id}/{file_name}")
-async def download_case_data_store_file_endpoint(case_id: int, file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:
+async def download_case_data_store_file_endpoint(
+    case_id: int,
+    file_name: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> StreamingResponse:
+    """Download case data store file with customer access validation"""
+    logger.info(f"Downloading file {file_name} from case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
     file_bytes, file_content_type = await download_file_from_case(case_id, file_name, db)
     logger.info(f"Streaming file {file_name} from case {case_id}")
     output = io.BytesIO(file_bytes)
@@ -1283,10 +1477,25 @@ async def download_case_data_store_file_endpoint(case_id: int, file_name: str, d
 async def upload_case_data_store_endpoint(
     case_id: int,
     file: UploadFile = File(...),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Upload file to case data store with customer access validation"""
+    logger.info(f"Uploading file {file.filename} to case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
     if await file_exists(case_id, file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this case")
+
     return CaseDataStoreResponse(
         case_data_store=await upload_file_to_case(case_id, file, db),
         success=True,
@@ -1295,29 +1504,81 @@ async def upload_case_data_store_endpoint(
 
 
 @incidents_db_operations_router.delete("/case/data-store/{case_id}/{file_name}")
-async def delete_case_data_store_file_endpoint(case_id: int, file_name: str, db: AsyncSession = Depends(get_db)):
+async def delete_case_data_store_file_endpoint(
+    case_id: int,
+    file_name: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete case data store file with customer access validation"""
+    logger.info(f"Deleting file {file_name} from case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
     await delete_file_from_case(case_id, file_name, db)
     return {"message": "File deleted successfully", "success": True}
 
 
 @incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
-async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
-    return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+async def get_case_by_id_endpoint(
+    case_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get case by ID with customer access validation"""
+    logger.info(f"Getting case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first
+    case = await get_case_by_id(case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions"
+        )
+
+    return CaseOutResponse(cases=[case], success=True, message="Case retrieved successfully")
 
 
 @incidents_db_operations_router.post("/case/notification", response_model=CaseNotificationResponse)
-async def create_case_notification_endpoint(request: CaseNotificationCreate, db: AsyncSession = Depends(get_db)):
+async def create_case_notification_endpoint(
+    request: CaseNotificationCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
+    Create case notification with customer access validation.
+
     This function collects the case details and then invokes the create_case_notification function to create a new case notification within the Shuffle Workflow.
 
     Args:
         request (CaseNotificationCreate): The request object containing the case details.
+        current_user (User): Current authenticated user.
         db (AsyncSession, optional): The database session dependency.
 
     Returns:
         CaseNotificationResponse: The response object containing the created case notification.
     """
+    logger.info(f"Creating case notification for case {request.case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
     case_details = await get_case_by_id(request.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case_details.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {request.case_id} - insufficient customer permissions"
+        )
+
     case_notification_payload = CreatedCaseNotificationPayload(
         case_name=case_details.case_name,
         case_description=case_details.case_description,
