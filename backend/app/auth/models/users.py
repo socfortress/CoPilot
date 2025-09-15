@@ -26,7 +26,7 @@ class UserCustomerAccess(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     customer_code: str = Field(foreign_key="customers.customer_code")
-    created_at: datetime.datetime = Field(default=datetime.datetime.now)
+    created_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
 
     # Relationships
     user: "User" = Relationship(back_populates="customer_access")

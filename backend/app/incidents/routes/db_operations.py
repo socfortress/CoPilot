@@ -199,6 +199,15 @@ from app.incidents.services.db_operations import upload_report_template
 from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
+from app.middleware.customer_access import customer_access_handler
+from app.auth.models.users import User
+from app.auth.utils import AuthHandler
+from app.incidents.services.db_operations import alert_total_by_customer_codes
+from app.incidents.services.db_operations import alerts_closed_by_customer_codes
+from app.incidents.services.db_operations import alerts_in_progress_by_customer_codes
+from app.incidents.services.db_operations import alerts_open_by_customer_codes
+from app.incidents.services.db_operations import list_alerts_for_user
+from app.incidents.services.db_operations import list_cases_for_user
 
 incidents_db_operations_router = APIRouter()
 
@@ -573,19 +582,56 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
     )
 
 
+# @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
+# async def list_alerts_endpoint(
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(25, ge=1),
+#     order: str = Query("desc", regex="^(asc|desc)$"),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     return AlertOutResponse(
+#         alerts=await list_alerts(db, page=page, page_size=page_size, order=order),
+#         total=await alert_total(db),
+#         open=await alerts_open(db),
+#         in_progress=await alerts_in_progress(db),
+#         closed=await alerts_closed(db),
+#         success=True,
+#         message="Alerts retrieved successfully",
+#     )
+
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
 async def list_alerts_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
+    current_user: User = Depends(AuthHandler().get_current_user),  # Get the full user object
     db: AsyncSession = Depends(get_db),
 ):
+    """List alerts with automatic customer filtering"""
+    alerts = await list_alerts_for_user(current_user, db, page, page_size, order)
+
+    # Get totals with customer filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        # Admin/analyst - use existing total functions
+        total = await alert_total(db)
+        open_alerts = await alerts_open(db)
+        in_progress = await alerts_in_progress(db)
+        closed = await alerts_closed(db)
+    else:
+        # Customer user - filter totals by their customers
+        total = await alert_total_by_customer_codes(db, accessible_customers)
+        open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
+        in_progress = await alerts_in_progress_by_customer_codes(db, accessible_customers)
+        closed = await alerts_closed_by_customer_codes(db, accessible_customers)
+
     return AlertOutResponse(
-        alerts=await list_alerts(db, page=page, page_size=page_size, order=order),
-        total=await alert_total(db),
-        open=await alerts_open(db),
-        in_progress=await alerts_in_progress(db),
-        closed=await alerts_closed(db),
+        alerts=alerts,
+        total=total,
+        open=open_alerts,
+        in_progress=in_progress,
+        closed=closed,
         success=True,
         message="Alerts retrieved successfully",
     )
@@ -719,16 +765,40 @@ async def list_alerts_by_title_endpoint(
     )
 
 
+# @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
+# async def list_alerts_by_customer_code_endpoint(
+#     customer_code: str,
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(25, ge=1),
+#     order: str = Query("desc", regex="^(asc|desc)$"),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     return AlertOutResponse(
+#         alerts=await list_alerts_by_customer_code(customer_code, db, page=page, page_size=page_size, order=order),
+#         total=await alerts_total_by_customer_code(db, customer_code),
+#         open=await alerts_open_by_customer_code(db, customer_code),
+#         in_progress=await alerts_in_progress_by_customer_code(db, customer_code),
+#         closed=await alerts_closed_by_customer_code(db, customer_code),
+#         success=True,
+#         message="Alerts retrieved successfully",
+#     )
+
 @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
 async def list_alerts_by_customer_code_endpoint(
     customer_code: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
+    current_user: User = Depends(customer_access_handler.require_customer_access()),
     db: AsyncSession = Depends(get_db),
 ):
+    """List alerts for specific customer (with access validation)"""
+    # Verify user has access to this specific customer
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail="Access denied to this customer")
+
     return AlertOutResponse(
-        alerts=await list_alerts_by_customer_code(customer_code, db, page=page, page_size=page_size, order=order),
+        alerts=await list_alerts_by_customer_code(customer_code, db, page, page_size, order),
         total=await alerts_total_by_customer_code(db, customer_code),
         open=await alerts_open_by_customer_code(db, customer_code),
         in_progress=await alerts_in_progress_by_customer_code(db, customer_code),

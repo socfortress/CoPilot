@@ -14,7 +14,7 @@ from app.auth.models.users import PasswordResetToken
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
 from app.auth.models.users import UserLogin
-from app.auth.schema.auth import Token
+from app.auth.schema.auth import Token, UpdateUserRoleRequest
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
@@ -22,6 +22,7 @@ from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
+from app.auth.models.users import RoleEnum
 from app.db.db_session import get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
@@ -305,3 +306,61 @@ async def delete_user_by_username(
         dict: A dictionary containing the message and success status.
     """
     return await delete_user(user_id, session)
+
+
+@auth_router.put(
+    "/users/{user_id}/role/by-name",
+    status_code=200,
+    description="Update a user's role by role name",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def update_user_role_by_name(
+    user_id: int,
+    request: UpdateUserRoleRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Update a user's role by role name. Must be an admin.
+
+    Args:
+        user_id (int): The ID of the user to update.
+        request (UpdateUserRoleRequest): The role update request containing role name.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the message and success status.
+    """
+    # First, find the user
+    user = await session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Map role names to IDs
+    role_mapping = {
+        "admin": RoleEnum.admin.value,
+        "analyst": RoleEnum.analyst.value,
+        "scheduler": RoleEnum.scheduler.value,
+        "customer_user": RoleEnum.customer_user.value,
+    }
+
+    role_name_lower = request.role_name.lower()
+    if role_name_lower not in role_mapping:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid role name. Valid roles are: {list(role_mapping.keys())}"
+        )
+
+    role_id = role_mapping[role_name_lower]
+
+    # Update the user's role
+    user.role_id = role_id
+    session.add(user)
+    await session.commit()
+
+    return {
+        "message": f"User {user.username} role updated successfully to {request.role_name}",
+        "success": True,
+        "user_id": user_id,
+        "new_role_name": request.role_name,
+        "new_role_id": role_id
+    }
