@@ -46,18 +46,28 @@ async def get_user_customer_access(
     user_id: int,
     current_user: User = Depends(AuthHandler().require_any_scope("admin")),
     session: AsyncSession = Depends(get_db)
-) -> List[str]:
+):
     """Get customer codes accessible to user (admin only)"""
 
     result = await session.execute(
         select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user_id)
     )
-    return result.scalars().all()
+    customer_codes = result.scalars().all()
+
+    return {
+        "success": True,
+        "customer_codes": customer_codes
+    }
 
 @customer_users_router.get("/me/customers")
 async def get_my_customer_access(
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db)
-) -> List[str]:
+):
     """Get current user's accessible customers"""
-    return await customer_access_handler.get_user_accessible_customers(current_user, session)
+    customer_codes = await customer_access_handler.get_user_accessible_customers(current_user, session)
+
+    return {
+        "success": True,
+        "customer_codes": customer_codes
+    }

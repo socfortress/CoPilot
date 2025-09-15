@@ -161,8 +161,21 @@ async def get_users(session: AsyncSession = Depends(get_db)):
 
     """
     users = await select_all_users()
+
+    # Transform users to include role_name
+    user_list = []
+    for user in users:
+        user_dict = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role_id": user.role_id,
+            "role_name": user.role.name if user.role else None
+        }
+        user_list.append(user_dict)
+
     return UserBaseResponse(
-        users=users,
+        users=user_list,
         message="Users retrieved successfully",
         success=True,
     )

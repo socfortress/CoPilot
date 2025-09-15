@@ -23,6 +23,7 @@
 							<th>ID</th>
 							<th>Username</th>
 							<th>Email</th>
+							<th>Role</th>
 							<th style="max-width: 300px"></th>
 						</tr>
 					</thead>
@@ -38,6 +39,11 @@
 							</td>
 							<td>
 								{{ user.email }}
+							</td>
+							<td>
+								<n-tag :type="getRoleTagType(user.role_name)" size="small">
+									{{ user.role_name || 'No Role' }}
+								</n-tag>
 							</td>
 							<td style="max-width: 300px">
 								<div v-if="isAdmin" class="flex justify-end">
@@ -84,7 +90,7 @@
 
 <script setup lang="ts">
 import type { User } from "@/types/user.d"
-import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, useMessage } from "naive-ui"
+import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -93,6 +99,8 @@ import { useAuthStore } from "@/stores/auth"
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
 const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
+const AssignRole = defineAsyncComponent(() => import("./AssignRole.vue"))
+const AssignCustomer = defineAsyncComponent(() => import("./AssignCustomer.vue"))
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
 const UserAddIcon = "carbon:user-follow"
@@ -108,7 +116,38 @@ const loading = computed(() => loadingUsers.value || loadingDelete.value)
 const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
+function getRoleTagType(roleName: string | null | undefined) {
+	switch (roleName?.toLowerCase()) {
+		case 'admin':
+			return 'error'
+		case 'analyst':
+			return 'warning'
+		case 'scheduler':
+			return 'info'
+		case 'customer_user':
+			return 'success'
+		default:
+			return 'default'
+	}
+}
+
 const options = [
+	{
+		key: "AssignRole",
+		type: "render",
+		render: () => h(AssignRole, {
+			user: selectedUser.value || undefined,
+			onSuccess: getUsers
+		})
+	},
+	{
+		key: "AssignCustomer",
+		type: "render",
+		render: () => h(AssignCustomer, {
+			user: selectedUser.value || undefined,
+			onSuccess: getUsers
+		})
+	},
 	{
 		key: "ChangePassword",
 		type: "render",
