@@ -607,12 +607,14 @@ async def list_alerts_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),  # Get the full user object
     db: AsyncSession = Depends(get_db),
 ):
+    logger.info(f"Listing alerts for user: {current_user.username} with role_id: {current_user.role_id}")
     """List alerts with automatic customer filtering"""
     alerts = await list_alerts_for_user(current_user, db, page, page_size, order)
 
     # Get totals with customer filtering
     accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
 
+    logger.info(f"User {current_user.username} has access to customers: {accessible_customers}")
     if "*" in accessible_customers:
         # Admin/analyst - use existing total functions
         total = await alert_total(db)
@@ -635,7 +637,6 @@ async def list_alerts_endpoint(
         success=True,
         message="Alerts retrieved successfully",
     )
-
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):

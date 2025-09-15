@@ -1981,7 +1981,7 @@ async def list_alerts_for_user(
     base_query = select(Alert).options(
         selectinload(Alert.comments),
         selectinload(Alert.assets),
-        selectinload(Alert.cases),
+        selectinload(Alert.cases).selectinload(CaseAlertLink.case),
         selectinload(Alert.tags).selectinload(AlertToTag.tag),
     )
 
@@ -1997,13 +1997,13 @@ async def list_alerts_for_user(
     result = await session.execute(final_query)
     alerts = result.scalars().all()
 
-    # Convert to AlertOut objects (existing logic)
+    # Convert to AlertOut objects
     alerts_out = []
     for alert in alerts:
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        linked_cases = [AlertCaseBase(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
 
         alert_out = AlertOut(
             id=alert.id,
