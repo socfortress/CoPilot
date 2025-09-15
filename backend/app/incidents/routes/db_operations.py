@@ -1223,7 +1223,11 @@ async def update_case_status_endpoint(
             detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions"
         )
 
-    updated_case = await update_case_status(case_status, db)
+    # Update the case status
+    await update_case_status(case_status, db)
+
+    # Re-fetch the case with full data structure
+    updated_case = await get_case_by_id(case_status.case_id, db)
     return CaseOutResponse(cases=[updated_case], success=True, message="Case status updated successfully")
 
 
@@ -1251,14 +1255,16 @@ async def update_case_assigned_to_endpoint(
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
 
-    updated_case = await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)
+    # Update the case assigned_to
+    await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)
+
+    # Re-fetch the case with full data structure
+    updated_case = await get_case_by_id(assigned_to.case_id, db)
     return CaseOutResponse(
         cases=[updated_case],
         success=True,
         message="Case assigned to user successfully",
     )
-
-
 @incidents_db_operations_router.put("/case/customer-code", response_model=CaseOutResponse)
 async def update_case_customer_code_endpoint(
     case_id: int,
@@ -1287,7 +1293,11 @@ async def update_case_customer_code_endpoint(
             detail=f"Access denied - cannot assign case to customer {customer_code}"
         )
 
-    updated_case = await update_case_customer_code(case_id, customer_code, db)
+    # Update the case customer code
+    await update_case_customer_code(case_id, customer_code, db)
+
+    # Re-fetch the case with full data structure
+    updated_case = await get_case_by_id(case_id, db)
     return CaseOutResponse(
         cases=[updated_case],
         success=True,
