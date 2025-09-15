@@ -1,34 +1,32 @@
 <template>
-	<div>
-		<n-button
-			size="small"
-			type="info"
-			ghost
-			@click="showModal = true"
-		>
-			<template #icon>
-				<Icon :name="CustomerIcon"></Icon>
-			</template>
-			Assign Customer
-		</n-button>
+	<n-button
+		quaternary
+		class="!w-full !justify-start"
+		@click="showModal = true"
+	>
+		<template #icon>
+			<Icon :name="CustomerIcon" :size="14"></Icon>
+		</template>
+		Assign Customer
+	</n-button>
 
-		<n-modal
-			v-model:show="showModal"
-			display-directive="show"
-			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 60vh)' }"
-			title="Assign Customer Access"
-			:bordered="false"
-			content-class="flex flex-col"
-			segmented
-		>
-			<div class="flex flex-col gap-4">
-				<div>
-					<strong>User:</strong> {{ user?.username }}
-				</div>
+	<n-modal
+		v-model:show="showModal"
+		display-directive="show"
+		preset="card"
+		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 60vh)' }"
+		title="Assign Customer Access"
+		:bordered="false"
+		content-class="flex flex-col"
+		segmented
+	>
+		<div class="flex flex-col gap-4">
+			<div>
+				<strong>User:</strong> {{ user?.username }}
+			</div>
 
-				<n-form ref="formRef" :model="formModel">
-					<n-form-item label="Select Customers">
+			<n-form ref="formRef" :model="formModel">
+				<n-form-item label="Select Customers">
 						<n-select
 							v-model:value="formModel.customerCodes"
 							:options="customerOptions"
@@ -67,7 +65,6 @@
 				</div>
 			</div>
 		</n-modal>
-	</div>
 </template>
 
 <script setup lang="ts">
@@ -126,10 +123,8 @@ async function loadCurrentAccess() {
 
 	try {
 		const res = await Api.auth.getUserCustomerAccess(props.user.id)
-		console.error('DEBUG - API Response:', res.data)
 		if (res.data.success) {
 			currentAccess.value = res.data.customer_codes || []
-			console.error('DEBUG - Current access set to:', currentAccess.value)
 			formModel.value.customerCodes = [...currentAccess.value]
 		}
 	} catch (error) {

@@ -1,34 +1,32 @@
 <template>
-	<div>
-		<n-button
-			size="small"
-			type="warning"
-			ghost
-			@click="showModal = true"
-		>
-			<template #icon>
-				<Icon :name="RoleIcon"></Icon>
-			</template>
-			Assign Role
-		</n-button>
+	<n-button
+		quaternary
+		class="!w-full !justify-start"
+		@click="showModal = true"
+	>
+		<template #icon>
+			<Icon :name="RoleIcon" :size="14"></Icon>
+		</template>
+		Assign Role
+	</n-button>
 
-		<n-modal
-			v-model:show="showModal"
-			display-directive="show"
-			preset="card"
-			:style="{ maxWidth: 'min(500px, 90vw)', minHeight: 'min(200px, 50vh)' }"
-			title="Assign Role"
-			:bordered="false"
-			content-class="flex flex-col"
-			segmented
-		>
-			<div class="flex flex-col gap-4">
-				<div>
-					<strong>User:</strong> {{ user?.username }}
-				</div>
+	<n-modal
+		v-model:show="showModal"
+		display-directive="show"
+		preset="card"
+		:style="{ maxWidth: 'min(500px, 90vw)', minHeight: 'min(200px, 50vh)' }"
+		title="Assign Role"
+		:bordered="false"
+		content-class="flex flex-col"
+		segmented
+	>
+		<div class="flex flex-col gap-4">
+			<div>
+				<strong>User:</strong> {{ user?.username }}
+			</div>
 
-				<n-form ref="formRef" :model="formModel" :rules="rules">
-					<n-form-item path="role" label="Select Role">
+			<n-form ref="formRef" :model="formModel" :rules="rules">
+				<n-form-item path="role" label="Select Role">
 						<n-select
 							v-model:value="formModel.role"
 							:options="roleOptions"
@@ -51,7 +49,6 @@
 				</div>
 			</div>
 		</n-modal>
-	</div>
 </template>
 
 <script setup lang="ts">
