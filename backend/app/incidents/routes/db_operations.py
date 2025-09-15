@@ -639,8 +639,25 @@ async def list_alerts_endpoint(
     )
 
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
-async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
-    return AlertOutResponse(alerts=[await get_alert_by_id(alert_id, db)], success=True, message="Alert retrieved successfully")
+async def get_alert_by_id_endpoint(
+    alert_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get alert by ID with customer access validation"""
+    logger.info(f"Getting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the alert first
+    alert = await get_alert_by_id(alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to alert {alert_id} - insufficient customer permissions"
+        )
+
+    return AlertOutResponse(alerts=[alert], success=True, message="Alert retrieved successfully")
 
 
 @incidents_db_operations_router.delete("/alert/{alert_id}")
