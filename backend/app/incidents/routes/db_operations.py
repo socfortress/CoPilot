@@ -28,6 +28,7 @@ from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
 from app.incidents.models import FieldName
+from app.incidents.models import Comment
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -416,17 +417,65 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 
 
 @incidents_db_operations_router.post("/alert/comment", response_model=CommentResponse)
-async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
+async def create_comment_endpoint(
+    comment: CommentCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the alert to check customer access
+    alert = await get_alert_by_id(comment.alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions"
+        )
+
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
 
 @incidents_db_operations_router.put("/alert/comment", response_model=CommentResponse)
-async def edit_comment_endpoint(comment: CommentEdit, db: AsyncSession = Depends(get_db)):
+async def edit_comment_endpoint(
+    comment: CommentEdit,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the alert to check customer access
+    alert = await get_alert_by_id(comment.alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions"
+        )
+
     return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
 
 
 @incidents_db_operations_router.delete("/alert/comment/{comment_id}")
-async def delete_comment_endpoint(comment_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_comment_endpoint(
+    comment_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # First get the comment to find the alert_id
+    result = await db.execute(select(Comment).where(Comment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    # Get the alert to check customer access
+    alert = await get_alert_by_id(comment.alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions"
+        )
+
     await delete_comment(comment_id, db)
     return {"message": "Comment deleted successfully", "success": True}
 

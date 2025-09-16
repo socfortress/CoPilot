@@ -2,6 +2,7 @@ import hashlib
 import io
 import mimetypes
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -864,7 +865,12 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    db_comment = Comment(**comment.dict())
+    # Create comment with automatic timestamp if not provided
+    comment_data = comment.dict()
+    if comment_data.get('created_at') is None:
+        comment_data['created_at'] = datetime.utcnow()
+
+    db_comment = Comment(**comment_data)
     db.add(db_comment)
     try:
         await db.commit()

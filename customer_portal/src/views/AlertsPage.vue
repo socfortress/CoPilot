@@ -659,32 +659,26 @@ const addComment = async () => {
 
   isAddingComment.value = true
   try {
-    // TODO: Implement API call to add comment
-    // For now, we'll just add it locally as a placeholder
-    const comment = {
-      id: Date.now(), // Temporary ID
+    // Make API call to add comment
+    const response = await AlertsAPI.addComment({
       alert_id: selectedAlert.value.id,
-      user_name: 'Customer User', // This should come from auth context
       comment: newComment.value.trim(),
-      created_at: new Date().toISOString()
-    }
+      user_name: 'Customer User' // This should come from auth context later
+    })
 
-    // Add to local array (this should be replaced with API call)
+    // Add the new comment to the local array
     if (!selectedAlert.value.comments) {
       selectedAlert.value.comments = []
     }
-    selectedAlert.value.comments.push(comment)
+    selectedAlert.value.comments.push(response.comment)
 
     // Clear the input
     newComment.value = ''
 
-    // TODO: Make actual API call to backend
-    // await AlertsAPI.addComment(selectedAlert.value.id, newComment.value)
-    // Then refresh the alert to get updated data
-
   } catch (err) {
     console.error('Failed to add comment:', err)
     // Handle error - maybe show a toast notification
+    error.value = 'Failed to add comment. Please try again.'
   } finally {
     isAddingComment.value = false
   }

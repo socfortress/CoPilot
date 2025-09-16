@@ -257,7 +257,7 @@ class CommentCreate(BaseModel):
     alert_id: int
     comment: str
     user_name: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 
 class CommentEdit(BaseModel):
