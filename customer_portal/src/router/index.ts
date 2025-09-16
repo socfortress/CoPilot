@@ -1,54 +1,43 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/components/LoginPage.vue'
+import OverviewPage from '@/views/OverviewPage.vue'
 
-// Simple dashboard component template for now
-const Dashboard = {
-	template: `
-		<div class="min-h-screen bg-gray-50">
-			<header class="bg-white shadow">
-				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div class="flex justify-between h-16">
-						<div class="flex items-center">
-							<h1 class="text-xl font-semibold">Customer Portal</h1>
-						</div>
-						<div class="flex items-center space-x-4">
-							<span class="text-sm text-gray-700">{{ username }}</span>
-							<button
-								@click="logout"
-								class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-							>
-								Logout
-							</button>
+// Helper function to create placeholder components
+const createPlaceholderComponent = (title: string, description: string) => {
+	return {
+		template: `
+			<div class="min-h-screen bg-gray-50">
+				<header class="bg-white shadow-sm border-b">
+					<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+						<div class="flex justify-between h-16">
+							<div class="flex items-center">
+								<button @click="goBack" class="mr-4 text-indigo-600 hover:text-indigo-500">
+									← Back
+								</button>
+								<h1 class="text-xl font-semibold text-gray-900">${title}</h1>
+							</div>
 						</div>
 					</div>
-				</div>
-			</header>
-			<main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-				<div class="px-4 py-6 sm:px-0">
-					<div class="text-center">
-						<h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome to the Customer Portal</h2>
-						<p class="text-gray-600">Your security dashboard is being prepared.</p>
-						<p class="text-sm text-gray-500 mt-4">More features coming soon...</p>
+				</header>
+				<main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+					<div class="px-4 py-6 sm:px-0">
+						<div class="text-center py-12">
+							<h2 class="text-2xl font-bold text-gray-900 mb-4">${title}</h2>
+							<p class="text-gray-600 mb-8">${description}</p>
+							<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md mx-auto">
+								<p class="text-blue-800 text-sm">
+									This feature is coming soon. We're working on bringing you comprehensive ${title.toLowerCase()} management.
+								</p>
+							</div>
+						</div>
 					</div>
-				</div>
-			</main>
-		</div>
-	`,
-	computed: {
-		username() {
-			try {
-				const user = JSON.parse(localStorage.getItem('customer-portal-user') || '{}')
-				return user.username || 'User'
-			} catch {
-				return 'User'
+				</main>
+			</div>
+		`,
+		methods: {
+			goBack() {
+				this.$router.push('/')
 			}
-		}
-	},
-	methods: {
-		logout() {
-			localStorage.removeItem('customer-portal-auth-token')
-			localStorage.removeItem('customer-portal-user')
-			this.$router.push('/login')
 		}
 	}
 }
@@ -76,8 +65,24 @@ const routes = [
 	},
 	{
 		path: '/',
-		name: 'Dashboard',
-		component: Dashboard,
+		name: 'Overview',
+		component: OverviewPage,
+		meta: { requiresAuth: true }
+	},
+	{
+		path: '/overview',
+		redirect: '/'
+	},
+	{
+		path: '/alerts',
+		name: 'Alerts',
+		component: () => createPlaceholderComponent('Alerts', 'Security alerts for your organization'),
+		meta: { requiresAuth: true }
+	},
+	{
+		path: '/cases',
+		name: 'Cases',
+		component: () => createPlaceholderComponent('Cases', 'Security incident cases'),
 		meta: { requiresAuth: true }
 	},
 	{
@@ -96,7 +101,7 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
 	const token = localStorage.getItem('customer-portal-auth-token')
 	const isAuthenticated = !!token
-	
+
 	if (to.meta.requiresAuth && !isAuthenticated) {
 		next('/login')
 	} else if (to.meta.requiresGuest && isAuthenticated) {

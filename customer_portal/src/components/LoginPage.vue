@@ -121,14 +121,17 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    // Use FormData to match the backend's OAuth2PasswordRequestForm expectation
-    const formData = new FormData()
-    formData.append('username', username.value)
-    formData.append('password', password.value)
-
-    const response = await fetch('/api/auth/token', {
+    // Use the API URL from environment variables
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    const response = await fetch(`${apiUrl}/api/auth/token`, {
       method: 'POST',
-      body: formData  // Send as FormData, not JSON
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        username: username.value,
+        password: password.value
+      })
     })
 
     if (response.ok) {
