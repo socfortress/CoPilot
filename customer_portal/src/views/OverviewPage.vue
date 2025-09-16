@@ -337,7 +337,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { httpClient } from '@/utils/httpClient'
+import AlertsAPI, { type Alert } from '@/api/alerts'
+import CasesAPI, { type Case } from '@/api/cases'
 
 interface Stats {
   totalAlerts: number
@@ -348,7 +349,7 @@ interface Stats {
   scoreImprovement: number
 }
 
-interface Alert {
+interface DashboardAlert {
   id: number
   name: string
   description: string
@@ -356,13 +357,13 @@ interface Alert {
   created_at: string
 }
 
-interface Case {
+interface DashboardCase {
   id: number
   name: string
   description: string
   status: string
   created_at: string
-  assigned_to?: string
+  assigned_to?: string | null
 }
 
 const router = useRouter()
@@ -377,8 +378,8 @@ const stats = ref<Stats>({
   alertTrend: '+0',
   scoreImprovement: 0
 })
-const recentAlerts = ref<Alert[]>([])
-const recentCases = ref<Case[]>([])
+const recentAlerts = ref<DashboardAlert[]>([])
+const recentCases = ref<DashboardCase[]>([])
 
 const username = computed(() => {
   try {
@@ -426,64 +427,67 @@ const fetchDashboardData = async () => {
   error.value = ''
 
   try {
-    // Fetch alerts and cases data from the API
+    // Fetch alerts and cases data using our API services
     const [alertsResponse, casesResponse] = await Promise.all([
-      httpClient.get('/alerts/').catch(() => ({ data: [] })),
-      httpClient.get('/cases/').catch(() => ({ data: [] }))
+      AlertsAPI.getAlerts(1, 50).catch(() => ({ alerts: [], total: 0, open: 0, in_progress: 0, closed: 0, success: false, message: 'Failed to load alerts' })),
+      CasesAPI.getCases().catch(() => ({ cases: [], success: false, message: 'Failed to load cases' }))
     ])
 
-    const alerts = alertsResponse.data || []
-    const cases = casesResponse.data || []
+    const alerts = alertsResponse.alerts || []
+    const cases = casesResponse.cases || []
 
-    // Calculate stats
-    const criticalAlerts = alerts.filter((alert: any) =>
-      alert.alert_severity === 'high' || alert.alert_severity === 'critical'
+    // Calculate stats from real data
+    const openAlerts = alertsResponse.open || 0
+    const inProgressAlerts = alertsResponse.in_progress || 0
+    const criticalAlerts = alerts.filter((alert: Alert) =>
+      alert.status === 'open' || alert.status === 'in_progress'
     ).length
 
-    const openCases = cases.filter((case_: any) =>
+    const openCases = cases.filter((case_: Case) =>
       case_.case_status === 'open' || case_.case_status === 'in_progress'
     ).length
 
-    // Mock some additional stats for demo
-    const securityScore = Math.max(60, 100 - (criticalAlerts * 5) - (openCases * 3))
+    // Calculate security score based on actual data
+    const totalActiveIssues = openAlerts + inProgressAlerts + openCases
+    const securityScore = Math.max(60, 100 - (totalActiveIssues * 2))
 
     stats.value = {
-      totalAlerts: alerts.length,
-      criticalAlerts,
+      totalAlerts: alertsResponse.total || 0,
+      criticalAlerts: openAlerts + inProgressAlerts,
       openCases,
       securityScore: Math.min(100, securityScore),
-      alertTrend: alerts.length > 5 ? `+${alerts.length - 5}` : '0',
+      alertTrend: openAlerts > 0 ? `+${openAlerts}` : '0',
       scoreImprovement: Math.floor(Math.random() * 5) + 1
     }
 
-    // Get recent alerts (last 5)
+    // Get recent alerts (last 5, sorted by creation time)
     recentAlerts.value = alerts
-      .map((alert: any) => ({
+      .map((alert: Alert) => ({
         id: alert.id,
         name: alert.alert_name || 'Unnamed Alert',
-        description: alert.alert_description || 'No description',
-        severity: alert.alert_severity || 'medium',
+        description: alert.alert_description || 'No description available',
+        severity: alert.status === 'open' ? 'high' : alert.status === 'in_progress' ? 'medium' : 'low',
         created_at: alert.alert_creation_time || new Date().toISOString()
       }))
-      .sort((a: Alert, b: Alert) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a: DashboardAlert, b: DashboardAlert) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5)
 
-    // Get recent cases (last 5)
+    // Get recent cases (last 5, sorted by creation time)
     recentCases.value = cases
-      .map((case_: any) => ({
+      .map((case_: Case) => ({
         id: case_.id,
         name: case_.case_name || 'Unnamed Case',
-        description: case_.case_description || 'No description',
+        description: case_.case_description || 'No description available',
         status: case_.case_status || 'open',
         created_at: case_.case_creation_time || new Date().toISOString(),
-        assigned_to: case_.assigned_to
+        assigned_to: case_.assigned_to || undefined
       }))
-      .sort((a: Case, b: Case) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5)
 
   } catch (err: any) {
     console.error('Failed to fetch dashboard data:', err)
-    error.value = err.response?.data?.detail || 'Failed to load dashboard data'
+    error.value = err.response?.data?.detail || err.message || 'Failed to load dashboard data'
 
     // Set default/mock data if API fails
     stats.value = {
@@ -494,6 +498,8 @@ const fetchDashboardData = async () => {
       alertTrend: '0',
       scoreImprovement: 2
     }
+    recentAlerts.value = []
+    recentCases.value = []
   } finally {
     loading.value = false
   }

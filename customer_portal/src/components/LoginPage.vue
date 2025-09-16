@@ -121,8 +121,8 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    // Use the API URL from environment variables
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    // Use the Vite proxy in development, direct URL in production
+    const apiUrl = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:5000')
     const response = await fetch(`${apiUrl}/api/auth/token`, {
       method: 'POST',
       headers: {

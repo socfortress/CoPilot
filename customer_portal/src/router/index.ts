@@ -1,46 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/components/LoginPage.vue'
 import OverviewPage from '@/views/OverviewPage.vue'
-
-// Helper function to create placeholder components
-const createPlaceholderComponent = (title: string, description: string) => {
-	return {
-		template: `
-			<div class="min-h-screen bg-gray-50">
-				<header class="bg-white shadow-sm border-b">
-					<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-						<div class="flex justify-between h-16">
-							<div class="flex items-center">
-								<button @click="goBack" class="mr-4 text-indigo-600 hover:text-indigo-500">
-									← Back
-								</button>
-								<h1 class="text-xl font-semibold text-gray-900">${title}</h1>
-							</div>
-						</div>
-					</div>
-				</header>
-				<main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-					<div class="px-4 py-6 sm:px-0">
-						<div class="text-center py-12">
-							<h2 class="text-2xl font-bold text-gray-900 mb-4">${title}</h2>
-							<p class="text-gray-600 mb-8">${description}</p>
-							<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md mx-auto">
-								<p class="text-blue-800 text-sm">
-									This feature is coming soon. We're working on bringing you comprehensive ${title.toLowerCase()} management.
-								</p>
-							</div>
-						</div>
-					</div>
-				</main>
-			</div>
-		`,
-		methods: {
-			goBack() {
-				this.$router.push('/')
-			}
-		}
-	}
-}
+import AlertsPage from '@/views/AlertsPage.vue'
+import CasesPage from '@/views/CasesPage.vue'
 
 const NotFound = {
 	template: `
@@ -76,13 +38,13 @@ const routes = [
 	{
 		path: '/alerts',
 		name: 'Alerts',
-		component: () => createPlaceholderComponent('Alerts', 'Security alerts for your organization'),
+		component: AlertsPage,
 		meta: { requiresAuth: true }
 	},
 	{
 		path: '/cases',
 		name: 'Cases',
-		component: () => createPlaceholderComponent('Cases', 'Security incident cases'),
+		component: CasesPage,
 		meta: { requiresAuth: true }
 	},
 	{
