@@ -305,7 +305,7 @@
             </svg>
           </button>
         </div>
-        
+
         <div class="space-y-6">
           <!-- Basic Alert Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -343,7 +343,7 @@
               <p class="mt-1 text-sm text-gray-900">{{ selectedAlert.assigned_to }}</p>
             </div>
           </div>
-          
+
           <div v-if="selectedAlert.alert_description">
             <label class="block text-sm font-medium text-gray-700">Description</label>
             <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{{ selectedAlert.alert_description }}</p>
@@ -460,7 +460,7 @@
               <div v-for="ioc in selectedAlert.iocs" :key="ioc.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                   <div>
-                    <span class="font-medium">Value:</span> 
+                    <span class="font-medium">Value:</span>
                     <code class="bg-gray-100 px-1 rounded text-xs">{{ ioc.ioc_value }}</code>
                   </div>
                   <div>
