@@ -475,15 +475,51 @@
           </div>
 
           <!-- Comments Section -->
-          <div v-if="selectedAlert.comments && selectedAlert.comments.length > 0">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Comments ({{ selectedAlert.comments.length }})</label>
-            <div class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Comments
+              <span v-if="selectedAlert.comments && selectedAlert.comments.length > 0" class="text-gray-500 font-normal">
+                ({{ selectedAlert.comments.length }})
+              </span>
+            </label>
+            
+            <!-- Existing Comments -->
+            <div v-if="selectedAlert.comments && selectedAlert.comments.length > 0" class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto mb-4">
               <div v-for="comment in selectedAlert.comments" :key="comment.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
                 <div class="flex justify-between items-start mb-2">
                   <span class="text-sm font-medium text-gray-900">{{ comment.user_name }}</span>
                   <span class="text-xs text-gray-500">{{ formatDate(comment.created_at) }}</span>
                 </div>
                 <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ comment.comment }}</p>
+              </div>
+            </div>
+            
+            <!-- No Comments Message -->
+            <div v-else class="bg-gray-50 rounded-lg p-4 mb-4 text-center">
+              <p class="text-sm text-gray-500">No comments yet</p>
+            </div>
+            
+            <!-- Add Comment Form -->
+            <div class="border rounded-lg p-4 bg-white">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Add Comment</label>
+              <textarea
+                v-model="newComment"
+                placeholder="Enter your comment..."
+                rows="3"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              ></textarea>
+              <div class="flex justify-end mt-3">
+                <button
+                  @click="addComment"
+                  :disabled="!newComment.trim() || isAddingComment"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg v-if="isAddingComment" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {{ isAddingComment ? 'Adding...' : 'Add Comment' }}
+                </button>
               </div>
             </div>
           </div>
@@ -512,6 +548,10 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const selectedAlert = ref<Alert | null>(null)
 const updatingStatus = ref<number | null>(null)
+
+// Comment management
+const newComment = ref('')
+const isAddingComment = ref(false)
 
 // Pagination
 const currentPage = ref(1)
@@ -611,6 +651,43 @@ const viewAlert = (alert: Alert) => {
 
 const closeModal = () => {
   selectedAlert.value = null
+  newComment.value = '' // Clear comment when closing modal
+}
+
+const addComment = async () => {
+  if (!selectedAlert.value || !newComment.value.trim()) return
+
+  isAddingComment.value = true
+  try {
+    // TODO: Implement API call to add comment
+    // For now, we'll just add it locally as a placeholder
+    const comment = {
+      id: Date.now(), // Temporary ID
+      alert_id: selectedAlert.value.id,
+      user_name: 'Customer User', // This should come from auth context
+      comment: newComment.value.trim(),
+      created_at: new Date().toISOString()
+    }
+
+    // Add to local array (this should be replaced with API call)
+    if (!selectedAlert.value.comments) {
+      selectedAlert.value.comments = []
+    }
+    selectedAlert.value.comments.push(comment)
+
+    // Clear the input
+    newComment.value = ''
+    
+    // TODO: Make actual API call to backend
+    // await AlertsAPI.addComment(selectedAlert.value.id, newComment.value)
+    // Then refresh the alert to get updated data
+    
+  } catch (err) {
+    console.error('Failed to add comment:', err)
+    // Handle error - maybe show a toast notification
+  } finally {
+    isAddingComment.value = false
+  }
 }
 
 const formatDate = (dateString: string) => {
