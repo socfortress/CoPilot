@@ -482,7 +482,7 @@
                 ({{ selectedAlert.comments.length }})
               </span>
             </label>
-            
+
             <!-- Existing Comments -->
             <div v-if="selectedAlert.comments && selectedAlert.comments.length > 0" class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto mb-4">
               <div v-for="comment in selectedAlert.comments" :key="comment.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
@@ -493,12 +493,12 @@
                 <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ comment.comment }}</p>
               </div>
             </div>
-            
+
             <!-- No Comments Message -->
             <div v-else class="bg-gray-50 rounded-lg p-4 mb-4 text-center">
               <p class="text-sm text-gray-500">No comments yet</p>
             </div>
-            
+
             <!-- Add Comment Form -->
             <div class="border rounded-lg p-4 bg-white">
               <label class="block text-sm font-medium text-gray-700 mb-2">Add Comment</label>
@@ -677,11 +677,11 @@ const addComment = async () => {
 
     // Clear the input
     newComment.value = ''
-    
+
     // TODO: Make actual API call to backend
     // await AlertsAPI.addComment(selectedAlert.value.id, newComment.value)
     // Then refresh the alert to get updated data
-    
+
   } catch (err) {
     console.error('Failed to add comment:', err)
     // Handle error - maybe show a toast notification
