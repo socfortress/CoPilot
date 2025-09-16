@@ -1,0 +1,49 @@
+import type { AxiosRequestHeaders } from "axios"
+import axios from "axios"
+import { useAuthStore } from "@/stores/auth"
+import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
+
+const HttpClient = axios.create({
+	baseURL: "/api"
+})
+
+let __TOKEN_REFRESHING = false
+let __TOKEN_LAST_CHECK: Date | null = null
+
+HttpClient.interceptors.request.use(
+	config => {
+		const store = useAuthStore()
+
+		if (!config.headers) config.headers = {} as AxiosRequestHeaders
+		if (store.userToken) {
+			config.headers.Authorization = `Bearer ${store.userToken}`
+		}
+
+		if (isJwtExpiring(store.userToken, 60 * 60) && !__TOKEN_REFRESHING && isDebounceTimeOver(__TOKEN_LAST_CHECK)) {
+			__TOKEN_REFRESHING = true
+			__TOKEN_LAST_CHECK = new Date()
+
+			store.refreshToken().then(() => {
+				__TOKEN_REFRESHING = false
+			})
+		}
+
+		return config
+	},
+	error => Promise.reject(error)
+)
+
+HttpClient.interceptors.response.use(
+	response => response,
+	error => {
+		if (error.response && error.response.status === 401) {
+			if (!window.location.pathname.includes("login")) {
+				window.location.href = "/logout"
+			}
+		}
+
+		return Promise.reject(error)
+	}
+)
+
+export { HttpClient }
