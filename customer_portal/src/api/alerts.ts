@@ -1,29 +1,67 @@
 import { httpClient } from '@/utils/httpClient'
 
-export interface Alert {
-  id: number
-  alert_creation_time: string
-  alert_description: string
-  alert_name: string
-  asset_name: string
-  assigned_to: string | null
-  case_ids: number[]
-  customer_code: string
-  index_id: string
-  index_name: string
-  source: string
-  status: 'open' | 'in_progress' | 'closed'
-  tag: string[]
-  time_stamp: string
-  comments?: AlertComment[]
-}
-
 export interface AlertComment {
   id: number
   alert_id: number
   comment: string
   user_name: string
-  timestamp: string
+  created_at: string
+}
+
+export interface AlertAsset {
+  id: number
+  asset_name: string
+  agent_id: string
+  customer_code: string
+  index_id: string
+  alert_linked: number
+  alert_context_id: number
+  velociraptor_id: string
+  index_name: string
+}
+
+export interface AlertTag {
+  id: number
+  tag: string
+}
+
+export interface AlertIoC {
+  id: number
+  ioc_value: string
+  ioc_type: string
+  ioc_description: string
+}
+
+export interface LinkedCase {
+  id: number
+  case_name: string
+  case_description: string
+  case_creation_time: string
+  case_status: string
+  assigned_to: string | null
+}
+
+export interface Alert {
+  id: number
+  alert_creation_time: string
+  time_closed: string | null
+  alert_name: string
+  alert_description: string
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED'
+  customer_code: string
+  source: string
+  assigned_to: string | null
+  time_stamp?: string
+  index_id?: string
+  index_name?: string
+  asset_name?: string
+  case_ids?: number[]
+  tag?: string[]
+  comments: AlertComment[]
+  assets: AlertAsset[]
+  tags: AlertTag[]
+  linked_cases: LinkedCase[]
+  iocs: AlertIoC[]
 }
 
 export interface AlertsResponse {
@@ -44,7 +82,7 @@ export interface AlertResponse {
 
 export interface AlertStatusUpdate {
   alert_id: number
-  status: 'open' | 'in_progress' | 'closed'
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED'
 }
 
 export interface AlertCommentPayload {
@@ -83,7 +121,7 @@ export class AlertsAPI {
   /**
    * Update alert status (customer access controlled)
    */
-  static async updateAlertStatus(alertId: number, status: 'open' | 'in_progress' | 'closed'): Promise<AlertResponse> {
+  static async updateAlertStatus(alertId: number, status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED'): Promise<AlertResponse> {
     const response = await httpClient.put('/incidents/db_operations/alert/status', {
       alert_id: alertId,
       status
@@ -110,7 +148,7 @@ export class AlertsAPI {
   /**
    * Get alerts by status with customer filtering
    */
-  static async getAlertsByStatus(status: 'open' | 'in_progress' | 'closed'): Promise<AlertsResponse> {
+  static async getAlertsByStatus(status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED'): Promise<AlertsResponse> {
     const response = await httpClient.get(`/incidents/db_operations/alerts/status/${status}`)
     return response.data
   }
