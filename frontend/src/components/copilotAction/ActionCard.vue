@@ -4,7 +4,7 @@
 			hoverable
 			clickable
 			:embedded
-			class="@ h-full"
+			class="h-full"
 			main-box-class="grow"
 			card-entity-wrapper-class="h-full"
 			header-box-class="flex-nowrap! items-start"
