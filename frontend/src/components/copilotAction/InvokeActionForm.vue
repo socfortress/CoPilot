@@ -1,24 +1,11 @@
 <template>
-	<div class="invoke-action-form">
-		<n-spin :show="loading">
-			<div class="flex flex-col gap-6">
-				<!-- Action Information -->
-				<div class="action-header rounded-lg border p-4">
-					<div class="mb-3 flex items-start justify-between">
-						<div class="flex-1">
-							<h4 class="mb-2 text-lg font-semibold">{{ action.copilot_action_name }}</h4>
-							<p class="text-base font-medium leading-relaxed opacity-90">{{ action.description }}</p>
-						</div>
-						<TechnologyBadge :action />
-					</div>
-				</div>
+	<n-spin :show="loading">
+		<div class="flex flex-col gap-6">
+			<div class="text-sm leading-relaxed">{{ action.description }}</div>
 
-				<!-- Target Agents Selection -->
-				<div class="form-section">
-					<div class="section-header mb-3">
-						<h5 class="text-base font-semibold">Target Agents</h5>
-						<span class="required-indicator">*</span>
-					</div>
+			<!-- Target Agents Selection -->
+			<div class="mt-4 flex flex-col gap-1">
+				<n-form-item label="Target Agents" required :show-feedback="false">
 					<n-select
 						v-model:value="form.agent_names"
 						:options="agentOptions"
@@ -30,110 +17,88 @@
 						size="large"
 						class="mb-2"
 					/>
-					<p class="helper-text">Select one or more agents to run this action on</p>
-				</div>
-
-				<!-- Parameters Form -->
-				<div v-if="action.script_parameters.length > 0" class="form-section">
-					<div class="section-header mb-4">
-						<h5 class="text-base font-semibold">Parameters</h5>
-					</div>
-
-					<!-- Required Parameters -->
-					<div v-if="requiredParameters.length > 0" class="parameter-group mb-6">
-						<div class="parameter-group-header mb-4">
-							<h6 class="text-sm font-medium opacity-90">Required Parameters</h6>
-							<div class="parameter-group-line"></div>
-						</div>
-						<div class="grid grid-cols-1 gap-4">
-							<div v-for="param in requiredParameters" :key="param.name" class="parameter-field">
-								<div class="parameter-label mb-2">
-									<label class="text-sm font-medium">
-										{{ param.name }}
-										<span class="required-indicator">*</span>
-									</label>
-									<Badge v-if="param.type" color="primary" size="small" class="ml-2">
-										<template #value>{{ param.type }}</template>
-									</Badge>
-								</div>
-								<component
-									:is="getInputComponent(param.type)"
-									v-model:value="form.parameters[param.name]"
-									:placeholder="getPlaceholder(param)"
-									:options="param.enum?.map(e => ({ label: e, value: e }))"
-									clearable
-									size="large"
-									class="mb-1"
-								/>
-								<p v-if="param.description" class="helper-text">{{ param.description }}</p>
-							</div>
-						</div>
-					</div>
-
-					<!-- Optional Parameters -->
-					<div v-if="optionalParameters.length > 0" class="parameter-group">
-						<div class="parameter-group-header mb-4">
-							<h6 class="text-sm font-medium opacity-90">Optional Parameters</h6>
-							<div class="parameter-group-line"></div>
-						</div>
-						<div class="grid grid-cols-1 gap-4">
-							<div v-for="param in optionalParameters" :key="param.name" class="parameter-field">
-								<div class="parameter-label mb-2">
-									<label class="text-sm font-medium">{{ param.name }}</label>
-									<Badge v-if="param.type" color="primary" size="small" class="ml-2">
-										<template #value>{{ param.type }}</template>
-									</Badge>
-								</div>
-								<component
-									:is="getInputComponent(param.type)"
-									v-model:value="form.parameters[param.name]"
-									:placeholder="getPlaceholder(param)"
-									:options="param.enum?.map(e => ({ label: e, value: e }))"
-									clearable
-									size="large"
-									class="mb-1"
-								/>
-								<p v-if="param.description" class="helper-text">{{ param.description }}</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- Action Buttons -->
-				<div class="action-buttons mt-6 flex justify-end gap-3 border-t border-opacity-20 pt-6">
-					<n-button size="large" class="px-6" @click="$emit('close')">Cancel</n-button>
-					<n-button
-						type="primary"
-						size="large"
-						class="px-8"
-						:loading="loading"
-						:disabled="!isFormValid"
-						@click="handleSubmit"
-					>
-						<template v-if="!loading" #icon>
-							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M13 10V3L4 14h7v7l9-11h-7z"
-								/>
-							</svg>
-						</template>
-						{{ loading ? "Invoking..." : "Invoke Action" }}
-					</n-button>
-				</div>
+				</n-form-item>
+				<p class="px-0.5 text-sm">Select one or more agents to run this action on</p>
 			</div>
-		</n-spin>
-	</div>
+
+			<!-- Parameters Form -->
+			<CardEntity v-if="action.script_parameters.length > 0">
+				<template #header>Parameters</template>
+
+				<div class="flex flex-col gap-3">
+					<div v-for="param in requiredParameters" :key="param.name" class="parameter-field">
+						<div class="parameter-label mb-2">
+							<label class="text-sm font-medium">
+								{{ param.name }}
+								<span class="required-indicator">*</span>
+							</label>
+							<Badge v-if="param.type" color="primary" size="small" class="ml-2">
+								<template #value>{{ param.type }}</template>
+							</Badge>
+						</div>
+						<component
+							:is="getInputComponent(param.type)"
+							v-model:value="form.parameters[param.name]"
+							:placeholder="getPlaceholder(param)"
+							:options="param.enum?.map(e => ({ label: e, value: e }))"
+							clearable
+							size="large"
+							class="mb-1"
+						/>
+						<p v-if="param.description" class="helper-text">{{ param.description }}</p>
+					</div>
+
+					<div v-for="param in optionalParameters" :key="param.name" class="parameter-field">
+						<div class="parameter-label mb-2">
+							<label class="text-sm font-medium">{{ param.name }}</label>
+							<Badge v-if="param.type" color="primary" size="small" class="ml-2">
+								<template #value>{{ param.type }}</template>
+							</Badge>
+						</div>
+						<component
+							:is="getInputComponent(param.type)"
+							v-model:value="form.parameters[param.name]"
+							:placeholder="getPlaceholder(param)"
+							:options="param.enum?.map(e => ({ label: e, value: e }))"
+							clearable
+							size="large"
+							class="mb-1"
+						/>
+						<p v-if="param.description" class="helper-text">{{ param.description }}</p>
+					</div>
+				</div>
+			</CardEntity>
+
+			<!-- Action Buttons -->
+			<div class="mt-6 flex justify-end gap-3">
+				<n-button size="large" class="px-6" @click="$emit('close')">Cancel</n-button>
+				<n-button
+					type="primary"
+					size="large"
+					class="px-8"
+					:loading="loading"
+					:disabled="!isFormValid"
+					@click="handleSubmit"
+				>
+					<template #icon>
+						<Icon :size="18" :name="InvokeIcon" />
+					</template>
+					{{ loading ? "Invoking..." : "Invoke Action" }}
+				</n-button>
+			</div>
+		</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
 import type { ActiveResponseItem, InvokeCopilotActionRequest, ScriptParameter } from "@/types/copilotAction.d"
-import { NButton, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { NButton, NFormItem, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import TechnologyBadge from "./TechnologyBadge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 
 const { action } = defineProps<{
 	action: ActiveResponseItem
@@ -144,6 +109,7 @@ const emit = defineEmits<{
 	close: []
 }>()
 
+const InvokeIcon = "solar:playback-speed-outline"
 const message = useMessage()
 const loading = ref(false)
 const loadingAgents = ref(false)
@@ -202,6 +168,7 @@ function getPlaceholder(param: ScriptParameter): string {
 
 async function loadAgents() {
 	loadingAgents.value = true
+
 	try {
 		const response = await Api.agents.getAgents()
 		if (response.data.success) {
@@ -265,18 +232,13 @@ function initializeForm() {
 	form.value.parameters = parameters
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadAgents()
 	initializeForm()
 })
 </script>
 
 <style scoped>
-.invoke-action-form {
-	max-height: 70vh;
-	overflow-y: auto;
-}
-
 /* Form section styling */
 .form-section {
 	padding: 1rem;
@@ -316,35 +278,5 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-}
-
-.helper-text {
-	font-size: 0.875rem;
-	opacity: 0.7;
-	margin-top: 0.25rem;
-}
-
-/* Action header styling */
-.action-header {
-	border-color: var(--border-color);
-}
-
-/* Action buttons styling */
-.action-buttons {
-	border-color: var(--border-color);
-}
-
-/* CSS Variables for theme support */
-.light-theme {
-	--border-color: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme {
-	--border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Default fallback */
-:not(.light-theme):not(.dark-theme) {
-	--border-color: rgba(0, 0, 0, 0.1);
 }
 </style>

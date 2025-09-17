@@ -72,10 +72,16 @@
 			v-model:show="showInvokeModal"
 			preset="card"
 			:style="{ maxWidth: 'min(600px, 90vw)' }"
-			:title="`Invoke: ${action.copilot_action_name}`"
 			:bordered="false"
+			display-directive="show"
 			segmented
 		>
+			<template #header>
+				<div class="flex gap-3">
+					<TechnologyBadge :action />
+					<span class="text-base">{{ action.copilot_action_name }}</span>
+				</div>
+			</template>
 			<InvokeActionForm :action="action" @success="handleInvokeSuccess" @close="showInvokeModal = false" />
 		</n-modal>
 	</div>
