@@ -102,7 +102,7 @@ const form = ref<{
 
 // Separate required and optional parameters
 const requiredParameters = computed(() => action.script_parameters.filter(p => p.required))
-const parameters = computed(() => _orderBy(action.script_parameters, ["required"], ["asc"]))
+const parameters = computed(() => _orderBy(action.script_parameters, ["required"], ["desc"]))
 
 const isFormValid = computed(() => {
 	if (form.value.agent_names.length === 0) return false
