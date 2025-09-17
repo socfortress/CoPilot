@@ -3,11 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ActiveResponseItem } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
 
-const { action, size = 14 } = defineProps<{ action: ActiveResponseItem; size?: number }>()
+const { action, size = 14 } = defineProps<{ action: CopilotAction; size?: number }>()
 
 function getTechnologyIcon(technology: string): string {
 	if (

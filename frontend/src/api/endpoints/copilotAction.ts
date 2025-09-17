@@ -1,4 +1,9 @@
-import type { ActiveResponseItem, CollectArtifactResponse, InvokeCopilotActionRequest } from "@/types/copilotAction.d"
+import type {
+	CopilotAction,
+	CopilotActionInvokeResponse,
+	CopilotActionListResponse,
+	InvokeCopilotActionRequest
+} from "@/types/copilotAction.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
@@ -26,29 +31,26 @@ export default {
 	 * Get inventory of available active response scripts
 	 */
 	getInventory(query?: CopilotActionInventoryQuery, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { copilot_actions: ActiveResponseItem[] }>(
-			`/copilot_action/inventory`,
-			{
-				params: {
-					technology: query?.technology,
-					category: query?.category,
-					tag: query?.tag,
-					q: query?.q,
-					limit: query?.limit || 100,
-					offset: query?.offset || 0,
-					refresh: query?.refresh || false,
-					include: query?.include
-				},
-				signal
-			}
-		)
+		return HttpClient.get<FlaskBaseResponse & CopilotActionListResponse>(`/copilot_action/inventory`, {
+			params: {
+				technology: query?.technology,
+				category: query?.category,
+				tag: query?.tag,
+				q: query?.q,
+				limit: query?.limit || 100,
+				offset: query?.offset || 0,
+				refresh: query?.refresh || false,
+				include: query?.include
+			},
+			signal
+		})
 	},
 
 	/**
 	 * Get details for a specific active response script
 	 */
 	getActionByName(copilotActionName: string) {
-		return HttpClient.get<FlaskBaseResponse & { copilot_action: ActiveResponseItem }>(
+		return HttpClient.get<FlaskBaseResponse & { copilot_action: CopilotAction }>(
 			`/copilot_action/inventory/${copilotActionName}`
 		)
 	},
@@ -66,7 +68,7 @@ export default {
 	 * Invoke a Copilot Action on multiple target agents
 	 */
 	invokeAction(payload: InvokeCopilotActionRequest) {
-		return HttpClient.post<FlaskBaseResponse & { responses: CollectArtifactResponse[] }>(
+		return HttpClient.post<FlaskBaseResponse & { responses: CopilotActionInvokeResponse[] }>(
 			`/copilot_action/invoke`,
 			payload
 		)

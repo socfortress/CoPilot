@@ -9,8 +9,8 @@
 		</n-alert>
 
 		<div class="flex flex-col">
-			<div class="flex items-center justify-end gap-2">
-				<div class="info flex grow gap-2">
+			<div class="flex flex-wrap items-center justify-end gap-2">
+				<div class="flex min-w-80 grow gap-2">
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -24,7 +24,7 @@
 						<div class="flex flex-col gap-2">
 							<div class="box">
 								Total Actions:
-								<code>{{ total }}</code>
+								<code>{{ pagination.total }}</code>
 							</div>
 						</div>
 					</n-popover>
@@ -36,14 +36,15 @@
 						size="small"
 						placeholder="Technology"
 						:loading="loadingTechnologies"
-						class="max-w-32"
+						class="max-w-30"
+						:consistent-menu-width="false"
 					/>
 
 					<n-input
 						v-model:value="searchQuery"
 						size="small"
 						placeholder="Search actions..."
-						class="max-w-48"
+						class="max-w-120!"
 						clearable
 					>
 						<template #prefix>
@@ -51,6 +52,13 @@
 						</template>
 					</n-input>
 				</div>
+
+				<n-pagination
+					v-model:page="pagination.current"
+					:page-size="pagination.size"
+					:item-count="pagination.total"
+					:page-slot="5"
+				/>
 			</div>
 
 			<n-spin :show="loading">
@@ -64,16 +72,26 @@
 					</template>
 				</div>
 			</n-spin>
+
+			<div class="flex justify-end">
+				<n-pagination
+					v-if="list.length > 3"
+					v-model:page="pagination.current"
+					:page-size="pagination.size"
+					:item-count="pagination.total"
+					:page-slot="6"
+				/>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { CopilotActionInventoryQuery } from "@/api/endpoints/copilotAction"
-import type { ActiveResponseItem } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { NAlert, NButton, NEmpty, NInput, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -82,8 +100,12 @@ import ActionCard from "./ActionCard.vue"
 const loading = ref(false)
 const loadingTechnologies = ref(false)
 const message = useMessage()
-const list = ref<ActiveResponseItem[]>([])
-const total = ref(0)
+const list = ref<CopilotAction[]>([])
+const pagination = ref({
+	current: 1,
+	size: 24,
+	total: 0
+})
 const selectedTechnology = ref<string | null>(null)
 const technologyOptions = ref<{ label: string; value: string }[]>([])
 const searchQuery = ref<string | null>(null)
@@ -99,8 +121,8 @@ function getList() {
 	loading.value = true
 
 	const query: CopilotActionInventoryQuery = {
-		limit: 100,
-		offset: 0,
+		offset: (pagination.value.current - 1) * pagination.value.size,
+		limit: pagination.value.size,
 		technology: selectedTechnology.value || undefined,
 		q: searchQuery.value || undefined
 	}
@@ -112,7 +134,7 @@ function getList() {
 
 			if (res.data.success) {
 				list.value = res.data?.copilot_actions || []
-				total.value = res.data?.copilot_actions?.length || 0
+				pagination.value.total = res.data?.total || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -145,7 +167,7 @@ function getTechnologies() {
 		})
 }
 
-watchDebounced([selectedTechnology, searchQuery], getList, {
+watchDebounced([selectedTechnology, searchQuery, () => pagination.value.current], getList, {
 	deep: true,
 	debounce: 300,
 	immediate: true

@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ActiveResponseItem } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
@@ -100,7 +100,7 @@ import ActionCardContent from "./ActionCardContent.vue"
 import InvokeActionForm from "./InvokeActionForm.vue"
 import TechnologyBadge from "./TechnologyBadge.vue"
 
-const { action } = defineProps<{ action: ActiveResponseItem; embedded?: boolean }>()
+const { action } = defineProps<{ action: CopilotAction; embedded?: boolean }>()
 
 const showDetails = ref(false)
 const showInvokeModal = ref(false)

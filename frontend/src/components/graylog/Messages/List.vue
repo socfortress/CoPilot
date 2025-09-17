@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2">
-			<div class="info flex grow gap-5">
+		<div class="flex items-center justify-end gap-2">
+			<div class="flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
@@ -30,7 +30,7 @@
 				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
 			</template>
 		</div>
-		<div class="footer flex justify-end">
+		<div class="flex justify-end">
 			<n-pagination
 				v-if="messages.length > 3"
 				v-model:page="currentPage"

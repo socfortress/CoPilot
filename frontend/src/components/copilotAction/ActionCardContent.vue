@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ActiveResponseItem } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -138,7 +138,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
 const { action } = defineProps<{
-	action: ActiveResponseItem
+	action: CopilotAction
 }>()
 
 const dFormats = useSettingsStore().dateFormat

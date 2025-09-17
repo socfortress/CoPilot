@@ -68,18 +68,16 @@
 </template>
 
 <script setup lang="ts">
-import type { ActiveResponseItem, InvokeCopilotActionRequest, ScriptParameter } from "@/types/copilotAction.d"
+import type { CopilotAction, InvokeCopilotActionRequest, ScriptParameter } from "@/types/copilotAction.d"
 import _orderBy from "lodash/orderBy"
 import { NButton, NCard, NFormItem, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 
 const { action } = defineProps<{
-	action: ActiveResponseItem
+	action: CopilotAction
 }>()
 
 const emit = defineEmits<{
@@ -215,46 +213,3 @@ onBeforeMount(() => {
 	initializeForm()
 })
 </script>
-
-<style scoped>
-/* Form section styling */
-.form-section {
-	padding: 1rem;
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-}
-
-.section-header {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.required-indicator {
-	color: #f56565;
-	font-weight: 600;
-}
-
-/* Parameter groups */
-.parameter-group-header {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-}
-
-.parameter-group-line {
-	flex: 1;
-	height: 1px;
-	background: linear-gradient(to right, var(--border-color) 0%, transparent 100%);
-}
-
-.parameter-field {
-	position: relative;
-}
-
-.parameter-label {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-</style>

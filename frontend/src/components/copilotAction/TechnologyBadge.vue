@@ -9,11 +9,11 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { ActiveResponseItem } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import Badge from "@/components/common/Badge.vue"
 import TechnologyIcon from "./TechnologyIcon.vue"
 
-const { action } = defineProps<{ action: ActiveResponseItem }>()
+const { action } = defineProps<{ action: CopilotAction }>()
 
 function getTechnologyColor(technology: string): BadgeColor | undefined {
 	if (technology.toLowerCase().includes("win")) {
