@@ -44,6 +44,23 @@ def get_license_key() -> str:
     return license_key
 
 
+def calculate_pagination_info(total: int, limit: int, offset: int) -> dict:
+    """Calculate pagination metadata for responses."""
+    current_page = (offset // limit) + 1
+    total_pages = (total + limit - 1) // limit  # Ceiling division
+    has_next = offset + limit < total
+    has_prev = offset > 0
+
+    return {
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "items_per_page": limit,
+        "total_items": total
+    }
+
+
 async def get_agents_by_hostnames(session: AsyncSession, hostnames: List[str]) -> List[Agents]:
     """Retrieve multiple agents from database by hostnames."""
     agent_details = await session.execute(select(Agents).filter(Agents.hostname.in_(hostnames)))
@@ -175,7 +192,7 @@ async def build_artifact_collection_body(agent: Agents, artifact_name: str, velo
 @copilot_action_router.get(
     "/inventory",
     response_model=InventoryResponse,
-    description="Get inventory of available active response scripts",
+    description="Get paginated inventory of available active response scripts",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_inventory(
@@ -183,13 +200,31 @@ async def get_inventory(
     category: Optional[str] = Query(None, description="Filter by category"),
     tag: Optional[str] = Query(None, description="Filter by tag"),
     q: Optional[str] = Query(None, description="Free-text search query"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
-    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results per page"),
+    offset: int = Query(0, ge=0, description="Number of items to skip (for pagination)"),
     refresh: bool = Query(False, description="Force refresh cache"),
     include: Optional[str] = Query(None, description="Comma-separated extra fields to include"),
 ) -> InventoryResponse:
-    """Retrieve inventory of available active response scripts."""
-    logger.info(f"Fetching active response inventory with filters: tech={technology}, category={category}, tag={tag}, q={q}")
+    """
+    Retrieve paginated inventory of available active response scripts.
+
+    This endpoint supports pagination through the `limit` and `offset` parameters:
+    - `limit`: Controls how many items are returned per page (1-1000, default 100)
+    - `offset`: Controls how many items to skip (for pagination, default 0)
+
+    The response includes pagination metadata:
+    - `total`: Total number of items available
+    - `count`: Number of items in current response
+    - `has_more`: Whether there are more items available
+    - `next_offset`: Offset to use for the next page
+    - `prev_offset`: Offset to use for the previous page
+
+    Example for paginated requests:
+    - Page 1: GET /inventory?limit=50&offset=0
+    - Page 2: GET /inventory?limit=50&offset=50
+    - Page 3: GET /inventory?limit=50&offset=100
+    """
+    logger.info(f"Fetching active response inventory with filters: tech={technology}, category={category}, tag={tag}, q={q}, limit={limit}, offset={offset}")
 
     license_key = get_license_key()
 
@@ -206,12 +241,57 @@ async def get_inventory(
             include=include,
         )
 
-        logger.info(f"Successfully fetched inventory: {len(response.copilot_actions)} actions")
+        logger.info(f"Successfully fetched inventory: {response.count} of {response.total} actions (offset: {response.offset})")
         return response
 
     except Exception as e:
         logger.error(f"Error fetching inventory: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching inventory: {str(e)}")
+
+
+@copilot_action_router.get(
+    "/inventory/count",
+    description="Get total count of available scripts for pagination calculations",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_inventory_count(
+    technology: Optional[Technology] = Query(None, description="Filter by technology type"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    tag: Optional[str] = Query(None, description="Filter by tag"),
+    q: Optional[str] = Query(None, description="Free-text search query"),
+) -> dict:
+    """
+    Get the total count of items matching the filters without fetching the full data.
+    Useful for pagination calculations on the frontend.
+    """
+    logger.info(f"Fetching inventory count with filters: tech={technology}, category={category}, tag={tag}, q={q}")
+
+    license_key = get_license_key()
+
+    try:
+        # Fetch with minimal data (limit=1) just to get the total
+        response = await CopilotActionService.get_inventory(
+            license_key=license_key,
+            technology=technology,
+            category=category,
+            tag=tag,
+            q=q,
+            limit=1,  # Minimal fetch
+            offset=0,
+            refresh=False,
+            include=None,
+        )
+
+        return {
+            "total": response.total,
+            "message": "Successfully retrieved inventory count",
+            "success": True,
+            **calculate_pagination_info(response.total or 0, 100, 0)  # Default pagination info
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching inventory count: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching inventory count: {str(e)}")
 
 
 @copilot_action_router.get(
