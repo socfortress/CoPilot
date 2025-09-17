@@ -41,7 +41,7 @@
 			</div>
 		</n-spin>
 
-		<div class="flex justify-end">
+		<div v-if="list.length >= 9" class="flex justify-end">
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
@@ -135,10 +135,12 @@ function getList() {
 }
 
 function selectSeverity(value: VulnerabilitySeverity) {
+	showFiltersView.value = true
 	filtersCTX.value?.setFilter([{ type: "severity", value }])
 }
 
 function selectPackage(value: string) {
+	showFiltersView.value = true
 	filtersCTX.value?.setFilter([{ type: "package_name", value }])
 }
 
