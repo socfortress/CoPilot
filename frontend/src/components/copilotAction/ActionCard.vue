@@ -77,9 +77,11 @@
 			segmented
 		>
 			<template #header>
-				<div class="flex gap-3">
-					<TechnologyBadge :action />
-					<span class="text-base">{{ action.copilot_action_name }}</span>
+				<div class="flex flex-col gap-2">
+					<div class="flex">
+						<TechnologyBadge :action />
+					</div>
+					<span class="px-1 text-base">{{ action.copilot_action_name }}</span>
 				</div>
 			</template>
 			<InvokeActionForm :action="action" @success="handleInvokeSuccess" @close="showInvokeModal = false" />

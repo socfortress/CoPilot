@@ -22,64 +22,41 @@
 			</div>
 
 			<!-- Parameters Form -->
-			<CardEntity v-if="action.script_parameters.length > 0">
+			<CardEntity v-if="action.script_parameters.length > 0" embedded>
 				<template #header>Parameters</template>
 
-				<div class="flex flex-col gap-3">
-					<div v-for="param in requiredParameters" :key="param.name" class="parameter-field">
-						<div class="parameter-label mb-2">
-							<label class="text-sm font-medium">
-								{{ param.name }}
-								<span class="required-indicator">*</span>
-							</label>
-							<Badge v-if="param.type" color="primary" size="small" class="ml-2">
-								<template #value>{{ param.type }}</template>
-							</Badge>
-						</div>
-						<component
-							:is="getInputComponent(param.type)"
-							v-model:value="form.parameters[param.name]"
-							:placeholder="getPlaceholder(param)"
-							:options="param.enum?.map(e => ({ label: e, value: e }))"
-							clearable
-							size="large"
-							class="mb-1"
-						/>
-						<p v-if="param.description" class="helper-text">{{ param.description }}</p>
-					</div>
-
-					<div v-for="param in optionalParameters" :key="param.name" class="parameter-field">
-						<div class="parameter-label mb-2">
-							<label class="text-sm font-medium">{{ param.name }}</label>
-							<Badge v-if="param.type" color="primary" size="small" class="ml-2">
-								<template #value>{{ param.type }}</template>
-							</Badge>
-						</div>
-						<component
-							:is="getInputComponent(param.type)"
-							v-model:value="form.parameters[param.name]"
-							:placeholder="getPlaceholder(param)"
-							:options="param.enum?.map(e => ({ label: e, value: e }))"
-							clearable
-							size="large"
-							class="mb-1"
-						/>
-						<p v-if="param.description" class="helper-text">{{ param.description }}</p>
-					</div>
+				<div class="flex flex-col gap-4">
+					<n-card
+						v-for="param in parameters"
+						:key="param.name"
+						embedded
+						size="small"
+						content-class="flex flex-col gap-2"
+					>
+						<n-form-item :required="param.required" :show-feedback="false">
+							<template #label>
+								<div class="flex items-center gap-2">
+									<span>{{ param.name }}</span>
+									<code>{{ param.type }}</code>
+								</div>
+							</template>
+							<component
+								:is="getInputComponent(param.type)"
+								v-model:value="form.parameters[param.name]"
+								:placeholder="getPlaceholder(param)"
+								:options="param.enum?.map(e => ({ label: e, value: e }))"
+								clearable
+							/>
+						</n-form-item>
+						<p v-if="param.description" class="px-0.5 text-sm">{{ param.description }}</p>
+					</n-card>
 				</div>
 			</CardEntity>
 
 			<!-- Action Buttons -->
 			<div class="mt-6 flex justify-end gap-3">
-				<n-button size="large" class="px-6" @click="$emit('close')">Cancel</n-button>
-				<n-button
-					type="primary"
-					size="large"
-					class="px-8"
-					:loading="loading"
-					:disabled="!isFormValid"
-					@click="handleSubmit"
-				>
+				<n-button size="large" @click="$emit('close')">Cancel</n-button>
+				<n-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
 					<template #icon>
 						<Icon :size="18" :name="InvokeIcon" />
 					</template>
@@ -92,7 +69,8 @@
 
 <script setup lang="ts">
 import type { ActiveResponseItem, InvokeCopilotActionRequest, ScriptParameter } from "@/types/copilotAction.d"
-import { NButton, NFormItem, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
+import _orderBy from "lodash/orderBy"
+import { NButton, NCard, NFormItem, NInput, NInputNumber, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -126,7 +104,7 @@ const form = ref<{
 
 // Separate required and optional parameters
 const requiredParameters = computed(() => action.script_parameters.filter(p => p.required))
-const optionalParameters = computed(() => action.script_parameters.filter(p => !p.required))
+const parameters = computed(() => _orderBy(action.script_parameters, ["required"], ["asc"]))
 
 const isFormValid = computed(() => {
 	if (form.value.agent_names.length === 0) return false
