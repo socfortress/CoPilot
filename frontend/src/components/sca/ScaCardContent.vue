@@ -29,12 +29,7 @@
 				<div class="space-y-3">
 					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Compliance Level:</span>
-						<Badge :color="getComplianceLevelColor(getComplianceLevel(sca.score))">
-							<template #iconLeft>
-								<Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" />
-							</template>
-							<template #value>{{ getComplianceLevel(sca.score) }}</template>
-						</Badge>
+						<ScaLevelBadge :score="sca.score" />
 					</div>
 					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Score:</span>
@@ -180,7 +175,7 @@
 import type { AgentScaOverviewItem } from "@/types/sca.d"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "./utils"
+import ScaLevelBadge from "./ScaLevelBadge.vue"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem }>()
 

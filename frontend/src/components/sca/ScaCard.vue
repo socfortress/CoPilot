@@ -10,12 +10,7 @@
 		>
 			<template #headerMain>{{ sca.policy_name }}</template>
 			<template #headerExtra>
-				<Badge :color="getComplianceLevelColor(getComplianceLevel(sca.score))">
-					<template #iconLeft>
-						<Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" />
-					</template>
-					<template #value>{{ getComplianceLevel(sca.score) }}</template>
-				</Badge>
+				<ScaLevelBadge :score="sca.score" />
 			</template>
 			<template #default>
 				<div class="flex-1">
@@ -93,7 +88,8 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import ScaCardContent from "./ScaCardContent.vue"
-import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "./utils"
+import ScaLevelBadge from "./ScaLevelBadge.vue"
+import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
