@@ -138,6 +138,7 @@
 		"onlyBuiltDependencies": [
 			"@parcel/watcher",
 			"@tailwindcss/oxide",
+			"cypress",
 			"esbuild",
 			"unrs-resolver"
 		]
