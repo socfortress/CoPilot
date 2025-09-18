@@ -175,12 +175,12 @@
                   <span
                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                     :class="{
-                      'bg-red-100 text-red-800': case_.case_status === 'open',
-                      'bg-yellow-100 text-yellow-800': case_.case_status === 'in_progress',
-                      'bg-green-100 text-green-800': case_.case_status === 'closed'
+                      'bg-red-100 text-red-800': case_.case_status?.toLowerCase() === 'open',
+                      'bg-yellow-100 text-yellow-800': case_.case_status?.toLowerCase() === 'in_progress',
+                      'bg-green-100 text-green-800': case_.case_status?.toLowerCase() === 'closed'
                     }"
                   >
-                    {{ case_.case_status.replace('_', ' ').toUpperCase() }}
+                    {{ case_.case_status?.replace('_', ' ').toUpperCase() }}
                   </span>
                 </div>
                 <div class="ml-4">
@@ -257,12 +257,12 @@
               <span
                 class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                 :class="{
-                  'bg-red-100 text-red-800': selectedCase.case_status === 'open',
-                  'bg-yellow-100 text-yellow-800': selectedCase.case_status === 'in_progress',
-                  'bg-green-100 text-green-800': selectedCase.case_status === 'closed'
+                  'bg-red-100 text-red-800': selectedCase.case_status?.toLowerCase() === 'open',
+                  'bg-yellow-100 text-yellow-800': selectedCase.case_status?.toLowerCase() === 'in_progress',
+                  'bg-green-100 text-green-800': selectedCase.case_status?.toLowerCase() === 'closed'
                 }"
               >
-                {{ selectedCase.case_status.replace('_', ' ').toUpperCase() }}
+                {{ selectedCase.case_status?.replace('_', ' ').toUpperCase() }}
               </span>
             </div>
             <div>
@@ -681,9 +681,9 @@ const filters = ref({
 })
 
 // Computed properties
-const openCases = computed(() => cases.value.filter(c => c.case_status === 'open').length)
-const inProgressCases = computed(() => cases.value.filter(c => c.case_status === 'in_progress').length)
-const closedCases = computed(() => cases.value.filter(c => c.case_status === 'closed').length)
+const openCases = computed(() => cases.value.filter(c => c.case_status?.toLowerCase() === 'open').length)
+const inProgressCases = computed(() => cases.value.filter(c => c.case_status?.toLowerCase() === 'in_progress').length)
+const closedCases = computed(() => cases.value.filter(c => c.case_status?.toLowerCase() === 'closed').length)
 
 const availableAssignees = computed(() => {
   const assignees = new Set(cases.value.map(c => c.assigned_to).filter((assignee): assignee is string => assignee !== null))
@@ -694,7 +694,7 @@ const filteredCases = computed(() => {
   let filtered = cases.value
 
   if (filters.value.status) {
-    filtered = filtered.filter(c => c.case_status === filters.value.status)
+    filtered = filtered.filter(c => c.case_status?.toLowerCase() === filters.value.status.toLowerCase())
   }
 
   if (filters.value.assignedTo) {
@@ -725,6 +725,8 @@ const loadCases = async () => {
     }
 
     cases.value = response.cases
+    console.log('Loaded cases:', response.cases)
+    console.log('Case statuses:', response.cases.map(c => c.case_status))
   } catch (err: any) {
     error.value = err.response?.data?.detail || err.message || 'Failed to load cases'
     console.error('Error loading cases:', err)
