@@ -48,6 +48,7 @@ async def search_sca_results_overview(
     - Efficient pagination for large result sets
     - Comprehensive statistics and aggregations
     - No database storage required - direct from Wazuh Manager
+    - **Intelligent sorting: Results are sorted by agent minimum score (lowest first)**
 
     **Use Cases:**
     - Get organization-wide SCA compliance overview
@@ -60,6 +61,7 @@ async def search_sca_results_overview(
     - Automatic error handling for unavailable agents
     - Optimized data collection and processing
     - Smart filtering to reduce data transfer
+    - **Smart sorting: Agents with lowest compliance scores appear first for priority attention**
 
     **Filtering Options:**
     - **customer_code**: Filter by specific customer/organization
