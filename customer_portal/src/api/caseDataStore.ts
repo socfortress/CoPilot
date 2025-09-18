@@ -42,6 +42,25 @@ export class CaseDataStoreAPI {
   }
 
   /**
+   * Upload a file to a case data store
+   */
+  static async uploadCaseFile(caseId: number, file: File): Promise<CaseDataStoreResponse> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await httpClient.post(
+      `/incidents/db_operations/case/data-store/upload?case_id=${caseId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    )
+    return response.data
+  }
+
+  /**
    * Trigger file download in browser
    */
   static downloadFileBlob(blob: Blob, fileName: string): void {

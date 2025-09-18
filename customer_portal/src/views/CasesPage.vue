@@ -338,16 +338,83 @@
                   ({{ caseFiles.length }})
                 </span>
               </label>
-              <button
-                v-if="!loadingFiles"
-                @click="loadCaseFiles(selectedCase.id)"
-                class="text-xs text-indigo-600 hover:text-indigo-500 focus:outline-none"
-              >
-                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                Refresh
-              </button>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="openUploadForm"
+                  class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                  </svg>
+                  Upload File
+                </button>
+                <button
+                  v-if="!loadingFiles"
+                  @click="loadCaseFiles(selectedCase.id)"
+                  class="text-xs text-indigo-600 hover:text-indigo-500 focus:outline-none"
+                >
+                  <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div v-if="showUploadForm" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-medium text-blue-900">Upload File to Case</h4>
+                <button
+                  @click="closeUploadForm"
+                  class="text-blue-400 hover:text-blue-600"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="space-y-3">
+                <div>
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    @change="handleFileSelect"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 focus:outline-none"
+                  />
+                </div>
+
+                <div v-if="selectedFile" class="text-sm text-gray-600">
+                  Selected: {{ selectedFile.name }} ({{ CaseDataStoreAPI.formatFileSize(selectedFile.size) }})
+                </div>
+
+                <!-- Error message for upload -->
+                <div v-if="error && showUploadForm" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2">
+                  {{ error }}
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                  <button
+                    @click="closeUploadForm"
+                    type="button"
+                    class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    @click="uploadFile"
+                    :disabled="!selectedFile || uploadingFile"
+                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg v-if="uploadingFile" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {{ uploadingFile ? 'Uploading...' : 'Upload File' }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Loading Files -->
@@ -424,6 +491,12 @@ const updatingStatus = ref<number | null>(null)
 const caseFiles = ref<CaseDataStoreFile[]>([])
 const loadingFiles = ref(false)
 const downloadingFile = ref<string | null>(null)
+
+// File upload data
+const uploadingFile = ref(false)
+const selectedFile = ref<File | null>(null)
+const showUploadForm = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 // Filters
 const filters = ref({
@@ -544,9 +617,79 @@ const downloadFile = async (caseId: number, fileName: string) => {
   }
 }
 
+const openUploadForm = () => {
+  showUploadForm.value = true
+  selectedFile.value = null
+  error.value = null
+}
+
+const closeUploadForm = () => {
+  showUploadForm.value = false
+  selectedFile.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0]
+    // Check file size (e.g., limit to 50MB)
+    const maxSize = 50 * 1024 * 1024 // 50MB in bytes
+    if (file.size > maxSize) {
+      error.value = 'File size too large. Maximum size is 50MB.'
+      selectedFile.value = null
+      return
+    }
+    selectedFile.value = file
+    error.value = null // Clear any previous errors
+  }
+}
+
+const uploadFile = async () => {
+  if (!selectedFile.value || !selectedCase.value) return
+
+  uploadingFile.value = true
+  error.value = null
+
+  try {
+    await CaseDataStoreAPI.uploadCaseFile(selectedCase.value.id, selectedFile.value)
+
+    // Refresh the files list
+    await loadCaseFiles(selectedCase.value.id)
+
+    // Close the upload form
+    closeUploadForm()
+
+    // You could add a success message here if you have a toast/notification system
+    console.log('File uploaded successfully!')
+
+  } catch (err: any) {
+    console.error('Error uploading file:', err)
+
+    // Extract more specific error messages
+    let errorMessage = 'Failed to upload file'
+    if (err.response?.data?.detail) {
+      if (typeof err.response.data.detail === 'string') {
+        errorMessage = err.response.data.detail
+      } else if (Array.isArray(err.response.data.detail)) {
+        errorMessage = err.response.data.detail.map((e: any) => e.msg || e.message || e).join(', ')
+      }
+    } else if (err.message) {
+      errorMessage = err.message
+    }
+
+    error.value = errorMessage
+  } finally {
+    uploadingFile.value = false
+  }
+}
+
 const closeModal = () => {
   selectedCase.value = null
   caseFiles.value = []
+  closeUploadForm()
 }
 
 const formatDate = (dateString: string) => {
