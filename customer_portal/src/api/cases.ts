@@ -106,7 +106,7 @@ export class CasesAPI {
   /**
    * Get cases by status with customer filtering
    */
-  static async getCasesByStatus(status: 'open' | 'in_progress' | 'closed'): Promise<CasesResponse> {
+  static async getCasesByStatus(status: string): Promise<CasesResponse> {
     const response = await httpClient.get(`/incidents/db_operations/case/status/${status}`)
     return response.data
   }

@@ -717,7 +717,9 @@ const loadCases = async () => {
     let response: CasesResponse
 
     if (filters.value.status) {
-      response = await CasesAPI.getCasesByStatus(filters.value.status as any)
+      // Convert lowercase filter to uppercase for backend API
+      const backendStatus = filters.value.status.toUpperCase() as any
+      response = await CasesAPI.getCasesByStatus(backendStatus)
     } else if (filters.value.assignedTo) {
       response = await CasesAPI.getCasesByAssignedTo(filters.value.assignedTo)
     } else {
