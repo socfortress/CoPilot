@@ -1,4 +1,3 @@
-import type { SafeAny } from "@/types/common.d"
 import SecureLS from "secure-ls"
 
 const secureLS = new SecureLS({
