@@ -89,11 +89,11 @@
 				<div
 					v-for="(policy, index) in topPoliciesByScore"
 					:key="policy.policy_id"
-					class="flex items-stretch gap-2"
+					class="@container flex items-stretch gap-2"
 				>
 					<div class="flex items-end">
 						<div
-							class="w-4 rounded-md"
+							class="w-4 rounded-b-sm rounded-t-2xl"
 							:class="{
 								'h-full bg-yellow-500': index === 0,
 								'h-8/12 bg-gray-400': index === 1,
@@ -128,7 +128,7 @@
 
 						<div class="text-lg font-semibold leading-snug">{{ policy.policy_name }}</div>
 
-						<div class="flex flex-col gap-1 break-all text-xs">
+						<div class="@md:grid-cols-2 text-secondary grid grid-cols-1 gap-1 break-all text-xs">
 							<div class="flex items-center gap-2">
 								<span>Policy ID:</span>
 								<span class="font-mono font-semibold">{{ policy.policy_id }}</span>
