@@ -302,16 +302,25 @@
           </div>
 
           <div v-if="selectedCase.alerts && selectedCase.alerts.length > 0">
-            <label class="block text-sm font-medium text-gray-700">Alert Details</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">Alert Details</label>
+              <span class="text-xs text-gray-500">Click alerts to view details</span>
+            </div>
             <div class="mt-1 space-y-2">
               <div
                 v-for="alert in selectedCase.alerts"
                 :key="alert.id"
-                class="p-3 bg-gray-50 rounded-md border"
+                class="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 cursor-pointer transition-colors"
+                @click="viewAlert(alert.id)"
               >
                 <div class="flex justify-between items-start">
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ alert.alert_name }}</p>
+                  <div class="flex-1">
+                    <div class="flex items-center space-x-2">
+                      <p class="text-sm font-medium text-gray-900">{{ alert.alert_name }}</p>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7l10 10M17 7v4h-4"></path>
+                      </svg>
+                    </div>
                     <p class="text-xs text-gray-500">Asset: {{ alert.asset_name }}</p>
                   </div>
                   <span
@@ -469,6 +478,171 @@
         </div>
       </div>
     </div>
+
+    <!-- Alert Details Modal -->
+    <div v-if="selectedAlert" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeAlertModal">
+      <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto" @click.stop>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Alert Details</h3>
+          <button @click="closeAlertModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Basic Alert Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Alert Name</label>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedAlert.alert_name }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Status</label>
+              <span
+                class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="{
+                  'bg-red-100 text-red-800': selectedAlert.status === 'OPEN',
+                  'bg-yellow-100 text-yellow-800': selectedAlert.status === 'IN_PROGRESS',
+                  'bg-green-100 text-green-800': selectedAlert.status === 'CLOSED'
+                }"
+              >
+                {{ selectedAlert.status.replace('_', ' ') }}
+              </span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Source</label>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedAlert.source }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Customer</label>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedAlert.customer_code }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Created</label>
+              <p class="mt-1 text-sm text-gray-900">{{ formatDate(selectedAlert.alert_creation_time) }}</p>
+            </div>
+            <div v-if="selectedAlert.assigned_to">
+              <label class="block text-sm font-medium text-gray-700">Assigned To</label>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedAlert.assigned_to }}</p>
+            </div>
+          </div>
+
+          <div v-if="selectedAlert.alert_description">
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <p class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{{ selectedAlert.alert_description }}</p>
+          </div>
+
+          <!-- Assets Section -->
+          <div v-if="selectedAlert.assets && selectedAlert.assets.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Assets</label>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div v-for="asset in selectedAlert.assets" :key="asset.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <span class="font-medium">Asset Name:</span> {{ asset.asset_name }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Agent ID:</span> {{ asset.agent_id }}
+                  </div>
+                  <div v-if="asset.velociraptor_id">
+                    <span class="font-medium">Velociraptor ID:</span> {{ asset.velociraptor_id }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Index:</span> {{ asset.index_name }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Index ID:</span> {{ asset.index_id.substring(0, 20) }}...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags Section -->
+          <div v-if="selectedAlert.tags && selectedAlert.tags.length > 0">
+            <label class="block text-sm font-medium text-gray-700">Tags</label>
+            <div class="mt-1 flex flex-wrap gap-2">
+              <span
+                v-for="tag in selectedAlert.tags"
+                :key="tag.id"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {{ tag.tag }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Linked Cases Section -->
+          <div v-if="selectedAlert.linked_cases && selectedAlert.linked_cases.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Linked Cases</label>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div v-for="linkedCase in selectedAlert.linked_cases" :key="linkedCase.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h4 class="text-sm font-medium text-gray-900">{{ linkedCase.case_name }}</h4>
+                    <p class="text-xs text-gray-600 mt-1">{{ linkedCase.case_description }}</p>
+                    <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                      <span>Case #{{ linkedCase.id }}</span>
+                      <span>Created: {{ formatDate(linkedCase.case_creation_time) }}</span>
+                      <span v-if="linkedCase.assigned_to">Assigned to: {{ linkedCase.assigned_to }}</span>
+                    </div>
+                  </div>
+                  <span
+                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                    :class="{
+                      'bg-red-100 text-red-800': linkedCase.case_status === 'OPEN',
+                      'bg-yellow-100 text-yellow-800': linkedCase.case_status === 'IN_PROGRESS',
+                      'bg-green-100 text-green-800': linkedCase.case_status === 'CLOSED'
+                    }"
+                  >
+                    {{ linkedCase.case_status.replace('_', ' ') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- IoCs Section -->
+          <div v-if="selectedAlert.iocs && selectedAlert.iocs.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Indicators of Compromise (IoCs)</label>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div v-for="ioc in selectedAlert.iocs" :key="ioc.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <span class="font-medium">Value:</span>
+                    <code class="bg-gray-100 px-1 rounded text-xs">{{ ioc.ioc_value }}</code>
+                  </div>
+                  <div>
+                    <span class="font-medium">Type:</span> {{ ioc.ioc_type }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Description:</span> {{ ioc.ioc_description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div v-if="selectedAlert.comments && selectedAlert.comments.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Comments ({{ selectedAlert.comments.length }})
+            </label>
+            <div class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+              <div v-for="comment in selectedAlert.comments" :key="comment.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
+                <div class="flex justify-between items-start mb-2">
+                  <span class="text-sm font-medium text-gray-900">{{ comment.user_name }}</span>
+                  <span class="text-xs text-gray-500">{{ formatDate(comment.created_at) }}</span>
+                </div>
+                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ comment.comment }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -477,6 +651,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import CasesAPI, { type Case, type CasesResponse } from '@/api/cases'
 import CaseDataStoreAPI, { type CaseDataStoreFile } from '@/api/caseDataStore'
+import AlertsAPI, { type Alert } from '@/api/alerts'
 
 const router = useRouter()
 
@@ -485,6 +660,7 @@ const cases = ref<Case[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const selectedCase = ref<Case | null>(null)
+const selectedAlert = ref<Alert | null>(null)
 const updatingStatus = ref<number | null>(null)
 
 // Case files data
@@ -686,10 +862,25 @@ const uploadFile = async () => {
   }
 }
 
+const viewAlert = async (alertId: number) => {
+  try {
+    const response = await AlertsAPI.getAlert(alertId)
+    selectedAlert.value = response.alerts[0] // AlertResponse contains alerts array
+  } catch (err: any) {
+    console.error('Error loading alert details:', err)
+    error.value = err.response?.data?.detail || err.message || 'Failed to load alert details'
+  }
+}
+
+const closeAlertModal = () => {
+  selectedAlert.value = null
+}
+
 const closeModal = () => {
   selectedCase.value = null
   caseFiles.value = []
   closeUploadForm()
+  closeAlertModal()
 }
 
 const formatDate = (dateString: string) => {
