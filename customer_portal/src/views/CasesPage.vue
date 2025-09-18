@@ -328,6 +328,77 @@
               </div>
             </div>
           </div>
+
+          <!-- Case Files Section -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">
+                Case Files
+                <span v-if="caseFiles.length > 0" class="text-gray-500 font-normal">
+                  ({{ caseFiles.length }})
+                </span>
+              </label>
+              <button
+                v-if="!loadingFiles"
+                @click="loadCaseFiles(selectedCase.id)"
+                class="text-xs text-indigo-600 hover:text-indigo-500 focus:outline-none"
+              >
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Refresh
+              </button>
+            </div>
+
+            <!-- Loading Files -->
+            <div v-if="loadingFiles" class="bg-gray-50 rounded-lg p-4 text-center">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mx-auto"></div>
+              <p class="mt-2 text-sm text-gray-500">Loading files...</p>
+            </div>
+
+            <!-- Files List -->
+            <div v-else-if="caseFiles.length > 0" class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+              <div v-for="file in caseFiles" :key="file.id" class="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <p class="text-sm font-medium text-gray-900 truncate">{{ file.file_name }}</p>
+                    </div>
+                    <div class="mt-1 flex items-center space-x-4 text-xs text-gray-500">
+                      <span>{{ CaseDataStoreAPI.formatFileSize(file.file_size) }}</span>
+                      <span v-if="file.content_type">{{ file.content_type }}</span>
+                      <span>{{ formatDate(file.upload_time) }}</span>
+                    </div>
+                  </div>
+                  <button
+                    @click="downloadFile(selectedCase.id, file.file_name)"
+                    :disabled="downloadingFile === file.file_name"
+                    class="ml-3 inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg v-if="downloadingFile === file.file_name" class="animate-spin -ml-1 mr-1 h-3 w-3 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    {{ downloadingFile === file.file_name ? 'Downloading...' : 'Download' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Files Message -->
+            <div v-else class="bg-gray-50 rounded-lg p-4 text-center">
+              <svg class="w-8 h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <p class="mt-2 text-sm text-gray-500">No files available for this case</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -338,6 +409,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import CasesAPI, { type Case, type CasesResponse } from '@/api/cases'
+import CaseDataStoreAPI, { type CaseDataStoreFile } from '@/api/caseDataStore'
 
 const router = useRouter()
 
@@ -347,6 +419,11 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const selectedCase = ref<Case | null>(null)
 const updatingStatus = ref<number | null>(null)
+
+// Case files data
+const caseFiles = ref<CaseDataStoreFile[]>([])
+const loadingFiles = ref(false)
+const downloadingFile = ref<string | null>(null)
 
 // Filters
 const filters = ref({
@@ -438,10 +515,38 @@ const updateCaseStatus = async (caseId: number, newStatus: string) => {
 
 const viewCase = (case_: Case) => {
   selectedCase.value = case_
+  loadCaseFiles(case_.id)
+}
+
+const loadCaseFiles = async (caseId: number) => {
+  loadingFiles.value = true
+  try {
+    const response = await CaseDataStoreAPI.getCaseFiles(caseId)
+    caseFiles.value = response.case_data_store
+  } catch (err: any) {
+    console.error('Error loading case files:', err)
+    caseFiles.value = []
+  } finally {
+    loadingFiles.value = false
+  }
+}
+
+const downloadFile = async (caseId: number, fileName: string) => {
+  downloadingFile.value = fileName
+  try {
+    const blob = await CaseDataStoreAPI.downloadCaseFile(caseId, fileName)
+    CaseDataStoreAPI.downloadFileBlob(blob, fileName)
+  } catch (err: any) {
+    console.error('Error downloading file:', err)
+    error.value = err.response?.data?.detail || err.message || 'Failed to download file'
+  } finally {
+    downloadingFile.value = null
+  }
 }
 
 const closeModal = () => {
   selectedCase.value = null
+  caseFiles.value = []
 }
 
 const formatDate = (dateString: string) => {
