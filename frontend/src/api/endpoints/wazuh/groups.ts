@@ -1,5 +1,10 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { WazuhGroup, WazuhGroupConfigurationUpdate, WazuhGroupFile, WazuhGroupFileDetails } from "@/types/wazuh/groups.d"
+import type {
+	WazuhGroup,
+	WazuhGroupConfigurationUpdate,
+	WazuhGroupFile,
+	WazuhGroupFileDetails
+} from "@/types/wazuh/groups.d"
 import { HttpClient } from "../../httpClient"
 
 // Interface for groups query parameters
@@ -102,7 +107,7 @@ export default {
 			configContent,
 			{
 				headers: {
-					'Content-Type': 'application/xml'
+					"Content-Type": "application/xml"
 				}
 			}
 		)

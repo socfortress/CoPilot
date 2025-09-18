@@ -1,7 +1,4 @@
-import type {
-	VulnerabilitySearchQuery,
-	VulnerabilitySearchResponse
-} from "@/types/vulnerabilities.d"
+import type { VulnerabilitySearchQuery, VulnerabilitySearchResponse } from "@/types/vulnerabilities.d"
 import { HttpClient } from "../httpClient"
 
 export default {

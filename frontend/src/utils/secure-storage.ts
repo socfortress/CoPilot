@@ -24,7 +24,7 @@ export function removePersistentSessionKey() {
 
 export function secureLocalStorage(options?: { session?: boolean }) {
 	return {
-		getItem(key: string): SafeAny | null {
+		getItem(key: string) {
 			try {
 				return secureLS.get(persistentKey({ session: options?.session })(key))
 			} catch (err) {
@@ -33,7 +33,7 @@ export function secureLocalStorage(options?: { session?: boolean }) {
 			}
 		},
 
-		setItem(key: string, value: SafeAny): void {
+		setItem(key: string, value: string): void {
 			try {
 				secureLS.set(persistentKey({ session: options?.session })(key), value)
 			} catch (err) {

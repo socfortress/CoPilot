@@ -125,6 +125,8 @@
 
 						<div class="text-lg font-semibold leading-snug">{{ policy.policy_name }}</div>
 
+						<ScaLevelBadge :score="policy.score" />
+
 						<div class="flex flex-col gap-1 break-all text-xs">
 							<div class="flex items-center gap-2">
 								<span>Policy ID:</span>
@@ -151,8 +153,6 @@
 								<span class="font-mono font-semibold">{{ policy.fail }}</span>
 							</div>
 						</div>
-
-						<ScaLevelBadge :score="policy.score" />
 					</div>
 				</div>
 			</div>
@@ -170,7 +170,6 @@ import _toNumber from "lodash/toNumber"
 import { NCard, NProgress, NSpin, NStatistic, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { ScaComplianceLevel } from "@/types/sca.d"
 import ScaLevelBadge from "./ScaLevelBadge.vue"
