@@ -589,8 +589,8 @@ const criticalAgents = computed(() => {
 })
 
 const offlineAgents = computed(() => {
-  return agents.value.filter(agent => 
-    agent.wazuh_agent_status === 'disconnected' || 
+  return agents.value.filter(agent =>
+    agent.wazuh_agent_status === 'disconnected' ||
     agent.wazuh_agent_status === 'never_connected'
   ).length
 })
