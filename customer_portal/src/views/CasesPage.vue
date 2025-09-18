@@ -5,10 +5,38 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <button @click="goBack" class="mr-4 text-indigo-600 hover:text-indigo-500">
-              ← Back
-            </button>
-            <h1 class="text-xl font-semibold text-gray-900">Security Cases</h1>
+            <img
+              class="h-8 w-auto mr-3"
+              src="/logo.svg"
+              alt="SOCFortress Logo"
+            />
+            <h1 class="text-xl font-semibold text-gray-900">Customer Portal</h1>
+            <nav class="ml-8 flex space-x-8">
+              <router-link
+                to="/"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Overview
+              </router-link>
+              <router-link
+                to="/alerts"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Alerts
+              </router-link>
+              <router-link
+                to="/cases"
+                class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Cases
+              </router-link>
+              <router-link
+                to="/agents"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Agents
+              </router-link>
+            </nav>
           </div>
           <div class="flex items-center space-x-4">
             <button

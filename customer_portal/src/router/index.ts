@@ -3,6 +3,7 @@ import LoginPage from '@/components/LoginPage.vue'
 import OverviewPage from '@/views/OverviewPage.vue'
 import AlertsPage from '@/views/AlertsPage.vue'
 import CasesPage from '@/views/CasesPage.vue'
+import AgentsPage from '@/views/AgentsPage.vue'
 
 const NotFound = {
 	template: `
@@ -45,6 +46,12 @@ const routes = [
 		path: '/cases',
 		name: 'Cases',
 		component: CasesPage,
+		meta: { requiresAuth: true }
+	},
+	{
+		path: '/agents',
+		name: 'Agents',
+		component: AgentsPage,
 		meta: { requiresAuth: true }
 	},
 	{

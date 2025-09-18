@@ -11,6 +11,32 @@
               alt="SOCFortress Logo"
             />
             <h1 class="text-xl font-semibold text-gray-900">Customer Portal</h1>
+            <nav class="ml-8 flex space-x-8">
+              <router-link
+                to="/"
+                class="text-indigo-600 border-b-2 border-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Overview
+              </router-link>
+              <router-link
+                to="/alerts"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Alerts
+              </router-link>
+              <router-link
+                to="/cases"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Cases
+              </router-link>
+              <router-link
+                to="/agents"
+                class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Agents
+              </router-link>
+            </nav>
           </div>
           <div class="flex items-center space-x-4">
             <div class="text-sm text-gray-700">
@@ -68,7 +94,7 @@
         <!-- Dashboard Content -->
         <div v-else>
           <!-- Key Metrics Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <!-- Total Alerts -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
               <div class="p-6">
@@ -157,6 +183,27 @@
                           +{{ stats.scoreImprovement }}%
                         </div>
                       </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Agents -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+              <div class="p-6">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">Total Agents</dt>
+                      <dd class="text-2xl font-semibold text-gray-900">{{ stats.totalAgents }}</dd>
                     </dl>
                   </div>
                 </div>
@@ -288,7 +335,7 @@
               <h3 class="text-lg font-medium text-gray-900">Quick Actions</h3>
             </div>
             <div class="p-6">
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <button
                   @click="goToAlerts"
                   class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -306,6 +353,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                   View Cases
+                </button>
+                <button
+                  @click="goToAgents"
+                  class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                  View Agents
                 </button>
                 <button
                   @click="refreshData"
@@ -339,11 +395,13 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AlertsAPI, { type Alert } from '@/api/alerts'
 import CasesAPI, { type Case } from '@/api/cases'
+import AgentsAPI from '@/api/agents'
 
 interface Stats {
   totalAlerts: number
   criticalAlerts: number
   openCases: number
+  totalAgents: number
   securityScore: number
   alertTrend: string
   scoreImprovement: number
@@ -374,6 +432,7 @@ const stats = ref<Stats>({
   totalAlerts: 0,
   criticalAlerts: 0,
   openCases: 0,
+  totalAgents: 0,
   securityScore: 0,
   alertTrend: '+0',
   scoreImprovement: 0
@@ -427,21 +486,20 @@ const fetchDashboardData = async () => {
   error.value = ''
 
   try {
-    // Fetch alerts and cases data using our API services
-    const [alertsResponse, casesResponse] = await Promise.all([
+    // Fetch alerts, cases, and agents data using our API services
+    const [alertsResponse, casesResponse, agentsResponse] = await Promise.all([
       AlertsAPI.getAlerts(1, 50).catch(() => ({ alerts: [], total: 0, open: 0, in_progress: 0, closed: 0, success: false, message: 'Failed to load alerts' })),
-      CasesAPI.getCases().catch(() => ({ cases: [], success: false, message: 'Failed to load cases' }))
+      CasesAPI.getCases().catch(() => ({ cases: [], success: false, message: 'Failed to load cases' })),
+      AgentsAPI.getAgents().catch(() => ({ agents: [], success: false, message: 'Failed to load agents' }))
     ])
 
     const alerts = alertsResponse.alerts || []
     const cases = casesResponse.cases || []
+    const agents = agentsResponse.agents || []
 
     // Calculate stats from real data
     const openAlerts = alertsResponse.open || 0
     const inProgressAlerts = alertsResponse.in_progress || 0
-    const criticalAlerts = alerts.filter((alert: Alert) =>
-      alert.status === 'open' || alert.status === 'in_progress'
-    ).length
 
     const openCases = cases.filter((case_: Case) =>
       case_.case_status === 'open' || case_.case_status === 'in_progress'
@@ -455,6 +513,7 @@ const fetchDashboardData = async () => {
       totalAlerts: alertsResponse.total || 0,
       criticalAlerts: openAlerts + inProgressAlerts,
       openCases,
+      totalAgents: agents.length,
       securityScore: Math.min(100, securityScore),
       alertTrend: openAlerts > 0 ? `+${openAlerts}` : '0',
       scoreImprovement: Math.floor(Math.random() * 5) + 1
@@ -494,6 +553,7 @@ const fetchDashboardData = async () => {
       totalAlerts: 0,
       criticalAlerts: 0,
       openCases: 0,
+      totalAgents: 0,
       securityScore: 85,
       alertTrend: '0',
       scoreImprovement: 2
@@ -515,6 +575,10 @@ const goToAlerts = () => {
 
 const goToCases = () => {
   router.push('/cases')
+}
+
+const goToAgents = () => {
+  router.push('/agents')
 }
 
 const logout = () => {
