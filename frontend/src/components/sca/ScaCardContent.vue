@@ -2,21 +2,24 @@
 	<div class="sca-content">
 		<!-- Overview Section -->
 		<div class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="OverviewIcon" :size="20" />
 				Policy Overview
 			</h3>
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div class="space-y-3">
-					<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Policy ID:</span>
 						<code class="text-sm">{{ sca.policy_id }}</code>
 					</div>
-					<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Agent:</span>
-						<span class="text-sm font-mono">{{ sca.agent_name }}</span>
+						<span class="font-mono text-sm">{{ sca.agent_name }}</span>
 					</div>
-					<div v-if="sca.customer_code" class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div
+						v-if="sca.customer_code"
+						class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800"
+					>
 						<span class="text-sm font-medium">Customer:</span>
 						<Badge class="text-xs">
 							<template #value>{{ sca.customer_code }}</template>
@@ -24,21 +27,23 @@
 					</div>
 				</div>
 				<div class="space-y-3">
-					<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Compliance Level:</span>
 						<Badge :color="getComplianceLevelColor(getComplianceLevel(sca.score))">
-							<template #iconLeft><Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" /></template>
+							<template #iconLeft>
+								<Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" />
+							</template>
 							<template #value>{{ getComplianceLevel(sca.score) }}</template>
 						</Badge>
 					</div>
-					<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Score:</span>
 						<Badge color="primary" type="splitted">
 							<template #label>Score</template>
 							<template #value>{{ sca.score }}%</template>
 						</Badge>
 					</div>
-					<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 						<span class="text-sm font-medium">Scan Date:</span>
 						<span class="text-sm">{{ formatDateTime(sca.end_scan) }}</span>
 					</div>
@@ -48,22 +53,22 @@
 
 		<!-- Description Section -->
 		<div class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="DescriptionIcon" :size="20" />
 				Description
 			</h3>
-			<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+			<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
 				<p class="text-sm leading-relaxed">{{ sca.description }}</p>
 			</div>
 		</div>
 
 		<!-- Compliance Statistics -->
 		<div class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="StatsIcon" :size="20" />
 				Compliance Statistics
 			</h3>
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+			<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 				<div class="stat-card-small pass">
 					<div class="stat-header-small">
 						<Icon :name="PassIcon" :size="16" class="text-green-600" />
@@ -104,22 +109,25 @@
 
 		<!-- Progress Bar -->
 		<div class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="ProgressIcon" :size="20" />
 				Compliance Progress
 			</h3>
-			<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
+			<div class="relative h-6 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
 				<div
-					class="bg-green-500 h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+					class="flex h-6 items-center justify-end rounded-full bg-green-500 pr-2 transition-all duration-500"
 					:style="{ width: `${sca.score}%` }"
 				>
-					<span v-if="sca.score > 15" class="text-white text-xs font-semibold">{{ sca.score }}%</span>
+					<span v-if="sca.score > 15" class="text-xs font-semibold text-white">{{ sca.score }}%</span>
 				</div>
-				<span v-if="sca.score <= 15" class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-300">
+				<span
+					v-if="sca.score <= 15"
+					class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-300"
+				>
 					{{ sca.score }}%
 				</span>
 			</div>
-			<div class="flex justify-between text-xs text-gray-500 mt-1">
+			<div class="mt-1 flex justify-between text-xs text-gray-500">
 				<span>0%</span>
 				<span>50%</span>
 				<span>100%</span>
@@ -128,24 +136,27 @@
 
 		<!-- Scan Information -->
 		<div class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="ScanIcon" :size="20" />
 				Scan Information
 			</h3>
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 					<span class="text-sm font-medium">Scan Started:</span>
 					<span class="text-sm">{{ formatDateTime(sca.start_scan) }}</span>
 				</div>
-				<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 					<span class="text-sm font-medium">Scan Completed:</span>
 					<span class="text-sm">{{ formatDateTime(sca.end_scan) }}</span>
 				</div>
-				<div v-if="sca.hash_file" class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+				<div
+					v-if="sca.hash_file"
+					class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800"
+				>
 					<span class="text-sm font-medium">Hash File:</span>
 					<code class="text-xs">{{ sca.hash_file }}</code>
 				</div>
-				<div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-gray-800">
 					<span class="text-sm font-medium">Scan Duration:</span>
 					<span class="text-sm">{{ getScanDuration() }}</span>
 				</div>
@@ -154,12 +165,12 @@
 
 		<!-- References -->
 		<div v-if="sca.references" class="mb-6">
-			<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+			<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 				<Icon :name="ReferenceIcon" :size="20" />
 				References
 			</h3>
-			<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-				<p class="text-sm leading-relaxed break-all">{{ sca.references }}</p>
+			<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+				<p class="break-all text-sm leading-relaxed">{{ sca.references }}</p>
 			</div>
 		</div>
 	</div>
@@ -169,7 +180,7 @@
 import type { AgentScaOverviewItem } from "@/types/sca.d"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "@/types/sca.d"
+import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem }>()
 

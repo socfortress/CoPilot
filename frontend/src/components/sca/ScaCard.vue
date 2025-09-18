@@ -1,22 +1,31 @@
 <template>
 	<div class="sca-card h-full">
-		<CardEntity hoverable clickable :embedded class="@container h-full flex flex-col" :class="getComplianceBorderClass(sca.score)" @click.stop="showDetails = true">
+		<CardEntity
+			hoverable
+			clickable
+			:embedded
+			class="@container flex h-full flex-col"
+			:class="getComplianceBorderClass(sca.score)"
+			@click.stop="showDetails = true"
+		>
 			<template #headerMain>{{ sca.policy_name }}</template>
 			<template #headerExtra>
 				<Badge :color="getComplianceLevelColor(getComplianceLevel(sca.score))">
-					<template #iconLeft><Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" /></template>
+					<template #iconLeft>
+						<Icon :name="getComplianceLevelIcon(getComplianceLevel(sca.score))" :size="14" />
+					</template>
 					<template #value>{{ getComplianceLevel(sca.score) }}</template>
 				</Badge>
 			</template>
 			<template #default>
 				<div class="flex-1">
-					<p class="text-base font-medium opacity-90 leading-relaxed line-clamp-3">{{ sca.description }}</p>
+					<p class="line-clamp-3 text-base font-medium leading-relaxed opacity-90">{{ sca.description }}</p>
 					<div class="mt-2 text-sm opacity-75">
 						<div class="flex items-center gap-2">
 							<Icon :name="HostIcon" :size="14" />
 							<span>{{ sca.agent_name }}</span>
 						</div>
-						<div class="flex items-center gap-2 mt-1">
+						<div class="mt-1 flex items-center gap-2">
 							<Icon :name="PolicyIcon" :size="14" />
 							<span>{{ sca.policy_id }}</span>
 						</div>
@@ -83,8 +92,8 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "@/types/sca.d"
 import ScaCardContent from "./ScaCardContent.vue"
+import { getComplianceLevel, getComplianceLevelColor, getComplianceLevelIcon } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
