@@ -14,7 +14,7 @@
 					<Icon :name="InfoIcon" :size="14" />
 				</p>
 			</div>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-5">
+			<div class="grid-auto-fit-250 grid gap-4">
 				<n-card
 					v-for="item of statisticsCards"
 					:key="item.level"
@@ -85,7 +85,7 @@
 					<Icon :name="InfoIcon" :size="14" />
 				</p>
 			</div>
-			<div class="grid grid-cols-1 gap-10 md:grid-cols-3 lg:grid-cols-5">
+			<div class="grid-auto-fit-250 grid gap-10">
 				<div
 					v-for="(policy, index) in topPoliciesByScore"
 					:key="policy.policy_id"
@@ -106,26 +106,27 @@
 						class="bg-secondary ring-primary flex grow cursor-pointer flex-col gap-2 rounded-md px-3 py-2 transition-all duration-300 hover:ring-1"
 						@click="selectPolicyID(policy.policy_id)"
 					>
-						<div class="flex items-center gap-2 text-xl">
-							<Icon
-								:name="index < 3 ? 'carbon:trophy' : 'carbon:warning-alt'"
-								:size="20"
-								:class="
-									index === 0
-										? 'text-yellow-500'
-										: index === 1
-											? 'text-gray-400'
-											: index === 2
-												? 'text-amber-600'
-												: 'text-info'
-								"
-							/>
-							<span>#{{ index + 1 }}</span>
+						<div class="flex items-center justify-between gap-4">
+							<div class="flex items-center gap-2 text-xl">
+								<Icon
+									:name="index < 3 ? 'carbon:trophy' : 'carbon:warning-alt'"
+									:size="20"
+									:class="
+										index === 0
+											? 'text-yellow-500'
+											: index === 1
+												? 'text-gray-400'
+												: index === 2
+													? 'text-amber-600'
+													: 'text-info'
+									"
+								/>
+								<span>#{{ index + 1 }}</span>
+							</div>
+							<ScaLevelBadge :score="policy.score" class="mt-1" />
 						</div>
 
 						<div class="text-lg font-semibold leading-snug">{{ policy.policy_name }}</div>
-
-						<ScaLevelBadge :score="policy.score" />
 
 						<div class="flex flex-col gap-1 break-all text-xs">
 							<div class="flex items-center gap-2">

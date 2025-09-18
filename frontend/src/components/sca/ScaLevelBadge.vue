@@ -1,5 +1,5 @@
 <template>
-	<Badge :color="getComplianceLevelColor(getComplianceLevel(score))" type="splitted" bright>
+	<Badge :color="getComplianceLevelColor(getComplianceLevel(score))" type="splitted" bright class="whitespace-nowrap">
 		<template #iconLeft>
 			<ScaLevelIcon :level="getComplianceLevel(score)" :size="14" />
 		</template>

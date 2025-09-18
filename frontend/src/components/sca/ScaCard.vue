@@ -1,11 +1,13 @@
 <template>
-	<div class="sca-card h-full">
+	<div class="h-full">
 		<CardEntity
-			hoverable
 			clickable
 			:embedded
-			class="@container flex h-full flex-col"
-			:class="getComplianceBorderClass(sca.score)"
+			class="h-full"
+			main-box-class="grow"
+			card-entity-wrapper-class="h-full"
+			header-box-class="flex-nowrap! items-start"
+			:class="`${getComplianceBorderClass(sca.score)} transition-all duration-300`"
 			@click.stop="showDetails = true"
 		>
 			<template #headerMain>{{ sca.policy_name }}</template>
@@ -13,9 +15,11 @@
 				<ScaLevelBadge :score="sca.score" />
 			</template>
 			<template #default>
-				<div class="flex-1">
-					<p class="line-clamp-3 text-base font-medium leading-relaxed opacity-90">{{ sca.description }}</p>
-					<div class="mt-2 text-sm opacity-75">
+				<div class="flex flex-col gap-4">
+					<div class="font-medium leading-snug">
+						{{ sca.description }}
+					</div>
+					<div class="text-secondary flex flex-col gap-0.5 text-sm">
 						<div class="flex items-center gap-2">
 							<Icon :name="HostIcon" :size="14" />
 							<span>{{ sca.agent_name }}</span>
@@ -29,13 +33,9 @@
 			</template>
 			<template #footerMain>
 				<div class="flex flex-wrap items-center gap-2">
-					<Badge v-if="sca.customer_code" class="text-xs">
-						<template #value>{{ sca.customer_code }}</template>
-					</Badge>
-
-					<Badge color="primary" type="splitted" class="text-xs">
-						<template #label>Score</template>
-						<template #value>{{ sca.score }}%</template>
+					<Badge type="splitted" class="text-xs">
+						<template #label>Total</template>
+						<template #value>{{ sca.total_checks }}</template>
 					</Badge>
 
 					<Badge color="success" type="splitted" class="text-xs">
@@ -53,15 +53,22 @@
 						<template #value>{{ sca.invalid }}</template>
 					</Badge>
 
-					<Badge type="splitted" class="text-xs">
-						<template #label>Total</template>
-						<template #value>{{ sca.total_checks }}</template>
+					<Badge v-if="sca.customer_code" class="text-xs">
+						<template #value>
+							<code
+								class="text-primary cursor-pointer"
+								@click.stop="gotoCustomer({ code: sca.customer_code })"
+							>
+								customer #{{ sca.customer_code }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+						</template>
 					</Badge>
 				</div>
 			</template>
 			<template #footerExtra>
-				<div class="text-xs opacity-60">
-					{{ formatDate(sca.end_scan) }}
+				<div class="text-tertiary text-xs">
+					{{ formatDate(sca.end_scan, dFormats.datetime) }}
 				</div>
 			</template>
 		</CardEntity>
@@ -70,12 +77,13 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)' }"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:title="`SCA Policy: ${sca.policy_name}`"
 			:bordered="false"
+			content-class="!p-0"
 			segmented
 		>
-			<ScaCardContent :sca="sca" />
+			<ScaCardContent :sca />
 		</n-modal>
 	</div>
 </template>
@@ -87,44 +95,32 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 import ScaCardContent from "./ScaCardContent.vue"
 import ScaLevelBadge from "./ScaLevelBadge.vue"
 import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
+const { gotoCustomer } = useGoto()
+const dFormats = useSettingsStore().dateFormat
+
 const showDetails = ref(false)
+const LinkIcon = "carbon:launch"
 const HostIcon = "carbon:bare-metal-server"
 const PolicyIcon = "carbon:security"
 
 function getComplianceBorderClass(score: number): string {
 	const level = getComplianceLevel(score)
 	const borderMap: Record<string, string> = {
-		Excellent: "border-l-4 border-l-green-500 dark:border-l-green-400",
-		Good: "border-l-4 border-l-blue-500 dark:border-l-blue-400",
-		Average: "border-l-4 border-l-yellow-500 dark:border-l-yellow-400",
-		Poor: "border-l-4 border-l-orange-500 dark:border-l-orange-400",
-		Critical: "border-l-4 border-l-red-500 dark:border-l-red-400"
+		Excellent: "ring-1 ring-success/30 hover:ring-success/80",
+		Good: "ring-1 ring-info/30 hover:ring-info/80",
+		Average: "ring-1 ring-warning/30 hover:ring-warning/80",
+		Poor: "ring-1 ring-orange-500/30 hover:ring-orange-500/80",
+		Critical: "ring-1 ring-error/30 hover:ring-error/80"
 	}
 	return borderMap[level] || ""
 }
-
-function formatDate(dateString: string): string {
-	return new Date(dateString).toLocaleDateString()
-}
 </script>
-
-<style scoped>
-.sca-card {
-	min-height: 280px;
-}
-
-.line-clamp-3 {
-	display: -webkit-box;
-	-webkit-line-clamp: 3;
-	line-clamp: 3;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-</style>
