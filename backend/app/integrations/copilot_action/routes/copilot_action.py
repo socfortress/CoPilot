@@ -57,7 +57,7 @@ def calculate_pagination_info(total: int, limit: int, offset: int) -> dict:
         "has_next": has_next,
         "has_prev": has_prev,
         "items_per_page": limit,
-        "total_items": total
+        "total_items": total,
     }
 
 
@@ -224,7 +224,9 @@ async def get_inventory(
     - Page 2: GET /inventory?limit=50&offset=50
     - Page 3: GET /inventory?limit=50&offset=100
     """
-    logger.info(f"Fetching active response inventory with filters: tech={technology}, category={category}, tag={tag}, q={q}, limit={limit}, offset={offset}")
+    logger.info(
+        f"Fetching active response inventory with filters: tech={technology}, category={category}, tag={tag}, q={q}, limit={limit}, offset={offset}",
+    )
 
     license_key = get_license_key()
 
@@ -286,7 +288,7 @@ async def get_inventory_count(
             "total": response.total,
             "message": "Successfully retrieved inventory count",
             "success": True,
-            **calculate_pagination_info(response.total or 0, 100, 0)  # Default pagination info
+            **calculate_pagination_info(response.total or 0, 100, 0),  # Default pagination info
         }
 
     except Exception as e:

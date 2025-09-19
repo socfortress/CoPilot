@@ -179,7 +179,7 @@ async def init_db():
     if environment == "PRODUCTION":
         await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
         await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
-    #apply_migrations()
+    apply_migrations()
     await create_buckets()
     await add_connectors(async_engine)
     await delete_connectors(async_engine)

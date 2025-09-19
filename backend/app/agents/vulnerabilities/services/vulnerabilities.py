@@ -1080,7 +1080,7 @@ async def search_vulnerabilities_from_indexer(
                     return (
                         -epss_float,  # Negative for descending order
                         severity_order.get(vuln.severity, 4),  # Secondary sort by severity
-                        vuln.cve_id  # Tertiary sort by CVE ID for consistency
+                        vuln.cve_id,  # Tertiary sort by CVE ID for consistency
                     )
 
                 vulnerabilities.sort(key=get_epss_sort_key)

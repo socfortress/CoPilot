@@ -88,21 +88,22 @@ class CopilotActionService:
                 logger.info(f"Successfully fetched inventory: {len(data.get('copilot_actions', []))} actions")
 
                 # Calculate pagination metadata
-                copilot_actions = data.get('copilot_actions', [])
+                copilot_actions = data.get("copilot_actions", [])
                 count = len(copilot_actions)
 
                 # Try to get total from API response, with fallback parsing from message
-                total = data.get('total')
+                total = data.get("total")
                 if total is None:
                     # Try to parse total from message like "Returned 1 of 44 matching items"
-                    message = data.get('message', '')
+                    message = data.get("message", "")
                     import re
+
                     # Try multiple patterns to be more robust
                     patterns = [
-                        r'(\d+) of (\d+) matching items',
-                        r'Returned (\d+) of (\d+)',
-                        r'(\d+)/(\d+) items',
-                        r'showing (\d+) of (\d+)',
+                        r"(\d+) of (\d+) matching items",
+                        r"Returned (\d+) of (\d+)",
+                        r"(\d+)/(\d+) items",
+                        r"showing (\d+) of (\d+)",
                     ]
 
                     for pattern in patterns:
@@ -122,15 +123,15 @@ class CopilotActionService:
 
                 return InventoryResponse(
                     copilot_actions=copilot_actions,
-                    message=data.get('message', 'Successfully fetched inventory'),
-                    success=data.get('success', True),
+                    message=data.get("message", "Successfully fetched inventory"),
+                    success=data.get("success", True),
                     total=total,
                     count=count,
                     limit=limit,
                     offset=offset,
                     has_more=has_more,
                     next_offset=next_offset,
-                    prev_offset=prev_offset
+                    prev_offset=prev_offset,
                 )
 
         except httpx.HTTPError as e:
@@ -143,7 +144,7 @@ class CopilotActionService:
                 count=0,
                 limit=limit,
                 offset=offset,
-                has_more=False
+                has_more=False,
             )
         except Exception as e:
             logger.error(f"Unexpected error fetching inventory: {str(e)}")
@@ -155,7 +156,7 @@ class CopilotActionService:
                 count=0,
                 limit=limit,
                 offset=offset,
-                has_more=False
+                has_more=False,
             )
 
     @classmethod
