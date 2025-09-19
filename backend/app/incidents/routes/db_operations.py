@@ -46,6 +46,8 @@ from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
+from app.incidents.schema.db_operations import EscalateAlert
+from app.incidents.schema.db_operations import EscalateCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
@@ -175,7 +177,6 @@ from app.incidents.services.db_operations import increment_case_notification_cou
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
-from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_customer_code
 from app.incidents.services.db_operations import list_alerts_by_ioc
@@ -197,9 +198,11 @@ from app.incidents.services.db_operations import replace_ioc_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import report_template_exists
 from app.incidents.services.db_operations import update_alert_assigned_to
+from app.incidents.services.db_operations import update_alert_escalated
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_customer_code
+from app.incidents.services.db_operations import update_case_escalated
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import upload_report_template
@@ -421,6 +424,29 @@ async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(g
 @incidents_db_operations_router.put("/alert/status", response_model=AlertResponse)
 async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: AsyncSession = Depends(get_db)):
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
+
+
+@incidents_db_operations_router.put("/alert/escalated", response_model=AlertResponse)
+async def update_alert_escalated_endpoint(
+    escalate_alert: EscalateAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update alert escalated status with customer access validation"""
+    logger.info(f"Updating alert {escalate_alert.alert_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the alert first to check customer access
+    alert = await get_alert_by_id(escalate_alert.alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to alert {escalate_alert.alert_id} - insufficient customer permissions"
+        )
+
+    updated_alert = await update_alert_escalated(escalate_alert.alert_id, escalate_alert.escalated, db)
+    return AlertResponse(alert=updated_alert, success=True, message="Alert escalated status updated successfully")
 
 
 @incidents_db_operations_router.post("/alert/comment", response_model=CommentResponse)
@@ -1349,6 +1375,33 @@ async def update_case_status_endpoint(
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(case_status.case_id, db)
     return CaseOutResponse(cases=[updated_case], success=True, message="Case status updated successfully")
+
+
+@incidents_db_operations_router.put("/case/escalated", response_model=CaseOutResponse)
+async def update_case_escalated_endpoint(
+    escalate_case: EscalateCase,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update case escalated status with customer access validation"""
+    logger.info(f"Updating case {escalate_case.case_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(escalate_case.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {escalate_case.case_id} - insufficient customer permissions"
+        )
+
+    # Update the case escalated status
+    await update_case_escalated(escalate_case.case_id, escalate_case.escalated, db)
+
+    # Re-fetch the case with full data structure
+    updated_case = await get_case_by_id(escalate_case.case_id, db)
+    return CaseOutResponse(cases=[updated_case], success=True, message="Case escalated status updated successfully")
 
 
 @incidents_db_operations_router.put("/case/assigned-to", response_model=CaseOutResponse)

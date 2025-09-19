@@ -847,6 +847,26 @@ async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSes
     return alert
 
 
+async def update_alert_escalated(alert_id: int, escalated: bool, db: AsyncSession) -> Alert:
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    alert.escalated = escalated
+    await db.commit()
+    return alert
+
+
+async def update_case_escalated(case_id: int, escalated: bool, db: AsyncSession) -> Case:
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    case.escalated = escalated
+    await db.commit()
+    return case
+
+
 async def increment_case_notification_count(case_id: int, db: AsyncSession) -> Case:
     result = await db.execute(select(Case).where(Case.id == case_id))
     case = result.scalars().first()
@@ -1109,6 +1129,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
         customer_code=alert.customer_code,
         source=alert.source,
         assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
         comments=comments,
         assets=assets,
         tags=tags,
@@ -1154,6 +1175,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1188,6 +1210,7 @@ async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
         case_description=alert.alert_description,
         case_status=alert.status,
         assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
         customer_code=alert.customer_code,
     )
     db.add(case)
@@ -1285,6 +1308,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1306,6 +1330,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         customer_code=case.customer_code,
         notification_invoked_number=case.notification_invoked_number or 0,
         comments=case_comments,
+        escalated=case.escalated,
     )
     return case_out
 
@@ -1342,6 +1367,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -1364,6 +1390,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             customer_code=case.customer_code,
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1403,6 +1430,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -1425,6 +1453,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             customer_code=case.customer_code,
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1460,6 +1489,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -1486,6 +1516,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             alerts=alerts_out,
             customer_code=case.customer_code,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1524,6 +1555,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -1550,6 +1582,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             alerts=alerts_out,
             customer_code=case.customer_code,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1585,6 +1618,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -1611,6 +1645,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             alerts=alerts_out,
             customer_code=case.customer_code,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1663,6 +1698,7 @@ async def list_alerts_by_ioc(ioc_value: str, db: AsyncSession, page: int = 1, pa
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1709,6 +1745,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1754,6 +1791,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1803,6 +1841,7 @@ async def list_alerts_by_asset_name(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1850,6 +1889,7 @@ async def list_alert_by_assigned_to(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1897,6 +1937,7 @@ async def list_alerts_by_title(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1944,6 +1985,7 @@ async def list_alerts_by_customer_code(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -1991,6 +2033,7 @@ async def list_alerts_by_source(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -2077,6 +2120,7 @@ async def list_alerts_multiple_filters(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -2133,6 +2177,7 @@ async def list_alerts_for_user(
             customer_code=alert.customer_code,
             source=alert.source,
             assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
             comments=comments,
             assets=assets,
             tags=tags,
@@ -2186,6 +2231,7 @@ async def list_cases_for_user(
                 customer_code=alert.customer_code,
                 source=alert.source,
                 assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
                 comments=comments,
                 assets=assets,
                 tags=tags,
@@ -2217,6 +2263,7 @@ async def list_cases_for_user(
             customer_code=case.customer_code,
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
+        escalated=case.escalated,
         )
         cases_out.append(case_out)
     return cases_out

@@ -249,6 +249,16 @@ class AssignedToCase(BaseModel):
     assigned_to: str
 
 
+class EscalateAlert(BaseModel):
+    alert_id: int
+    escalated: bool
+
+
+class EscalateCase(BaseModel):
+    case_id: int
+    escalated: bool
+
+
 class AlertCreate(BaseModel):
     alert_name: str
     alert_description: str
@@ -408,6 +418,7 @@ class AlertOut(BaseModel):
     customer_code: str
     source: str
     assigned_to: Optional[str] = None
+    escalated: bool = False
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
@@ -436,6 +447,7 @@ class CaseOut(BaseModel):
     case_creation_time: Optional[datetime] = None
     customer_code: Optional[str] = None
     notification_invoked_number: Optional[int] = 0
+    escalated: bool = False
     comments: List[CaseCommentBase] = []
 
 
