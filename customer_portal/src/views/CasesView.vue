@@ -244,8 +244,8 @@ const fetchCases = async () => {
   error.value = ''
 
   try {
-    const response = await httpClient.get('/cases/')
-    cases.value = response.data || []
+    const response = await httpClient.get('/incidents/db_operations/cases')
+    cases.value = response.data.cases || []
   } catch (err: any) {
     error.value = err.response?.data?.detail || 'Failed to fetch cases'
     console.error('Failed to fetch cases:', err)
