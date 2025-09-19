@@ -37,6 +37,7 @@ from app.agents.vulnerabilities.services.vulnerabilities import (
     sync_vulnerabilities_for_agent,
 )
 from app.auth.routes.auth import AuthHandler
+from app.auth.models.users import User
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 
@@ -358,6 +359,7 @@ async def search_vulnerabilities(
     page: int = Query(1, description="Page number for pagination", ge=1),
     page_size: int = Query(50, description="Number of vulnerabilities per page", ge=1, le=1000),
     include_epss: bool = Query(True, description="Include EPSS scores (may impact performance)"),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilitySearchResponse:
     """
@@ -367,12 +369,18 @@ async def search_vulnerabilities(
     and pagination capabilities. Perfect for exploring vulnerability data without
     the overhead of database synchronization.
 
+    **Customer Access Control:**
+    - Admin/analyst users: Can access vulnerabilities for all customers
+    - Customer users: Can only access vulnerabilities for their assigned customers
+    - Customer filtering is automatically applied based on user permissions
+
     **Features:**
     - Real-time data directly from Wazuh indexer
     - Advanced filtering by customer, agent, severity, CVE, or package
     - Efficient pagination for large result sets
     - No database storage required
     - Optional EPSS scoring integration
+    - Automatic customer access filtering based on user role
 
     **Performance:**
     - Handles large datasets efficiently with pagination
@@ -382,7 +390,7 @@ async def search_vulnerabilities(
     - EPSS scoring can be disabled for faster response times
 
     **Filtering Options:**
-    - **customer_code**: Filter by specific customer
+    - **customer_code**: Filter by specific customer (subject to user access permissions)
     - **agent_name**: Filter by specific agent hostname
     - **severity**: Filter by vulnerability severity (Critical, High, Medium, Low)
     - **cve_id**: Search for specific CVE identifier
@@ -403,17 +411,18 @@ async def search_vulnerabilities(
     - When **include_epss=False**: Results sorted by detection date (newest first), then by severity
 
     Args:
-        customer_code: Optional customer code filter
+        customer_code: Optional customer code filter (filtered by user access)
         agent_name: Optional agent hostname filter
         severity: Optional severity filter
         cve_id: Optional CVE ID filter
         package_name: Optional package name filter (partial matching)
         page: Page number for pagination
         page_size: Number of results per page
+        current_user: Current authenticated user (automatically injected)
         db: Database session
 
     Returns:
-        VulnerabilitySearchResponse: Paginated vulnerability search results
+        VulnerabilitySearchResponse: Paginated vulnerability search results filtered by user access
     """
     logger.info(
         f"Searching vulnerabilities from indexer with filters: "
@@ -425,6 +434,7 @@ async def search_vulnerabilities(
     try:
         result = await search_vulnerabilities_from_indexer(
             db_session=db,
+            current_user=current_user,
             customer_code=customer_code,
             agent_name=agent_name,
             severity=severity,

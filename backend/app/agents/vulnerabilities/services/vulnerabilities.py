@@ -26,6 +26,8 @@ from app.connectors.wazuh_indexer.utils.universal import (
 )
 from app.db.universal_models import Agents
 from app.db.universal_models import AgentVulnerabilities
+from app.auth.models.users import User
+from app.middleware.customer_access import customer_access_handler
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
 
@@ -817,6 +819,7 @@ async def delete_vulnerabilities(db_session: AsyncSession, agent_name: Optional[
 
 async def search_vulnerabilities_from_indexer(
     db_session: AsyncSession,
+    current_user: User,
     customer_code: Optional[str] = None,
     agent_name: Optional[str] = None,
     severity: Optional[str] = None,
@@ -831,6 +834,7 @@ async def search_vulnerabilities_from_indexer(
 
     Args:
         db_session: Database session for agent lookup
+        current_user: Current authenticated user for customer access filtering
         customer_code: Optional customer code filter
         agent_name: Optional agent hostname filter
         severity: Optional severity filter
@@ -841,7 +845,7 @@ async def search_vulnerabilities_from_indexer(
         include_epss: Whether to include EPSS scores (default: True, may impact performance)
 
     Returns:
-        VulnerabilitySearchResponse with paginated results
+        VulnerabilitySearchResponse with paginated results filtered by user access
     """
     logger.info(
         f"Searching vulnerabilities with filters: customer_code={customer_code}, "
@@ -849,6 +853,33 @@ async def search_vulnerabilities_from_indexer(
         f"package_name={package_name}, page={page}, page_size={page_size}, "
         f"include_epss={include_epss}",
     )
+
+    # Apply customer access filtering based on user permissions
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+    logger.info(f"User {current_user.username} has access to customers: {accessible_customers}")
+
+    # Override customer_code based on user permissions
+    if "*" not in accessible_customers:
+        # User has limited access - filter by their accessible customers
+        if customer_code and customer_code not in accessible_customers:
+            # User requested a customer they don't have access to
+            return VulnerabilitySearchResponse(
+                vulnerabilities=[],
+                total_count=0,
+                critical_count=0,
+                high_count=0,
+                medium_count=0,
+                low_count=0,
+                page=page,
+                page_size=page_size,
+                total_pages=0,
+                has_next=False,
+                has_previous=False,
+                success=True,
+                message=f"Access denied to customer {customer_code}",
+                filters_applied={},
+            )
+        # If no customer_code specified or user has access, we'll filter by accessible customers later
 
     # Build filters applied dict for response
     filters_applied = {}
@@ -884,35 +915,44 @@ async def search_vulnerabilities_from_indexer(
         # Get agent information for filtering (if filters are applied)
         agent_hostnames = []
 
-        if customer_code or agent_name:
-            query = select(Agents)
-            if customer_code:
-                query = query.filter(Agents.customer_code == customer_code)
-            if agent_name:
-                query = query.filter(Agents.hostname == agent_name)
+        # Build base query for agents
+        query = select(Agents)
 
-            result = await db_session.execute(query)
-            agents = result.scalars().all()
+        # Apply user access restrictions first
+        if "*" not in accessible_customers:
+            # User has limited access - only show their customers' agents
+            query = query.filter(Agents.customer_code.in_(accessible_customers))
 
-            if not agents and (customer_code or agent_name):
-                return VulnerabilitySearchResponse(
-                    vulnerabilities=[],
-                    total_count=0,
-                    critical_count=0,
-                    high_count=0,
-                    medium_count=0,
-                    low_count=0,
-                    page=page,
-                    page_size=page_size,
-                    total_pages=0,
-                    has_next=False,
-                    has_previous=False,
-                    success=True,
-                    message="No agents found matching the specified criteria",
-                    filters_applied=filters_applied,
-                )
+        # Apply additional filters if specified
+        if customer_code:
+            query = query.filter(Agents.customer_code == customer_code)
+        if agent_name:
+            query = query.filter(Agents.hostname == agent_name)
 
-            # Build list of agent hostnames for Elasticsearch filtering
+        result = await db_session.execute(query)
+        agents = result.scalars().all()
+
+        if not agents and (customer_code or agent_name or "*" not in accessible_customers):
+            return VulnerabilitySearchResponse(
+                vulnerabilities=[],
+                total_count=0,
+                critical_count=0,
+                high_count=0,
+                medium_count=0,
+                low_count=0,
+                page=page,
+                page_size=page_size,
+                total_pages=0,
+                has_next=False,
+                has_previous=False,
+                success=True,
+                message="No agents found matching the specified criteria or user access permissions",
+                filters_applied=filters_applied,
+            )
+
+        # Build list of agent hostnames for Elasticsearch filtering
+        # If user has restricted access, always filter by their accessible agents
+        if "*" not in accessible_customers or customer_code or agent_name:
             for agent in agents:
                 if agent.hostname:
                     agent_hostnames.append(agent.hostname)
