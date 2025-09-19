@@ -202,6 +202,33 @@ async def search_sca_overview(
             max_score=max_score,
         )
 
+        # Sort results by agent's minimum score (lowest first)
+        if all_sca_results:
+            # Group results by agent to find minimum score per agent
+            agent_min_scores = {}
+            agent_results = {}
+
+            for result in all_sca_results:
+                agent_id = result.agent_id
+                if agent_id not in agent_min_scores:
+                    agent_min_scores[agent_id] = result.score
+                    agent_results[agent_id] = []
+                else:
+                    agent_min_scores[agent_id] = min(agent_min_scores[agent_id], result.score)
+                agent_results[agent_id].append(result)
+
+            # Sort agents by their minimum score (lowest first)
+            sorted_agent_ids = sorted(agent_min_scores.keys(), key=lambda x: agent_min_scores[x])
+
+            # Rebuild the results list with agents sorted by their minimum score
+            all_sca_results = []
+            for agent_id in sorted_agent_ids:
+                # Sort policies within each agent by score (lowest first)
+                agent_policies = sorted(agent_results[agent_id], key=lambda x: x.score)
+                all_sca_results.extend(agent_policies)
+
+            logger.info("Sorted SCA results by agent minimum scores (lowest first)")
+
         total_count = len(all_sca_results)
 
         # Calculate pagination
@@ -240,7 +267,7 @@ async def search_sca_overview(
             has_next=page < total_pages,
             has_previous=page > 1,
             success=True,
-            message=f"Found {total_count} SCA results across {len(unique_agents)} agents",
+            message=f"Found {total_count} SCA results across {len(unique_agents)} agents (sorted by agent minimum score, lowest first)",
             filters_applied=filters_applied,
         )
 

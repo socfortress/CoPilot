@@ -377,7 +377,8 @@ async def search_vulnerabilities(
     **Performance:**
     - Handles large datasets efficiently with pagination
     - Optimized Elasticsearch queries for fast response times
-    - Automatic sorting by detection date and severity
+    - Automatic sorting by EPSS score (highest to lowest) when include_epss=True
+    - Falls back to detection date and severity sorting when include_epss=False
     - EPSS scoring can be disabled for faster response times
 
     **Filtering Options:**
@@ -390,11 +391,16 @@ async def search_vulnerabilities(
     **EPSS Integration:**
     - **include_epss**: Include EPSS scores and percentiles for vulnerabilities
     - Provides risk assessment data from FIRST.org
+    - Results are automatically sorted by EPSS score (highest to lowest)
     - May impact response time due to external API calls
 
     **Pagination:**
     - **page**: Page number (starts at 1)
     - **page_size**: Results per page (1-1000, default: 50)
+
+    **Sorting Behavior:**
+    - When **include_epss=True**: Results sorted by EPSS score (highest to lowest), then by severity, then by CVE ID
+    - When **include_epss=False**: Results sorted by detection date (newest first), then by severity
 
     Args:
         customer_code: Optional customer code filter

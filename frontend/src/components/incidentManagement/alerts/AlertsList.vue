@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+		<div ref="header" class="flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2 lg:!hidden">
 				<n-popover overlap placement="left">
 					<template #trigger>
@@ -275,11 +275,11 @@ const availableUsers = ref<string[]>([])
 const linkableCases = ref<Case[]>([])
 let abortController: AbortController | null = null
 
-const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
+const pageSize = ref(pageSizes[1])
 const header = ref()
 const pageSlot = ref(8)
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })

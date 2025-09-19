@@ -29,7 +29,7 @@ export interface VulnerabilitySearchResponse {
 	has_previous: boolean
 	success: boolean
 	message: string
-	filters_applied: Record<string, any>
+	filters_applied: Record<string, string | number | boolean>
 }
 
 export enum VulnerabilitySeverity {

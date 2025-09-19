@@ -84,6 +84,15 @@ class InventoryResponse(BaseModel):
     message: str
     success: bool
 
+    # Pagination metadata
+    total: Optional[int] = Field(None, description="Total number of items available")
+    count: Optional[int] = Field(None, description="Number of items in current response")
+    limit: Optional[int] = Field(None, description="Maximum items per page")
+    offset: Optional[int] = Field(None, description="Current offset")
+    has_more: Optional[bool] = Field(None, description="Whether there are more items available")
+    next_offset: Optional[int] = Field(None, description="Offset for next page")
+    prev_offset: Optional[int] = Field(None, description="Offset for previous page")
+
 
 class ActionDetailResponse(BaseModel):
     """Response model for single action details"""

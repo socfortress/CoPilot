@@ -41,7 +41,7 @@
 							<div
 								v-for="group of groupsList"
 								:key="group.name"
-								class="hover:text-warning cursor-pointer break-all px-4.5 py-2.5 text-sm"
+								class="hover:text-warning px-4.5 cursor-pointer break-all py-2.5 text-sm"
 								:class="{ 'bg-warning/10': group.name === currentGroup?.name }"
 								@click.stop="loadGroup(group)"
 							>
@@ -137,9 +137,7 @@
 			</template>
 			<template #main-content>
 				<div v-if="currentGroup && currentFile" class="px-4.5 break-all py-2.5 text-sm">
-					<div class="font-mono">
-						Group: {{ currentGroup?.name }} | File: {{ currentFile?.filename }}
-					</div>
+					<div class="font-mono">Group: {{ currentGroup?.name }} | File: {{ currentFile?.filename }}</div>
 				</div>
 				<n-spin
 					:show="loadingFile || uploadingConfig"

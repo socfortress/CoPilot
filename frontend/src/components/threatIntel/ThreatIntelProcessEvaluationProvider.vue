@@ -4,7 +4,7 @@
 	<n-modal
 		v-model:show="showDetails"
 		preset="card"
-		content-class="!p-0"
+		content-class="p-0!"
 		:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)' }"
 		:title="`Process Analysis: ${processName}`"
 		:bordered="false"
@@ -33,7 +33,13 @@
 					</div>
 				</n-tab-pane>
 				<!-- Legacy tabs for backward compatibility -->
-				<n-tab-pane v-if="evaluation" name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
+				<n-tab-pane
+					v-if="evaluation"
+					name="Overview"
+					tab="Overview"
+					display-directive="show:lazy"
+					class="flex flex-col gap-4 !py-8"
+				>
 					<div class="px-7">
 						<n-card embedded class="overflow-hidden">
 							<div class="flex flex-wrap justify-between gap-8">
@@ -71,7 +77,12 @@
 						percentage-key="percentage"
 					/>
 				</n-tab-pane>
-				<n-tab-pane v-if="evaluation?.network?.length" name="Network" tab="Network" display-directive="show:lazy">
+				<n-tab-pane
+					v-if="evaluation?.network?.length"
+					name="Network"
+					tab="Network"
+					display-directive="show:lazy"
+				>
 					<ListPercentage
 						class="p-7 pt-4"
 						:list="evaluation.network"
@@ -79,7 +90,12 @@
 						percentage-key="usage"
 					/>
 				</n-tab-pane>
-				<n-tab-pane v-if="evaluation?.parents?.length" name="Parents" tab="Parents" display-directive="show:lazy">
+				<n-tab-pane
+					v-if="evaluation?.parents?.length"
+					name="Parents"
+					tab="Parents"
+					display-directive="show:lazy"
+				>
 					<ListPercentage
 						class="p-7 pt-4"
 						:list="evaluation.parents"
@@ -96,7 +112,11 @@
 					/>
 				</n-tab-pane>
 			</n-tabs>
-			<n-empty v-if="!loading && !mcpResponse && !evaluation" description="Process analysis not found" class="h-48 justify-center" />
+			<n-empty
+				v-if="!loading && !mcpResponse && !evaluation"
+				description="Process analysis not found"
+				class="h-48 justify-center"
+			/>
 		</n-spin>
 	</n-modal>
 </template>
@@ -138,11 +158,11 @@ function getEvaluation() {
 		.then(res => {
 			if (res.data.success) {
 				// Check if response is in new MCP format by checking for structured_result property
-				if ('structured_result' in res.data && res.data.structured_result) {
+				if ("structured_result" in res.data && res.data.structured_result) {
 					mcpResponse.value = res.data as MCPQueryResponse
 				} else {
 					// Fallback to legacy format
-					const legacyResponse = res.data as any
+					const legacyResponse = res.data as { data?: EvaluationData }
 					evaluation.value = legacyResponse?.data || null
 				}
 			} else {

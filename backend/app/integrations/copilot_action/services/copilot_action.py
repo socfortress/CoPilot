@@ -80,19 +80,84 @@ class CopilotActionService:
 
                 try:
                     data = response.json()
+                    logger.debug(f"Raw API response: {data}")
                 except ValueError:
                     logger.error(f"Non-JSON response from inventory API: {response.text[:200]}")
                     return InventoryResponse(copilot_actions=[], message="Invalid response format from inventory API", success=False)
 
                 logger.info(f"Successfully fetched inventory: {len(data.get('copilot_actions', []))} actions")
-                return InventoryResponse(**data)
+
+                # Calculate pagination metadata
+                copilot_actions = data.get("copilot_actions", [])
+                count = len(copilot_actions)
+
+                # Try to get total from API response, with fallback parsing from message
+                total = data.get("total")
+                if total is None:
+                    # Try to parse total from message like "Returned 1 of 44 matching items"
+                    message = data.get("message", "")
+                    import re
+
+                    # Try multiple patterns to be more robust
+                    patterns = [
+                        r"(\d+) of (\d+) matching items",
+                        r"Returned (\d+) of (\d+)",
+                        r"(\d+)/(\d+) items",
+                        r"showing (\d+) of (\d+)",
+                    ]
+
+                    for pattern in patterns:
+                        match = re.search(pattern, message, re.IGNORECASE)
+                        if match:
+                            total = int(match.group(2))
+                            logger.info(f"Parsed total from message using pattern '{pattern}': {total}")
+                            break
+                    else:
+                        # Fallback to count if we can't parse
+                        total = count
+                        logger.warning(f"Could not determine total count from message '{message}', using current count: {count}")
+
+                has_more = (offset + count) < total
+                next_offset = offset + limit if has_more else None
+                prev_offset = max(0, offset - limit) if offset > 0 else None
+
+                return InventoryResponse(
+                    copilot_actions=copilot_actions,
+                    message=data.get("message", "Successfully fetched inventory"),
+                    success=data.get("success", True),
+                    total=total,
+                    count=count,
+                    limit=limit,
+                    offset=offset,
+                    has_more=has_more,
+                    next_offset=next_offset,
+                    prev_offset=prev_offset,
+                )
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error fetching inventory: {str(e)}")
-            return InventoryResponse(copilot_actions=[], message=f"HTTP error fetching inventory: {str(e)}", success=False)
+            return InventoryResponse(
+                copilot_actions=[],
+                message=f"HTTP error fetching inventory: {str(e)}",
+                success=False,
+                total=0,
+                count=0,
+                limit=limit,
+                offset=offset,
+                has_more=False,
+            )
         except Exception as e:
             logger.error(f"Unexpected error fetching inventory: {str(e)}")
-            return InventoryResponse(copilot_actions=[], message=f"Unexpected error: {str(e)}", success=False)
+            return InventoryResponse(
+                copilot_actions=[],
+                message=f"Unexpected error: {str(e)}",
+                success=False,
+                total=0,
+                count=0,
+                limit=limit,
+                offset=offset,
+                has_more=False,
+            )
 
     @classmethod
     async def get_action_by_name(cls, license_key: str, copilot_action_name: str) -> ActionDetailResponse:

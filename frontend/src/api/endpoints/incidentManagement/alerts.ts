@@ -64,6 +64,7 @@ export default {
 			url = `/incidents/db_operations/alerts/source/${args.filter.source}`
 		}
 
+		// TODO: remove any
 		const params: any = {
 			page: args.page || 1,
 			page_size: args.pageSize || 25,
