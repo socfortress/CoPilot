@@ -371,20 +371,20 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Cases" }
 						),
 					key: "IncidentManagement-Cases"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Sigma"
-								}
-							},
-							{ default: () => "SIGMA" }
-						),
-					key: "IncidentManagement-Sigma"
 				}
+				// {
+				// 	label: () =>
+				// 		h(
+				// 			RouterLink,
+				// 			{
+				// 				to: {
+				// 					name: "IncidentManagement-Sigma"
+				// 				}
+				// 			},
+				// 			{ default: () => "SIGMA" }
+				// 		),
+				// 	key: "IncidentManagement-Sigma"
+				// }
 			]
 		},
 		{

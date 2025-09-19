@@ -2,6 +2,7 @@ import hashlib
 import io
 import mimetypes
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -72,6 +73,8 @@ from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from app.middleware.customer_access import customer_access_handler
+from app.auth.models.users import User
 
 
 async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
@@ -206,6 +209,40 @@ async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
     return len(result.scalars().all())
 
+async def alert_total_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
+    """Get total alerts for multiple customer codes"""
+    result = await db.execute(select(Alert).where(Alert.customer_code.in_(customer_codes)))
+    return len(result.scalars().all())
+
+
+async def alerts_closed_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
+    """Get closed alerts for multiple customer codes"""
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "CLOSED") & (Alert.customer_code.in_(customer_codes))
+        )
+    )
+    return len(result.scalars().all())
+
+
+async def alerts_in_progress_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
+    """Get in-progress alerts for multiple customer codes"""
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "IN_PROGRESS") & (Alert.customer_code.in_(customer_codes))
+        )
+    )
+    return len(result.scalars().all())
+
+
+async def alerts_open_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
+    """Get open alerts for multiple customer codes"""
+    result = await db.execute(
+        select(Alert).where(
+            (Alert.status == "OPEN") & (Alert.customer_code.in_(customer_codes))
+        )
+    )
+    return len(result.scalars().all())
 
 async def alerts_total_multiple_filters(
     db: AsyncSession,
@@ -828,7 +865,12 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    db_comment = Comment(**comment.dict())
+    # Create comment with automatic timestamp if not provided
+    comment_data = comment.dict()
+    if comment_data.get('created_at') is None:
+        comment_data['created_at'] = datetime.utcnow()
+
+    db_comment = Comment(**comment_data)
     db.add(db_comment)
     try:
         await db.commit()
@@ -1932,6 +1974,125 @@ async def list_alerts_multiple_filters(
         alerts_out.append(alert_out)
 
     return alerts_out
+
+async def list_alerts_for_user(
+    user: User,
+    session: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[AlertOut]:
+    """List alerts filtered by user's customer access"""
+
+    base_query = select(Alert).options(
+        selectinload(Alert.comments),
+        selectinload(Alert.assets),
+        selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+        selectinload(Alert.tags).selectinload(AlertToTag.tag),
+    )
+
+    # Apply customer filtering
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        user, session, base_query, Alert.customer_code
+    )
+
+    offset = (page - 1) * page_size
+    order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
+
+    final_query = filtered_query.order_by(order_by).offset(offset).limit(page_size)
+    result = await session.execute(final_query)
+    alerts = result.scalars().all()
+
+    # Convert to AlertOut objects
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+            linked_cases=linked_cases,
+        )
+        alerts_out.append(alert_out)
+
+    return alerts_out
+
+async def list_cases_for_user(
+    user: User,
+    session: AsyncSession,
+) -> List[CaseOut]:
+    """List cases filtered by user's customer access"""
+
+    base_query = select(Case).options(
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+        selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+    )
+
+    # Apply customer filtering
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        user, session, base_query, Case.customer_code
+    )
+
+    result = await session.execute(filtered_query)
+    cases = result.scalars().all()
+
+    # Convert to CaseOut objects (using same logic as list_cases)
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
+            iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+                linked_cases=linked_cases,
+                iocs=iocs,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+            case_creation_time=case.case_creation_time,
+            case_status=case.case_status,
+            customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
+        )
+        cases_out.append(case_out)
+    return cases_out
 
 
 async def delete_comments(alert_id: int, db: AsyncSession):

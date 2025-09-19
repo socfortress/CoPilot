@@ -20,6 +20,7 @@ class AuthHandler:
             "admin": "Admin users",
             "analyst": "SOC Analysts",
             "scheduler": "Scheduler for automated tasks",
+            "customer_user": "Customer portal users",
         },
     )
     pwd_context = CryptContext(schemes=["bcrypt"])

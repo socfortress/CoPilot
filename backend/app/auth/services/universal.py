@@ -1,8 +1,10 @@
+from typing import List
 from fastapi import HTTPException
 from loguru import logger
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session, selectinload
 from sqlmodel import select
 
 from app.auth.models.users import Password
@@ -13,17 +15,31 @@ from app.db.db_session import async_engine
 passwords_in_memory = {}
 
 
-async def select_all_users():
+def select_all_users_sync(session: Session) -> List[User]:
     """
-    Retrieves all users from the database.
+    Retrieves all Users from the database with their role information.
+
+    Args:
+        session: The database session to use for the query.
 
     Returns:
-        List[User]: A list of User objects representing all the users in the database.
+        List[User]: A list of all Users in the database with role information loaded.
+    """
+    result = session.exec(select(User).options(selectinload(User.role)))
+    return result.all()
+
+
+async def select_all_users():
+    """
+    Async version: Retrieves all Users from the database with their role information.
+
+    Returns:
+        List[User]: A list of all Users in the database with role information loaded.
     """
     async with AsyncSession(async_engine) as session:
-        statement = select(User)
-        results = await session.execute(statement)
-        return results.scalars().all()
+        statement = select(User).options(selectinload(User.role))
+        result = await session.execute(statement)
+        return result.scalars().all()
 
 
 async def find_user(name: str):

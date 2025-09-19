@@ -246,6 +246,7 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
         {"name": "admin", "description": "Administrator"},
         {"name": "analyst", "description": "SOC Analyst"},
         {"name": "scheduler", "description": "Scheduler for automated tasks"},
+        {"name": "customer_user", "description": "Customer user with limited access to their own data"},
     ]
 
     for role_data in role_list:

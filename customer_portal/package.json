@@ -1,0 +1,62 @@
+{
+	"name": "copilot-customer-portal",
+	"type": "module",
+	"version": "1.0.0",
+	"private": true,
+	"packageManager": "pnpm@10.13.1",
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"scripts": {
+		"dev": "vite --host 0.0.0.0 --port 3001",
+		"build": "run-p type-check \"build:only {@}\" --",
+		"build:only": "vite build",
+		"build:docker": "docker build .",
+		"preview": "vite build && echo '' && vite preview --port 4174 --host",
+		"preview:only": "vite preview --port 4174 --host",
+		"type-check": "vue-tsc --build --force",
+		"lint": "eslint . --fix",
+		"format": "prettier --write src/",
+		"start-server": "cd ../backend && /opt/venv/bin/python copilot.py",
+		"start-frontend": "vite --host 0.0.0.0 --port 3001",
+		"start": "concurrently \"pnpm start-server\" \"pnpm start-frontend\""
+	},
+	"dependencies": {
+		"@ajoelp/json-to-formdata": "^1.5.0",
+		"@vueuse/core": "^13.6.0",
+		"axios": "^1.11.0",
+		"dayjs": "^1.11.13",
+		"jose": "^6.0.12",
+		"lodash": "^4.17.21",
+		"mitt": "^3.0.1",
+		"naive-ui": "^2.42.0",
+		"nanoid": "^5.1.5",
+		"pinia": "^3.0.3",
+		"pinia-plugin-persistedstate": "^4.4.1",
+		"secure-ls": "^2.0.0",
+		"vue": "^3.5.18",
+		"vue-router": "^4.5.1"
+	},
+	"devDependencies": {
+		"@antfu/eslint-config": "^5.0.0",
+		"@iconify/vue": "^5.0.0",
+		"@tailwindcss/vite": "^4.1.11",
+		"@tsconfig/node20": "^20.1.6",
+		"@types/lodash": "^4.17.20",
+		"@types/node": "^24.1.0",
+		"@vitejs/plugin-vue": "^6.0.1",
+		"@vue/tsconfig": "^0.7.0",
+		"concurrently": "^8.2.2",
+		"eslint": "^9.32.0",
+		"npm-run-all2": "^8.0.4",
+		"prettier": "^3.6.2",
+		"prettier-plugin-tailwindcss": "^0.6.14",
+		"sass": "^1.89.2",
+		"tailwindcss": "^4.1.11",
+		"typescript": "~5.8.3",
+		"vite": "^7.0.6",
+		"vite-plugin-vue-devtools": "^8.0.0",
+		"vite-svg-loader": "^5.1.0",
+		"vue-tsc": "^3.0.4"
+	}
+}

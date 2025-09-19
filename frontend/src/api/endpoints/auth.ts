@@ -32,5 +32,23 @@ export default {
 			username,
 			new_password: password
 		})
+	},
+	/** need admin role */
+	assignRole(userId: number, roleName: string) {
+		return HttpClient.put<FlaskBaseResponse>(`/auth/users/${userId}/role/by-name`, {
+			role_name: roleName
+		})
+	},
+	/** need admin role */
+	assignCustomerAccess(userId: number, customerCodes: string[]) {
+		return HttpClient.post<FlaskBaseResponse>(`/auth/users/${userId}/customers`, customerCodes)
+	},
+	/** need admin role */
+	getUserCustomerAccess(userId: number) {
+		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>(`/auth/users/${userId}/customers`)
+	},
+	/** get current user's accessible customers */
+	getMyCustomerAccess() {
+		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>("/auth/me/customers")
 	}
 }
