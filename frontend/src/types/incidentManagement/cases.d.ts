@@ -10,6 +10,15 @@ export interface Case {
 	customer_code: null | string
 	notification_invoked_number?: number
 	alerts: Alert[]
+	comments: CaseComment[]
+}
+
+export interface CaseComment {
+	id: number
+	case_id: number
+	comment: string
+	created_at: Date
+	user_name: string
 }
 
 export type CaseStatus = AlertStatus

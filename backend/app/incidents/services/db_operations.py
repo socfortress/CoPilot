@@ -1349,6 +1349,10 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 iocs=iocs,
             )
             alerts_out.append(alert_out)
+
+        # Extract case comments
+        case_comments = [CaseCommentBase(**comment.__dict__) for comment in case.comments]
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
@@ -1359,6 +1363,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             case_status=case.case_status,
             customer_code=case.customer_code,
             notification_invoked_number=case.notification_invoked_number or 0,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1374,6 +1379,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+            selectinload(Case.comments),
         ),
     )
     cases = result.scalars().all()
@@ -1404,13 +1410,21 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
                 iocs=iocs,
             )
             alerts_out.append(alert_out)
+
+        # Extract case comments
+        case_comments = [CaseCommentBase(**comment.__dict__) for comment in case.comments]
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            case_creation_time=case.case_creation_time,
+            case_status=case.case_status,
             customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1424,6 +1438,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.comments),
         ),
     )
     cases = result.scalars().all()
@@ -1450,6 +1465,19 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
                 tags=tags,
             )
             alerts_out.append(alert_out)
+
+        # Handle case comments
+        case_comments = []
+        for comment in case.comments:
+            case_comment = CaseCommentBase(
+                id=comment.id,
+                case_id=comment.case_id,
+                user_name=comment.user_name,
+                comment=comment.comment,
+                created_at=comment.created_at,
+            )
+            case_comments.append(case_comment)
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
@@ -1457,6 +1485,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             assigned_to=case.assigned_to,
             alerts=alerts_out,
             customer_code=case.customer_code,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1473,6 +1502,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.comments),
         ),
     )
     cases = result.scalars().all()
@@ -1499,6 +1529,19 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
                 tags=tags,
             )
             alerts_out.append(alert_out)
+
+        # Handle case comments
+        case_comments = []
+        for comment in case.comments:
+            case_comment = CaseCommentBase(
+                id=comment.id,
+                case_id=comment.case_id,
+                user_name=comment.user_name,
+                comment=comment.comment,
+                created_at=comment.created_at,
+            )
+            case_comments.append(case_comment)
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
@@ -1506,6 +1549,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             assigned_to=case.assigned_to,
             alerts=alerts_out,
             customer_code=case.customer_code,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1519,6 +1563,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.comments),
         ),
     )
     cases = result.scalars().all()
@@ -1545,6 +1590,19 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
                 tags=tags,
             )
             alerts_out.append(alert_out)
+
+        # Handle case comments
+        case_comments = []
+        for comment in case.comments:
+            case_comment = CaseCommentBase(
+                id=comment.id,
+                case_id=comment.case_id,
+                user_name=comment.user_name,
+                comment=comment.comment,
+                created_at=comment.created_at,
+            )
+            case_comments.append(case_comment)
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
@@ -1552,6 +1610,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             assigned_to=case.assigned_to,
             alerts=alerts_out,
             customer_code=case.customer_code,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out
@@ -2095,6 +2154,7 @@ async def list_cases_for_user(
         selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
         selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
         selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+        selectinload(Case.comments),
     )
 
     # Apply customer filtering
@@ -2133,6 +2193,19 @@ async def list_cases_for_user(
                 iocs=iocs,
             )
             alerts_out.append(alert_out)
+
+        # Handle case comments
+        case_comments = []
+        for comment in case.comments:
+            case_comment = CaseCommentBase(
+                id=comment.id,
+                case_id=comment.case_id,
+                user_name=comment.user_name,
+                comment=comment.comment,
+                created_at=comment.created_at,
+            )
+            case_comments.append(case_comment)
+
         case_out = CaseOut(
             id=case.id,
             case_name=case.case_name,
@@ -2143,6 +2216,7 @@ async def list_cases_for_user(
             case_status=case.case_status,
             customer_code=case.customer_code,
             notification_invoked_number=case.notification_invoked_number or 0,
+            comments=case_comments,
         )
         cases_out.append(case_out)
     return cases_out

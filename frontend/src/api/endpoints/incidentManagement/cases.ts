@@ -2,6 +2,7 @@ import type { KeysOfUnion, UnionToIntersection } from "type-fest"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
 	Case,
+	CaseComment,
 	CaseDataStore,
 	CasePayload,
 	CaseReportTemplateDataStore,
@@ -22,6 +23,10 @@ export interface CaseReportPayload {
 	file_name: string
 	template_name: string
 }
+
+export type CaseCommentPayload = Omit<CaseComment, "id">
+
+export type CaseCommentUpdatePayload = Omit<CaseComment, "id"> & { comment_id: number }
 
 export default {
 	getCasesList(filters?: Partial<UnionToIntersection<CasesFilter>>) {
@@ -174,5 +179,20 @@ export default {
 	},
 	createCaseNotification(caseId: number) {
 		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/notification`, { case_id: caseId })
+	},
+	newCaseComment(payload: CaseCommentPayload) {
+		return HttpClient.post<FlaskBaseResponse & { comment: CaseComment }>(
+			`/incidents/db_operations/case/comment`,
+			payload
+		)
+	},
+	updateCaseComment(payload: CaseCommentUpdatePayload) {
+		return HttpClient.put<FlaskBaseResponse & { comment: CaseComment }>(
+			`/incidents/db_operations/case/comment`,
+			payload
+		)
+	},
+	deleteCaseComment(commentId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/comment/${commentId}`)
 	}
 }
