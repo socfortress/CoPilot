@@ -5,12 +5,18 @@
 		:class="[
 			`card-size-${size}`,
 			`card-status-${status}`,
-			{ embedded, highlighted, clickable, hoverable, disabled }
+			{ embedded, highlighted, clickable, hoverable, disabled },
+			cardEntityClass
 		]"
 	>
-		<n-spin :show="loading" :description="loadingDescription">
-			<div class="card-entity-wrapper flex flex-col">
-				<div class="main-box flex flex-col">
+		<n-spin
+			:show="loading"
+			:description="loadingDescription"
+			content-class="h-full grow"
+			class="flex h-full flex-col"
+		>
+			<div class="card-entity-wrapper flex flex-col" :class="cardEntityWrapperClass">
+				<div class="main-box flex flex-col" :class="mainBoxClass">
 					<div v-if="$slots.header" class="header-box">
 						<slot name="header" />
 					</div>
@@ -18,6 +24,7 @@
 					<div
 						v-if="!$slots.header && ($slots.headerMain || $slots.headerExtra)"
 						class="header-box flex flex-wrap items-center justify-between"
+						:class="headerBoxClass"
 					>
 						<div>
 							<slot name="headerMain" />
@@ -59,18 +66,35 @@
 <script setup lang="ts">
 import { NCard, NSpin } from "naive-ui"
 
-const { size, status, embedded, highlighted, clickable, hoverable, disabled, loading, loadingDescription } =
-	defineProps<{
-		size?: "medium" | "small" | "large"
-		status?: "success" | "warning" | "error"
-		embedded?: boolean
-		highlighted?: boolean
-		clickable?: boolean
-		hoverable?: boolean
-		disabled?: boolean
-		loading?: boolean
-		loadingDescription?: string
-	}>()
+const {
+	size,
+	status,
+	embedded,
+	highlighted,
+	clickable,
+	hoverable,
+	disabled,
+	loading,
+	loadingDescription,
+	mainBoxClass,
+	headerBoxClass,
+	cardEntityClass,
+	cardEntityWrapperClass
+} = defineProps<{
+	size?: "medium" | "small" | "large"
+	status?: "success" | "warning" | "error"
+	embedded?: boolean
+	highlighted?: boolean
+	clickable?: boolean
+	hoverable?: boolean
+	disabled?: boolean
+	loading?: boolean
+	loadingDescription?: string
+	mainBoxClass?: string
+	headerBoxClass?: string
+	cardEntityClass?: string
+	cardEntityWrapperClass?: string
+}>()
 </script>
 
 <style lang="scss" scoped>

@@ -8,7 +8,7 @@ import type {
 	MitreSoftwareDetails,
 	MitreTacticDetails,
 	MitreTechnique,
-	MitreTechniquesDetails
+	MitreTechniqueDetails
 } from "@/types/mitre.d"
 import { HttpClient } from "../../httpClient"
 
@@ -118,7 +118,7 @@ export default {
 			q = `id=${query?.id}`
 		}
 
-		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniquesDetails[] }>(
+		return HttpClient.get<FlaskBaseResponse & { results: MitreTechniqueDetails[] }>(
 			`/wazuh_manager/mitre/techniques`,
 			{
 				params: {

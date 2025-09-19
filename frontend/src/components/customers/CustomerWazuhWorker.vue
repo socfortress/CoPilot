@@ -136,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SafeAny } from "@/types/common.d"
 import type { PortainerStack } from "@/types/portainer.d"
 import _castArray from "lodash/castArray"
 import _pick from "lodash/pick"
@@ -173,7 +174,7 @@ const portainerStackType = computed(
 )
 
 const properties = computed(() => {
-	const props: Partial<{ [key in keyof PortainerStack]: any }> = _pick(portainerStack.value || {}, [
+	const props: Partial<{ [key in keyof PortainerStack]: SafeAny | null | Date }> = _pick(portainerStack.value || {}, [
 		"EndpointId",
 		"SwarmId",
 		"EntryPoint",
@@ -191,7 +192,9 @@ const properties = computed(() => {
 	])
 
 	props.Env = _castArray(props.Env).join(", ") || null
-	props.UpdateDate = props.UpdateDate ? formatDate(props.UpdateDate, dFormats.datetimesec) : null
+	props.UpdateDate = props.UpdateDate
+		? formatDate(props.UpdateDate as string | number | Date, dFormats.datetimesec)
+		: null
 	props.UpdatedBy = props.UpdatedBy || null
 	props.Namespace = props.Namespace || null
 

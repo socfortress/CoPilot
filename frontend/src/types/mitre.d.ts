@@ -110,8 +110,6 @@ export interface MitreGroupDetails {
 	country: null | string
 }
 
-export type MitreTechniquesDetails = any
-
 export interface MitreEventDetails {
 	data_source_ip: string
 	data_host_architecture: string

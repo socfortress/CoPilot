@@ -1,8 +1,4 @@
-import type {
-	ScaOverviewQuery,
-	ScaOverviewResponse,
-	ScaStatsResponse
-} from "@/types/sca.d"
+import type { ScaOverviewQuery, ScaOverviewResponse, ScaStatsResponse } from "@/types/sca.d"
 import { HttpClient } from "../httpClient"
 
 export default {

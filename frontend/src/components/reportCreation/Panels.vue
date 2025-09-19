@@ -24,7 +24,7 @@
 											ghost-class="ghost-panel"
 											:group="{
 												name: 'panels',
-												put(to: any) {
+												put(to: { el: HTMLElement }) {
 													return to.el.children.length < 4
 												},
 												pull: ['panels']

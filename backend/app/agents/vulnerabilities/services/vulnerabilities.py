@@ -1061,9 +1061,38 @@ async def search_vulnerabilities_from_indexer(
                     logger.error(f"Error processing vulnerability document: {e}")
                     continue
 
+            # Sort vulnerabilities by EPSS score (highest to lowest) if EPSS is included
+            if include_epss:
+                # Sort by EPSS score descending, treating None/null as 0
+                # Then by severity (Critical=0, High=1, Medium=2, Low=3) for tie-breaking
+                severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+
+                def get_epss_sort_key(vuln):
+                    # Convert EPSS score to float for sorting, handle string/None values
+                    epss_score = vuln.epss_score
+                    if epss_score is None:
+                        epss_float = 0.0
+                    else:
+                        try:
+                            epss_float = float(epss_score)
+                        except (ValueError, TypeError):
+                            epss_float = 0.0
+                    return (
+                        -epss_float,  # Negative for descending order
+                        severity_order.get(vuln.severity, 4),  # Secondary sort by severity
+                        vuln.cve_id,  # Tertiary sort by CVE ID for consistency
+                    )
+
+                vulnerabilities.sort(key=get_epss_sort_key)
+                logger.info(f"Sorted {len(vulnerabilities)} vulnerabilities by EPSS score (highest to lowest)")
+
             message = f"Found {len(vulnerabilities)} vulnerabilities on page {page} of {total_pages}"
             if filters_applied:
                 message += f" with filters: {filters_applied}"
+            if include_epss:
+                message += " (sorted by EPSS score, highest to lowest)"
+            else:
+                message += " (sorted by detection date and severity)"
 
             return VulnerabilitySearchResponse(
                 vulnerabilities=vulnerabilities,

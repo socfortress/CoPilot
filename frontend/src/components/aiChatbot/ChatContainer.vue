@@ -44,7 +44,6 @@
 </template>
 
 <script setup lang="ts">
-import type { RemovableRef } from "@vueuse/core"
 import type { ScrollbarInst } from "naive-ui"
 import type { ChatBubble } from "./ChatBubble.vue"
 import type { Message } from "./ChatQuery.vue"
@@ -67,11 +66,7 @@ const emit = defineEmits<{
 
 const message = useMessage()
 
-const list: RemovableRef<ChatBubble[]> = useStorage<ChatBubble[]>(
-	"ai-chatbot-list-messages",
-	[],
-	secureLocalStorage({ session: true })
-)
+const list = useStorage<ChatBubble[]>("ai-chatbot-list-messages", [], secureLocalStorage({ session: true }))
 const loading = ref(false)
 const server = ref<string | null>(null)
 const input = ref<string | null>(null)

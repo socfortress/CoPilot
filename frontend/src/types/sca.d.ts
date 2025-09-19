@@ -33,7 +33,7 @@ export interface ScaOverviewResponse {
 	has_previous: boolean
 	success: boolean
 	message: string
-	filters_applied: Record<string, any>
+	filters_applied: Record<string, string | number | boolean>
 }
 
 export interface ScaOverviewQuery {
@@ -55,15 +55,18 @@ export interface ScaStatsResponse {
 	total_passes_all_agents: number
 	total_fails_all_agents: number
 	total_invalid_all_agents: number
-	by_customer: Record<string, {
-		total_agents: number
-		total_policies: number
-		average_score: number
-		total_checks: number
-		total_passes: number
-		total_fails: number
-		total_invalid: number
-	}>
+	by_customer: Record<
+		string,
+		{
+			total_agents: number
+			total_policies: number
+			average_score: number
+			total_checks: number
+			total_passes: number
+			total_fails: number
+			total_invalid: number
+		}
+	>
 	success: boolean
 	message: string
 }
@@ -74,46 +77,4 @@ export enum ScaComplianceLevel {
 	Average = "Average", // 70-79%
 	Poor = "Poor", // 60-69%
 	Critical = "Critical" // <60%
-}
-
-export function getComplianceLevel(score: number): ScaComplianceLevel {
-	if (score >= 90) return ScaComplianceLevel.Excellent
-	if (score >= 80) return ScaComplianceLevel.Good
-	if (score >= 70) return ScaComplianceLevel.Average
-	if (score >= 60) return ScaComplianceLevel.Poor
-	return ScaComplianceLevel.Critical
-}
-
-export function getComplianceLevelColor(level: ScaComplianceLevel): "primary" | "warning" | "success" | "danger" {
-	switch (level) {
-		case ScaComplianceLevel.Excellent:
-			return "success"
-		case ScaComplianceLevel.Good:
-			return "primary"
-		case ScaComplianceLevel.Average:
-			return "warning"
-		case ScaComplianceLevel.Poor:
-			return "warning"
-		case ScaComplianceLevel.Critical:
-			return "danger"
-		default:
-			return "primary"
-	}
-}
-
-export function getComplianceLevelIcon(level: ScaComplianceLevel): string {
-	switch (level) {
-		case ScaComplianceLevel.Excellent:
-			return "carbon:checkmark-filled"
-		case ScaComplianceLevel.Good:
-			return "carbon:checkmark"
-		case ScaComplianceLevel.Average:
-			return "carbon:warning-alt"
-		case ScaComplianceLevel.Poor:
-			return "carbon:warning"
-		case ScaComplianceLevel.Critical:
-			return "carbon:warning-filled"
-		default:
-			return "carbon:help"
-	}
 }

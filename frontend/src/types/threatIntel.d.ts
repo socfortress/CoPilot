@@ -1,3 +1,5 @@
+import type { SafeAny } from "./common"
+
 export interface ThreatIntelResponse {
 	comment: string | null
 	ioc_source: string
@@ -17,7 +19,7 @@ export interface StructuredAgentResponse {
 export interface MCPQueryResponse {
 	message: string
 	success: boolean
-	result?: any
+	result?: SafeAny
 	structured_result?: StructuredAgentResponse
 	execution_time?: number
 }

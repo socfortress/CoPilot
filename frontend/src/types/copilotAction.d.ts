@@ -1,39 +1,5 @@
-export enum Technology {
-	WAZUH = "Wazuh",
-	LINUX = "Linux",
-	WINDOWS = "Windows",
-	MACOS = "macOS",
-	NETWORK = "Network",
-	CLOUD = "Cloud",
-	VELOCIRAPTOR = "Velociraptor"
-}
-
-export interface ScriptParameter {
-	name: string
-	type: string
-	required: boolean
-	description?: string
-	default?: string | number | boolean | Array<any> | Record<string, any>
-	enum?: string[]
-	arg_position?: string
-}
-
-export interface ActiveResponseItem {
-	copilot_action_name: string
-	description: string
-	technology: Technology
-	icon?: string
-	script_parameters: ScriptParameter[]
-	repo_url: string
-	script_name?: string
-	version?: string
-	last_updated?: Date
-	category?: string
-	tags?: string[]
-}
-
 export interface InventoryQueryRequest {
-	technology?: Technology
+	technology?: string
 	category?: string
 	tag?: string
 	q?: string
@@ -43,46 +9,54 @@ export interface InventoryQueryRequest {
 	include?: string
 }
 
-export interface InventoryResponse {
-	copilot_actions: ActiveResponseItem[]
-	message: string
-	success: boolean
-}
-
-export interface ActionDetailResponse {
-	copilot_action: ActiveResponseItem
-	message: string
-	success: boolean
-}
-
-export interface InventoryMetricsResponse {
-	status: string
-	metrics: Record<string, any>
-	message: string
-	success: boolean
-}
-
 export interface InvokeCopilotActionRequest {
 	copilot_action_name: string
 	agent_names: string[]
-	parameters: Record<string, any>
+	parameters: Record<string, string | number>
 }
 
-export interface CollectArtifactResponse {
-	message: string
-	success: boolean
+export interface CopilotActionListResponse {
+	copilot_actions: CopilotAction[]
+	total: number
+	count: number
+	limit: number
+	offset: number
+	has_more: boolean
+	next_offset: number | number
+	prev_offset: null | number
+}
+
+export interface CopilotAction {
+	copilot_action_name: string
+	description: string
+	technology: string
+	icon?: string
+	script_parameters: ScriptParameter[]
+	repo_url: string
+	script_name?: string
+	version?: string
+	last_updated?: Date
+	category?: null | string
+	tags?: null | string[]
+}
+
+export interface ScriptParameter {
+	name: string
+	type: ScriptParameterType
+	required: boolean
+	description?: string
+	default?: string | number | boolean | null
+	enum?: string[] | null
+	arg_position?: string
+}
+
+export enum ScriptParameterType {
+	Boolean = "boolean",
+	Integer = "integer",
+	String = "string"
+}
+
+export interface CopilotActionInvokeResponse {
 	session_id?: string
 	flow_id?: string
-}
-
-export interface InvokeCopilotActionResponse {
-	responses: CollectArtifactResponse[]
-	message: string
-	success: boolean
-}
-
-export interface TechnologiesResponse {
-	technologies: Technology[]
-	message: string
-	success: boolean
 }
