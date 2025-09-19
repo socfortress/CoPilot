@@ -29,6 +29,7 @@ from app.db.universal_models import Customers
 from app.incidents.models import Alert
 from app.incidents.models import FieldName
 from app.incidents.models import Comment
+from app.incidents.models import CaseComment
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -66,6 +67,9 @@ from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
+from app.incidents.schema.db_operations import CaseCommentCreate
+from app.incidents.schema.db_operations import CaseCommentEdit
+from app.incidents.schema.db_operations import CaseCommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import DeleteAlertsRequest
@@ -139,6 +143,7 @@ from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_alert_links_bulk
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
+from app.incidents.services.db_operations import create_case_comment
 from app.incidents.services.db_operations import delete_alert
 from app.incidents.services.db_operations import delete_alert_ioc
 from app.incidents.services.db_operations import delete_alert_tag
@@ -146,6 +151,7 @@ from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
 from app.incidents.services.db_operations import delete_comment
+from app.incidents.services.db_operations import delete_case_comment
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
 from app.incidents.services.db_operations import delete_ioc_name
@@ -154,6 +160,7 @@ from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
 from app.incidents.services.db_operations import edit_comment
+from app.incidents.services.db_operations import edit_case_comment
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
@@ -478,6 +485,70 @@ async def delete_comment_endpoint(
 
     await delete_comment(comment_id, db)
     return {"message": "Comment deleted successfully", "success": True}
+
+
+@incidents_db_operations_router.post("/case/comment", response_model=CaseCommentResponse)
+async def create_case_comment_endpoint(
+    comment: CaseCommentCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {comment.case_id} - insufficient customer permissions"
+        )
+
+    return CaseCommentResponse(comment=await create_case_comment(comment, db), success=True, message="Case comment created successfully")
+
+
+@incidents_db_operations_router.put("/case/comment", response_model=CaseCommentResponse)
+async def edit_case_comment_endpoint(
+    comment: CaseCommentEdit,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {comment.case_id} - insufficient customer permissions"
+        )
+
+    return CaseCommentResponse(comment=await edit_case_comment(comment, db), success=True, message="Case comment edited successfully")
+
+
+@incidents_db_operations_router.delete("/case/comment/{comment_id}")
+async def delete_case_comment_endpoint(
+    comment_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # First get the comment to find the case_id
+    result = await db.execute(select(CaseComment).where(CaseComment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to comment on case {comment.case_id} - insufficient customer permissions"
+        )
+
+    await delete_case_comment(comment_id, db)
+    return {"message": "Case comment deleted successfully", "success": True}
 
 
 @incidents_db_operations_router.get("/alert/available-users", response_model=AvailableUsersResponse)

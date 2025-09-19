@@ -15,6 +15,7 @@ from app.incidents.models import AlertToIoC
 from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseComment
 from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
@@ -132,6 +133,12 @@ class AlertResponse(BaseModel):
 
 class CommentResponse(BaseModel):
     comment: Comment
+    success: bool
+    message: str
+
+
+class CaseCommentResponse(BaseModel):
+    comment: CaseComment
     success: bool
     message: str
 
@@ -268,6 +275,21 @@ class CommentEdit(BaseModel):
     created_at: datetime
 
 
+class CaseCommentCreate(BaseModel):
+    case_id: int
+    comment: str
+    user_name: str
+    created_at: Optional[datetime] = None
+
+
+class CaseCommentEdit(BaseModel):
+    case_id: int
+    comment_id: int
+    comment: str
+    user_name: str
+    created_at: datetime
+
+
 class AlertContextCreate(BaseModel):
     source: str
     context: Dict
@@ -349,6 +371,14 @@ class CommentBase(BaseModel):
     created_at: datetime
 
 
+class CaseCommentBase(BaseModel):
+    user_name: str
+    case_id: int
+    id: int
+    comment: str
+    created_at: datetime
+
+
 class AssetBase(BaseModel):
     asset_name: str
     agent_id: Optional[str] = None
@@ -406,6 +436,7 @@ class CaseOut(BaseModel):
     case_creation_time: Optional[datetime] = None
     customer_code: Optional[str] = None
     notification_invoked_number: Optional[int] = 0
+    comments: List[CaseCommentBase] = []
 
 
 class CaseOutResponse(BaseModel):

@@ -37,6 +37,7 @@ from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseComment
 from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
@@ -65,6 +66,9 @@ from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListRe
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentEdit
+from app.incidents.schema.db_operations import CaseCommentCreate
+from app.incidents.schema.db_operations import CaseCommentEdit
+from app.incidents.schema.db_operations import CaseCommentBase
 from app.incidents.schema.db_operations import IoCBase
 from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
@@ -900,6 +904,48 @@ async def delete_comment(comment_id: int, db: AsyncSession) -> Comment:
     return comment
 
 
+async def create_case_comment(comment: CaseCommentCreate, db: AsyncSession) -> CaseComment:
+    # Check if the case exists
+    result = await db.execute(select(Case).options(selectinload(Case.comments)).where(Case.id == comment.case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    # Create comment with automatic timestamp if not provided
+    comment_data = comment.dict()
+    if comment_data.get('created_at') is None:
+        comment_data['created_at'] = datetime.utcnow()
+
+    db_comment = CaseComment(**comment_data)
+    db.add(db_comment)
+    try:
+        await db.commit()
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Comment already exists")
+    return db_comment
+
+
+async def edit_case_comment(comment: CaseCommentEdit, db: AsyncSession) -> CaseComment:
+    result = await db.execute(select(CaseComment).where(CaseComment.id == comment.comment_id))
+    db_comment = result.scalars().first()
+    if not db_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    db_comment.comment = comment.comment
+    db_comment.user_name = comment.user_name
+    await db.commit()
+    return db_comment
+
+
+async def delete_case_comment(comment_id: int, db: AsyncSession) -> CaseComment:
+    result = await db.execute(select(CaseComment).where(CaseComment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    await db.execute(delete(CaseComment).where(CaseComment.id == comment_id))
+    await db.commit()
+    return comment
+
+
 async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
     # Check if the alert exists
     result = await db.execute(select(Alert).options(selectinload(Alert.assets)).where(Alert.id == asset.alert_linked))
@@ -1215,6 +1261,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+            selectinload(Case.comments),
         ),
     )
     case = result.scalars().first()
@@ -1245,6 +1292,10 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
             iocs=iocs,
         )
         alerts_out.append(alert_out)
+
+    # Extract case comments
+    case_comments = [CaseCommentBase(**comment.__dict__) for comment in case.comments]
+
     case_out = CaseOut(
         id=case.id,
         case_name=case.case_name,
@@ -1254,6 +1305,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         case_creation_time=case.case_creation_time,
         customer_code=case.customer_code,
         notification_invoked_number=case.notification_invoked_number or 0,
+        comments=case_comments,
     )
     return case_out
 
@@ -1266,6 +1318,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+            selectinload(Case.comments),
         ),
     )
     cases = result.scalars().all()
