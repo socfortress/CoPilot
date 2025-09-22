@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
-from app.db.db_session import session
+from app.db.db_session import get_sync_db_session
 from app.db.universal_models import Agents
 
 
@@ -23,7 +23,8 @@ def get_agent(agent_id: str) -> List[Agents]:
         AgentMetadata: The agent object if found, otherwise None.
     """
     try:
-        return session.query(Agents).filter(Agents.agent_id == agent_id).first()
+        with get_sync_db_session() as sync_session:
+            return sync_session.query(Agents).filter(Agents.agent_id == agent_id).first()
     except Exception as e:
         logger.error(f"Failed to fetch agent with agent_id {agent_id}: {e}")
         raise HTTPException(

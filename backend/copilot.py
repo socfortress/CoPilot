@@ -1,7 +1,6 @@
 import os
 
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -9,10 +8,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
+from sqlalchemy import text
+from sqlalchemy.engine.url import make_url
 
 from app.auth.utils import AuthHandler
 from app.data_store.data_store_setup import create_buckets
-from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
 from app.db.db_setup import add_connectors
 from app.db.db_setup import apply_migrations
@@ -78,15 +78,16 @@ from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+from settings import ENVIRONMENT
+from settings import MANAGED_DB
+from settings import SERVER_IP
+from settings import SERVER_PORT
+from settings import SQLALCHEMY_DATABASE_URI_NO_DB
 
 # from app.middleware.logger import log_requests
 
 
 auth_handler = AuthHandler()
-# Get the `SERVER_IP` from the `.env` file
-load_dotenv()
-server_ip = os.getenv("SERVER_IP", "localhost")
-environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 
 # ! Not needed for now maybe revist later ! #
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
@@ -176,9 +177,40 @@ app.include_router(api_router)
 @app.on_event("startup")
 async def init_db():
     logger.info("Initializing database")
-    if environment == "PRODUCTION":
-        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
-        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
+
+    # Run DB bootstrap only when:
+    #  - we're in PRODUCTION
+    #  - MANAGED_DB is false (self-hosted bootstrap allowed)
+    #  - and the NO_DB URI exists and is a MySQL DSN (not SQLite)
+    should_bootstrap = False
+    if ENVIRONMENT == "PRODUCTION" and not MANAGED_DB:
+        if SQLALCHEMY_DATABASE_URI_NO_DB:
+            try:
+                url = make_url(SQLALCHEMY_DATABASE_URI_NO_DB)
+                # url.get_backend_name() returns "mysql", "sqlite", etc.
+                should_bootstrap = url.get_backend_name() == "mysql"
+            except Exception as e:
+                logger.warning(f"Skipping bootstrap: invalid NO_DB URI ({e})")
+
+    if should_bootstrap:
+        await create_database_if_not_exists(
+            db_url=SQLALCHEMY_DATABASE_URI_NO_DB,
+            db_name="copilot",
+        )
+        await create_copilot_user_if_not_exists(
+            db_url=SQLALCHEMY_DATABASE_URI_NO_DB,
+            db_user_name="copilot",
+        )
+
+    # connectivity preflight guard
+    try:
+        async with async_engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        logger.info("Database connectivity preflight: OK")
+    except Exception as e:
+        logger.error(f"Database connectivity preflight FAILED: {e}")
+        raise e
+
     apply_migrations()
     await create_buckets()
     await add_connectors(async_engine)
@@ -220,6 +252,8 @@ async def shutdown_scheduler():
 
     await ensure_scheduler_user_removed(async_engine)
 
+    await async_engine.dispose()
+
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=server_ip, port=5000)
+    uvicorn.run(app, host=SERVER_IP, port=SERVER_PORT)
