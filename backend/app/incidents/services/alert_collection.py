@@ -1,11 +1,13 @@
 from loguru import logger
 
+from app.connectors.utils import is_connector_verified
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
 from app.connectors.wazuh_indexer.utils.universal import (
     return_graylog_events_index_names,
 )
+from app.db.db_session import get_db_session
 from app.incidents.schema.alert_collection import AlertPayloadItem
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import CreateAlertRequest
@@ -61,18 +63,26 @@ async def get_alerts_not_created_in_copilot() -> AlertsPayload:
     """
     Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
     """
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Skipping alert collection; Wazuh Indexer connector is not verified.")
+            return AlertsPayload(alerts=[], success=False, message="Wazuh Indexer connector is not verified.")
+
     indices = await return_graylog_events_index_names()
     logger.info(f"Indices: {indices}")
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
-    query = await construct_query()
+    try:
+        query = await construct_query()
 
-    alerts_not_created = []
-    for index in indices:
-        alerts = await fetch_alerts_for_index(es_client, index, query)
-        alerts_not_created.extend(alerts)
+        alerts_not_created = []
+        for index in indices:
+            alerts = await fetch_alerts_for_index(es_client, index, query)
+            alerts_not_created.extend(alerts)
 
-    logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
-    return AlertsPayload(alerts=alerts_not_created)
+        logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
+        return AlertsPayload(alerts=alerts_not_created)
+    finally:
+        await es_client.close()
 
 
 async def get_original_alert_id(origin_context: str):
@@ -101,30 +111,40 @@ async def add_copilot_alert_id(index_data: CreateAlertRequest, alert_id: int):
     """
     Add the CoPilot alert ID to the Graylog event.
     """
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning(
+                "Skipping Graylog event update; Wazuh Indexer connector is not verified.",
+            )
+            return None
+
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     body = {"doc": {"fields": {"COPILOT_ALERT_ID": f"{alert_id}"}}}
     try:
-        await es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
-        logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
-    except Exception as e:
-        logger.error(
-            f"Failed to add CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}: {e}",
-        )
-
-        # Attempt to remove read-only block
         try:
-            await es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": None})
-            logger.info(f"Removed read-only block from index {index_data.index_name}. Retrying update.")
-
-            # Retry the update operation
             await es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
-            logger.info(
-                f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name} after removing read-only block",
+            logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
+        except Exception as e:
+            logger.error(
+                f"Failed to add CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}: {e}",
             )
 
-            # Re-enable the write block
-            await es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": True})
-        except Exception as e2:
-            logger.error(f"Failed to remove read-only block from index {index_data.index_name}: {e2}")
+            # Attempt to remove read-only block
+            try:
+                await es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": None})
+                logger.info(f"Removed read-only block from index {index_data.index_name}. Retrying update.")
+
+                # Retry the update operation
+                await es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
+                logger.info(
+                    f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name} after removing read-only block",
+                )
+
+                # Re-enable the write block
+                await es_client.indices.put_settings(index=index_data.index_name, body={"index.blocks.write": True})
+            except Exception as e2:
+                logger.error(f"Failed to remove read-only block from index {index_data.index_name}: {e2}")
+    finally:
+        await es_client.close()
 
     return None

@@ -1,5 +1,7 @@
 from typing import Any
 from typing import Dict
+from typing import Iterable
+from typing import List
 from typing import Optional
 
 from loguru import logger
@@ -58,3 +60,16 @@ async def is_connector_verified(connector_name: str, db: AsyncSession) -> bool:
     else:
         logger.warning("No connector found.")
         return False
+
+
+async def get_unverified_connectors(
+    connector_names: Iterable[str],
+    db: AsyncSession,
+) -> List[str]:
+    """Return the subset of connectors that are not verified."""
+
+    missing: List[str] = []
+    for connector_name in connector_names:
+        if not await is_connector_verified(connector_name, db):
+            missing.append(connector_name)
+    return missing

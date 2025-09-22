@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.active_response.routes.graylog import verify_graylog_header
 from app.active_response.schema.graylog import GraylogThresholdEventNotification
 from app.auth.utils import AuthHandler
+from app.connectors.utils import get_unverified_connectors
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AlertDetailsResponse
@@ -182,6 +183,12 @@ async def create_alert_auto_route(
     Returns:
         CreateAlertResponse: The response object containing the result of the alert creation.
     """
+    missing_connectors = await get_unverified_connectors(["Wazuh-Indexer"], session)
+    if missing_connectors:
+        message = "Skipping automatic alert creation; unverified connectors: " + ", ".join(missing_connectors)
+        logger.warning(message)
+        return AutoCreateAlertResponse(success=False, message=message)
+
     alerts = await get_alerts_not_created_in_copilot()
     logger.info(f"Alerts to create in CoPilot: {alerts}")
     if len(alerts.alerts) == 0:

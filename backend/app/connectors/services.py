@@ -399,6 +399,15 @@ class ConnectorServices:
             connector_record.connector_api_key = connector.connector_api_key
             connector_record.connector_extra_data = connector.connector_extra_data
             connector_record.connector_last_updated = datetime.now()
+            connector_record.connector_configured = any(
+                [
+                    connector.connector_url,
+                    connector.connector_username,
+                    connector.connector_password,
+                    connector.connector_api_key,
+                    connector.connector_extra_data,
+                ],
+            )
 
             # Commit the changes to the database
             session.add(connector_record)

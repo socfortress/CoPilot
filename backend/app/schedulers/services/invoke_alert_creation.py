@@ -3,6 +3,7 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.future import select
 
+from app.connectors.utils import get_unverified_connectors
 from app.db.db_session import get_db_session
 from app.incidents.routes.incident_alert import create_alert_auto_route
 from app.schedulers.models.scheduler import JobMetadata
@@ -20,7 +21,20 @@ async def invoke_alert_creation_collect():
     """
     logger.info("Invoking alert creation collection via scheduler...")
     async with get_db_session() as session:
-        await create_alert_auto_route(session=session)
+        missing_connectors = await get_unverified_connectors(["Wazuh-Indexer"], session)
+        if missing_connectors:
+            logger.info(
+                "invoke_alert_creation_collect job skipped; unverified connectors: {}",
+                ", ".join(missing_connectors),
+            )
+            return
+
+        response = await create_alert_auto_route(session=session)
+        if not response.success:
+            logger.info(
+                "invoke_alert_creation_collect completed without new alerts: {}",
+                response.message,
+            )
 
         stmt = select(JobMetadata).where(JobMetadata.job_id == "invoke_alert_creation_collect")
         result = await session.execute(stmt)
