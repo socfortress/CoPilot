@@ -3,6 +3,7 @@ from typing import Union
 
 from loguru import logger
 
+from app.connectors.utils import is_connector_verified
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStats
@@ -15,6 +16,7 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
 from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
 from app.connectors.wazuh_indexer.utils.universal import format_shards
+from app.db.db_session import get_db_session
 
 
 async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
@@ -28,6 +30,14 @@ async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
         Exception: An exception is raised if the cluster health cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer healthcheck")
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Skipping cluster healthcheck; Wazuh Indexer connector is not verified.")
+            return ClusterHealthResponse(
+                cluster_health=None,
+                success=False,
+                message="Wazuh Indexer connector is not verified.",
+            )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         cluster_health_data = es_client.cluster.health()
@@ -40,6 +50,8 @@ async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
     except Exception as e:
         e = f"Cluster health check failed with error: {e}"
         raise Exception(str(e))
+    finally:
+        es_client.transport.close()
 
 
 async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
@@ -53,6 +65,14 @@ async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
         Exception: An exception is raised if the node allocation cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer node allocation")
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Skipping node allocation; Wazuh Indexer connector is not verified.")
+            return NodeAllocationResponse(
+                node_allocation=None,
+                success=False,
+                message="Wazuh Indexer connector is not verified.",
+            )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_node_allocation_data = es_client.cat.allocation(format="json")
@@ -72,6 +92,8 @@ async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
     except Exception as e:
         e = f"Node allocation check failed with error: {e}"
         raise Exception(str(e))
+    finally:
+        es_client.transport.close()
 
 
 async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
@@ -85,6 +107,14 @@ async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
         Exception: An exception is raised if the indices stats cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer indices stats")
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Skipping indices stats; Wazuh Indexer connector is not verified.")
+            return IndicesStatsResponse(
+                indices_stats=None,
+                success=False,
+                message="Wazuh Indexer connector is not verified.",
+            )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_indices_stats_data = es_client.cat.indices(format="json")
@@ -103,6 +133,8 @@ async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
     except Exception as e:
         e = f"Indices stats check failed with error: {e}"
         raise Exception(str(e))
+    finally:
+        es_client.transport.close()
 
 
 async def shards() -> Union[ShardsResponse, Dict[str, str]]:
@@ -116,6 +148,14 @@ async def shards() -> Union[ShardsResponse, Dict[str, str]]:
         Exception: An exception is raised if the shards cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer shards")
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning("Skipping shard collection; Wazuh Indexer connector is not verified.")
+            return ShardsResponse(
+                shards=None,
+                success=False,
+                message="Wazuh Indexer connector is not verified.",
+            )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_shards_data = es_client.cat.shards(format="json")
@@ -133,6 +173,8 @@ async def shards() -> Union[ShardsResponse, Dict[str, str]]:
         logger.error(f"Shards check failed with error: {e}")
         e = f"Shards check failed with error: {e}"
         raise Exception(str(e))
+    finally:
+        es_client.transport.close()
 
 
 async def output_shard_number_to_be_set_based_on_nodes() -> int:
@@ -144,6 +186,13 @@ async def output_shard_number_to_be_set_based_on_nodes() -> int:
     Returns:
         int: The number of shards to be set for the new index.
     """
+    async with get_db_session() as session:
+        if not await is_connector_verified("Wazuh-Indexer", session):
+            logger.warning(
+                "Skipping shard number calculation; Wazuh Indexer connector is not verified.",
+            )
+            raise Exception("Wazuh Indexer connector is not verified.")
+
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         cluster_health_data = es_client.cluster.health()
@@ -153,3 +202,5 @@ async def output_shard_number_to_be_set_based_on_nodes() -> int:
         logger.error(f"Shards check failed with error: {e}")
         e = f"Shards check failed with error: {e}"
         raise Exception(str(e))
+    finally:
+        es_client.transport.close()

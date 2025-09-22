@@ -9,6 +9,8 @@ from loguru import logger
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
+DEFAULT_REQUEST_TIMEOUT = 15
+
 HEADERS = {"X-Requested-By": "CoPilot"}
 
 
@@ -30,6 +32,7 @@ async def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, An
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         if graylog_roles.status_code == 200:
             logger.info(
@@ -47,6 +50,14 @@ async def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, An
                 "connectionSuccessful": False,
                 "message": f"Connection to {attributes['connector_url']} failed with error: {graylog_roles.text}",
             }
+    except requests.exceptions.Timeout:
+        logger.error(
+            f"Connection to {attributes['connector_url']} timed out while verifying credentials.",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} timed out",
+        }
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
@@ -92,6 +103,12 @@ async def send_get_request(
     if attributes is None:
         logger.error("No Graylog connector found in the database")
         return None
+    if not attributes.get("connector_verified"):
+        logger.warning("Graylog connector is not verified; skipping request to %s", endpoint)
+        return {
+            "success": False,
+            "message": "Graylog connector is not verified.",
+        }
     try:
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",
@@ -102,6 +119,7 @@ async def send_get_request(
             ),
             params=params,
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         if response.status_code == 404:
             raise HTTPException(
@@ -115,6 +133,11 @@ async def send_get_request(
         }
     except HTTPException as e:
         raise e
+    except requests.exceptions.Timeout:
+        raise HTTPException(
+            status_code=504,
+            detail=f"Request to {attributes['connector_url']}{endpoint} timed out",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -147,6 +170,12 @@ async def send_post_request(
             "success": False,
             "message": "No Graylog connector found in the database",
         }
+    if not attributes.get("connector_verified"):
+        logger.warning("Graylog connector is not verified; skipping POST request to %s", endpoint)
+        return {
+            "success": False,
+            "message": "Graylog connector is not verified.",
+        }
 
     try:
         response = requests.post(
@@ -158,6 +187,7 @@ async def send_post_request(
             ),
             json=data,
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         logger.info(
             f"Response from POST request: {response.status_code} {response.text}",
@@ -195,6 +225,11 @@ async def send_post_request(
             )
     except HTTPException as e:
         raise e
+    except requests.exceptions.Timeout:
+        raise HTTPException(
+            status_code=504,
+            detail=f"Request to {attributes['connector_url']}{endpoint} timed out",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,

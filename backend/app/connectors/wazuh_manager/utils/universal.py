@@ -10,6 +10,8 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
 
+DEFAULT_REQUEST_TIMEOUT = 15
+
 
 async def verify_wazuh_manager_credentials(
     attributes: Dict[str, Any],
@@ -32,6 +34,7 @@ async def verify_wazuh_manager_credentials(
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
 
         if wazuh_auth_token.status_code == 200:
@@ -49,6 +52,14 @@ async def verify_wazuh_manager_credentials(
                 "connectionSuccessful": False,
                 "message": f"Connection to {attributes['connector_url']} failed",
             }
+    except requests.exceptions.Timeout:
+        logger.error(
+            f"Connection to {attributes['connector_url']} timed out while verifying credentials.",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} timed out",
+        }
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
@@ -101,6 +112,7 @@ async def create_wazuh_manager_client(connector_name: str) -> str:
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
 
         if wazuh_auth_token.status_code == 200:
@@ -115,6 +127,11 @@ async def create_wazuh_manager_client(connector_name: str) -> str:
             )
 
             return None
+    except requests.exceptions.Timeout:
+        logger.error(
+            f"Connection to {attributes['connector_url']} timed out while retrieving authentication token.",
+        )
+        return None
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
@@ -148,6 +165,12 @@ async def send_get_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    if not attributes.get("connector_verified"):
+        logger.warning("Wazuh Manager connector is not verified; skipping GET request to %s", endpoint)
+        return {
+            "success": False,
+            "message": "Wazuh Manager connector is not verified.",
+        }
     try:
         # Check if raw response is requested - support both old and new ways
         # Old way: params == {"raw": True} (exact match for backward compatibility)
@@ -160,6 +183,7 @@ async def send_get_request(
                 headers=wazuh_manager_client,
                 params=params,
                 verify=False,
+                timeout=DEFAULT_REQUEST_TIMEOUT,
             )
             response.raise_for_status()
             return {
@@ -172,12 +196,19 @@ async def send_get_request(
             headers=wazuh_manager_client,
             params=params,
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return {
             "data": response.json(),
             "success": True,
             "message": "Successfully retrieved data",
+        }
+    except requests.exceptions.Timeout:
+        logger.error(f"GET {endpoint} timed out when contacting {attributes['connector_url']}")
+        return {
+            "success": False,
+            "message": f"Request to {attributes['connector_url']}{endpoint} timed out",
         }
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
@@ -210,18 +241,31 @@ async def send_post_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    if not attributes.get("connector_verified"):
+        logger.warning("Wazuh Manager connector is not verified; skipping POST request to %s", endpoint)
+        return {
+            "success": False,
+            "message": "Wazuh Manager connector is not verified.",
+        }
     try:
         response = requests.post(
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             json=data,
             verify=False,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return {
             "data": response.json(),
             "success": True,
             "message": "Successfully retrieved data",
+        }
+    except requests.exceptions.Timeout:
+        logger.error(f"POST {endpoint} timed out when contacting {attributes['connector_url']}")
+        return {
+            "success": False,
+            "message": f"Request to {attributes['connector_url']}{endpoint} timed out",
         }
     except Exception as e:
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")

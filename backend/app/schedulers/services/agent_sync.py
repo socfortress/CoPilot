@@ -23,7 +23,14 @@ async def agent_sync():
     """
     logger.info("Synchronizing agents via scheduler...")
     async with get_db_session() as session:
-        await sync_all_agents()
+        response = await sync_all_agents()
+
+        if not response.success:
+            logger.info(
+                "agent_sync job skipped: {message}",
+                message=response.message,
+            )
+            return
 
         stmt = select(JobMetadata).where(JobMetadata.job_id == "agent_sync")
         result = await session.execute(stmt)

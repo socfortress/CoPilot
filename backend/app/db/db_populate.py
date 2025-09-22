@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -18,6 +19,19 @@ from app.network_connectors.models.network_connectors import (
 )
 
 load_dotenv()
+
+
+def _get_env_flag(env_var: str) -> Optional[bool]:
+    """Parse truthy/falsey environment variables.
+
+    Returns True or False when the variable is present, otherwise None.
+    """
+
+    value = os.getenv(env_var)
+    if value is None:
+        return None
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_connector_data(
@@ -45,6 +59,23 @@ def load_connector_data(
     logger.info(
         f"Loading connector data for {connector_name} from environment variables with URL: {url}",
     )
+    verified_flag = _get_env_flag(f"{env_prefix}_VERIFIED")
+    configured_flag = _get_env_flag(f"{env_prefix}_CONFIGURED")
+
+    connector_verified = verified_flag is True
+
+    # Treat any provided credential details as "configured" unless explicitly overridden
+    credential_fields = [
+        os.getenv(f"{env_prefix}_URL"),
+        os.getenv(f"{env_prefix}_USERNAME"),
+        os.getenv(f"{env_prefix}_PASSWORD"),
+        os.getenv(f"{env_prefix}_API_KEY"),
+        os.getenv(extra_data_key) if extra_data_key else None,
+    ]
+    has_credentials = any(value for value in credential_fields if value)
+
+    connector_configured = configured_flag if configured_flag is not None else has_credentials
+
     return {
         "connector_name": connector_name,
         "connector_type": connector_type,
@@ -54,8 +85,8 @@ def load_connector_data(
         "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
         "connector_description": description,
         "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
-        "connector_configured": True,
-        "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
+        "connector_configured": connector_configured,
+        "connector_verified": connector_verified,
         "connector_accepts_host_only": accepts_key == "host_only",
         "connector_accepts_api_key": accepts_key == "api_key",
         "connector_accepts_username_password": accepts_key == "username_password",
