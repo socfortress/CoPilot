@@ -110,7 +110,8 @@ function pinPage(page: Page) {
 }
 
 function checkRoute(route: RouteLocationNormalized) {
-	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
+	const splitName = _split(route.name?.toString(), "-")
+	const title = route.meta?.title || splitName[splitName.length - 1]
 
 	if (route.name && title && !route.meta?.skipPin) {
 		const page: Page = {
