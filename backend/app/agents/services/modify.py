@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 import app.agents.wazuh.services.agents as wazuh_services
-from app.db.db_session import session
+from app.db.db_session import get_sync_db_session
 from app.db.universal_models import Agents
 
 
@@ -15,14 +15,15 @@ def delete_agent_db(agent_id: str):
     Returns:
         dict: A dictionary indicating the success of the operation and a message.
     """
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
-    if not agent:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Agent with agent_id {agent_id} not found",
-        )
-    session.delete(agent)
-    session.commit()
+    with get_sync_db_session() as sync_session:
+        agent = sync_session.query(Agents).filter(Agents.agent_id == agent_id).first()
+        if not agent:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found",
+            )
+        sync_session.delete(agent)
+        sync_session.commit()
     return {"success": True, "message": f"Agent {agent_id} deleted from database"}
 
 
