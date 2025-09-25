@@ -11,10 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import PasswordReset
 from app.auth.models.users import PasswordResetToken
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
 from app.auth.models.users import UserLogin
-from app.auth.schema.auth import Token, UpdateUserRoleRequest
+from app.auth.schema.auth import Token
+from app.auth.schema.auth import UpdateUserRoleRequest
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
@@ -22,7 +24,6 @@ from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.auth.models.users import RoleEnum
 from app.db.db_session import get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
@@ -170,7 +171,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
             "username": user.username,
             "email": user.email,
             "role_id": user.role_id,
-            "role_name": user.role.name if user.role else None
+            "role_name": user.role.name if user.role else None,
         }
         user_list.append(user_dict)
 
@@ -358,10 +359,7 @@ async def update_user_role_by_name(
 
     role_name_lower = request.role_name.lower()
     if role_name_lower not in role_mapping:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid role name. Valid roles are: {list(role_mapping.keys())}"
-        )
+        raise HTTPException(status_code=400, detail=f"Invalid role name. Valid roles are: {list(role_mapping.keys())}")
 
     role_id = role_mapping[role_name_lower]
 
@@ -375,5 +373,5 @@ async def update_user_role_by_name(
         "success": True,
         "user_id": user_id,
         "new_role_name": request.role_name,
-        "new_role_id": role_id
+        "new_role_id": role_id,
     }
