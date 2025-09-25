@@ -1,16 +1,20 @@
 # Create new file: app/middleware/customer_access.py
-from typing import List, Optional
-from fastapi import Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from loguru import logger
+from typing import List
+from typing import Optional
 
-from app.auth.models.users import User, UserCustomerAccess, RoleEnum
+from fastapi import Depends
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.models.users import RoleEnum
+from app.auth.models.users import User
+from app.auth.models.users import UserCustomerAccess
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
-class CustomerAccessHandler:
 
+class CustomerAccessHandler:
     async def get_user_accessible_customers(self, user: User, session: AsyncSession) -> List[str]:
         """Get all customer codes accessible to a user"""
         # Admin and analyst users have access to all customers
@@ -19,10 +23,7 @@ class CustomerAccessHandler:
 
         # Customer users only see their assigned customers
         if user.role_id == RoleEnum.customer_user:
-            result = await session.execute(
-                select(UserCustomerAccess.customer_code)
-                .where(UserCustomerAccess.user_id == user.id)
-            )
+            result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
             return result.scalars().all()
 
         return []  # No access by default
@@ -38,13 +39,7 @@ class CustomerAccessHandler:
         # Specific customer access
         return customer_code in accessible_customers
 
-    async def filter_query_by_customer_access(
-        self,
-        user: User,
-        session: AsyncSession,
-        base_query,
-        customer_code_field
-    ):
+    async def filter_query_by_customer_access(self, user: User, session: AsyncSession, base_query, customer_code_field):
         """Filter any query by user's customer access"""
         accessible_customers = await self.get_user_accessible_customers(user, session)
 
@@ -61,18 +56,15 @@ class CustomerAccessHandler:
 
     def require_customer_access(self, customer_code: Optional[str] = None):
         """FastAPI dependency to enforce customer access"""
-        async def _check_access(
-            current_user: User = Depends(AuthHandler().get_current_user),
-            session: AsyncSession = Depends(get_db)
-        ):
+
+        async def _check_access(current_user: User = Depends(AuthHandler().get_current_user), session: AsyncSession = Depends(get_db)):
             if customer_code:
                 if not await self.check_customer_access(current_user, customer_code, session):
-                    raise HTTPException(
-                        status_code=403,
-                        detail=f"Access denied to customer {customer_code}"
-                    )
+                    raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
             return current_user
+
         return _check_access
+
 
 # Create a singleton instance
 customer_access_handler = CustomerAccessHandler()

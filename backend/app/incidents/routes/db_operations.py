@@ -14,7 +14,9 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.services.universal import select_all_users
+from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
@@ -27,8 +29,8 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
-from app.incidents.models import FieldName
 from app.incidents.models import Comment
+from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -87,6 +89,7 @@ from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 
+# from app.incidents.services.db_operations import list_alerts
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
 # from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 # from app.incidents.services.db_operations import alerts_closed_multiple_filters
@@ -98,11 +101,13 @@ from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
+from app.incidents.services.db_operations import alert_total_by_customer_codes
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
 from app.incidents.services.db_operations import alerts_closed_by_assigned_to
 from app.incidents.services.db_operations import alerts_closed_by_customer_code
+from app.incidents.services.db_operations import alerts_closed_by_customer_codes
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
@@ -111,6 +116,7 @@ from app.incidents.services.db_operations import alerts_in_progress_by_alert_tit
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
 from app.incidents.services.db_operations import alerts_in_progress_by_assigned_to
 from app.incidents.services.db_operations import alerts_in_progress_by_customer_code
+from app.incidents.services.db_operations import alerts_in_progress_by_customer_codes
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
@@ -119,6 +125,7 @@ from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
 from app.incidents.services.db_operations import alerts_open_by_assigned_to
 from app.incidents.services.db_operations import alerts_open_by_customer_code
+from app.incidents.services.db_operations import alerts_open_by_customer_codes
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
@@ -168,19 +175,20 @@ from app.incidents.services.db_operations import increment_case_notification_cou
 from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
-from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_customer_code
 from app.incidents.services.db_operations import list_alerts_by_ioc
 from app.incidents.services.db_operations import list_alerts_by_source
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
+from app.incidents.services.db_operations import list_alerts_for_user
 from app.incidents.services.db_operations import list_alerts_multiple_filters
 from app.incidents.services.db_operations import list_all_files
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_customer_code
 from app.incidents.services.db_operations import list_cases_by_status
+from app.incidents.services.db_operations import list_cases_for_user
 from app.incidents.services.db_operations import list_files_by_case_id
 from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
@@ -200,14 +208,6 @@ from app.incidents.services.db_operations import upload_report_template_to_data_
 from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
 from app.middleware.customer_access import customer_access_handler
-from app.auth.models.users import User
-from app.auth.utils import AuthHandler
-from app.incidents.services.db_operations import alert_total_by_customer_codes
-from app.incidents.services.db_operations import alerts_closed_by_customer_codes
-from app.incidents.services.db_operations import alerts_in_progress_by_customer_codes
-from app.incidents.services.db_operations import alerts_open_by_customer_codes
-from app.incidents.services.db_operations import list_alerts_for_user
-from app.incidents.services.db_operations import list_cases_for_user
 
 incidents_db_operations_router = APIRouter()
 
@@ -420,17 +420,14 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 async def create_comment_endpoint(
     comment: CommentCreate,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # Get the alert to check customer access
     alert = await get_alert_by_id(comment.alert_id, db)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
 
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
@@ -439,17 +436,14 @@ async def create_comment_endpoint(
 async def edit_comment_endpoint(
     comment: CommentEdit,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # Get the alert to check customer access
     alert = await get_alert_by_id(comment.alert_id, db)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
 
     return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
 
@@ -458,7 +452,7 @@ async def edit_comment_endpoint(
 async def delete_comment_endpoint(
     comment_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # First get the comment to find the alert_id
     result = await db.execute(select(Comment).where(Comment.id == comment_id))
@@ -473,7 +467,7 @@ async def delete_comment_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(
             status_code=403,
-            detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions"
+            detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions",
         )
 
     await delete_comment(comment_id, db)
@@ -560,7 +554,7 @@ async def list_alerts_by_ioc_value_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order="desc"
+            order="desc",
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -621,7 +615,7 @@ async def list_alerts_by_tag_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order="desc"
+            order="desc",
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -705,6 +699,7 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
 #         message="Alerts retrieved successfully",
 #     )
 
+
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
 async def list_alerts_endpoint(
     page: int = Query(1, ge=1),
@@ -744,11 +739,12 @@ async def list_alerts_endpoint(
         message="Alerts retrieved successfully",
     )
 
+
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(
     alert_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Get alert by ID with customer access validation"""
     logger.info(f"Getting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -758,10 +754,7 @@ async def get_alert_by_id_endpoint(
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to alert {alert_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient customer permissions")
 
     return AlertOutResponse(alerts=[alert], success=True, message="Alert retrieved successfully")
 
@@ -770,7 +763,7 @@ async def get_alert_by_id_endpoint(
 async def delete_alert_endpoint(
     alert_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete alert with customer access validation"""
     logger.info(f"Deleting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -780,10 +773,7 @@ async def delete_alert_endpoint(
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to alert {alert_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient customer permissions")
 
     await is_alert_linked_to_case(alert_id, db)
     await delete_alert(alert_id, db)
@@ -863,7 +853,7 @@ async def list_alerts_by_status_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order=order
+            order=order,
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -911,7 +901,7 @@ async def list_alerts_by_assigned_to_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order=order
+            order=order,
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -959,7 +949,7 @@ async def list_alerts_by_asset_name_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order=order
+            order=order,
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -1007,7 +997,7 @@ async def list_alerts_by_title_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order=order
+            order=order,
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -1042,6 +1032,7 @@ async def list_alerts_by_title_endpoint(
 #         success=True,
 #         message="Alerts retrieved successfully",
 #     )
+
 
 @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
 async def list_alerts_by_customer_code_endpoint(
@@ -1098,7 +1089,7 @@ async def list_alerts_by_source_endpoint(
             db=db,
             page=page,
             page_size=page_size,
-            order=order
+            order=order,
         )
         total = await alert_total_by_customer_codes(db, accessible_customers)
         open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
@@ -1168,10 +1159,7 @@ async def list_alerts_multiple_filters_endpoint(
     if "*" not in accessible_customers:
         # If user provided customer_code, validate they have access to it
         if customer_code and customer_code not in accessible_customers:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Access denied to customer {customer_code}"
-            )
+            raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
 
         # If no customer_code specified, use the first accessible customer for single customer users
         # For multi-customer users, we'll need to modify the query to handle multiple customers
@@ -1242,10 +1230,7 @@ async def list_alerts_multiple_filters_endpoint(
 
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
-async def list_cases_endpoint(
-    current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
+async def list_cases_endpoint(current_user: User = Depends(AuthHandler().get_current_user), db: AsyncSession = Depends(get_db)):
     """List cases with automatic customer filtering"""
     logger.info(f"Listing cases for user: {current_user.username} with role_id: {current_user.role_id}")
 
@@ -1257,7 +1242,7 @@ async def list_cases_endpoint(
 async def update_case_status_endpoint(
     case_status: UpdateCaseStatus,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update case status with customer access validation"""
     logger.info(f"Updating case {case_status.case_id} status for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1267,10 +1252,7 @@ async def update_case_status_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions")
 
     # Update the case status
     await update_case_status(case_status, db)
@@ -1284,7 +1266,7 @@ async def update_case_status_endpoint(
 async def update_case_assigned_to_endpoint(
     assigned_to: AssignedToCase,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update case assigned_to with customer access validation"""
     logger.info(f"Updating case {assigned_to.case_id} assigned_to for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1294,10 +1276,7 @@ async def update_case_assigned_to_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {assigned_to.case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {assigned_to.case_id} - insufficient customer permissions")
 
     all_users = await select_all_users()
     user_names = [user.username for user in all_users]
@@ -1314,12 +1293,14 @@ async def update_case_assigned_to_endpoint(
         success=True,
         message="Case assigned to user successfully",
     )
+
+
 @incidents_db_operations_router.put("/case/customer-code", response_model=CaseOutResponse)
 async def update_case_customer_code_endpoint(
     case_id: int,
     customer_code: str,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update case customer_code with customer access validation"""
     logger.info(f"Updating case {case_id} customer_code for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1329,18 +1310,12 @@ async def update_case_customer_code_endpoint(
 
     # Check if user has access to the current case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     # Also check if user has access to the new customer code (for non-admin users)
     accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
     if "*" not in accessible_customers and customer_code not in accessible_customers:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied - cannot assign case to customer {customer_code}"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied - cannot assign case to customer {customer_code}")
 
     # Update the case customer code
     await update_case_customer_code(case_id, customer_code, db)
@@ -1358,7 +1333,7 @@ async def update_case_customer_code_endpoint(
 async def delete_case_endpoint(
     case_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete case with customer access validation"""
     logger.info(f"Deleting case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1368,10 +1343,7 @@ async def delete_case_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     await delete_case(case_id, db)
     return {"message": "Case deleted successfully", "success": True}
@@ -1381,7 +1353,7 @@ async def delete_case_endpoint(
 async def list_cases_by_status_endpoint(
     status: AlertStatus,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """List cases by status with customer access filtering"""
     if status not in AlertStatus:
@@ -1408,7 +1380,7 @@ async def list_cases_by_status_endpoint(
 async def list_cases_by_assigned_to_endpoint(
     assigned_to: str,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """List cases by assigned user with customer access filtering"""
     logger.info(f"Listing cases assigned to {assigned_to} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1431,7 +1403,7 @@ async def list_cases_by_assigned_to_endpoint(
 async def list_cases_by_asset_name_endpoint(
     asset_name: str,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """List cases by asset name with customer access filtering"""
     logger.info(f"Listing cases by asset {asset_name} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1460,7 +1432,7 @@ async def list_cases_by_asset_name_endpoint(
 async def list_cases_by_customer_code_endpoint(
     customer_code: str,
     current_user: User = Depends(customer_access_handler.require_customer_access()),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """List cases for specific customer (with access validation)"""
     logger.info(f"Listing cases for customer {customer_code} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1482,7 +1454,7 @@ async def list_all_case_data_store_files_endpoint(db: AsyncSession = Depends(get
 async def list_case_data_store_files_endpoint(
     case_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """List case data store files with customer access validation"""
     logger.info(f"Listing files for case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1492,10 +1464,7 @@ async def list_case_data_store_files_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     return ListCaseDataStoreResponse(
         case_data_store=await list_files_by_case_id(case_id, db),
@@ -1509,7 +1478,7 @@ async def download_case_data_store_file_endpoint(
     case_id: int,
     file_name: str,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
     """Download case data store file with customer access validation"""
     logger.info(f"Downloading file {file_name} from case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1519,10 +1488,7 @@ async def download_case_data_store_file_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     file_bytes, file_content_type = await download_file_from_case(case_id, file_name, db)
     logger.info(f"Streaming file {file_name} from case {case_id}")
@@ -1547,10 +1513,7 @@ async def upload_case_data_store_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     if await file_exists(case_id, file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this case")
@@ -1567,7 +1530,7 @@ async def delete_case_data_store_file_endpoint(
     case_id: int,
     file_name: str,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete case data store file with customer access validation"""
     logger.info(f"Deleting file {file_name} from case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1577,10 +1540,7 @@ async def delete_case_data_store_file_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     await delete_file_from_case(case_id, file_name, db)
     return {"message": "File deleted successfully", "success": True}
@@ -1590,7 +1550,7 @@ async def delete_case_data_store_file_endpoint(
 async def get_case_by_id_endpoint(
     case_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Get case by ID with customer access validation"""
     logger.info(f"Getting case {case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
@@ -1600,10 +1560,7 @@ async def get_case_by_id_endpoint(
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     return CaseOutResponse(cases=[case], success=True, message="Case retrieved successfully")
 
@@ -1612,7 +1569,7 @@ async def get_case_by_id_endpoint(
 async def create_case_notification_endpoint(
     request: CaseNotificationCreate,
     current_user: User = Depends(AuthHandler().get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create case notification with customer access validation.
@@ -1627,16 +1584,15 @@ async def create_case_notification_endpoint(
     Returns:
         CaseNotificationResponse: The response object containing the created case notification.
     """
-    logger.info(f"Creating case notification for case {request.case_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+    logger.info(
+        f"Creating case notification for case {request.case_id} for user: {current_user.username} with role_id: {current_user.role_id}",
+    )
 
     case_details = await get_case_by_id(request.case_id, db)
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case_details.customer_code, db):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access denied to case {request.case_id} - insufficient customer permissions"
-        )
+        raise HTTPException(status_code=403, detail=f"Access denied to case {request.case_id} - insufficient customer permissions")
 
     case_notification_payload = CreatedCaseNotificationPayload(
         case_name=case_details.case_name,

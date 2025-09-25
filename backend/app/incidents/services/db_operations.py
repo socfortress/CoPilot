@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.auth.models.users import User
 from app.data_store.data_store_operations import delete_file
 from app.data_store.data_store_operations import download_data_store
 from app.data_store.data_store_operations import upload_case_data_store
@@ -74,7 +75,6 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.middleware.customer_access import customer_access_handler
-from app.auth.models.users import User
 
 
 async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
@@ -209,6 +209,7 @@ async def alerts_open_by_source(db: AsyncSession, source: str) -> int:
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.source == source)))
     return len(result.scalars().all())
 
+
 async def alert_total_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
     """Get total alerts for multiple customer codes"""
     result = await db.execute(select(Alert).where(Alert.customer_code.in_(customer_codes)))
@@ -217,32 +218,21 @@ async def alert_total_by_customer_codes(db: AsyncSession, customer_codes: List[s
 
 async def alerts_closed_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
     """Get closed alerts for multiple customer codes"""
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "CLOSED") & (Alert.customer_code.in_(customer_codes))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "CLOSED") & (Alert.customer_code.in_(customer_codes))))
     return len(result.scalars().all())
 
 
 async def alerts_in_progress_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
     """Get in-progress alerts for multiple customer codes"""
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "IN_PROGRESS") & (Alert.customer_code.in_(customer_codes))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "IN_PROGRESS") & (Alert.customer_code.in_(customer_codes))))
     return len(result.scalars().all())
 
 
 async def alerts_open_by_customer_codes(db: AsyncSession, customer_codes: List[str]) -> int:
     """Get open alerts for multiple customer codes"""
-    result = await db.execute(
-        select(Alert).where(
-            (Alert.status == "OPEN") & (Alert.customer_code.in_(customer_codes))
-        )
-    )
+    result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.customer_code.in_(customer_codes))))
     return len(result.scalars().all())
+
 
 async def alerts_total_multiple_filters(
     db: AsyncSession,
@@ -867,8 +857,8 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
 
     # Create comment with automatic timestamp if not provided
     comment_data = comment.dict()
-    if comment_data.get('created_at') is None:
-        comment_data['created_at'] = datetime.utcnow()
+    if comment_data.get("created_at") is None:
+        comment_data["created_at"] = datetime.utcnow()
 
     db_comment = Comment(**comment_data)
     db.add(db_comment)
@@ -1975,6 +1965,7 @@ async def list_alerts_multiple_filters(
 
     return alerts_out
 
+
 async def list_alerts_for_user(
     user: User,
     session: AsyncSession,
@@ -1992,9 +1983,7 @@ async def list_alerts_for_user(
     )
 
     # Apply customer filtering
-    filtered_query = await customer_access_handler.filter_query_by_customer_access(
-        user, session, base_query, Alert.customer_code
-    )
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(user, session, base_query, Alert.customer_code)
 
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
@@ -2030,6 +2019,7 @@ async def list_alerts_for_user(
 
     return alerts_out
 
+
 async def list_cases_for_user(
     user: User,
     session: AsyncSession,
@@ -2045,9 +2035,7 @@ async def list_cases_for_user(
     )
 
     # Apply customer filtering
-    filtered_query = await customer_access_handler.filter_query_by_customer_access(
-        user, session, base_query, Case.customer_code
-    )
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(user, session, base_query, Case.customer_code)
 
     result = await session.execute(filtered_query)
     cases = result.scalars().all()

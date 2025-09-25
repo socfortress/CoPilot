@@ -1,10 +1,12 @@
 from typing import List
+
 from fastapi import HTTPException
 from loguru import logger
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from app.auth.models.users import Password

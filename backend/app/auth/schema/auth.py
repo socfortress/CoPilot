@@ -20,5 +20,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
+
 class UpdateUserRoleRequest(BaseModel):
     role_name: str
