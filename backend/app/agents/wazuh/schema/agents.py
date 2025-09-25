@@ -101,7 +101,10 @@ class WazuhAgentScaPolicyResults(BaseModel):
         description="Description of the issue",
     )
     id: int
-    reason: str
+    reason: Optional[str] = Field(
+        "Reason not found",
+        description="Reason for the issue",
+    )
     command: Optional[str] = Field(
         "Command not found",
         description="Command to run to fix the issue",
