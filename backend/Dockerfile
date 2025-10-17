@@ -1,4 +1,4 @@
-FROM debian:11
+FROM debian:12
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -18,8 +18,8 @@ RUN apt-get install -y \
     lsb-release
 
 # Add the deadsnakes PPA
-RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main" | tee /etc/apt/sources.list.d/focal.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+#RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main" | tee /etc/apt/sources.list.d/focal.list
+#RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
 
 # Update the package lists
 RUN apt-get update
