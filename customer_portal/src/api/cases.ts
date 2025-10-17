@@ -1,5 +1,13 @@
 import { httpClient } from '@/utils/httpClient'
 
+export interface CaseComment {
+  id: number
+  case_id: number
+  user_name: string
+  comment: string
+  created_at: string
+}
+
 export interface Case {
   id: number
   case_creation_time: string
@@ -10,6 +18,7 @@ export interface Case {
   customer_code: string
   alert_ids: number[]
   alerts?: Alert[]
+  comments?: CaseComment[]
 }
 
 export interface Alert {
@@ -46,6 +55,23 @@ export interface CasePayload {
   case_name: string
   case_description: string
   assigned_to?: string
+}
+
+export interface CaseCommentCreate {
+  case_id: number
+  comment: string
+}
+
+export interface CaseCommentEdit {
+  id: number
+  case_id: number
+  comment: string
+}
+
+export interface CaseCommentResponse {
+  comment: CaseComment
+  success: boolean
+  message: string
 }
 
 export class CasesAPI {
@@ -148,6 +174,37 @@ export class CasesAPI {
       case_id: caseId,
       alert_id: alertId
     })
+    return response.data
+  }
+
+  /**
+   * Create a new case comment
+   */
+  static async createCaseComment(caseId: number, comment: string): Promise<CaseCommentResponse> {
+    const response = await httpClient.post('/incidents/db_operations/case/comment', {
+      case_id: caseId,
+      comment
+    })
+    return response.data
+  }
+
+  /**
+   * Update an existing case comment
+   */
+  static async updateCaseComment(id: number, caseId: number, comment: string): Promise<CaseCommentResponse> {
+    const response = await httpClient.put('/incidents/db_operations/case/comment', {
+      id,
+      case_id: caseId,
+      comment
+    })
+    return response.data
+  }
+
+  /**
+   * Delete a case comment
+   */
+  static async deleteCaseComment(commentId: number): Promise<{ success: boolean; message: string }> {
+    const response = await httpClient.delete(`/incidents/db_operations/case/comment/${commentId}`)
     return response.data
   }
 }

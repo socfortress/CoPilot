@@ -1,9 +1,5 @@
 <template>
-	<n-button
-		quaternary
-		class="!w-full !justify-start"
-		@click="showModal = true"
-	>
+	<n-button quaternary class="!w-full !justify-start" @click="showModal = true">
 		<template #icon>
 			<Icon :name="RoleIcon" :size="14"></Icon>
 		</template>
@@ -22,33 +18,29 @@
 	>
 		<div class="flex flex-col gap-4">
 			<div>
-				<strong>User:</strong> {{ user?.username }}
+				<strong>User:</strong>
+				{{ user?.username }}
 			</div>
 
 			<n-form ref="formRef" :model="formModel" :rules="rules">
 				<n-form-item path="role" label="Select Role">
-						<n-select
-							v-model:value="formModel.role"
-							:options="roleOptions"
-							placeholder="Choose a role"
-							:loading="loading"
-						/>
-					</n-form-item>
-				</n-form>
-
-				<div class="flex justify-end gap-3">
-					<n-button @click="showModal = false">Cancel</n-button>
-					<n-button
-						type="primary"
+					<n-select
+						v-model:value="formModel.role"
+						:options="roleOptions"
+						placeholder="Choose a role"
 						:loading="loading"
-						:disabled="!formModel.role"
-						@click="handleAssignRole"
-					>
-						Assign Role
-					</n-button>
-				</div>
+					/>
+				</n-form-item>
+			</n-form>
+
+			<div class="flex justify-end gap-3">
+				<n-button @click="showModal = false">Cancel</n-button>
+				<n-button type="primary" :loading="loading" :disabled="!formModel.role" @click="handleAssignRole">
+					Assign Role
+				</n-button>
 			</div>
-		</n-modal>
+		</div>
+	</n-modal>
 </template>
 
 <script setup lang="ts">
@@ -95,12 +87,12 @@ const rules = {
 function handleAssignRole() {
 	if (!props.user || !formModel.value.role) return
 
-	formRef.value?.validate(async (errors) => {
-		if (!errors) {
+	formRef.value?.validate(async errors => {
+		if (!errors && props.user?.id && formModel.value.role) {
 			loading.value = true
 
 			try {
-				const res = await Api.auth.assignRole(props.user!.id, formModel.value.role!)
+				const res = await Api.auth.assignRole(props.user.id, formModel.value.role)
 				if (res.data.success) {
 					message.success(res.data.message || "Role assigned successfully")
 					showModal.value = false

@@ -1,9 +1,5 @@
 <template>
-	<n-button
-		quaternary
-		class="!w-full !justify-start"
-		@click="showModal = true"
-	>
+	<n-button quaternary class="!w-full !justify-start" @click="showModal = true">
 		<template #icon>
 			<Icon :name="CustomerIcon" :size="14"></Icon>
 		</template>
@@ -22,49 +18,37 @@
 	>
 		<div class="flex flex-col gap-4">
 			<div>
-				<strong>User:</strong> {{ user?.username }}
+				<strong>User:</strong>
+				{{ user?.username }}
 			</div>
 
 			<n-form ref="formRef" :model="formModel">
 				<n-form-item label="Select Customers">
-						<n-select
-							v-model:value="formModel.customerCodes"
-							:options="customerOptions"
-							placeholder="Choose customers"
-							multiple
-							:loading="loadingCustomers"
-						/>
-					</n-form-item>
+					<n-select
+						v-model:value="formModel.customerCodes"
+						:options="customerOptions"
+						placeholder="Choose customers"
+						multiple
+						:loading="loadingCustomers"
+					/>
+				</n-form-item>
 
-					<n-form-item label="Current Access">
-						<div v-if="currentAccess.length > 0" class="flex flex-wrap gap-2">
-							<n-tag
-								v-for="customerCode in currentAccess"
-								:key="customerCode"
-								type="info"
-								size="small"
-							>
-								{{ customerCode }}
-							</n-tag>
-						</div>
-						<div v-else class="text-gray-500">
-							No customer access assigned
-						</div>
-					</n-form-item>
-				</n-form>
+				<n-form-item label="Current Access">
+					<div v-if="currentAccess.length > 0" class="flex flex-wrap gap-2">
+						<n-tag v-for="customerCode in currentAccess" :key="customerCode" type="info" size="small">
+							{{ customerCode }}
+						</n-tag>
+					</div>
+					<div v-else class="text-gray-500">No customer access assigned</div>
+				</n-form-item>
+			</n-form>
 
-				<div class="flex justify-end gap-3">
-					<n-button @click="showModal = false">Cancel</n-button>
-					<n-button
-						type="primary"
-						:loading="loading"
-						@click="handleAssignCustomers"
-					>
-						Assign Customers
-					</n-button>
-				</div>
+			<div class="flex justify-end gap-3">
+				<n-button @click="showModal = false">Cancel</n-button>
+				<n-button type="primary" :loading="loading" @click="handleAssignCustomers">Assign Customers</n-button>
 			</div>
-		</n-modal>
+		</div>
+	</n-modal>
 </template>
 
 <script setup lang="ts">
@@ -128,7 +112,7 @@ async function loadCurrentAccess() {
 			formModel.value.customerCodes = [...currentAccess.value]
 		}
 	} catch (error) {
-		console.error('Error loading customer access:', error)
+		console.error("Error loading customer access:", error)
 		message.error("Failed to load current customer access")
 	}
 }
@@ -138,8 +122,9 @@ function handleAssignCustomers() {
 
 	loading.value = true
 
-	Api.auth.assignCustomerAccess(props.user.id, formModel.value.customerCodes)
-		.then((res) => {
+	Api.auth
+		.assignCustomerAccess(props.user.id, formModel.value.customerCodes)
+		.then(res => {
 			if (res.data.success) {
 				message.success(res.data.message || "Customer access assigned successfully")
 				showModal.value = false
@@ -148,7 +133,7 @@ function handleAssignCustomers() {
 				message.error(res.data.message || "Failed to assign customer access")
 			}
 		})
-		.catch((err) => {
+		.catch(err => {
 			message.error(err.response?.data?.message || "Failed to assign customer access")
 		})
 		.finally(() => {
@@ -156,7 +141,7 @@ function handleAssignCustomers() {
 		})
 }
 
-watch(showModal, (newVal) => {
+watch(showModal, newVal => {
 	if (newVal) {
 		loadCustomers()
 		loadCurrentAccess()

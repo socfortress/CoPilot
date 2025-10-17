@@ -15,6 +15,7 @@ from app.incidents.models import AlertToIoC
 from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
+from app.incidents.models import CaseComment
 from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
@@ -136,6 +137,12 @@ class CommentResponse(BaseModel):
     message: str
 
 
+class CaseCommentResponse(BaseModel):
+    comment: CaseComment
+    success: bool
+    message: str
+
+
 class AlertContextResponse(BaseModel):
     alert_context: AlertContext
     success: bool
@@ -242,6 +249,16 @@ class AssignedToCase(BaseModel):
     assigned_to: str
 
 
+class EscalateAlert(BaseModel):
+    alert_id: int
+    escalated: bool
+
+
+class EscalateCase(BaseModel):
+    case_id: int
+    escalated: bool
+
+
 class AlertCreate(BaseModel):
     alert_name: str
     alert_description: str
@@ -262,6 +279,21 @@ class CommentCreate(BaseModel):
 
 class CommentEdit(BaseModel):
     alert_id: int
+    comment_id: int
+    comment: str
+    user_name: str
+    created_at: datetime
+
+
+class CaseCommentCreate(BaseModel):
+    case_id: int
+    comment: str
+    user_name: str
+    created_at: Optional[datetime] = None
+
+
+class CaseCommentEdit(BaseModel):
+    case_id: int
     comment_id: int
     comment: str
     user_name: str
@@ -349,6 +381,14 @@ class CommentBase(BaseModel):
     created_at: datetime
 
 
+class CaseCommentBase(BaseModel):
+    user_name: str
+    case_id: int
+    id: int
+    comment: str
+    created_at: datetime
+
+
 class AssetBase(BaseModel):
     asset_name: str
     agent_id: Optional[str] = None
@@ -378,6 +418,7 @@ class AlertOut(BaseModel):
     customer_code: str
     source: str
     assigned_to: Optional[str] = None
+    escalated: bool = False
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
@@ -406,6 +447,8 @@ class CaseOut(BaseModel):
     case_creation_time: Optional[datetime] = None
     customer_code: Optional[str] = None
     notification_invoked_number: Optional[int] = 0
+    escalated: bool = False
+    comments: List[CaseCommentBase] = []
 
 
 class CaseOutResponse(BaseModel):

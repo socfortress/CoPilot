@@ -30,6 +30,15 @@
 					</template>
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<CaseCommentsList
+						:comments="caseEntity.comments || []"
+						:case-id="caseEntity.id"
+						@updated="updateCaseComments($event)"
+					/>
+				</div>
+			</n-tab-pane>
 			<n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
 				<div class="p-7 pt-4">
 					<CaseDataStore :case-id="caseEntity.id" />
@@ -40,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case, CaseComment } from "@/types/incidentManagement/cases.d"
 import _clone from "lodash/cloneDeep"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
@@ -56,6 +65,7 @@ const emit = defineEmits<{
 }>()
 const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
 const CaseDataStore = defineAsyncComponent(() => import("./CaseDataStore.vue"))
+const CaseCommentsList = defineAsyncComponent(() => import("./CaseCommentsList.vue"))
 const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
 
 const { caseData, caseId } = toRefs(props)
@@ -67,6 +77,13 @@ const caseEntity = ref<Case | null>(null)
 function updateCase(updatedCase: Case) {
 	caseEntity.value = updatedCase
 	emit("updated", updatedCase)
+}
+
+function updateCaseComments(updatedComments: CaseComment[]) {
+	if (caseEntity.value) {
+		caseEntity.value.comments = updatedComments
+		emit("updated", caseEntity.value)
+	}
 }
 
 function getCase(caseId: number) {

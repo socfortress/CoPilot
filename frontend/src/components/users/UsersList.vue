@@ -16,7 +16,7 @@
 		</div>
 
 		<n-spin :show="loading" content-class="min-h-32">
-			<n-scrollbar x-scrollable style="width: 100%">
+			<n-scrollbar x-scrollable class="w-full">
 				<n-table :bordered="false" class="min-w-max">
 					<thead>
 						<tr>
@@ -24,7 +24,7 @@
 							<th>Username</th>
 							<th>Email</th>
 							<th>Role</th>
-							<th style="max-width: 300px"></th>
+							<th class="max-w-75"></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -42,15 +42,14 @@
 							</td>
 							<td>
 								<n-tag :type="getRoleTagType(user.role_name)" size="small">
-									{{ user.role_name || 'No Role' }}
+									{{ user.role_name || "No Role" }}
 								</n-tag>
 							</td>
-							<td style="max-width: 300px">
+							<td class="max-w-75">
 								<div v-if="isAdmin" class="flex justify-end">
 									<n-dropdown
 										trigger="click"
 										:options
-										to="body"
 										display-directive="show"
 										:keyboard="false"
 										@click="selectedUser = user"
@@ -118,16 +117,16 @@ const emailList = computed(() => usersList.value.map(user => user.email))
 
 function getRoleTagType(roleName: string | null | undefined) {
 	switch (roleName?.toLowerCase()) {
-		case 'admin':
-			return 'error'
-		case 'analyst':
-			return 'warning'
-		case 'scheduler':
-			return 'info'
-		case 'customer_user':
-			return 'success'
+		case "admin":
+			return "error"
+		case "analyst":
+			return "warning"
+		case "scheduler":
+			return "info"
+		case "customer_user":
+			return "success"
 		default:
-			return 'default'
+			return "default"
 	}
 }
 
@@ -135,18 +134,20 @@ const options = [
 	{
 		key: "AssignRole",
 		type: "render",
-		render: () => h(AssignRole, {
-			user: selectedUser.value || undefined,
-			onSuccess: getUsers
-		})
+		render: () =>
+			h(AssignRole, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers
+			})
 	},
 	{
 		key: "AssignCustomer",
 		type: "render",
-		render: () => h(AssignCustomer, {
-			user: selectedUser.value || undefined,
-			onSuccess: getUsers
-		})
+		render: () =>
+			h(AssignCustomer, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers
+			})
 	},
 	{
 		key: "ChangePassword",

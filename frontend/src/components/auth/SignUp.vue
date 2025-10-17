@@ -62,6 +62,16 @@
 									@keydown.enter="signUp"
 								/>
 							</n-form-item>
+							<n-form-item path="role" label="Role">
+								<n-select
+									v-model:value="model.role"
+									:options="roleOptions"
+									placeholder="Choose a role"
+									size="large"
+									to="body"
+									@keydown.enter="signUp"
+								/>
+							</n-form-item>
 
 							<!--
 						<div class="propic flex gap-5 mb-5">
@@ -149,14 +159,16 @@
 
 <script lang="ts" setup>
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
+import type { SelectBaseOption } from "naive-ui/es/select/src/interface"
 import type { RegisterPayload } from "@/types/auth.d"
 import _trim from "lodash/trim"
-import { NButton, NForm, NFormItem, NInput, NSpin, NStep, NSteps, useMessage } from "naive-ui"
+import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import PasswordValidator from "password-validator"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { AuthUserRole } from "@/types/auth.d"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {
@@ -164,6 +176,7 @@ interface ModelType {
 	password: string | null
 	username: string | null
 	confirmPassword: string | null
+	role: number | null
 	/*
 	customerCode: string | null
 	firstName: string | null
@@ -193,6 +206,13 @@ const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const model = ref<ModelType>(getModel())
 
+const roleOptions: SelectBaseOption[] = Object.values(AuthUserRole)
+	.filter(o => typeof o === "number" && o !== 0)
+	.map(o => ({
+		label: `${Object.entries(AuthUserRole).find(e => e[1] === o)?.[0]}`,
+		value: o
+	}))
+
 const accountStepValid = computed(
 	() =>
 		!!_trim(model.value.email || "") &&
@@ -200,7 +220,7 @@ const accountStepValid = computed(
 		!!model.value.confirmPassword &&
 		model.value.password === model.value.confirmPassword
 )
-const detailsStepValid = computed(() => !!_trim(model.value.username || ""))
+const detailsStepValid = computed(() => !!_trim(model.value.username || "") && !!model.value.role)
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new PasswordValidator()
@@ -282,6 +302,14 @@ const rules: FormRules = {
 			message: "The Username is already used",
 			trigger: ["blur", "input"]
 		}
+	],
+	role: [
+		{
+			required: true,
+			trigger: ["blur"],
+			type: "number",
+			message: "Role is required"
+		}
 	]
 	/*
 	customerCode: [
@@ -313,7 +341,8 @@ function getModel(): ModelType {
 		email: null,
 		password: null,
 		confirmPassword: null,
-		username: null
+		username: null,
+		role: null
 		/*
 		customerCode: null,
 		firstName: null,
@@ -332,6 +361,7 @@ function reset(step?: number) {
 			break
 		case 2:
 			model.value.username = null
+			model.value.role = null
 			break
 		default:
 			model.value = getModel()
@@ -350,7 +380,7 @@ function signUp(e: Event) {
 				password: model.value.password || "",
 				email: _trim(model.value.email || ""),
 				username: _trim(model.value.username || ""),
-				role_id: 1
+				role_id: model.value.role || 1
 				/*
 				customerCode: model.value.customerCode,
 				usersFirstName: model.value.firstName,

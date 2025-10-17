@@ -29,6 +29,7 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
+from app.incidents.models import CaseComment
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
@@ -56,6 +57,9 @@ from app.incidents.schema.db_operations import CaseAlertLinksCreate
 from app.incidents.schema.db_operations import CaseAlertLinksResponse
 from app.incidents.schema.db_operations import CaseAlertUnLink
 from app.incidents.schema.db_operations import CaseAlertUnLinkResponse
+from app.incidents.schema.db_operations import CaseCommentCreate
+from app.incidents.schema.db_operations import CaseCommentEdit
+from app.incidents.schema.db_operations import CaseCommentResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
@@ -72,6 +76,8 @@ from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import DeleteAlertsRequest
 from app.incidents.schema.db_operations import DeleteAlertsResponse
+from app.incidents.schema.db_operations import EscalateAlert
+from app.incidents.schema.db_operations import EscalateCase
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
@@ -144,6 +150,7 @@ from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_case_alert_links_bulk
+from app.incidents.services.db_operations import create_case_comment
 from app.incidents.services.db_operations import create_case_from_alert
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
@@ -152,6 +159,7 @@ from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_case
+from app.incidents.services.db_operations import delete_case_comment
 from app.incidents.services.db_operations import delete_comment
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_file_from_case
@@ -160,6 +168,7 @@ from app.incidents.services.db_operations import delete_report_template
 from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import download_file_from_case
 from app.incidents.services.db_operations import download_report_template
+from app.incidents.services.db_operations import edit_case_comment
 from app.incidents.services.db_operations import edit_comment
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
@@ -198,9 +207,11 @@ from app.incidents.services.db_operations import replace_ioc_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import report_template_exists
 from app.incidents.services.db_operations import update_alert_assigned_to
+from app.incidents.services.db_operations import update_alert_escalated
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_customer_code
+from app.incidents.services.db_operations import update_case_escalated
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import upload_report_template
@@ -416,6 +427,28 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
 
 
+@incidents_db_operations_router.put("/alert/escalated", response_model=AlertResponse)
+async def update_alert_escalated_endpoint(
+    escalate_alert: EscalateAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update alert escalated status with customer access validation"""
+    logger.info(
+        f"Updating alert {escalate_alert.alert_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}",
+    )
+
+    # Get the alert first to check customer access
+    alert = await get_alert_by_id(escalate_alert.alert_id, db)
+
+    # Check if user has access to this alert's customer
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {escalate_alert.alert_id} - insufficient customer permissions")
+
+    updated_alert = await update_alert_escalated(escalate_alert.alert_id, escalate_alert.escalated, db)
+    return AlertResponse(alert=updated_alert, success=True, message="Alert escalated status updated successfully")
+
+
 @incidents_db_operations_router.post("/alert/comment", response_model=CommentResponse)
 async def create_comment_endpoint(
     comment: CommentCreate,
@@ -472,6 +505,64 @@ async def delete_comment_endpoint(
 
     await delete_comment(comment_id, db)
     return {"message": "Comment deleted successfully", "success": True}
+
+
+@incidents_db_operations_router.post("/case/comment", response_model=CaseCommentResponse)
+async def create_case_comment_endpoint(
+    comment: CaseCommentCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
+
+    return CaseCommentResponse(comment=await create_case_comment(comment, db), success=True, message="Case comment created successfully")
+
+
+@incidents_db_operations_router.put("/case/comment", response_model=CaseCommentResponse)
+async def edit_case_comment_endpoint(
+    comment: CaseCommentEdit,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
+
+    return CaseCommentResponse(comment=await edit_case_comment(comment, db), success=True, message="Case comment edited successfully")
+
+
+@incidents_db_operations_router.delete("/case/comment/{comment_id}")
+async def delete_case_comment_endpoint(
+    comment_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # First get the comment to find the case_id
+    result = await db.execute(select(CaseComment).where(CaseComment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    # Get the case to check customer access
+    case = await get_case_by_id(comment.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to comment on case {comment.case_id} - insufficient customer permissions",
+        )
+
+    await delete_case_comment(comment_id, db)
+    return {"message": "Case comment deleted successfully", "success": True}
 
 
 @incidents_db_operations_router.get("/alert/available-users", response_model=AvailableUsersResponse)
@@ -1260,6 +1351,32 @@ async def update_case_status_endpoint(
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(case_status.case_id, db)
     return CaseOutResponse(cases=[updated_case], success=True, message="Case status updated successfully")
+
+
+@incidents_db_operations_router.put("/case/escalated", response_model=CaseOutResponse)
+async def update_case_escalated_endpoint(
+    escalate_case: EscalateCase,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update case escalated status with customer access validation"""
+    logger.info(
+        f"Updating case {escalate_case.case_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}",
+    )
+
+    # Get the case first to check customer access
+    case = await get_case_by_id(escalate_case.case_id, db)
+
+    # Check if user has access to this case's customer
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to case {escalate_case.case_id} - insufficient customer permissions")
+
+    # Update the case escalated status
+    await update_case_escalated(escalate_case.case_id, escalate_case.escalated, db)
+
+    # Re-fetch the case with full data structure
+    updated_case = await get_case_by_id(escalate_case.case_id, db)
+    return CaseOutResponse(cases=[updated_case], success=True, message="Case escalated status updated successfully")
 
 
 @incidents_db_operations_router.put("/case/assigned-to", response_model=CaseOutResponse)

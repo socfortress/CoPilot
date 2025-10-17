@@ -42,6 +42,7 @@ class Alert(SQLModel, table=True):
     time_closed: Optional[datetime] = Field(default=None)
     source: str = Field(max_length=50, nullable=False)
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
+    escalated: bool = Field(default=False, nullable=False)
 
     comments: List["Comment"] = Relationship(back_populates="alert")
     assets: List["Asset"] = Relationship(back_populates="alert")
@@ -144,6 +145,15 @@ class CustomerCodeFieldName(SQLModel, table=True):
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
 
+class CaseComment(SQLModel, table=True):
+    __tablename__ = "incident_management_case_comment"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    case_id: int = Field(default=None, foreign_key="incident_management_case.id")
+    comment: str = Field(sa_column=Text)
+    user_name: str = Field(max_length=50, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    case: "Case" = Relationship(back_populates="comments")
 
 class Case(SQLModel, table=True):
     __tablename__ = "incident_management_case"
@@ -155,9 +165,11 @@ class Case(SQLModel, table=True):
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
     customer_code: Optional[str] = Field(max_length=50, nullable=True)
     notification_invoked_number: Optional[int] = Field(default=0, nullable=True)
+    escalated: bool = Field(default=False, nullable=False)
 
     alerts: List["CaseAlertLink"] = Relationship(back_populates="case")
     data_store: List["CaseDataStore"] = Relationship(back_populates="case")
+    comments: List["CaseComment"] = Relationship(back_populates="case")
 
 
 class CaseAlertLink(SQLModel, table=True):

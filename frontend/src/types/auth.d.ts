@@ -12,7 +12,9 @@ export enum RouteRole {
 export enum AuthUserRole {
 	Unknown = 0,
 	Admin = 1,
-	Analyst = 2
+	Analyst = 2,
+	Scheduler = 3,
+	CustomerUser = 4
 }
 
 export type RouteMetaAuthRole = AuthUserRole | RouteRole

@@ -124,7 +124,7 @@
             </div>
 
             <ul v-else class="divide-y divide-gray-200">
-              <li v-for="case_ in cases" :key="case_.id" class="px-4 py-4 sm:px-6">
+              <li v-for="case_ in cases" :key="case_.id" class="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer" @click="viewCaseDetails(case_.id)">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
                     <div
@@ -137,7 +137,7 @@
                       }"
                     ></div>
                     <div>
-                      <p class="text-sm font-medium text-gray-900">
+                      <p class="text-sm font-medium text-gray-900 hover:text-indigo-600">
                         {{ case_.case_name || 'Unnamed Case' }}
                       </p>
                       <p class="text-sm text-gray-500">
@@ -146,6 +146,7 @@
                       <p class="text-xs text-gray-400 mt-1">
                         Created: {{ formatDate(case_.case_creation_time) }}
                         <span v-if="case_.assigned_to"> • Assigned to: {{ case_.assigned_to }}</span>
+                        <span v-if="case_.comments && case_.comments.length > 0"> • {{ case_.comments.length }} {{ case_.comments.length === 1 ? 'comment' : 'comments' }}</span>
                       </p>
                     </div>
                   </div>
@@ -208,6 +209,12 @@ interface Case {
   assigned_to?: string
   escalation_level?: string
   customer_code?: string
+  comments?: Array<{
+    id: number
+    comment: string
+    user_name?: string
+    created_at: string
+  }>
 }
 
 const router = useRouter()
@@ -237,8 +244,8 @@ const fetchCases = async () => {
   error.value = ''
 
   try {
-    const response = await httpClient.get('/cases/')
-    cases.value = response.data || []
+    const response = await httpClient.get('/incidents/db_operations/cases')
+    cases.value = response.data.cases || []
   } catch (err: any) {
     error.value = err.response?.data?.detail || 'Failed to fetch cases'
     console.error('Failed to fetch cases:', err)
@@ -249,6 +256,10 @@ const fetchCases = async () => {
 
 const refreshCases = () => {
   fetchCases()
+}
+
+const viewCaseDetails = (caseId: number) => {
+  router.push(`/cases/${caseId}`)
 }
 
 const logout = () => {
