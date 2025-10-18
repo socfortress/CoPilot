@@ -388,17 +388,21 @@ async def add_license_to_db(session: AsyncSession, result, request: AddLicenseTo
     return new_license
 
 
-async def get_license(session: AsyncSession) -> License:
+async def get_license(session: AsyncSession, raise_on_missing: bool = True) -> Optional[License]:
     """
     Get the license from the database
 
     :param session: The AsyncSession object for the database
-    :return: The License object
+    :param raise_on_missing: If True, raise HTTPException when no license found. If False, return None.
+    :return: The License object or None
     """
     result = await session.execute(select(License))
     license = result.scalars().first()
     if license is None:
-        raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
+        if raise_on_missing:
+            raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
+        else:
+            return None
     else:
         return license
 
@@ -1045,21 +1049,53 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
 
 @license_router.post(
     "/replace_license_in_db",
-    description="Replace a license",
+    description="Replace a license or create one if it doesn't exist",
 )
 async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSession = Depends(get_db)):
-    # ! Remove get_license becasue we don't need to fetch old license
-    #license = await get_license(session)
+    # Get license without raising error if it doesn't exist
+    license = await get_license(session, raise_on_missing=False)
 
-    # Invalidate cache for old license
-    await invalidate_license_cache(session, license.license_key)
+    if license:
+        # Existing license - replace it
+        logger.info(f"Replacing existing license {license.license_key[:8]}... with {request.license_key[:8]}...")
 
-    # Update license key
-    license.license_key = request.license_key
-    await session.commit()
+        # Invalidate cache for old license
+        await invalidate_license_cache(session, license.license_key)
 
-    logger.info("License replaced successfully")
-    return {"success": True, "message": "License replaced successfully"}
+        # Update license key
+        license.license_key = request.license_key
+        await session.commit()
+
+        logger.info("License replaced successfully")
+        return {"success": True, "message": "License replaced successfully"}
+    else:
+        # No existing license - create a new one
+        logger.info("No existing license found, creating new license")
+
+        # Verify the new license key first to get customer details
+        results = await send_post_request("verify-license", data={"license_key": request.license_key})
+        normalized_results = normalize_api_response(results)
+
+        if not normalized_results.get("success", True):
+            raise HTTPException(status_code=400, detail="Invalid license key")
+
+        # Extract customer info from license verification
+        license_data = normalized_results["data"]["license"]
+        customer_data = license_data["customer"]
+
+        # Create new license in database
+        await add_license_to_db(
+            session,
+            request.license_key,
+            AddLicenseToDB(
+                customer_email=customer_data["email"],
+                customer_name=customer_data["name"],
+                company_name=customer_data["companyName"],
+            ),
+        )
+
+        logger.info("License created successfully")
+        return {"success": True, "message": "License created successfully"}
 
 
 @license_router.post(
