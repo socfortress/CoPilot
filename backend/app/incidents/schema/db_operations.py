@@ -317,11 +317,16 @@ class CaseCreate(BaseModel):
 class LinkedCaseCreate(BaseModel):
     case_name: str
     case_description: str
-    case_creation_time: datetime
+    case_creation_time: str
     case_status: str
     assigned_to: Optional[str] = None
     id: int
 
+    @validator('case_creation_time', pre=True)
+    def format_case_creation_time(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        return v
 
 class CaseCreateFromAlert(BaseModel):
     alert_id: int
@@ -378,7 +383,13 @@ class CommentBase(BaseModel):
     alert_id: int
     id: int
     comment: str
-    created_at: datetime
+    created_at: str
+
+    @validator('created_at', pre=True)
+    def format_created_at(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        return v
 
 
 class CaseCommentBase(BaseModel):
@@ -386,7 +397,13 @@ class CaseCommentBase(BaseModel):
     case_id: int
     id: int
     comment: str
-    created_at: datetime
+    created_at: str
+
+    @validator('created_at', pre=True)
+    def format_created_at(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        return v
 
 
 class AssetBase(BaseModel):
@@ -410,8 +427,8 @@ class IoCBase(BaseModel):
 
 class AlertOut(BaseModel):
     id: int
-    alert_creation_time: datetime
-    time_closed: Optional[datetime] = None
+    alert_creation_time: str
+    time_closed: Optional[str] = None
     alert_name: str
     alert_description: str
     status: str
@@ -424,6 +441,12 @@ class AlertOut(BaseModel):
     tags: List[AlertTagBase] = []
     linked_cases: List[LinkedCaseCreate] = []
     iocs: List[IoCBase] = []
+
+    @validator('alert_creation_time', 'time_closed', pre=True)
+    def format_datetime(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        return v
 
 
 class AlertOutResponse(BaseModel):
@@ -444,11 +467,17 @@ class CaseOut(BaseModel):
     assigned_to: Optional[str] = None
     alerts: Optional[List[AlertOut]] = []
     case_status: Optional[str] = None
-    case_creation_time: Optional[datetime] = None
+    case_creation_time: Optional[str] = None
     customer_code: Optional[str] = None
     notification_invoked_number: Optional[int] = 0
     escalated: bool = False
     comments: List[CaseCommentBase] = []
+
+    @validator('case_creation_time', pre=True)
+    def format_case_creation_time(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        return v
 
 
 class CaseOutResponse(BaseModel):
