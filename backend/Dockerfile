@@ -141,7 +141,7 @@ RUN apt-get update && apt-get install -y \
     curl ca-certificates build-essential \
     python3.11 python3.11-venv python3.11-dev \
     libnss3 libatk-bridge2.0-0 libxkbcommon0 libgtk-3-0 libasound2 libx11-xcb1 \
-    wkhtmltopdf && \
+    wkhtmltopdf libmagic1 file && \
     rm -rf /var/lib/apt/lists/*
 
 # ───────────────
