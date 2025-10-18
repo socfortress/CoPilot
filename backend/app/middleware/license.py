@@ -1048,7 +1048,8 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
     description="Replace a license",
 )
 async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSession = Depends(get_db)):
-    license = await get_license(session)
+    # ! Remove get_license becasue we don't need to fetch old license
+    #license = await get_license(session)
 
     # Invalidate cache for old license
     await invalidate_license_cache(session, license.license_key)
