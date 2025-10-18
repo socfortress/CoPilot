@@ -118,63 +118,70 @@
 # CMD ["/usr/wait-for-it.sh", "copilot-mysql:3306", "--", "/opt/venv/bin/python", "copilot.py"]
 
 # ─────────────────────────────────────────────
-# STAGE 1 – Builder
+# SOCFortress CoPilot Backend – Single-Stage Build
+# Optimized with uv (Rust-based pip)
+# Compatible with Debian 12 / ARM64 / x86_64
 # ─────────────────────────────────────────────
-FROM debian:12 AS builder
 
+FROM debian:12
+
+# ───────────────
+# Core Environment
+# ───────────────
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
     UV_CACHE_DIR=/root/.cache/uv \
     PATH="/opt/venv/bin:$PATH"
 
-# Install Python & tools
-RUN apt-get update && \
-    apt-get install -y curl ca-certificates python3.11 python3.11-venv python3.11-dev build-essential && \
+# ───────────────
+# System Dependencies
+# ───────────────
+RUN apt-get update && apt-get install -y \
+    curl ca-certificates build-essential \
+    python3.11 python3.11-venv python3.11-dev \
+    libnss3 libatk-bridge2.0-0 libxkbcommon0 libgtk-3-0 libasound2 libx11-xcb1 \
+    wkhtmltopdf && \
     rm -rf /var/lib/apt/lists/*
 
-# Setup venv
-RUN python3.11 -m venv /opt/venv
-
-# Install uv (Rust-based pip replacement)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+# ───────────────
+# Virtual Environment + uv
+# ───────────────
+RUN python3.11 -m venv /opt/venv && \
+    curl -LsSf https://astral.sh/uv/install.sh | sh && \
     ln -s /root/.local/bin/uv /usr/local/bin/uv
 
 WORKDIR /opt/copilot/backend
 
-# Cache only requirements first for layer reuse
+# ───────────────
+# Install Dependencies
+# ───────────────
 COPY requirements.txt ./
-
-# Install dependencies inside venv using uv
 RUN uv pip install -r requirements.txt --no-cache
 
-# ─────────────────────────────────────────────
-# STAGE 2 – Runtime
-# ─────────────────────────────────────────────
-FROM debian:12-slim
+# ───────────────
+# Install Playwright Chromium
+# ───────────────
+RUN /opt/venv/bin/python -m playwright install-deps && \
+    /opt/venv/bin/python -m playwright install chromium
 
-# Copy venv + app
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /opt/copilot/backend /opt/copilot/backend
+# ───────────────
+# Copy Application
+# ───────────────
+COPY . .
 COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh && mkdir -p file-store
 
-RUN chmod +x /usr/local/bin/wait-for-it.sh
-
-# Install minimal runtime deps + Playwright + wkhtmltopdf
-RUN apt-get update && \
-    apt-get install -y wkhtmltopdf libnss3 libatk-bridge2.0-0 libxkbcommon0 libgtk-3-0 libasound2 libx11-xcb1 && \
-    /opt/venv/bin/python -m playwright install-deps && \
-    /opt/venv/bin/python -m playwright install chromium && \
-    rm -rf /var/lib/apt/lists/*
-
-# Environment setup
-ENV PATH="/opt/venv/bin:$PATH"
-WORKDIR /opt/copilot/backend
+# ───────────────
+# Expose API Port
+# ───────────────
 EXPOSE 5000
-ENV SERVER_IP=0.0.0.0
 
-# Connector Credentials (kept as-is)
-ENV WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
+# ───────────────
+# Runtime Environment
+# ───────────────
+ENV SERVER_IP=0.0.0.0 \
+    WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
     WAZUH_INDEXER_USERNAME=admin \
     WAZUH_INDEXER_PASSWORD=admin \
     WAZUH_MANAGER_URL=https://1.1.1.1 \
@@ -208,10 +215,13 @@ ENV WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
     GELF_INPUT_PORT=gelf_port \
     ALERT_CREATION_PROVISIONING_URL=http://1.1.1.1
 
+# ───────────────
+# Optional Build ARG
+# ───────────────
 ARG COPILOT_API_KEY
 ENV COPILOT_API_KEY=$COPILOT_API_KEY
 
-# ─────────────────────────────────────────────
-# ENTRYPOINT
-# ─────────────────────────────────────────────
+# ───────────────
+# Start Application
+# ───────────────
 CMD ["wait-for-it.sh", "copilot-mysql:3306", "--", "python", "copilot.py"]
