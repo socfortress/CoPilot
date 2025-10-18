@@ -144,7 +144,9 @@ WORKDIR /opt/copilot/backend
 
 # Cache only requirements first for layer reuse
 COPY requirements.txt ./
-RUN uv pip install -r requirements.txt --system --no-cache
+
+# Install dependencies inside venv using uv
+RUN uv pip install -r requirements.txt --no-cache
 
 # ─────────────────────────────────────────────
 # STAGE 2 – Runtime
@@ -165,14 +167,13 @@ RUN apt-get update && \
     /opt/venv/bin/python -m playwright install chromium && \
     rm -rf /var/lib/apt/lists/*
 
+# Environment setup
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /opt/copilot/backend
 EXPOSE 5000
-
-# Environment defaults
 ENV SERVER_IP=0.0.0.0
 
-# Connector Credentials (unchanged for demo)
+# Connector Credentials (kept as-is)
 ENV WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
     WAZUH_INDEXER_USERNAME=admin \
     WAZUH_INDEXER_PASSWORD=admin \
@@ -210,4 +211,7 @@ ENV WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
 ARG COPILOT_API_KEY
 ENV COPILOT_API_KEY=$COPILOT_API_KEY
 
+# ─────────────────────────────────────────────
+# ENTRYPOINT
+# ─────────────────────────────────────────────
 CMD ["wait-for-it.sh", "copilot-mysql:3306", "--", "python", "copilot.py"]
