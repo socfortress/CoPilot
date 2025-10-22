@@ -595,7 +595,7 @@ async def provision_office365_threat_intel_alert(
             priority=2,
             config=GraylogAlertProvisionConfig(
                 type="aggregation-v1",
-                query="syslog_level:ALERT AND data_office365_UserId:ThreatIntel",
+                query="syslog_level:ALERT AND data_office365_UserId:ThreatIntel AND NOT data_office365_DeliveryAction:Blocked",
                 query_parameters=[],
                 streams=[],
                 group_by=[],
