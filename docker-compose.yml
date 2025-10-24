@@ -38,7 +38,7 @@ services:
         restart: always
 
     copilot-minio:
-        image: quay.io/minio/minio:RELEASE.2024-09-13T20-26-02Z
+        image: ghcr.io/socfortress/minio:release.2024-09-13t20-26-02z
         environment:
             MINIO_ROOT_USER: ${MINIO_ROOT_USER}
             MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
