@@ -74,7 +74,7 @@ export function useHealthchecksNotify() {
 			watch(
 				alerts,
 				(val, old) => {
-					if (val?.length !== old?.length) {
+					if (JSON.stringify(val) !== JSON.stringify(old)) {
 						if (val !== null && val.length) {
 							const obj: Notification = {
 								id: "influxDBAlert",

@@ -16,7 +16,7 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 		uncommittedJournalEntries: 0 as number | null,
 		clusterName: "" as string | null,
 		clusterStatus: IndexHealth.GREEN as IndexHealth | null,
-		alerts: [] as InfluxDBAlert[] | null
+		alerts: null as InfluxDBAlert[] | null
 	}),
 	actions: {
 		getGraylogCheck() {
@@ -59,6 +59,19 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 					} else {
 						this.alerts = null
 					}
+
+					/*
+					this.alerts = [
+						{
+							time: new Date(),
+							message: "string",
+							checkID: "string",
+							checkName: "string",
+							level: InfluxDBAlertLevel.Crit
+						}
+					]
+					this.alerts = []
+					*/
 				})
 				.catch(() => {
 					this.alerts = null
