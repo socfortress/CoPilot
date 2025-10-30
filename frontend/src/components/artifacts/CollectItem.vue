@@ -1,8 +1,8 @@
 <template>
 	<div class="@container">
 		<CardEntity :embedded hoverable size="small">
-			<div class="grid-auto-fit-200 @lg:grid flex flex-col gap-2">
-				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ '@lg:flex hidden': prop.hideMobile }">
+			<div class="grid-auto-fit-200 flex flex-col gap-2 @lg:grid">
+				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hidden @lg:flex': prop.hideMobile }">
 					<template #key>
 						{{ prop.key }}
 					</template>

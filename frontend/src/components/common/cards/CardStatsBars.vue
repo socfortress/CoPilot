@@ -34,7 +34,7 @@
 							<span class="truncate font-mono">{{ item.label }}</span>
 						</div>
 						<div class="divider grow"></div>
-						<div class="value flex gap-3 whitespace-nowrap font-mono">
+						<div class="value flex gap-3 font-mono whitespace-nowrap">
 							<span v-if="!item.isTotal" class="opacity-50">{{ item.percentage }}%</span>
 							<strong>{{ item.value }}</strong>
 						</div>

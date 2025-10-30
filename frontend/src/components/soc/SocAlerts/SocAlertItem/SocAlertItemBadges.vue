@@ -23,7 +23,7 @@
 				{{ alert.severity?.severity_name || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
+		<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
@@ -32,7 +32,7 @@
 				{{ alert.alert_source || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
+		<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13"></Icon>
 			</template>

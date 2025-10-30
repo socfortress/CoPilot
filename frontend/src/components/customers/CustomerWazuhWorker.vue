@@ -105,7 +105,7 @@
 				:bordered="false"
 				title="Resource Control"
 			>
-				<div class="@2xl:!flex-row flex flex-col gap-4">
+				<div class="flex flex-col gap-4 @2xl:!flex-row">
 					<SimpleJsonViewer
 						v-if="portainerStack"
 						class="vuesjv-override grow"

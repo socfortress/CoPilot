@@ -2,7 +2,7 @@
 	<n-spin :show="loadingDetails">
 		<n-tabs type="line" animated :tabs-padding="24">
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<TechniqueAlertDetails v-if="techniqueDetails" :entity="techniqueDetails" />
 				</div>
 			</n-tab-pane>
@@ -11,7 +11,7 @@
 				:tab="`Groups (${techniqueDetails?.groups?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
 				</div>
 			</n-tab-pane>
@@ -20,7 +20,7 @@
 				:tab="`Mitigations (${techniqueDetails?.mitigations?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<MitigationsList v-if="techniqueDetails" :list="techniqueDetails.mitigations" />
 				</div>
 			</n-tab-pane>
@@ -29,7 +29,7 @@
 				:tab="`Software (${techniqueDetails?.software?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<SoftwareList v-if="techniqueDetails" :list="techniqueDetails.software" />
 				</div>
 			</n-tab-pane>
@@ -38,17 +38,17 @@
 				:tab="`Tactics (${techniqueDetails?.tactics?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<TechniqueEventsList v-if="techniqueDetails" :external-id />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Atomic test" tab="Atomic test" display-directive="show:lazy">
-				<div class="px-7 pb-7 pt-4">
+				<div class="px-7 pt-4 pb-7">
 					<TechniqueCardContent :technique-id="externalId" />
 				</div>
 			</n-tab-pane>

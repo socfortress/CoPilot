@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApexOptions } from "apexcharts"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
@@ -62,7 +63,7 @@ const series = ref<{ name: string; data: [Date, number][] }[]>([
 
 const serieLength = computed<number>(() => series.value[0].data.length || 0)
 
-function getOptions() {
+function getOptions(): ApexOptions {
 	return {
 		chart: {
 			height: 70,
@@ -72,7 +73,6 @@ function getOptions() {
 			},
 			animations: {
 				enabled: serieLength.value < 100,
-				easing: "linear",
 				dynamicAnimation: {
 					speed: 200
 				}
@@ -102,8 +102,8 @@ function getOptions() {
 				}
 			},
 			y: {
-				formatter: (val: number | string) => {
-					return val || "&nbsp;0"
+				formatter: (val: number) => {
+					return `${val}` || "&nbsp;0"
 				}
 			},
 			style: {
@@ -120,7 +120,7 @@ watch(value, val => {
 	if (serieLength.value > 100) {
 		series.value[0].data.shift()
 
-		if (options.value.chart.animations.enabled) {
+		if (options.value.chart?.animations?.enabled) {
 			options.value = getOptions()
 		}
 	}

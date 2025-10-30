@@ -27,10 +27,10 @@
 				/>
 			</div>
 
-			<div class="@md:block hidden">
+			<div class="hidden @md:block">
 				<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
 			</div>
-			<div class="@md:hidden block">
+			<div class="block @md:hidden">
 				<n-popover overlap placement="right" class="!px-0">
 					<template #trigger>
 						<div class="bg-default rounded-lg">

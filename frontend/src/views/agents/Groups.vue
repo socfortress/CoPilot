@@ -37,11 +37,11 @@
 			<template #sidebar-content>
 				<n-spin :show="loadingGroups">
 					<template v-if="groupsList.length">
-						<div class="divide-border divide-y-1 flex flex-col">
+						<div class="divide-border flex flex-col divide-y-1">
 							<div
 								v-for="group of groupsList"
 								:key="group.name"
-								class="hover:text-warning px-4.5 cursor-pointer break-all py-2.5 text-sm"
+								class="hover:text-warning cursor-pointer px-4.5 py-2.5 text-sm break-all"
 								:class="{ 'bg-warning/10': group.name === currentGroup?.name }"
 								@click.stop="loadGroup(group)"
 							>
@@ -77,7 +77,7 @@
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UndoIcon" />
-								<span class="@sm:flex hidden">Undo</span>
+								<span class="hidden @sm:flex">Undo</span>
 							</div>
 						</n-button>
 						<n-button
@@ -87,7 +87,7 @@
 							@click="xmlEditorCTX.redo"
 						>
 							<div class="flex items-center gap-2">
-								<span class="@sm:flex hidden">Redo</span>
+								<span class="hidden @sm:flex">Redo</span>
 								<Icon :name="RedoIcon" />
 							</div>
 						</n-button>
@@ -101,7 +101,7 @@
 										:size="20"
 										class="text-warning animate-fade cursor-help"
 									/>
-									<span class="text-warning @lg:flex hidden font-mono text-xs">Errors detected</span>
+									<span class="text-warning hidden font-mono text-xs @lg:flex">Errors detected</span>
 								</div>
 							</template>
 
@@ -129,14 +129,14 @@
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UploadIcon" />
-								<span class="@xs:flex hidden">Update</span>
+								<span class="hidden @xs:flex">Update</span>
 							</div>
 						</n-button>
 					</div>
 				</div>
 			</template>
 			<template #main-content>
-				<div v-if="currentGroup && currentFile" class="px-4.5 break-all py-2.5 text-sm">
+				<div v-if="currentGroup && currentFile" class="px-4.5 py-2.5 text-sm break-all">
 					<div class="font-mono">Group: {{ currentGroup?.name }} | File: {{ currentFile?.filename }}</div>
 				</div>
 				<n-spin

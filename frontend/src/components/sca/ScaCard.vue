@@ -16,7 +16,7 @@
 			</template>
 			<template #default>
 				<div class="flex flex-col gap-4">
-					<div class="font-medium leading-snug">
+					<div class="leading-snug font-medium">
 						{{ sca.description }}
 					</div>
 					<div class="text-secondary flex flex-col gap-0.5 text-sm">

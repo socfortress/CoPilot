@@ -85,7 +85,7 @@
 							>
 								<template #header>{{ key }}</template>
 								<template #footer>
-									<div class="@xs:!flex-row flex flex-col justify-between gap-4 text-sm">
+									<div class="flex flex-col justify-between gap-4 text-sm @xs:!flex-row">
 										<n-statistic class="grow">
 											<template #label>
 												<span class="text-sm">method</span>
@@ -180,8 +180,8 @@
 												.last_https_certificate.cert_signature"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">{{ value }}</td>
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">{{ value }}</td>
 										</tr>
 									</tbody>
 								</n-table>
@@ -207,8 +207,8 @@
 												.last_https_certificate.extensions.authority_key_identifier"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">{{ value }}</td>
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">{{ value }}</td>
 										</tr>
 									</tbody>
 								</n-table>
@@ -369,8 +369,8 @@
 												.last_https_certificate.extensions.ca_information_access"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">
 												<a :href="value" target="_blank" rel="nofollow noopener noreferrer">
 													{{ value }}
 												</a>
@@ -420,8 +420,8 @@
 												.last_https_certificate.validity"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">{{ value }}</td>
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">{{ value }}</td>
 										</tr>
 									</tbody>
 								</n-table>
@@ -443,8 +443,8 @@
 								<n-table :bordered="false" single-line>
 									<tbody>
 										<tr>
-											<td class="whitespace-nowrap text-sm">thumbprint_sha256</td>
-											<td class="whitespace-nowrap text-sm font-semibold">
+											<td class="text-sm whitespace-nowrap">thumbprint_sha256</td>
+											<td class="text-sm font-semibold whitespace-nowrap">
 												{{
 													virusTotalDataResponse.attributes.last_https_certificate
 														.thumbprint_sha256
@@ -452,16 +452,16 @@
 											</td>
 										</tr>
 										<tr>
-											<td class="whitespace-nowrap text-sm">thumbprint</td>
-											<td class="whitespace-nowrap text-sm font-semibold">
+											<td class="text-sm whitespace-nowrap">thumbprint</td>
+											<td class="text-sm font-semibold whitespace-nowrap">
 												{{
 													virusTotalDataResponse.attributes.last_https_certificate.thumbprint
 												}}
 											</td>
 										</tr>
 										<tr>
-											<td class="whitespace-nowrap text-sm">serial_number</td>
-											<td class="whitespace-nowrap text-sm font-semibold">
+											<td class="text-sm whitespace-nowrap">serial_number</td>
+											<td class="text-sm font-semibold whitespace-nowrap">
 												{{
 													virusTotalDataResponse.attributes.last_https_certificate
 														.serial_number
@@ -491,8 +491,8 @@
 												.last_https_certificate.issuer"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">{{ value }}</td>
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">{{ value }}</td>
 										</tr>
 									</tbody>
 								</n-table>
@@ -517,8 +517,8 @@
 												.last_https_certificate.subject"
 											:key
 										>
-											<td class="whitespace-nowrap text-sm">{{ key }}</td>
-											<td class="whitespace-nowrap text-sm font-semibold">{{ value }}</td>
+											<td class="text-sm whitespace-nowrap">{{ key }}</td>
+											<td class="text-sm font-semibold whitespace-nowrap">{{ value }}</td>
 										</tr>
 									</tbody>
 								</n-table>

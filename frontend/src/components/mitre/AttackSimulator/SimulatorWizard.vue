@@ -1,8 +1,8 @@
 <template>
-	<div class="simulator-windows-attack-wizard min-h-120 flex flex-col gap-4 overflow-hidden">
+	<div class="simulator-windows-attack-wizard flex min-h-120 flex-col gap-4 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
-				<div class="px-7 pb-2 pt-4">
+				<div class="px-7 pt-4 pb-2">
 					<n-steps :current="current" size="small" :status="currentStatus">
 						<n-step title="Attack" />
 						<n-step title="Endpoint agent" />
@@ -90,7 +90,7 @@
 								<table>
 									<tbody class="text-xs">
 										<tr v-for="(value, key) in report" :key="`${key}`">
-											<td class="text-secondary whitespace-nowrap p-1 pr-4">{{ key }}</td>
+											<td class="text-secondary p-1 pr-4 whitespace-nowrap">{{ key }}</td>
 											<td class="p-1">{{ value }}</td>
 										</tr>
 									</tbody>

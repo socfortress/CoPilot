@@ -123,7 +123,7 @@
 							</div>
 							<div v-if="!_isEmpty(analysisResponse.attributes.stats)" class="flex flex-col gap-1 p-4">
 								<div class="text-secondary text-xs">stats</div>
-								<div class="divide-border divide-y-1 flex flex-col gap-2">
+								<div class="divide-border flex flex-col gap-2 divide-y-1">
 									<div
 										v-for="(val, key) of analysisResponse.attributes.stats"
 										:key="key"
@@ -165,7 +165,7 @@
 										class="border-default border"
 									>
 										<div class="px-2 py-1">{{ resultKey }}</div>
-										<div class="divide-border divide-y-1 bg-default flex flex-col gap-1">
+										<div class="divide-border bg-default flex flex-col gap-1 divide-y-1">
 											<div
 												v-for="(val, key) of resultVal"
 												:key="key"
@@ -180,7 +180,7 @@
 							</div>
 							<div v-if="!_isEmpty(analysisResponse.links)" class="flex flex-col gap-1 p-4">
 								<div class="text-secondary text-xs">links</div>
-								<div class="divide-border divide-y-1 flex flex-col gap-2">
+								<div class="divide-border flex flex-col gap-2 divide-y-1">
 									<div
 										v-for="(val, key) of analysisResponse.links"
 										:key="key"

@@ -20,7 +20,7 @@
 						maxRows: 18
 					}"
 				/>
-				<div class="absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 pr-3">
+				<div class="absolute right-0 bottom-0 left-0 flex items-center justify-between p-2 pr-3">
 					<div class="flex items-center gap-2.5">
 						<n-select
 							v-model:value="selectedServer"
@@ -34,7 +34,7 @@
 							<template #trigger>
 								<Icon name="carbon:help" :size="14" class="cursor-help" />
 							</template>
-							<div class="divide-border divide-y-1 flex flex-col">
+							<div class="divide-border flex flex-col divide-y-1">
 								<div class="flex flex-col gap-1 px-3 py-2 text-sm">
 									<div>{{ selectedServerDetails.name }}</div>
 									<div class="text-secondary text-xs">
@@ -48,7 +48,7 @@
 											v-for="item of selectedServerDetails.capabilities"
 											:key="item"
 											size="small"
-											class="[&_.n-tag\_\_content]:leading-0 text-[10px] [&_.n-tag\_\_content]:pb-0.5"
+											class="text-[10px] [&_.n-tag\_\_content]:pb-0.5 [&_.n-tag\_\_content]:leading-0"
 										>
 											{{ item }}
 										</n-tag>
@@ -60,7 +60,7 @@
 							<template #trigger>
 								<Icon name="carbon:settings-adjust" :size="14" />
 							</template>
-							<div class="divide-border divide-y-1 flex flex-col">
+							<div class="divide-border flex flex-col divide-y-1">
 								<div class="px-3 py-2">
 									<div class="flex items-center gap-2 text-sm">
 										<div>verbose response</div>
