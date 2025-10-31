@@ -47,7 +47,8 @@ function createCase() {
 							case_creation_time: new Date(),
 							assigned_to: null,
 							case_status: null,
-							customer_code: null
+							customer_code: null,
+							comments: []
 						}
 					]
 				})

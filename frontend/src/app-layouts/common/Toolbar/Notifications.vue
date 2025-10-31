@@ -1,5 +1,5 @@
 <template>
-	<n-popover :show-arrow="false" placement="bottom" content-class="p-0! w-72">
+	<n-popover :show-arrow="false" placement="bottom" content-class="w-72 p-0!">
 		<template #trigger>
 			<n-badge :show="hasUnread" dot :color="primaryColor">
 				<Icon :name="BellIcon" :size="21" class="text-default" />

@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-provision-wizard">
-		<div class="min-h-120 flex flex-col">
+		<div class="flex min-h-120 flex-col">
 			<div class="grow">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">

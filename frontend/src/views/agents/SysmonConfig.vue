@@ -61,7 +61,7 @@
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UndoIcon" />
-								<span class="@sm:flex hidden">Undo</span>
+								<span class="hidden @sm:flex">Undo</span>
 							</div>
 						</n-button>
 						<n-button
@@ -71,7 +71,7 @@
 							@click="xmlEditorCTX.redo"
 						>
 							<div class="flex items-center gap-2">
-								<span class="@sm:flex hidden">Redo</span>
+								<span class="hidden @sm:flex">Redo</span>
 								<Icon :name="RedoIcon" />
 							</div>
 						</n-button>
@@ -85,7 +85,7 @@
 										:size="20"
 										class="text-warning animate-fade cursor-help"
 									/>
-									<span class="text-warning @lg:flex hidden font-mono text-xs">Errors detected</span>
+									<span class="text-warning hidden font-mono text-xs @lg:flex">Errors detected</span>
 								</div>
 							</template>
 
@@ -113,7 +113,7 @@
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UploadIcon" />
-								<span class="@xs:flex hidden">Upload</span>
+								<span class="hidden @xs:flex">Upload</span>
 							</div>
 						</n-button>
 						<n-button
@@ -125,7 +125,7 @@
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="DeployIcon" />
-								<span class="@xs:flex hidden">Deploy</span>
+								<span class="hidden @xs:flex">Deploy</span>
 							</div>
 						</n-button>
 					</div>

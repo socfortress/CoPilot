@@ -4,7 +4,7 @@
 			<slot :loading :toggle-popup />
 		</template>
 
-		<div class="flex min-w-72 max-w-80 flex-col gap-2 py-1">
+		<div class="flex max-w-80 min-w-72 flex-col gap-2 py-1">
 			<div>Choose the level to load:</div>
 
 			<n-checkbox-group v-model:value="ruleLevels" class="flex gap-4" :disabled="loading">

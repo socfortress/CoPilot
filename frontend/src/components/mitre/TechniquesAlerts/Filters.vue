@@ -12,7 +12,7 @@
 					</n-badge>
 				</template>
 
-				<div class="pb-2 pt-1">
+				<div class="pt-1 pb-2">
 					<div class="text-secondary mb-1 text-sm">Mitre field:</div>
 					<n-input v-model:value="mitreField" size="small" clearable class="!w-40" />
 				</div>

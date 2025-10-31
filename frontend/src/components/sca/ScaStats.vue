@@ -93,7 +93,7 @@
 				>
 					<div class="flex items-end">
 						<div
-							class="w-4 rounded-b-sm rounded-t-2xl"
+							class="w-4 rounded-t-2xl rounded-b-sm"
 							:class="{
 								'h-full bg-yellow-500': index === 0,
 								'h-8/12 bg-gray-400': index === 1,
@@ -126,9 +126,9 @@
 							<ScaLevelBadge :score="policy.score" class="mt-1" />
 						</div>
 
-						<div class="text-lg font-semibold leading-snug">{{ policy.policy_name }}</div>
+						<div class="text-lg leading-snug font-semibold">{{ policy.policy_name }}</div>
 
-						<div class="@md:grid-cols-2 text-secondary grid grid-cols-1 gap-1 break-all text-xs">
+						<div class="text-secondary grid grid-cols-1 gap-1 text-xs break-all @md:grid-cols-2">
 							<div class="flex items-center gap-2">
 								<span>Policy ID:</span>
 								<span class="font-mono font-semibold">{{ policy.policy_id }}</span>

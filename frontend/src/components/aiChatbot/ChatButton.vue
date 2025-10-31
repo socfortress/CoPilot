@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="ai-chatbot-button-wrapper w-15 fixed bottom-10 right-0 h-10" @click="showDrawer = true">
+		<div class="ai-chatbot-button-wrapper fixed right-0 bottom-10 h-10 w-15" @click="showDrawer = true">
 			<n-tooltip trigger="hover" placement="left">
 				<template #trigger>
 					<n-float-button type="primary" class="ai-chatbot-button">
@@ -15,7 +15,7 @@
 		<n-drawer
 			v-model:show="showDrawer"
 			:default-width="400"
-			class="min-w-85 max-w-[90vw]"
+			class="max-w-[90vw] min-w-85"
 			display-directive="show"
 			:trap-focus="false"
 			resizable

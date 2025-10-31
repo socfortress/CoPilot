@@ -48,7 +48,7 @@
 					</div>
 				</CollapseKeepAlive>
 			</div>
-			<div v-if="body && isBodyVisible" class="[&_*:last-child]:mb-0! [&_*]:text-default [&_*]:text-sm">
+			<div v-if="body && isBodyVisible" class="[&_*]:text-default [&_*]:text-sm [&_*:last-child]:mb-0!">
 				<Markdown :source="body" class="animate-fade overflow-hidden" />
 			</div>
 		</template>
@@ -83,7 +83,7 @@
 						</n-tooltip>
 					</div>
 				</div>
-				<div class="bg-secondary [&_*:last-child]:mb-0! [&_*]:text-default rounded-lg px-2 py-1 text-sm">
+				<div class="bg-secondary [&_*]:text-default rounded-lg px-2 py-1 text-sm [&_*:last-child]:mb-0!">
 					<Markdown :source="entity.body" class="animate-fade overflow-hidden" />
 				</div>
 			</div>

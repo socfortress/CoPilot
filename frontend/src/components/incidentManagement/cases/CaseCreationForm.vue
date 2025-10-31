@@ -174,7 +174,8 @@ function getForm() {
 		case_description: "",
 		assigned_to: null,
 		case_status: null,
-		customer_code: null
+		customer_code: null,
+		comments: []
 	}
 	return payload
 }

@@ -1,8 +1,8 @@
 <template>
-	<div class="customer-integration-form min-h-120 flex flex-col gap-4 overflow-hidden">
+	<div class="customer-integration-form flex min-h-120 flex-col gap-4 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
-				<div class="px-7 pb-2 pt-4">
+				<div class="px-7 pt-4 pb-2">
 					<n-steps :current="current" size="small" :status="currentStatus">
 						<n-step title="Choose Integration" />
 						<n-step title="Set Auth Keys">

@@ -9,7 +9,7 @@
 			</div>
 		</div>
 		<div>
-			<n-tag size="small" class="[&_.n-tag\_\_content]:leading-0 text-[10px]! [&_.n-tag\_\_content]:p-0!">
+			<n-tag size="small" class="text-[10px]! [&_.n-tag\_\_content]:p-0! [&_.n-tag\_\_content]:leading-0">
 				{{ entity.category }}
 			</n-tag>
 		</div>

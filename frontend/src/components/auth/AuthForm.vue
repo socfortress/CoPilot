@@ -1,5 +1,5 @@
 <template>
-	<div class="w-full min-w-64 max-w-96">
+	<div class="w-full max-w-96 min-w-64">
 		<div>
 			<Logo mini :dark="isDark" class="mb-4" max-height="40px" />
 			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">

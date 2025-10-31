@@ -38,7 +38,7 @@
 									type="textarea"
 									:autosize="{ minRows: 3 }"
 								/>
-								<div class="absolute -right-2.5 -top-2.5">
+								<div class="absolute -top-2.5 -right-2.5">
 									<n-button
 										v-if="model.field_matches.length > 1"
 										circle

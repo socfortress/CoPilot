@@ -57,7 +57,7 @@
 			<n-spin :show="canceling" content-class="flex grow flex-col gap-4" class="flex grow flex-col">
 				<div class="flex justify-between gap-4">
 					<div>{{ subscription.info }}</div>
-					<div class="text-primary whitespace-nowrap font-mono">
+					<div class="text-primary font-mono whitespace-nowrap">
 						{{ price(subscription.price) }}
 					</div>
 				</div>

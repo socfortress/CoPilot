@@ -50,12 +50,12 @@
 						class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 						size="small"
 					>
-						<strong class="recommendation-name px-4 pb-1 pt-3 font-mono">{{ recommendation.name }}</strong>
+						<strong class="recommendation-name px-4 pt-3 pb-1 font-mono">{{ recommendation.name }}</strong>
 						<n-divider class="!m-0" />
 						<div class="recommendation-description px-4 pt-1">
 							{{ recommendation.description }}
 						</div>
-						<p class="recommendation-explanation px-4 pb-3 pt-2">
+						<p class="recommendation-explanation px-4 pt-2 pb-3">
 							{{ recommendation.explanation }}
 						</p>
 					</n-card>

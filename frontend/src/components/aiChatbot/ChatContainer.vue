@@ -2,7 +2,7 @@
 	<div class="flex flex-col overflow-hidden">
 		<div class="relative grow overflow-hidden">
 			<n-scrollbar ref="scrollbar">
-				<div v-if="list.length" class="pb-50 flex flex-col gap-6 p-4">
+				<div v-if="list.length" class="flex flex-col gap-6 p-4 pb-50">
 					<ChatBubbleBlock
 						v-for="item of list"
 						:key="item.id"

@@ -71,31 +71,33 @@ export function useHealthchecksNotify() {
 				}
 			})
 
-			watch(alerts, (val, old) => {
-				if (val?.length !== old?.length) {
-					const obj: Notification = {
-						id: "influxDBAlert",
-						category: "alert",
-						type: "error",
-						title: "Error check",
-						description: "Influx Alert",
-						read: false,
-						date: new Date(),
-						action() {
-							gotoHealthcheck()
-						},
-						actionTitle: "See Healthcheck"
-					}
+			watch(
+				alerts,
+				(val, old) => {
+					if (JSON.stringify(val) !== JSON.stringify(old)) {
+						if (val !== null && val.length) {
+							const obj: Notification = {
+								id: "influxDBAlert",
+								category: "alert",
+								type: "warning",
+								title: "Influx Alert",
+								description: `${val.length} Critical ${val.length > 1 ? "issues" : "issue"}`,
+								read: false,
+								date: new Date(),
+								action() {
+									gotoHealthcheck()
+								},
+								actionTitle: "See Healthcheck"
+							}
 
-					if (val !== null && val.length) {
-						obj.type = "warning"
-						obj.title = "Influx Alert"
-						obj.description = `${val.length} Critical ${val.length > 1 ? "issues" : "issue"}`
+							useNotifications().prepend(obj, { autoNotify: true })
+						} else {
+							useNotifications().deleteOne("influxDBAlert")
+						}
 					}
-
-					useNotifications().prepend(obj, { autoNotify: true })
-				}
-			})
+				},
+				{ deep: true }
+			)
 		}
 	}
 }

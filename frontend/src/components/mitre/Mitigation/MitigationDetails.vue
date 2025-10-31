@@ -28,7 +28,7 @@
 					</template>
 				</CardKV>
 			</div>
-			<div ref="sidebarRef" class="md:max-w-70 shrink-0 basis-1/3">
+			<div ref="sidebarRef" class="shrink-0 basis-1/3 md:max-w-70">
 				<div ref="sidebarCardRef" class="flex flex-col gap-2 will-change-transform">
 					<n-card content-class="bg-secondary flex flex-col gap-3 rounded-lg" size="small">
 						<div class="flex flex-col gap-0.5 text-sm">
@@ -62,7 +62,7 @@
 					</n-card>
 
 					<div class="flex flex-wrap gap-1">
-						<Badge v-if="mitigationDetails.deprecated" color="primary" class="text-xs! font-mono">
+						<Badge v-if="mitigationDetails.deprecated" color="primary" class="font-mono text-xs!">
 							<template #value>deprecated</template>
 						</Badge>
 					</div>

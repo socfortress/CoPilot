@@ -152,7 +152,8 @@ function linkCase() {
 									case_creation_time: caseData?.case_creation_time || new Date(),
 									assigned_to: caseData?.assigned_to || null,
 									case_status: caseData?.case_status || null,
-									customer_code: caseData?.customer_code || null
+									customer_code: caseData?.customer_code || null,
+									comments: caseData?.comments || []
 								}
 							]
 						})

@@ -72,19 +72,19 @@
 						<template #label>syslog</template>
 						<template #value>{{ alert.syslog_type }} / {{ alert.syslog_level }}</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
+					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 						<template #label>manager</template>
 						<template #value>
 							{{ alert.manager_name }}
 						</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
+					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 						<template #label>decoder</template>
 						<template #value>
 							{{ alert.decoder_name }}
 						</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="@2xl:!flex !hidden">
+					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 						<template #label>source</template>
 						<template #value>
 							{{ alert.source }}
