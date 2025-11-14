@@ -38,7 +38,7 @@
 			</template>
 			Ask SOCFortress
 		</n-button>
-		<n-button
+		<!-- <n-button
 			v-if="isWazuhRulesVisible"
 			:loading="loadingWazuhRuleExclude"
 			secondary
@@ -49,7 +49,7 @@
 				<Icon :name="RulesIcon"></Icon>
 			</template>
 			Exclude Rule in Wazuh
-		</n-button>
+		</n-button> -->
 
 		<n-modal
 			v-model:show="showSocResponse"
