@@ -138,7 +138,7 @@ def build_event_stream_config(
                 "inverted": False,
                 "value": request.customer_code,
             },
-            {"field": "cluster_node", "type": 1, "inverted": False, "value": f"wazuh.worker.{sanitized_name}"},
+            {"field": "cluster_node", "type": 1, "inverted": False, "value": f"wazuh.worker.{sanitized_name}.1"},
         ],
         matching_type="OR",
         remove_matches_from_default_stream=True,
