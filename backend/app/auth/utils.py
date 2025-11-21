@@ -218,7 +218,7 @@ class AuthHandler:
         if username is None:
             raise HTTPException(
                 status_code=401,
-                detail="Username not found in token.",
+                detail="Username not found in token",
                 headers={"WWW-Authenticate": authenticate_value},
             )
         user = await find_user(username)
