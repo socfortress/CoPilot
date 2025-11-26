@@ -540,25 +540,25 @@ async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSes
         CollectArtifactResponse: The response containing the collected file.
     """
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
-    # result = await get_all_artifacts_for_hostname(
-    #     collect_artifact_body.hostname,
-    #     session,
-    # )
-    # artifact_names = [artifact.name for artifact in result.artifacts]
-
+    result = await get_all_artifacts_for_hostname(
+        collect_artifact_body.hostname,
+        session,
+    )
+    artifact_names = [artifact.name for artifact in result.artifacts]
+    # ! Commenting out for now bc this is true because the artifact name doesnt contain linux ! #
     # if collect_artifact_body.artifact_name not in artifact_names:
     #     raise HTTPException(
     #         status_code=400,
     #         detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
     #     )
 
-    # collect_artifact_body.velociraptor_id = await get_velociraptor_id(
-    #     session,
-    #     collect_artifact_body.hostname,
-    # )
+    collect_artifact_body.velociraptor_id = await get_velociraptor_id(
+        session,
+        collect_artifact_body.hostname,
+    )
 
-    # collect_artifact_body.velociraptor_org = await get_velociraptor_org(
-    #     session,
-    #     collect_artifact_body.hostname,
-    # )
+    collect_artifact_body.velociraptor_org = await get_velociraptor_org(
+        session,
+        collect_artifact_body.hostname,
+    )
     return await run_file_collection(collect_artifact_body)

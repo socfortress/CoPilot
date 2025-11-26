@@ -177,6 +177,26 @@ class CollectFileBody(BaseBody):
             raise HTTPException(status_code=400, detail="Invalid artifact name. Name should be 'Generic.Collectors.File'")
         return value
 
+# ! Windows Example ! #
+# {
+#   "hostname": "WIN-HFOU106TD7K",
+#   "velociraptor_id": "C.475df76785008b04",
+#   "velociraptor_org": "root",
+#   "artifact_name": "Generic.Collectors.File",
+#   "file": "Glob\nUsers\\\\Administrator\\\\Downloads\\\\LICENSE.txt\n",
+#   "root_disk": "C:"
+# }
+
+# ! Linux Example ! #
+# {
+#   "hostname": "ASHWZHMA",
+#   "velociraptor_id": "C.c4e8798fbab1d9c6",
+#   "velociraptor_org": "root",
+#   "artifact_name": "Generic.Collectors.File",
+#   "file": "Glob\n/tmp/dir/test.txt\n",
+#   "root_disk": "/" # Always use / for linux
+# }
+
 
 class RunCommandBody(BaseBody):
     command: Optional[str] = Field(None, description="Command to run")
@@ -204,6 +224,10 @@ class BaseResponse(BaseModel):
 
 
 class CollectArtifactResponse(BaseResponse):
+    file_info: Optional[Dict] = Field(
+        None,
+        description="Information about collected files",
+    )
     pass  # If you have additional fields, you can define them here
 
 
