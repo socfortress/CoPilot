@@ -1,6 +1,8 @@
 import httpx
 from fastapi import HTTPException
 from loguru import logger
+from typing import Optional
+import io
 
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
@@ -363,79 +365,277 @@ async def run_file_collection(
     Run an artifact collection on a client.
 
     Args:
-        run_analyzer_body (RunAnalyzerBody): The body of the request.
+        collect_artifact_body (CollectFileBody): The body of the request.
 
     Returns:
-        RunAnalyzerResponse: A dictionary containing the success status and a message.
+        CollectArtifactResponse: A dictionary containing the success status and a message.
     """
-    # velociraptor_service = await UniversalService.create("Velociraptor")
-    return CollectArtifactResponse(
-        success=False,
-        message="Not yet implemented",
-        results=[],
-    )
-    # ! NOT YET READY ! #
-    # try:
-    #     # ! Can specify org_id with org_id='OL680' ! #
-    #     query = create_query(
-    #         (
-    #             f"SELECT collect_client("
-    #             f"org_id='{collect_artifact_body.velociraptor_org}', "
-    #             f"client_id='{collect_artifact_body.velociraptor_id}', "
-    #             f"artifacts=['{collect_artifact_body.artifact_name}'], "
-    #             f"specs=[{{"
-    #             f"    'artifact': '{collect_artifact_body.artifact_name}',"
-    #             f"    'parameters': {{"
-    #             f"        'env': ["
-    #             f"            {{'key': 'collectionSpec', 'value': '{collect_artifact_body.file}'}},"
-    #             f"            {{'key': 'Root', 'value': '{collect_artifact_body.root_disk}'}}"
-    #             f"        ]"
-    #             f"    }}"
-    #             f"}}
-    #         ]"
-    #             f") "
-    #             f"FROM scope()",
-    #     ),
-    #     )
-    #     logger.info(f"Query: {query}")
-    #     flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
-    #     logger.info(f"Successfully ran artifact collection on {flow}")
+    velociraptor_service = await UniversalService.create("Velociraptor")
 
-    #     artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
+    try:
+        # Build the query with proper VQL syntax
+        query = create_query(
+            f"SELECT collect_client("
+            f"org_id='{collect_artifact_body.velociraptor_org}', "
+            f"client_id='{collect_artifact_body.velociraptor_id}', "
+            f"artifacts=['{collect_artifact_body.artifact_name}'], "
+            f"spec=dict(`{collect_artifact_body.artifact_name}`=dict("
+            f"`collectionSpec`='{collect_artifact_body.file}', "
+            f"`Root`='{collect_artifact_body.root_disk}'"
+            f"))) "
+            f"FROM scope()"
+        )
 
-    #     flow_id = flow["results"][0][artifact_key]["flow_id"]
-    #     logger.info(f"Extracted flow_id: {flow_id}")
+        logger.info(f"Query: {query}")
+        flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
+        logger.info(f"Successfully ran artifact collection on {flow}")
 
-    #     completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
-    #     logger.info(f"Successfully watched flow completion on {completed}")
+        # Check if results are available
+        if not flow.get("results") or len(flow["results"]) == 0:
+            logger.error("No results returned from query execution")
+            raise HTTPException(
+                status_code=500,
+                detail="Query execution did not return any results",
+            )
 
-    #     results = velociraptor_service.read_collection_results(
-    #         client_id=collect_artifact_body.velociraptor_id,
-    #         flow_id=flow_id,
-    #         org_id=collect_artifact_body.velociraptor_org,
-    #         artifact=collect_artifact_body.artifact_name,
-    #     )
+        # Extract flow_id from results
+        result_dict = flow["results"][0]
+        flow_id = None
 
-    #     logger.info(f"Successfully read collection results on {results}")
+        # Look for any key that has a flow_id in its value
+        for key, value in result_dict.items():
+            if isinstance(value, dict) and "flow_id" in value:
+                flow_id = value["flow_id"]
+                logger.debug(f"Found flow_id {flow_id} in key: {key}")
+                break
 
-    #     return CollectArtifactResponse(
-    #         success=results["success"],
-    #         message=results["message"],
-    #         results=results["results"],
-    #     )
-    # except HTTPException as he:  # Catch HTTPException separately to propagate the original message
-    #     logger.error(
-    #         f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
-    #     )
-    #     raise he
-    # except Exception as err:
-    #     logger.error(
-    #         f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-    #     )
-    #     raise HTTPException(
-    #         status_code=500,
-    #         detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-    #     )
+        if not flow_id:
+            logger.error(f"Could not find flow_id in results: {result_dict}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to extract flow ID from results",
+            )
+
+        logger.info(f"Extracted flow_id: {flow_id}")
+
+        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
+        logger.info(f"Successfully watched flow completion on {completed}")
+
+        results = velociraptor_service.read_collection_results(
+            client_id=collect_artifact_body.velociraptor_id,
+            flow_id=flow_id,
+            org_id=collect_artifact_body.velociraptor_org,
+            artifact=collect_artifact_body.artifact_name,
+        )
+
+        logger.info(f"Successfully read collection results on {results}")
+
+        # Fetch the collected file from filestore
+        logger.info("Fetching collected file from filestore")
+        file_data = await fetch_file_from_filestore(
+            client_id=collect_artifact_body.velociraptor_id,
+            flow_id=flow_id,
+            org_id=collect_artifact_body.velociraptor_org,
+        )
+
+        # Add file information to results
+        results["file_data"] = file_data
+
+        return CollectArtifactResponse(
+            success=results["success"],
+            message=results["message"],
+            results=results["results"],
+            file_info=file_data if file_data.get("success") else None,
+        )
+    except HTTPException as he:
+        logger.error(
+            f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
+        )
+        raise he
+    except Exception as err:
+        logger.error(
+            f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
+
+async def fetch_file_from_filestore(
+    client_id: str,
+    flow_id: str,
+    org_id: str,
+    hostname: Optional[str] = None,
+    password: Optional[str] = None,
+    format: str = "json",
+    expand_sparse: bool = False,
+    output_dir: Optional[str] = ".",
+) -> dict:
+    """
+    Fetch a file from Velociraptor's filestore and save it to disk.
+    First creates a download pack for the flow, then fetches it.
+
+    Args:
+        client_id (str): The client ID (e.g., 'C.c4e8798fbab1d9c6')
+        flow_id (str): The flow ID (e.g., 'F.D4JK8SJDA4N08')
+        org_id (str): The organization ID
+        hostname (Optional[str]): The hostname (if None, will be extracted from client metadata)
+        password (Optional[str]): An optional password to encrypt the collection zip
+        format (str): Format to export (csv,json,csv_only) defaults to json
+        expand_sparse (bool): If set we expand sparse files in the archive
+        output_dir (str): Directory to save the downloaded file (defaults to current directory)
+
+    Returns:
+        dict: A dictionary containing success status, message, and file path
+    """
+    import os
+    import base64
+
+    velociraptor_service = await UniversalService.create("Velociraptor")
+
+    try:
+        # If hostname is not provided, fetch it from client metadata
+        if not hostname:
+            logger.info(f"Fetching hostname for client {client_id}")
+            query = create_query(
+                f"SELECT os_info.hostname AS Hostname "
+                f"FROM clients(client_id='{client_id}')"
+            )
+            client_info = velociraptor_service.execute_query(query, org_id=org_id)
+
+            if client_info.get("results") and len(client_info["results"]) > 0:
+                hostname = client_info["results"][0].get("Hostname", client_id)
+            else:
+                hostname = client_id
+                logger.warning(f"Could not fetch hostname, using client_id: {client_id}")
+
+        # Step 1: Create the flow download
+        logger.info(f"Creating flow download for client {client_id}, flow {flow_id}")
+
+        # Build the create_flow_download query
+        download_query_parts = [
+            f"client_id='{client_id}'",
+            f"flow_id='{flow_id}'",
+            "wait=true",  # Wait for download to complete
+            f"format='{format}'",
+            f"expand_sparse={str(expand_sparse).lower()}",
+        ]
+
+        # Add optional password if provided
+        if password:
+            download_query_parts.append(f"password='{password}'")
+
+        # Generate filename
+        zip_filename = f"{hostname}-{client_id}-{flow_id}.zip"
+        download_query_parts.append(f"name='{hostname}-{client_id}-{flow_id}'")
+
+        create_download_query = create_query(
+            f"SELECT create_flow_download({', '.join(download_query_parts)}) "
+            f"FROM scope()"
+        )
+
+        logger.info(f"Create download query: {create_download_query}")
+        download_result = velociraptor_service.execute_query(create_download_query, org_id=org_id)
+
+        if not download_result.get("success"):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create flow download: {download_result.get('message')}",
+            )
+
+        logger.info(f"Flow download created successfully: {download_result}")
+
+        # Step 2: Construct the VFS path where the download will be stored
+        vfs_path = f"downloads/{client_id}/{flow_id}/{zip_filename}"
+
+        logger.info(f"Fetching file from VFS path: {vfs_path}")
+
+        # Step 3: Fetch the file in chunks using base64 encoding
+        output_path = os.path.join(output_dir, zip_filename)
+        offset = 0
+        chunk_size = 1024 * 1024  # 1MB chunks
+        total_bytes = 0
+
+        with open(output_path, 'wb') as f:
+            while True:
+                # Build VQL query to fetch file buffer with base64 encoding
+                query = create_query(
+                    f"SELECT base64encode(string=read_file("
+                    f"accessor='fs', "
+                    f"filename='/{vfs_path}', "
+                    f"offset={offset}, "
+                    f"length={chunk_size})) AS Data "
+                    f"FROM scope()"
+                )
+
+                result = velociraptor_service.execute_query(query, org_id=org_id)
+
+                if not result.get("success"):
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to fetch file chunk: {result.get('message')}",
+                    )
+
+                # Check if we got data
+                if not result.get("results") or len(result["results"]) == 0:
+                    break
+
+                data = result["results"][0].get("Data")
+                if not data:
+                    break
+
+                # Decode base64 and write to file
+                try:
+                    decoded_data = base64.b64decode(data)
+                    if len(decoded_data) == 0:
+                        break
+
+                    f.write(decoded_data)
+                    chunk_bytes = len(decoded_data)
+                    total_bytes += chunk_bytes
+                    offset += chunk_bytes
+
+                    logger.debug(f"Fetched {chunk_bytes} bytes, total: {total_bytes}")
+
+                    # If we got less than chunk_size, we're done
+                    if chunk_bytes < chunk_size:
+                        break
+                except Exception as e:
+                    logger.error(f"Failed to decode chunk: {e}")
+                    break
+
+        if total_bytes == 0:
+            logger.warning(f"No file data found at path: {vfs_path}")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            return {
+                "success": False,
+                "message": f"No file found at path: {vfs_path}",
+                "file_path": None,
+                "file_size": 0,
+                "vfs_path": vfs_path,
+            }
+
+        logger.info(f"Successfully fetched and saved file of size {total_bytes} bytes to {output_path}")
+
+        return {
+            "success": True,
+            "message": f"Successfully fetched file from filestore and saved to {output_path}",
+            "file_path": output_path,
+            "file_size": total_bytes,
+            "vfs_path": vfs_path,
+            "filename": zip_filename,
+        }
+
+    except HTTPException as he:
+        logger.error(f"HTTPException while fetching file: {he.detail}")
+        raise he
+    except Exception as err:
+        logger.error(f"Failed to fetch file from filestore: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch file from filestore: {err}",
+        )
 
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
