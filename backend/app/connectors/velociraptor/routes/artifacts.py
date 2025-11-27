@@ -561,4 +561,4 @@ async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSes
         session,
         collect_artifact_body.hostname,
     )
-    return await run_file_collection(collect_artifact_body)
+    return await run_file_collection(collect_artifact_body, session)

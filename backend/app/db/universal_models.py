@@ -107,6 +107,7 @@ class Agents(SQLModel, table=True):
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
     vulnerabilities: Optional[list["AgentVulnerabilities"]] = Relationship(back_populates="agent")
+    data_store: list["AgentDataStore"] = Relationship(back_populates="agent")
 
     @classmethod
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
@@ -225,7 +226,7 @@ class AgentDataStore(SQLModel, table=True):
     # Agent information
     agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True, nullable=False)
     velociraptor_id: str = Field(max_length=256, nullable=False)
-    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+    # Removed customer_code - access via agent.customer_code relationship
 
     # Artifact collection details
     artifact_name: str = Field(max_length=255, nullable=False, index=True)
@@ -247,6 +248,9 @@ class AgentDataStore(SQLModel, table=True):
     # Status tracking
     status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
     error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Relationship to Agents table
+    agent: Optional["Agents"] = Relationship(back_populates="data_store")
 
 class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"

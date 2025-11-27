@@ -66,6 +66,7 @@ from app.routers import nuclei
 from app.routers import office365
 from app.routers import portainer
 from app.routers import sap_siem
+from app.routers import data_store
 from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
@@ -154,6 +155,7 @@ api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
+api_router.include_router(data_store.router)
 api_router.include_router(customer_portal.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)

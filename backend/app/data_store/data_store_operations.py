@@ -6,6 +6,7 @@ import aiohttp
 from fastapi import HTTPException
 from fastapi import UploadFile
 from loguru import logger
+import hashlib
 
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
@@ -217,3 +218,117 @@ async def list_sysmon_configs() -> list:
     except Exception as e:
         logger.error(f"Error listing sysmon configs: returning empty list - {e}")
         return []
+
+
+# ! Agent Data Store Operations ! #
+async def upload_agent_artifact_file(
+    agent_id: str,
+    flow_id: str,
+    file_path: str,
+    file_name: str,
+) -> dict:
+    """
+    Upload a Velociraptor artifact collection file to MinIO.
+
+    Args:
+        agent_id: The agent ID
+        flow_id: The flow ID
+        file_path: Local path to the file to upload
+        file_name: Name of the file
+
+    Returns:
+        dict: Upload details including object_key, file_size, and file_hash
+    """
+    bucket_name = "velociraptor-artifacts"
+    client = await create_session()
+
+    # Create bucket if it doesn't exist
+    await create_bucket_if_not_exists(bucket_name)
+
+    # Calculate file hash
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    file_hash = sha256_hash.hexdigest()
+
+    # Get file size
+    file_size = os.path.getsize(file_path)
+
+    # Construct object key: agent_id/flow_id/filename.zip
+    object_key = f"{agent_id}/{flow_id}/{file_name}"
+
+    logger.info(f"Uploading artifact file to {bucket_name}/{object_key}")
+
+    # Upload to MinIO
+    await client.fput_object(
+        bucket_name=bucket_name,
+        object_name=object_key,
+        file_path=file_path,
+        content_type="application/zip",
+    )
+
+    logger.info(f"Successfully uploaded {file_name} ({file_size} bytes) to MinIO")
+
+    return {
+        "bucket_name": bucket_name,
+        "object_key": object_key,
+        "file_name": file_name,
+        "file_size": file_size,
+        "file_hash": file_hash,
+    }
+
+
+async def download_agent_artifact_file(agent_id: str, flow_id: str, file_name: str) -> bytes:
+    """
+    Download a Velociraptor artifact file from MinIO.
+
+    Args:
+        agent_id: The agent ID
+        flow_id: The flow ID
+        file_name: Name of the file
+
+    Returns:
+        bytes: File content
+    """
+    bucket_name = "velociraptor-artifacts"
+    object_key = f"{agent_id}/{flow_id}/{file_name}"
+
+    return await download_data_store(bucket_name, object_key)
+
+
+async def list_agent_artifact_files(agent_id: str, flow_id: Optional[str] = None) -> list:
+    """
+    List all artifact files for an agent, optionally filtered by flow_id.
+
+    Args:
+        agent_id: The agent ID
+        flow_id: Optional flow ID to filter by
+
+    Returns:
+        list: List of object names
+    """
+    bucket_name = "velociraptor-artifacts"
+    client = await create_session()
+
+    prefix = f"{agent_id}/"
+    if flow_id:
+        prefix = f"{agent_id}/{flow_id}/"
+
+    objects = await client.list_objects(bucket_name, prefix=prefix, recursive=True)
+    return [obj.object_name for obj in objects]
+
+
+async def delete_agent_artifact_file(agent_id: str, flow_id: str, file_name: str) -> None:
+    """
+    Delete a Velociraptor artifact file from MinIO.
+
+    Args:
+        agent_id: The agent ID
+        flow_id: The flow ID
+        file_name: Name of the file
+    """
+    bucket_name = "velociraptor-artifacts"
+    object_key = f"{agent_id}/{flow_id}/{file_name}"
+
+    await delete_file(bucket_name, object_key)
