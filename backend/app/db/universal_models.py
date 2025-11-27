@@ -217,6 +217,36 @@ class Agents(SQLModel, table=True):
         logger.info(f"Updated with Velociraptor details: {self}")
         self.velociraptor_org = velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None
 
+class AgentDataStore(SQLModel, table=True):
+    __tablename__ = "agent_datastore"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Agent information
+    agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True, nullable=False)
+    velociraptor_id: str = Field(max_length=256, nullable=False)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+
+    # Artifact collection details
+    artifact_name: str = Field(max_length=255, nullable=False, index=True)
+    flow_id: str = Field(max_length=255, nullable=False, index=True)
+    collection_time: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    # MinIO storage details
+    bucket_name: str = Field(max_length=255, nullable=False, default="velociraptor-artifacts")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: agent_id/flow_id/filename.zip
+    file_name: str = Field(max_length=255, nullable=False)  # Original file name
+    content_type: str = Field(max_length=100, default="application/zip")
+    file_size: int = Field(nullable=False)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False)  # SHA-256 hash
+
+    # Metadata
+    uploaded_by: Optional[int] = Field(default=None)  # User ID who initiated the collection
+    notes: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Status tracking
+    status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
+    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
 
 class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"
