@@ -75,6 +75,7 @@ from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
+from app.routers import customer_portal
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
@@ -153,6 +154,7 @@ api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
+api_router.include_router(customer_portal.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
 api_router.include_router(license.router)
