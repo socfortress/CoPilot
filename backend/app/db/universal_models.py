@@ -3,7 +3,7 @@ from typing import Optional
 
 from loguru import logger
 from sqlalchemy import Column
-from sqlalchemy import Float
+from sqlalchemy import Float, Text
 from sqlalchemy import LargeBinary
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -320,4 +320,36 @@ class AgentVulnerabilities(SQLModel, table=True):
             discovered_at=getattr(vulnerability_data, "detected_at", datetime.utcnow()),
             agent_id=agent_id,
             customer_code=customer_code,
+        )
+
+class CustomerPortalSettings(SQLModel, table=True):
+    __tablename__ = "customer_portal_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    title: str = Field(max_length=255, default="CoPilot")
+    logo_base64: Optional[str] = Field(default=None, sa_column=Column(Text))  # Use TEXT column for large base64 data
+    logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+    def update_from_request(self, title: Optional[str] = None, logo_base64: Optional[str] = None, logo_mime_type: Optional[str] = None, user_id: Optional[int] = None):
+        """Update settings from API request"""
+        if title is not None:
+            self.title = title
+        if logo_base64 is not None:
+            self.logo_base64 = logo_base64
+        if logo_mime_type is not None:
+            self.logo_mime_type = logo_mime_type
+        if user_id is not None:
+            self.updated_by = user_id
+        self.updated_at = datetime.utcnow()
+
+    @classmethod
+    def create_default(cls):
+        """Create default settings"""
+        return cls(
+            title="CoPilot",
+            logo_base64=None,
+            logo_mime_type=None,
+            updated_at=datetime.utcnow()
         )
