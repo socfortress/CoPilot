@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from sqlalchemy.orm import selectinload
 from loguru import logger
 from typing import Optional
 import io
@@ -40,6 +41,7 @@ async def list_agent_artifacts(
     """
     try:
         query = select(AgentDataStore).where(AgentDataStore.agent_id == agent_id)
+        query = query.options(selectinload(AgentDataStore.agent))  # Eager load agent
 
         if flow_id:
             query = query.where(AgentDataStore.flow_id == flow_id)
@@ -49,7 +51,29 @@ async def list_agent_artifacts(
         result = await session.execute(query)
         artifacts = result.scalars().all()
 
-        artifact_data = [AgentDataStoreData.from_orm(artifact) for artifact in artifacts]
+        # Convert to response data, accessing customer_code via relationship
+        artifact_data = []
+        for artifact in artifacts:
+            # Create a dict from the artifact
+            artifact_dict = {
+                "id": artifact.id,
+                "agent_id": artifact.agent_id,
+                "velociraptor_id": artifact.velociraptor_id,
+                "customer_code": artifact.agent.customer_code if artifact.agent else None,
+                "artifact_name": artifact.artifact_name,
+                "flow_id": artifact.flow_id,
+                "bucket_name": artifact.bucket_name,
+                "object_key": artifact.object_key,
+                "file_name": artifact.file_name,
+                "content_type": artifact.content_type,
+                "file_size": artifact.file_size,
+                "file_hash": artifact.file_hash,
+                "collection_time": artifact.collection_time,
+                "uploaded_by": artifact.uploaded_by,
+                "notes": artifact.notes,
+                "status": artifact.status,
+            }
+            artifact_data.append(AgentDataStoreData(**artifact_dict))
 
         return AgentDataStoreListResponse(
             success=True,
@@ -79,12 +103,13 @@ async def get_agent_artifact_details(
 ) -> AgentDataStoreResponse:
     """Get details of a specific artifact collection file."""
     try:
-        result = await session.execute(
-            select(AgentDataStore).where(
-                AgentDataStore.id == artifact_id,
-                AgentDataStore.agent_id == agent_id
-            )
+        query = select(AgentDataStore).where(
+            AgentDataStore.id == artifact_id,
+            AgentDataStore.agent_id == agent_id
         )
+        query = query.options(selectinload(AgentDataStore.agent))
+
+        result = await session.execute(query)
         artifact = result.scalars().first()
 
         if not artifact:
@@ -93,10 +118,30 @@ async def get_agent_artifact_details(
                 detail=f"Artifact {artifact_id} not found for agent {agent_id}",
             )
 
+        # Create response data with customer_code from relationship
+        artifact_dict = {
+            "id": artifact.id,
+            "agent_id": artifact.agent_id,
+            "velociraptor_id": artifact.velociraptor_id,
+            "customer_code": artifact.agent.customer_code if artifact.agent else None,
+            "artifact_name": artifact.artifact_name,
+            "flow_id": artifact.flow_id,
+            "bucket_name": artifact.bucket_name,
+            "object_key": artifact.object_key,
+            "file_name": artifact.file_name,
+            "content_type": artifact.content_type,
+            "file_size": artifact.file_size,
+            "file_hash": artifact.file_hash,
+            "collection_time": artifact.collection_time,
+            "uploaded_by": artifact.uploaded_by,
+            "notes": artifact.notes,
+            "status": artifact.status,
+        }
+
         return AgentDataStoreResponse(
             success=True,
             message="Artifact details retrieved successfully",
-            data=AgentDataStoreData.from_orm(artifact),
+            data=AgentDataStoreData(**artifact_dict),
         )
 
     except HTTPException:

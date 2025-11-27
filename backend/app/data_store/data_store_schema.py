@@ -45,7 +45,7 @@ class AgentDataStoreData(BaseModel):
     id: int
     agent_id: str
     velociraptor_id: str
-    customer_code: str
+    customer_code: Optional[str] = None  # Made optional since it comes from relationship
     artifact_name: str
     flow_id: str
     bucket_name: str
