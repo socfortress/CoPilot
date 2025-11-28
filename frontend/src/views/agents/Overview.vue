@@ -134,6 +134,11 @@
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
 						<ActiveResponseAgent v-if="agent" :agent="agent" embedded />
 					</n-tab-pane>
+          <n-tab-pane name="file-collection" tab="File Collection" display-directive="show:lazy">
+              <div class="section">
+                  <FileCollectionForm v-if="agent" :agent-id="agent.agent_id" />
+              </div>
+          </n-tab-pane>
           <n-tab-pane name="data-store" tab="Data Store" display-directive="show:lazy">
               <div class="section">
                   <AgentDataStoreTab v-if="agent" :agent="agent" />
@@ -173,6 +178,7 @@ const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifac
 const ArtifactsQuarantine = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsQuarantine.vue"))
 const ActiveResponseAgent = defineAsyncComponent(() => import("@/components/activeResponse/ActiveResponseAgent.vue"))
 const AgentDataStoreTab = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStoreTab.vue"))
+const FileCollectionForm = defineAsyncComponent(() => import("@/components/agents/fileCollection/FileCollectionForm.vue"))
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
