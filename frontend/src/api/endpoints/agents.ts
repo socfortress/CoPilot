@@ -1,5 +1,6 @@
 import type {
 	Agent,
+    AgentArtifactData,
 	AgentSca,
 	AgentVulnerabilities,
 	OutdatedVelociraptorAgents,
@@ -14,6 +15,15 @@ export interface AgentPayload {
 }
 
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
+
+export interface AgentDataStoreListResponse extends FlaskBaseResponse {
+    data: AgentArtifactData[]
+    total: number
+}
+
+export interface AgentDataStoreResponse extends FlaskBaseResponse {
+    data: AgentArtifactData | null
+}
 
 export default {
 	getAgents(agentId?: string) {
@@ -80,6 +90,54 @@ export default {
 	upgradeWazuhAgent(agentId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/wazuh/upgrade`)
 	},
+    // Agent Data Store / Artifact Collection Methods
+    /**
+     * List all artifact files for a specific agent
+     * @param agentId - The agent ID
+     * @param flowId - Optional flow ID to filter artifacts
+     * @param signal - Optional AbortSignal for request cancellation
+     */
+    listAgentArtifacts(agentId: string, flowId?: string, signal?: AbortSignal) {
+        const params = flowId ? { flow_id: flowId } : {}
+        return HttpClient.get<AgentDataStoreListResponse>(
+            `/agent_data_store/agent/${agentId}/artifacts`,
+            signal ? { signal, params } : { params }
+        )
+    },
+
+    /**
+     * Get details of a specific artifact file
+     * @param agentId - The agent ID
+     * @param artifactId - The artifact ID
+     * @param signal - Optional AbortSignal for request cancellation
+     */
+    getAgentArtifactDetails(agentId: string, artifactId: number, signal?: AbortSignal) {
+        return HttpClient.get<AgentDataStoreResponse>(
+            `/agent_data_store/agent/${agentId}/artifacts/${artifactId}`,
+            signal ? { signal } : {}
+        )
+    },
+
+    /**
+     * Download a specific artifact file
+     * @param agentId - The agent ID
+     * @param artifactId - The artifact ID
+     * @returns Promise with Blob response
+     */
+    downloadAgentArtifact(agentId: string, artifactId: number) {
+        return HttpClient.get<Blob>(`/agent_data_store/agent/${agentId}/artifacts/${artifactId}/download`, {
+            responseType: "blob"
+        })
+    },
+
+    /**
+     * Delete a specific artifact file
+     * @param agentId - The agent ID
+     * @param artifactId - The artifact ID
+     */
+    deleteAgentArtifact(agentId: string, artifactId: number) {
+        return HttpClient.delete<FlaskBaseResponse>(`/agent_data_store/agent/${agentId}/artifacts/${artifactId}`)
+    },
 
 	// IGNORE AT THE MOMENT !
 	/** @deprecated */
