@@ -15,6 +15,8 @@ interface PortalSettingsState {
 	error: string | null
 }
 
+const STORAGE_KEY = "customer-portal-settings"
+
 export const usePortalSettingsStore = defineStore("portalSettings", {
 	state: (): PortalSettingsState => ({
 		settings: null,
@@ -33,7 +35,38 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 	},
 
 	actions: {
-		async fetchSettings() {
+		loadFromSessionStorage() {
+			try {
+				const stored = sessionStorage.getItem(STORAGE_KEY)
+				if (stored) {
+					const data = JSON.parse(stored)
+					this.settings = data.settings
+					return true
+				}
+			} catch (error) {
+				console.error("Failed to load settings from sessionStorage:", error)
+				sessionStorage.removeItem(STORAGE_KEY)
+			}
+			return false
+		},
+
+		saveToSessionStorage() {
+			try {
+				const data = {
+					settings: this.settings
+				}
+				sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+			} catch (error) {
+				console.error("Failed to save settings to sessionStorage:", error)
+			}
+		},
+
+		async fetchSettings(force = false) {
+			// Try to load from sessionStorage first
+			if (!force && this.loadFromSessionStorage()) {
+				return
+			}
+
 			this.loading = true
 			this.error = null
 
@@ -42,6 +75,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 
 				if (response.data.success && response.data.settings) {
 					this.settings = response.data.settings
+					this.saveToSessionStorage()
 				}
 			} catch (error: any) {
 				this.error = error.response?.data?.message || "Failed to load portal settings"
