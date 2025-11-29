@@ -4,6 +4,7 @@ from typing import Optional
 from loguru import logger
 from sqlalchemy import Column
 from sqlalchemy import Float, Text
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy import LargeBinary
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -361,7 +362,7 @@ class CustomerPortalSettings(SQLModel, table=True):
 
     id: Optional[int] = Field(primary_key=True)
     title: str = Field(max_length=255, default="CoPilot")
-    logo_base64: Optional[str] = Field(default=None, sa_column=Column(Text))  # Use TEXT column for large base64 data
+    logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated

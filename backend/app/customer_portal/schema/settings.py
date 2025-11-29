@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, validator
 from fastapi import HTTPException
 import re
+import base64
 
 
 class UpdatePortalSettingsRequest(BaseModel):
@@ -11,13 +12,20 @@ class UpdatePortalSettingsRequest(BaseModel):
 
     @validator('logo_base64')
     def validate_base64(cls, v):
-        # Allow None to pass through for restoring defaults
         if v is None:
             return v
 
-        # Remove data URL prefix if present (e.g., "data:image/png;base64,")
+        # Remove data URL prefix if present
         if v.startswith('data:'):
             v = v.split(',', 1)[1] if ',' in v else v
+
+        # Check size (limit to 5MB base64 = ~3.75MB original)
+        max_size = 5 * 1024 * 1024  # 5MB
+        if len(v) > max_size:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Logo file too large. Maximum size is {max_size // (1024*1024)}MB (base64-encoded)"
+            )
 
         # Validate base64 format
         if not re.match(r'^[A-Za-z0-9+/]*={0,2}$', v):
@@ -25,11 +33,20 @@ class UpdatePortalSettingsRequest(BaseModel):
                 status_code=400,
                 detail="Invalid base64 encoded string for logo_base64"
             )
+
+        # Optional: Try to decode to verify it's valid base64
+        try:
+            base64.b64decode(v)
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid base64 data - cannot decode"
+            )
+
         return v
 
     @validator('logo_mime_type')
     def validate_mime_type(cls, v):
-        # Allow None to pass through for restoring defaults
         if v is None:
             return v
 
@@ -40,6 +57,15 @@ class UpdatePortalSettingsRequest(BaseModel):
                 detail=f"Invalid MIME type. Allowed types are: {', '.join(allowed_types)}"
             )
         return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "title": "My Custom Portal",
+                "logo_base64": "iVBORw0KGgoAAAANS...",
+                "logo_mime_type": "image/png"
+            }
+        }
 
 
 class PortalSettingsData(BaseModel):
