@@ -30,7 +30,7 @@ auth_handler = AuthHandler()
     "/servers",
     response_model=AvailableMCPServersResponse,
     description="Get list of available MCP servers",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_mcp_servers() -> AvailableMCPServersResponse:
     """
@@ -66,7 +66,7 @@ async def get_available_mcp_servers() -> AvailableMCPServersResponse:
     "/servers/{mcp_server}",
     response_model=dict,
     description="Get detailed information about a specific MCP server",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_mcp_server_details(mcp_server: MCPServerType) -> dict:
     """
@@ -107,7 +107,7 @@ async def get_mcp_server_details(mcp_server: MCPServerType) -> dict:
     "/example-questions",
     response_model=ExampleQuestionsResponse,
     description="Get example questions for a specific MCP server",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_example_questions(
     mcp_server: MCPServerType = Query(..., description="MCP server to get example questions for"),
@@ -160,7 +160,7 @@ async def get_example_questions(
 @copilot_mcp_router.get(
     "/categories",
     description="Get available question categories for a specific MCP server",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_question_categories(mcp_server: MCPServerType = Query(..., description="MCP server to get categories for")) -> dict:
     """
@@ -199,7 +199,7 @@ async def get_question_categories(mcp_server: MCPServerType = Query(..., descrip
 @copilot_mcp_router.post(
     "/query",
     description="Process a query to the appropriate MCP server",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def query_mcp(request: MCPQueryRequest, session: AsyncSession = Depends(get_db)) -> MCPQueryResponse:
     """
