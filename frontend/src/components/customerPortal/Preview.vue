@@ -2,8 +2,10 @@
 	<div class="w-full max-w-md space-y-8">
 		<!-- Logo and Title -->
 		<div class="text-center">
-			<div class="mb-6"><img class="mx-auto h-12 w-auto" :src="logo || '/logo.svg'" alt="SOCFortress Logo" /></div>
-			<h2 class="mb-2 text-4xl font-bold text-gray-900">{{ title || 'SOCFortress Customer Portal' }}</h2>
+			<div class="mb-6">
+				<img class="mx-auto h-12 w-auto" :src="logo || '/logo.svg'" alt="SOCFortress Logo" />
+			</div>
+			<h2 class="mb-2 text-4xl font-bold text-gray-900">{{ title || "SOCFortress Customer Portal" }}</h2>
 			<p class="text-lg text-gray-600">Access your security dashboard and reports</p>
 		</div>
 		<!-- Login Form -->
@@ -47,5 +49,5 @@
 </template>
 
 <script setup lang="ts">
-const { title, logo } = defineProps<{ title?: string | null, logo?: string | null }>()
+const { title, logo } = defineProps<{ title?: string | null; logo?: string | null }>()
 </script>

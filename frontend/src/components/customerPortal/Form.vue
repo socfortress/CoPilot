@@ -6,6 +6,8 @@
 			</n-form-item>
 
 			<div class="flex gap-3">
+				<!-- TODO: remove logo button -->
+				<!-- TODO: logo placeholder -->
 				<div v-if="model.logo">
 					<img :src="model.logo" width="66" height="66" class="object-cover" />
 				</div>
@@ -41,7 +43,7 @@ import _split from "lodash/split"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-	import Icon from "@/components/common/Icon.vue"
+import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 
 export interface SettingsModel {
@@ -69,15 +71,28 @@ function setCroppedImage(result: ImageCropperResult) {
 function getDefaultModel(entity?: CustomerPortalSettings): SettingsModel {
 	return {
 		title: entity?.title || "",
-		logo: null
+		logo: entity?.logo_base64 && entity?.logo_mime_type ? `data:${entity.logo_mime_type};base64,${entity.logo_base64}` : null
 	}
 }
 
-	function getLogoMeta(logo?: string | null): { base64: string | null, mime_type: string | null } {
+function getLogoMeta(logo?: string | null): { base64: string | null; mime_type: string | null } {
+	// Parse data URL format: data:image/png;base64,iVBORw0KG...
+	const parts = _split(logo, ",")
+	if (!logo || parts.length !== 2) {
 		return {
-			base64: logo || null,
-			mime_type: logo || null
+			base64: null,
+			mime_type: null
 		}
+	}
+
+	const base64 = parts[1]
+	const mimeMatch = parts[0].match(/data:([^;]+);base64/)
+	const mime_type = mimeMatch ? mimeMatch[1] : null
+
+	return {
+		base64,
+		mime_type
+	}
 }
 
 function save() {
@@ -130,9 +145,13 @@ function getSettings() {
 		})
 }
 
-watch(model, val => {
-	emit("update", val)
-}, { immediate: true, deep: true })
+watch(
+	model,
+	val => {
+		emit("update", val)
+	},
+	{ immediate: true, deep: true }
+)
 
 onBeforeMount(() => {
 	getSettings()
