@@ -7,11 +7,11 @@
 				<div class="text-center">
 					<div class="mb-6 min-h-12">
 						<img
-							v-if="portalLogo"
+							v-if="portalLogo && showLogo"
 							class="mx-auto h-12 w-auto"
 							:src="portalLogo"
 							:alt="portalTitle"
-							@error="$event.target.style.display = 'none'"
+							@error="showLogo = false"
 						/>
 					</div>
 					<h2 class="mb-2 min-h-10 text-4xl font-bold text-gray-900">{{ portalTitle }}</h2>
@@ -122,6 +122,7 @@ const loading = ref(false)
 const error = ref("")
 const portalTitle = ref("")
 const portalLogo = ref<string | null>(null)
+const showLogo = ref(true)
 
 // Fetch portal settings on component mount
 onMounted(async () => {
