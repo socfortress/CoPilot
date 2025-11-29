@@ -7,12 +7,12 @@
 	>
 		<div class="flex flex-col gap-3">
 			<div class="flex items-start justify-between gap-4">
-				<div class="flex flex-col gap-1 grow">
+				<div class="flex grow flex-col gap-1">
 					<div class="flex items-center gap-2">
 						<Icon :name="FileIcon" :size="18" class="text-primary-color" />
-						<span class="font-bold text-primary-color">{{ artifact.artifact_name }}</span>
+						<span class="text-primary-color font-bold">{{ artifact.artifact_name }}</span>
 					</div>
-					<div class="flex items-center gap-2 text-sm text-secondary-color">
+					<div class="text-secondary-color flex items-center gap-2 text-sm">
 						<span class="font-mono">{{ artifact.file_name }}</span>
 					</div>
 				</div>
@@ -69,24 +69,29 @@ import type { AgentArtifactData } from "@/types/agents.d"
 import bytes from "bytes"
 import { NBadge, NButton, NCard, NDivider } from "naive-ui"
 import { computed } from "vue"
-	import Icon from "@/components/common/Icon.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-	// TODO: join ArtifactCard + ArtifactCardCompact
+// TODO: join ArtifactCard + ArtifactCardCompact
 
-	const { artifact, showActions = false, hoverable = false, clickable = false } = defineProps<{
-    artifact: AgentArtifactData
-    showActions?: boolean
-    hoverable?: boolean
-    clickable?: boolean
+const {
+	artifact,
+	showActions = false,
+	hoverable = false,
+	clickable = false
+} = defineProps<{
+	artifact: AgentArtifactData
+	showActions?: boolean
+	hoverable?: boolean
+	clickable?: boolean
 }>()
 
 const emit = defineEmits<{
-    (e: "click", artifact: AgentArtifactData): void
-    (e: "download", artifact: AgentArtifactData): void
-    (e: "delete", artifact: AgentArtifactData): void
-    (e: "details", artifact: AgentArtifactData): void
+	(e: "click", artifact: AgentArtifactData): void
+	(e: "download", artifact: AgentArtifactData): void
+	(e: "delete", artifact: AgentArtifactData): void
+	(e: "details", artifact: AgentArtifactData): void
 }>()
 
 const dFormats = useSettingsStore().dateFormat
@@ -94,21 +99,21 @@ const dFormats = useSettingsStore().dateFormat
 const FileIcon = "lsicon:file-zip-outline"
 const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
-	const InfoIcon = "carbon:information"
+const InfoIcon = "carbon:information"
 
 const fileSize = computed(() => bytes(artifact.file_size))
 
 function getStatusType(status: string) {
-    switch (status.toLowerCase()) {
-        case "completed":
-            return "success"
-        case "failed":
-            return "error"
-        case "processing":
-            return "warning"
-        default:
-            return "default"
-    }
+	switch (status.toLowerCase()) {
+		case "completed":
+			return "success"
+		case "failed":
+			return "error"
+		case "processing":
+			return "warning"
+		default:
+			return "default"
+	}
 }
 </script>
 
@@ -116,18 +121,18 @@ function getStatusType(status: string) {
 // TODO: remove style
 
 .artifact-card {
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    transition: all 0.2s var(--bezier-ease);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	transition: all 0.2s var(--bezier-ease);
 
-    &.hoverable {
-        &:hover {
-            box-shadow: 0 0 0 1px var(--primary-color);
-        }
-    }
+	&.hoverable {
+		&:hover {
+			box-shadow: 0 0 0 1px var(--primary-color);
+		}
+	}
 
-    &.clickable {
-        cursor: pointer;
-    }
+	&.clickable {
+		cursor: pointer;
+	}
 }
 </style>

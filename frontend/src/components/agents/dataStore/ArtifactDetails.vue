@@ -61,37 +61,37 @@ import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-	const { artifact } = defineProps<{ artifact: AgentArtifactData }>()
+const { artifact } = defineProps<{ artifact: AgentArtifactData }>()
 
 const dFormats = useSettingsStore().dateFormat
 
 const fileSize = computed(() => bytes(artifact.file_size))
 
 function getStatusType(status: string) {
-    switch (status.toLowerCase()) {
-        case "completed":
-            return "success"
-        case "failed":
-            return "error"
-        case "processing":
-            return "warning"
-        default:
-            return "default"
-    }
+	switch (status.toLowerCase()) {
+		case "completed":
+			return "success"
+		case "failed":
+			return "error"
+		case "processing":
+			return "warning"
+		default:
+			return "default"
+	}
 }
 </script>
 
 <style lang="scss" scoped>
 // TODO: remove style
 .artifact-details {
-    :deep() {
-        code {
-            font-family: var(--font-family-mono);
-            font-size: 12px;
-            padding: 2px 4px;
-            background-color: var(--bg-secondary-color);
-            border-radius: 3px;
-        }
-    }
+	:deep() {
+		code {
+			font-family: var(--font-family-mono);
+			font-size: 12px;
+			padding: 2px 4px;
+			background-color: var(--bg-secondary-color);
+			border-radius: 3px;
+		}
+	}
 }
 </style>

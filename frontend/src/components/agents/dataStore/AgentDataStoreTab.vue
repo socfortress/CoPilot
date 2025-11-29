@@ -4,12 +4,7 @@
 			<div class="filters-section" style="min-width: 280px; max-width: 320px">
 				<n-card size="small" title="Filters" :segmented="{ content: true }">
 					<div class="flex flex-col gap-3">
-						<n-input
-							v-model:value="textFilter"
-							placeholder="Search artifacts..."
-							clearable
-							size="small"
-						>
+						<n-input v-model:value="textFilter" placeholder="Search artifacts..." clearable size="small">
 							<template #prefix>
 								<Icon :name="SearchIcon" :size="16" />
 							</template>
@@ -63,11 +58,7 @@
 								/>
 							</template>
 							<template v-else>
-								<n-empty
-									v-if="!loading"
-									description="No artifacts found"
-									class="h-48 justify-center"
-								/>
+								<n-empty v-if="!loading" description="No artifacts found" class="h-48 justify-center" />
 							</template>
 						</div>
 					</n-scrollbar>
@@ -104,29 +95,29 @@ import type { Agent, AgentArtifactData } from "@/types/agents.d"
 import { refDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import {
-    NButton,
-    NCard,
-    NDivider,
-    NEmpty,
-    NInput,
-    NModal,
-    NPagination,
-    NScrollbar,
-    NSelect,
-    NSpin,
-    useDialog,
-    useMessage
+	NButton,
+	NCard,
+	NDivider,
+	NEmpty,
+	NInput,
+	NModal,
+	NPagination,
+	NScrollbar,
+	NSelect,
+	NSpin,
+	useDialog,
+	useMessage
 } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCard from "./ArtifactCard.vue"
-	import ArtifactDetails from "./ArtifactDetails.vue"
+import ArtifactDetails from "./ArtifactDetails.vue"
 
-	// TODO: join AgentDataStoreTab + AgentDataStoreTabCompact
+// TODO: join AgentDataStoreTab + AgentDataStoreTabCompact
 
 const props = defineProps<{
-    agent: Agent
+	agent: Agent
 }>()
 
 const message = useMessage()
@@ -146,101 +137,100 @@ const showDetailsModal = ref(false)
 const selectedArtifact = ref<AgentArtifactData | null>(null)
 
 const statusOptions: SelectOption[] = [
-    { label: "All", value: undefined },
-    { label: "Completed", value: "completed" },
-    { label: "Failed", value: "failed" },
-    { label: "Processing", value: "processing" }
+	{ label: "All", value: undefined },
+	{ label: "Completed", value: "completed" },
+	{ label: "Failed", value: "failed" },
+	{ label: "Processing", value: "processing" }
 ]
 
 const artifactsFiltered = computed(() => {
-    return artifacts.value.filter(artifact => {
-        // Text filter
-        const matchesText =
-            (artifact.artifact_name + artifact.flow_id + artifact.file_name)
-                .toString()
-                .toLowerCase()
-                .includes((textFilterDebounced.value || '').toString().toLowerCase())
+	return artifacts.value.filter(artifact => {
+		// Text filter
+		const matchesText = (artifact.artifact_name + artifact.flow_id + artifact.file_name)
+			.toString()
+			.toLowerCase()
+			.includes((textFilterDebounced.value || "").toString().toLowerCase())
 
-        // Status filter
-        const matchesStatus = !statusFilter.value || artifact.status === statusFilter.value
+		// Status filter
+		const matchesStatus = !statusFilter.value || artifact.status === statusFilter.value
 
-        return matchesText && matchesStatus
-    })
+		return matchesText && matchesStatus
+	})
 })
 
 const itemsPaginated = computed(() => {
-    const from = (page.value - 1) * pageSize.value
-    const to = page.value * pageSize.value
+	const from = (page.value - 1) * pageSize.value
+	const to = page.value * pageSize.value
 
-    return artifactsFiltered.value.slice(from, to)
+	return artifactsFiltered.value.slice(from, to)
 })
 
 function getArtifacts() {
-    loading.value = true
+	loading.value = true
 
-    Api.agents
-        .listAgentArtifacts(props.agent.agent_id)
-        .then(res => {
-            if (res.data.success) {
-                artifacts.value = res.data.data || []
-            } else {
-                message.error(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loading.value = false
-        })
+	Api.agents
+		.listAgentArtifacts(props.agent.agent_id)
+		.then(res => {
+			if (res.data.success) {
+				artifacts.value = res.data.data || []
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 
 function downloadArtifact(artifact: AgentArtifactData) {
-    message.loading(`Downloading ${artifact.file_name}...`)
+	message.loading(`Downloading ${artifact.file_name}...`)
 
-    Api.agents
-        .downloadAgentArtifact(props.agent.agent_id, artifact.id)
-        .then(res => {
-            				saveAs(res.data, artifact.file_name)
+	Api.agents
+		.downloadAgentArtifact(props.agent.agent_id, artifact.id)
+		.then(res => {
+			saveAs(res.data, artifact.file_name)
 
-            message.success(`Downloaded ${artifact.file_name}`)
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "Failed to download artifact")
-        })
+			message.success(`Downloaded ${artifact.file_name}`)
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "Failed to download artifact")
+		})
 }
 
 function deleteArtifact(artifact: AgentArtifactData) {
-    dialog.warning({
-        title: "Delete Artifact",
-        content: `Are you sure you want to delete "${artifact.file_name}"? This action cannot be undone.`,
-        positiveText: "Delete",
-        negativeText: "Cancel",
-        onPositiveClick: () => {
-            Api.agents
-                .deleteAgentArtifact(props.agent.agent_id, artifact.id)
-                .then(res => {
-                    if (res.data.success) {
-                        message.success("Artifact deleted successfully")
-                        getArtifacts()
-                    } else {
-                        message.error(res.data?.message || "Failed to delete artifact")
-                    }
-                })
-                .catch(err => {
-                    message.error(err.response?.data?.message || "Failed to delete artifact")
-                })
-        }
-    })
+	dialog.warning({
+		title: "Delete Artifact",
+		content: `Are you sure you want to delete "${artifact.file_name}"? This action cannot be undone.`,
+		positiveText: "Delete",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			Api.agents
+				.deleteAgentArtifact(props.agent.agent_id, artifact.id)
+				.then(res => {
+					if (res.data.success) {
+						message.success("Artifact deleted successfully")
+						getArtifacts()
+					} else {
+						message.error(res.data?.message || "Failed to delete artifact")
+					}
+				})
+				.catch(err => {
+					message.error(err.response?.data?.message || "Failed to delete artifact")
+				})
+		}
+	})
 }
 
 function showArtifactDetails(artifact: AgentArtifactData) {
-    selectedArtifact.value = artifact
-    showDetailsModal.value = true
+	selectedArtifact.value = artifact
+	showDetailsModal.value = true
 }
 
 onMounted(() => {
-    getArtifacts()
+	getArtifacts()
 })
 </script>
 
@@ -248,16 +238,16 @@ onMounted(() => {
 // TODO: remove style
 
 .agent-data-store-tab {
-    .filters-section {
-        :deep() {
-            .n-card__content {
-                padding: 16px;
-            }
-        }
-    }
+	.filters-section {
+		:deep() {
+			.n-card__content {
+				padding: 16px;
+			}
+		}
+	}
 
-    .artifacts-section {
-        min-height: 300px;
-    }
+	.artifacts-section {
+		min-height: 300px;
+	}
 }
 </style>

@@ -104,20 +104,20 @@ export interface ScaPolicyResultRule {
 }
 
 export interface AgentArtifactData {
-    id: number
-    agent_id: string
-    velociraptor_id: string
-    customer_code: string | null
-    artifact_name: string
-    flow_id: string
-    bucket_name: string
-    object_key: string
-    file_name: string
-    content_type: string
-    file_size: number
-    file_hash: string
-    collection_time: string
-    uploaded_by: number | null
-    notes: string | null
-    status: string
+	id: number
+	agent_id: string
+	velociraptor_id: string
+	customer_code: string | null
+	artifact_name: string
+	flow_id: string
+	bucket_name: string
+	object_key: string
+	file_name: string
+	content_type: string
+	file_size: number
+	file_hash: string
+	collection_time: string
+	uploaded_by: number | null
+	notes: string | null
+	status: string
 }

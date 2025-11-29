@@ -7,12 +7,7 @@
 					<span :class="{ 'text-default': incidentNotification.enabled }">
 						{{ incidentNotification.enabled ? "Enabled" : "Disabled" }}
 					</span>
-					<Icon
-						v-if="incidentNotification.enabled"
-						:name="EnabledIcon"
-						:size="14"
-						class="text-success"
-					/>
+					<Icon v-if="incidentNotification.enabled" :name="EnabledIcon" :size="14" class="text-success" />
 					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary" />
 				</div>
 			</template>

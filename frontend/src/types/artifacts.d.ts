@@ -32,9 +32,7 @@ export interface MatchingParameter {
 	default?: string
 }
 
-export interface FileCollectionResult {
-    success: boolean
-    message: string
-    flow_id?: string
-    session_id?: string
+export interface FileCollection {
+	flow_id?: string
+	session_id?: string
 }

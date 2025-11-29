@@ -153,12 +153,8 @@
 				</n-tab-pane>
 				<n-tab-pane name="File Collection" tab="File Collection" display-directive="show:lazy">
 					<div class="p-7 pt-2">
-						<FileCollectionForm
-							v-if="asset.agent_id"
-							:agent-id="asset.agent_id"
-							@success="handleFileCollectionSuccess"
-							@error="handleFileCollectionError"
-						/>
+						<FileCollectionForm v-if="asset.agent_id" :agent-id="asset.agent_id" />
+
 						<n-empty v-else description="No agent associated with this asset" class="h-40" />
 					</div>
 				</n-tab-pane>
@@ -202,9 +198,11 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
-const AgentDataStoreTabCompact = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue"))
+const AgentDataStoreTabCompact = defineAsyncComponent(
+	() => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
+)
 const FileCollectionForm = defineAsyncComponent(
-    () => import("@/components/agents/fileCollection/FileCollectionForm.vue")
+	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
 const ViewIcon = "iconoir:eye-solid"

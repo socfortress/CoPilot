@@ -72,7 +72,7 @@
 						<strong>Session ID:</strong>
 						<code class="ml-2">{{ result.session_id }}</code>
 					</div>
-					<div class="text-sm text-secondary-color mt-2">
+					<div class="text-secondary-color mt-2 text-sm">
 						{{ result.message }}
 					</div>
 				</div>
@@ -86,19 +86,24 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { FileCollectionResult } from "@/types/artifacts.d"
+import type { FileCollection } from "@/types/artifacts.d"
 import { NAlert, NButton, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
+interface FileCollectionResult extends FileCollection {
+	success: boolean
+	message: string
+}
+
 const props = defineProps<{
-    agentId: string
+	agentId: string
 }>()
 
 const emit = defineEmits<{
-    (e: "success", result: FileCollectionResult): void
-    (e: "error", error: string): void
+	(e: "success", result: FileCollectionResult): void
+	(e: "error", error: string): void
 }>()
 
 const FileIcon = "carbon:document"
@@ -110,92 +115,92 @@ const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
 
 const formData = ref({
-    file_path: "",
-    root_disk: ""
+	file_path: "",
+	root_disk: ""
 })
 
 const result = ref<FileCollectionResult | null>(null)
 
 const formRules: FormRules = {
-    file_path: [
-        {
-            required: true,
-            message: "File path is required",
-            trigger: ["blur", "input"]
-        }
-    ],
-    root_disk: [
-        {
-            required: true,
-            message: "Root disk is required",
-            trigger: ["blur", "input"]
-        }
-    ]
+	file_path: [
+		{
+			required: true,
+			message: "File path is required",
+			trigger: ["blur", "input"]
+		}
+	],
+	root_disk: [
+		{
+			required: true,
+			message: "Root disk is required",
+			trigger: ["blur", "input"]
+		}
+	]
 }
 
 async function handleSubmit() {
-    if (!formRef.value) return
+	if (!formRef.value) return
 
-    try {
-        await formRef.value.validate()
-    } catch {
-       message.warning("You must fill in the required fields correctly.")
-			return false
-    }
+	try {
+		await formRef.value.validate()
+	} catch {
+		message.warning("You must fill in the required fields correctly.")
+		return false
+	}
 
-    loading.value = true
-    result.value = null
+	loading.value = true
+	result.value = null
 
-    Api.artifacts
-        .collectFileByAgentId(props.agentId, {
-            file: formData.value.file_path,
-            root_disk: formData.value.root_disk
-        })
-        .then(res => {
-            if (res.data.success) {
-                result.value = {
-                    success: true,
-                    message: res.data.message || "File collection started successfully",
-                    flow_id: res.data.flow_id,
-                    session_id: res.data.session_id
-                }
-                message.success("File collection started successfully")
-                emit("success", result.value)
-            } else {
-                result.value = {
-                    success: false,
-                    message: res.data?.message || "Failed to start file collection"
-                }
-                message.error(result.value.message)
-                emit("error", result.value.message)
-            }
-        })
-        .catch(err => {
-            const errorMessage = err.response?.data?.message || "An error occurred during file collection"
-            result.value = {
-                success: false,
-                message: errorMessage
-            }
-            message.error(errorMessage)
-            emit("error", errorMessage)
-        })
-        .finally(() => {
-            loading.value = false
-        })
+	Api.artifacts
+		.collectFileByAgentId(props.agentId, {
+			file: formData.value.file_path,
+			root_disk: formData.value.root_disk
+		})
+		.then(res => {
+			if (res.data.success) {
+				result.value = {
+					success: true,
+					message: res.data.message || "File collection started successfully",
+					flow_id: res.data.flow_id,
+					session_id: res.data.session_id
+				}
+				message.success("File collection started successfully")
+				emit("success", result.value)
+			} else {
+				result.value = {
+					success: false,
+					message: res.data?.message || "Failed to start file collection"
+				}
+				message.error(result.value.message)
+				emit("error", result.value.message)
+			}
+		})
+		.catch(err => {
+			const errorMessage = err.response?.data?.message || "An error occurred during file collection"
+			result.value = {
+				success: false,
+				message: errorMessage
+			}
+			message.error(errorMessage)
+			emit("error", errorMessage)
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 
 function handleReset() {
-    formData.value = {
-        file_path: "",
-        root_disk: ""
-    }
-    result.value = null
-    formRef.value?.restoreValidation()
+	formData.value = {
+		file_path: "",
+		root_disk: ""
+	}
+	result.value = null
+	formRef.value?.restoreValidation()
 }
 
 // Expose methods for parent components
 defineExpose({
-    reset: handleReset
+	reset: handleReset
 })
 </script>
 
@@ -203,18 +208,18 @@ defineExpose({
 // TODO: remove style
 
 .file-collection-form {
-    max-width: 600px;
+	max-width: 600px;
 
-    :deep(.n-form-item) {
-        margin-bottom: 20px;
-    }
+	:deep(.n-form-item) {
+		margin-bottom: 20px;
+	}
 
-    code {
-        font-family: var(--font-family-mono);
-        font-size: 12px;
-        padding: 2px 6px;
-        background-color: var(--bg-secondary-color);
-        border-radius: 3px;
-    }
+	code {
+		font-family: var(--font-family-mono);
+		font-size: 12px;
+		padding: 2px 6px;
+		background-color: var(--bg-secondary-color);
+		border-radius: 3px;
+	}
 }
 </style>

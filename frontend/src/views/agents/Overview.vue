@@ -178,7 +178,9 @@ const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifac
 const ArtifactsQuarantine = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsQuarantine.vue"))
 const ActiveResponseAgent = defineAsyncComponent(() => import("@/components/activeResponse/ActiveResponseAgent.vue"))
 const AgentDataStoreTab = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStoreTab.vue"))
-const FileCollectionForm = defineAsyncComponent(() => import("@/components/agents/fileCollection/FileCollectionForm.vue"))
+const FileCollectionForm = defineAsyncComponent(
+	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
+)
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
