@@ -118,7 +118,7 @@
 		"fs-extra": "^11.3.2",
 		"jsdom": "^27.2.0",
 		"npm-run-all2": "^8.0.4",
-		"prettier": "^3.7.1",
+		"prettier": "^3.7.3",
 		"prettier-plugin-tailwindcss": "^0.7.1",
 		"sass": "^1.94.2",
 		"start-server-and-test": "^2.1.3",
