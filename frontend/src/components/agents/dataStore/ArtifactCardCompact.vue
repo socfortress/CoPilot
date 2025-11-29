@@ -5,7 +5,7 @@
 				<div class="mb-1 flex items-center gap-2">
 					<Icon :name="FileIcon" :size="16" class="text-primary-color shrink-0" />
 					<span class="truncate text-sm font-semibold">{{ artifact.artifact_name }}</span>
-					<n-tag :type="getStatusType(artifact.status)" size="small" round>
+					<n-tag :type="statusType" size="small" round>
 						{{ artifact.status }}
 					</n-tag>
 				</div>
@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { TagProps } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents.d"
 import bytes from "bytes"
 import { NButton, NCard, NTag } from "naive-ui"
@@ -66,20 +67,19 @@ const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 
+const STATUS_TYPE_MAP: Record<string, TagProps["type"]> = {
+	completed: "success",
+	failed: "error",
+	processing: "warning",
+	pending: "info"
+} as const
+
 const fileSize = computed(() => bytes(artifact.file_size))
 
-function getStatusType(status: string) {
-	switch (status.toLowerCase()) {
-		case "completed":
-			return "success"
-		case "failed":
-			return "error"
-		case "processing":
-			return "warning"
-		default:
-			return "default"
-	}
-}
+const statusType = computed<TagProps["type"]>(() => {
+	const normalizedStatus = artifact.status.toLowerCase()
+	return STATUS_TYPE_MAP[normalizedStatus] ?? "default"
+})
 </script>
 
 <style lang="scss" scoped>

@@ -35,7 +35,7 @@
 				{{ formatDate(artifact.collection_time, dFormats.datetime) }}
 			</n-descriptions-item>
 			<n-descriptions-item label="Status">
-				<n-badge :value="artifact.status" :type="getStatusType(artifact.status)" />
+				<n-badge :value="artifact.status" :type="statusType" />
 			</n-descriptions-item>
 			<n-descriptions-item label="Bucket">
 				{{ artifact.bucket_name }}
@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import type { BadgeProps } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents.d"
 import bytes from "bytes"
 import { NBadge, NDescriptions, NDescriptionsItem } from "naive-ui"
@@ -65,20 +66,19 @@ const { artifact } = defineProps<{ artifact: AgentArtifactData }>()
 
 const dFormats = useSettingsStore().dateFormat
 
+const STATUS_TYPE_MAP: Record<string, BadgeProps["type"]> = {
+	completed: "success",
+	failed: "error",
+	processing: "warning",
+	pending: "info"
+} as const
+
 const fileSize = computed(() => bytes(artifact.file_size))
 
-function getStatusType(status: string) {
-	switch (status.toLowerCase()) {
-		case "completed":
-			return "success"
-		case "failed":
-			return "error"
-		case "processing":
-			return "warning"
-		default:
-			return "default"
-	}
-}
+const statusType = computed<BadgeProps["type"]>(() => {
+	const normalizedStatus = artifact.status.toLowerCase()
+	return STATUS_TYPE_MAP[normalizedStatus] ?? "default"
+})
 </script>
 
 <style lang="scss" scoped>
