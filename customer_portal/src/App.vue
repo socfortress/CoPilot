@@ -3,7 +3,15 @@
 </template>
 
 <script setup lang="ts">
-// This is the root component for the customer portal
+import { onMounted } from "vue"
+import { usePortalSettingsStore } from "./stores/portalSettings"
+
+const portalSettingsStore = usePortalSettingsStore()
+
+// Fetch portal settings on app mount
+onMounted(async () => {
+	await portalSettingsStore.fetchSettings()
+})
 </script>
 
 <style scoped>

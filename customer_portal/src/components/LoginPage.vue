@@ -111,41 +111,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
+import { usePortalSettingsStore } from "../stores/portalSettings"
 
 const router = useRouter()
+const portalSettingsStore = usePortalSettingsStore()
 
 const username = ref("")
 const password = ref("")
 const loading = ref(false)
 const error = ref("")
-const portalTitle = ref("")
-const portalLogo = ref<string | null>(null)
 const showLogo = ref(true)
 
-// Fetch portal settings on component mount
-onMounted(async () => {
-	try {
-		const apiUrl = import.meta.env.DEV ? "" : import.meta.env.VITE_API_URL || "http://localhost:5000"
-		const response = await fetch(`${apiUrl}/api/customer_portal/settings`)
-
-		if (response.ok) {
-			const data = await response.json()
-			if (data.success && data.settings) {
-				if (data.settings.title) {
-					portalTitle.value = data.settings.title
-				}
-				if (data.settings.logo_base64 && data.settings.logo_mime_type) {
-					portalLogo.value = `data:${data.settings.logo_mime_type};base64,${data.settings.logo_base64}`
-				}
-			}
-		}
-	} catch (err) {
-		console.error("Failed to load portal settings:", err)
-		// Keep default values on error
-	}
-})
+const portalTitle = computed(() => portalSettingsStore.portalTitle)
+const portalLogo = computed(() => portalSettingsStore.portalLogo)
 
 const handleLogin = async () => {
 	loading.value = true
