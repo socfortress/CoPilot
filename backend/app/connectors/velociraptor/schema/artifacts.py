@@ -177,6 +177,11 @@ class CollectFileBody(BaseBody):
             raise HTTPException(status_code=400, detail="Invalid artifact name. Name should be 'Generic.Collectors.File'")
         return value
 
+class FileCollectionBody(BaseModel):
+    file: str = Field(..., description="File to collect")
+    root_disk: str = Field("C:", description="Root disk to collect from")
+
+
 # ! Windows Example ! #
 # {
 #   "hostname": "WIN-HFOU106TD7K",

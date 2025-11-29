@@ -14,7 +14,7 @@ from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationA
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse, FileCollectionBody
 from app.connectors.velociraptor.schema.artifacts import CollectFileBody
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
@@ -165,6 +165,58 @@ async def get_velociraptor_org(session: AsyncSession, hostname: str) -> str:
 
     logger.info(f"velociraptor_org for hostname {hostname} is {agent.velociraptor_org}")
     return agent.velociraptor_org
+
+def format_file_path_for_os(file_path: str, os_prefix: str) -> str:
+    """
+    Format the file path based on the operating system prefix.
+
+    For Windows OS:
+    - Prepends "Glob\n" to the file path
+    - Escapes backslashes (single \ becomes \\\\)
+    - Appends "\n" at the end
+
+    For Linux/MacOS:
+    - Prepends "Glob\n" to the file path
+    - Appends "\n" at the end
+    - Forward slashes are kept as-is
+
+    Args:
+        file_path (str): The original file path to format.
+        os_prefix (str): The OS prefix (e.g., "Windows", "Linux", "MacOS", "Generic.Client").
+
+    Returns:
+        str: The formatted file path.
+
+    Examples:
+        >>> format_file_path_for_os("Users\\Administrator\\Downloads\\LICENSE.txt", "Windows")
+        'Glob\\nUsers\\\\\\\\Administrator\\\\\\\\Downloads\\\\\\\\LICENSE.txt\\n'
+
+        >>> format_file_path_for_os("/home/user/document.txt", "Linux")
+        'Glob\\n/home/user/document.txt\\n'
+
+        >>> format_file_path_for_os("/Users/user/document.txt", "MacOS")
+        'Glob\\n/Users/user/document.txt\\n'
+    """
+    logger.info(f"Formatting file path '{file_path}' for OS prefix '{os_prefix}'")
+
+    # Check if the OS is Windows
+    if os_prefix.lower() in ["windows", "windows."]:
+        # Escape backslashes: single \ becomes \\\\
+        # This is because we need double escaping: once for Python string, once for Velociraptor
+        escaped_path = file_path.replace("\\", "\\\\")
+
+        # Format with Glob prefix and newline suffix
+        formatted_path = f"Glob\n{escaped_path}\n"
+
+        logger.info(f"Formatted Windows path: '{formatted_path}'")
+        return formatted_path
+
+    # For Linux, MacOS, or other Unix-based systems
+    # Also add Glob prefix and newline suffix, but keep forward slashes as-is
+    formatted_path = f"Glob\n{file_path}\n"
+
+    logger.info(f"Formatted {os_prefix} path: '{formatted_path}'")
+    return formatted_path
 
 
 async def update_agent_quarantine_status(
@@ -551,3 +603,89 @@ async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSes
         collect_artifact_body.hostname,
     )
     return await run_file_collection(collect_artifact_body, session)
+
+# Add this new route after the existing collect_file route
+
+@velociraptor_artifacts_router.post(
+    "/collect/file/agent/{agent_id}",
+    response_model=CollectArtifactResponse,
+    description="Collect a file from an agent using agent ID",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def collect_file_by_agent_id(
+    agent_id: str,
+    collect_file_body: FileCollectionBody,
+    session: AsyncSession = Depends(get_db),
+) -> CollectArtifactResponse:
+    """
+    Collects a file from an agent using the agent ID.
+
+    Args:
+        agent_id (str): The agent ID to collect the file from.
+        collect_file_body (FileCollectionBody): The request body containing file path and root disk.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CollectArtifactResponse: The response containing the collection status.
+
+    Raises:
+        HTTPException: If the agent is not found or velociraptor details are not available.
+    """
+    logger.info(f"Received request to collect file for agent ID {agent_id}")
+
+    # Query the agent from the database using agent_id
+    result = await session.execute(
+        select(Agents).filter(Agents.agent_id == agent_id)
+    )
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with ID {agent_id} not found",
+        )
+
+    # Verify hostname exists
+    if not agent.hostname:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Hostname for agent {agent_id} is not available",
+        )
+
+    # Verify velociraptor_id exists and is valid
+    if not agent.velociraptor_id or agent.velociraptor_id == "n/a":
+        raise HTTPException(
+            status_code=404,
+            detail=f"Velociraptor ID for agent {agent_id} is not available",
+        )
+
+    # Verify velociraptor_org exists
+    if not agent.velociraptor_org:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Velociraptor ORG for agent {agent_id} is not available",
+        )
+
+    # Collect the agent os
+    os_prefix = get_os_prefix_from_os_name(os_name=agent.os.lower())
+
+    logger.info(f"OS prefix for agent ID {agent_id} is {os_prefix}")
+    # Format the file path based on the OS
+    original_file_path = collect_file_body.file
+    formatted_file_path = format_file_path_for_os(original_file_path, os_prefix)
+
+    logger.info(f"Original file path: '{original_file_path}'")
+    logger.info(f"Formatted file path: '{formatted_file_path}'")
+
+    # Update the file path in the request body
+    collect_file_body.file = formatted_file_path
+    return await run_file_collection(
+        CollectFileBody(
+            hostname=agent.hostname,
+            velociraptor_id=agent.velociraptor_id,
+            velociraptor_org=agent.velociraptor_org,
+            artifact_name="Generic.Collectors.File",
+            file=collect_file_body.file,
+            root_disk=collect_file_body.root_disk,
+        ), session
+    )

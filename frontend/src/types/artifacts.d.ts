@@ -31,3 +31,10 @@ export interface MatchingParameter {
 	type: string
 	default?: string
 }
+
+export interface FileCollectionResult {
+    success: boolean
+    message: string
+    flow_id?: string
+    session_id?: string
+}
