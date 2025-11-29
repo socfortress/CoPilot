@@ -23,7 +23,7 @@
 				{{ artifact.file_name }}
 			</n-descriptions-item>
 			<n-descriptions-item label="File Size">
-				{{ formatFileSize(artifact.file_size) }}
+				{{ fileSize }}
 			</n-descriptions-item>
 			<n-descriptions-item label="Content Type">
 				{{ artifact.content_type }}
@@ -32,7 +32,7 @@
 				<code class="text-xs">{{ artifact.file_hash }}</code>
 			</n-descriptions-item>
 			<n-descriptions-item label="Collection Time">
-				{{ formatDate(artifact.collection_time) }}
+				{{ formatDate(artifact.collection_time, dFormats.datetime) }}
 			</n-descriptions-item>
 			<n-descriptions-item label="Status">
 				<n-badge :value="artifact.status" :type="getStatusType(artifact.status)" />
@@ -55,14 +55,17 @@
 
 <script setup lang="ts">
 import type { AgentArtifactData } from "@/types/agents.d"
+import bytes from "bytes"
 import { NBadge, NDescriptions, NDescriptionsItem } from "naive-ui"
+import { computed } from "vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-interface Props {
-    artifact: AgentArtifactData
-}
+	const { artifact } = defineProps<{ artifact: AgentArtifactData }>()
 
-defineProps<Props>()
+const dFormats = useSettingsStore().dateFormat
+
+const fileSize = computed(() => bytes(artifact.file_size))
 
 function getStatusType(status: string) {
     switch (status.toLowerCase()) {
@@ -76,17 +79,10 @@ function getStatusType(status: string) {
             return "default"
     }
 }
-
-function formatFileSize(bytes: number): string {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`
-}
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
 .artifact-details {
     :deep() {
         code {

@@ -1,106 +1,108 @@
 <template>
-    <div class="agent-data-store-tab">
-        <div class="flex gap-4">
-            <div class="filters-section" style="min-width: 280px; max-width: 320px">
-                <n-card size="small" title="Filters" :segmented="{ content: true }">
-                    <div class="flex flex-col gap-3">
-                        <n-input
-                            v-model:value="textFilter"
-                            placeholder="Search artifacts..."
-                            clearable
-                            size="small"
-                        >
-                            <template #prefix>
-                                <Icon :name="SearchIcon" :size="16" />
-                            </template>
-                        </n-input>
+	<div class="agent-data-store-tab">
+		<div class="flex gap-4">
+			<div class="filters-section" style="min-width: 280px; max-width: 320px">
+				<n-card size="small" title="Filters" :segmented="{ content: true }">
+					<div class="flex flex-col gap-3">
+						<n-input
+							v-model:value="textFilter"
+							placeholder="Search artifacts..."
+							clearable
+							size="small"
+						>
+							<template #prefix>
+								<Icon :name="SearchIcon" :size="16" />
+							</template>
+						</n-input>
 
-                        <n-select
-                            v-model:value="statusFilter"
-                            :options="statusOptions"
-                            placeholder="Filter by status"
-                            size="small"
-                            clearable
-                        />
+						<n-select
+							v-model:value="statusFilter"
+							:options="statusOptions"
+							placeholder="Filter by status"
+							size="small"
+							clearable
+						/>
 
-                        <n-button type="primary" secondary size="small" @click="getArtifacts()" :loading="loading">
-                            <template #icon>
-                                <Icon :name="RefreshIcon" />
-                            </template>
-                            Refresh
-                        </n-button>
+						<n-button type="primary" secondary size="small" :loading="loading" @click="getArtifacts()">
+							<template #icon>
+								<Icon :name="RefreshIcon" />
+							</template>
+							Refresh
+						</n-button>
 
-                        <n-divider class="!my-2" />
+						<n-divider class="my-2!" />
 
-                        <div class="flex flex-col gap-2 text-sm">
-                            <div class="flex items-center justify-between">
-                                <span class="text-secondary-color">Total:</span>
-                                <span class="font-mono">{{ artifacts.length }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-secondary-color">Filtered:</span>
-                                <span class="font-mono">{{ artifactsFiltered.length }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </n-card>
-            </div>
+						<div class="flex flex-col gap-2 text-sm">
+							<div class="flex items-center justify-between">
+								<span class="text-secondary-color">Total:</span>
+								<span class="font-mono">{{ artifacts.length }}</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-secondary-color">Filtered:</span>
+								<span class="font-mono">{{ artifactsFiltered.length }}</span>
+							</div>
+						</div>
+					</div>
+				</n-card>
+			</div>
 
-            <div class="artifacts-section flex-1">
-                <n-spin :show="loading">
-                    <n-scrollbar style="max-height: 600px">
-                        <div class="flex flex-col gap-3 pr-2">
-                            <template v-if="artifactsFiltered.length">
-                                <ArtifactCard
-                                    v-for="artifact in itemsPaginated"
-                                    :key="artifact.id"
-                                    :artifact
-                                    show-actions
-                                    hoverable
-                                    @download="downloadArtifact(artifact)"
-                                    @delete="deleteArtifact(artifact)"
-                                    @details="showArtifactDetails(artifact)"
-                                />
-                            </template>
-                            <template v-else>
-                                <n-empty
-                                    v-if="!loading"
-                                    description="No artifacts found"
-                                    class="h-48 justify-center"
-                                />
-                            </template>
-                        </div>
-                    </n-scrollbar>
+			<div class="artifacts-section flex-1">
+				<n-spin :show="loading">
+					<n-scrollbar style="max-height: 600px">
+						<div class="flex flex-col gap-3 pr-2">
+							<template v-if="artifactsFiltered.length">
+								<ArtifactCard
+									v-for="artifact in itemsPaginated"
+									:key="artifact.id"
+									:artifact
+									show-actions
+									hoverable
+									@download="downloadArtifact(artifact)"
+									@delete="deleteArtifact(artifact)"
+									@details="showArtifactDetails(artifact)"
+								/>
+							</template>
+							<template v-else>
+								<n-empty
+									v-if="!loading"
+									description="No artifacts found"
+									class="h-48 justify-center"
+								/>
+							</template>
+						</div>
+					</n-scrollbar>
 
-                    <div v-if="artifactsFiltered.length > pageSize" class="mt-4 flex justify-end">
-                        <n-pagination
-                            v-model:page="page"
-                            :page-size="pageSize"
-                            :page-slot="5"
-                            :item-count="artifactsFiltered.length"
-                            size="small"
-                        />
-                    </div>
-                </n-spin>
-            </div>
-        </div>
+					<div v-if="artifactsFiltered.length > pageSize" class="mt-4 flex justify-end">
+						<n-pagination
+							v-model:page="page"
+							:page-size="pageSize"
+							:page-slot="5"
+							:item-count="artifactsFiltered.length"
+							size="small"
+						/>
+					</div>
+				</n-spin>
+			</div>
+		</div>
 
-        <!-- Artifact Details Modal -->
-        <n-modal
-            v-model:show="showDetailsModal"
-            preset="card"
-            title="Artifact Details"
-            :style="{ width: '800px' }"
-            :segmented="{ content: true }"
-        >
-            <ArtifactDetails v-if="selectedArtifact" :artifact="selectedArtifact" />
-        </n-modal>
-    </div>
+		<!-- Artifact Details Modal -->
+		<n-modal
+			v-model:show="showDetailsModal"
+			preset="card"
+			title="Artifact Details"
+			:style="{ width: '800px' }"
+			:segmented="{ content: true }"
+		>
+			<ArtifactDetails v-if="selectedArtifact" :artifact="selectedArtifact" />
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
+import type { SelectOption } from "naive-ui"
 import type { Agent, AgentArtifactData } from "@/types/agents.d"
-import _debounce from "lodash/debounce"
+import { refDebounced } from "@vueuse/core"
+import { saveAs } from "file-saver"
 import {
     NButton,
     NCard,
@@ -115,17 +117,17 @@ import {
     useDialog,
     useMessage
 } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCard from "./ArtifactCard.vue"
-import ArtifactDetails from "./ArtifactDetails.vue"
+	import ArtifactDetails from "./ArtifactDetails.vue"
 
-interface Props {
+	// TODO: join AgentDataStoreTab + AgentDataStoreTabCompact
+
+const props = defineProps<{
     agent: Agent
-}
-
-const props = defineProps<Props>()
+}>()
 
 const message = useMessage()
 const dialog = useDialog()
@@ -135,25 +137,16 @@ const RefreshIcon = "carbon:renew"
 
 const loading = ref(false)
 const artifacts = ref<AgentArtifactData[]>([])
-const textFilter = ref("")
-const statusFilter = ref<string | null>(null)
+const textFilter = ref<string | null>(null)
+const textFilterDebounced = refDebounced<string | null>(textFilter, 300)
+const statusFilter = ref<string | undefined>(undefined)
 const page = ref(1)
 const pageSize = ref(20)
 const showDetailsModal = ref(false)
 const selectedArtifact = ref<AgentArtifactData | null>(null)
 
-const textFilterDebounced = ref("")
-
-const update = _debounce((value: string) => {
-    textFilterDebounced.value = value
-}, 300)
-
-watch(textFilter, val => {
-    update(val)
-})
-
-const statusOptions = [
-    { label: "All", value: null },
+const statusOptions: SelectOption[] = [
+    { label: "All", value: undefined },
     { label: "Completed", value: "completed" },
     { label: "Failed", value: "failed" },
     { label: "Processing", value: "processing" }
@@ -166,7 +159,7 @@ const artifactsFiltered = computed(() => {
             (artifact.artifact_name + artifact.flow_id + artifact.file_name)
                 .toString()
                 .toLowerCase()
-                .includes(textFilterDebounced.value.toString().toLowerCase())
+                .includes((textFilterDebounced.value || '').toString().toLowerCase())
 
         // Status filter
         const matchesStatus = !statusFilter.value || artifact.status === statusFilter.value
@@ -208,16 +201,7 @@ function downloadArtifact(artifact: AgentArtifactData) {
     Api.agents
         .downloadAgentArtifact(props.agent.agent_id, artifact.id)
         .then(res => {
-            // Create a blob URL and trigger download
-            const blob = new Blob([res.data], { type: artifact.content_type })
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement("a")
-            link.href = url
-            link.download = artifact.file_name
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
+            				saveAs(res.data, artifact.file_name)
 
             message.success(`Downloaded ${artifact.file_name}`)
         })
@@ -261,6 +245,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
+
 .agent-data-store-tab {
     .filters-section {
         :deep() {

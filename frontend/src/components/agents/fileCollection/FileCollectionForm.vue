@@ -1,101 +1,100 @@
 <template>
-    <div class="file-collection-form">
-        <n-form ref="formRef" :model="formData" :rules="formRules">
-            <n-form-item label="File Path" path="file_path">
-                <n-input
-                    v-model:value="formData.file_path"
-                    placeholder="e.g., Users\Administrator\Downloads\file.txt or /home/user/file.txt"
-                    :disabled="loading"
-                    clearable
-                >
-                    <template #prefix>
-                        <Icon :name="FileIcon" :size="16" />
-                    </template>
-                </n-input>
-            </n-form-item>
+	<div class="file-collection-form">
+		<n-form ref="formRef" :model="formData" :rules="formRules">
+			<n-form-item label="File Path" path="file_path">
+				<n-input
+					v-model:value="formData.file_path"
+					placeholder="e.g., Users\Administrator\Downloads\file.txt or /home/user/file.txt"
+					:disabled="loading"
+					clearable
+				>
+					<template #prefix>
+						<Icon :name="FileIcon" :size="16" />
+					</template>
+				</n-input>
+			</n-form-item>
 
-            <n-form-item label="Root Disk" path="root_disk">
-                <n-input
-                    v-model:value="formData.root_disk"
-                    placeholder="e.g., C: (Windows) or / (Linux)"
-                    :disabled="loading"
-                    clearable
-                >
-                    <template #prefix>
-                        <Icon :name="DiskIcon" :size="16" />
-                    </template>
-                </n-input>
-            </n-form-item>
+			<n-form-item label="Root Disk" path="root_disk">
+				<n-input
+					v-model:value="formData.root_disk"
+					placeholder="e.g., C: (Windows) or / (Linux)"
+					:disabled="loading"
+					clearable
+				>
+					<template #prefix>
+						<Icon :name="DiskIcon" :size="16" />
+					</template>
+				</n-input>
+			</n-form-item>
 
-            <n-form-item>
-                <div class="flex items-center gap-3">
-                    <n-button
-                        type="primary"
-                        :loading="loading"
-                        :disabled="!formData.file_path || !formData.root_disk"
-                        @click="handleSubmit"
-                    >
-                        <template #icon>
-                            <Icon :name="CollectIcon" />
-                        </template>
-                        Collect File
-                    </n-button>
+			<n-form-item>
+				<div class="flex items-center gap-3">
+					<n-button
+						type="primary"
+						:loading="loading"
+						:disabled="!formData.file_path || !formData.root_disk"
+						@click="handleSubmit"
+					>
+						<template #icon>
+							<Icon :name="CollectIcon" />
+						</template>
+						Collect File
+					</n-button>
 
-                    <n-button
-                        v-if="formData.file_path || formData.root_disk"
-                        secondary
-                        :disabled="loading"
-                        @click="handleReset"
-                    >
-                        Reset
-                    </n-button>
-                </div>
-            </n-form-item>
-        </n-form>
+					<n-button
+						v-if="formData.file_path || formData.root_disk"
+						secondary
+						:disabled="loading"
+						@click="handleReset"
+					>
+						Reset
+					</n-button>
+				</div>
+			</n-form-item>
+		</n-form>
 
-        <n-divider v-if="result" class="!my-4" />
+		<n-divider v-if="result" class="my-4!" />
 
-        <n-alert
-            v-if="result"
-            :type="result.success ? 'success' : 'error'"
-            :title="result.success ? 'Collection Started' : 'Collection Failed'"
-            closable
-            @close="result = null"
-        >
-            <template v-if="result.success">
-                <div class="flex flex-col gap-2">
-                    <div v-if="result.flow_id">
-                        <strong>Flow ID:</strong>
-                        <code class="ml-2">{{ result.flow_id }}</code>
-                    </div>
-                    <div v-if="result.session_id">
-                        <strong>Session ID:</strong>
-                        <code class="ml-2">{{ result.session_id }}</code>
-                    </div>
-                    <div class="text-sm text-secondary-color mt-2">
-                        {{ result.message }}
-                    </div>
-                </div>
-            </template>
-            <template v-else>
-                {{ result.message }}
-            </template>
-        </n-alert>
-    </div>
+		<n-alert
+			v-if="result"
+			:type="result.success ? 'success' : 'error'"
+			:title="result.success ? 'Collection Started' : 'Collection Failed'"
+			closable
+			@close="result = null"
+		>
+			<template v-if="result.success">
+				<div class="flex flex-col gap-2">
+					<div v-if="result.flow_id">
+						<strong>Flow ID:</strong>
+						<code class="ml-2">{{ result.flow_id }}</code>
+					</div>
+					<div v-if="result.session_id">
+						<strong>Session ID:</strong>
+						<code class="ml-2">{{ result.session_id }}</code>
+					</div>
+					<div class="text-sm text-secondary-color mt-2">
+						{{ result.message }}
+					</div>
+				</div>
+			</template>
+			<template v-else>
+				{{ result.message }}
+			</template>
+		</n-alert>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NForm, NFormItem, NInput, useMessage, type FormInst, type FormRules } from "naive-ui"
+import type { FormInst, FormRules } from "naive-ui"
+import type { FileCollectionResult } from "@/types/artifacts.d"
+import { NAlert, NButton, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import type { FileCollectionResult } from "@/types/artifacts.d"
 
-interface Props {
+const props = defineProps<{
     agentId: string
-}
-
-const props = defineProps<Props>()
+}>()
 
 const emit = defineEmits<{
     (e: "success", result: FileCollectionResult): void
@@ -139,8 +138,9 @@ async function handleSubmit() {
 
     try {
         await formRef.value.validate()
-    } catch (error) {
-        return
+    } catch {
+       message.warning("You must fill in the required fields correctly.")
+			return false
     }
 
     loading.value = true
@@ -200,6 +200,8 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
+
 .file-collection-form {
     max-width: 600px;
 

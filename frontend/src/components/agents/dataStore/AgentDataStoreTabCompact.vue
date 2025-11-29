@@ -90,8 +90,10 @@
 </template>
 
 <script setup lang="ts">
+import type { SelectOption } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents.d"
-import _debounce from "lodash/debounce"
+import { refDebounced } from "@vueuse/core"
+import { saveAs } from "file-saver"
 import {
     NButton,
     NEmpty,
@@ -102,19 +104,17 @@ import {
     NSelect,
     NSpin,
     useDialog,
-    useMessage
+	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+	import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCardCompact from "./ArtifactCardCompact.vue"
 import ArtifactDetails from "./ArtifactDetails.vue"
 
-interface Props {
+const props = defineProps<{
     agentId: string
-}
-
-const props = defineProps<Props>()
+}>()
 
 const message = useMessage()
 const dialog = useDialog()
@@ -124,25 +124,16 @@ const RefreshIcon = "carbon:renew"
 
 const loading = ref(false)
 const artifacts = ref<AgentArtifactData[]>([])
-const textFilter = ref("")
+	const textFilter = ref<string | null>(null)
+const textFilterDebounced = refDebounced<string | null>(textFilter, 300)
 const statusFilter = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(10)
 const showDetailsModal = ref(false)
 const selectedArtifact = ref<AgentArtifactData | null>(null)
 
-const textFilterDebounced = ref("")
-
-const update = _debounce((value: string) => {
-    textFilterDebounced.value = value
-}, 300)
-
-watch(textFilter, val => {
-    update(val)
-})
-
-const statusOptions = [
-    { label: "All", value: null },
+const statusOptions: SelectOption[] = [
+    { label: "All", value: undefined },
     { label: "Completed", value: "completed" },
     { label: "Failed", value: "failed" },
     { label: "Processing", value: "processing" }
@@ -154,7 +145,7 @@ const artifactsFiltered = computed(() => {
             (artifact.artifact_name + artifact.flow_id + artifact.file_name)
                 .toString()
                 .toLowerCase()
-                .includes(textFilterDebounced.value.toString().toLowerCase())
+                .includes((textFilterDebounced.value || '').toString().toLowerCase())
 
         const matchesStatus = !statusFilter.value || artifact.status === statusFilter.value
 
@@ -195,15 +186,7 @@ function downloadArtifact(artifact: AgentArtifactData) {
     Api.agents
         .downloadAgentArtifact(props.agentId, artifact.id)
         .then(res => {
-            const blob = new Blob([res.data], { type: artifact.content_type })
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement("a")
-            link.href = url
-            link.download = artifact.file_name
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
+           	saveAs(res.data, artifact.file_name)
 
             message.success(`Downloaded ${artifact.file_name}`)
         })
@@ -247,6 +230,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
+
 .agent-data-store-tab-compact {
     .filters-bar {
         padding-bottom: 8px;

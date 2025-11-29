@@ -90,7 +90,7 @@
 			:title="selectedSca?.policy_id || ''"
 			:bordered="false"
 			segmented
-			content-class="!p-0"
+			content-class="p-0!"
 		>
 			<ScaItem v-if="selectedSca" :sca="selectedSca" :agent></ScaItem>
 		</n-modal>

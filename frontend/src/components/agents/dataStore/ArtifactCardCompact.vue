@@ -3,7 +3,7 @@
 		<div class="flex items-start justify-between gap-3">
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center gap-2 mb-1">
-					<Icon :name="FileIcon" :size="16" class="text-primary-color flex-shrink-0" />
+					<Icon :name="FileIcon" :size="16" class="text-primary-color shrink-0" />
 					<span class="font-semibold text-sm truncate">{{ artifact.artifact_name }}</span>
 					<n-tag :type="getStatusType(artifact.status)" size="small" round>
 						{{ artifact.status }}
@@ -13,12 +13,12 @@
 					<code class="text-xs">{{ artifact.file_name }}</code>
 				</div>
 				<div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-secondary-color">
-					<span>Size: {{ formatFileSize(artifact.file_size) }}</span>
-					<span>{{ formatDate(artifact.collection_time) }}</span>
+					<span>Size: {{ fileSize }}</span>
+					<span>{{ formatDate(artifact.collection_time, dFormats.datetime) }}</span>
 				</div>
 			</div>
 
-			<div v-if="showActions" class="flex flex-col gap-1 flex-shrink-0">
+			<div v-if="showActions" class="flex flex-col gap-1 shrink-0">
 				<n-button size="tiny" secondary type="info" @click.stop="emit('details', artifact)">
 					<template #icon>
 						<Icon :name="InfoIcon" :size="14" />
@@ -41,18 +41,17 @@
 
 <script setup lang="ts">
 import type { AgentArtifactData } from "@/types/agents.d"
+import bytes from "bytes"
 import { NButton, NCard, NTag } from "naive-ui"
+import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-interface Props {
+const { artifact, showActions = false } = defineProps<{
     artifact: AgentArtifactData
     showActions?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-    showActions: false
-})
+}>()
 
 const emit = defineEmits<{
     (e: "download", artifact: AgentArtifactData): void
@@ -60,10 +59,14 @@ const emit = defineEmits<{
     (e: "details", artifact: AgentArtifactData): void
 }>()
 
-const FileIcon = "carbon:document-zip"
+const dFormats = useSettingsStore().dateFormat
+
+const FileIcon = "lsicon:file-zip-outline"
 const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
-const InfoIcon = "carbon:information"
+	const InfoIcon = "carbon:information"
+
+const fileSize = computed(() => bytes(artifact.file_size))
 
 function getStatusType(status: string) {
     switch (status.toLowerCase()) {
@@ -77,17 +80,11 @@ function getStatusType(status: string) {
             return "default"
     }
 }
-
-function formatFileSize(bytes: number): string {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`
-}
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
+
 .artifact-card-compact {
     transition: all 0.2s var(--bezier-ease);
 

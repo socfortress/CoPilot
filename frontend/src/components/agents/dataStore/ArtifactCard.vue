@@ -3,7 +3,7 @@
 		class="artifact-card"
 		:class="{ 'cursor-pointer': hoverable, clickable }"
 		content-style="padding: 16px"
-		@click="handleClick"
+		@click="emit('click', artifact)"
 	>
 		<div class="flex flex-col gap-3">
 			<div class="flex items-start justify-between gap-4">
@@ -19,7 +19,7 @@
 				<n-badge :value="artifact.status" :type="getStatusType(artifact.status)" />
 			</div>
 
-			<n-divider class="!my-1" />
+			<n-divider class="my-1!" />
 
 			<div class="flex flex-col gap-2 text-sm">
 				<div class="flex items-center justify-between">
@@ -28,11 +28,11 @@
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-secondary-color">File Size:</span>
-					<span>{{ formatFileSize(artifact.file_size) }}</span>
+					<span>{{ fileSize }}</span>
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-secondary-color">Collected:</span>
-					<span>{{ formatDate(artifact.collection_time) }}</span>
+					<span>{{ formatDate(artifact.collection_time, dFormats.datetime) }}</span>
 				</div>
 				<div v-if="artifact.customer_code" class="flex items-center justify-between">
 					<span class="text-secondary-color">Customer:</span>
@@ -66,22 +66,21 @@
 
 <script setup lang="ts">
 import type { AgentArtifactData } from "@/types/agents.d"
+import bytes from "bytes"
 import { NBadge, NButton, NCard, NDivider } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { computed } from "vue"
+	import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
-interface Props {
+	// TODO: join ArtifactCard + ArtifactCardCompact
+
+	const { artifact, showActions = false, hoverable = false, clickable = false } = defineProps<{
     artifact: AgentArtifactData
     showActions?: boolean
     hoverable?: boolean
     clickable?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-    showActions: false,
-    hoverable: false,
-    clickable: false
-})
+}>()
 
 const emit = defineEmits<{
     (e: "click", artifact: AgentArtifactData): void
@@ -90,14 +89,14 @@ const emit = defineEmits<{
     (e: "details", artifact: AgentArtifactData): void
 }>()
 
-const FileIcon = "carbon:document-zip"
+const dFormats = useSettingsStore().dateFormat
+
+const FileIcon = "lsicon:file-zip-outline"
 const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
-const InfoIcon = "carbon:information"
+	const InfoIcon = "carbon:information"
 
-function handleClick() {
-    emit("click", props.artifact)
-}
+const fileSize = computed(() => bytes(artifact.file_size))
 
 function getStatusType(status: string) {
     switch (status.toLowerCase()) {
@@ -111,17 +110,11 @@ function getStatusType(status: string) {
             return "default"
     }
 }
-
-function formatFileSize(bytes: number): string {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`
-}
 </script>
 
 <style lang="scss" scoped>
+// TODO: remove style
+
 .artifact-card {
     border-radius: var(--border-radius);
     overflow: hidden;
