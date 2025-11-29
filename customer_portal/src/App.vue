@@ -66,6 +66,17 @@ watch(
 	},
 	{ immediate: true }
 )
+
+// Watch for title changes and update document title
+watch(
+	() => portalSettingsStore.portalTitle,
+	newTitle => {
+		if (newTitle) {
+			document.title = newTitle
+		}
+	},
+	{ immediate: true }
+)
 </script>
 
 <style scoped>
