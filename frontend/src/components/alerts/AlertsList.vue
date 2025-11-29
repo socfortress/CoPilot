@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -27,13 +27,13 @@
 			<div class="actions flex items-center gap-2">
 				<n-button v-if="!isFilterPreselected" size="small" @click="showStatsDrawer = true">
 					<template #icon>
-						<Icon :name="StatsIcon" :size="14"></Icon>
+						<Icon :name="StatsIcon" :size="14" />
 					</template>
 					Stats
 				</n-button>
 				<n-button size="small" @click="showFiltersDrawer = true">
 					<template #icon>
-						<Icon :name="FilterIcon" :size="15"></Icon>
+						<Icon :name="FilterIcon" :size="15" />
 					</template>
 					Filters
 				</n-button>

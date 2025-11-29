@@ -8,14 +8,14 @@
 			<div class="flex flex-wrap items-center gap-3">
 				<Badge type="active" class="cursor-pointer" @click.stop="gotoIndex(alert.alert_index)">
 					<template #iconRight>
-						<Icon :name="LinkIcon" :size="14"></Icon>
+						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Index / {{ alert.alert_index }}</template>
 				</Badge>
 
 				<Badge type="active" class="cursor-pointer" @click.stop="gotoCustomer({ code: alert.customer_code })">
 					<template #iconRight>
-						<Icon :name="LinkIcon" :size="14"></Icon>
+						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Customer #{{ alert.customer_code }}</template>
 				</Badge>

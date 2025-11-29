@@ -3,7 +3,7 @@
 		<div class="mb-4">
 			<n-button secondary type="primary" @click="showRulesDrawer = true">
 				<template #icon>
-					<Icon :name="RulesIcon" :size="22"></Icon>
+					<Icon :name="RulesIcon" :size="22" />
 				</template>
 				View All Rules
 			</n-button>

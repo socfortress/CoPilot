@@ -45,7 +45,7 @@
 									@click="wizardCurrent = 2"
 								>
 									<template #icon>
-										<Icon :name="ArrowRightIcon"></Icon>
+										<Icon :name="ArrowRightIcon" />
 									</template>
 									Next
 								</n-button>
@@ -87,14 +87,14 @@
 								>
 									<n-button type="primary" @click="openCropper()" size="small">
 										<template #icon>
-											<Icon :name="ImageIcon"></Icon>
+											<Icon :name="ImageIcon"/>
 										</template>
 										{{ model.propic ? "Edit" : "Add" }} Photo
 									</n-button>
 								</ImageCropper>
 								<n-button @click="model.propic = ''" v-if="model.propic" size="small">
 									<template #icon>
-										<Icon :name="RemoveImageIcon"></Icon>
+										<Icon :name="RemoveImageIcon"/>
 									</template>
 									Remove Photo
 								</n-button>
@@ -130,7 +130,7 @@
 								<div class="flex items-center justify-between gap-3">
 									<n-button size="large" @click="wizardCurrent = 1">
 										<template #icon>
-											<Icon :name="ArrowLeftIcon"></Icon>
+											<Icon :name="ArrowLeftIcon" />
 										</template>
 										Back
 									</n-button>
@@ -144,7 +144,7 @@
 									@click="signUp"
 								>
 									<template #icon>
-										<Icon :name="UserAddIcon"></Icon>
+										<Icon :name="UserAddIcon" />
 									</template>
 									Create account
 								</n-button>

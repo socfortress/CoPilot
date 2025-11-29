@@ -30,7 +30,7 @@
 			<template #resize-trigger>
 				<div class="split-trigger">
 					<div class="split-trigger-icon">
-						<Icon :name="SplitIcon"></Icon>
+						<Icon :name="SplitIcon" />
 					</div>
 				</div>
 			</template>
@@ -48,7 +48,7 @@
 				<template #header>
 					<n-button size="small" @click="showBookmarkedDrawer = true">
 						<template #icon>
-							<Icon :name="StarIcon" :size="14"></Icon>
+							<Icon :name="StarIcon" :size="14" />
 						</template>
 					</n-button>
 				</template>

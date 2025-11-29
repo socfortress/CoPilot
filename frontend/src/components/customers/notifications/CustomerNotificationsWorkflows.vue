@@ -33,7 +33,7 @@
 
 								<n-button size="small" type="primary" @click="openForm()">
 									<template #icon>
-										<Icon :name="AddIcon" :size="14"></Icon>
+										<Icon :name="AddIcon" :size="14" />
 									</template>
 									Create a Notification
 								</n-button>

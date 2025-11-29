@@ -4,7 +4,7 @@
 		<Icon v-if="$slots.default" :size="iconFinalSize">
 			<slot></slot>
 		</Icon>
-		<Icon v-else :size="iconFinalSize" :name="iconName"></Icon>
+		<Icon v-else :size="iconFinalSize" :name="iconName" />
 	</div>
 </template>
 

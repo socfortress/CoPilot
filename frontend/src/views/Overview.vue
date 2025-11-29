@@ -13,7 +13,7 @@
 			<div class="mobile-box block lg:hidden">
 				<n-button size="small" type="primary" @click="showQuickActions = true">
 					<template #icon>
-						<Icon :name="QuickActionsIcon"></Icon>
+						<Icon :name="QuickActionsIcon" />
 					</template>
 					Quick Actions
 				</n-button>

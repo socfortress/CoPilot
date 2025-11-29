@@ -3,7 +3,7 @@
 		<div class="license-box" :class="{ loading: loadingLicense && !licenseKey }">
 			<p v-if="loadingLicense || licenseKey" class="flex items-center gap-4">
 				<span>your license:</span>
-				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
+				<Icon v-if="loadingLicense" :name="LoadingIcon" />
 			</p>
 			<div v-if="!loadingLicense && !licenseKey">
 				<p v-if="!creationEnabled" class="flex items-center gap-4">no license found</p>
@@ -17,7 +17,7 @@
 							@click="enableCreation()"
 						>
 							<template #icon>
-								<Icon :name="LicenseIcon"></Icon>
+								<Icon :name="LicenseIcon" />
 							</template>
 							Create new license
 						</n-button>
@@ -29,7 +29,7 @@
 				<div class="actions-box flex gap-2">
 					<n-button secondary :disabled="replaceEnabled" size="small" @click="enableReplace()">
 						<template #icon>
-							<Icon :name="EditIcon"></Icon>
+							<Icon :name="EditIcon" />
 						</template>
 						Edit
 					</n-button>
@@ -41,7 +41,7 @@
 						@click="enableExtend()"
 					>
 						<template #icon>
-							<Icon :name="ExtendIcon"></Icon>
+							<Icon :name="ExtendIcon" />
 						</template>
 						Extend
 					</n-button>
@@ -54,7 +54,7 @@
 			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">Reset</n-button>
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKeyModel" @click="replaceLicense()">
 				<template #icon>
-					<Icon :name="EditIcon"></Icon>
+					<Icon :name="EditIcon" />
 				</template>
 				Replace
 			</n-button>
@@ -69,7 +69,7 @@
 			<n-button secondary :disabled="loadingExtend" @click="resetPeriod()">Reset</n-button>
 			<n-button type="success" :loading="loadingExtend" :disabled="!period" @click="extendLicense()">
 				<template #icon>
-					<Icon :name="ExtendIcon"></Icon>
+					<Icon :name="ExtendIcon" />
 				</template>
 				Extend
 			</n-button>
@@ -102,7 +102,7 @@
 					@click="validateCreation()"
 				>
 					<template #icon>
-						<Icon :name="LicenseIcon"></Icon>
+						<Icon :name="LicenseIcon" />
 					</template>
 					Create License
 				</n-button>

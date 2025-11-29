@@ -1,7 +1,7 @@
 <template>
 	<n-tooltip placement="top-end" @update:show="getNextRun()">
 		<template #trigger>
-			<Icon :name="NextIcon"></Icon>
+			<Icon :name="NextIcon" />
 		</template>
 		<template #header>Next run time:</template>
 		<div>

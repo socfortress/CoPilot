@@ -34,7 +34,7 @@
 									@click="standardMode()"
 								>
 									<template #icon>
-										<Icon :name="ArrowRightIcon"></Icon>
+										<Icon :name="ArrowRightIcon" />
 									</template>
 									Next
 								</n-button>
@@ -57,7 +57,7 @@
 								<template #additionalActions>
 									<n-button v-if="isPrevStepEnabled" :disabled="submitting" @click="prev()">
 										<template #icon>
-											<Icon :name="ArrowLeftIcon"></Icon>
+											<Icon :name="ArrowLeftIcon" />
 										</template>
 										Prev
 									</n-button>

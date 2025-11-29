@@ -3,7 +3,7 @@
 		<CardEntity hoverable :embedded>
 			<template #headerMain>
 				<div class="flex items-center gap-2">
-					<Icon :name="UserIcon" :size="14"></Icon>
+					<Icon :name="UserIcon" :size="14" />
 					{{ input.creator_user_id }}
 				</div>
 			</template>
@@ -20,7 +20,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge :type="input.global ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>Global</template>
 					</Badge>
@@ -28,7 +28,7 @@
 						<template #trigger>
 							<Badge :type="isRunning ? 'active' : 'muted'" :hint-cursor="isRunning">
 								<template #iconRight>
-									<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14"></Icon>
+									<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14" />
 								</template>
 								<template #label>Running</template>
 							</Badge>
@@ -41,19 +41,19 @@
 				<div class="flex flex-wrap items-center justify-end gap-3">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
-							<Icon :name="InfoIcon"></Icon>
+							<Icon :name="InfoIcon" />
 						</template>
 						Details
 					</n-button>
 					<n-button v-if="isRunning" :loading="loading" type="warning" size="small" secondary @click="stop()">
 						<template #icon>
-							<Icon :name="StopIcon"></Icon>
+							<Icon :name="StopIcon" />
 						</template>
 						Stop input
 					</n-button>
 					<n-button v-else :loading="loading" type="success" secondary size="small" @click="start()">
 						<template #icon>
-							<Icon :name="StartIcon"></Icon>
+							<Icon :name="StartIcon" />
 						</template>
 						Start input
 					</n-button>

@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -40,7 +40,7 @@
 						>
 							<n-button v-show="!isFilterPreselected" size="small" @click="showFilters = true">
 								<template #icon>
-									<Icon :name="FilterIcon"></Icon>
+									<Icon :name="FilterIcon" />
 								</template>
 							</n-button>
 						</n-badge>

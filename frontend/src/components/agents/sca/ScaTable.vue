@@ -21,7 +21,7 @@
 									<template #trigger>
 										<n-button size="small" @click="showScaDetails(item)">
 											<template #icon>
-												<Icon :name="InfoIcon"></Icon>
+												<Icon :name="InfoIcon" />
 											</template>
 										</n-button>
 									</template>
@@ -32,7 +32,7 @@
 									<template #trigger>
 										<n-button size="small" :loading="item.downloading" @click="scaDownload(item)">
 											<template #icon>
-												<Icon :name="DownloadIcon"></Icon>
+												<Icon :name="DownloadIcon" />
 											</template>
 										</n-button>
 									</template>

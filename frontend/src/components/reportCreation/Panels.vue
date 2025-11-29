@@ -34,14 +34,14 @@
 											<template #header>
 												<div class="left-box flex justify-end">
 													<div class="pan-area">
-														<Icon :name="PanIcon" :size="20"></Icon>
+														<Icon :name="PanIcon" :size="20" />
 													</div>
 													<div class="delete-box">
 														<n-tooltip trigger="hover">
 															<template #trigger>
 																<n-button text type="error" @click="removeRow(row)">
 																	<template #icon>
-																		<Icon :name="CloseIcon"></Icon>
+																		<Icon :name="CloseIcon" />
 																	</template>
 																</n-button>
 															</template>
@@ -53,7 +53,7 @@
 															<template #trigger>
 																<n-button text>
 																	<template #icon>
-																		<Icon :name="RowSettingsIcon" :size="13"></Icon>
+																		<Icon :name="RowSettingsIcon" :size="13" />
 																	</template>
 																</n-button>
 															</template>
@@ -89,7 +89,7 @@
 																	@click="removePanel(row, panel)"
 																>
 																	<template #icon>
-																		<Icon :name="CloseIcon"></Icon>
+																		<Icon :name="CloseIcon" />
 																	</template>
 																</n-button>
 															</template>
@@ -118,7 +118,7 @@
 						@click="addRow()"
 					>
 						<template #icon>
-							<Icon :name="AddIcon"></Icon>
+							<Icon :name="AddIcon" />
 						</template>
 						<span>Add row</span>
 					</n-button>
@@ -126,13 +126,13 @@
 					<div v-if="panelsReady" class="flex items-center gap-2">
 						<n-button type="success" :loading="loading" @click="print()">
 							<template #icon>
-								<Icon :name="PrintIcon"></Icon>
+								<Icon :name="PrintIcon" />
 							</template>
 							Print Report
 						</n-button>
 						<n-button type="success" :loading="loading" @click="openSettings()">
 							<template #icon>
-								<Icon :name="SettingsIcon"></Icon>
+								<Icon :name="SettingsIcon" />
 							</template>
 						</n-button>
 					</div>

@@ -1,7 +1,7 @@
 <template>
 	<n-button :size="size" :type="type" @click="gotoPage()">
 		<template #icon>
-			<Icon :name="CloudIcon"></Icon>
+			<Icon :name="CloudIcon" />
 		</template>
 		Cloud Security Assessment
 	</n-button>

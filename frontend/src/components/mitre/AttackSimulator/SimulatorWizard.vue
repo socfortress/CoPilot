@@ -117,20 +117,20 @@
 			<div class="flex items-center gap-4">
 				<n-button v-if="isPrevStepEnabled" :disabled="loading" @click="prev()">
 					<template #icon>
-						<Icon :name="ArrowLeftIcon"></Icon>
+						<Icon :name="ArrowLeftIcon" />
 					</template>
 					Prev
 				</n-button>
 				<n-button v-if="isNextStepEnabled" icon-placement="right" :disabled="loading" @click="next()">
 					<template #icon>
-						<Icon :name="ArrowRightIcon"></Icon>
+						<Icon :name="ArrowRightIcon" />
 					</template>
 					Next
 				</n-button>
 			</div>
 			<n-button v-if="isSubmitEnabled" type="primary" :disabled="!isSubmitValid" :loading @click="submit()">
 				<template #icon>
-					<Icon :name="AttackIcon"></Icon>
+					<Icon :name="AttackIcon" />
 				</template>
 				Simulate attack
 			</n-button>

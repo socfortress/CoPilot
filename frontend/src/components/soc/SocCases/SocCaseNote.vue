@@ -9,7 +9,7 @@
 							<span>
 								{{ formatDateTime(note.note_details.note_creationdate) }}
 							</span>
-							<Icon :name="TimeIcon" :size="16"></Icon>
+							<Icon :name="TimeIcon" :size="16" />
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">

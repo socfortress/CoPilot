@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="min-h-48">
 		<n-empty v-if="errorMessage" :description="errorMessage" class="h-48 justify-center">
 			<template #icon>
-				<Icon :name="WarningIcon"></Icon>
+				<Icon :name="WarningIcon" />
 			</template>
 		</n-empty>
 		<template v-else>
@@ -25,7 +25,7 @@
 						class="h-48 justify-center"
 					>
 						<template #icon>
-							<Icon :name="CheckIcon"></Icon>
+							<Icon :name="CheckIcon" />
 						</template>
 					</n-empty>
 				</template>
@@ -53,7 +53,7 @@
 								<div class="flex justify-end gap-4">
 									<n-button quaternary @click="selectedSubscription = null">
 										<template #icon>
-											<Icon :name="ArrowLeftIcon"></Icon>
+											<Icon :name="ArrowLeftIcon" />
 										</template>
 										Back
 									</n-button>
@@ -64,7 +64,7 @@
 										@click="createCheckoutSession()"
 									>
 										<template #icon>
-											<Icon :name="CartIcon"></Icon>
+											<Icon :name="CartIcon" />
 										</template>
 										Checkout
 									</n-button>

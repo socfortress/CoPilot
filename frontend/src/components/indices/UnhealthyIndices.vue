@@ -23,7 +23,7 @@
 					</template>
 					<n-empty v-else description="No Unhealthy Indices found">
 						<template #icon>
-							<Icon :name="ShieldIcon"></Icon>
+							<Icon :name="ShieldIcon" />
 						</template>
 						<template #extra>Great, all indices are healthy!</template>
 					</n-empty>

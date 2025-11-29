@@ -61,7 +61,7 @@
 
 					<n-button size="small" @click.stop="openDetails()">
 						<template #icon>
-							<Icon :name="DetailsIcon"></Icon>
+							<Icon :name="DetailsIcon" />
 						</template>
 						Details
 					</n-button>
@@ -96,13 +96,13 @@
 					<div v-if="!editing" class="flex items-center justify-end gap-4">
 						<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
 							<template #icon>
-								<Icon :name="DeleteIcon" :size="15"></Icon>
+								<Icon :name="DeleteIcon" :size="15" />
 							</template>
 							Delete
 						</n-button>
 						<n-button :disabled="loadingDelete" @click="editing = true">
 							<template #icon>
-								<Icon :name="EditIcon" :size="14"></Icon>
+								<Icon :name="EditIcon" :size="14" />
 							</template>
 							Edit
 						</n-button>

@@ -14,7 +14,7 @@
 				<div class="flex items-center justify-between gap-4 px-7 pt-2">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
-							<Icon :name="AddIcon" :size="14"></Icon>
+							<Icon :name="AddIcon" :size="14" />
 						</template>
 						Add Integration
 					</n-button>

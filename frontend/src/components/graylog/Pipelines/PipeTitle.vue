@@ -2,7 +2,7 @@
 	<div class="flex items-center gap-1 leading-[1.1]" :class="{ 'text-warning': isWarning }">
 		<n-tooltip v-if="isWarning" placement="top-start" trigger="hover">
 			<template #trigger>
-				<Icon :name="DangerIcon" :size="18"></Icon>
+				<Icon :name="DangerIcon" :size="18" />
 			</template>
 			Open Info dialog to see errors
 		</n-tooltip>

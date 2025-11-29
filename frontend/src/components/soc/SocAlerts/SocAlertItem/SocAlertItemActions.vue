@@ -2,7 +2,7 @@
 	<div class="contents">
 		<n-button v-if="existCase" type="success" secondary :size="size" @click.stop="openSocCase()">
 			<template #icon>
-				<Icon :name="ViewIcon"></Icon>
+				<Icon :name="ViewIcon" />
 			</template>
 			View SOC Case
 		</n-button>
@@ -15,7 +15,7 @@
 			@click.stop="createCase()"
 		>
 			<template #icon>
-				<Icon :name="DangerIcon"></Icon>
+				<Icon :name="DangerIcon" />
 			</template>
 			Create SOC Case
 		</n-button>
@@ -28,7 +28,7 @@
 			@click.stop="handleDelete()"
 		>
 			<template #icon>
-				<Icon :name="DeleteIcon"></Icon>
+				<Icon :name="DeleteIcon" />
 			</template>
 			Delete
 		</n-button>

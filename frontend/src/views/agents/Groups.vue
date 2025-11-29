@@ -26,7 +26,7 @@
 						<template #trigger>
 							<n-button secondary :loading="loadingRefresh" size="small" @click="refreshGroups()">
 								<template #icon>
-									<Icon :name="RefreshIcon"></Icon>
+									<Icon :name="RefreshIcon" />
 								</template>
 							</n-button>
 						</template>

@@ -2,13 +2,13 @@
 	<div class="contents">
 		<n-button :loading="loadingInvoke" type="success" secondary :size="size" @click.stop="invoke()">
 			<template #icon>
-				<Icon :name="InvokeIcon"></Icon>
+				<Icon :name="InvokeIcon" />
 			</template>
 			Invoke
 		</n-button>
 		<n-button :loading="loadingDelete" :size="size" type="error" secondary @click.stop="handleDelete()">
 			<template #icon>
-				<Icon :name="DeleteIcon"></Icon>
+				<Icon :name="DeleteIcon" />
 			</template>
 			Delete
 		</n-button>

@@ -5,8 +5,8 @@
 			<template #headerExtra>
 				<div class="flex items-center gap-2">
 					<span>{{ query.active ? "Active" : "Inactive" }}</span>
-					<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success"></Icon>
-					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary"></Icon>
+					<Icon v-if="query.active" :name="EnabledIcon" :size="14" class="text-success" />
+					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary" />
 				</div>
 			</template>
 			<template #default>

@@ -1,92 +1,92 @@
 <template>
-    <div class="agent-data-store-tab-compact">
-        <div class="flex flex-col gap-3">
-            <div class="filters-bar flex flex-wrap items-center gap-2">
-                <n-input
-                    v-model:value="textFilter"
-                    placeholder="Search artifacts..."
-                    clearable
-                    size="small"
-                    style="max-width: 250px"
-                >
-                    <template #prefix>
-                        <Icon :name="SearchIcon" :size="14" />
-                    </template>
-                </n-input>
+	<div class="agent-data-store-tab-compact">
+		<div class="flex flex-col gap-3">
+			<div class="filters-bar flex flex-wrap items-center gap-2">
+				<n-input
+					v-model:value="textFilter"
+					placeholder="Search artifacts..."
+					clearable
+					size="small"
+					style="max-width: 250px"
+				>
+					<template #prefix>
+						<Icon :name="SearchIcon" :size="14" />
+					</template>
+				</n-input>
 
-                <n-select
-                    v-model:value="statusFilter"
-                    :options="statusOptions"
-                    placeholder="Status"
-                    size="small"
-                    clearable
-                    style="max-width: 150px"
-                />
+				<n-select
+					v-model:value="statusFilter"
+					:options="statusOptions"
+					placeholder="Status"
+					size="small"
+					clearable
+					style="max-width: 150px"
+				/>
 
-                <n-button type="primary" secondary size="small" @click="getArtifacts()" :loading="loading">
-                    <template #icon>
-                        <Icon :name="RefreshIcon" />
-                    </template>
-                </n-button>
+				<n-button type="primary" secondary size="small" :loading="loading" @click="getArtifacts()">
+					<template #icon>
+						<Icon :name="RefreshIcon" />
+					</template>
+				</n-button>
 
-                <div class="flex-1"></div>
+				<div class="flex-1"></div>
 
-                <div class="flex items-center gap-3 text-xs text-secondary-color">
-                    <span>Total: <strong class="font-mono">{{ artifacts.length }}</strong></span>
-                    <span>Filtered: <strong class="font-mono">{{ artifactsFiltered.length }}</strong></span>
-                </div>
-            </div>
+				<div class="flex items-center gap-3 text-xs text-secondary-color">
+					<span>Total: <strong class="font-mono">{{ artifacts.length }}</strong></span>
+					<span>Filtered: <strong class="font-mono">{{ artifactsFiltered.length }}</strong></span>
+				</div>
+			</div>
 
-            <n-spin :show="loading">
-                <div class="artifacts-list">
-                    <n-scrollbar style="max-height: 400px">
-                        <div class="flex flex-col gap-2 pr-2">
-                            <template v-if="artifactsFiltered.length">
-                                <ArtifactCardCompact
-                                    v-for="artifact in itemsPaginated"
-                                    :key="artifact.id"
-                                    :artifact
-                                    show-actions
-                                    @download="downloadArtifact(artifact)"
-                                    @delete="deleteArtifact(artifact)"
-                                    @details="showArtifactDetails(artifact)"
-                                />
-                            </template>
-                            <template v-else>
-                                <n-empty
-                                    v-if="!loading"
-                                    description="No artifacts found"
-                                    class="h-32 justify-center"
-                                    size="small"
-                                />
-                            </template>
-                        </div>
-                    </n-scrollbar>
+			<n-spin :show="loading">
+				<div class="artifacts-list">
+					<n-scrollbar style="max-height: 400px">
+						<div class="flex flex-col gap-2 pr-2">
+							<template v-if="artifactsFiltered.length">
+								<ArtifactCardCompact
+									v-for="artifact in itemsPaginated"
+									:key="artifact.id"
+									:artifact
+									show-actions
+									@download="downloadArtifact(artifact)"
+									@delete="deleteArtifact(artifact)"
+									@details="showArtifactDetails(artifact)"
+								/>
+							</template>
+							<template v-else>
+								<n-empty
+									v-if="!loading"
+									description="No artifacts found"
+									class="h-32 justify-center"
+									size="small"
+								/>
+							</template>
+						</div>
+					</n-scrollbar>
 
-                    <div v-if="artifactsFiltered.length > pageSize" class="mt-3 flex justify-end">
-                        <n-pagination
-                            v-model:page="page"
-                            :page-size="pageSize"
-                            :page-slot="5"
-                            :item-count="artifactsFiltered.length"
-                            size="small"
-                        />
-                    </div>
-                </div>
-            </n-spin>
-        </div>
+					<div v-if="artifactsFiltered.length > pageSize" class="mt-3 flex justify-end">
+						<n-pagination
+							v-model:page="page"
+							:page-size="pageSize"
+							:page-slot="5"
+							:item-count="artifactsFiltered.length"
+							size="small"
+						/>
+					</div>
+				</div>
+			</n-spin>
+		</div>
 
-        <!-- Artifact Details Modal -->
-        <n-modal
-            v-model:show="showDetailsModal"
-            preset="card"
-            title="Artifact Details"
-            :style="{ width: '700px' }"
-            :segmented="{ content: true }"
-        >
-            <ArtifactDetails v-if="selectedArtifact" :artifact="selectedArtifact" />
-        </n-modal>
-    </div>
+		<!-- Artifact Details Modal -->
+		<n-modal
+			v-model:show="showDetailsModal"
+			preset="card"
+			title="Artifact Details"
+			:style="{ width: '700px' }"
+			:segmented="{ content: true }"
+		>
+			<ArtifactDetails v-if="selectedArtifact" :artifact="selectedArtifact" />
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">

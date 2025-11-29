@@ -2,7 +2,7 @@
 	<div class="active-response-actions flex justify-end gap-2">
 		<n-button type="success" secondary :size :loading="loadingInvoke" @click="showInvokeForm = true">
 			<template #icon>
-				<Icon :name="InvokeIcon"></Icon>
+				<Icon :name="InvokeIcon" />
 			</template>
 			Invoke Action
 		</n-button>

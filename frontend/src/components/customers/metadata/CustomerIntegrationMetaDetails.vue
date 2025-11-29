@@ -8,7 +8,7 @@
 				<template #extraActions>
 					<n-button secondary @click="setViewMode()">
 						<template #icon>
-							<Icon :name="BackIcon"></Icon>
+							<Icon :name="BackIcon" />
 						</template>
 						Back
 					</n-button>
@@ -38,13 +38,13 @@
 					<div class="flex gap-3">
 						<n-button secondary :loading @click="loadMetaData()">
 							<template #icon>
-								<Icon :name="RefreshIcon"></Icon>
+								<Icon :name="RefreshIcon" />
 							</template>
 							Refresh
 						</n-button>
 						<n-button secondary type="primary" @click="setEditMode()">
 							<template #icon>
-								<Icon :name="EditIcon"></Icon>
+								<Icon :name="EditIcon" />
 							</template>
 							Edit
 						</n-button>

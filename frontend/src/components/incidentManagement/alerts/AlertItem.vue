@@ -20,7 +20,7 @@
 						@click="compact ? undefined : openDetails()"
 					>
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
+						<Icon v-if="!compact" :name="InfoIcon" :size="16" />
 					</div>
 				</div>
 			</template>
@@ -40,7 +40,7 @@
 								<span v-if="alert.alert_creation_time">
 									{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
 								</span>
-								<Icon :name="TimeIcon" :size="16"></Icon>
+								<Icon :name="TimeIcon" :size="16" />
 							</div>
 						</template>
 						<div class="flex flex-col px-1 py-2">

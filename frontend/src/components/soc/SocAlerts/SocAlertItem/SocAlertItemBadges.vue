@@ -4,7 +4,7 @@
 			<template #trigger>
 				<Badge type="splitted" color="primary" hint-cursor>
 					<template #iconLeft>
-						<Icon :name="StatusIcon" :size="14"></Icon>
+						<Icon :name="StatusIcon" :size="14" />
 					</template>
 					<template #label>Status</template>
 					<template #value>
@@ -16,7 +16,7 @@
 		</n-tooltip>
 		<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : 'primary'">
 			<template #iconLeft>
-				<Icon :name="SeverityIcon" :size="13"></Icon>
+				<Icon :name="SeverityIcon" :size="13" />
 			</template>
 			<template #label>Severity</template>
 			<template #value>
@@ -25,7 +25,7 @@
 		</Badge>
 		<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 			<template #iconLeft>
-				<Icon :name="SourceIcon" :size="13"></Icon>
+				<Icon :name="SourceIcon" :size="13" />
 			</template>
 			<template #label>Source</template>
 			<template #value>
@@ -34,7 +34,7 @@
 		</Badge>
 		<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
 			<template #iconLeft>
-				<Icon :name="CustomerIcon" :size="13"></Icon>
+				<Icon :name="CustomerIcon" :size="13" />
 			</template>
 			<template #label>Customer</template>
 			<template #value>
@@ -57,7 +57,7 @@
 			<Badge type="active" class="cursor-pointer">
 				<template #iconLeft>
 					<n-spin :size="16" :show="loading">
-						<Icon :name="OwnerIcon" :size="16"></Icon>
+						<Icon :name="OwnerIcon" :size="16" />
 					</n-spin>
 				</template>
 				<template #label>Owner</template>
@@ -76,7 +76,7 @@
 			rel="nofollow noopener noreferrer"
 		>
 			<template #iconRight>
-				<Icon :name="LinkIcon" :size="14"></Icon>
+				<Icon :name="LinkIcon" :size="14" />
 			</template>
 			<template #label>Source link</template>
 		</Badge>

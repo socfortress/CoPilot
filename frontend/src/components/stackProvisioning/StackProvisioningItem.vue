@@ -15,7 +15,7 @@
 				@click="provision(contentPack.name)"
 			>
 				<template #icon>
-					<Icon :name="DeployIcon"></Icon>
+					<Icon :name="DeployIcon" />
 				</template>
 				Deploy
 			</n-button>

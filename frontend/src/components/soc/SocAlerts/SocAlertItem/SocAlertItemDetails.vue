@@ -32,7 +32,7 @@
 			<div class="grid gap-2 px-7 pt-4">
 				<Badge type="active" style="max-width: 145px" class="cursor-pointer" @click="gotoSocUsers(ownerId)">
 					<template #iconRight>
-						<Icon :name="LinkIcon" :size="14"></Icon>
+						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Go to users page</template>
 				</Badge>
@@ -49,7 +49,7 @@
 						>
 							<div class="text-primary flex cursor-pointer items-center gap-2">
 								<n-spin :size="16" :show="loading">
-									<Icon :name="EditIcon" :size="16"></Icon>
+									<Icon :name="EditIcon" :size="16" />
 								</n-spin>
 								<span>{{ ownerName || "Assign a user" }}</span>
 							</div>

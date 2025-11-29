@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -100,7 +100,7 @@
 			<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
 				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
 					<template #icon>
-						<Icon :name="FilterIcon"></Icon>
+						<Icon :name="FilterIcon" />
 					</template>
 				</n-button>
 			</n-badge>

@@ -3,7 +3,7 @@
 		<div class="uncommitted-entries">
 			<div class="chart grow">
 				<div class="label flex items-center gap-3">
-					<Icon v-if="isWarning" :name="DangerIcon"></Icon>
+					<Icon v-if="isWarning" :name="DangerIcon" />
 					<span>Uncommitted Journal Entries</span>
 				</div>
 				<apexchart height="70" :options="options" :series="series"></apexchart>
@@ -15,7 +15,7 @@
 		<div class="footer">
 			<n-button type="primary" ghost icon-placement="right" @click="gotoGraylogManagement('messages')">
 				<template #icon>
-					<Icon :name="LinkIcon" :size="14"></Icon>
+					<Icon :name="LinkIcon" :size="14" />
 				</template>
 				See messages
 			</n-button>

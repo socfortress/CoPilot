@@ -8,7 +8,7 @@
 			<div>
 				<n-button size="small" type="primary" @click="showForm = true">
 					<template #icon>
-						<Icon :name="UserAddIcon"></Icon>
+						<Icon :name="UserAddIcon" />
 					</template>
 					Add User
 				</n-button>
@@ -56,7 +56,7 @@
 									>
 										<n-button text>
 											<template #icon>
-												<Icon :name="DropdownIcon" :size="24"></Icon>
+												<Icon :name="DropdownIcon" :size="24" />
 											</template>
 										</n-button>
 									</n-dropdown>

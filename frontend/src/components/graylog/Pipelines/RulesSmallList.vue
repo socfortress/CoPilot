@@ -3,7 +3,7 @@
 		<n-button v-for="rule of rules" :key="rule.id" quaternary size="tiny" @click="emit('click', rule.id)">
 			<div class="btn-wrap flex items-center">
 				<span class="spacer">
-					<Icon :name="ViewIcon" :size="16"></Icon>
+					<Icon :name="ViewIcon" :size="16" />
 				</span>
 				<span class="title grow">
 					{{ rule.title }}

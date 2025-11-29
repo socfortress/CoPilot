@@ -22,7 +22,7 @@
 		<div v-if="licenseResponse" class="over-layer mobile-layer">
 			<n-alert>
 				<template #icon>
-					<Icon :name="AlertIcon" :size="18"></Icon>
+					<Icon :name="AlertIcon" :size="18" />
 				</template>
 				This function is available only for desktop devices
 			</n-alert>

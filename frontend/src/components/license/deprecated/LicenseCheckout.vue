@@ -3,7 +3,7 @@
 		<div class="flex flex-col gap-1">
 			<p class="flex items-center gap-4">
 				<span>license</span>
-				<Icon v-if="loadingLicense" :name="LoadingIcon"></Icon>
+				<Icon v-if="loadingLicense" :name="LoadingIcon" />
 			</p>
 
 			<h3 v-if="!loadingLicense">
@@ -14,7 +14,7 @@
 		<div v-if="!loadingLicense" class="actions-box mr-2 flex gap-2">
 			<n-button type="primary" @click="openCheckout()">
 				<template #icon>
-					<Icon :name="licenseKey ? ExtendIcon : LicenseIcon"></Icon>
+					<Icon :name="licenseKey ? ExtendIcon : LicenseIcon" />
 				</template>
 				{{ licenseKey ? "Extend license" : "Create new license" }}
 			</n-button>

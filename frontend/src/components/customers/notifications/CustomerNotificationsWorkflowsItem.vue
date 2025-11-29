@@ -12,8 +12,8 @@
 						:name="EnabledIcon"
 						:size="14"
 						class="text-success"
-					></Icon>
-					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary"></Icon>
+					/>
+					<Icon v-else :name="DisabledIcon" :size="14" class="text-secondary" />
 				</div>
 			</template>
 			<template #default>

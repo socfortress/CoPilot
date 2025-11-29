@@ -6,7 +6,7 @@
 				<template #trigger>
 					<div class="flex items-center gap-2">
 						{{ formatDate(job.last_success, dFormats.datetimesec) }}
-						<Icon :name="TimeIcon"></Icon>
+						<Icon :name="TimeIcon" />
 					</div>
 				</template>
 				Last success time

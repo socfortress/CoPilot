@@ -4,7 +4,7 @@
 		<div class="flex justify-end">
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKey" @click="replaceLicense()">
 				<template #icon>
-					<Icon :name="LicenseIcon"></Icon>
+					<Icon :name="LicenseIcon" />
 				</template>
 				Load License
 			</n-button>

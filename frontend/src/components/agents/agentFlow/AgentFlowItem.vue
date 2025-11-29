@@ -13,7 +13,7 @@
 							<span>
 								{{ formatDate(flow.start_time, dFormats.datetimesec) }}
 							</span>
-							<Icon :name="TimeIcon" :size="16"></Icon>
+							<Icon :name="TimeIcon" :size="16" />
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">
@@ -57,13 +57,13 @@
 					</Badge>
 					<Badge :type="flow.dirty ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="flow.dirty ? EnabledIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>Dirty</template>
 					</Badge>
 					<Badge :type="flow.user_notified ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="flow.user_notified ? EnabledIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>User notified</template>
 					</Badge>

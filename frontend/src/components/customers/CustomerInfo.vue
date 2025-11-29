@@ -11,13 +11,13 @@
 			<div class="flex items-center justify-between gap-4 px-7 pt-2">
 				<n-button size="small" :disabled="loadingDelete" @click="editing = true">
 					<template #icon>
-						<Icon :name="EditIcon" :size="14"></Icon>
+						<Icon :name="EditIcon" :size="14" />
 					</template>
 					Edit
 				</n-button>
 				<n-button size="small" type="error" ghost :loading="loadingDelete" @click="handleDelete">
 					<template #icon>
-						<Icon :name="DeleteIcon" :size="15"></Icon>
+						<Icon :name="DeleteIcon" :size="15" />
 					</template>
 					Delete Customer
 				</n-button>

@@ -48,7 +48,7 @@
 			<template #footerExtra>
 				<n-button size="small" type="primary" secondary @click.stop="showInvokeModal = true">
 					<template #icon>
-						<Icon :name="PlayIcon"></Icon>
+						<Icon :name="PlayIcon" />
 					</template>
 					Invoke
 				</n-button>

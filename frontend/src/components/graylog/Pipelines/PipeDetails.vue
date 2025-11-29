@@ -26,7 +26,7 @@
 					<template #trigger>
 						<n-button size="tiny">
 							<template #icon>
-								<Icon :name="RulesIcon" :size="18"></Icon>
+								<Icon :name="RulesIcon" :size="18" />
 							</template>
 							Rules
 							<span class="text-secondary ml-2 font-mono">{{ stage.rules.length }}</span>

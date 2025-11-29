@@ -1,7 +1,7 @@
 <template>
 	<n-button :size :type quaternary class="!w-full !justify-start" @click="showFormDrawer = true">
 		<template #icon>
-			<Icon :name="PasswordIcon" :size="14"></Icon>
+			<Icon :name="PasswordIcon" :size="14" />
 		</template>
 		Change Password
 	</n-button>

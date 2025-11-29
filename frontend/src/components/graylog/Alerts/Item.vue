@@ -5,7 +5,7 @@
 				<template #trigger>
 					<div class="hover:text-primary flex cursor-help items-center gap-2">
 						<span>#{{ alertsEvent.event.id }}</span>
-						<Icon :name="InfoIcon" :size="16"></Icon>
+						<Icon :name="InfoIcon" :size="16" />
 					</div>
 				</template>
 				<div class="flex flex-col gap-1">
@@ -54,7 +54,7 @@
 				<template #trigger>
 					<div class="hover:text-primary flex cursor-help items-center gap-2">
 						<span>{{ formatDateTime(alertsEvent.event.timestamp) }}</span>
-						<Icon :name="TimeIcon" :size="16"></Icon>
+						<Icon :name="TimeIcon" :size="16" />
 					</div>
 				</template>
 				<div class="flex flex-col px-1 py-2">

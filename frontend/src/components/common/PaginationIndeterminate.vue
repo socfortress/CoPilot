@@ -9,10 +9,10 @@
 			:disabled="disabled"
 		>
 			<template #minus-icon>
-				<Icon :name="ArrowBackIcon"></Icon>
+				<Icon :name="ArrowBackIcon" />
 			</template>
 			<template #add-icon>
-				<Icon :name="ArrowForwardIcon"></Icon>
+				<Icon :name="ArrowForwardIcon" />
 			</template>
 		</n-input-number>
 		<n-select

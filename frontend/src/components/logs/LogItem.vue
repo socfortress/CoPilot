@@ -33,7 +33,7 @@
 			<div class="flex flex-wrap items-center gap-3">
 				<Badge type="splitted" :color="eventTypeLower === LogEventType.ERROR ? 'danger' : 'primary'">
 					<template #iconLeft>
-						<Icon :name="eventTypeLower === LogEventType.ERROR ? ErrorIcon : InfoIcon" :size="14"></Icon>
+						<Icon :name="eventTypeLower === LogEventType.ERROR ? ErrorIcon : InfoIcon" :size="14" />
 					</template>
 					<template #label>Type</template>
 					<template #value>
@@ -42,7 +42,7 @@
 				</Badge>
 				<Badge v-if="log.user_id" type="splitted" color="primary">
 					<template #iconLeft>
-						<Icon :name="UserIcon" :size="14"></Icon>
+						<Icon :name="UserIcon" :size="14" />
 					</template>
 					<template #value>
 						<span class="flex items-center gap-2">

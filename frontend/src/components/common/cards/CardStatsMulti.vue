@@ -4,7 +4,7 @@
 			<div class="card-header flex items-center justify-between gap-4">
 				<div class="title flex grow items-center gap-2">
 					<span class="truncate">{{ title }}</span>
-					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
+					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12" />
 				</div>
 				<div class="icon">
 					<slot name="icon"></slot>

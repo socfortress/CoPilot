@@ -17,7 +17,7 @@
 							@click="handleDelete()"
 						>
 							<div class="flex items-center gap-2">
-								<Icon :name="TrashIcon" :size="16"></Icon>
+								<Icon :name="TrashIcon" :size="16" />
 								<span class="flex items-center gap-2">
 									<span v-if="!compactMode">Delete Alerts:</span>
 									<span class="font-mono">
@@ -37,7 +37,7 @@
 						<div v-for="alertId of checkedList" :key="alertId" class="w-full">
 							<n-button size="small" class="!w-full !justify-start" @click="clearChecked(alertId)">
 								<template #icon>
-									<Icon :name="CloseIcon" :size="18"></Icon>
+									<Icon :name="CloseIcon" :size="18" />
 								</template>
 								<span class="font-mono">#{{ alertId }}</span>
 							</n-button>
@@ -46,7 +46,7 @@
 				</n-popover>
 				<n-button v-else size="small" type="error" ghost :loading="loadingPurge" @click="handlePurge()">
 					<div class="flex items-center gap-2">
-						<Icon :name="TrashIcon" :size="16"></Icon>
+						<Icon :name="TrashIcon" :size="16" />
 						<span class="xs:block hidden">Purge</span>
 					</div>
 				</n-button>

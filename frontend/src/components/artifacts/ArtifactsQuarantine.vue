@@ -53,7 +53,7 @@
 							:disabled="!areFiltersValid"
 							@click="getData()"
 						>
-							<Icon :name="SubmitIcon"></Icon>
+							<Icon :name="SubmitIcon" />
 						</n-button>
 					</n-input-group>
 				</div>

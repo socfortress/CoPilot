@@ -151,23 +151,23 @@
 						<AlertDetailTimeline :asset />
 					</div>
 				</n-tab-pane>
-        <n-tab-pane name="File Collection" tab="File Collection" display-directive="show:lazy">
-            <div class="p-7 pt-2">
-                <FileCollectionForm
-                    v-if="asset.agent_id"
-                    :agent-id="asset.agent_id"
-                    @success="handleFileCollectionSuccess"
-                    @error="handleFileCollectionError"
-                />
-                <n-empty v-else description="No agent associated with this asset" class="h-40" />
-            </div>
-        </n-tab-pane>
-        <n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
-            <div class="p-7 pt-2">
-                <AgentDataStoreTabCompact v-if="asset.agent_id" :agent-id="asset.agent_id" />
-                <n-empty v-else description="No agent associated with this asset" class="h-40" />
-            </div>
-        </n-tab-pane>
+				<n-tab-pane name="File Collection" tab="File Collection" display-directive="show:lazy">
+					<div class="p-7 pt-2">
+						<FileCollectionForm
+							v-if="asset.agent_id"
+							:agent-id="asset.agent_id"
+							@success="handleFileCollectionSuccess"
+							@error="handleFileCollectionError"
+						/>
+						<n-empty v-else description="No agent associated with this asset" class="h-40" />
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
+					<div class="p-7 pt-2">
+						<AgentDataStoreTabCompact v-if="asset.agent_id" :agent-id="asset.agent_id" />
+						<n-empty v-else description="No agent associated with this asset" class="h-40" />
+					</div>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>

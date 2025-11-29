@@ -5,7 +5,7 @@
 		class="toggler-bookmark"
 		:class="{ active: isBookmark }"
 		@click.stop="toggleBookmark()"
-	></Icon>
+	/>
 </template>
 
 <script setup lang="ts">

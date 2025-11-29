@@ -17,19 +17,19 @@
 						<div v-if="current === 1" class="flex flex-col gap-2 px-7">
 							<CardEntity embedded hoverable clickable @click.stop="setOs('linux')">
 								<div class="flex items-center gap-3">
-									<Icon :size="18" :name="iconFromOs('linux')"></Icon>
+									<Icon :size="18" :name="iconFromOs('linux')" />
 									<span>LINUX</span>
 								</div>
 							</CardEntity>
 							<CardEntity embedded hoverable clickable @click.stop="setOs('windows')">
 								<div class="flex items-center gap-3">
-									<Icon :size="18" :name="iconFromOs('windows')"></Icon>
+									<Icon :size="18" :name="iconFromOs('windows')" />
 									<span>WINDOWS</span>
 								</div>
 							</CardEntity>
 							<CardEntity embedded hoverable clickable @click.stop="setOs('macos')">
 								<div class="flex items-center gap-3">
-									<Icon :size="18" :name="iconFromOs('macos')"></Icon>
+									<Icon :size="18" :name="iconFromOs('macos')" />
 									<span>MACOS</span>
 								</div>
 							</CardEntity>
@@ -71,7 +71,7 @@
 								<template #additionalActions>
 									<n-button :disabled="loadingActiveResponseInvoke" @click.stop="prev()">
 										<template #icon>
-											<Icon :name="ArrowLeftIcon"></Icon>
+											<Icon :name="ArrowLeftIcon" />
 										</template>
 										Prev
 									</n-button>
@@ -86,7 +86,7 @@
 				<div class="flex gap-4">
 					<n-button v-if="isPrevStepEnabled" @click.stop="prev()">
 						<template #icon>
-							<Icon :name="ArrowLeftIcon"></Icon>
+							<Icon :name="ArrowLeftIcon" />
 						</template>
 						Prev
 					</n-button>

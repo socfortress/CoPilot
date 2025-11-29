@@ -40,13 +40,13 @@
 						<template #trigger>
 							<Badge type="splitted" hint-cursor>
 								<template #iconLeft>
-									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
+									<Icon :name="AgentIcon" :size="13" class="!opacity-80" />
 								</template>
 								<template #label>Agent</template>
 								<template #value>
 									<div class="flex items-center gap-2">
 										{{ healthData.hostname }}
-										<Icon :name="InfoIcon" :size="14"></Icon>
+										<Icon :name="InfoIcon" :size="14" />
 									</div>
 								</template>
 							</Badge>

@@ -1,7 +1,7 @@
 <template>
 	<n-button :size="size" :type="type" @click="showForm = true">
 		<template #icon>
-			<Icon :name="PackIcon"></Icon>
+			<Icon :name="PackIcon" />
 		</template>
 		Stack Provisioning
 	</n-button>

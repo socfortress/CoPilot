@@ -15,13 +15,13 @@
 			</h4>
 		</template>
 		<template v-if="type === 'error'">
-			<Icon :name="ErrorIcon" class="text-error" :size="100"></Icon>
+			<Icon :name="ErrorIcon" class="text-error" :size="100" />
 			<h1 class="text-center">Checkout canceled</h1>
 		</template>
 		<div>
 			<n-button @click="gotoLicense()">
 				<template #icon>
-					<Icon :name="LicenseIcon"></Icon>
+					<Icon :name="LicenseIcon" />
 				</template>
 				View license
 			</n-button>
