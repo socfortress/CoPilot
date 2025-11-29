@@ -3,9 +3,9 @@ import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 export interface CustomerPortalSettingsPayload {
-	title: string
-	logo_base64: string
-	logo_mime_type: string
+	title: string | null
+	logo_base64: string | null
+	logo_mime_type: string | null
 }
 
 export default {

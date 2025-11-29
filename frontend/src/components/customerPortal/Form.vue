@@ -1,19 +1,27 @@
 <template>
 	<n-spin :show="loading" content-class="flex grow flex-col">
-		<div class="flex flex-col gap-4">
-			<div class="grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2">
-				<n-form-item label="Title" path="title">
-					<n-input :value="model.title" />
-				</n-form-item>
+		<div class="flex flex-col gap-10">
+			<n-form-item label="Title" path="title" :show-feedback="false">
+				<n-input v-model:value="model.title" clearable />
+			</n-form-item>
 
-				<!-- Integration Name (readonly) -->
-				<n-form-item label="Logo" path="logo">
-					<n-input :value="model.logo" />
+			<div class="flex gap-3">
+				<div v-if="model.logo">
+					<img :src="model.logo" width="66" height="66" class="object-cover" />
+				</div>
+				<n-form-item label="Logo" path="logo" :show-feedback="false">
+					<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
+						<n-button @click="openCropper()">
+							<template #icon>
+								<Icon :name="EditIcon"></Icon>
+							</template>
+							Edit Logo Image
+						</n-button>
+					</ImageCropper>
 				</n-form-item>
 			</div>
 
-			<!-- Edit Form Actions -->
-			<div class="flex items-center justify-between gap-3">
+			<div>
 				<n-button type="primary" :loading="loading" @click="save()">
 					<template #icon>
 						<Icon :name="SaveIcon"></Icon>
@@ -27,41 +35,58 @@
 
 <script setup lang="ts">
 import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customerPortal"
+import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { CustomerPortalSettings } from "@/types/customerPortal"
+import _split from "lodash/split"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+	import Icon from "@/components/common/Icon.vue"
+import ImageCropper from "@/components/common/ImageCropper.vue"
 
-interface Model {
+export interface SettingsModel {
 	title: string | null
-	logo: File | null
+	logo: string | null
 }
 
 const emit = defineEmits<{
+	(e: "update", value: SettingsModel): void
 	(e: "success"): void
 }>()
 
 const SaveIcon = "carbon:save"
+const EditIcon = "uil:image-edit"
 const message = useMessage()
 const loading = ref(false)
 const settings = ref<CustomerPortalSettings | null>(null)
-const model = ref<Model>(getDefaultModel())
+const model = ref<SettingsModel>(getDefaultModel())
 
-function getDefaultModel(entity?: CustomerPortalSettings): Model {
+function setCroppedImage(result: ImageCropperResult) {
+	const canvas = result.canvas as HTMLCanvasElement
+	model.value.logo = canvas.toDataURL()
+}
+
+function getDefaultModel(entity?: CustomerPortalSettings): SettingsModel {
 	return {
 		title: entity?.title || "",
 		logo: null
 	}
 }
 
+	function getLogoMeta(logo?: string | null): { base64: string | null, mime_type: string | null } {
+		return {
+			base64: logo || null,
+			mime_type: logo || null
+		}
+}
+
 function save() {
 	loading.value = true
 
 	const payload: CustomerPortalSettingsPayload = {
-		title: "",
-		logo_base64: "",
-		logo_mime_type: ""
+		title: model.value.title || null,
+		logo_base64: getLogoMeta(model.value.logo).base64,
+		logo_mime_type: getLogoMeta(model.value.logo).mime_type
 	}
 
 	Api.customerPortal
@@ -104,6 +129,10 @@ function getSettings() {
 			loading.value = false
 		})
 }
+
+watch(model, val => {
+	emit("update", val)
+}, { immediate: true, deep: true })
 
 onBeforeMount(() => {
 	getSettings()
