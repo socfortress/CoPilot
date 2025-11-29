@@ -1,53 +1,10 @@
 <template>
 	<div class="artifact-details flex flex-col gap-4">
 		<n-descriptions :column="1" bordered size="small">
-			<n-descriptions-item label="ID">
-				<code>{{ artifact.id }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item label="Agent ID">
-				<code>{{ artifact.agent_id }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item label="Velociraptor ID">
-				<code>{{ artifact.velociraptor_id }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item v-if="artifact.customer_code" label="Customer Code">
-				{{ artifact.customer_code }}
-			</n-descriptions-item>
-			<n-descriptions-item label="Artifact Name">
-				{{ artifact.artifact_name }}
-			</n-descriptions-item>
-			<n-descriptions-item label="Flow ID">
-				<code>{{ artifact.flow_id }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item label="File Name">
-				{{ artifact.file_name }}
-			</n-descriptions-item>
-			<n-descriptions-item label="File Size">
-				{{ fileSize }}
-			</n-descriptions-item>
-			<n-descriptions-item label="Content Type">
-				{{ artifact.content_type }}
-			</n-descriptions-item>
-			<n-descriptions-item label="File Hash">
-				<code class="text-xs">{{ artifact.file_hash }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item label="Collection Time">
-				{{ formatDate(artifact.collection_time, dFormats.datetime) }}
-			</n-descriptions-item>
-			<n-descriptions-item label="Status">
-				<n-badge :value="artifact.status" :type="statusType" />
-			</n-descriptions-item>
-			<n-descriptions-item label="Bucket">
-				{{ artifact.bucket_name }}
-			</n-descriptions-item>
-			<n-descriptions-item label="Object Key">
-				<code class="text-xs">{{ artifact.object_key }}</code>
-			</n-descriptions-item>
-			<n-descriptions-item v-if="artifact.uploaded_by" label="Uploaded By">
-				{{ artifact.uploaded_by }}
-			</n-descriptions-item>
-			<n-descriptions-item v-if="artifact.notes" label="Notes">
-				{{ artifact.notes }}
+			<n-descriptions-item v-for="field in visibleFields" :key="field.key" :label="field.label">
+				<component :is="field.component" v-bind="field.props">
+					{{ field.value }}
+				</component>
 			</n-descriptions-item>
 		</n-descriptions>
 	</div>
@@ -79,6 +36,104 @@ const statusType = computed<BadgeProps["type"]>(() => {
 	const normalizedStatus = artifact.status.toLowerCase()
 	return STATUS_TYPE_MAP[normalizedStatus] ?? "default"
 })
+
+const fields = computed(() => [
+	{
+		key: "id",
+		label: "ID",
+		value: artifact.id,
+		component: "code"
+	},
+	{
+		key: "agent_id",
+		label: "Agent ID",
+		value: artifact.agent_id,
+		component: "code"
+	},
+	{
+		key: "velociraptor_id",
+		label: "Velociraptor ID",
+		value: artifact.velociraptor_id,
+		component: "code"
+	},
+	{
+		key: "customer_code",
+		label: "Customer Code",
+		value: artifact.customer_code || "",
+		condition: !!artifact.customer_code
+	},
+	{
+		key: "artifact_name",
+		label: "Artifact Name",
+		value: artifact.artifact_name
+	},
+	{
+		key: "flow_id",
+		label: "Flow ID",
+		value: artifact.flow_id,
+		component: "code"
+	},
+	{
+		key: "file_name",
+		label: "File Name",
+		value: artifact.file_name
+	},
+	{
+		key: "file_size",
+		label: "File Size",
+		value: fileSize.value
+	},
+	{
+		key: "content_type",
+		label: "Content Type",
+		value: artifact.content_type
+	},
+	{
+		key: "file_hash",
+		label: "File Hash",
+		value: artifact.file_hash,
+		component: "code",
+		props: { class: "text-xs" }
+	},
+	{
+		key: "collection_time",
+		label: "Collection Time",
+		value: formatDate(artifact.collection_time, dFormats.datetime)
+	},
+	{
+		key: "status",
+		label: "Status",
+		value: artifact.status,
+		component: NBadge,
+		props: { value: artifact.status, type: statusType.value }
+	},
+	{
+		key: "bucket_name",
+		label: "Bucket",
+		value: artifact.bucket_name
+	},
+	{
+		key: "object_key",
+		label: "Object Key",
+		value: artifact.object_key,
+		component: "code",
+		props: { class: "text-xs" }
+	},
+	{
+		key: "uploaded_by",
+		label: "Uploaded By",
+		value: artifact.uploaded_by || "",
+		condition: !!artifact.uploaded_by
+	},
+	{
+		key: "notes",
+		label: "Notes",
+		value: artifact.notes || "",
+		condition: !!artifact.notes
+	}
+])
+
+const visibleFields = computed(() => fields.value.filter(field => field.condition !== false))
 </script>
 
 <style lang="scss" scoped>

@@ -6,16 +6,21 @@
 			</n-form-item>
 
 			<div class="flex gap-3">
-				<!-- TODO: remove logo button -->
-				<!-- TODO: logo placeholder -->
-				<div v-if="model.logo">
+				<div v-if="model.logo" class="relative">
+					<div
+						class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/10 opacity-0 transition-opacity duration-300 hover:opacity-100"
+						@click="model.logo = null"
+					>
+						<Icon :name="RemoveIcon" :size="30" class="text-secondary drop-shadow-md/90" />
+					</div>
+
 					<img :src="model.logo" width="66" height="66" class="object-cover" />
 				</div>
 				<n-form-item label="Logo" path="logo" :show-feedback="false">
 					<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
 						<n-button @click="openCropper()">
 							<template #icon>
-								<Icon :name="EditIcon"></Icon>
+								<Icon :name="EditIcon" />
 							</template>
 							Edit Logo Image
 						</n-button>
@@ -26,7 +31,7 @@
 			<div>
 				<n-button type="primary" :loading="loading" @click="save()">
 					<template #icon>
-						<Icon :name="SaveIcon"></Icon>
+						<Icon :name="SaveIcon" />
 					</template>
 					Save Changes
 				</n-button>
@@ -58,6 +63,7 @@ const emit = defineEmits<{
 
 const SaveIcon = "carbon:save"
 const EditIcon = "uil:image-edit"
+const RemoveIcon = "carbon:trash-can"
 const message = useMessage()
 const loading = ref(false)
 const settings = ref<CustomerPortalSettings | null>(null)
@@ -71,7 +77,10 @@ function setCroppedImage(result: ImageCropperResult) {
 function getDefaultModel(entity?: CustomerPortalSettings): SettingsModel {
 	return {
 		title: entity?.title || "",
-		logo: entity?.logo_base64 && entity?.logo_mime_type ? `data:${entity.logo_mime_type};base64,${entity.logo_base64}` : null
+		logo:
+			entity?.logo_base64 && entity?.logo_mime_type
+				? `data:${entity.logo_mime_type};base64,${entity.logo_base64}`
+				: null
 	}
 }
 

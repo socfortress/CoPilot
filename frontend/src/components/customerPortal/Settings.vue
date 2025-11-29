@@ -1,8 +1,6 @@
 <template>
 	<div class="flex flex-col-reverse gap-6 lg:flex-row">
-		<div
-			class="border-primary shrink-0 overflow-hidden rounded-lg border-2 bg-white px-4 py-6 lg:w-120 lg:px-8 lg:py-10"
-		>
+		<div class="border-primary shrink-0 overflow-hidden rounded-lg border-2 bg-white p-4 pt-12 lg:w-120 lg:p-8">
 			<Preview class="mx-auto" :title="previewData?.title" :logo="previewData?.logo" />
 		</div>
 
