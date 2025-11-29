@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from loguru import logger
+from datetime import datetime
 
 from app.customer_portal.schema.settings import (
     UpdatePortalSettingsRequest,
@@ -19,7 +20,7 @@ customer_portal_settings_router = APIRouter()
 @customer_portal_settings_router.post(
     "/settings",
     response_model=UpdatePortalSettingsResponse,
-    description="Update customer portal settings (logo and title)",
+    description="Update customer portal settings (logo and title). Set fields to null to restore defaults.",
     dependencies=[Depends(AuthHandler().require_any_scope("admin"))],
 )
 async def update_portal_settings(
@@ -29,6 +30,7 @@ async def update_portal_settings(
 ) -> UpdatePortalSettingsResponse:
     """
     Update customer portal settings including logo and title.
+    Set any field to null to restore its default value.
     Requires authentication.
     """
     try:
@@ -41,13 +43,30 @@ async def update_portal_settings(
             settings = CustomerPortalSettings.create_default()
             session.add(settings)
 
-        # Update settings
-        settings.update_from_request(
-            title=request.title,
-            logo_base64=request.logo_base64,
-            logo_mime_type=request.logo_mime_type,
-            user_id=auth_handler.user_id if hasattr(auth_handler, 'user_id') else None,
-        )
+        # Get default values
+        defaults = CustomerPortalSettings.get_default_values()
+
+        # Handle title: if explicitly set to null, restore default
+        if request.title is None:
+            settings.title = defaults['title']
+        else:
+            settings.title = request.title
+
+        # Handle logo_base64: if explicitly set to null, restore default
+        if request.logo_base64 is None:
+            settings.logo_base64 = defaults['logo_base64']
+        else:
+            settings.logo_base64 = request.logo_base64
+
+        # Handle logo_mime_type: if explicitly set to null, restore default
+        if request.logo_mime_type is None:
+            settings.logo_mime_type = defaults['logo_mime_type']
+        else:
+            settings.logo_mime_type = request.logo_mime_type
+
+        # Update metadata
+        settings.updated_by = auth_handler.user_id if hasattr(auth_handler, 'user_id') else None
+        settings.updated_at = datetime.now()
 
         await session.commit()
         await session.refresh(settings)

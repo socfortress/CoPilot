@@ -366,24 +366,56 @@ class CustomerPortalSettings(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
-    def update_from_request(self, title: Optional[str] = None, logo_base64: Optional[str] = None, logo_mime_type: Optional[str] = None, user_id: Optional[int] = None):
-        """Update settings from API request"""
+    def update_from_request(
+        self,
+        title: Optional[str] = None,
+        logo_base64: Optional[str] = None,
+        logo_mime_type: Optional[str] = None,
+        user_id: Optional[int] = None,
+    ) -> None:
+        """
+        Update settings from request data.
+        If a field is explicitly None, restore it to default value.
+        """
+        # Get default values for restoration
+        defaults = self.get_default_values()
+
+        # Update title - if None is passed, restore to default
         if title is not None:
             self.title = title
+        elif title is None and hasattr(self, '_explicit_none_title'):
+            self.title = defaults['title']
+
+        # Update logo_base64 - if None is passed, restore to default
         if logo_base64 is not None:
             self.logo_base64 = logo_base64
+        elif logo_base64 is None and hasattr(self, '_explicit_none_logo'):
+            self.logo_base64 = defaults['logo_base64']
+
+        # Update logo_mime_type - if None is passed, restore to default
         if logo_mime_type is not None:
             self.logo_mime_type = logo_mime_type
-        if user_id is not None:
-            self.updated_by = user_id
-        self.updated_at = datetime.utcnow()
+        elif logo_mime_type is None and hasattr(self, '_explicit_none_mime'):
+            self.logo_mime_type = defaults['logo_mime_type']
+
+        self.updated_by = user_id
+        self.updated_at = datetime.now()
+
+    @staticmethod
+    def get_default_values() -> dict:
+        """Get default values for restoration."""
+        return {
+            'title': 'CoPilot',
+            'logo_base64': None,
+            'logo_mime_type': None,
+        }
 
     @classmethod
-    def create_default(cls):
-        """Create default settings"""
+    def create_default(cls) -> "CustomerPortalSettings":
+        """Create default settings."""
+        defaults = cls.get_default_values()
         return cls(
-            title="CoPilot",
-            logo_base64=None,
-            logo_mime_type=None,
-            updated_at=datetime.utcnow()
+            title=defaults['title'],
+            logo_base64=defaults['logo_base64'],
+            logo_mime_type=defaults['logo_mime_type'],
         )
