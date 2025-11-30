@@ -429,6 +429,7 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
         ioc_field_names=await get_ioc_names(syslog_type, session),
     )
 
+
 async def resolve_asset_name_from_payload(asset_name_field: str, alert_payload: dict) -> Optional[str]:
     """
     Resolve the actual asset name value from the alert payload.
@@ -442,7 +443,7 @@ async def resolve_asset_name_from_payload(asset_name_field: str, alert_payload: 
         Optional[str]: The resolved asset name value, or None if not found
     """
     # Split by comma and strip whitespace to support multiple fields
-    possible_asset_fields = [field.strip() for field in asset_name_field.split(',')]
+    possible_asset_fields = [field.strip() for field in asset_name_field.split(",")]
 
     logger.info(f"Checking for asset name in fields: {possible_asset_fields}")
 
@@ -581,7 +582,6 @@ async def build_alert_payload(
 
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
-        #asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
         asset_payload=asset_name_value,
         timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
         alert_title_payload=cleaned_alert_title,
