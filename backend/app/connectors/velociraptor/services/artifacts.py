@@ -1,8 +1,9 @@
+from datetime import datetime
+from typing import Optional
+
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from typing import Optional
-from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
@@ -366,22 +367,24 @@ async def run_file_collection(
     """
     Run an artifact collection on a client and store the result in MinIO.
     """
-    from app.db.universal_models import AgentDataStore, Agents
     from sqlalchemy import select
+
+    from app.db.universal_models import AgentDataStore
+    from app.db.universal_models import Agents
 
     velociraptor_service = await UniversalService.create("Velociraptor")
 
     try:
         # Get agent details from database
         result = await session.execute(
-            select(Agents).where(Agents.velociraptor_id == collect_artifact_body.velociraptor_id)
+            select(Agents).where(Agents.velociraptor_id == collect_artifact_body.velociraptor_id),
         )
         agent = result.scalars().first()
 
         if not agent:
             raise HTTPException(
                 status_code=404,
-                detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found"
+                detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found",
             )
 
         # Build the query with proper VQL syntax
@@ -394,7 +397,7 @@ async def run_file_collection(
             f"`collectionSpec`='{collect_artifact_body.file}', "
             f"`Root`='{collect_artifact_body.root_disk}'"
             f"))) "
-            f"FROM scope()"
+            f"FROM scope()",
         )
 
         logger.info(f"Query: {query}")
@@ -488,6 +491,7 @@ async def run_file_collection(
             detail=f"Failed to run artifact collection: {err}",
         )
 
+
 async def fetch_file_from_filestore(
     client_id: str,
     flow_id: str,
@@ -502,8 +506,9 @@ async def fetch_file_from_filestore(
     Fetch a file from Velociraptor's filestore and save it to MinIO.
     First creates a download pack for the flow, then fetches and uploads to MinIO.
     """
-    import os
     import base64
+    import os
+
     from app.data_store.data_store_operations import upload_agent_artifact_file
 
     velociraptor_service = await UniversalService.create("Velociraptor")
@@ -514,7 +519,7 @@ async def fetch_file_from_filestore(
             logger.info(f"Fetching hostname for client {client_id}")
             query = create_query(
                 f"SELECT os_info.hostname AS Hostname "
-                f"FROM clients(client_id='{client_id}')"
+                f"FROM clients(client_id='{client_id}')",
             )
             client_info = velociraptor_service.execute_query(query, org_id=org_id)
 
@@ -543,7 +548,7 @@ async def fetch_file_from_filestore(
 
         create_download_query = create_query(
             f"SELECT create_flow_download({', '.join(download_query_parts)}) "
-            f"FROM scope()"
+            f"FROM scope()",
         )
 
         logger.info(f"Create download query: {create_download_query}")
@@ -575,7 +580,7 @@ async def fetch_file_from_filestore(
                     f"filename='/{vfs_path}', "
                     f"offset={offset}, "
                     f"length={chunk_size})) AS Data "
-                    f"FROM scope()"
+                    f"FROM scope()",
                 )
 
                 result = velociraptor_service.execute_query(query, org_id=org_id)

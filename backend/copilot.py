@@ -42,9 +42,11 @@ from app.routers import copilot_action
 from app.routers import copilot_mcp
 from app.routers import cortex
 from app.routers import crowdstrike
+from app.routers import customer_portal
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import darktrace
+from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import dfir_iris
 from app.routers import dnstwist
@@ -66,7 +68,6 @@ from app.routers import nuclei
 from app.routers import office365
 from app.routers import portainer
 from app.routers import sap_siem
-from app.routers import data_store
 from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
@@ -76,7 +77,6 @@ from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
-from app.routers import customer_portal
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler

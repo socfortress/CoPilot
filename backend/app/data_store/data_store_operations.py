@@ -1,3 +1,4 @@
+import hashlib
 import os
 from typing import Optional
 
@@ -6,7 +7,6 @@ import aiohttp
 from fastapi import HTTPException
 from fastapi import UploadFile
 from loguru import logger
-import hashlib
 
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation

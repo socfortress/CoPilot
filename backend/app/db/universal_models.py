@@ -3,9 +3,10 @@ from typing import Optional
 
 from loguru import logger
 from sqlalchemy import Column
-from sqlalchemy import Float, Text
-from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy import Float
 from sqlalchemy import LargeBinary
+from sqlalchemy import Text
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -219,6 +220,7 @@ class Agents(SQLModel, table=True):
         logger.info(f"Updated with Velociraptor details: {self}")
         self.velociraptor_org = velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None
 
+
 class AgentDataStore(SQLModel, table=True):
     __tablename__ = "agent_datastore"
 
@@ -252,6 +254,7 @@ class AgentDataStore(SQLModel, table=True):
 
     # Relationship to Agents table
     agent: Optional["Agents"] = Relationship(back_populates="data_store")
+
 
 class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"
@@ -357,6 +360,7 @@ class AgentVulnerabilities(SQLModel, table=True):
             customer_code=customer_code,
         )
 
+
 class CustomerPortalSettings(SQLModel, table=True):
     __tablename__ = "customer_portal_settings"
 
@@ -384,20 +388,20 @@ class CustomerPortalSettings(SQLModel, table=True):
         # Update title - if None is passed, restore to default
         if title is not None:
             self.title = title
-        elif title is None and hasattr(self, '_explicit_none_title'):
-            self.title = defaults['title']
+        elif title is None and hasattr(self, "_explicit_none_title"):
+            self.title = defaults["title"]
 
         # Update logo_base64 - if None is passed, restore to default
         if logo_base64 is not None:
             self.logo_base64 = logo_base64
-        elif logo_base64 is None and hasattr(self, '_explicit_none_logo'):
-            self.logo_base64 = defaults['logo_base64']
+        elif logo_base64 is None and hasattr(self, "_explicit_none_logo"):
+            self.logo_base64 = defaults["logo_base64"]
 
         # Update logo_mime_type - if None is passed, restore to default
         if logo_mime_type is not None:
             self.logo_mime_type = logo_mime_type
-        elif logo_mime_type is None and hasattr(self, '_explicit_none_mime'):
-            self.logo_mime_type = defaults['logo_mime_type']
+        elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
+            self.logo_mime_type = defaults["logo_mime_type"]
 
         self.updated_by = user_id
         self.updated_at = datetime.now()
@@ -406,9 +410,9 @@ class CustomerPortalSettings(SQLModel, table=True):
     def get_default_values() -> dict:
         """Get default values for restoration."""
         return {
-            'title': 'CoPilot',
-            'logo_base64': None,
-            'logo_mime_type': None,
+            "title": "CoPilot",
+            "logo_base64": None,
+            "logo_mime_type": None,
         }
 
     @classmethod
@@ -416,7 +420,7 @@ class CustomerPortalSettings(SQLModel, table=True):
         """Create default settings."""
         defaults = cls.get_default_values()
         return cls(
-            title=defaults['title'],
-            logo_base64=defaults['logo_base64'],
-            logo_mime_type=defaults['logo_mime_type'],
+            title=defaults["title"],
+            logo_base64=defaults["logo_base64"],
+            logo_mime_type=defaults["logo_mime_type"],
         )

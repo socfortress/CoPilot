@@ -14,8 +14,9 @@ from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationA
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse, FileCollectionBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import CollectFileBody
+from app.connectors.velociraptor.schema.artifacts import FileCollectionBody
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
@@ -165,6 +166,7 @@ async def get_velociraptor_org(session: AsyncSession, hostname: str) -> str:
 
     logger.info(f"velociraptor_org for hostname {hostname} is {agent.velociraptor_org}")
     return agent.velociraptor_org
+
 
 def format_file_path_for_os(file_path: str, os_prefix: str) -> str:
     """
@@ -604,7 +606,9 @@ async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSes
     )
     return await run_file_collection(collect_artifact_body, session)
 
+
 # Add this new route after the existing collect_file route
+
 
 @velociraptor_artifacts_router.post(
     "/collect/file/agent/{agent_id}",
@@ -634,9 +638,7 @@ async def collect_file_by_agent_id(
     logger.info(f"Received request to collect file for agent ID {agent_id}")
 
     # Query the agent from the database using agent_id
-    result = await session.execute(
-        select(Agents).filter(Agents.agent_id == agent_id)
-    )
+    result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
     agent = result.scalars().first()
 
     if not agent:
@@ -687,5 +689,6 @@ async def collect_file_by_agent_id(
             artifact_name="Generic.Collectors.File",
             file=collect_file_body.file,
             root_disk=collect_file_body.root_disk,
-        ), session
+        ),
+        session,
     )

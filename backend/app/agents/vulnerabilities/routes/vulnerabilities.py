@@ -36,8 +36,8 @@ from app.agents.vulnerabilities.services.vulnerabilities import sync_all_vulnera
 from app.agents.vulnerabilities.services.vulnerabilities import (
     sync_vulnerabilities_for_agent,
 )
-from app.auth.routes.auth import AuthHandler
 from app.auth.models.users import User
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 

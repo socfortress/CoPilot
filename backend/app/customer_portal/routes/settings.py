@@ -1,18 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from loguru import logger
 from datetime import datetime
 
-from app.customer_portal.schema.settings import (
-    UpdatePortalSettingsRequest,
-    UpdatePortalSettingsResponse,
-    PortalSettingsResponse,
-    PortalSettingsData,
-)
-from app.db.universal_models import CustomerPortalSettings
-from app.db.db_session import get_db
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from loguru import logger
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth.utils import AuthHandler
+from app.customer_portal.schema.settings import PortalSettingsData
+from app.customer_portal.schema.settings import PortalSettingsResponse
+from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
+from app.customer_portal.schema.settings import UpdatePortalSettingsResponse
+from app.db.db_session import get_db
+from app.db.universal_models import CustomerPortalSettings
 
 customer_portal_settings_router = APIRouter()
 
@@ -48,30 +50,32 @@ async def update_portal_settings(
 
         # Handle title: if explicitly set to null, restore default
         if request.title is None:
-            settings.title = defaults['title']
+            settings.title = defaults["title"]
         else:
             settings.title = request.title
 
         # Handle logo_base64: if explicitly set to null, restore default
         if request.logo_base64 is None:
-            settings.logo_base64 = defaults['logo_base64']
+            settings.logo_base64 = defaults["logo_base64"]
         else:
             settings.logo_base64 = request.logo_base64
 
         # Handle logo_mime_type: if explicitly set to null, restore default
         if request.logo_mime_type is None:
-            settings.logo_mime_type = defaults['logo_mime_type']
+            settings.logo_mime_type = defaults["logo_mime_type"]
         else:
             settings.logo_mime_type = request.logo_mime_type
 
         # Update metadata
-        settings.updated_by = auth_handler.user_id if hasattr(auth_handler, 'user_id') else None
+        settings.updated_by = auth_handler.user_id if hasattr(auth_handler, "user_id") else None
         settings.updated_at = datetime.now()
 
         await session.commit()
         await session.refresh(settings)
 
-        logger.info(f"Portal settings updated successfully by user {auth_handler.user_id if hasattr(auth_handler, 'user_id') else 'unknown'}")
+        logger.info(
+            f"Portal settings updated successfully by user {auth_handler.user_id if hasattr(auth_handler, 'user_id') else 'unknown'}",
+        )
 
         return UpdatePortalSettingsResponse(
             success=True,

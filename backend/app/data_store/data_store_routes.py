@@ -1,25 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
-from sqlalchemy.orm import selectinload
-from loguru import logger
-from typing import Optional
 import io
+from typing import Optional
 
-from app.data_store.data_store_schema import (
-    AgentDataStoreResponse,
-    AgentDataStoreListResponse,
-    AgentDataStoreData,
-)
-from app.data_store.data_store_operations import (
-    download_agent_artifact_file,
-    list_agent_artifact_files,
-    delete_agent_artifact_file,
-)
-from app.db.universal_models import AgentDataStore
-from app.db.db_session import get_db
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from fastapi.responses import StreamingResponse
+from loguru import logger
+from sqlalchemy import desc
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.auth.utils import AuthHandler
+from app.data_store.data_store_operations import delete_agent_artifact_file
+from app.data_store.data_store_operations import download_agent_artifact_file
+from app.data_store.data_store_schema import AgentDataStoreData
+from app.data_store.data_store_schema import AgentDataStoreListResponse
+from app.data_store.data_store_schema import AgentDataStoreResponse
+from app.db.db_session import get_db
+from app.db.universal_models import AgentDataStore
 
 agent_data_store_router = APIRouter()
 
@@ -103,10 +103,7 @@ async def get_agent_artifact_details(
 ) -> AgentDataStoreResponse:
     """Get details of a specific artifact collection file."""
     try:
-        query = select(AgentDataStore).where(
-            AgentDataStore.id == artifact_id,
-            AgentDataStore.agent_id == agent_id
-        )
+        query = select(AgentDataStore).where(AgentDataStore.id == artifact_id, AgentDataStore.agent_id == agent_id)
         query = query.options(selectinload(AgentDataStore.agent))
 
         result = await session.execute(query)
@@ -166,12 +163,7 @@ async def download_agent_artifact(
 ):
     """Download a specific artifact collection file."""
     try:
-        result = await session.execute(
-            select(AgentDataStore).where(
-                AgentDataStore.id == artifact_id,
-                AgentDataStore.agent_id == agent_id
-            )
-        )
+        result = await session.execute(select(AgentDataStore).where(AgentDataStore.id == artifact_id, AgentDataStore.agent_id == agent_id))
         artifact = result.scalars().first()
 
         if not artifact:
@@ -218,12 +210,7 @@ async def delete_agent_artifact(
 ):
     """Delete a specific artifact collection file."""
     try:
-        result = await session.execute(
-            select(AgentDataStore).where(
-                AgentDataStore.id == artifact_id,
-                AgentDataStore.agent_id == agent_id
-            )
-        )
+        result = await session.execute(select(AgentDataStore).where(AgentDataStore.id == artifact_id, AgentDataStore.agent_id == agent_id))
         artifact = result.scalars().first()
 
         if not artifact:
