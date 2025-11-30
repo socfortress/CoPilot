@@ -15,4 +15,6 @@ export interface SourceConfigurationModel extends SourceConfiguration {
 	timefield_name: string | null
 	alert_title_name: string | null
 	source: string | null
+	// Add helper for UI to work with arrays
+    asset_name_array?: string[]
 }
