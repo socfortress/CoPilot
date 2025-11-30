@@ -32,19 +32,49 @@ auth_router = APIRouter()
 auth_handler = AuthHandler()
 
 
+# @auth_router.post("/token", response_model=Token)
+# async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+#     """
+#     Authenticates a user and generates an access token.
+
+#     Args:
+#         form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
+
+#     Returns:
+#         dict: A dictionary containing the access token and token type.
+#     """
+#     # user = auth_handler.authenticate_user(form_data.username, form_data.password)
+
+#     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
+#     if not user:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Incorrect username or password",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+#     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#     access_token = await auth_handler.encode_token(user.username, access_token_expires)
+#     logger.info(f"Access token: {access_token}")
+#     return {"access_token": access_token, "token_type": "bearer"}
+
 @auth_router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db)
+):
     """
     Authenticates a user and generates an access token.
 
     Args:
         form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
+        session (AsyncSession): The database session.
 
     Returns:
         dict: A dictionary containing the access token and token type.
-    """
-    # user = auth_handler.authenticate_user(form_data.username, form_data.password)
 
+    Raises:
+        HTTPException: If user is customer_user role trying to access main portal.
+    """
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -52,9 +82,59 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Check if user is customer_user role
+    if user.role_id == RoleEnum.customer_user.value:
+        logger.warning(f"Customer user {user.username} attempted to log in to main portal")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
-    logger.info(f"Access token: {access_token}")
+    logger.info(f"User {user.username} logged in successfully")
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@auth_router.post("/token/customer-portal", response_model=Token)
+async def login_for_customer_portal(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticates a customer user and generates an access token for the customer portal.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
+        session (AsyncSession): The database session.
+
+    Returns:
+        dict: A dictionary containing the access token and token type.
+
+    Raises:
+        HTTPException: If user is not a customer_user role.
+    """
+    user = await auth_handler.authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Only allow customer_user role to log in here
+    if user.role_id != RoleEnum.customer_user.value:
+        logger.warning(f"Non-customer user {user.username} attempted to log in to customer portal")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account does not have access to the Customer Portal. Please log in at the main portal.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = await auth_handler.encode_token(user.username, access_token_expires)
+    logger.info(f"Customer user {user.username} logged in successfully to customer portal")
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -113,29 +193,68 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     return {"message": "User created successfully", "success": True}
 
 
+# @auth_router.post(
+#     "/login",
+#     response_model=UserLoginResponse,
+#     description="Login user",
+#     deprecated=True,
+# )
+# async def login(user: UserLogin):
+#     """
+#     Logs in a user.
+
+#     Args:
+#         user (UserLogin): The user login credentials.
+
+#     Returns:
+#         dict: A dictionary containing the authentication token, success status, and a message.
+#     """
+#     # user_found = find_user(user.username)
+#     user_found = await find_user(user.username)
+#     if not user_found:
+#         raise HTTPException(status_code=401, detail="Invalid username and/or password")
+#     verified = auth_handler.verify_password(user.password, user_found.password)
+#     if not verified:
+#         raise HTTPException(status_code=401, detail="Invalid username and/or password")
+#     token = auth_handler.encode_token(user_found.username)
+#     return {"token": token, "success": True, "message": "Login successful"}
+
 @auth_router.post(
     "/login",
     response_model=UserLoginResponse,
     description="Login user",
     deprecated=True,
 )
-async def login(user: UserLogin):
+async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
     """
     Logs in a user.
 
     Args:
         user (UserLogin): The user login credentials.
+        session (AsyncSession): The database session.
 
     Returns:
         dict: A dictionary containing the authentication token, success status, and a message.
+
+    Raises:
+        HTTPException: If user is customer_user role trying to access main portal.
     """
-    # user_found = find_user(user.username)
     user_found = await find_user(user.username)
     if not user_found:
         raise HTTPException(status_code=401, detail="Invalid username and/or password")
+
     verified = auth_handler.verify_password(user.password, user_found.password)
     if not verified:
         raise HTTPException(status_code=401, detail="Invalid username and/or password")
+
+    # Check if user is customer_user role
+    if user_found.role_id == RoleEnum.customer_user.value:
+        logger.warning(f"Customer user {user_found.username} attempted to log in to main portal")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
+        )
+
     token = auth_handler.encode_token(user_found.username)
     return {"token": token, "success": True, "message": "Login successful"}
 

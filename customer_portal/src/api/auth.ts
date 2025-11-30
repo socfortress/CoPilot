@@ -26,7 +26,7 @@ export class AuthAPI {
 		formData.append("username", credentials.username)
 		formData.append("password", credentials.password)
 
-		const response = await httpClient.post("/auth/token", formData, {
+		const response = await httpClient.post("/auth/token/customer-portal", formData, {
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded"
 			}
