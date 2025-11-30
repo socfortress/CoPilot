@@ -24,6 +24,15 @@ services:
             - "443:443"
         restart: always
 
+    # ! Optional Customer Portal Service ! #
+    # copilot-customer-portal:
+    #     image: ghcr.io/socfortress/copilot-customer-portal:latest
+    #     environment:
+    #         - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+    #     ports:
+    #         - "8080:80"
+    #     restart: always
+
     copilot-mysql:
         image: mysql:8.0.38-debian
         environment:
