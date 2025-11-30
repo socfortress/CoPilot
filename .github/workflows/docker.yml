@@ -98,4 +98,4 @@ jobs:
             with:
                 webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
                 webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-                message: "Docker image for frontend has been updated."
+                message: "Docker image for customer portal has been updated."
