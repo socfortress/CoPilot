@@ -32,31 +32,6 @@ auth_router = APIRouter()
 auth_handler = AuthHandler()
 
 
-# @auth_router.post("/token", response_model=Token)
-# async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-#     """
-#     Authenticates a user and generates an access token.
-
-#     Args:
-#         form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
-
-#     Returns:
-#         dict: A dictionary containing the access token and token type.
-#     """
-#     # user = auth_handler.authenticate_user(form_data.username, form_data.password)
-
-#     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
-#     if not user:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Incorrect username or password",
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
-#     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#     access_token = await auth_handler.encode_token(user.username, access_token_expires)
-#     logger.info(f"Access token: {access_token}")
-#     return {"access_token": access_token, "token_type": "bearer"}
-
 @auth_router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -192,32 +167,6 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     await session.commit()
     return {"message": "User created successfully", "success": True}
 
-
-# @auth_router.post(
-#     "/login",
-#     response_model=UserLoginResponse,
-#     description="Login user",
-#     deprecated=True,
-# )
-# async def login(user: UserLogin):
-#     """
-#     Logs in a user.
-
-#     Args:
-#         user (UserLogin): The user login credentials.
-
-#     Returns:
-#         dict: A dictionary containing the authentication token, success status, and a message.
-#     """
-#     # user_found = find_user(user.username)
-#     user_found = await find_user(user.username)
-#     if not user_found:
-#         raise HTTPException(status_code=401, detail="Invalid username and/or password")
-#     verified = auth_handler.verify_password(user.password, user_found.password)
-#     if not verified:
-#         raise HTTPException(status_code=401, detail="Invalid username and/or password")
-#     token = auth_handler.encode_token(user_found.username)
-#     return {"token": token, "success": True, "message": "Login successful"}
 
 @auth_router.post(
     "/login",
