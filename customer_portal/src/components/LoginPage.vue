@@ -114,6 +114,7 @@
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
 import { usePortalSettingsStore } from "../stores/portalSettings"
+import { AuthAPI } from "../api/auth"
 
 const router = useRouter()
 const portalSettingsStore = usePortalSettingsStore()
@@ -132,56 +133,46 @@ const handleLogin = async () => {
 	error.value = ""
 
 	try {
-		// Use the Vite proxy in development, direct URL in production
-		const apiUrl = import.meta.env.DEV ? "" : import.meta.env.VITE_API_URL || "http://localhost:5000"
-		const response = await fetch(`${apiUrl}/api/auth/token`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded"
-			},
-			body: new URLSearchParams({
-				username: username.value,
-				password: password.value
-			})
+		const data = await AuthAPI.login({
+			username: username.value,
+			password: password.value
 		})
 
-		if (response.ok) {
-			const data = (await response.json()) as { access_token: string; token_type: string }
+		if (data.access_token) {
+			const decoded = AuthAPI.decodeToken(data.access_token)
 
-			// Check if user is customer_user by decoding the token
-			if (data.access_token) {
-				try {
-					const payload = JSON.parse(atob(data.access_token.split(".")[1]))
-					const userScopes = payload.scopes || []
+			if (!decoded) {
+				error.value = "Invalid token received"
+				return
+			}
 
-					// Check if user has customer_user scope
-					if (userScopes.includes("customer_user")) {
-						// Store the token and user info
-						localStorage.setItem("customer-portal-auth-token", data.access_token)
-						localStorage.setItem(
-							"customer-portal-user",
-							JSON.stringify({
-								username: username.value,
-								scopes: userScopes
-							})
-						)
+			// Check if user has customer_user scope
+			if (AuthAPI.hasCustomerAccess(decoded.scopes)) {
+				// Store the token and user info
+				localStorage.setItem("customer-portal-auth-token", data.access_token)
+				localStorage.setItem(
+					"customer-portal-user",
+					JSON.stringify({
+						username: username.value,
+						scopes: decoded.scopes
+					})
+				)
 
-						router.push("/")
-					} else {
-						error.value = "Access denied. Customer portal is for customer users only."
-					}
-				} catch (err) {
-					error.value = "Invalid token received"
-				}
+				router.push("/")
 			} else {
-				error.value = "Login failed"
+				error.value = "Access denied. Customer portal is for customer users only."
 			}
 		} else {
-			const errorData = (await response.json()) as { detail?: string }
-			error.value = errorData.detail || "Login failed"
+			error.value = "Login failed"
 		}
-	} catch (err) {
-		error.value = "Network error. Please try again."
+	} catch (err: any) {
+		if (err.response?.data?.detail) {
+			error.value = err.response.data.detail
+		} else if (err.message) {
+			error.value = err.message
+		} else {
+			error.value = "Network error. Please try again."
+		}
 		console.error("Login error:", err)
 	} finally {
 		loading.value = false
