@@ -75,7 +75,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
@@ -100,7 +100,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -124,7 +124,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -148,7 +148,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -238,7 +238,7 @@
 					<li v-for="case_ in filteredCases" :key="case_.id" class="px-4 py-4 hover:bg-gray-50 sm:px-6">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center">
-								<div class="flex-shrink-0">
+								<div class="shrink-0">
 									<span
 										class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
 										:class="{
@@ -583,7 +583,7 @@
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center space-x-2">
 											<svg
-												class="h-4 w-4 flex-shrink-0 text-gray-500"
+												class="h-4 w-4 shrink-0 text-gray-500"
 												fill="none"
 												stroke="currentColor"
 												viewBox="0 0 24 24"
@@ -885,13 +885,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue"
-import { useRouter } from "vue-router"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import CasesAPI, { type Case, type CasesResponse } from "@/api/cases"
 import CaseDataStoreAPI, { type CaseDataStoreFile } from "@/api/caseDataStore"
 import AlertsAPI, { type Alert } from "@/api/alerts"
 
-const router = useRouter()
 const portalSettingsStore = usePortalSettingsStore()
 
 // Reactive data
@@ -948,11 +946,6 @@ const filteredCases = computed(() => {
 
 	return filtered.sort((a, b) => new Date(b.case_creation_time).getTime() - new Date(a.case_creation_time).getTime())
 })
-
-// Methods
-const goBack = () => {
-	router.push("/")
-}
 
 const loadCases = async () => {
 	loading.value = true

@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
 			proxy: {
 				"/api": {
 					// target: "http://copilot-backend:5000",
-					target: process.env.VITE_API_URL, // for local development
+					target: process.env.VITE_API_URL,
 					changeOrigin: true
 				}
 			}

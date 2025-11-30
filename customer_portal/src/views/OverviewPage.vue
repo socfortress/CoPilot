@@ -76,7 +76,7 @@
 				<!-- Error State -->
 				<div v-else-if="error" class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
 					<div class="flex">
-						<div class="flex-shrink-0">
+						<div class="shrink-0">
 							<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
 								<path
 									fill-rule="evenodd"
@@ -108,7 +108,7 @@
 						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
 							<div class="p-6">
 								<div class="flex items-center">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500">
 											<svg
 												class="h-5 w-5 text-white"
@@ -149,7 +149,7 @@
 						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
 							<div class="p-6">
 								<div class="flex items-center">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-orange-500">
 											<svg
 												class="h-5 w-5 text-white"
@@ -182,7 +182,7 @@
 						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
 							<div class="p-6">
 								<div class="flex items-center">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500">
 											<svg
 												class="h-5 w-5 text-white"
@@ -213,7 +213,7 @@
 						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
 							<div class="p-6">
 								<div class="flex items-center">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500">
 											<svg
 												class="h-5 w-5 text-white"
@@ -253,7 +253,7 @@
 						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
 							<div class="p-6">
 								<div class="flex items-center">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-purple-500">
 											<svg
 												class="h-5 w-5 text-white"

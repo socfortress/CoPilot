@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import LoginPage from '@/components/LoginPage.vue'
-import OverviewPage from '@/views/OverviewPage.vue'
-import AlertsPage from '@/views/AlertsPage.vue'
-import CasesPage from '@/views/CasesPage.vue'
-import CaseDetailsView from '@/views/CaseDetailsView.vue'
-import AgentsPage from '@/views/AgentsPage.vue'
+import { createRouter, createWebHistory } from "vue-router"
+import LoginPage from "@/components/LoginPage.vue"
+import OverviewPage from "@/views/OverviewPage.vue"
+import AlertsPage from "@/views/AlertsPage.vue"
+import CasesPage from "@/views/CasesPage.vue"
+import CaseDetailsView from "@/views/CaseDetailsView.vue"
+import AgentsPage from "@/views/AgentsPage.vue"
 
 const NotFound = {
 	template: `
@@ -22,48 +22,48 @@ const NotFound = {
 
 const routes = [
 	{
-		path: '/login',
-		name: 'Login',
+		path: "/login",
+		name: "Login",
 		component: LoginPage,
 		meta: { requiresGuest: true }
 	},
 	{
-		path: '/',
-		name: 'Overview',
+		path: "/",
+		name: "Overview",
 		component: OverviewPage,
 		meta: { requiresAuth: true }
 	},
 	{
-		path: '/overview',
-		redirect: '/'
+		path: "/overview",
+		redirect: "/"
 	},
 	{
-		path: '/alerts',
-		name: 'Alerts',
+		path: "/alerts",
+		name: "Alerts",
 		component: AlertsPage,
 		meta: { requiresAuth: true }
 	},
 	{
-		path: '/cases',
-		name: 'Cases',
+		path: "/cases",
+		name: "Cases",
 		component: CasesPage,
 		meta: { requiresAuth: true }
 	},
 	{
-		path: '/cases/:id',
-		name: 'CaseDetails',
+		path: "/cases/:id",
+		name: "CaseDetails",
 		component: CaseDetailsView,
 		meta: { requiresAuth: true }
 	},
 	{
-		path: '/agents',
-		name: 'Agents',
+		path: "/agents",
+		name: "Agents",
 		component: AgentsPage,
 		meta: { requiresAuth: true }
 	},
 	{
-		path: '/:pathMatch(.*)*',
-		name: 'NotFound',
+		path: "/:pathMatch(.*)*",
+		name: "NotFound",
 		component: NotFound
 	}
 ]
@@ -75,13 +75,13 @@ const router = createRouter({
 
 // Simple navigation guards
 router.beforeEach((to, _from, next) => {
-	const token = localStorage.getItem('customer-portal-auth-token')
+	const token = localStorage.getItem("customer-portal-auth-token")
 	const isAuthenticated = !!token
 
 	if (to.meta.requiresAuth && !isAuthenticated) {
-		next('/login')
+		next("/login")
 	} else if (to.meta.requiresGuest && isAuthenticated) {
-		next('/')
+		next("/")
 	} else {
 		next()
 	}

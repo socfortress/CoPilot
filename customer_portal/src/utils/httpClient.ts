@@ -10,7 +10,7 @@ let __TOKEN_LAST_CHECK: Date | null = null
 
 // Helper function to get token from localStorage
 function getToken(): string | null {
-	return localStorage.getItem('customer-portal-auth-token')
+	return localStorage.getItem("customer-portal-auth-token")
 }
 
 // Helper function to check if JWT is expiring
@@ -18,12 +18,12 @@ function isJwtExpiring(token: string | null, expiryThresholdSeconds: number): bo
 	if (!token) return false
 
 	try {
-		const payload = JSON.parse(atob(token.split('.')[1]))
+		const payload = JSON.parse(atob(token.split(".")[1]))
 		const expiryTime = payload.exp * 1000 // Convert to milliseconds
 		const currentTime = Date.now()
 		const thresholdTime = expiryThresholdSeconds * 1000
 
-		return (expiryTime - currentTime) <= thresholdTime
+		return expiryTime - currentTime <= thresholdTime
 	} catch {
 		return false
 	}
@@ -32,7 +32,7 @@ function isJwtExpiring(token: string | null, expiryThresholdSeconds: number): bo
 // Helper function for debouncing token checks
 function isDebounceTimeOver(lastCheck: Date | null): boolean {
 	if (!lastCheck) return true
-	return (Date.now() - lastCheck.getTime()) > 30000 // 30 seconds
+	return Date.now() - lastCheck.getTime() > 30000 // 30 seconds
 }
 
 httpClient.interceptors.request.use(
@@ -42,9 +42,9 @@ httpClient.interceptors.request.use(
 		if (!config.headers) config.headers = {} as AxiosRequestHeaders
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`
-			console.log('Adding Authorization header:', `Bearer ${token.substring(0, 20)}...`)
+			console.log("Adding Authorization header:", `Bearer ${token.substring(0, 20)}...`)
 		} else {
-			console.warn('No token found in localStorage')
+			console.warn("No token found in localStorage")
 		}
 
 		// Optional: Check for token expiry and handle refresh if needed
@@ -54,7 +54,7 @@ httpClient.interceptors.request.use(
 
 			// For customer portal, we'll just let the token expire and redirect to login
 			// since customer users typically don't have refresh tokens
-			console.warn('JWT token is expiring soon')
+			console.warn("JWT token is expiring soon")
 			__TOKEN_REFRESHING = false
 		}
 
@@ -69,8 +69,8 @@ httpClient.interceptors.response.use(
 		if (error.response && error.response.status === 401) {
 			if (!window.location.pathname.includes("login")) {
 				// Clear stored auth data and redirect to login
-				localStorage.removeItem('customer-portal-auth-token')
-				localStorage.removeItem('customer-portal-user')
+				localStorage.removeItem("customer-portal-auth-token")
+				localStorage.removeItem("customer-portal-user")
 				window.location.href = "/login"
 			}
 		}
