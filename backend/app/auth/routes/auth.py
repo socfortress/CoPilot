@@ -33,10 +33,7 @@ auth_handler = AuthHandler()
 
 
 @auth_router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_db)
-):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
     """
     Authenticates a user and generates an access token.
 
@@ -72,11 +69,9 @@ async def login_for_access_token(
     logger.info(f"User {user.username} logged in successfully")
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @auth_router.post("/token/customer-portal", response_model=Token)
-async def login_for_customer_portal(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_db)
-):
+async def login_for_customer_portal(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
     """
     Authenticates a customer user and generates an access token for the customer portal.
 
