@@ -11,7 +11,9 @@ SOCFortress CoPilot
 
 [![Get in Touch](https://img.shields.io/badge/📧%20Get%20in%20Touch-Friendly%20Support%20Awaits!-blue?style=for-the-badge)](https://www.socfortress.co/contact_form.html)
 
-</h1><h4 align="center">
+</h1>
+
+<h4 align="center">
 
 [SOCFortress CoPilot](https://www.socfortress.co) focuses on providing a single pane of glass for all your security operations needs. Simplify your open source security stack with a single platform focused on making open source security tools easier to use and more accessible.
 
@@ -21,6 +23,7 @@ SOCFortress CoPilot
 
 -   [Getting Started](#getting-started)
     -   [Running Copilot](#runnning-copilot)
+    -   [Customer Portal (Optional)](#customer-portal-optional)
     -   [Upgrading Copilot](#upgrading-copilot)
 -   [Connectors](#connectors)
 -   [Help](#help)
@@ -53,12 +56,12 @@ nano /etc/docker/daemon.json
 
 ```json
 {
-	"dns": ["YOUR_DNS_SERVER"],
-	"log-driver": "json-file",
-	"log-opts": {
-		"max-size": "10m",
-		"max-file": "3"
-	}
+    "dns": ["YOUR_DNS_SERVER"],
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "10m",
+        "max-file": "3"
+    }
 }
 ```
 
@@ -66,13 +69,13 @@ nano /etc/docker/daemon.json
 
 ```json
 {
-	"dns": ["YOUR_DNS_SERVER"],
-	"log-driver": "json-file",
-	"log-opts": {
-		"max-size": "10m",
-		"max-file": "3"
-	},
-	"mtu": 1450
+    "dns": ["YOUR_DNS_SERVER"],
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "10m",
+        "max-file": "3"
+    },
+    "mtu": 1450
 }
 ```
 
@@ -85,7 +88,7 @@ systemctl restart docker
 
 ```bash
 #  Clone the CoPilot repository
-wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.3/docker-compose.yml
+wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.1.4/docker-compose.yml
 
 # Edit the docker-compose.yml file to set the server name and/or the services you want to use
 
@@ -140,6 +143,85 @@ copilot-frontend:
         - "80:80"
         - "443:443"
 ```
+
+### Customer Portal (Optional)
+
+Copilot includes an optional customer-facing portal that provides a simplified interface for viewing cases, alerts, and agents. This portal is designed for customers or end-users who need visibility into their security operations without access to the full administrative interface.
+
+#### Features
+
+- 🔐 **Secure Authentication:** Customer-specific login with role-based access control
+- 📊 **Case Management:** View and track security cases assigned to your organization
+- 🚨 **Alert Monitoring:** Real-time visibility into security alerts and their status
+- 💻 **Agent Overview:** Monitor deployed security agents and their health status
+- 📝 **Case Comments:** Collaborate with your security team through case comments
+
+#### Enabling the Customer Portal
+
+The customer portal is commented out by default in the `docker-compose.yml` file. To enable it:
+
+1. **Edit the docker-compose.yml file:**
+
+```bash
+nano docker-compose.yml
+```
+
+2. **Uncomment the customer portal service:**
+
+```yaml
+# Uncomment these lines:
+copilot-customer-portal:
+    image: ghcr.io/socfortress/copilot-customer-portal:latest
+    environment:
+        - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+    ports:
+        - "8443:443"  # HTTPS access
+    restart: always
+```
+
+3. **Start the SOCFortress CoPilot stack:**
+
+```bash
+docker compose up -d
+```
+
+4. **Access the customer portal:**
+
+- **HTTPS:** `https://<your_instance_ip>:8443`
+
+#### Customer Portal SSL Configuration
+
+Like the main frontend, the customer portal uses a self-signed certificate by default. To use your own certificate:
+
+```yaml
+copilot-customer-portal:
+    image: ghcr.io/socfortress/copilot-customer-portal:latest
+    volumes:
+        - PATH_TO_YOUR_CERTS:/etc/letsencrypt
+    environment:
+        - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+    ports:
+        - "8443:443"
+```
+
+#### Creating Customer Portal Users
+
+Customer portal users are managed through the main Copilot admin interface:
+
+1. Log in to the main Copilot interface as an admin
+2. Navigate to **Users**
+3. Create a new user with the `customer_user` role
+4. Assign the user to a specific customer organization
+5. The user can now log in to the customer portal using their credentials
+
+#### Customer Portal Customization
+
+You can customize the customer portal branding and logo through the main Copilot admin interface:
+
+1. Navigate to **Customer Portal**
+2. Upload your custom logo (supports PNG, JPG, SVG)
+3. Set a custom title for the portal
+4. Changes are applied immediately to the customer portal
 
 ### Upgrading Copilot
 
