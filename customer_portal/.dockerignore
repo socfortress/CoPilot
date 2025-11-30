@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.npm
+.eslintcache
