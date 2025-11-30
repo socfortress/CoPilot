@@ -430,6 +430,34 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
     )
 
 
+async def resolve_asset_name_from_payload(asset_name_field: str, alert_payload: dict) -> Optional[str]:
+    """
+    Resolve the actual asset name value from the alert payload.
+    Supports multiple asset name fields separated by commas.
+
+    Args:
+        asset_name_field (str): The asset name field(s) from config (can be comma-separated)
+        alert_payload (dict): The alert payload containing the data
+
+    Returns:
+        Optional[str]: The resolved asset name value, or None if not found
+    """
+    # Split by comma and strip whitespace to support multiple fields
+    possible_asset_fields = [field.strip() for field in asset_name_field.split(",")]
+
+    logger.info(f"Checking for asset name in fields: {possible_asset_fields}")
+
+    # Try each possible asset field in order
+    for field in possible_asset_fields:
+        if field in alert_payload and alert_payload[field]:
+            asset_value = alert_payload[field]
+            logger.info(f"Found asset name '{asset_value}' in field '{field}'")
+            return asset_value
+
+    logger.warning(f"No asset name found in any of these fields: {possible_asset_fields}")
+    return None
+
+
 async def get_process_name(source_dict: dict) -> List[str]:
     """
     Get the process name from the source dictionary.
@@ -536,8 +564,12 @@ async def build_alert_payload(
         dict: The built alert payload.
     """
     field_names = await get_all_field_names(syslog_type, session)
-    # Validate that the field_names exist in the alert_payload
-    for field_name in [field_names.asset_name, field_names.timefield_name, field_names.alert_title_name]:
+
+    # Resolve the actual asset name from the payload using multiple possible fields
+    asset_name_value = await resolve_asset_name_from_payload(field_names.asset_name, alert_payload)
+
+    # Validate that the required fields exist in the alert_payload
+    for field_name in [field_names.timefield_name, field_names.alert_title_name]:
         if field_name not in alert_payload:
             raise HTTPException(
                 status_code=400,
@@ -550,7 +582,7 @@ async def build_alert_payload(
 
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
-        asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
+        asset_payload=asset_name_value,
         timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
         alert_title_payload=cleaned_alert_title,
         ioc_payload=await build_ioc_payload(alert_payload, field_names),
