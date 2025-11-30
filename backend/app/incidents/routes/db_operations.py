@@ -66,6 +66,7 @@ from app.incidents.schema.db_operations import CaseDataStoreResponse
 from app.incidents.schema.db_operations import CaseNotificationCreate
 from app.incidents.schema.db_operations import CaseNotificationResponse
 from app.incidents.schema.db_operations import CaseOutResponse
+from app.incidents.models import CaseAlertLink
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
@@ -1335,8 +1336,8 @@ async def update_case_status_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update case status with customer access validation"""
-    logger.info(f"Updating case {case_status.case_id} status for user: {current_user.username} with role_id: {current_user.role_id}")
+    """Update case status with customer access validation and auto-update linked alerts"""
+    logger.info(f"Updating case {case_status.case_id} status to {case_status.status} for user: {current_user.username}")
 
     # Get the case first to check customer access
     case = await get_case_by_id(case_status.case_id, db)
@@ -1345,12 +1346,88 @@ async def update_case_status_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions")
 
-    # Update the case status
-    await update_case_status(case_status, db)
+    # Store the old status BEFORE updating - this is the actual current status from the database
+    old_status = case.case_status
+
+    # Convert new status enum to string value for comparison
+    new_status_value = case_status.status.value if hasattr(case_status.status, 'value') else str(case_status.status)
+
+    logger.info(f"Case status transition: {old_status} -> {new_status_value}")
+
+    try:
+        # Get all alert IDs linked to this case BEFORE updating
+        result = await db.execute(
+            select(CaseAlertLink.alert_id)
+            .where(CaseAlertLink.case_id == case_status.case_id)
+        )
+        alert_ids = [row[0] for row in result]
+
+        logger.info(f"Found {len(alert_ids)} alerts linked to case {case_status.case_id}")
+
+        # Determine what to do with linked alerts based on status transition
+        new_alert_status = None
+
+        # Handle status transitions
+        if new_status_value == "CLOSED" and (old_status != "CLOSED" or old_status is None):
+            # Case is being closed - close all linked alerts
+            logger.info(f"Closing {len(alert_ids)} alerts linked to case {case_status.case_id}")
+            new_alert_status = "CLOSED"
+
+        elif old_status == "CLOSED" and new_status_value in ["OPEN", "IN_PROGRESS"]:
+            # Case is being reopened from CLOSED - reopen alerts to IN_PROGRESS
+            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
+            new_alert_status = "IN_PROGRESS"
+
+        elif old_status == "CLOSED" and new_status_value != "CLOSED":
+            # Case is being reopened from CLOSED to any other status - reopen to IN_PROGRESS
+            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
+            new_alert_status = "IN_PROGRESS"
+
+        else:
+            # No alert status change needed for other transitions
+            logger.info(f"No alert status change needed for transition from {old_status} to {new_status_value}")
+
+        # Update alert statuses if needed (BEFORE updating the case)
+        if new_alert_status:
+            closed_count = 0
+            failed_alerts = []
+
+            for alert_id in alert_ids:
+                try:
+                    logger.debug(f"Updating alert {alert_id} to {new_alert_status}")
+                    await update_alert_status(
+                        UpdateAlertStatus(alert_id=alert_id, status=new_alert_status),
+                        db
+                    )
+                    closed_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to update alert {alert_id}: {str(e)}")
+                    failed_alerts.append(alert_id)
+
+            logger.info(f"Successfully updated {closed_count}/{len(alert_ids)} alerts to {new_alert_status}")
+
+            if failed_alerts:
+                logger.warning(f"Failed to update alerts: {failed_alerts}")
+
+        # NOW update the case status (after we've handled the alerts)
+        await update_case_status(case_status, db)
+
+        # Commit all changes
+        await db.commit()
+
+    except Exception as e:
+        logger.error(f"Error updating case status: {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update case status: {str(e)}")
 
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(case_status.case_id, db)
-    return CaseOutResponse(cases=[updated_case], success=True, message="Case status updated successfully")
+
+    message = "Case status updated successfully"
+    if alert_ids and new_alert_status:
+        message += f" and {len(alert_ids)} linked alerts updated to {new_alert_status}"
+
+    return CaseOutResponse(cases=[updated_case], success=True, message=message)
 
 
 @incidents_db_operations_router.put("/case/escalated", response_model=CaseOutResponse)
