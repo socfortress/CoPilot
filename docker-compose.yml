@@ -31,6 +31,7 @@ services:
     #         - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
     #     ports:
     #         - "8080:80"
+    #         - "8443:443"
     #     restart: always
 
     copilot-mysql:
