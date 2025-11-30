@@ -8,7 +8,7 @@
 						<div class="hover:text-primary flex cursor-help items-center gap-2">
 							{{ formatDateTime(rule.modified_at) }}
 
-							<Icon :name="TimeIcon" :size="16"></Icon>
+							<Icon :name="TimeIcon" :size="16" />
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">

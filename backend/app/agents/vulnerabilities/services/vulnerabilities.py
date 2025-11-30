@@ -20,13 +20,13 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
 from app.agents.vulnerabilities.schema.vulnerabilities import WazuhVulnerabilityData
+from app.auth.models.users import User
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
 from app.db.universal_models import Agents
 from app.db.universal_models import AgentVulnerabilities
-from app.auth.models.users import User
 from app.middleware.customer_access import customer_access_handler
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score

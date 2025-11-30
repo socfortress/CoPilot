@@ -5,6 +5,8 @@ from loguru import logger
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import LargeBinary
+from sqlalchemy import Text
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -107,6 +109,7 @@ class Agents(SQLModel, table=True):
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
     vulnerabilities: Optional[list["AgentVulnerabilities"]] = Relationship(back_populates="agent")
+    data_store: list["AgentDataStore"] = Relationship(back_populates="agent")
 
     @classmethod
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
@@ -218,6 +221,41 @@ class Agents(SQLModel, table=True):
         self.velociraptor_org = velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None
 
 
+class AgentDataStore(SQLModel, table=True):
+    __tablename__ = "agent_datastore"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Agent information
+    agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True, nullable=False)
+    velociraptor_id: str = Field(max_length=256, nullable=False)
+    # Removed customer_code - access via agent.customer_code relationship
+
+    # Artifact collection details
+    artifact_name: str = Field(max_length=255, nullable=False, index=True)
+    flow_id: str = Field(max_length=255, nullable=False, index=True)
+    collection_time: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    # MinIO storage details
+    bucket_name: str = Field(max_length=255, nullable=False, default="velociraptor-artifacts")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: agent_id/flow_id/filename.zip
+    file_name: str = Field(max_length=255, nullable=False)  # Original file name
+    content_type: str = Field(max_length=100, default="application/zip")
+    file_size: int = Field(nullable=False)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False)  # SHA-256 hash
+
+    # Metadata
+    uploaded_by: Optional[int] = Field(default=None)  # User ID who initiated the collection
+    notes: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Status tracking
+    status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
+    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Relationship to Agents table
+    agent: Optional["Agents"] = Relationship(back_populates="data_store")
+
+
 class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"
     id: Optional[int] = Field(primary_key=True)
@@ -320,4 +358,69 @@ class AgentVulnerabilities(SQLModel, table=True):
             discovered_at=getattr(vulnerability_data, "detected_at", datetime.utcnow()),
             agent_id=agent_id,
             customer_code=customer_code,
+        )
+
+
+class CustomerPortalSettings(SQLModel, table=True):
+    __tablename__ = "customer_portal_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    title: str = Field(max_length=255, default="CoPilot")
+    logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
+    logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+    def update_from_request(
+        self,
+        title: Optional[str] = None,
+        logo_base64: Optional[str] = None,
+        logo_mime_type: Optional[str] = None,
+        user_id: Optional[int] = None,
+    ) -> None:
+        """
+        Update settings from request data.
+        If a field is explicitly None, restore it to default value.
+        """
+        # Get default values for restoration
+        defaults = self.get_default_values()
+
+        # Update title - if None is passed, restore to default
+        if title is not None:
+            self.title = title
+        elif title is None and hasattr(self, "_explicit_none_title"):
+            self.title = defaults["title"]
+
+        # Update logo_base64 - if None is passed, restore to default
+        if logo_base64 is not None:
+            self.logo_base64 = logo_base64
+        elif logo_base64 is None and hasattr(self, "_explicit_none_logo"):
+            self.logo_base64 = defaults["logo_base64"]
+
+        # Update logo_mime_type - if None is passed, restore to default
+        if logo_mime_type is not None:
+            self.logo_mime_type = logo_mime_type
+        elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
+            self.logo_mime_type = defaults["logo_mime_type"]
+
+        self.updated_by = user_id
+        self.updated_at = datetime.now()
+
+    @staticmethod
+    def get_default_values() -> dict:
+        """Get default values for restoration."""
+        return {
+            "title": "CoPilot",
+            "logo_base64": None,
+            "logo_mime_type": None,
+        }
+
+    @classmethod
+    def create_default(cls) -> "CustomerPortalSettings":
+        """Create default settings."""
+        defaults = cls.get_default_values()
+        return cls(
+            title=defaults["title"],
+            logo_base64=defaults["logo_base64"],
+            logo_mime_type=defaults["logo_mime_type"],
         )

@@ -34,7 +34,7 @@
 				</div>
 				<n-button type="primary" :loading="loading" @click="save()">
 					<template #icon>
-						<Icon :name="SaveIcon"></Icon>
+						<Icon :name="SaveIcon" />
 					</template>
 					Save Changes
 				</n-button>

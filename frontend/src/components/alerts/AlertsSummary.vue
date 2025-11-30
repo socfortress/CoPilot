@@ -38,7 +38,7 @@
 				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
 					<n-button size="small" text class="!w-full">
 						<template #icon>
-							<Icon :name="ExpandIcon"></Icon>
+							<Icon :name="ExpandIcon" />
 						</template>
 						See all alerts
 					</n-button>

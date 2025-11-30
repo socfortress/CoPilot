@@ -38,7 +38,7 @@
 			<template v-if="selectable" #footerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
-						<Icon :name="InfoIcon"></Icon>
+						<Icon :name="InfoIcon" />
 					</template>
 					Details
 				</n-button>
@@ -69,7 +69,7 @@
 						<template #trigger>
 							<n-button text size="small" class="opacity-50">
 								<template #icon>
-									<Icon :name="DeleteIcon" :size="16"></Icon>
+									<Icon :name="DeleteIcon" :size="16" />
 								</template>
 								Unsubscribe
 							</n-button>

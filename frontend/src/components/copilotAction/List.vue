@@ -16,7 +16,7 @@
 							<div class="bg-default rounded-lg">
 								<n-button size="small" class="cursor-help!">
 									<template #icon>
-										<Icon :name="InfoIcon"></Icon>
+										<Icon :name="InfoIcon" />
 									</template>
 								</n-button>
 							</div>
@@ -48,7 +48,7 @@
 						clearable
 					>
 						<template #prefix>
-							<Icon :name="SearchIcon"></Icon>
+							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
 				</div>

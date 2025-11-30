@@ -10,7 +10,7 @@
 			<template #headerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
-						<Icon :name="InfoIcon"></Icon>
+						<Icon :name="InfoIcon" />
 					</template>
 				</n-button>
 			</template>

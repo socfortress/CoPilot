@@ -26,7 +26,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="UserTypeIcon" :size="14"></Icon>
+							<Icon :name="UserTypeIcon" :size="14" />
 						</template>
 						<template #label>Type</template>
 						<template #value>
@@ -38,7 +38,7 @@
 						<template #trigger>
 							<Badge type="splitted" color="primary" :class="{ 'cursor-help': addressLabel !== '-' }">
 								<template #iconLeft>
-									<Icon :name="LocationIcon" :size="13"></Icon>
+									<Icon :name="LocationIcon" :size="13" />
 								</template>
 								<template #value>
 									<div class="flex flex-wrap items-center gap-2">
@@ -48,7 +48,7 @@
 											:name="InfoIcon"
 											:size="13"
 											class="!opacity-80"
-										></Icon>
+										/>
 									</div>
 								</template>
 							</Badge>
@@ -84,7 +84,7 @@
 
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="PhoneIcon" :size="13"></Icon>
+							<Icon :name="PhoneIcon" :size="13" />
 						</template>
 						<template #value>
 							{{ customerInfo?.phone || "-" }}
@@ -93,7 +93,7 @@
 
 					<Badge v-if="customerInfo?.parent_customer_code" type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="ParentIcon" :size="13"></Icon>
+							<Icon :name="ParentIcon" :size="13" />
 						</template>
 						<template #label>Parent</template>
 						<template #value>
@@ -106,7 +106,7 @@
 			<template v-if="!hideCardActions" #footerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
-						<Icon :name="DetailsIcon"></Icon>
+						<Icon :name="DetailsIcon" />
 					</template>
 					Details
 				</n-button>
@@ -116,7 +116,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="customerInfo?.customer_name"
 			:bordered="false"
@@ -188,7 +188,7 @@
 							class="hover:text-primary relative top-1 cursor-pointer pl-6"
 							@click="selectedTabsGroup = 'customer'"
 						>
-							<Icon :name="ArrowIcon" :size="20"></Icon>
+							<Icon :name="ArrowIcon" :size="20" />
 						</div>
 					</template>
 					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
@@ -226,7 +226,7 @@
 							class="hover:text-primary relative top-1 cursor-pointer pl-6"
 							@click="selectedTabsGroup = 'customer'"
 						>
-							<Icon :name="ArrowIcon" :size="20"></Icon>
+							<Icon :name="ArrowIcon" :size="20" />
 						</div>
 					</template>
 					<n-tab-pane name="Wazuh Worker" tab="Wazuh Worker" display-directive="show:lazy">

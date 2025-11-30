@@ -7,7 +7,7 @@
 				<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
 					<n-button @click="openCropper()">
 						<template #icon>
-							<Icon :name="EditIcon"></Icon>
+							<Icon :name="EditIcon" />
 						</template>
 						Edit Logo Image
 					</n-button>

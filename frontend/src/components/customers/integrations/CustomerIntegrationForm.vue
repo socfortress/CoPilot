@@ -7,7 +7,7 @@
 						<n-step title="Choose Integration" />
 						<n-step title="Set Auth Keys">
 							<template #icon>
-								<Icon v-if="!isAuthKeysStepEnabled" :name="SkipIcon"></Icon>
+								<Icon v-if="!isAuthKeysStepEnabled" :name="SkipIcon" />
 							</template>
 						</n-step>
 					</n-steps>
@@ -55,13 +55,13 @@
 			<div class="flex gap-4">
 				<n-button v-if="isPrevStepEnabled" @click="prev()">
 					<template #icon>
-						<Icon :name="ArrowLeftIcon"></Icon>
+						<Icon :name="ArrowLeftIcon" />
 					</template>
 					Prev
 				</n-button>
 				<n-button v-if="isNextStepShown" :disabled="!isNextStepEnabled" icon-placement="right" @click="next()">
 					<template #icon>
-						<Icon :name="ArrowRightIcon"></Icon>
+						<Icon :name="ArrowRightIcon" />
 					</template>
 					Next
 				</n-button>

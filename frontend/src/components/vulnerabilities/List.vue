@@ -19,7 +19,7 @@
 			<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
 					<template #icon>
-						<Icon :name="FilterIcon"></Icon>
+						<Icon :name="FilterIcon" />
 					</template>
 				</n-button>
 			</n-badge>

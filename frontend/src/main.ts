@@ -20,3 +20,6 @@ app.use(i18n)
 app.use(router)
 
 app.mount("#app")
+
+// TODO: Rename all files to file-case. For example: activeResponse.ts -> active-response.ts
+// TODO: use .ts files instead of .d.ts files

@@ -12,7 +12,7 @@
 		<div class="flex justify-end">
 			<n-button strong secondary type="primary" @click="search()">
 				<template #icon>
-					<Icon :name="SearchIcon"></Icon>
+					<Icon :name="SearchIcon" />
 				</template>
 				Search
 			</n-button>

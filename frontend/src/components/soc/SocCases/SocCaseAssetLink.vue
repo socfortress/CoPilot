@@ -33,7 +33,7 @@
 			<n-collapse @item-header-click="showSocCase($event.expanded)">
 				<template #arrow>
 					<div class="mx-5 flex">
-						<Icon :name="ChevronIcon"></Icon>
+						<Icon :name="ChevronIcon" />
 					</div>
 				</template>
 				<n-collapse-item>

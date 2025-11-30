@@ -29,13 +29,13 @@
 						<div class="flex flex-wrap items-center gap-3">
 							<Badge type="splitted" color="primary">
 								<template #iconLeft>
-									<Icon :name="UserIcon" :size="14"></Icon>
+									<Icon :name="UserIcon" :size="14" />
 								</template>
 								<template #value>{{ portainerStack.CreatedBy }}</template>
 							</Badge>
 							<Badge type="splitted" color="primary">
 								<template #iconLeft>
-									<Icon :name="DateIcon" :size="14"></Icon>
+									<Icon :name="DateIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ formatDate(portainerStack.CreationDate, dFormats.datetimesec) }}
@@ -47,7 +47,7 @@
 						<div class="flex flex-wrap items-center justify-end gap-3">
 							<n-button secondary size="small" @click.stop="showResourceControl = true">
 								<template #icon>
-									<Icon :name="ViewIcon"></Icon>
+									<Icon :name="ViewIcon" />
 								</template>
 								ResourceControl
 							</n-button>
@@ -60,7 +60,7 @@
 								@click.stop="stop()"
 							>
 								<template #icon>
-									<Icon :name="StopIcon"></Icon>
+									<Icon :name="StopIcon" />
 								</template>
 								Stop Worker
 							</n-button>
@@ -73,7 +73,7 @@
 								@click.stop="start()"
 							>
 								<template #icon>
-									<Icon :name="StartIcon"></Icon>
+									<Icon :name="StartIcon" />
 								</template>
 								Start Worker
 							</n-button>

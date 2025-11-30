@@ -2,7 +2,7 @@
 	<div class="flex flex-wrap justify-end gap-2">
 		<n-button v-if="socAlertFieldValue" type="success" secondary :size="size" @click.stop="gotoSocAlertUrl()">
 			<template #icon>
-				<Icon :name="ViewIcon"></Icon>
+				<Icon :name="ViewIcon" />
 			</template>
 			View SOC Alert
 		</n-button>
@@ -15,13 +15,13 @@
 			@click.stop="createAlert()"
 		>
 			<template #icon>
-				<Icon :name="DangerIcon"></Icon>
+				<Icon :name="DangerIcon" />
 			</template>
 			Create SOC Alert
 		</n-button>
 		<n-button v-if="alertAskMessage" type="success" secondary :size="size" @click.stop="showSocResponse = true">
 			<template #icon>
-				<Icon :name="ViewIcon"></Icon>
+				<Icon :name="ViewIcon" />
 			</template>
 			View SOCFortress Response
 		</n-button>
@@ -34,7 +34,7 @@
 			@click.stop="askSOCFortress()"
 		>
 			<template #icon>
-				<Icon :name="AskIcon"></Icon>
+				<Icon :name="AskIcon" />
 			</template>
 			Ask SOCFortress
 		</n-button>
@@ -46,7 +46,7 @@
 			@click.stop="wazuhManagerRuleExclude()"
 		>
 			<template #icon>
-				<Icon :name="RulesIcon"></Icon>
+				<Icon :name="RulesIcon"/>
 			</template>
 			Exclude Rule in Wazuh
 		</n-button> -->
@@ -77,7 +77,7 @@
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			title="Recommended exclusion for a Wazuh Rule"
 			:bordered="false"
-			content-class="!p-0"
+			content-class="p-0!"
 			segmented
 		>
 			<AlertWazuhRules v-if="wazuhRuleData" :data="wazuhRuleData" />
@@ -112,7 +112,7 @@ const emit = defineEmits<{
 const DangerIcon = "majesticons:exclamation-line"
 const AskIcon = "majesticons:question-mark-circle-line"
 const ViewIcon = "iconoir:eye-solid"
-const RulesIcon = "carbon:rule-cancelled"
+// const RulesIcon = "carbon:rule-cancelled"
 
 const router = useRouter()
 const message = useMessage()
@@ -131,7 +131,7 @@ const wazuhRuleData = ref<WazuhRuleExclude | null>(null)
 const socAlertFieldValue = computed(() => (socAlertField === "alert_id" ? alertId.value : alertUrl.value))
 
 const isAskVisible = computed(() => alert._source?.rule_group3 === "sigma" && !alertAskMessage.value)
-const isWazuhRulesVisible = computed(() => alert._source)
+// const _isWazuhRulesVisible = computed(() => alert._source)
 
 watch(loading, val => {
 	if (val) {
@@ -188,6 +188,7 @@ function askSOCFortress() {
 		})
 }
 
+/*
 function wazuhManagerRuleExclude() {
 	if (wazuhRuleData.value) {
 		showWazuhRuleExclude.value = true
@@ -216,6 +217,7 @@ function wazuhManagerRuleExclude() {
 			loadingWazuhRuleExclude.value = false
 		})
 }
+*/
 
 function createAlert() {
 	loadingSocAlert.value = true

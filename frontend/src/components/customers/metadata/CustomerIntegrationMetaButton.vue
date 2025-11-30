@@ -2,7 +2,7 @@
 	<div>
 		<n-button :size @click.stop="showDetails = true">
 			<template #icon>
-				<Icon :name="MetaIcon"></Icon>
+				<Icon :name="MetaIcon" />
 			</template>
 			Meta Details
 		</n-button>

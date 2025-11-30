@@ -7,6 +7,7 @@ repos:
           - id: check-yaml
             args: ["--unsafe"]
           - id: end-of-file-fixer
+            exclude: '\.json$'
           - id: check-json
           - id: trailing-whitespace
           - id: check-added-large-files

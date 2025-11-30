@@ -8,7 +8,7 @@
 			<template v-if="integration.deployed" #footerMain>
 				<Badge type="active">
 					<template #iconLeft>
-						<Icon :name="DeployIcon" :size="13"></Icon>
+						<Icon :name="DeployIcon" :size="13" />
 					</template>
 					<template #value>Deployed</template>
 				</Badge>
@@ -17,7 +17,7 @@
 				<div class="flex flex-wrap gap-3">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
-							<Icon :name="DetailsIcon"></Icon>
+							<Icon :name="DetailsIcon" />
 						</template>
 						Details
 					</n-button>

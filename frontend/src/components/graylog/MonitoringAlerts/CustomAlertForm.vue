@@ -96,7 +96,7 @@
 									<n-form-item size="small">
 										<n-button type="error" secondary @click="removeCustomFiled(cf.key)">
 											<template #icon>
-												<Icon :name="RemoveIcon" :size="16"></Icon>
+												<Icon :name="RemoveIcon" :size="16" />
 											</template>
 										</n-button>
 									</n-form-item>
@@ -105,7 +105,7 @@
 							<div class="mt-3">
 								<n-button @click="addCustomFiled()">
 									<template #icon>
-										<Icon :name="AddIcon"></Icon>
+										<Icon :name="AddIcon" />
 									</template>
 									Add Custom Field
 								</n-button>

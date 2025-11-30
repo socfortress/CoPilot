@@ -10,7 +10,7 @@
 				@click="toggleState()"
 			>
 				<template #icon>
-					<Icon :name="job.enabled ? PauseIcon : StartIcon"></Icon>
+					<Icon :name="job.enabled ? PauseIcon : StartIcon" />
 				</template>
 				{{ job.enabled ? "Pause" : "Start" }}
 			</n-button>
@@ -18,13 +18,13 @@
 		<div class="flex items-center gap-3">
 			<n-button :size type="success" secondary :loading="loadingRun" @click="run()">
 				<template #icon>
-					<Icon :name="RunIcon"></Icon>
+					<Icon :name="RunIcon" />
 				</template>
 				Run once
 			</n-button>
 			<n-button :size secondary :loading="loadingUpdate" @click="showForm = true">
 				<template #icon>
-					<Icon :name="UpdatedIcon"></Icon>
+					<Icon :name="UpdatedIcon" />
 				</template>
 			</n-button>
 		</div>

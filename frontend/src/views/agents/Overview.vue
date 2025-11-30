@@ -2,7 +2,7 @@
 	<div class="page">
 		<div class="agent-toolbar">
 			<div class="back-btn" @click="gotoAgent()">
-				<Icon :name="ArrowIcon" :size="16"></Icon>
+				<Icon :name="ArrowIcon" :size="16" />
 				<span>Agents list</span>
 			</div>
 			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
@@ -26,7 +26,7 @@
 										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 									>
 										<template #icon>
-											<Icon :name="StarIcon"></Icon>
+											<Icon :name="StarIcon" />
 										</template>
 									</n-button>
 								</template>
@@ -40,7 +40,7 @@
 						<n-tag v-if="isOnline" type="success" round :bordered="false">ONLINE</n-tag>
 						<n-tag v-if="isQuarantined" type="warning" round :bordered="false">
 							<template #icon>
-								<Icon :name="QuarantinedIcon"></Icon>
+								<Icon :name="QuarantinedIcon" />
 							</template>
 							<span>QUARANTINED</span>
 						</n-tag>
@@ -134,6 +134,16 @@
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
 						<ActiveResponseAgent v-if="agent" :agent="agent" embedded />
 					</n-tab-pane>
+					<n-tab-pane name="file-collection" tab="File Collection" display-directive="show:lazy">
+						<div class="section">
+							<FileCollectionForm v-if="agent" :agent-id="agent.agent_id" />
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="data-store" tab="Data Store" display-directive="show:lazy">
+						<div class="section">
+							<AgentDataStoreTab v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
 				</n-tabs>
 			</n-spin>
 		</n-card>
@@ -167,6 +177,10 @@ const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifac
 const ArtifactsCommand = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCommand.vue"))
 const ArtifactsQuarantine = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsQuarantine.vue"))
 const ActiveResponseAgent = defineAsyncComponent(() => import("@/components/activeResponse/ActiveResponseAgent.vue"))
+const AgentDataStoreTab = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStoreTab.vue"))
+const FileCollectionForm = defineAsyncComponent(
+	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
+)
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"

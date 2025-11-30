@@ -6,7 +6,7 @@
 			<template #footerMain>
 				<Badge :type="isEnabled ? 'active' : 'muted'">
 					<template #iconRight>
-						<Icon :name="isEnabled ? EnabledIcon : DisabledIcon" :size="13"></Icon>
+						<Icon :name="isEnabled ? EnabledIcon : DisabledIcon" :size="13" />
 					</template>
 					<template #label>
 						<span class="whitespace-nowrap">
@@ -25,7 +25,7 @@
 					@click="openFormDialog()"
 				>
 					<template #icon>
-						<Icon :name="EnableIcon"></Icon>
+						<Icon :name="EnableIcon" />
 					</template>
 					Enable
 				</n-button>

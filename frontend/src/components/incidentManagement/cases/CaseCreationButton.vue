@@ -1,7 +1,7 @@
 <template>
 	<n-button :size type="primary" :loading="loading" @click="showForm = true">
 		<template v-if="showIcon" #icon>
-			<Icon :name="NewCaseIcon" :size="14"></Icon>
+			<Icon :name="NewCaseIcon" :size="14" />
 		</template>
 		<span>Create Case</span>
 	</n-button>

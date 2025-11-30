@@ -17,7 +17,7 @@
 		<div class="flex min-h-52 flex-col gap-6">
 			<div v-if="healthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
 				<div class="text-primary mb-2 flex items-center gap-2">
-					<Icon :name="CheckIcon" :size="16"></Icon>
+					<Icon :name="CheckIcon" :size="16" />
 					Healthy
 					<code>{{ healthyList.length }}</code>
 				</div>
@@ -33,7 +33,7 @@
 			</div>
 			<div v-if="unhealthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
 				<div class="text-warning mb-2 flex items-center gap-2">
-					<Icon :name="AlertIcon" :size="16"></Icon>
+					<Icon :name="AlertIcon" :size="16" />
 					Unhealthy
 					<code>{{ unhealthyList.length }}</code>
 				</div>

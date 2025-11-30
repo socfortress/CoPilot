@@ -30,7 +30,7 @@
 				@click="showAddCustomer = true"
 			>
 				<template #icon>
-					<Icon :name="AddUserIcon" :size="14"></Icon>
+					<Icon :name="AddUserIcon" :size="14" />
 				</template>
 				<div class="flex items-center gap-2">
 					<span>Add Customer</span>

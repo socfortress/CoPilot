@@ -1,7 +1,7 @@
 <template>
 	<n-button size="small" secondary :loading="loading" @click="showForm = true">
 		<template #icon>
-			<Icon :name="SettingsIcon" :size="14"></Icon>
+			<Icon :name="SettingsIcon" :size="14" />
 		</template>
 		Default Settings
 	</n-button>

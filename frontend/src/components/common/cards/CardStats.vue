@@ -8,7 +8,7 @@
 				<div class="info flex grow flex-col overflow-hidden">
 					<div class="title flex items-center gap-2">
 						{{ title }}
-						<Icon v-if="hovered" :name="ArrowRightIcon" :size="12"></Icon>
+						<Icon v-if="hovered" :name="ArrowRightIcon" :size="12" />
 					</div>
 					<div v-if="value" class="value mt-1">
 						{{ value }}

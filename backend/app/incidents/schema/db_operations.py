@@ -322,11 +322,12 @@ class LinkedCaseCreate(BaseModel):
     assigned_to: Optional[str] = None
     id: int
 
-    @validator('case_creation_time', pre=True)
+    @validator("case_creation_time", pre=True)
     def format_case_creation_time(cls, v):
         if isinstance(v, datetime):
-            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return v
+
 
 class CaseCreateFromAlert(BaseModel):
     alert_id: int
@@ -385,10 +386,10 @@ class CommentBase(BaseModel):
     comment: str
     created_at: str
 
-    @validator('created_at', pre=True)
+    @validator("created_at", pre=True)
     def format_created_at(cls, v):
         if isinstance(v, datetime):
-            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return v
 
 
@@ -399,10 +400,10 @@ class CaseCommentBase(BaseModel):
     comment: str
     created_at: str
 
-    @validator('created_at', pre=True)
+    @validator("created_at", pre=True)
     def format_created_at(cls, v):
         if isinstance(v, datetime):
-            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return v
 
 
@@ -442,10 +443,10 @@ class AlertOut(BaseModel):
     linked_cases: List[LinkedCaseCreate] = []
     iocs: List[IoCBase] = []
 
-    @validator('alert_creation_time', 'time_closed', pre=True)
+    @validator("alert_creation_time", "time_closed", pre=True)
     def format_datetime(cls, v):
         if isinstance(v, datetime):
-            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return v
 
 
@@ -473,10 +474,10 @@ class CaseOut(BaseModel):
     escalated: bool = False
     comments: List[CaseCommentBase] = []
 
-    @validator('case_creation_time', pre=True)
+    @validator("case_creation_time", pre=True)
     def format_case_creation_time(cls, v):
         if isinstance(v, datetime):
-            return v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return v
 
 

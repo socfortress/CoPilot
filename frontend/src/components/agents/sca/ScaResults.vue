@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -46,7 +46,7 @@
 					<div class="bg-default rounded-lg">
 						<n-button size="small">
 							<template #icon>
-								<Icon :name="FilterIcon"></Icon>
+								<Icon :name="FilterIcon" />
 							</template>
 						</n-button>
 					</div>

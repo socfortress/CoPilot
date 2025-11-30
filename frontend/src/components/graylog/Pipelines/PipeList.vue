@@ -16,7 +16,7 @@
 						<template #header-extra>
 							<n-button size="small" @click.stop="openModal(pipe)">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</template>

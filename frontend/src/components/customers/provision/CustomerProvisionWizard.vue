@@ -10,12 +10,12 @@
 							<n-step title="Subscription" />
 							<n-step title="Infrastructure">
 								<template #icon>
-									<Icon v-if="!isInfrastructureEnabled" :name="SkipIcon"></Icon>
+									<Icon v-if="!isInfrastructureEnabled" :name="SkipIcon" />
 								</template>
 							</n-step>
 							<n-step title="Wazuh Worker" :status="!isWazuhStepEnabled ? 'wait' : undefined">
 								<template #icon>
-									<Icon v-if="!isWazuhStepEnabled" :name="SkipIcon"></Icon>
+									<Icon v-if="!isWazuhStepEnabled" :name="SkipIcon" />
 								</template>
 							</n-step>
 						</n-steps>
@@ -248,13 +248,13 @@
 				<div class="flex gap-4">
 					<n-button v-if="isPrevStepEnabled" @click="prev()">
 						<template #icon>
-							<Icon :name="ArrowLeftIcon"></Icon>
+							<Icon :name="ArrowLeftIcon" />
 						</template>
 						Prev
 					</n-button>
 					<n-button v-if="isNextStepEnabled" icon-placement="right" @click="next()">
 						<template #icon>
-							<Icon :name="ArrowRightIcon"></Icon>
+							<Icon :name="ArrowRightIcon" />
 						</template>
 						Next
 					</n-button>

@@ -31,3 +31,8 @@ export interface MatchingParameter {
 	type: string
 	default?: string
 }
+
+export interface FileCollection {
+	flow_id?: string
+	session_id?: string
+}

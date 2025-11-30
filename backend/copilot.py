@@ -42,9 +42,11 @@ from app.routers import copilot_action
 from app.routers import copilot_mcp
 from app.routers import cortex
 from app.routers import crowdstrike
+from app.routers import customer_portal
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import darktrace
+from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import dfir_iris
 from app.routers import dnstwist
@@ -153,6 +155,8 @@ api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
+api_router.include_router(data_store.router)
+api_router.include_router(customer_portal.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
 api_router.include_router(license.router)

@@ -17,7 +17,7 @@
 						<template #action>
 							<n-button size="tiny" quaternary class="!w-full" @click="clearFieldsHistory()">
 								<template #icon>
-									<Icon :name="ClearIcon"></Icon>
+									<Icon :name="ClearIcon" />
 								</template>
 								Clear history
 							</n-button>
@@ -47,7 +47,7 @@
 		<div class="flex justify-end">
 			<n-button strong secondary type="primary" @click="emit('search')">
 				<template #icon>
-					<Icon :name="SearchIcon"></Icon>
+					<Icon :name="SearchIcon" />
 				</template>
 				Search
 			</n-button>

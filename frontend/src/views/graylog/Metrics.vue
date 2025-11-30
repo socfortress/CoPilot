@@ -4,7 +4,7 @@
 			<div class="info flex items-center gap-3">
 				<n-button size="small" type="primary" secondary :loading="loading" @click="getData()">
 					<template #icon>
-						<Icon :name="UpdatedIcon" :size="15"></Icon>
+						<Icon :name="UpdatedIcon" :size="15" />
 					</template>
 				</n-button>
 				<span>Last check:</span>
@@ -14,13 +14,13 @@
 			<div class="toolbar flex items-center gap-3">
 				<n-button v-if="!isRunning" size="small" type="primary" class="!w-24" @click="start()">
 					<template #icon>
-						<Icon :name="StartIcon"></Icon>
+						<Icon :name="StartIcon" />
 					</template>
 					Start
 				</n-button>
 				<n-button v-if="isRunning" size="small" type="error" ghost class="!w-24" @click="stop()">
 					<template #icon>
-						<Icon :name="StopIcon"></Icon>
+						<Icon :name="StopIcon" />
 					</template>
 					Stop
 				</n-button>

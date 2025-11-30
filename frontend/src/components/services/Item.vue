@@ -28,7 +28,7 @@
 			<template #footerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
-						<Icon :name="InfoIcon"></Icon>
+						<Icon :name="InfoIcon" />
 					</template>
 					Details
 				</n-button>

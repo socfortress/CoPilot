@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -41,7 +41,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-pointer">
 								<template #icon>
-									<Icon :name="MenuIcon"></Icon>
+									<Icon :name="MenuIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -76,7 +76,7 @@
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
-									<Icon :name="FilterIcon"></Icon>
+									<Icon :name="FilterIcon" />
 								</template>
 							</n-button>
 						</n-badge>

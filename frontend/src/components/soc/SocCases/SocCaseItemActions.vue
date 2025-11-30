@@ -9,19 +9,19 @@
 			@click.stop="reopenCase()"
 		>
 			<template #icon>
-				<Icon :name="OpenIcon"></Icon>
+				<Icon :name="OpenIcon" />
 			</template>
 			Reopen
 		</n-button>
 		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size="size" @click.stop="closeCase()">
 			<template #icon>
-				<Icon :name="CloseIcon"></Icon>
+				<Icon :name="CloseIcon" />
 			</template>
 			Close
 		</n-button>
 		<n-button :loading="loadingCaseDelete" :size="size" type="error" secondary @click.stop="handleDelete()">
 			<template #icon>
-				<Icon :name="DeleteIcon"></Icon>
+				<Icon :name="DeleteIcon" />
 			</template>
 			Delete
 		</n-button>

@@ -2,14 +2,14 @@
 	<div class="contents">
 		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size secondary @click.stop="provision()">
 			<template #icon>
-				<Icon :name="DeployIcon"></Icon>
+				<Icon :name="DeployIcon" />
 			</template>
 			Deploy
 		</n-button>
 
 		<n-button v-if="!hideDeleteButton" :size type="error" ghost :loading="loadingDelete" @click.stop="handleDelete">
 			<template #icon>
-				<Icon :name="DeleteIcon" :size="15"></Icon>
+				<Icon :name="DeleteIcon" :size="15" />
 			</template>
 			Delete
 		</n-button>

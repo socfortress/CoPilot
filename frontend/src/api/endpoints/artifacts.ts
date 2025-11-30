@@ -2,6 +2,7 @@ import type {
 	Artifact,
 	CollectResult,
 	CommandResult,
+	FileCollection,
 	MatchingParameter,
 	QuarantineResult,
 	Recommendation
@@ -46,6 +47,11 @@ export interface ArtifactRecommendationRequest {
 	prompt: string | object
 }
 
+export interface FileCollectionByAgentRequest {
+	file: string
+	root_disk: string
+}
+
 export default {
 	getAll(filters?: ArtifactsQuery) {
 		let url = "/artifacts"
@@ -83,5 +89,8 @@ export default {
 				total_matches: number
 			}
 		>(`/artifacts/artifact/${artifactName}/parameters/${parameterPrefix}`)
+	},
+	collectFileByAgentId(agentId: string, payload: FileCollectionByAgentRequest) {
+		return HttpClient.post<FlaskBaseResponse & FileCollection>(`/artifacts/collect/file/agent/${agentId}`, payload)
 	}
 }

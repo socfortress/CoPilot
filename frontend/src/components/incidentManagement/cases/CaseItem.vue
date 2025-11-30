@@ -15,7 +15,7 @@
 					@click="compact ? undefined : openDetails()"
 				>
 					<span>#{{ caseEntity.id }}</span>
-					<Icon v-if="!compact" :name="InfoIcon" :size="16"></Icon>
+					<Icon v-if="!compact" :name="InfoIcon" :size="16" />
 				</div>
 			</template>
 			<template v-if="caseEntity?.case_creation_time" #headerExtra>

@@ -49,7 +49,7 @@
 						>
 							{{ showBadges ? "Less info" : "More info" }}
 							<span class="flex items-center transition-transform" :class="{ 'rotate-90': showBadges }">
-								<Icon :name="ChevronIcon" :size="14"></Icon>
+								<Icon :name="ChevronIcon" :size="14" />
 							</span>
 						</div>
 						<n-collapse-transition :show="!showBadgesToggle || showBadges">
@@ -73,7 +73,7 @@
 				<n-collapse>
 					<template #arrow>
 						<div class="mx-5 flex">
-							<Icon :name="ChevronIcon"></Icon>
+							<Icon :name="ChevronIcon" />
 						</div>
 					</template>
 					<n-collapse-item>

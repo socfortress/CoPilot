@@ -145,6 +145,7 @@ class CustomerCodeFieldName(SQLModel, table=True):
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
 
+
 class CaseComment(SQLModel, table=True):
     __tablename__ = "incident_management_case_comment"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -154,6 +155,7 @@ class CaseComment(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     case: "Case" = Relationship(back_populates="comments")
+
 
 class Case(SQLModel, table=True):
     __tablename__ = "incident_management_case"

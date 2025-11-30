@@ -2,7 +2,7 @@
 	<div>
 		<n-button size="small" type="primary" @click="showForm = true">
 			<template #icon>
-				<Icon :name="NewNewExclusionRuleIcon" :size="16"></Icon>
+				<Icon :name="NewNewExclusionRuleIcon" :size="16" />
 			</template>
 			{{ hideButtonExtendedLabel ? "Create" : " Create Exclusion Rule" }}
 		</n-button>

@@ -1,7 +1,7 @@
 <template>
 	<n-button quaternary class="!w-full !justify-start" @click="showModal = true">
 		<template #icon>
-			<Icon :name="RoleIcon" :size="14"></Icon>
+			<Icon :name="RoleIcon" :size="14" />
 		</template>
 		Assign Role
 	</n-button>

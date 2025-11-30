@@ -26,7 +26,7 @@
 						<template #trigger>
 							<n-button secondary :loading="loadingManager" size="small" @click="reloadManager()">
 								<template #icon>
-									<Icon :name="RefreshIcon"></Icon>
+									<Icon :name="RefreshIcon" />
 								</template>
 							</n-button>
 						</template>

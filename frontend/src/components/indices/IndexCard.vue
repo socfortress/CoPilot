@@ -48,7 +48,7 @@
 						<template #trigger>
 							<n-button quaternary circle type="error" @click.stop="handleDelete">
 								<template #icon>
-									<Icon :name="DeleteIcon"></Icon>
+									<Icon :name="DeleteIcon" />
 								</template>
 							</n-button>
 						</template>

@@ -16,7 +16,7 @@
 				<div v-if="customerMeta" class="flex items-center justify-end gap-4 px-7 pt-2">
 					<n-button size="small" type="error" ghost :loading="loadingDelete" @click="handleDelete">
 						<template #icon>
-							<Icon :name="DeleteIcon" :size="15"></Icon>
+							<Icon :name="DeleteIcon" :size="15" />
 						</template>
 						Decommission
 					</n-button>
@@ -24,7 +24,7 @@
 				<div v-else class="flex items-center justify-between gap-4 px-7 pt-2">
 					<n-button size="small" type="primary" @click="editing = true">
 						<template #icon>
-							<Icon :name="AddIcon" :size="14"></Icon>
+							<Icon :name="AddIcon" :size="14" />
 						</template>
 						Create Provision
 					</n-button>

@@ -22,7 +22,7 @@
 									@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 								>
 									<template #icon>
-										<Icon :name="StarIcon"></Icon>
+										<Icon :name="StarIcon" />
 									</template>
 								</n-button>
 							</template>
@@ -32,7 +32,7 @@
 						<n-tooltip>
 							Quarantined
 							<template #trigger>
-								<Icon :name="QuarantinedIcon" :size="18"></Icon>
+								<Icon :name="QuarantinedIcon" :size="18" />
 							</template>
 						</n-tooltip>
 					</div>
@@ -55,7 +55,7 @@
 						<template #trigger>
 							<n-button quaternary circle type="error" @click.stop="handleDelete">
 								<template #icon>
-									<Icon :name="DeleteIcon"></Icon>
+									<Icon :name="DeleteIcon" />
 								</template>
 							</n-button>
 						</template>

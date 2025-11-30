@@ -4,7 +4,7 @@
 			<CardKV v-if="!hideKey">
 				<template #key>
 					<span class="flex items-center gap-3">
-						<Icon :name="KeyIcon" :size="14"></Icon>
+						<Icon :name="KeyIcon" :size="14" />
 						<span>Key</span>
 					</span>
 				</template>
@@ -15,7 +15,7 @@
 			<CardKV v-if="!hideFeatures">
 				<template #key>
 					<span class="flex items-center gap-3">
-						<Icon :name="FeaturesIcon" :size="14"></Icon>
+						<Icon :name="FeaturesIcon" :size="14" />
 						<span>Features</span>
 					</span>
 				</template>
@@ -24,7 +24,7 @@
 						<CardKV v-for="feature of features" :key="feature">
 							<template #value>
 								<span class="flex items-center gap-3">
-									<Icon :name="CheckIcon" :size="14" class="text-primary"></Icon>
+									<Icon :name="CheckIcon" :size="14" class="text-primary" />
 									<span>{{ feature }}</span>
 								</span>
 							</template>
@@ -36,7 +36,7 @@
 			<CardKV>
 				<template #key>
 					<span class="flex items-center gap-3">
-						<Icon :name="ExpiresIcon" :size="14"></Icon>
+						<Icon :name="ExpiresIcon" :size="14" />
 						<span>Expires</span>
 					</span>
 				</template>
@@ -48,7 +48,7 @@
 			<CardKV>
 				<template #key>
 					<span class="flex items-center gap-3">
-						<Icon :name="CustomerIcon" :size="14"></Icon>
+						<Icon :name="CustomerIcon" :size="14" />
 						<span>Customer</span>
 					</span>
 				</template>
@@ -79,7 +79,7 @@
 			<CardKV v-if="dockerCompose">
 				<template #key>
 					<span class="flex items-center gap-3">
-						<Icon :name="ConfigIcon" :size="14"></Icon>
+						<Icon :name="ConfigIcon" :size="14" />
 						<span>Docker Configuration</span>
 					</span>
 				</template>

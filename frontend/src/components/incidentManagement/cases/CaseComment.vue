@@ -33,7 +33,7 @@
 				<template v-if="mode === 'view'">
 					<n-button size="tiny" secondary :disabled="canceling" @click="editComment()">
 						<template #icon>
-							<Icon :name="EditIcon" :size="12"></Icon>
+							<Icon :name="EditIcon" :size="12" />
 						</template>
 						<span>Edit</span>
 					</n-button>
@@ -41,7 +41,7 @@
 						<template #trigger>
 							<n-button size="tiny" secondary type="error" :loading="canceling">
 								<template #icon>
-									<Icon :name="DeleteIcon" :size="12"></Icon>
+									<Icon :name="DeleteIcon" :size="12" />
 								</template>
 								<span>Delete</span>
 							</n-button>
@@ -52,7 +52,7 @@
 				<template v-if="mode === 'edit'">
 					<n-button size="tiny" secondary :disabled="saving" @click="setMode('view')">
 						<template #icon>
-							<Icon :name="ArrowLeftIcon" :size="12"></Icon>
+							<Icon :name="ArrowLeftIcon" :size="12" />
 						</template>
 						<span>Cancel</span>
 					</n-button>
@@ -66,7 +66,7 @@
 						@click="updateCaseComment()"
 					>
 						<template #icon>
-							<Icon :name="SaveIcon" :size="13"></Icon>
+							<Icon :name="SaveIcon" :size="13" />
 						</template>
 						<span>Save</span>
 					</n-button>

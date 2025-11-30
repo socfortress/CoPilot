@@ -56,7 +56,7 @@
 							<template #trigger>
 								<Badge type="splitted" color="primary" hint-cursor>
 									<template #iconLeft>
-										<Icon :name="TimeIcon"></Icon>
+										<Icon :name="TimeIcon" />
 									</template>
 									<template #value>
 										<span class="flex">
@@ -74,7 +74,7 @@
 
 						<Badge v-if="diffTime" type="splitted" color="primary">
 							<template #iconLeft>
-								<Icon :name="StopWatchIcon" :size="15"></Icon>
+								<Icon :name="StopWatchIcon" :size="15" />
 							</template>
 							<template #value>
 								{{ diffTime }}

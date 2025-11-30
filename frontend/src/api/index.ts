@@ -8,6 +8,7 @@ import cloudSecurityAssessment from "./endpoints/cloudSecurityAssessment"
 import connectors from "./endpoints/connectors"
 import copilotAction from "./endpoints/copilotAction"
 import copilotMCP from "./endpoints/copilotMCP"
+import customerPortal from "./endpoints/customerPortal"
 import customers from "./endpoints/customers"
 import flow from "./endpoints/flow"
 import graylog from "./endpoints/graylog"
@@ -69,5 +70,6 @@ export default {
 	wazuh,
 	portainer,
 	shuffle,
-	copilotMCP
+	copilotMCP,
+	customerPortal
 }

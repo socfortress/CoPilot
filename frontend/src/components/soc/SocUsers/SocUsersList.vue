@@ -23,7 +23,7 @@
 									<span>#{{ user.user_id }}</span>
 									<n-tooltip trigger="hover">
 										<template #trigger>
-											<Icon :name="InfoIcon" :size="16" class="cursor-help"></Icon>
+											<Icon :name="InfoIcon" :size="16" class="cursor-help" />
 										</template>
 										{{ user.user_uuid }}
 									</n-tooltip>

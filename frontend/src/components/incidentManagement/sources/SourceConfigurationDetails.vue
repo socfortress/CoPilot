@@ -5,7 +5,7 @@
 		<div v-if="!editing && !loading" class="mt-4 flex items-center justify-end gap-2">
 			<n-button @click="setEditMode()">
 				<template #icon>
-					<Icon :name="EditIcon" :size="16"></Icon>
+					<Icon :name="EditIcon" :size="16" />
 				</template>
 				Edit
 			</n-button>
@@ -22,7 +22,7 @@
 			<template #additionalActions>
 				<n-button @click="setViewMode()">
 					<template #icon>
-						<Icon :name="ArrowIcon" :size="16"></Icon>
+						<Icon :name="ArrowIcon" :size="16" />
 					</template>
 					Cancel
 				</n-button>

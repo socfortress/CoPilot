@@ -16,7 +16,7 @@
 							<span>
 								{{ formatDate(caseOpenDate) }}
 							</span>
-							<Icon :name="TimeIcon" :size="16"></Icon>
+							<Icon :name="TimeIcon" :size="16" />
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">
@@ -47,7 +47,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted" :color="baseInfo.state_name === StateName.Open ? 'warning' : 'primary'">
 						<template #iconLeft>
-							<Icon :name="StatusIcon" :size="14"></Icon>
+							<Icon :name="StatusIcon" :size="14" />
 						</template>
 						<template #label>State</template>
 						<template #value>
@@ -56,7 +56,7 @@
 					</Badge>
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="OwnerIcon" :size="16"></Icon>
+							<Icon :name="OwnerIcon" :size="16" />
 						</template>
 						<template #label>Owner</template>
 						<template #value>
@@ -65,7 +65,7 @@
 					</Badge>
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="CustomerIcon" :size="13"></Icon>
+							<Icon :name="CustomerIcon" :size="13" />
 						</template>
 						<template #label>Client</template>
 						<template #value>
@@ -79,7 +79,7 @@
 						@click.stop="openSocAlert()"
 					>
 						<template #iconRight>
-							<Icon :name="LinkIcon" :size="14"></Icon>
+							<Icon :name="LinkIcon" :size="14" />
 						</template>
 						<template #label>Alert #{{ baseInfo.case_soc_id }}</template>
 					</Badge>
@@ -205,7 +205,7 @@
 						<n-collapse v-model:expanded-names="noteFormVisible" display-directive="show">
 							<template #arrow>
 								<div class="mx-4 flex">
-									<Icon :name="AddIcon"></Icon>
+									<Icon :name="AddIcon" />
 								</div>
 							</template>
 							<n-collapse-item name="1">

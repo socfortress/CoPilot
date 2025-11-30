@@ -1,7 +1,7 @@
 <template>
 	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
 		<template #icon>
-			<Icon :name="ThreatIcon"></Icon>
+			<Icon :name="ThreatIcon" />
 		</template>
 		Threat Intel
 	</n-button>

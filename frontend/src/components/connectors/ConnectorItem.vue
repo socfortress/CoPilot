@@ -56,7 +56,7 @@
 						@click="verify(connector)"
 					>
 						<template #icon>
-							<Icon :name="VerifyIcon"></Icon>
+							<Icon :name="VerifyIcon" />
 						</template>
 						Verify
 					</n-button>
@@ -68,7 +68,7 @@
 						@click="openConfigDialog()"
 					>
 						<template #icon>
-							<Icon :name="DetailsIcon"></Icon>
+							<Icon :name="DetailsIcon" />
 						</template>
 
 						{{ !connector.connector_configured ? "Configure" : "Update" }}

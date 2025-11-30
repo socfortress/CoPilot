@@ -16,7 +16,7 @@
 				<div class="flex justify-end">
 					<n-button @click="gotoLicense()">
 						<template #icon>
-							<Icon :name="LicenseIcon"></Icon>
+							<Icon :name="LicenseIcon" />
 						</template>
 						View license
 					</n-button>
@@ -40,7 +40,7 @@
 					<div class="flex justify-end">
 						<n-button @click="gotoLicense()">
 							<template #icon>
-								<Icon :name="LicenseIcon"></Icon>
+								<Icon :name="LicenseIcon" />
 							</template>
 							View license
 						</n-button>
@@ -64,7 +64,7 @@
 				<div class="flex justify-end">
 					<n-button @click="gotoLicense()">
 						<template #icon>
-							<Icon :name="LicenseIcon"></Icon>
+							<Icon :name="LicenseIcon" />
 						</template>
 						View license
 					</n-button>

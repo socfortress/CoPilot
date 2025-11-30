@@ -1,0 +1,95 @@
+<template>
+	<n-card size="small" :bordered="true" hoverable class="artifact-card-compact">
+		<div class="flex items-start justify-between gap-3">
+			<div class="min-w-0 flex-1">
+				<div class="mb-1 flex items-center gap-2">
+					<Icon :name="FileIcon" :size="16" class="text-primary-color shrink-0" />
+					<span class="truncate text-sm font-semibold">{{ artifact.artifact_name }}</span>
+					<n-tag :type="statusType" size="small" round>
+						{{ artifact.status }}
+					</n-tag>
+				</div>
+				<div class="text-secondary-color mb-2 text-xs">
+					<code class="text-xs">{{ artifact.file_name }}</code>
+				</div>
+				<div class="text-secondary-color flex flex-wrap gap-x-3 gap-y-1 text-xs">
+					<span>Size: {{ fileSize }}</span>
+					<span>{{ formatDate(artifact.collection_time, dFormats.datetime) }}</span>
+				</div>
+			</div>
+
+			<div v-if="showActions" class="flex shrink-0 flex-col gap-1">
+				<n-button size="tiny" secondary type="info" @click.stop="emit('details', artifact)">
+					<template #icon>
+						<Icon :name="InfoIcon" :size="14" />
+					</template>
+				</n-button>
+				<n-button size="tiny" secondary type="primary" @click.stop="emit('download', artifact)">
+					<template #icon>
+						<Icon :name="DownloadIcon" :size="14" />
+					</template>
+				</n-button>
+				<n-button size="tiny" secondary type="error" @click.stop="emit('delete', artifact)">
+					<template #icon>
+						<Icon :name="DeleteIcon" :size="14" />
+					</template>
+				</n-button>
+			</div>
+		</div>
+	</n-card>
+</template>
+
+<script setup lang="ts">
+import type { TagProps } from "naive-ui"
+import type { AgentArtifactData } from "@/types/agents.d"
+import bytes from "bytes"
+import { NButton, NCard, NTag } from "naive-ui"
+import { computed } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+
+const { artifact, showActions = false } = defineProps<{
+	artifact: AgentArtifactData
+	showActions?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "download", artifact: AgentArtifactData): void
+	(e: "delete", artifact: AgentArtifactData): void
+	(e: "details", artifact: AgentArtifactData): void
+}>()
+
+const dFormats = useSettingsStore().dateFormat
+
+const FileIcon = "lsicon:file-zip-outline"
+const DownloadIcon = "carbon:download"
+const DeleteIcon = "carbon:trash-can"
+const InfoIcon = "carbon:information"
+
+const STATUS_TYPE_MAP: Record<string, TagProps["type"]> = {
+	completed: "success",
+	failed: "error",
+	processing: "warning",
+	pending: "info"
+} as const
+
+const fileSize = computed(() => bytes(artifact.file_size))
+
+const statusType = computed<TagProps["type"]>(() => {
+	const normalizedStatus = artifact.status.toLowerCase()
+	return STATUS_TYPE_MAP[normalizedStatus] ?? "default"
+})
+</script>
+
+<style lang="scss" scoped>
+// TODO: remove style
+
+.artifact-card-compact {
+	transition: all 0.2s var(--bezier-ease);
+
+	&:hover {
+		border-color: var(--primary-color);
+	}
+}
+</style>

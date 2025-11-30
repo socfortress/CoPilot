@@ -2,7 +2,7 @@
 	<div>
 		<n-button size="small" type="primary" @click="showWizard = true">
 			<template #icon>
-				<Icon :name="NewSourceConfigurationIcon" :size="15"></Icon>
+				<Icon :name="NewSourceConfigurationIcon" :size="15" />
 			</template>
 			Create Source Configuration
 		</n-button>

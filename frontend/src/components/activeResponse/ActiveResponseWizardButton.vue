@@ -1,7 +1,7 @@
 <template>
 	<n-button :size="size" :type="type" :loading="loading" @click="showInvokeWizard = true">
 		<template #icon>
-			<Icon :name="InvokeIcon"></Icon>
+			<Icon :name="InvokeIcon" />
 		</template>
 		Active Response
 	</n-button>

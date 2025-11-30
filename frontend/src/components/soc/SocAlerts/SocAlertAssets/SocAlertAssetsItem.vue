@@ -33,7 +33,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge v-if="asset.date_added" type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="ClockIcon" :size="14"></Icon>
+							<Icon :name="ClockIcon" :size="14" />
 						</template>
 						<template #label>Added</template>
 						<template #value>
@@ -42,7 +42,7 @@
 					</Badge>
 					<Badge v-if="asset.date_update" type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="ClockIcon" :size="14"></Icon>
+							<Icon :name="ClockIcon" :size="14" />
 						</template>
 						<template #label>Updated</template>
 						<template #value>
@@ -51,7 +51,7 @@
 					</Badge>
 					<Badge type="active" class="cursor-pointer" @click.stop="gotoAgent(asset.asset_tags)">
 						<template #iconRight>
-							<Icon :name="LinkIcon" :size="14"></Icon>
+							<Icon :name="LinkIcon" :size="14" />
 						</template>
 						<template #label>Agent: {{ asset.asset_tags }}</template>
 					</Badge>

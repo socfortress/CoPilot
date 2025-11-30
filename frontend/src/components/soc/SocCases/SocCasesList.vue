@@ -7,7 +7,7 @@
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="!cursor-help">
 								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
+									<Icon :name="InfoIcon" />
 								</template>
 							</n-button>
 						</div>
@@ -29,7 +29,7 @@
 					@click="handlePurge()"
 				>
 					<div class="flex items-center gap-2">
-						<Icon :name="TrashIcon" :size="16"></Icon>
+						<Icon :name="TrashIcon" :size="16" />
 						<span class="xs:block hidden">Purge</span>
 					</div>
 				</n-button>
@@ -49,7 +49,7 @@
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
 							<n-button size="small" @click="showFilters = true">
 								<template #icon>
-									<Icon :name="FilterIcon"></Icon>
+									<Icon :name="FilterIcon" />
 								</template>
 							</n-button>
 						</n-badge>

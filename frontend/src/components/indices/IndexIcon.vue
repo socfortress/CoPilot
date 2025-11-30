@@ -1,8 +1,8 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="18"></Icon>
-		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="18"></Icon>
-		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="18"></Icon>
+		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="18" />
+		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="18" />
+		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="18" />
 	</span>
 </template>
 

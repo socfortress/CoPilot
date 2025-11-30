@@ -33,7 +33,7 @@
 					>
 						<n-upload-dragger>
 							<div>
-								<Icon :name="UploadIcon" :size="28" :depth="3"></Icon>
+								<Icon :name="UploadIcon" :size="28" :depth="3" />
 							</div>
 							<div class="font-semibold">Click or drag a file to this area to upload</div>
 							<p class="mt-2">

@@ -16,14 +16,14 @@
 				<div class="flex items-center justify-end gap-3">
 					<n-button :loading="updating" :disabled="deleting" secondary @click.stop="switchMode('edit')">
 						<template #icon>
-							<Icon :name="EditIcon"></Icon>
+							<Icon :name="EditIcon" />
 						</template>
 						Edit
 					</n-button>
 
 					<n-button type="error" :loading="deleting" secondary @click.stop="handleDelete">
 						<template #icon>
-							<Icon :name="DeleteIcon"></Icon>
+							<Icon :name="DeleteIcon" />
 						</template>
 						Delete
 					</n-button>
@@ -46,7 +46,7 @@
 					<div class="flex items-center justify-between gap-3">
 						<n-button secondary @click="switchMode('view')">
 							<template #icon>
-								<Icon :name="BackIcon"></Icon>
+								<Icon :name="BackIcon" />
 							</template>
 							Back
 						</n-button>
@@ -56,7 +56,7 @@
 
 							<n-button :loading="updating" type="success" :disabled="!isValid" @click="validate()">
 								<template #icon>
-									<Icon :name="UpdateIcon"></Icon>
+									<Icon :name="UpdateIcon" />
 								</template>
 								Submit
 							</n-button>

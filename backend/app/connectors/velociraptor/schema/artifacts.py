@@ -178,6 +178,32 @@ class CollectFileBody(BaseBody):
         return value
 
 
+class FileCollectionBody(BaseModel):
+    file: str = Field(..., description="File to collect")
+    root_disk: str = Field("C:", description="Root disk to collect from")
+
+
+# ! Windows Example ! #
+# {
+#   "hostname": "WIN-HFOU106TD7K",
+#   "velociraptor_id": "C.475df76785008b04",
+#   "velociraptor_org": "root",
+#   "artifact_name": "Generic.Collectors.File",
+#   "file": "Glob\nUsers\\\\Administrator\\\\Downloads\\\\LICENSE.txt\n",
+#   "root_disk": "C:"
+# }
+
+# ! Linux Example ! #
+# {
+#   "hostname": "ASHWZHMA",
+#   "velociraptor_id": "C.c4e8798fbab1d9c6",
+#   "velociraptor_org": "root",
+#   "artifact_name": "Generic.Collectors.File",
+#   "file": "Glob\n/tmp/dir/test.txt\n",
+#   "root_disk": "/" # Always use / for linux
+# }
+
+
 class RunCommandBody(BaseBody):
     command: Optional[str] = Field(None, description="Command to run")
     artifact_name: CommandArtifactsEnum = Field(
@@ -204,6 +230,10 @@ class BaseResponse(BaseModel):
 
 
 class CollectArtifactResponse(BaseResponse):
+    file_info: Optional[Dict] = Field(
+        None,
+        description="Information about collected files",
+    )
     pass  # If you have additional fields, you can define them here
 
 

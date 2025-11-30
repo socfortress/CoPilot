@@ -9,7 +9,7 @@
 			@click.stop="decommissionNetworkConnector()"
 		>
 			<template #icon>
-				<Icon :name="DecommissionIcon"></Icon>
+				<Icon :name="DecommissionIcon" />
 			</template>
 			Decommission
 		</n-button>
@@ -23,7 +23,7 @@
 			@click.stop="showFortinetForm = true"
 		>
 			<template #icon>
-				<Icon :name="DeployIcon"></Icon>
+				<Icon :name="DeployIcon" />
 			</template>
 			Deploy
 		</n-button>
@@ -37,7 +37,7 @@
 			@click.stop="handleDelete"
 		>
 			<template #icon>
-				<Icon :name="DeleteIcon" :size="15"></Icon>
+				<Icon :name="DeleteIcon" :size="15" />
 			</template>
 			Delete
 		</n-button>
@@ -65,7 +65,7 @@
 						@click.stop="fortinetProvision()"
 					>
 						<template #icon>
-							<Icon :name="DeployIcon"></Icon>
+							<Icon :name="DeployIcon" />
 						</template>
 						Deploy
 					</n-button>

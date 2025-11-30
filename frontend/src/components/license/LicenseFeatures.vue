@@ -9,7 +9,7 @@
 						</h3>
 						<n-popover v-if="features.length" class="max-w-80" trigger="hover">
 							<template #trigger>
-								<Icon :name="InfoIcon" :size="20" class="cursor-help"></Icon>
+								<Icon :name="InfoIcon" :size="20" class="cursor-help" />
 							</template>
 							To unsubscribe, click on the feature you wish to remove, and then click on the "Unsubscribe"
 							button.
@@ -31,7 +31,7 @@
 								</template>
 								<n-empty v-else description="No features unlocked" class="h-48 justify-center">
 									<template #icon>
-										<Icon :name="NoFeaturesIcon"></Icon>
+										<Icon :name="NoFeaturesIcon" />
 									</template>
 								</n-empty>
 							</div>
@@ -41,7 +41,7 @@
 					<div v-if="license" class="cta-section">
 						<n-button type="primary" class="!w-full" size="large" @click="openCheckout()">
 							<template #icon>
-								<Icon :name="ExtendIcon"></Icon>
+								<Icon :name="ExtendIcon" />
 							</template>
 							Add feature
 						</n-button>
@@ -55,7 +55,7 @@
 				<span class="cursor-pointer" @click="showLicenseDetails = true">
 					Your license:
 					<strong>{{ license }}</strong>
-					<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1"></Icon>
+					<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1" />
 				</span>
 			</template>
 			<template v-else>

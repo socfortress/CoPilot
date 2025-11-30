@@ -3,7 +3,7 @@
 		<CardEntity hoverable :highlighted="stream.is_default">
 			<template #headerMain>
 				<div class="flex items-center gap-2">
-					<Icon :name="UserIcon" :size="14"></Icon>
+					<Icon :name="UserIcon" :size="14" />
 					{{ stream.creator_user_id }}
 				</div>
 			</template>
@@ -21,19 +21,19 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge :type="stream.disabled ? 'muted' : 'active'">
 						<template #iconRight>
-							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
+							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14" />
 						</template>
 						<template #label>Enabled</template>
 					</Badge>
 					<Badge :type="stream.is_default ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>Default</template>
 					</Badge>
 					<Badge :type="stream.is_editable ? 'active' : 'muted'">
 						<template #iconRight>
-							<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+							<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14" />
 						</template>
 						<template #label>Editable</template>
 					</Badge>
@@ -43,7 +43,7 @@
 				<div class="flex flex-wrap items-center justify-end gap-3">
 					<n-button size="small" @click.stop="showDetails = true">
 						<template #icon>
-							<Icon :name="InfoIcon"></Icon>
+							<Icon :name="InfoIcon" />
 						</template>
 						Details
 					</n-button>
@@ -56,7 +56,7 @@
 						@click="stop()"
 					>
 						<template #icon>
-							<Icon :name="StopIcon"></Icon>
+							<Icon :name="StopIcon" />
 						</template>
 						Stop stream
 					</n-button>
@@ -69,7 +69,7 @@
 						@click="start()"
 					>
 						<template #icon>
-							<Icon :name="StartIcon"></Icon>
+							<Icon :name="StartIcon" />
 						</template>
 						Start stream
 					</n-button>

@@ -5,7 +5,7 @@
 				<span>
 					{{ formatDate(alert.alert_source_event_time) }}
 				</span>
-				<Icon v-if="!hideTimeline" :name="TimeIcon" :size="16"></Icon>
+				<Icon v-if="!hideTimeline" :name="TimeIcon" :size="16" />
 			</div>
 		</template>
 		<div class="flex flex-col px-1 py-2">
