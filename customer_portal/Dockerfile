@@ -27,9 +27,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built files from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy docker entrypoint script if needed for SSL
-COPY build/docker-entrypoint.d/90-copilot-ssl.sh /docker-entrypoint.d/ 2>/dev/null || true
-
 # Expose port 80
 EXPOSE 80
 
