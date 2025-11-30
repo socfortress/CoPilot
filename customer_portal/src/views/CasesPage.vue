@@ -424,9 +424,9 @@
 									<span
 										class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
 										:class="{
-											'bg-red-100 text-red-800': alert.status === 'open',
-											'bg-yellow-100 text-yellow-800': alert.status === 'in_progress',
-											'bg-green-100 text-green-800': alert.status === 'closed'
+											'bg-red-100 text-red-800': alert.status === 'OPEN',
+											'bg-yellow-100 text-yellow-800': alert.status === 'IN_PROGRESS',
+											'bg-green-100 text-green-800': alert.status === 'CLOSED'
 										}"
 									>
 										{{ alert.status.replace("_", " ").toUpperCase() }}

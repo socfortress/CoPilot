@@ -640,7 +640,7 @@ const fetchDashboardData = async () => {
 		const inProgressAlerts = alertsResponse.in_progress || 0
 
 		const openCases = cases.filter(
-			(case_: Case) => case_.case_status === "open" || case_.case_status === "in_progress"
+			(case_: Case) => case_.case_status === "OPEN" || case_.case_status === "IN_PROGRESS"
 		).length
 
 		// Calculate security score based on actual data
@@ -663,7 +663,7 @@ const fetchDashboardData = async () => {
 				id: alert.id,
 				name: alert.alert_name || "Unnamed Alert",
 				description: alert.alert_description || "No description available",
-				severity: alert.status === "open" ? "high" : alert.status === "in_progress" ? "medium" : "low",
+				severity: alert.status === "OPEN" ? "high" : alert.status === "IN_PROGRESS" ? "medium" : "low",
 				created_at: alert.alert_creation_time || new Date().toISOString()
 			}))
 			.sort(
