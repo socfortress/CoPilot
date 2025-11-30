@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import axios from 'axios'
+import { defineStore } from "pinia"
+import axios from "axios"
 
 interface User {
 	id: number
@@ -15,7 +15,7 @@ interface AuthState {
 	isAuthenticated: boolean
 }
 
-export const useAuthStore = defineStore('auth', {
+export const useAuthStore = defineStore("auth", {
 	state: (): AuthState => ({
 		userToken: null,
 		user: null,
@@ -23,18 +23,18 @@ export const useAuthStore = defineStore('auth', {
 	}),
 
 	getters: {
-		isLogged: (state) => state.isAuthenticated && !!state.userToken,
-		isCustomerUser: (state) => state.user?.role_name === 'customer_user'
+		isLogged: state => state.isAuthenticated && !!state.userToken,
+		isCustomerUser: state => state.user?.role_name === "customer_user"
 	},
 
 	actions: {
 		async login(username: string, password: string) {
 			try {
 				const formData = new FormData()
-				formData.append('username', username)
-				formData.append('password', password)
+				formData.append("username", username)
+				formData.append("password", password)
 
-				const response = await axios.post('/api/auth/token', formData)
+				const response = await axios.post("/api/auth/token", formData)
 
 				if (response.data.access_token) {
 					this.userToken = response.data.access_token
@@ -43,31 +43,31 @@ export const useAuthStore = defineStore('auth', {
 					return { success: true }
 				}
 
-				return { success: false, message: 'Login failed' }
+				return { success: false, message: "Login failed" }
 			} catch (error: any) {
 				return {
 					success: false,
-					message: error.response?.data?.detail || 'Login failed'
+					message: error.response?.data?.detail || "Login failed"
 				}
 			}
 		},
 
 		async fetchUser() {
 			try {
-				const response = await axios.get('/api/auth/me', {
+				const response = await axios.get("/api/auth/me", {
 					headers: {
 						Authorization: `Bearer ${this.userToken}`
 					}
 				})
 				this.user = response.data
 			} catch (error) {
-				console.error('Failed to fetch user:', error)
+				console.error("Failed to fetch user:", error)
 			}
 		},
 
 		async refreshToken() {
 			try {
-				const response = await axios.get('/api/auth/refresh', {
+				const response = await axios.get("/api/auth/refresh", {
 					headers: {
 						Authorization: `Bearer ${this.userToken}`
 					}
@@ -77,7 +77,7 @@ export const useAuthStore = defineStore('auth', {
 					this.userToken = response.data.access_token
 				}
 			} catch (error) {
-				console.error('Failed to refresh token:', error)
+				console.error("Failed to refresh token:", error)
 				this.logout()
 			}
 		},
@@ -94,8 +94,8 @@ export const useAuthStore = defineStore('auth', {
 	},
 
 	persist: {
-		key: 'customer-portal-auth',
+		key: "customer-portal-auth",
 		storage: localStorage,
-		paths: ['userToken', 'user', 'isAuthenticated']
+		pick: ["userToken", "user", "isAuthenticated"]
 	}
 })

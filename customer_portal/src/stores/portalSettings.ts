@@ -35,6 +35,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 	},
 
 	actions: {
+		// TODO: use persist with custom storage
 		loadFromSessionStorage() {
 			try {
 				const stored = sessionStorage.getItem(STORAGE_KEY)

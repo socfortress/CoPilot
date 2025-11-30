@@ -75,7 +75,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -95,7 +95,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -119,7 +119,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -143,7 +143,7 @@
 				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="p-5">
 						<div class="flex items-center">
-							<div class="flex-shrink-0">
+							<div class="shrink-0">
 								<div class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500">
 									<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
 										<path
@@ -245,7 +245,7 @@
 					<li v-for="alert in alerts" :key="alert.id" class="px-4 py-4 hover:bg-gray-50 sm:px-6">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center">
-								<div class="flex-shrink-0">
+								<div class="shrink-0">
 									<span
 										class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
 										:class="{
@@ -670,11 +670,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue"
-import { useRouter } from "vue-router"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import AlertsAPI, { type Alert, type AlertsResponse } from "@/api/alerts"
 
-const router = useRouter()
 const portalSettingsStore = usePortalSettingsStore()
 
 // Reactive data
@@ -721,11 +719,6 @@ const availableAssets = computed(() => {
 	const assets = new Set(alerts.value.map(alert => alert.asset_name))
 	return Array.from(assets).sort()
 })
-
-// Methods
-const goBack = () => {
-	router.push("/")
-}
 
 const loadAlerts = async () => {
 	loading.value = true
