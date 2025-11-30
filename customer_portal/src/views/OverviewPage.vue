@@ -47,6 +47,12 @@
 							Welcome,
 							<span class="font-medium">{{ username }}</span>
 						</div>
+            <button
+              @click="openChangePasswordModal"
+              class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+            >
+                Change Password
+            </button>
 						<button
 							@click="logout"
 							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
@@ -511,6 +517,7 @@
 				</div>
 			</div>
 		</main>
+    <ChangePasswordModal :is-open="showChangePasswordModal" @close="closeChangePasswordModal" @success="onPasswordChanged" />
 	</div>
 </template>
 
@@ -521,6 +528,7 @@ import { usePortalSettingsStore } from "@/stores/portalSettings"
 import AlertsAPI, { type Alert } from "@/api/alerts"
 import CasesAPI, { type Case } from "@/api/cases"
 import AgentsAPI from "@/api/agents"
+import ChangePasswordModal from "@/components/ChangePasswordModal.vue"
 
 interface Stats {
 	totalAlerts: number
@@ -555,6 +563,7 @@ const portalSettingsStore = usePortalSettingsStore()
 const loading = ref(true)
 const error = ref("")
 const showLogo = ref(true)
+const showChangePasswordModal = ref(false)
 const stats = ref<Stats>({
 	totalAlerts: 0,
 	criticalAlerts: 0,
@@ -719,6 +728,19 @@ const goToCases = () => {
 
 const goToAgents = () => {
 	router.push("/agents")
+}
+
+const openChangePasswordModal = () => {
+    showChangePasswordModal.value = true
+}
+
+const closeChangePasswordModal = () => {
+    showChangePasswordModal.value = false
+}
+
+const onPasswordChanged = () => {
+    // Optionally show a success message or perform other actions
+    console.log("Password changed successfully")
 }
 
 const logout = () => {

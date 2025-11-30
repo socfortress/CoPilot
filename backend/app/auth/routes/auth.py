@@ -332,7 +332,7 @@ async def reset_password_via_username(
     "/reset-password/me",
     status_code=200,
     description="Reset user's password",
-    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
+    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin", "customer_user"))],
 )
 async def reset_password_me(
     request: PasswordReset,
