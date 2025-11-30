@@ -29,6 +29,7 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
+from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
@@ -66,7 +67,6 @@ from app.incidents.schema.db_operations import CaseDataStoreResponse
 from app.incidents.schema.db_operations import CaseNotificationCreate
 from app.incidents.schema.db_operations import CaseNotificationResponse
 from app.incidents.schema.db_operations import CaseOutResponse
-from app.incidents.models import CaseAlertLink
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
@@ -1350,16 +1350,13 @@ async def update_case_status_endpoint(
     old_status = case.case_status
 
     # Convert new status enum to string value for comparison
-    new_status_value = case_status.status.value if hasattr(case_status.status, 'value') else str(case_status.status)
+    new_status_value = case_status.status.value if hasattr(case_status.status, "value") else str(case_status.status)
 
     logger.info(f"Case status transition: {old_status} -> {new_status_value}")
 
     try:
         # Get all alert IDs linked to this case BEFORE updating
-        result = await db.execute(
-            select(CaseAlertLink.alert_id)
-            .where(CaseAlertLink.case_id == case_status.case_id)
-        )
+        result = await db.execute(select(CaseAlertLink.alert_id).where(CaseAlertLink.case_id == case_status.case_id))
         alert_ids = [row[0] for row in result]
 
         logger.info(f"Found {len(alert_ids)} alerts linked to case {case_status.case_id}")
@@ -1395,10 +1392,7 @@ async def update_case_status_endpoint(
             for alert_id in alert_ids:
                 try:
                     logger.debug(f"Updating alert {alert_id} to {new_alert_status}")
-                    await update_alert_status(
-                        UpdateAlertStatus(alert_id=alert_id, status=new_alert_status),
-                        db
-                    )
+                    await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=new_alert_status), db)
                     closed_count += 1
                 except Exception as e:
                     logger.error(f"Failed to update alert {alert_id}: {str(e)}")
