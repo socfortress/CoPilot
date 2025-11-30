@@ -20,7 +20,12 @@ HttpClient.interceptors.request.use(
 			config.headers.Authorization = `Bearer ${store.userToken}`
 		}
 
-		if (isJwtExpiring(store.userToken, 60 * 60) && !__TOKEN_REFRESHING && isDebounceTimeOver(__TOKEN_LAST_CHECK)) {
+		if (
+			store.userToken &&
+			isJwtExpiring(store.userToken, 60 * 60) &&
+			!__TOKEN_REFRESHING &&
+			isDebounceTimeOver(__TOKEN_LAST_CHECK)
+		) {
 			__TOKEN_REFRESHING = true
 			__TOKEN_LAST_CHECK = new Date()
 

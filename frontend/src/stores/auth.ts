@@ -91,8 +91,8 @@ export const useAuthStore = defineStore("auth", {
 		isLogged(state): boolean {
 			return !!state.user?.access_token
 		},
-		userToken(state): string {
-			return state.user?.access_token
+		userToken(state): string | null {
+			return state.user?.access_token || null
 		},
 		userName(state): string {
 			return state.user?.username
