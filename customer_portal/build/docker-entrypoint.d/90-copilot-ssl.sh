@@ -1,14 +1,25 @@
 #!/bin/sh
-set -e
 
-# This script can be used to configure SSL certificates at runtime
-# Only runs if certificates are mounted/available
-
-if [ -f "/etc/nginx/ssl/cert.pem" ] && [ -f "/etc/nginx/ssl/key.pem" ]; then
-    echo "SSL certificates found, enabling HTTPS..."
-
-    # Update nginx config to enable SSL
-    # This is a placeholder - adjust based on your SSL needs
+if [[ -z "${SERVER_HOST}" ]]; then
+    echo "No SERVER_HOST set!"
+    echo "Please set the SERVER_HOST environment variable to use CoPilot"
+    exit 1;
+else
+    echo "Host is now https://${SERVER_HOST}:${SERVER_PORT}"
 fi
 
-exit 0
+if [[ ! -f "${TLS_CERT_PATH}" || ! -f "${TLS_KEY_PATH}" ]]; then
+    echo "No TLS certs found. Generating...."
+    mkdir -p $(dirname "${TLS_CERT_PATH}")
+    openssl req -x509 -subj "/CN=${SERVER_HOST}" -nodes -newkey rsa:4096 -keyout "${TLS_KEY_PATH}" -out "${TLS_CERT_PATH}" -days 365
+else
+    echo "TLS certificates found"
+fi
+
+if [[ ! -f /etc/nginx/certs/dhparams.pem ]]; then
+    echo "Generating new DH parameters - this may take a while..."
+    mkdir -p /etc/nginx/certs/
+    openssl dhparam -out /etc/nginx/certs/dhparams.pem 2048
+else
+    echo "... DH parameters found"
+fi
