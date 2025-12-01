@@ -12,6 +12,7 @@ from sqlmodel import select
 from app.auth.models.users import Password
 from app.auth.models.users import Role
 from app.auth.models.users import User
+from app.auth.models.users import UserCustomerAccess
 from app.db.db_session import async_engine
 
 passwords_in_memory = {}
@@ -240,6 +241,11 @@ async def delete_user(user_id: int, session: AsyncSession):
 
     # Database operations in try block
     try:
+        # Delete related customer access records first
+        from sqlalchemy import delete as sql_delete
+
+        await session.execute(sql_delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user_id))
+
         await session.delete(user)
         await session.commit()
         logger.info(f"User with ID {user_id} deleted.")
