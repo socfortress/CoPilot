@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
@@ -19,6 +20,7 @@ from app.customers.schema.customers import CustomerMetaResponse
 from app.customers.schema.customers import CustomerRequestBody
 from app.customers.schema.customers import CustomerResponse
 from app.customers.schema.customers import CustomersResponse
+from app.customers.schema.customers import DeleteCustomerResponse
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
@@ -351,14 +353,14 @@ async def update_customer(
 # ! TODO - Add a check to ensure that the customer_code is not being used by any agents
 @customers_router.delete(
     "/{customer_code}",
-    response_model=CustomerResponse,
+    response_model=DeleteCustomerResponse,
     description="Delete customer by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def delete_customer(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
-) -> CustomerResponse:
+) -> DeleteCustomerResponse:
     """
     Delete a customer by customer_code.
 
@@ -367,10 +369,10 @@ async def delete_customer(
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
-        CustomerResponse: The response containing the deleted customer data.
+        DeleteCustomerResponse: The response containing the deletion status.
 
     Raises:
-        HTTPException: If the customer with the given customer_code is not found.
+        HTTPException: If the customer with the given customer_code is not found or has associated users.
     """
     logger.info(f"Deleting customer with customer_code: {customer_code}")
 
@@ -385,21 +387,45 @@ async def delete_customer(
             detail=f"Customer with customer_code {customer_code} not found",
         )
 
-    # Capture the customer data before deleting
-    customer_data = CustomerRequestBody.from_orm(existing_customer)
+    try:
+        # Delete the customer
+        await session.delete(existing_customer)
+        await session.flush()  # Flush to trigger any constraint violations
+        await session.commit()  # Commit the transaction
+        await session.close()  # Close the session
 
-    # Delete the customer
-    await session.delete(existing_customer)
-    await session.flush()  # Optional: Flush the changes to the database
-    await session.commit()  # Commit the transaction
-    # Close the session
-    await session.close()
+        logger.info(f"Successfully deleted customer with customer_code: {customer_code}")
+        return DeleteCustomerResponse(
+            success=True,
+            message=f"Customer '{customer_code}' deleted successfully",
+        )
 
-    return CustomerResponse(
-        customer=customer_data,
-        success=True,
-        message="Customer deleted successfully",
-    )
+    except IntegrityError as e:
+        await session.rollback()
+        error_message = str(e.orig)
+
+        # Check if it's the user_customer_access foreign key constraint
+        if "user_customer_access" in error_message and "FOREIGN KEY" in error_message:
+            logger.error(f"Cannot delete customer {customer_code}: users are still assigned to this customer")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete customer '{customer_code}'. There are still users assigned to this customer. Please remove all user assignments before deleting the customer.",
+            )
+
+        # For other integrity errors
+        logger.error(f"Integrity error deleting customer {customer_code}: {error_message}")
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete customer due to existing dependencies. Please ensure all related data is removed first.",
+        )
+
+    except Exception as e:
+        await session.rollback()
+        logger.error(f"Error deleting customer {customer_code}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred while deleting the customer: {str(e)}",
+        )
 
 
 @customers_router.post(

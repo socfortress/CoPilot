@@ -152,3 +152,25 @@ class AgentsResponse(BaseModel):
     agents: Optional[List[AgentModel]] = Field([], description="List of agents")
     success: bool
     message: str
+
+
+class DeleteCustomerResponse(BaseModel):
+    """
+    Response model for customer deletion.
+    """
+
+    success: bool
+    message: str
+
+    class Config:
+        """
+        Pydantic configuration class.
+        """
+
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "message": "Customer 'customer_code' deleted successfully",
+            },
+        }
