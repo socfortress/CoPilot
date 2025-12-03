@@ -10,9 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.utils import AuthHandler
 from app.connectors.influxdb.schema.alerts import AlertStatus
 from app.connectors.influxdb.schema.alerts import GetInfluxDBAlertQueryParams
-from app.connectors.influxdb.schema.alerts import InfluxDBAlertResponse, InfluxDBCheckNamesResponse
+from app.connectors.influxdb.schema.alerts import InfluxDBAlertResponse
+from app.connectors.influxdb.schema.alerts import InfluxDBCheckNamesResponse
 from app.connectors.influxdb.schema.alerts import SeverityFilter
-from app.connectors.influxdb.services.alerts import get_influxdb_alerts, get_influxdb_check_names
+from app.connectors.influxdb.services.alerts import get_influxdb_alerts
+from app.connectors.influxdb.services.alerts import get_influxdb_check_names
 from app.db.db_session import get_db
 
 influxdb_alerts_router = APIRouter()
@@ -63,6 +65,7 @@ async def get_alerts_route(
     )
 
     return await get_influxdb_alerts(query_params, session)
+
 
 @influxdb_alerts_router.get(
     "/check-names",

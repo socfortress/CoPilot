@@ -96,10 +96,12 @@ class InfluxDBAlertsResponse(BaseModel):
     success: bool
     message: str
 
+
 class InfluxDBCheckNamesResponse(BaseModel):
     """
     Response for available check names query
     """
+
     success: bool
     message: str
     check_names: list[str]
@@ -112,6 +114,6 @@ class InfluxDBCheckNamesResponse(BaseModel):
                 "success": True,
                 "message": "Successfully retrieved check names",
                 "check_names": ["CPU CHECK", "Host Offline", "Memory Usage", "Disk Space"],
-                "total_count": 4
-            }
+                "total_count": 4,
+            },
         }

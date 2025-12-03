@@ -1,10 +1,11 @@
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.influxdb.schema.alerts import AlertStatus, InfluxDBCheckNamesResponse
+from app.connectors.influxdb.schema.alerts import AlertStatus
 from app.connectors.influxdb.schema.alerts import GetInfluxDBAlertQueryParams
 from app.connectors.influxdb.schema.alerts import InfluxDBAlert
 from app.connectors.influxdb.schema.alerts import InfluxDBAlertResponse
+from app.connectors.influxdb.schema.alerts import InfluxDBCheckNamesResponse
 from app.connectors.influxdb.utils.universal import create_influxdb_client
 from app.connectors.influxdb.utils.universal import get_influxdb_organization
 from app.connectors.utils import get_connector_info_from_db
@@ -209,6 +210,7 @@ async def get_influxdb_alerts(
     finally:
         await influxdb_client.close()
 
+
 async def get_influxdb_check_names(
     session: AsyncSession,
 ) -> InfluxDBCheckNamesResponse:
@@ -259,7 +261,7 @@ async def get_influxdb_check_names(
 
     try:
         # Query to get unique check names from the last 30 days
-        flux_query = f'''
+        flux_query = f"""
         from(bucket: "{influxdb_bucket}")
             |> range(start: -30d)
             |> filter(fn: (r) => r._measurement == "statuses" and r._field == "_message")
@@ -267,7 +269,7 @@ async def get_influxdb_check_names(
             |> group(columns: ["_check_name"])
             |> distinct(column: "_check_name")
             |> keep(columns: ["_check_name"])
-        '''
+        """
 
         logger.info(f"Executing Flux query:\n{flux_query}")
 
@@ -297,6 +299,7 @@ async def get_influxdb_check_names(
     except Exception as e:
         logger.error(f"Error querying InfluxDB check names: {e}")
         import traceback
+
         logger.error(f"Traceback: {traceback.format_exc()}")
         return InfluxDBCheckNamesResponse(
             success=False,
