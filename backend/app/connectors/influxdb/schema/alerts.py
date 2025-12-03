@@ -1,15 +1,3 @@
-# from datetime import datetime
-
-# from pydantic import BaseModel
-
-
-# class InfluxDBAlert(BaseModel):
-#     time: datetime
-#     message: str
-#     checkID: str
-#     checkName: str
-#     level: str
-
 from datetime import datetime
 from enum import Enum
 from typing import Optional
