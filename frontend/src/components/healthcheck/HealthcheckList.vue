@@ -34,6 +34,16 @@
             </div>
             <div class="flex items-center gap-2">
                 <n-select
+                    v-model:value="checkNameFilter"
+                    :options="checkNameOptions"
+                    size="small"
+                    class="!w-48"
+                    placeholder="Filter by check name"
+                    clearable
+                    filterable
+                    @update:value="getData"
+                />
+                <n-select
                     v-model:value="statusFilter"
                     :options="statusOptions"
                     size="small"
@@ -89,13 +99,14 @@ import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSelect, NSpin, useM
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { InfluxDBAlertSeverity, InfluxDBAlertStatus } from "@/types/healthchecks.d"
+import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
 import HealthcheckItem from "./HealthcheckItem.vue"
 
 const message = useMessage()
 const loading = ref(false)
 const healthcheckList = ref<InfluxDBAlert[]>([])
 const stats = ref<InfluxDBAlertResponse | null>(null)
+const checkNames = ref<string[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -108,12 +119,18 @@ const pageSlot = ref(8)
 // Filters
 const statusFilter = ref<"all" | "active" | "cleared">("all")
 const excludeOk = ref(false)
+const checkNameFilter = ref<string | null>(null)
 
 const statusOptions = [
     { label: "All", value: "all" },
     { label: "Active", value: "active" },
     { label: "Cleared", value: "cleared" }
 ]
+
+const checkNameOptions = computed(() => [
+    { label: "All Checks", value: null },
+    ...checkNames.value.map(name => ({ label: name, value: name }))
+])
 
 const itemsPaginated = computed(() => {
     const from = (currentPage.value - 1) * pageSize.value
@@ -150,6 +167,19 @@ const criticalTotal = computed<number>(() => {
     return healthcheckList.value.filter(o => o.severity === InfluxDBAlertSeverity.Critical).length || 0
 })
 
+function getCheckNames() {
+    Api.healthchecks
+        .getCheckNames()
+        .then(res => {
+            if (res.data.success) {
+                checkNames.value = res.data.check_names || []
+            }
+        })
+        .catch(() => {
+            checkNames.value = []
+        })
+}
+
 function getData() {
     loading.value = true
 
@@ -157,7 +187,8 @@ function getData() {
         .getHealthchecks({
             days: 7,
             status: statusFilter.value,
-            exclude_ok: excludeOk.value
+            exclude_ok: excludeOk.value,
+            check_name: checkNameFilter.value || undefined
         })
         .then(res => {
             if (res.data.success) {
@@ -187,6 +218,7 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
+    getCheckNames()
     getData()
 })
 </script>

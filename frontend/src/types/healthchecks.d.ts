@@ -39,3 +39,10 @@ export interface InfluxDBAlertQueryParams {
     latest_only?: boolean
     exclude_ok?: boolean
 }
+
+export interface InfluxDBCheckNamesResponse {
+    success: boolean
+    message: string
+    check_names: string[]
+    total_count: number
+}
