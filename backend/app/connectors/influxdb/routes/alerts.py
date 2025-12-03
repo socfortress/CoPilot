@@ -1,15 +1,18 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, Security
+from typing import List
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Query
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
-from app.connectors.influxdb.schema.alerts import (
-    GetInfluxDBAlertQueryParams,
-    InfluxDBAlertResponse,
-    SeverityFilter,
-    AlertStatus,
-)
-from app.connectors.influxdb.services.alerts import get_influxdb_alerts
+from app.connectors.influxdb.schema.alerts import AlertStatus
+from app.connectors.influxdb.schema.alerts import GetInfluxDBAlertQueryParams
+from app.connectors.influxdb.schema.alerts import InfluxDBAlertResponse, InfluxDBCheckNamesResponse
+from app.connectors.influxdb.schema.alerts import SeverityFilter
+from app.connectors.influxdb.services.alerts import get_influxdb_alerts, get_influxdb_check_names
 from app.db.db_session import get_db
 
 influxdb_alerts_router = APIRouter()
@@ -23,24 +26,12 @@ influxdb_alerts_router = APIRouter()
 )
 async def get_alerts_route(
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
-    severity: Optional[List[SeverityFilter]] = Query(
-        None,
-        description="Filter by severity (can specify multiple)"
-    ),
+    severity: Optional[List[SeverityFilter]] = Query(None, description="Filter by severity (can specify multiple)"),
     check_name: Optional[str] = Query(None, description="Filter by check name"),
     sensor_type: Optional[str] = Query(None, description="Filter by sensor type"),
-    status: AlertStatus = Query(
-        AlertStatus.ALL,
-        description="Filter by status: active, cleared, or all"
-    ),
-    latest_only: bool = Query(
-        False,
-        description="Return only latest alert per check"
-    ),
-    exclude_ok: bool = Query(
-        False,
-        description="Exclude alerts with 'ok' status"
-    ),
+    status: AlertStatus = Query(AlertStatus.ALL, description="Filter by status: active, cleared, or all"),
+    latest_only: bool = Query(False, description="Return only latest alert per check"),
+    exclude_ok: bool = Query(False, description="Exclude alerts with 'ok' status"),
     session: AsyncSession = Depends(get_db),
 ) -> InfluxDBAlertResponse:
     """
@@ -72,3 +63,24 @@ async def get_alerts_route(
     )
 
     return await get_influxdb_alerts(query_params, session)
+
+@influxdb_alerts_router.get(
+    "/check-names",
+    response_model=InfluxDBCheckNamesResponse,
+    description="Get available check names from InfluxDB",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_check_names_route(
+    session: AsyncSession = Depends(get_db),
+) -> InfluxDBCheckNamesResponse:
+    """
+    Get a list of all available check names from InfluxDB.
+
+    This endpoint retrieves unique check names from the last 30 days,
+    useful for populating filter dropdowns or autocomplete fields.
+
+    **Returns:**
+    - List of unique check names (sorted alphabetically)
+    - Total count of check names
+    """
+    return await get_influxdb_check_names(session)
