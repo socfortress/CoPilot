@@ -17,7 +17,7 @@
 			</template>
 			<template #headerExtra>
 				<div class="flex items-center gap-2">
-					<n-tag :type="severityTagType" size="small" :bordered="false">
+					<n-tag v-if="alert.severity" :type="severityTagType" size="small" :bordered="false">
 						{{ alert.severity.toUpperCase() }}
 					</n-tag>
 					<span>{{ formatDate(alert.time) }}</span>
