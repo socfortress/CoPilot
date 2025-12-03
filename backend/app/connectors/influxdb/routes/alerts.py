@@ -46,7 +46,7 @@ influxdb_alerts_router = APIRouter()
 
 
 @influxdb_alerts_router.get(
-    "",
+    "/alerts",
     response_model=InfluxDBAlertResponse,
     description="Get alerts from InfluxDB with advanced filtering",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
