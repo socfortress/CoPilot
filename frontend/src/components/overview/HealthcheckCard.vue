@@ -23,7 +23,7 @@ import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useGoto } from "@/composables/useGoto"
 import { useThemeStore } from "@/stores/theme"
-import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
 
 const HealthcheckIcon = "ph:heartbeat"
 const { gotoHealthcheck } = useGoto()
@@ -31,12 +31,15 @@ const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])
 const style = computed(() => useThemeStore().style)
+
 const total = computed<number>(() => {
 	return healthcheck.value.length || 0
 })
+
 const criticalTotal = computed<number>(() => {
-	return healthcheck.value.filter(o => o.level === InfluxDBAlertLevel.Crit).length || 0
+	return healthcheck.value.filter(o => o.severity === InfluxDBAlertSeverity.Critical).length || 0
 })
+
 const values = computed<ItemProps[]>(() => [
 	{ value: total.value, label: "Total" },
 	{ value: criticalTotal.value, label: "Critical", status: criticalTotal.value ? "warning" : undefined }
@@ -46,7 +49,11 @@ function getData() {
 	loading.value = true
 
 	Api.healthchecks
-		.getHealthchecks()
+		.getHealthchecks({
+			days: 1,
+			status: "active",
+			exclude_ok: true
+		})
 		.then(res => {
 			if (res.data.success) {
 				healthcheck.value = res.data.alerts || []

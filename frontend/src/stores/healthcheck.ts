@@ -2,7 +2,7 @@ import type { InfluxDBAlert } from "@/types/healthchecks.d"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
-import { InfluxDBAlertLevel } from "@/types/healthchecks.d"
+import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
 import { IndexHealth } from "@/types/indices.d"
 import { useAuthStore } from "./auth"
 
@@ -52,26 +52,18 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 		},
 		getHealthchecks() {
 			Api.healthchecks
-				.getHealthchecks()
+				.getHealthchecks({
+					days: 1,
+					status: "active",
+					exclude_ok: true
+				})
 				.then(res => {
 					if (res.data.success) {
-						this.alerts = res.data.alerts.filter(o => o.level === InfluxDBAlertLevel.Crit)
+						// Filter to only show critical alerts
+						this.alerts = res.data.alerts.filter(o => o.severity === InfluxDBAlertSeverity.Critical)
 					} else {
 						this.alerts = null
 					}
-
-					/*
-					this.alerts = [
-						{
-							time: new Date(),
-							message: "string",
-							checkID: "string",
-							checkName: "string",
-							level: InfluxDBAlertLevel.Crit
-						}
-					]
-					this.alerts = []
-					*/
 				})
 				.catch(() => {
 					this.alerts = null
