@@ -37,7 +37,7 @@ async def construct_query():
     """
     Constructs the query to find alerts where `fields.COPILOT_ALERT_ID` is NONE.
     """
-    return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}, "sort": [{"@timestamp": {"order": "asc"}}]}
+    return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}, "sort": [{"timestamp": {"order": "asc"}}]}
 
 
 async def fetch_alerts_for_index(es_client, index, query):
