@@ -10,6 +10,7 @@ from app.incidents.schema.alert_collection import AlertPayloadItem
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import IndexNamesResponse
+from typing import List, Tuple
 
 
 async def get_graylog_event_indices() -> IndexNamesResponse:
@@ -56,23 +57,88 @@ async def fetch_alerts_for_index(es_client, index, query):
 
     return [AlertPayloadItem(**hit) for hit in hits]
 
-
-async def get_alerts_not_created_in_copilot() -> AlertsPayload:
+async def fetch_alerts_batch(es_client, index: str, query: dict, batch_size: int = 100) -> Tuple[List[AlertPayloadItem], int]:
     """
-    Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
+    Fetches a single batch of alerts for a given index that match the query.
+
+    Args:
+        es_client: Wazuh Indexer client
+        index: Index name to query
+        query: Query to execute
+        batch_size: Number of alerts to fetch (default 100)
+
+    Returns:
+        Tuple of (list of alerts, total count of matching documents)
+    """
+    try:
+        response = await es_client.search(
+            index=index,
+            body=query,
+            size=batch_size,
+            sort=[{"@timestamp": {"order": "asc"}}]  # Process oldest first
+        )
+
+        hits = response["hits"]["hits"]
+        total = response["hits"]["total"]["value"] if isinstance(response["hits"]["total"], dict) else response["hits"]["total"]
+
+        logger.info(f"Fetched {len(hits)} alerts from index {index}. Total available: {total}")
+
+        return [AlertPayloadItem(**hit) for hit in hits], total
+    except Exception as e:
+        logger.error(f"Error fetching alerts from index {index}: {e}")
+        return [], 0
+
+
+# async def get_alerts_not_created_in_copilot() -> AlertsPayload:
+#     """
+#     Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
+#     """
+#     indices = await return_graylog_events_index_names()
+#     logger.info(f"Indices: {indices}")
+#     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+#     query = await construct_query()
+
+#     alerts_not_created = []
+#     for index in indices:
+#         alerts = await fetch_alerts_for_index(es_client, index, query)
+#         alerts_not_created.extend(alerts)
+
+#     logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
+#     return AlertsPayload(alerts=alerts_not_created)
+
+async def get_alerts_not_created_in_copilot(batch_size: int = 100) -> Tuple[AlertsPayload, int]:
+    """
+    Get a batch of alerts that have not been created in CoPilot yet.
+
+    Args:
+        batch_size: Maximum number of alerts to return (default 100)
+
+    Returns:
+        Tuple of (AlertsPayload with alerts, total count remaining)
     """
     indices = await return_graylog_events_index_names()
-    logger.info(f"Indices: {indices}")
+    logger.info(f"Checking indices: {indices}")
+
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     query = await construct_query()
 
-    alerts_not_created = []
-    for index in indices:
-        alerts = await fetch_alerts_for_index(es_client, index, query)
-        alerts_not_created.extend(alerts)
+    alerts_to_process = []
+    total_remaining = 0
 
-    logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
-    return AlertsPayload(alerts=alerts_not_created)
+    # Fetch from each index until we have enough alerts or run out
+    for index in indices:
+        if len(alerts_to_process) >= batch_size:
+            break
+
+        remaining_to_fetch = batch_size - len(alerts_to_process)
+        alerts, index_total = await fetch_alerts_batch(es_client, index, query, remaining_to_fetch)
+
+        alerts_to_process.extend(alerts)
+        total_remaining += index_total
+
+    logger.info(f"Returning {len(alerts_to_process)} alerts. Total remaining across all indices: {total_remaining}")
+
+    return AlertsPayload(alerts=alerts_to_process), total_remaining
 
 
 async def get_original_alert_id(origin_context: str):

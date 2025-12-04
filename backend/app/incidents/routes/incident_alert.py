@@ -6,6 +6,7 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
+from typing import Optional
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -162,47 +163,139 @@ async def create_alert_manual_route(
     return CreateAlertResponse(success=True, message="Alert created in CoPilot", alert_id=await create_alert(create_alert_request, session))
 
 
+# @incidents_alerts_router.post(
+#     "/create/auto",
+#     response_model=CreateAlertResponse,
+#     description="Is invoked by the scheduler to create an incident alert in CoPilot",
+# )
+# async def create_alert_auto_route(
+#     session: AsyncSession = Depends(get_db),
+# ) -> AutoCreateAlertResponse:
+#     """
+#     Create an incident alert in CoPilot. Automatically create an incident alert within CoPilot.
+#     This queries the `gl-events-*` indices for alerts that have not been created in CoPilot.
+#     It is important to note that Graylog must be configured for the alerts.
+
+#     Args:
+#         create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
+#         session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+#     Returns:
+#         CreateAlertResponse: The response object containing the result of the alert creation.
+#     """
+#     alerts = await get_alerts_not_created_in_copilot()
+#     logger.info(f"Alerts to create in CoPilot: {alerts}")
+#     if len(alerts.alerts) == 0:
+#         return AutoCreateAlertResponse(success=False, message="No alerts to create in CoPilot")
+
+#     created_alerts_count = 0
+
+#     for alert in alerts.alerts:
+#         try:
+#             logger.info(f"Creating alert {alert} in CoPilot")
+#             create_alert_request = CreateAlertRequest(
+#                 index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
+#                 alert_id=await get_original_alert_id(alert.source.origin_context),
+#             )
+#             logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
+#             alert_id = await create_alert(create_alert_request, session)
+#             # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
+#             await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
+#             created_alerts_count += 1
+#         except Exception as e:
+#             logger.error(f"Failed to create alert {alert} in CoPilot: {e}")
+
 @incidents_alerts_router.post(
     "/create/auto",
-    response_model=CreateAlertResponse,
+    response_model=AutoCreateAlertResponse,
     description="Is invoked by the scheduler to create an incident alert in CoPilot",
 )
 async def create_alert_auto_route(
+    batch_size: Optional[int] = Query(100, ge=10, le=500, description="Number of alerts to process per batch"),
+    max_batches: Optional[int] = Query(10, ge=1, le=50, description="Maximum number of batches to process in one run"),
     session: AsyncSession = Depends(get_db),
 ) -> AutoCreateAlertResponse:
     """
-    Create an incident alert in CoPilot. Automatically create an incident alert within CoPilot.
+    Create incident alerts in CoPilot in batches. Automatically create incident alerts within CoPilot.
     This queries the `gl-events-*` indices for alerts that have not been created in CoPilot.
-    It is important to note that Graylog must be configured for the alerts.
+
+    Processing is done in batches to prevent memory issues with large numbers of alerts.
+    The scheduler will call this endpoint multiple times until all alerts are processed.
 
     Args:
-        create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+        batch_size: Number of alerts to process per batch (default 100, max 500)
+        max_batches: Maximum number of batches to process in one scheduler run (default 10, max 50)
+        session (AsyncSession): The database session.
 
     Returns:
-        CreateAlertResponse: The response object containing the result of the alert creation.
+        AutoCreateAlertResponse: The response object containing the result of the alert creation.
     """
-    alerts = await get_alerts_not_created_in_copilot()
-    logger.info(f"Alerts to create in CoPilot: {alerts}")
-    if len(alerts.alerts) == 0:
-        return AutoCreateAlertResponse(success=False, message="No alerts to create in CoPilot")
+    total_created = 0
+    total_failed = 0
+    batches_processed = 0
 
-    created_alerts_count = 0
+    logger.info(f"Starting auto alert creation with batch_size={batch_size}, max_batches={max_batches}")
 
-    for alert in alerts.alerts:
-        try:
-            logger.info(f"Creating alert {alert} in CoPilot")
-            create_alert_request = CreateAlertRequest(
-                index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
-                alert_id=await get_original_alert_id(alert.source.origin_context),
-            )
-            logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
-            alert_id = await create_alert(create_alert_request, session)
-            # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
-            await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
-            created_alerts_count += 1
-        except Exception as e:
-            logger.error(f"Failed to create alert {alert} in CoPilot: {e}")
+    for batch_num in range(max_batches):
+        # Fetch the next batch
+        alerts_payload, total_remaining = await get_alerts_not_created_in_copilot(batch_size=batch_size)
+
+        if len(alerts_payload.alerts) == 0:
+            logger.info(f"No more alerts to process after {batches_processed} batches")
+            break
+
+        logger.info(f"Processing batch {batch_num + 1}/{max_batches}: {len(alerts_payload.alerts)} alerts (Total remaining: {total_remaining})")
+
+        # Process this batch
+        batch_created = 0
+        batch_failed = 0
+
+        for alert in alerts_payload.alerts:
+            try:
+                create_alert_request = CreateAlertRequest(
+                    index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
+                    alert_id=await get_original_alert_id(alert.source.origin_context),
+                )
+
+                alert_id = await create_alert(create_alert_request, session)
+
+                # Add the CoPilot alert ID to Graylog event index
+                await add_copilot_alert_id(
+                    index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id),
+                    alert_id=alert_id
+                )
+
+                batch_created += 1
+                total_created += 1
+
+            except Exception as e:
+                logger.error(f"Failed to create alert {alert.id} from index {alert.index}: {e}")
+                batch_failed += 1
+                total_failed += 1
+
+        batches_processed += 1
+        logger.info(f"Batch {batch_num + 1} complete: {batch_created} created, {batch_failed} failed")
+
+        # If we processed fewer alerts than the batch size, we're done
+        if len(alerts_payload.alerts) < batch_size:
+            logger.info("Processed final batch (fewer alerts than batch size)")
+            break
+
+    message = f"Processed {batches_processed} batches: {total_created} alerts created, {total_failed} failed"
+
+    if total_remaining > 0:
+        message += f". {total_remaining} alerts remaining for next run"
+
+    logger.info(message)
+
+    return AutoCreateAlertResponse(
+        success=True,
+        message=message,
+        alerts_created=total_created,
+        alerts_failed=total_failed,
+        batches_processed=batches_processed,
+        alerts_remaining=max(0, total_remaining - len(alerts_payload.alerts)) if batches_processed < max_batches else total_remaining
+    )
 
 
 @incidents_alerts_router.post(
