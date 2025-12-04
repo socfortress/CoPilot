@@ -66,6 +66,7 @@ from app.routers import monitoring_alert
 from app.routers import network_connectors
 from app.routers import nuclei
 from app.routers import office365
+from app.routers import version
 from app.routers import portainer
 from app.routers import sap_siem
 from app.routers import scheduler
@@ -140,6 +141,7 @@ api_router.include_router(smtp.router)
 api_router.include_router(dnstwist.router)
 api_router.include_router(logs.router)
 api_router.include_router(influxdb.router)
+api_router.include_router(version.router)
 api_router.include_router(grafana.router)
 api_router.include_router(customer_provisioning.router)
 api_router.include_router(threat_intel.router)
