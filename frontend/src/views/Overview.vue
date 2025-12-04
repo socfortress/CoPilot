@@ -1,5 +1,10 @@
 <template>
 	<div ref="page" class="page">
+		<!-- Add version banner at the top -->
+        <div class="section">
+            <VersionUpdateBanner />
+        </div>
+
 		<div class="section flex justify-end gap-3 lg:justify-between">
 			<div class="left-box hidden gap-3 lg:flex">
 				<StackProvisioningButton size="small" type="primary" />
@@ -82,6 +87,7 @@ import { defineAsyncComponent, ref } from "vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import VersionUpdateBanner from "@/components/common/VersionUpdateBanner.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"

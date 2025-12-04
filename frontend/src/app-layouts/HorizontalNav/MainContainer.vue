@@ -15,6 +15,7 @@
 			}"
 		>
 			<Toolbar :boxed="toolbarBoxed" gradient="sidebar" />
+
 			<div
 				id="app-view"
 				class="view"

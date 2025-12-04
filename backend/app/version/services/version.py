@@ -4,7 +4,7 @@ import httpx
 from typing import Optional, Dict, Any
 
 # Current version - update this with each release
-CURRENT_VERSION = "0.1.4"
+CURRENT_VERSION = "0.1.5"
 VERSION_CHECK_URL = "https://api.github.com/repos/socfortress/CoPilot/releases/latest"
 
 async def get_latest_version() -> Optional[Dict[str, Any]]:
