@@ -211,8 +211,6 @@ async def create_alert_manual_route(
     description="Is invoked by the scheduler to create an incident alert in CoPilot",
 )
 async def create_alert_auto_route(
-    batch_size: int = Query(default=100, ge=10, le=500, description="Number of alerts to process per batch"),
-    max_batches: int = Query(default=10, ge=1, le=50, description="Maximum number of batches to process in one run"),
     session: AsyncSession = Depends(get_db),
 ) -> AutoCreateAlertResponse:
     """
@@ -230,6 +228,9 @@ async def create_alert_auto_route(
     Returns:
         AutoCreateAlertResponse: The response object containing the result of the alert creation.
     """
+    batch_size = 100  # Number of alerts to process per batch
+    max_batches = 10  # Maximum number of batches to process in one scheduler run
+
     total_created = 0
     total_failed = 0
     batches_processed = 0
