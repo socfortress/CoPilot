@@ -66,7 +66,6 @@ from app.routers import monitoring_alert
 from app.routers import network_connectors
 from app.routers import nuclei
 from app.routers import office365
-from app.routers import version
 from app.routers import portainer
 from app.routers import sap_siem
 from app.routers import scheduler
@@ -77,6 +76,7 @@ from app.routers import stack_provisioning
 from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
+from app.routers import version
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance

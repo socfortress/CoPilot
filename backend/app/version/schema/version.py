@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class VersionCheckResponse(BaseModel):
     success: bool
@@ -21,6 +23,6 @@ class VersionCheckResponse(BaseModel):
                 "is_outdated": True,
                 "release_url": "https://github.com/socfortress/CoPilot/releases/tag/v0.1.5",
                 "release_notes": "## What's Changed\n* Feature 1\n* Feature 2",
-                "published_at": "2025-12-03T18:48:20Z"
-            }
+                "published_at": "2025-12-03T18:48:20Z",
+            },
         }
