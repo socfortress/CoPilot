@@ -1,15 +1,13 @@
 from fastapi import APIRouter
+from loguru import logger
+
 from app.version.schema.version import VersionCheckResponse
 from app.version.services.version import check_version_outdated
-from loguru import logger
 
 version_router = APIRouter()
 
-@version_router.get(
-    "/check",
-    response_model=VersionCheckResponse,
-    description="Check if CoPilot version is up to date"
-)
+
+@version_router.get("/check", response_model=VersionCheckResponse, description="Check if CoPilot version is up to date")
 async def check_version() -> VersionCheckResponse:
     """
     Check if the current CoPilot version is outdated.

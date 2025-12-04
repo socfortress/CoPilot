@@ -1,11 +1,15 @@
-from packaging.version import Version
-from loguru import logger
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 import httpx
-from typing import Optional, Dict, Any
+from loguru import logger
+from packaging.version import Version
 
 # Current version - update this with each release
 CURRENT_VERSION = "0.1.5"
 VERSION_CHECK_URL = "https://api.github.com/repos/socfortress/CoPilot/releases/latest"
+
 
 async def get_latest_version() -> Optional[Dict[str, Any]]:
     """
@@ -24,11 +28,12 @@ async def get_latest_version() -> Optional[Dict[str, Any]]:
                     "html_url": data.get("html_url", ""),
                     "published_at": data.get("published_at", ""),
                     "body": data.get("body", ""),
-                    "name": data.get("name", "").lstrip("v")
+                    "name": data.get("name", "").lstrip("v"),
                 }
     except Exception as e:
         logger.warning(f"Failed to fetch latest version: {e}")
     return None
+
 
 async def check_version_outdated() -> dict:
     """
@@ -48,7 +53,7 @@ async def check_version_outdated() -> dict:
             "is_outdated": False,
             "release_url": None,
             "release_notes": None,
-            "published_at": None
+            "published_at": None,
         }
 
     latest_version = release_info.get("tag_name")
@@ -66,7 +71,7 @@ async def check_version_outdated() -> dict:
             "is_outdated": is_outdated,
             "release_url": release_info.get("html_url"),
             "release_notes": release_info.get("body"),
-            "published_at": release_info.get("published_at")
+            "published_at": release_info.get("published_at"),
         }
     except Exception as e:
         logger.error(f"Error comparing versions: {e}")
@@ -78,5 +83,5 @@ async def check_version_outdated() -> dict:
             "is_outdated": False,
             "release_url": release_info.get("html_url"),
             "release_notes": None,
-            "published_at": None
+            "published_at": None,
         }
