@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
