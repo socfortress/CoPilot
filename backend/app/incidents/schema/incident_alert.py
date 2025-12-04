@@ -48,6 +48,7 @@ class CreateAlertResponse(BaseModel):
 #     success: bool
 #     message: str
 
+
 class AutoCreateAlertResponse(BaseModel):
     success: bool
     message: str
@@ -64,8 +65,8 @@ class AutoCreateAlertResponse(BaseModel):
                 "alerts_created": 487,
                 "alerts_failed": 13,
                 "batches_processed": 5,
-                "alerts_remaining": 2000
-            }
+                "alerts_remaining": 2000,
+            },
         }
 
 

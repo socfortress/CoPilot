@@ -1,3 +1,6 @@
+from typing import List
+from typing import Tuple
+
 from loguru import logger
 
 from app.connectors.wazuh_indexer.utils.universal import (
@@ -10,7 +13,6 @@ from app.incidents.schema.alert_collection import AlertPayloadItem
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import IndexNamesResponse
-from typing import List, Tuple
 
 
 async def get_graylog_event_indices() -> IndexNamesResponse:
@@ -57,6 +59,7 @@ async def fetch_alerts_for_index(es_client, index, query):
 
     return [AlertPayloadItem(**hit) for hit in hits]
 
+
 async def fetch_alerts_batch(es_client, index: str, query: dict, batch_size: int = 100) -> Tuple[List[AlertPayloadItem], int]:
     """
     Fetches a single batch of alerts for a given index that match the query.
@@ -75,7 +78,7 @@ async def fetch_alerts_batch(es_client, index: str, query: dict, batch_size: int
             index=index,
             body=query,
             size=batch_size,
-            sort=[{"@timestamp": {"order": "asc"}}]  # Process oldest first
+            sort=[{"@timestamp": {"order": "asc"}}],  # Process oldest first
         )
 
         hits = response["hits"]["hits"]
@@ -105,6 +108,7 @@ async def fetch_alerts_batch(es_client, index: str, query: dict, batch_size: int
 
 #     logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
 #     return AlertsPayload(alerts=alerts_not_created)
+
 
 async def get_alerts_not_created_in_copilot(batch_size: int = 100) -> Tuple[AlertsPayload, int]:
     """

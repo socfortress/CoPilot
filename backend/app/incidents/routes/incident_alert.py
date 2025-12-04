@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -6,7 +7,6 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
-from typing import Optional
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -205,6 +205,7 @@ async def create_alert_manual_route(
 #         except Exception as e:
 #             logger.error(f"Failed to create alert {alert} in CoPilot: {e}")
 
+
 @incidents_alerts_router.post(
     "/create/auto",
     response_model=AutoCreateAlertResponse,
@@ -244,7 +245,8 @@ async def create_alert_auto_route(
             logger.info(f"No more alerts to process after {batches_processed} batches")
             break
 
-        logger.info(f"Processing batch {batch_num + 1}/{max_batches}: {len(alerts_payload.alerts)} alerts (Total remaining: {total_remaining})")
+        logger.info(f"Processing batch {batch_num + 1}/{max_batches}: {len(alerts_payload.alerts)} alerts.)")
+        logger.info(f"Total remaining alerts after this batch: {total_remaining}")
 
         # Process this batch
         batch_created = 0
@@ -260,10 +262,7 @@ async def create_alert_auto_route(
                 alert_id = await create_alert(create_alert_request, session)
 
                 # Add the CoPilot alert ID to Graylog event index
-                await add_copilot_alert_id(
-                    index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id),
-                    alert_id=alert_id
-                )
+                await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
 
                 batch_created += 1
                 total_created += 1
@@ -294,7 +293,7 @@ async def create_alert_auto_route(
         alerts_created=total_created,
         alerts_failed=total_failed,
         batches_processed=batches_processed,
-        alerts_remaining=max(0, total_remaining - len(alerts_payload.alerts)) if batches_processed < max_batches else total_remaining
+        alerts_remaining=max(0, total_remaining - len(alerts_payload.alerts)) if batches_processed < max_batches else total_remaining,
     )
 
 
