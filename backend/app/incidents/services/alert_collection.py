@@ -26,11 +26,18 @@ async def get_graylog_event_indices() -> IndexNamesResponse:
     return IndexNamesResponse(index_names=await return_graylog_events_index_names(), success=True, message="Success")
 
 
+# async def construct_query():
+#     """
+#     Constructs the query to find alerts where `fields.COPILOT_ALERT_ID` is NONE.
+#     """
+#     return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}}
+
+
 async def construct_query():
     """
     Constructs the query to find alerts where `fields.COPILOT_ALERT_ID` is NONE.
     """
-    return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}}
+    return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}, "sort": [{"@timestamp": {"order": "asc"}}]}
 
 
 async def fetch_alerts_for_index(es_client, index, query):
@@ -78,7 +85,7 @@ async def fetch_alerts_batch(es_client, index: str, query: dict, batch_size: int
             index=index,
             body=query,
             size=batch_size,
-            sort=[{"@timestamp": {"order": "asc"}}],  # Process oldest first
+            # sort=[{"@timestamp": {"order": "asc"}}],  # Process oldest first
         )
 
         hits = response["hits"]["hits"]
