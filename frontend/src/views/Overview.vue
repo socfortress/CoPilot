@@ -1,9 +1,9 @@
 <template>
 	<div ref="page" class="page">
 		<!-- Add version banner at the top -->
-        <div class="section">
-            <VersionUpdateBanner />
-        </div>
+		<div class="section">
+			<VersionUpdateBanner />
+		</div>
 
 		<div class="section flex justify-end gap-3 lg:justify-between">
 			<div class="left-box hidden gap-3 lg:flex">

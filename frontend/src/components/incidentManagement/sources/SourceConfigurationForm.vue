@@ -215,7 +215,6 @@ import {
 	NSelect,
 	NSpin,
 	NTag,
-	NText,
 	useMessage
 } from "naive-ui"
 import { computed, h, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
