@@ -57,7 +57,7 @@ class Source(BaseModel):
 class AlertPayloadItem(BaseModel):
     index: str = Field(..., alias="_index")
     id: str = Field(..., alias="_id")
-    score: float = Field(..., alias="_score")
+    score: Optional[float] = Field(None, alias="_score")
     source: Source = Field(..., alias="_source")
 
 
