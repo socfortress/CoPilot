@@ -119,6 +119,11 @@ async def get_influxdb_alerts(
             |> sort(columns: ["_time"], desc: true)
             """
 
+        # Add limit to prevent overwhelming results
+        flux_query += f"""
+            |> limit(n: {query_params.limit})
+        """
+
         logger.info(f"Executing Flux query:\n{flux_query}")
 
         # Execute query

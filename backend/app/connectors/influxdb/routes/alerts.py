@@ -34,6 +34,7 @@ async def get_alerts_route(
     status: AlertStatus = Query(AlertStatus.ALL, description="Filter by status: active, cleared, or all"),
     latest_only: bool = Query(False, description="Return only latest alert per check"),
     exclude_ok: bool = Query(False, description="Exclude alerts with 'ok' status"),
+    limit: Optional[int] = Query(500, ge=1, le=1000, description="Limit the number of returned alerts"),
     session: AsyncSession = Depends(get_db),
 ) -> InfluxDBAlertResponse:
     """
@@ -62,6 +63,7 @@ async def get_alerts_route(
         status=status,
         latest_only=latest_only,
         exclude_ok=exclude_ok,
+        limit=limit,
     )
 
     return await get_influxdb_alerts(query_params, session)

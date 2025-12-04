@@ -35,6 +35,7 @@ class GetInfluxDBAlertQueryParams(BaseModel):
     status: AlertStatus = Field(default=AlertStatus.ALL, description="Filter by alert status (active/cleared/all)")
     latest_only: bool = Field(default=False, description="Return only the latest alert per check")
     exclude_ok: bool = Field(default=False, description="Exclude alerts with 'ok' status")
+    limit: Optional[int] = Field(default=500, ge=1, le=1000, description="Limit the number of returned alerts")
 
 
 class InfluxDBAlert(BaseModel):
