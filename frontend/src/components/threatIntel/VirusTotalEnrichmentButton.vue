@@ -12,7 +12,7 @@
 		<n-modal
 			v-model:show="showModal"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(710px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:bordered="false"
 			segmented
@@ -85,7 +85,7 @@
 							>
 								<template #header>{{ key }}</template>
 								<template #footer>
-									<div class="flex flex-col justify-between gap-4 text-sm @xs:!flex-row">
+									<div class="@xs:flex!-row flex flex-col justify-between gap-4 text-sm">
 										<n-statistic class="grow">
 											<template #label>
 												<span class="text-sm">method</span>
@@ -162,7 +162,7 @@
 							</code>
 						</div>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>cert_signature</template>
 							<template #value>
 								<n-table
@@ -188,7 +188,7 @@
 							</template>
 						</CardKV>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>authority_key_identifier</template>
 							<template #value>
 								<n-table
@@ -350,7 +350,7 @@
 							</template>
 						</CardKV>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>ca_information_access</template>
 							<template #value>
 								<n-table
@@ -402,7 +402,7 @@
 							</CardKV>
 						</div>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>validity</template>
 							<template #value>
 								<n-table
@@ -438,7 +438,7 @@
 							</template>
 						</CardKV>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #value>
 								<n-table :bordered="false" single-line>
 									<tbody>
@@ -473,7 +473,7 @@
 							</template>
 						</CardKV>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>issuer</template>
 							<template #value>
 								<n-table
@@ -499,7 +499,7 @@
 							</template>
 						</CardKV>
 
-						<CardKV value-class="!p-0 overflow-x-auto overflow-y-hidden">
+						<CardKV value-class="p-0! overflow-x-auto overflow-y-hidden">
 							<template #key>subject</template>
 							<template #value>
 								<n-table

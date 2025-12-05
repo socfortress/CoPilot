@@ -13,8 +13,8 @@
 				}"
 			/>
 			<div class="flex justify-end gap-2">
-				<n-button :disabled="loading" secondary class="!w-32" @click="clear(true)">Close</n-button>
-				<n-button :disabled="loading || !title" secondary type="primary" class="!w-32" @click="addNote()">
+				<n-button :disabled="loading" secondary class="w-32!" @click="clear(true)">Close</n-button>
+				<n-button :disabled="loading || !title" secondary type="primary" class="w-32!" @click="addNote()">
 					Submit
 				</n-button>
 			</div>

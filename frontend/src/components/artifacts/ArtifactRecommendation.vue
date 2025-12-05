@@ -22,7 +22,7 @@
 					v-model:value="selectedOs"
 					size="small"
 					:options="osOptions"
-					class="!w-32"
+					class="w-32!"
 					placeholder="Select OS"
 					:disabled="loading"
 				/>
@@ -46,12 +46,12 @@
 						v-for="recommendation of recommendations"
 						:key="recommendation.name"
 						embedded
-						content-class="flex flex-col gap-2 !p-0"
+						content-class="flex flex-col gap-2 p-0!"
 						class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 						size="small"
 					>
 						<strong class="recommendation-name px-4 pt-3 pb-1 font-mono">{{ recommendation.name }}</strong>
-						<n-divider class="!m-0" />
+						<n-divider class="m-0!" />
 						<div class="recommendation-description px-4 pt-1">
 							{{ recommendation.description }}
 						</div>

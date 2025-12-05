@@ -46,7 +46,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
 			:bordered="false"
 			:title="assetNameTruncated"
@@ -83,7 +83,7 @@
 				/>
 			</n-spin>
 
-			<n-divider class="!my-0" />
+			<n-divider class="my-0!" />
 
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">

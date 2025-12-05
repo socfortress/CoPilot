@@ -42,7 +42,7 @@
 							:options="actionsOptions"
 							:disabled="loading"
 							size="small"
-							class="!w-32"
+							class="w-32!"
 							status="success"
 						/>
 						<n-button

@@ -8,7 +8,7 @@
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
-								<n-button size="small" class="!cursor-help">
+								<n-button size="small" class="cursor-help!">
 									<template #icon>
 										<Icon :name="InfoIcon" />
 									</template>

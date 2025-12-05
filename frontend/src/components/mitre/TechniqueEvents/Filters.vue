@@ -14,7 +14,7 @@
 
 				<div class="pt-1 pb-2">
 					<div class="text-secondary mb-1 text-sm">Mitre field:</div>
-					<n-input v-model:value="mitreField" size="small" clearable class="!w-40" />
+					<n-input v-model:value="mitreField" size="small" clearable class="w-40!" />
 				</div>
 			</n-popover>
 		</div>
@@ -25,13 +25,13 @@
 					:options="unitOptions"
 					placeholder="Time unit"
 					size="small"
-					class="!w-24"
+					class="w-24!"
 				/>
 				<n-input-number
 					v-model:value="filterTimeRange.value"
 					:min="1"
 					placeholder="Value"
-					class="!w-26"
+					class="w-26!"
 					size="small"
 					:parse="parseTimeValue"
 				/>
@@ -40,7 +40,7 @@
 		<div v-for="filter of usedFilters" :key="filter.type">
 			<n-input-group>
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
-				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-30" />
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-30!" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
 						<Icon :name="DelIcon" />

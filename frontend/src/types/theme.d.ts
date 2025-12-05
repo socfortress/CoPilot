@@ -1,5 +1,5 @@
 export enum Layout {
-	HorizontalNav = "HorizontalNav",
+	VerticalNav = "VerticalNav",
 	Blank = "Blank"
 }
 

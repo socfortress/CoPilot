@@ -5,12 +5,14 @@
 				v-if="logoMini"
 				mini
 				:dark="isDark"
-				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+				max-height="32px"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)*2)_forwards_calc(var(--sidebar-anim-duration)/2)] opacity-0"
 			/>
 			<Logo
 				v-if="!logoMini"
 				:dark="isDark"
-				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+				max-height="28px"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)*2)_forwards_calc(var(--sidebar-anim-duration)/2)] opacity-0"
 			/>
 		</div>
 		<Transition name="fade" mode="out-in">

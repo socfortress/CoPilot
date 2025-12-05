@@ -37,7 +37,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 			:title="rule.title"
 			:bordered="false"

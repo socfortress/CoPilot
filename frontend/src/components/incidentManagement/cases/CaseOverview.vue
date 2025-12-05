@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="flex flex-col gap-4 px-7 sm:!flex-row">
+				<div class="flex flex-col gap-4 px-7 sm:flex-row!">
 					<CardKV
 						:color="
 							caseData.case_status === 'OPEN'

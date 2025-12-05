@@ -12,14 +12,14 @@
 						:options="unitOptions"
 						placeholder="Time unit"
 						:disabled="loading"
-						class="!w-28"
+						class="w-28!"
 					/>
 					<n-input-number
 						v-model:value="model.time"
 						:min="1"
 						clearable
 						placeholder="Time"
-						class="!w-32"
+						class="w-32!"
 						:disabled="loading"
 					/>
 				</n-input-group>

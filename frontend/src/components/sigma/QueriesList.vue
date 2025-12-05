@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -35,8 +35,8 @@
 						<Icon :name="ToolsIcon" :size="16" />
 						<span class="xs:block hidden">Actions</span>
 						<Icon
-							class="xs:!block !hidden transition-transform"
-							:class="{ '!rotate-90': showActionsView }"
+							class="xs:block! hidden! transition-transform"
+							:class="{ 'rotate-90!': showActionsView }"
 							:name="ChevronIcon"
 							:size="16"
 						/>
@@ -52,7 +52,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -74,7 +74,7 @@
 							:options="activeOptions"
 							placeholder="Select a status"
 							clearable
-							class="!w-56"
+							class="w-56!"
 						/>
 					</div>
 					<div class="flex justify-between gap-2 px-3">

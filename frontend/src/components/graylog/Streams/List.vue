@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -33,7 +33,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover overlap placement="right" class="!px-0">
+			<n-popover overlap placement="right" class="px-0!">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-button size="small">
@@ -52,10 +52,10 @@
 							:options="enabledOptions"
 							clearable
 							placeholder="All"
-							class="!w-36"
+							class="w-36!"
 						/>
 					</div>
-					<n-divider class="!my-3" />
+					<n-divider class="my-3!" />
 					<div class="px-3">
 						<div class="text-secondary mb-1 text-sm">Editable:</div>
 						<n-select
@@ -64,7 +64,7 @@
 							:options="editableOptions"
 							clearable
 							placeholder="All"
-							class="!w-36"
+							class="w-36!"
 						/>
 					</div>
 				</div>

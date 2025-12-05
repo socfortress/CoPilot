@@ -47,7 +47,7 @@
 											v-if="addressLabel !== '-'"
 											:name="InfoIcon"
 											:size="13"
-											class="!opacity-80"
+											class="opacity-80!"
 										/>
 									</div>
 								</template>

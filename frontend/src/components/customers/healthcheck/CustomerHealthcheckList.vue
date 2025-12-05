@@ -7,15 +7,15 @@
 					:options="unitOptions"
 					placeholder="Time unit"
 					clearable
-					class="!w-28"
+					class="w-28!"
 				/>
-				<n-input-number v-model:value="filters.time" :min="1" clearable placeholder="Time" class="!w-32" />
+				<n-input-number v-model:value="filters.time" :min="1" clearable placeholder="Time" class="w-32!" />
 			</n-input-group>
 		</div>
 	</div>
 	<n-spin :show="loading">
 		<div class="flex min-h-52 flex-col gap-6">
-			<div v-if="healthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
+			<div v-if="healthyList.length" class="flex flex-col gap-2 not-last:mb-5">
 				<div class="text-primary mb-2 flex items-center gap-2">
 					<Icon :name="CheckIcon" :size="16" />
 					Healthy
@@ -31,7 +31,7 @@
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
-			<div v-if="unhealthyList.length" class="flex flex-col gap-2 [&:not(:last-child)]:mb-5">
+			<div v-if="unhealthyList.length" class="flex flex-col gap-2 not-last:mb-5">
 				<div class="text-warning mb-2 flex items-center gap-2">
 					<Icon :name="AlertIcon" :size="16" />
 					Unhealthy

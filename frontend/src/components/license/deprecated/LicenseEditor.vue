@@ -50,7 +50,7 @@
 		</div>
 
 		<div v-if="replaceEnabled" class="replace-box mt-2 flex gap-2">
-			<n-input v-model:value="licenseKeyModel" class="!max-w-72 grow" clearable />
+			<n-input v-model:value="licenseKeyModel" class="max-w-72! grow" clearable />
 			<n-button secondary :disabled="loadingReplace" @click="resetLicense()">Reset</n-button>
 			<n-button type="success" :loading="loadingReplace" :disabled="!licenseKeyModel" @click="replaceLicense()">
 				<template #icon>
@@ -61,7 +61,7 @@
 		</div>
 
 		<div v-if="extendEnabled" class="extend-box mt-5 flex gap-2">
-			<n-input-number v-model:value="period" class="!max-w-44 grow" :min="1">
+			<n-input-number v-model:value="period" class="max-w-44! grow" :min="1">
 				<template #prefix>
 					<div class="min-w-12">Day{{ period === 1 ? "" : "s" }}</div>
 				</template>

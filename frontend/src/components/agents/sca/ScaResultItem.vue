@@ -60,7 +60,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="data?.title"
 			:bordered="false"

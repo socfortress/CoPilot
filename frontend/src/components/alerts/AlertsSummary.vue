@@ -36,7 +36,7 @@
 				</n-scrollbar>
 
 				<div v-if="alertsSummary.alerts.length > 3" class="load-more" @click="showAllAlerts = true">
-					<n-button size="small" text class="!w-full">
+					<n-button size="small" text class="w-full!">
 						<template #icon>
 							<Icon :name="ExpandIcon" />
 						</template>

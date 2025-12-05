@@ -1,7 +1,7 @@
 <template>
 	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
-			main-content-class="!p-0 overflow-hidden grow flex flex-col h-full"
+			main-content-class="p-0! overflow-hidden grow flex flex-col h-full"
 			:use-main-scroll="false"
 			padding="18px"
 			enable-resize
@@ -37,7 +37,7 @@
 			<template #sidebar-content>
 				<n-spin :show="loadingList">
 					<template v-if="fileList.length">
-						<div class="divide-border flex flex-col divide-y-1">
+						<div class="divide-border flex flex-col divide-y">
 							<div
 								v-for="item of fileList"
 								:key="item.filename"

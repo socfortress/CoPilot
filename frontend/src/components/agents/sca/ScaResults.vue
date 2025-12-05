@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -41,7 +41,7 @@
 				:item-count="itemsFiltered.length"
 				:simple="simpleMode"
 			/>
-			<n-popover overlap placement="right" class="!px-0">
+			<n-popover overlap placement="right" class="px-0!">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-button size="small">
@@ -60,7 +60,7 @@
 							:options="resultOptions"
 							clearable
 							placeholder="All"
-							class="!w-40"
+							class="w-40!"
 						/>
 					</div>
 				</div>

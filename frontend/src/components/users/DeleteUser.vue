@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type quaternary class="!w-full !justify-start" :loading @click="handleDelete()">
+	<n-button :size :type quaternary class="w-full! justify-start!" :loading @click="handleDelete()">
 		<template #icon>
 			<Icon :name="DeleteIcon" :size="14" />
 		</template>

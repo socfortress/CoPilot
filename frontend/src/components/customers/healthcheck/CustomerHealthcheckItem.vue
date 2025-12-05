@@ -40,7 +40,7 @@
 						<template #trigger>
 							<Badge type="splitted" hint-cursor>
 								<template #iconLeft>
-									<Icon :name="AgentIcon" :size="13" class="!opacity-80" />
+									<Icon :name="AgentIcon" :size="13" class="opacity-80!" />
 								</template>
 								<template #label>Agent</template>
 								<template #value>
@@ -72,7 +72,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			:title="`Health check ${source}`"
 			:bordered="false"

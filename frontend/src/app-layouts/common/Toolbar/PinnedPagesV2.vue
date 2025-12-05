@@ -22,7 +22,7 @@
 
 		<Transition name="anim" tag="div" class="shortcuts-container flex items-center">
 			<div v-if="pinned.length" class="flex items-center">
-				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="!p-1">
+				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="p-1!">
 					<template #trigger>
 						<button class="shortcuts-btn flex items-center gap-2 text-sm">
 							<span>Shortcuts</span>
@@ -35,7 +35,7 @@
 							:key="page.name"
 							size="small"
 							quaternary
-							class="!justify-start"
+							class="justify-start!"
 							@click="gotoPage(page.name)"
 						>
 							<span class="flex items-center gap-1">

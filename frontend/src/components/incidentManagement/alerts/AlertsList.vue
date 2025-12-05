@@ -1,11 +1,11 @@
 <template>
 	<div class="alerts-list">
 		<div ref="header" class="flex items-center justify-end gap-2">
-			<div class="info flex grow gap-2 lg:!hidden">
+			<div class="info flex grow gap-2 lg:hidden!">
 				<n-popover overlap placement="left">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -121,7 +121,7 @@
 			style="position: sticky; top: calc(var(--toolbar-height) - 24px); z-index: 1"
 		>
 			<n-card content-class="flex flex-wrap items-center gap-3" size="small" class="mt-3 shadow-xl" embedded>
-				<n-popover content-class="!p-0">
+				<n-popover content-class="p-0!">
 					<template #trigger>
 						<n-button secondary size="small">
 							<div class="flex min-w-8 items-center gap-2">
@@ -129,7 +129,7 @@
 								<n-badge
 									:value="checkedAlerts.length"
 									color="rgba(var(--border-color-rgb) / 0.3)"
-									class="!font-mono"
+									class="font-mono!"
 								/>
 							</div>
 						</n-button>

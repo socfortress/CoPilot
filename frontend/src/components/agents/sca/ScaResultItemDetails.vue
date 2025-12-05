@@ -1,6 +1,6 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
-		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
+		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 py-8!">
 			<div class="px-7">
 				<n-card embedded class="overflow-hidden">
 					<div class="flex flex-wrap justify-between gap-8">
@@ -28,7 +28,7 @@
 			</div>
 
 			<div class="px-7">
-				<n-card content-class="!p-0" embedded class="overflow-hidden">
+				<n-card content-class="p-0!" embedded class="overflow-hidden">
 					<div
 						v-shiki="{ lang: 'shell', decode: true }"
 						class="scrollbar-styled code-bg-transparent overflow-hidden"

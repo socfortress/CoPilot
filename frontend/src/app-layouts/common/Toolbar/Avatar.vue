@@ -49,7 +49,7 @@ const options = ref([
 			h(
 				"a",
 				{
-					href: "https://www.socfortress.co/contact_form.html",
+					href: "https://www.socfortress.co/contact-us",
 					target: "_blank",
 					rel: "noopenner noreferrer"
 				},

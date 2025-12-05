@@ -7,7 +7,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(700px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
 			:bordered="false"
 			title="Timeline Details"

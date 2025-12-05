@@ -9,13 +9,13 @@
 								v-model:value="timeUnit"
 								:options="timeUnitOptions"
 								placeholder="Time unit"
-								class="!min-w-28 basis-1"
+								class="min-w-28! basis-1"
 							/>
 							<n-input-number v-model:value="timeValue" :min="1" placeholder="Time" class="grow" />
 						</n-input-group>
 					</n-form-item>
 
-					<n-form-item label="Organization" class="flex flex-grow">
+					<n-form-item label="Organization" class="flex grow">
 						<n-select
 							v-model:value="selectedOrgId"
 							:options="orgsOptions"
@@ -24,7 +24,7 @@
 						/>
 					</n-form-item>
 
-					<n-form-item v-if="canSelectDashboard" label="Dashboard" class="flex flex-grow">
+					<n-form-item v-if="canSelectDashboard" label="Dashboard" class="flex grow">
 						<n-select
 							v-model:value="selectedDashboardUID"
 							:options="dashboardsOptions"

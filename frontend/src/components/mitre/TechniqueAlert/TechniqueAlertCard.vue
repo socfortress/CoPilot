@@ -29,7 +29,7 @@
 			v-model:show="showDetails"
 			display-directive="show"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`${entity.technique_id} • ${entity.technique_name}`"
 			:bordered="false"

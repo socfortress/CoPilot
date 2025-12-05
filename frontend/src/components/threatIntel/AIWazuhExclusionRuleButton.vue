@@ -35,7 +35,7 @@
 		<n-modal
 			v-model:show="showModal"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(710px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:bordered="false"
 			title="Wazuh Exclusion Rule"

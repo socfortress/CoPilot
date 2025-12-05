@@ -39,7 +39,7 @@
 						</Badge>
 					</QueryTimeIntervalForm>
 
-					<Badge type="splitted" bright fluid class="!hidden sm:!flex">
+					<Badge type="splitted" bright fluid class="hidden! sm:flex!">
 						<template #iconLeft>
 							<Icon :name="TimeIcon" />
 						</template>
@@ -76,7 +76,7 @@
 			display-directive="show"
 		>
 			<n-card
-				content-class="flex flex-col !p-0"
+				content-class="flex flex-col p-0!"
 				:title="`#${query.id}`"
 				closable
 				:bordered="false"

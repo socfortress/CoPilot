@@ -1,5 +1,5 @@
 <template>
-	<n-button quaternary class="!w-full !justify-start" @click="showModal = true">
+	<n-button quaternary class="w-full! justify-start!" @click="showModal = true">
 		<template #icon>
 			<Icon :name="CustomerIcon" :size="14" />
 		</template>

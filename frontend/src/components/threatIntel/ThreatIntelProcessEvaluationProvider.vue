@@ -38,7 +38,7 @@
 					name="Overview"
 					tab="Overview"
 					display-directive="show:lazy"
-					class="flex flex-col gap-4 !py-8"
+					class="flex flex-col gap-4 py-8!"
 				>
 					<div class="px-7">
 						<n-card embedded class="overflow-hidden">
