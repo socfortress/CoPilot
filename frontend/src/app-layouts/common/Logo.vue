@@ -1,7 +1,13 @@
 <template>
 	<div class="logo">
 		<Transition name="logo-fade" mode="out-in">
-			<img :key="logoSrc" :src="logoSrc" :alt="logoAlt" :aria-label="logoAlt" class="logo-image" />
+			<img
+				:key="logoSrc"
+				:src="logoSrc"
+				alt="SOCFortress logo"
+				aria-label="SOCFortress logo"
+				class="logo-image"
+			/>
 		</Transition>
 	</div>
 </template>
@@ -11,13 +17,14 @@ import { computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
 
 interface Props {
-	type?: "default" | "mini" | "large"
+	type?: "default" | "small" | "large"
 	dark?: boolean
 	maxHeight?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	type: "default",
+	dark: undefined,
 	maxHeight: "32px"
 })
 
@@ -28,11 +35,6 @@ const isDark = computed<boolean>(() => props.dark ?? themeStore.isThemeDark)
 const logoSrc = computed<string>(() => {
 	const theme = isDark.value ? "dark" : "light"
 	return new URL(`../../assets/images/socfortress_logo_${props.type}_${theme}.svg`, import.meta.url).href
-})
-
-const logoAlt = computed<string>(() => {
-	const typeLabel = props.type === "mini" ? "Mini" : props.type === "large" ? "Large" : ""
-	return `SOCFortress ${typeLabel} Logo`.trim()
 })
 </script>
 

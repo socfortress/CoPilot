@@ -6,7 +6,7 @@
 	>
 		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
 			<div :class="{ 'px-7': !sidebarClosed, 'px-2': sidebarClosed }" class="transition-all">
-				<SidebarHeader :logo-mini="sidebarClosed" />
+				<SidebarHeader :logo-small="sidebarClosed" />
 			</div>
 			<n-scrollbar :trigger="sidebarClosed ? 'hover' : 'none'">
 				<div :class="{ 'px-2': !sidebarClosed }" class="transition-all">
