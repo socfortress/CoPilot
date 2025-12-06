@@ -59,7 +59,7 @@
 			</div>
 		</n-card>
 		<div class="main">
-			<n-tabs v-model:value="tabActive" tab-class="!hidden" animated>
+			<n-tabs v-model:value="tabActive" tab-class="hidden!" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
 				</n-tab-pane>

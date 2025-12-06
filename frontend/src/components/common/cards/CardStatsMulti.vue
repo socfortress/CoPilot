@@ -1,5 +1,5 @@
 <template>
-	<n-card content-class="!p-0" :class="{ hovered }">
+	<n-card content-class="p-0!" :class="{ hovered }">
 		<div class="flex h-full flex-col overflow-hidden">
 			<div class="card-header flex items-center justify-between gap-4">
 				<div class="title flex grow items-center gap-2">

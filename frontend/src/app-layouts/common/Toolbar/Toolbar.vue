@@ -2,7 +2,7 @@
 	<header class="toolbar" :class="{ boxed }">
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="logo-box flex cursor-pointer items-center gap-2" @click="openNav()">
-				<Logo mini />
+				<Logo type="small" />
 				<Icon :size="20" name="carbon:chevron-right" />
 			</div>
 

@@ -1,11 +1,10 @@
 <template>
-	<nav class="nav" :class="[{ collapsed }, mode]">
+	<nav class="nav" :class="{ collapsed }">
 		<n-menu
 			ref="menu"
 			v-model:value="selectedKey"
 			:options="menuOptions"
 			:collapsed
-			:mode
 			:indent="18"
 			accordion
 			:collapsed-width
@@ -32,8 +31,7 @@ import { useRoute, useRouter } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 import getItems from "./items"
 
-const { mode = "horizontal", collapsed = false } = defineProps<{
-	mode?: "vertical" | "horizontal"
+const { collapsed = false } = defineProps<{
 	collapsed?: boolean
 }>()
 
@@ -157,14 +155,6 @@ function handleUpdateExpandedKeys(value: string[]) {
 							transparent 8px
 						);
 					}
-				}
-			}
-		}
-
-		.n-menu--horizontal {
-			.n-menu-item-content {
-				.n-menu-item-content-header {
-					overflow: initial;
 				}
 			}
 		}

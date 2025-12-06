@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -43,7 +43,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -66,13 +66,13 @@
 								:options="unitOptions"
 								placeholder="Time unit"
 								clearable
-								class="!w-28"
+								class="w-28!"
 							/>
 							<n-input-number
 								v-model:value="filters.olderThan"
 								clearable
 								placeholder="Time"
-								class="!w-32"
+								class="w-32!"
 							/>
 						</n-input-group>
 					</div>

@@ -17,7 +17,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
-							<Icon :name="TargetIcon" :size="13" class="!opacity-80" />
+							<Icon :name="TargetIcon" :size="13" class="opacity-80!" />
 						</template>
 						<template #label>Fired times</template>
 						<template #value>
@@ -29,13 +29,13 @@
 						<template #trigger>
 							<Badge type="splitted" color="primary" hint-cursor>
 								<template #iconLeft>
-									<Icon :name="AgentIcon" :size="13" class="!opacity-80" />
+									<Icon :name="AgentIcon" :size="13" class="opacity-80!" />
 								</template>
 								<template #label>Agent</template>
 								<template #value>
 									<div class="flex flex-wrap items-center gap-2">
 										{{ alert.agent_name }} / {{ alert.agent_labels_customer }}
-										<Icon :name="InfoIcon" :size="13" class="!opacity-80" />
+										<Icon :name="InfoIcon" :size="13" class="opacity-80!" />
 									</div>
 								</template>
 							</Badge>
@@ -72,19 +72,19 @@
 						<template #label>syslog</template>
 						<template #value>{{ alert.syslog_type }} / {{ alert.syslog_level }}</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
+					<Badge type="splitted" color="primary" class="hidden! @2xl:flex!">
 						<template #label>manager</template>
 						<template #value>
 							{{ alert.manager_name }}
 						</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
+					<Badge type="splitted" color="primary" class="hidden! @2xl:flex!">
 						<template #label>decoder</template>
 						<template #value>
 							{{ alert.decoder_name }}
 						</template>
 					</Badge>
-					<Badge type="splitted" color="primary" class="!hidden @2xl:!flex">
+					<Badge type="splitted" color="primary" class="hidden! @2xl:flex!">
 						<template #label>source</template>
 						<template #value>
 							{{ alert.source }}
@@ -97,7 +97,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`Alert: ${alert.id}`"
 			:bordered="false"

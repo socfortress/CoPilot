@@ -33,7 +33,7 @@ import { useRoute, useRouter } from "vue-router"
 import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
-import HorizontalNav from "@/app-layouts/HorizontalNav"
+import VerticalNav from "@/app-layouts/VerticalNav"
 import ChatButton from "@/components/aiChatbot/ChatButton.vue"
 import SearchDialog from "@/components/common/SearchDialog.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -41,7 +41,7 @@ import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 
 const layoutComponents = {
-	HorizontalNav,
+	VerticalNav,
 	Blank
 }
 

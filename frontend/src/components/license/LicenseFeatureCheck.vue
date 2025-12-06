@@ -8,7 +8,7 @@
 					<span v-else></span>
 				</template>
 			</template>
-			<div class="flex w-[90vw] !max-w-lg flex-col gap-3">
+			<div class="flex w-[90vw] max-w-lg! flex-col gap-3">
 				<div>
 					It seems that the feature you are looking for is currently unavailable. To unlock and use it, you
 					need to enable this feature. You can manage your features from the License page.
@@ -25,7 +25,7 @@
 		</n-tooltip>
 
 		<div v-if="showFeedback && feedback === 'overlay'" class="over-layer animate-fade">
-			<n-card class="w-[90vw] !max-w-lg">
+			<n-card class="w-[90vw] max-w-lg!">
 				<template #header>
 					<div class="flex items-center gap-3">
 						<Icon :name="AlertIcon" :size="18" />
@@ -49,7 +49,7 @@
 			</n-card>
 		</div>
 
-		<n-modal v-model:show="showModal" class="w-[90vw] !max-w-lg" preset="card">
+		<n-modal v-model:show="showModal" class="w-[90vw] max-w-lg!" preset="card">
 			<template #header>
 				<div class="flex items-center gap-3">
 					<Icon :name="AlertIcon" :size="18" />

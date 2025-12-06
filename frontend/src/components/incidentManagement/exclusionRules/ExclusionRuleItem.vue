@@ -75,7 +75,7 @@
 			display-directive="show"
 		>
 			<n-card
-				content-class="flex flex-col !p-0"
+				content-class="flex flex-col p-0!"
 				:title="`#${entity.id} • ${entity.name}`"
 				closable
 				:bordered="false"

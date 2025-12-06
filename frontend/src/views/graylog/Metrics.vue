@@ -12,19 +12,19 @@
 			</div>
 
 			<div class="toolbar flex items-center gap-3">
-				<n-button v-if="!isRunning" size="small" type="primary" class="!w-24" @click="start()">
+				<n-button v-if="!isRunning" size="small" type="primary" class="w-24!" @click="start()">
 					<template #icon>
 						<Icon :name="StartIcon" />
 					</template>
 					Start
 				</n-button>
-				<n-button v-if="isRunning" size="small" type="error" ghost class="!w-24" @click="stop()">
+				<n-button v-if="isRunning" size="small" type="error" ghost class="w-24!" @click="stop()">
 					<template #icon>
 						<Icon :name="StopIcon" />
 					</template>
 					Stop
 				</n-button>
-				<n-select v-model:value="intervalSelected" size="small" :options="intervalOptions" class="!w-36" />
+				<n-select v-model:value="intervalSelected" size="small" :options="intervalOptions" class="w-36!" />
 			</div>
 		</div>
 

@@ -1,6 +1,6 @@
 <template>
 	<div class="pipe-list">
-		<n-card content-class="!px-0">
+		<n-card content-class="px-0!">
 			<n-spin :show="loading" content-class="min-h-7">
 				<n-collapse v-if="pipelines.length" v-model:expanded-names="selectedPipeline" accordion>
 					<n-collapse-item
@@ -34,7 +34,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 			:title="highlightPipe?.title"
 			:bordered="false"

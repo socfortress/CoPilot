@@ -5,7 +5,7 @@
 				<n-popover v-if="showInfoPopover" overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -31,7 +31,7 @@
 				<n-checkbox v-model:checked="filters.enabledOnly">Enabled only</n-checkbox>
 			</div>
 			<div class="block @md:hidden">
-				<n-popover overlap placement="right" class="!px-0">
+				<n-popover overlap placement="right" class="px-0!">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-badge :show="filters.enabledOnly" dot type="success" :offset="[-3, 4]">

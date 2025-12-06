@@ -62,7 +62,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`Assets #${asset.asset_id} - ${asset.asset_uuid}`"
 			:bordered="false"

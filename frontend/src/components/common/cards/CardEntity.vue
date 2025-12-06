@@ -1,7 +1,7 @@
 <template>
 	<n-card
 		class="card-entity"
-		content-class="!p-0"
+		content-class="p-0!"
 		:class="[
 			`card-size-${size}`,
 			`card-status-${status}`,

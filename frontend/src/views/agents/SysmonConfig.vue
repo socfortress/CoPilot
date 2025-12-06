@@ -1,7 +1,7 @@
 <template>
 	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
-			main-content-class="!p-0 overflow-hidden grow flex h-full"
+			main-content-class="p-0! overflow-hidden grow flex h-full"
 			:use-main-scroll="false"
 			padding="18px"
 			enable-resize
@@ -41,7 +41,7 @@
 						:options="customersOptions"
 						@select="newConfig($event)"
 					>
-						<n-button secondary class="!mt-4 !w-full" size="large">
+						<n-button secondary class="mt-4! w-full!" size="large">
 							<template #icon>
 								<Icon :size="18" :name="NewConfigIcon" />
 							</template>

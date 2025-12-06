@@ -2,7 +2,7 @@
 	<div class="vulnerabilities-section">
 		<div class="toolbar mb-8 flex items-center gap-3">
 			<n-form-item label="Severity" label-placement="left" size="small" :show-feedback="false">
-				<n-select v-model:value="severity" :options="severityOptions" class="!w-28" />
+				<n-select v-model:value="severity" :options="severityOptions" class="w-28!" />
 			</n-form-item>
 
 			<n-button

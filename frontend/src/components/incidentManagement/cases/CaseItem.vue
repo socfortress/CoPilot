@@ -10,7 +10,7 @@
 		>
 			<template v-if="caseEntity" #headerMain>
 				<div
-					class="flex items-center gap-2 break-words"
+					class="flex items-center gap-2 wrap-break-word"
 					:class="{ 'hover:text-primary cursor-pointer': !compact }"
 					@click="compact ? undefined : openDetails()"
 				>
@@ -132,7 +132,7 @@
 						</Badge>
 					</CaseAssignUser>
 
-					<Badge v-if="caseEntity.customer_code" type="splitted" class="!hidden sm:!flex">
+					<Badge v-if="caseEntity.customer_code" type="splitted" class="hidden! sm:flex!">
 						<template #label>Customer</template>
 						<template #value>
 							<div class="flex h-full items-center">
@@ -161,7 +161,7 @@
 							</template>
 							<template #header-extra>
 								<div class="actions-box ml-2 flex flex-wrap items-center justify-end gap-2">
-									<n-button quaternary size="tiny" class="xs:!flex !hidden" @click="handleDelete()">
+									<n-button quaternary size="tiny" class="xs:flex! hidden!" @click="handleDelete()">
 										Delete Case
 									</n-button>
 									<CaseReportButton :case-id="caseEntity.id" size="tiny" />
@@ -203,7 +203,7 @@
 			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(482px, 90vh)', overflow: 'hidden' }"
 		>
 			<n-card
-				content-class="flex flex-col !p-0"
+				content-class="flex flex-col p-0!"
 				:title="caseNameTruncated"
 				closable
 				:bordered="false"

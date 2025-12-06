@@ -102,7 +102,7 @@
 		<n-modal
 			v-model:show="showSocAlertDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
 			:title="`SOC Alert: #${baseInfo?.case_soc_id}`"
 			:bordered="false"
@@ -123,7 +123,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
 			:title="`SOC Case: ${baseInfo?.case_uuid}`"
 			:bordered="false"

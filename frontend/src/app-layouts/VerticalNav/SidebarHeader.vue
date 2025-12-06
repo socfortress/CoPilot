@@ -1,16 +1,17 @@
 <template>
 	<div class="sidebar-header flex items-center justify-between gap-4">
-		<div class="flex grow" :class="{ 'justify-center': logoMini }">
+		<div class="flex grow" :class="{ 'justify-center': logoSmall }">
 			<Logo
-				v-if="logoMini"
-				mini
-				:dark="isDark"
-				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+				v-if="logoSmall"
+				type="small"
+				max-height="32px"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)*2)_forwards_calc(var(--sidebar-anim-duration)/2)] opacity-0"
 			/>
 			<Logo
-				v-if="!logoMini"
-				:dark="isDark"
-				class="animate-[fade_calc(var(--sidebar-anim-duration)_*_2)_forwards_calc(var(--sidebar-anim-duration)_/_2)] opacity-0"
+				v-if="!logoSmall"
+				type="large"
+				max-height="28px"
+				class="animate-[fade_calc(var(--sidebar-anim-duration)*2)_forwards_calc(var(--sidebar-anim-duration)/2)] opacity-0"
 			/>
 		</div>
 		<Transition name="fade" mode="out-in">
@@ -36,15 +37,15 @@ import Logo from "@/app-layouts/common/Logo.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
 
-const { logoMini } = defineProps<{
-	logoMini?: boolean
+const { logoSmall } = defineProps<{
+	logoSmall?: boolean
 }>()
 
 const CircleRegular = "fa6-regular:circle"
 const DotCircleRegular = "fa6-regular:circle-dot"
 const CloseOutline = "carbon:chevron-left"
 const themeStore = useThemeStore()
-const showPin = computed<boolean>(() => !logoMini)
+const showPin = computed<boolean>(() => !logoSmall)
 const sidebarCollapsed = computed({
 	get(): boolean {
 		return themeStore.sidebar.collapsed
@@ -53,7 +54,6 @@ const sidebarCollapsed = computed({
 		themeStore.toggleSidebar()
 	}
 })
-const isDark = computed<boolean>(() => themeStore.isThemeDark)
 </script>
 
 <style lang="scss" scoped>

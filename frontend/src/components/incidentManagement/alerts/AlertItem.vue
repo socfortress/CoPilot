@@ -146,7 +146,7 @@
 						</Badge>
 					</AlertAssignUser>
 
-					<Badge v-if="alert.customer_code" type="splitted" class="!hidden sm:!flex">
+					<Badge v-if="alert.customer_code" type="splitted" class="hidden! sm:flex!">
 						<template #label>Customer</template>
 						<template #value>
 							<div class="flex h-full items-center">
@@ -161,7 +161,7 @@
 						</template>
 					</Badge>
 
-					<Badge v-if="alert.assets?.length" type="splitted" fluid class="!hidden sm:!flex">
+					<Badge v-if="alert.assets?.length" type="splitted" fluid class="hidden! sm:flex!">
 						<template #label>Assets</template>
 						<template #value>
 							<div class="flex flex-wrap gap-1">
@@ -170,7 +170,7 @@
 						</template>
 					</Badge>
 
-					<Badge type="splitted" class="!hidden sm:!flex">
+					<Badge type="splitted" class="hidden! sm:flex!">
 						<template #label>Linked Cases</template>
 						<template #value>
 							<AlertLinkedCases v-if="alert.linked_cases?.length" :alert @updated="updateAlert($event)" />
@@ -182,7 +182,7 @@
 
 			<template v-if="alert && !compact" #footerMain>
 				<div class="flex flex-wrap items-center gap-3">
-					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:!hidden': !compact }">
+					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:hidden!': !compact }">
 						<template #iconLeft>
 							<Icon :name="TimeIcon" :size="16" />
 						</template>
@@ -193,7 +193,7 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:!flex !hidden">
+							<Badge type="splitted" class="xs:flex! hidden!">
 								<template #iconLeft>
 									<Icon :name="AssetsIcon" :size="16" />
 								</template>
@@ -207,7 +207,7 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:!flex !hidden">
+							<Badge type="splitted" class="xs:flex! hidden!">
 								<template #iconLeft>
 									<Icon :name="CommentsIcon" :size="16" />
 								</template>
@@ -221,7 +221,7 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:!flex !hidden">
+							<Badge type="splitted" class="xs:flex! hidden!">
 								<template #iconLeft>
 									<Icon :name="IoCsIcon" :size="16" />
 								</template>
@@ -255,7 +255,7 @@
 			display-directive="show"
 		>
 			<n-card
-				content-class="flex flex-col !p-0"
+				content-class="flex flex-col p-0!"
 				:title="alertNameTruncated"
 				closable
 				:bordered="false"

@@ -41,7 +41,7 @@
 		</template>
 
 		<template #[tplNameMain]>
-			<div class="main flex flex-grow flex-col">
+			<div class="main flex grow flex-col">
 				<div v-if="$slots['main-toolbar']" class="main-toolbar flex items-center">
 					<div v-if="sidebarAvailable && !hideMenuBtn" class="menu-btn flex justify-center opacity-50">
 						<n-button text @click="sidebarOpen = true">

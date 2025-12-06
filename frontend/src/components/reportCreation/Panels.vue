@@ -114,7 +114,7 @@
 				<div class="toolbar flex items-center justify-between gap-2 pr-4">
 					<n-button
 						v-if="dashboard || panelsReady"
-						class="add-task-btn !mt-0 flex items-center justify-center"
+						class="add-task-btn mt-0! flex items-center justify-center"
 						@click="addRow()"
 					>
 						<template #icon>

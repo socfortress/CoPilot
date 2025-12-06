@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -33,7 +33,7 @@
 				:page-sizes="pageSizes"
 				:simple="simpleMode"
 			/>
-			<n-select v-if="!compactMode" v-model:value="timerange" size="small" :options="timeOptions" class="!w-32" />
+			<n-select v-if="!compactMode" v-model:value="timerange" size="small" :options="timeOptions" class="w-32!" />
 			<n-popover v-if="compactMode" overlap placement="right">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
@@ -46,7 +46,7 @@
 				</template>
 				<div class="mb-2">
 					<div class="text-secondary my-1 text-sm">Time range:</div>
-					<n-select v-model:value="timerange" size="small" :options="timeOptions" class="mb-1 !w-32" />
+					<n-select v-model:value="timerange" size="small" :options="timeOptions" class="mb-1 w-32!" />
 				</div>
 			</n-popover>
 		</div>

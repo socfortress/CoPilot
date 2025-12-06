@@ -14,7 +14,7 @@ const osTheme = useOsTheme()
 
 export function getDefaultState() {
 	return {
-		layout: Layout.HorizontalNav, // Type of layout, with vertical or horizontal navigation
+		layout: Layout.VerticalNav, // Type of layout, with vertical or horizontal navigation
 		themeName: osTheme.value === "dark" ? ThemeNameEnum.Dark : ThemeNameEnum.Light, // Theme name (Dark, Light), with fallback to the light theme
 		routerTransition: RouterTransition.FadeUp, // Type of transition for the router
 		routerTransitionDuration: 0.3, // Duration of the router transition in seconds

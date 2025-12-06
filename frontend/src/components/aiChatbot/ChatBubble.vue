@@ -43,12 +43,12 @@
 
 			<div v-if="thought && isThoughtVisible">
 				<CollapseKeepAlive :show="!isThoughtCollapsed">
-					<div class="text-secondary bg-secondary mb-2 rounded-md p-2 [&_*]:text-[10px]">
+					<div class="text-secondary bg-secondary mb-2 rounded-md p-2 **:text-[10px]">
 						<Markdown :source="thought" class="animate-fade overflow-hidden" />
 					</div>
 				</CollapseKeepAlive>
 			</div>
-			<div v-if="body && isBodyVisible" class="[&_*]:text-default [&_*]:text-sm [&_*:last-child]:mb-0!">
+			<div v-if="body && isBodyVisible" class="**:text-default **:text-sm [&_*:last-child]:mb-0!">
 				<Markdown :source="body" class="animate-fade overflow-hidden" />
 			</div>
 		</template>
@@ -83,7 +83,7 @@
 						</n-tooltip>
 					</div>
 				</div>
-				<div class="bg-secondary [&_*]:text-default rounded-lg px-2 py-1 text-sm [&_*:last-child]:mb-0!">
+				<div class="bg-secondary **:text-default rounded-lg px-2 py-1 text-sm [&_*:last-child]:mb-0!">
 					<Markdown :source="entity.body" class="animate-fade overflow-hidden" />
 				</div>
 			</div>

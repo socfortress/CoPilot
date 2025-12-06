@@ -36,7 +36,7 @@
 		<n-modal
 			v-model:show="showSocCaseDetails"
 			preset="card"
-			content-class="!p-0"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
 			:title="`SOC Case: #${caseId}`"
 			:bordered="false"

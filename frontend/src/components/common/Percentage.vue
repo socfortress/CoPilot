@@ -17,7 +17,7 @@
 				:percentage="value"
 				:show-indicator="false"
 				:stroke-width="18"
-				class="!w-12"
+				class="w-12!"
 			/>
 		</span>
 		<span v-if="icon && icon === 'arrow'" class="percentage-icon flex items-center">

@@ -5,17 +5,17 @@
 			<VersionUpdateBanner />
 		</div>
 
-		<div class="section flex justify-end gap-3 lg:justify-between">
-			<div class="left-box hidden gap-3 lg:flex">
+		<div class="section flex justify-end gap-3 min-[70rem]:justify-between">
+			<div class="left-box hidden gap-3 min-[70rem]:flex">
 				<StackProvisioningButton size="small" type="primary" />
 				<CloudSecurityAssessmentButton size="small" type="primary" />
 				<WebVulnerabilityAssessmentButton size="small" type="primary" />
 			</div>
-			<div class="right-box hidden gap-3 lg:flex">
+			<div class="right-box hidden gap-3 min-[70rem]:flex">
 				<ActiveResponseWizardButton size="small" type="primary" />
 				<ThreatIntelButton size="small" type="primary" />
 			</div>
-			<div class="mobile-box block lg:hidden">
+			<div class="mobile-box block min-[70rem]:hidden">
 				<n-button size="small" type="primary" @click="showQuickActions = true">
 					<template #icon>
 						<Icon :name="QuickActionsIcon" />
@@ -26,19 +26,19 @@
 		</div>
 		<div class="section">
 			<div class="grid grid-flow-row-dense grid-cols-12 gap-6">
-				<div class="xs:col-span-12 col-span-12 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-12 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
 					<AgentsCard class="h-full" />
 				</div>
-				<div class="xs:col-span-6 col-span-12 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
 					<HealthcheckCard class="h-full" />
 				</div>
-				<div class="xs:col-span-6 col-span-12 sm:col-span-4 lg:col-span-2">
+				<div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
 					<CustomersCard class="h-full" />
 				</div>
-				<div class="col-span-12 lg:col-span-3">
+				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
 					<IncidentAlerts class="h-full" />
 				</div>
-				<div class="col-span-12 lg:col-span-3">
+				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
 					<IncidentCases class="h-full" />
 				</div>
 			</div>

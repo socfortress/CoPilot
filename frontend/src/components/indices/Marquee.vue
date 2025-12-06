@@ -1,6 +1,6 @@
 <template>
 	<div class="indices-marquee">
-		<n-card content-class="!p-0" class="overflow-hidden">
+		<n-card content-class="p-0!" class="overflow-hidden">
 			<n-spin :show="loading" content-class="h-12">
 				<Vue3Marquee
 					v-if="list?.length"

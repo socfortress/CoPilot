@@ -14,7 +14,7 @@
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(200px, 90vh)', overflow: 'hidden' }"
 			title="Create Source Configuration"
 			:bordered="false"
-			content-class="flex flex-col !p-0"
+			content-class="flex flex-col p-0!"
 			segmented
 		>
 			<SourceConfigurationWizard

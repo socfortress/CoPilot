@@ -60,7 +60,7 @@ const licenseResponse = ref(false)
 </script>
 
 <style lang="scss" scoped>
-@import "../app-layouts/HorizontalNav/_variables.scss";
+@import "../app-layouts/VerticalNav/_variables.scss";
 
 .page {
 	overflow: hidden;

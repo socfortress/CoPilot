@@ -16,7 +16,7 @@
 			<div class="main flex grow flex-col overflow-hidden">
 				<n-spin class="flex h-full w-full flex-col overflow-hidden" :show="loadingAgents">
 					<n-scrollbar class="grow">
-						<div class="agents-list flex flex-grow flex-col gap-3">
+						<div class="agents-list flex grow flex-col gap-3">
 							<template v-if="agentsFiltered.length">
 								<AgentCard
 									v-for="agent in itemsPaginated"

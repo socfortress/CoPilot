@@ -39,7 +39,7 @@
 						</n-scrollbar>
 					</div>
 					<div v-if="license" class="cta-section">
-						<n-button type="primary" class="!w-full" size="large" @click="openCheckout()">
+						<n-button type="primary" class="w-full!" size="large" @click="openCheckout()">
 							<template #icon>
 								<Icon :name="ExtendIcon" />
 							</template>

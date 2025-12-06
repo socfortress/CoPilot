@@ -1,6 +1,6 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
-		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 !py-8">
+		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 py-8!">
 			<div class="px-7">
 				<n-card embedded class="overflow-hidden">
 					<div class="flex flex-wrap justify-between gap-8">
@@ -14,7 +14,7 @@
 			</div>
 			<div class="px-7">
 				<n-card embedded class="overflow-hidden">
-					<div class="xs:!flex-row flex flex-col justify-between gap-8">
+					<div class="xs:flex-row! flex flex-col justify-between gap-8">
 						<n-statistic
 							class="grow"
 							label="Start scan"

@@ -14,8 +14,7 @@
 				railInsetVerticalLeft: `${toolbarHeight}px auto 4px 4px`
 			}"
 		>
-			<Toolbar :boxed="toolbarBoxed" gradient="sidebar" />
-
+			<Toolbar :boxed="toolbarBoxed" gradient="body" />
 			<div
 				id="app-view"
 				class="view"
@@ -40,7 +39,7 @@ import { useThemeStore } from "@/stores/theme"
 const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
-const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
+const sidebarCollapsed = computed(() => themeStore.sidebar.collapsed)
 const footerShown = computed(() => themeStore.isFooterShown)
 const themeBoxed = computed<boolean>(() => themeStore.isBoxed)
 const overrideBoxed = ref<boolean | undefined>(undefined)
@@ -83,15 +82,24 @@ onMounted(() => {
 
 .main {
 	width: 100%;
-	overflow: hidden;
+	position: relative;
+	padding-left: var(--sidebar-open-width);
 	background-color: var(--bg-body-color);
 	transition: all var(--sidebar-anim-ease) var(--sidebar-anim-duration);
+	display: flex;
+	flex-direction: column;
+
+	&.sidebar-collapsed {
+		padding-left: var(--sidebar-close-width);
+	}
 
 	.view {
 		padding: 0 var(--view-padding);
 		flex-grow: 1;
 		width: 100%;
 		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
 
 		&.boxed {
 			max-width: var(--boxed-width);
@@ -102,6 +110,12 @@ onMounted(() => {
 	}
 
 	@media (max-width: $sidebar-bp) {
+		padding-left: 0px;
+
+		&.sidebar-collapsed {
+			padding-left: 0px;
+		}
+
 		&.sidebar-opened {
 			/*
 			transform: scale(0.8) translateX(100%) rotateY(35deg);
@@ -120,6 +134,26 @@ onMounted(() => {
 				.logo-box {
 					display: none;
 				}
+			}
+		}
+	}
+}
+
+.direction-rtl {
+	.main {
+		padding-left: unset;
+		padding-right: var(--sidebar-open-width);
+
+		&.sidebar-collapsed {
+			padding-left: unset;
+			padding-right: var(--sidebar-close-width);
+		}
+
+		@media (max-width: $sidebar-bp) {
+			padding-right: 0px;
+
+			&.sidebar-collapsed {
+				padding-right: 0px;
 			}
 		}
 	}

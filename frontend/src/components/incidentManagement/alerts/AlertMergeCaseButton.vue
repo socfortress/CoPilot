@@ -12,7 +12,7 @@
 		preset="card"
 		:title="`Select the case you want to merge ${alerts.length > 1 ? 'them' : 'it'} with :`"
 		:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', maxHeight: '80vh' }"
-		content-class="flex flex-col overflow-hidden !px-2 !py-0"
+		content-class="flex flex-col overflow-hidden px-2! py-0!"
 		segmented
 	>
 		<n-spin

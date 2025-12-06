@@ -6,11 +6,11 @@
 	>
 		<div ref="sidebar" class="sidebar-wrap flex grow flex-col">
 			<div :class="{ 'px-7': !sidebarClosed, 'px-2': sidebarClosed }" class="transition-all">
-				<SidebarHeader :logo-mini="sidebarClosed" />
+				<SidebarHeader :logo-small="sidebarClosed" />
 			</div>
-			<n-scrollbar>
+			<n-scrollbar :trigger="sidebarClosed ? 'hover' : 'none'">
 				<div :class="{ 'px-2': !sidebarClosed }" class="transition-all">
-					<Navbar :collapsed="sidebarClosed" mode="vertical" />
+					<Navbar :collapsed="sidebarClosed" />
 				</div>
 			</n-scrollbar>
 			<div class="p-2">
@@ -33,8 +33,8 @@ import SidebarHeader from "./SidebarHeader.vue"
 const themeStore = useThemeStore()
 const sidebar = ref(null)
 const sidebarHovered = useElementHover(sidebar)
-const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
-const sidebarClosed = computed<boolean>(() => !sidebarHovered.value && sidebarCollapsed.value)
+const sidebarCollapsed = computed(() => themeStore.sidebar.collapsed)
+const sidebarClosed = computed(() => !sidebarHovered.value && sidebarCollapsed.value)
 
 function clickListener() {
 	if (sidebar.value) {
@@ -46,6 +46,7 @@ function clickListener() {
 		})
 	}
 }
+
 onMounted(() => {
 	watch(
 		sidebarCollapsed,
@@ -72,7 +73,7 @@ onMounted(() => {
 
 .sidebar {
 	position: fixed;
-	z-index: 4;
+	z-index: 5;
 	top: 0;
 	left: 0;
 	width: var(--sidebar-open-width);
@@ -86,24 +87,34 @@ onMounted(() => {
 		box-shadow var(--sidebar-anim-ease) var(--sidebar-anim-duration),
 		color 0.3s var(--bezier-ease) 0s,
 		background-color 0.3s var(--bezier-ease) 0s;
-	z-index: -1;
-	transition: all 0.3s var(--bezier-ease) 0s;
-	transform: translateX(-100%);
 
 	.sidebar-wrap {
 		overflow: hidden;
 	}
 
+	:deep(.n-scrollbar-rail) {
+		opacity: 0.15;
+	}
+
+	&.collapsed {
+		width: var(--sidebar-close-width);
+
+		&:hover {
+			width: var(--sidebar-open-width);
+			box-shadow: 0px 0px 80px 0px rgba(0, 0, 0, 0.2);
+		}
+	}
+
 	@media (max-width: $sidebar-bp) {
+		z-index: -1;
+		transition: all 0.3s var(--bezier-ease) 0s;
+		transform: translateX(-100%);
+
 		&.opened {
 			z-index: 2100;
 			transform: translateX(0);
 			box-shadow: 0px 0px 80px 0px rgba(0, 0, 0, 0.2);
 		}
-	}
-
-	:deep(.n-scrollbar-rail) {
-		opacity: 0.15;
 	}
 }
 

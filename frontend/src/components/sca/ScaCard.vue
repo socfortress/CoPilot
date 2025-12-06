@@ -80,7 +80,7 @@
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(500px, 90vh)' }"
 			:title="`SCA Policy: ${sca.policy_name}`"
 			:bordered="false"
-			content-class="!p-0"
+			content-class="p-0!"
 			segmented
 		>
 			<ScaCardContent :sca />

@@ -1,7 +1,7 @@
 <template>
 	<div class="w-full max-w-96 min-w-64">
 		<div>
-			<Logo mini :dark="isDark" class="mb-4" max-height="40px" />
+			<Logo type="small" class="mb-4" max-height="40px" />
 			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">
 				{{ title }}
 			</div>
@@ -20,7 +20,6 @@
 import type { FormType } from "./types.d"
 import { computed, onBeforeMount, ref } from "vue"
 import Logo from "@/app-layouts/common/Logo.vue"
-import { useThemeStore } from "@/stores/theme"
 import SignIn from "./SignIn.vue"
 
 const props = defineProps<{
@@ -28,8 +27,6 @@ const props = defineProps<{
 }>()
 
 const type = ref<FormType>("signin")
-const themeStore = useThemeStore()
-const isDark = computed<boolean>(() => themeStore.isThemeDark)
 const title = computed<string>(() =>
 	type.value === "signin"
 		? "SOCFortress CoPilot"

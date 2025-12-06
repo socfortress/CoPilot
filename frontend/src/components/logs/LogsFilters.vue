@@ -8,10 +8,10 @@
 				placeholder="Select"
 				size="tiny"
 				clearable
-				class="!w-24"
+				class="w-24!"
 			/>
 		</div>
-		<div class="!w-72 px-3">
+		<div class="w-72! px-3">
 			<div v-if="filterType === 'userId'" class="flex grow">
 				<n-select
 					v-if="userIdOptions.length"
@@ -43,7 +43,7 @@
 					v-model:value="filterTimeRange.unit"
 					:options="unitOptions"
 					placeholder="Time unit"
-					class="!w-40"
+					class="w-40!"
 				/>
 				<n-input-number v-model:value="filterTimeRange.time" :min="1" placeholder="Time" class="grow" />
 			</n-input-group>

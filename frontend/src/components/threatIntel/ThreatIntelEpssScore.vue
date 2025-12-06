@@ -15,7 +15,7 @@
 				embedded
 				class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 			>
-				<div class="xs:!flex-row flex flex-col justify-between gap-8">
+				<div class="xs:flex!-row flex flex-col justify-between gap-8">
 					<n-statistic class="grow" label="Date">
 						<span class="stats-value whitespace-nowrap">
 							{{ formatDate(item.date, dFormats.date) }}

@@ -15,7 +15,7 @@
 						class="basis-1/2"
 					>
 						<template #action>
-							<n-button size="tiny" quaternary class="!w-full" @click="clearFieldsHistory()">
+							<n-button size="tiny" quaternary class="w-full!" @click="clearFieldsHistory()">
 								<template #icon>
 									<Icon :name="ClearIcon" />
 								</template>

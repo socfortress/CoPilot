@@ -34,7 +34,7 @@
 							<template #trigger>
 								<Icon name="carbon:help" :size="14" class="cursor-help" />
 							</template>
-							<div class="divide-border flex flex-col divide-y-1">
+							<div class="divide-border flex flex-col divide-y">
 								<div class="flex flex-col gap-1 px-3 py-2 text-sm">
 									<div>{{ selectedServerDetails.name }}</div>
 									<div class="text-secondary text-xs">
@@ -60,7 +60,7 @@
 							<template #trigger>
 								<Icon name="carbon:settings-adjust" :size="14" />
 							</template>
-							<div class="divide-border flex flex-col divide-y-1">
+							<div class="divide-border flex flex-col divide-y">
 								<div class="px-3 py-2">
 									<div class="flex items-center gap-2 text-sm">
 										<div>verbose response</div>

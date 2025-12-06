@@ -8,7 +8,7 @@
 					size="small"
 					:options="statusOptions"
 					placeholder="Select..."
-					class="!w-32"
+					class="w-32!"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -25,7 +25,7 @@
 					placeholder="Select..."
 					size="small"
 					filterable
-					class="!w-40"
+					class="w-40!"
 					:loading="loadingAvailableUsers || !usersOptions.length"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
@@ -43,7 +43,7 @@
 					placeholder="Select..."
 					size="small"
 					filterable
-					class="!w-56"
+					class="w-56!"
 					:loading="loadingCustomers || !customersOptions.length"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
@@ -61,7 +61,7 @@
 					placeholder="Select..."
 					size="small"
 					filterable
-					class="!w-44"
+					class="w-44!"
 					:loading="loadingConfiguredSources || !sourcesOptions.length"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
@@ -83,7 +83,7 @@
 					placeholder="Input, press enter to create"
 					:show-arrow="false"
 					:show="false"
-					class="!min-w-64"
+					class="min-w-64!"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -96,7 +96,7 @@
 				v-if="filter.type === 'title' && (typeof filter.value === 'string' || filter.value === null)"
 			>
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
-				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
 						<Icon :name="DelIcon" />
@@ -108,7 +108,7 @@
 				v-if="filter.type === 'assetName' && (typeof filter.value === 'string' || filter.value === null)"
 			>
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
-				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
 						<Icon :name="DelIcon" />
@@ -120,7 +120,7 @@
 				v-if="filter.type === 'iocValue' && (typeof filter.value === 'string' || filter.value === null)"
 			>
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
-				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="!min-w-40" />
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
 						<Icon :name="DelIcon" />

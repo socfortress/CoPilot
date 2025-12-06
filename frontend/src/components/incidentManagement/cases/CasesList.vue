@@ -5,7 +5,7 @@
 				<n-popover overlap placement="left">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-help">
+							<n-button size="small" class="cursor-help!">
 								<template #icon>
 									<Icon :name="InfoIcon" />
 								</template>
@@ -70,7 +70,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
+			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
@@ -90,7 +90,7 @@
 								:options="typeOptions"
 								placeholder="Filter by..."
 								clearable
-								class="!w-40"
+								class="w-40!"
 							/>
 
 							<n-select
@@ -100,7 +100,7 @@
 								placeholder="Value..."
 								:disabled="!filters.type"
 								clearable
-								class="!w-56"
+								class="w-56!"
 							/>
 							<n-select
 								v-else-if="filters.type === 'assignedTo'"
@@ -110,7 +110,7 @@
 								:disabled="!filters.type"
 								clearable
 								filterable
-								class="!w-56"
+								class="w-56!"
 							/>
 							<n-select
 								v-else-if="filters.type === 'customerCode'"
@@ -120,7 +120,7 @@
 								:disabled="!filters.type"
 								clearable
 								filterable
-								class="!w-56"
+								class="w-56!"
 							/>
 							<n-input
 								v-else
@@ -128,7 +128,7 @@
 								placeholder="Value..."
 								:disabled="!filters.type"
 								clearable
-								class="!w-56"
+								class="w-56!"
 							/>
 						</n-input-group>
 					</div>
