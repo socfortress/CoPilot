@@ -1,6 +1,6 @@
 <h1 align="center">
 
-<a href="https://www.socfortress.co"><img src="frontend/src/assets/images/socfortress_logo.svg" width="300" height="200"></a>
+<a href="https://www.socfortress.co"><img src="frontend/src/assets/images/socfortress_logo_default_dark.svg" width="300" height="200"></a>
 
 SOCFortress CoPilot
 
