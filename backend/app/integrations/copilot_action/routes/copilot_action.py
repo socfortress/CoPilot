@@ -85,6 +85,8 @@ def determine_artifact_name(agent_os: str) -> str:
         return "Windows.Execute.RemotePowerShellScript"
     elif "Linux" in agent_os:
         return "Linux.Execute.RemoteBashScript"
+    elif "Ubuntu" in agent_os or "Debian" in agent_os or "CentOS" in agent_os or "Red Hat" in agent_os:
+        return "Linux.Execute.RemoteBashScript"
     else:
         raise HTTPException(
             status_code=400,
@@ -385,6 +387,7 @@ async def invoke_action_on_agent(
     Returns:
         CollectArtifactResponse: Response from the artifact collection
     """
+    logger.info(f"Invoking action '{copilot_action_name}' on agent {agent.hostname} with OS {agent.os}")
     try:
         # Determine the appropriate artifact based on OS
         artifact_name = determine_artifact_name(agent.os)
