@@ -2344,36 +2344,42 @@ async def delete_alert(alert_id: int, db: AsyncSession):
 
 async def delete_case(case_id: int, db: AsyncSession):
     """
-    Delete a case from the database.
+    Delete a case and all its related records (comments, alert links, data store files, etc.)
 
     Args:
-        case_id (int): The ID of the case to be deleted.
-        db (AsyncSession): The database session.
-
-    Raises:
-        HTTPException: If the case is not found or there is an error deleting the case.
+        case_id: The ID of the case to delete
+        db: Database session
     """
-    result = await db.execute(
-        select(Case).options(selectinload(Case.alerts), selectinload(Case.data_store)).where(Case.id == case_id),
-    )
-    case = result.scalars().first()
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-
-    # Delete entries from CaseAlertLink table
-    await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
-
-    # Delete entries from CaseDataStore table
-    await db.execute(delete(CaseDataStore).where(CaseDataStore.case_id == case_id))
-
-    # Delete the case
-    await db.execute(delete(Case).where(Case.id == case.id))
-
     try:
+        # 1. Delete all case comments first
+        logger.info(f"Deleting case comments for case {case_id}")
+        await db.execute(delete(CaseComment).where(CaseComment.case_id == case_id))
+
+        # 2. Delete all case alert links
+        logger.info(f"Deleting case alert links for case {case_id}")
+        await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
+
+        # 3. Delete all data store files associated with the case
+        logger.info(f"Deleting data store files for case {case_id}")
+        files = await list_files_by_case_id(case_id, db)
+        for file in files:
+            try:
+                await delete_file_from_case(case_id, file.file_name, db)
+            except Exception as e:
+                logger.warning(f"Failed to delete file {file.file_name} from case {case_id}: {e}")
+
+        # 4. Finally delete the case itself
+        logger.info(f"Deleting case {case_id}")
+        await db.execute(delete(Case).where(Case.id == case_id))
+
+        # Commit all changes
         await db.commit()
-    except IntegrityError:
+        logger.info(f"Successfully deleted case {case_id} and all related records")
+
+    except Exception as e:
+        logger.error(f"Error deleting case {case_id}: {e}")
         await db.rollback()
-        raise HTTPException(status_code=400, detail="Error deleting case")
+        raise HTTPException(status_code=500, detail=f"Failed to delete case: {str(e)}")
 
 
 async def list_all_files(db: AsyncSession) -> List[CaseDataStore]:
