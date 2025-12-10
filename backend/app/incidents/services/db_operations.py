@@ -2350,9 +2350,6 @@ async def delete_case(case_id: int, db: AsyncSession):
         case_id: The ID of the case to delete
         db: Database session
     """
-    # Get the case first
-    case = await get_case_by_id(case_id, db)
-
     try:
         # 1. Delete all case comments first
         logger.info(f"Deleting case comments for case {case_id}")
@@ -2382,10 +2379,7 @@ async def delete_case(case_id: int, db: AsyncSession):
     except Exception as e:
         logger.error(f"Error deleting case {case_id}: {e}")
         await db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete case: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete case: {str(e)}")
 
 
 async def list_all_files(db: AsyncSession) -> List[CaseDataStore]:
