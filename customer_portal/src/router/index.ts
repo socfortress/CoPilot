@@ -5,6 +5,7 @@ import AlertsPage from "@/views/AlertsPage.vue"
 import CasesPage from "@/views/CasesPage.vue"
 import CaseDetailsView from "@/views/CaseDetailsView.vue"
 import AgentsPage from "@/views/AgentsPage.vue"
+import AccessDenied from '@/components/common/AccessDenied.vue'
 
 const NotFound = {
 	template: `
@@ -61,6 +62,12 @@ const routes = [
 		component: AgentsPage,
 		meta: { requiresAuth: true }
 	},
+    {
+        path: '/access-denied',
+        name: 'AccessDenied',
+        component: AccessDenied,
+        meta: { requiresAuth: false }
+    },
 	{
 		path: "/:pathMatch(.*)*",
 		name: "NotFound",

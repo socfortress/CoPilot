@@ -233,8 +233,8 @@ class AuthHandler:
         for scope in security_scopes.scopes:
             if scope not in token_scopes:
                 raise HTTPException(
-                    status_code=401,
-                    detail="Not enough permissions",
+                    status_code=403,
+                    detail=f"Insufficient permissions. Required scope: {scope}",
                     headers={"WWW-Authenticate": authenticate_value},
                 )
 
@@ -289,8 +289,8 @@ class AuthHandler:
 
             if not any(scope in token_scopes for scope in required_scopes):
                 raise HTTPException(
-                    status_code=401,
-                    detail="Not enough permissions, you don't have any of the required scopes.",
+                    status_code=403,
+                    detail=f"Insufficient permissions. Required one of: {', '.join(required_scopes)}",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
