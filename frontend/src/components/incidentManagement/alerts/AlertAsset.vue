@@ -135,7 +135,7 @@
 						</div>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Artifact Collection" tab="Artifact Collection" display-directive="show:lazy">
+				<n-tab-pane v-if="isWazuhSource" name="Artifact Collection" tab="Artifact Collection" display-directive="show:lazy">
 					<div class="p-7 pt-2">
 						<ArtifactsCollect
 							:hostname="asset.asset_name"
@@ -146,19 +146,19 @@
 						/>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Alert Timeline" tab="Alert Timeline" display-directive="show:lazy">
+				<n-tab-pane v-if="isWazuhSource" name="Alert Timeline" tab="Alert Timeline" display-directive="show:lazy">
 					<div class="p-7 pt-2">
 						<AlertDetailTimeline :asset />
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="File Collection" tab="File Collection" display-directive="show:lazy">
+				<n-tab-pane v-if="isWazuhSource" name="File Collection" tab="File Collection" display-directive="show:lazy">
 					<div class="p-7 pt-2">
 						<FileCollectionForm v-if="asset.agent_id" :agent-id="asset.agent_id" />
 
 						<n-empty v-else description="No agent associated with this asset" class="h-40" />
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
+				<n-tab-pane v-if="isWazuhSource" name="Data Store" tab="Data Store" display-directive="show:lazy">
 					<div class="p-7 pt-2">
 						<AgentDataStoreTabCompact v-if="asset.agent_id" :agent-id="asset.agent_id" />
 						<n-empty v-else description="No agent associated with this asset" class="h-40" />
@@ -172,7 +172,7 @@
 <script setup lang="ts">
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 import _truncate from "lodash/truncate"
-import { NCard, NDivider, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NCard, NDivider, NEmpty, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -187,22 +187,22 @@ const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTime
 // const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
 const AIWazuhExclusionRuleButton = defineAsyncComponent(
-	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
+    () => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
 )
 const AIVelociraptorArtifactRecommendationButton = defineAsyncComponent(
-	() => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
+    () => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
 )
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
-	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
+    () => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
 const AgentDataStoreTabCompact = defineAsyncComponent(
-	() => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
+    () => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
 )
 const FileCollectionForm = defineAsyncComponent(
-	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
+    () => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
 const ViewIcon = "iconoir:eye-solid"
@@ -219,44 +219,48 @@ const isInvestigationAvailable = computed(() => processNameList.value.length)
 const licenseChecked = ref(false)
 const licenseResponse = ref(false)
 
+const isWazuhSource = computed(() => {
+    return alertContext.value?.source?.toLowerCase() === 'wazuh'
+})
+
 watch(showDetails, val => {
-	if (val && !alertContext.value) {
-		getAlertContext(asset.alert_context_id)
-	}
+    if (val && !alertContext.value) {
+        getAlertContext(asset.alert_context_id)
+    }
 })
 
 function getAlertContext(alertContextId: number) {
-	loading.value = true
+    loading.value = true
 
-	Api.incidentManagement.alerts
-		.getAlertContext(alertContextId)
-		.then(res => {
-			if (res.data.success) {
-				alertContext.value = res.data?.alert_context || null
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
+    Api.incidentManagement.alerts
+        .getAlertContext(alertContextId)
+        .then(res => {
+            if (res.data.success) {
+                alertContext.value = res.data?.alert_context || null
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            loading.value = false
+        })
 }
 </script>
 
 <style lang="scss" scoped>
 .alert-assets-badge {
-	color: var(--primary-color);
-	line-height: 1;
-	cursor: pointer;
+    color: var(--primary-color);
+    line-height: 1;
+    cursor: pointer;
 
-	code {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		padding: 2px 5px;
-	}
+    code {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 2px 5px;
+    }
 }
 </style>
