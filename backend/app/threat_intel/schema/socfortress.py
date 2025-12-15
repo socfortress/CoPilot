@@ -86,6 +86,7 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
 
 class SyslogType(str, Enum):
     WAZUH = "wazuh"
+    FORTINET = "fortinet"
     # Add other valid syslog types here if needed
 
 
