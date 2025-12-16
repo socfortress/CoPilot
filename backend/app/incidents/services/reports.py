@@ -22,12 +22,14 @@ def create_case_context(case) -> Dict[str, Dict[str, str]]:
             "description": case.case_description,
             "assigned_to": case.assigned_to,
             "case_creation_time": case.case_creation_time,
+            "case_closed_time": case.case_closed_time,
             "id": case.id,
             "alerts": [
                 {
                     "alert_name": alert.alert.alert_name,
                     "alert_description": alert.alert.alert_description,
                     "status": alert.alert.status,
+                    "time_closed": alert.alert.time_closed,
                     "tags": [tag.tag.tag for tag in alert.alert.tags],
                     "assets": [
                         {
