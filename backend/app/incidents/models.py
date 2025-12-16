@@ -164,6 +164,7 @@ class Case(SQLModel, table=True):
     case_description: str = Field(sa_column=Text)
     case_creation_time: datetime = Field(default_factory=datetime.utcnow)
     case_status: str = Field(max_length=50, nullable=False)
+    case_closed_time: Optional[datetime] = Field(default=None, nullable=True)
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
     customer_code: Optional[str] = Field(max_length=50, nullable=True)
     notification_invoked_number: Optional[int] = Field(default=0, nullable=True)

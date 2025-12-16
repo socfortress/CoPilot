@@ -15,6 +15,7 @@
         <p><strong>Description:</strong> {{ case.description }}</p>
         <p><strong>Assigned To:</strong> {{ case.assigned_to }}</p>
         <p><strong>Case Creation Time:</strong> {{ case.case_creation_time }}</p>
+        <p><strong>Case Closed Time:</strong> {{ case.case_closed_time if case.case_closed_time else 'N/A' }}</p>
         <p><strong>Case ID:</strong> {{ case.id }}</p>
     </div>
 
@@ -24,6 +25,7 @@
         <p><strong>Alert Name:</strong> {{ alert.alert_name }}</p>
         <p><strong>Description:</strong> {{ alert.alert_description }}</p>
         <p><strong>Status:</strong> {{ alert.status }}</p>
+        <p><strong>Time Closed:</strong> {{ alert.time_closed if alert.time_closed else 'N/A' }}</p>
         <p><strong>Tags:</strong> {{ alert.tags | join(', ') }}</p>
 
         <h3>Assets:</h3>

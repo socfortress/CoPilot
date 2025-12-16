@@ -792,6 +792,14 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     alert.status = update_alert_status.status
+
+    # Set time_closed if status is CLOSED
+    if update_alert_status.status == "CLOSED":
+        alert.time_closed = datetime.utcnow()
+    # Reset time_closed if status is OPEN
+    elif update_alert_status.status == "OPEN":
+        alert.time_closed = None
+
     await db.commit()
     return alert
 
@@ -802,6 +810,14 @@ async def update_case_status(update_case_status: UpdateCaseStatus, db: AsyncSess
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     case.case_status = update_case_status.status
+
+    # Set case_closed_time if status is CLOSED
+    if update_case_status.status == "CLOSED":
+        case.case_closed_time = datetime.utcnow()
+    # Reset case_closed_time if status is OPEN
+    elif update_case_status.status == "OPEN":
+        case.case_closed_time = None
+
     await db.commit()
     return case
 
