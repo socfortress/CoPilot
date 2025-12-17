@@ -20,7 +20,9 @@ class CustomerCodeKeys(Enum):
     def get_processed_value(key, value):
         if key == CustomerCodeKeys.CLUSTER_NODE:
             if value.startswith("wazuh.worker."):
-                return value.replace("wazuh.worker.", "").lower()
+                parts = value.split(".")
+                if len(parts) >= 3:
+                    return parts[2].lower()
         return value
 
 

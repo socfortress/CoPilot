@@ -232,28 +232,6 @@ async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
     return f"{root_url}{url_path}"
 
 
-# async def get_customer_code(alert_details: dict):
-#     logger.info(f"Fetching customer code for alert {alert_details}")
-
-#     # Iterate over the possible keys and return the value if the key is present
-#     for key in CustomerCodeKeys:
-#         logger.info(f"Checking for key {key.value}")
-#         if key.value in alert_details:
-#             value = alert_details[key.value]
-#             if key == CustomerCodeKeys.CLUSTER_NODE:
-#                 processed_value = CustomerCodeKeys.get_processed_value(key, value)
-#                 logger.info(f"Processed value for {key.value} is {processed_value}")
-#                 return processed_value
-#             return value
-
-#     # If none of the keys are present, raise an exception
-#     logger.info(f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}")
-#     raise HTTPException(
-#         status_code=400,
-#         detail=f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}",
-#     )
-
-
 async def get_customer_code(alert_details: dict, session: AsyncSession = None):
     """
     Fetch the customer code from alert details.
