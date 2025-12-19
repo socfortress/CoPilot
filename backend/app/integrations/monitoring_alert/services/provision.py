@@ -1861,6 +1861,7 @@ async def provision_fortinet_suspicious_super_admin_login_detected_monitoring_al
         message="Fortinet suspicious super admin login detected monitoring alert provisioned successfully",
     )
 
+
 # ! -- PaloAlto Monitoring Alerts -- ! #
 async def provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
@@ -1954,6 +1955,7 @@ async def provision_paloalto_monitoring_alert(
         message="Palo Alto monitoring alerts provisioned successfully",
     )
 
+
 async def provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
@@ -1961,8 +1963,7 @@ async def provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring
     Provisions PaloAlto Firewall Traffic to Phishing URL Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2034,8 +2035,7 @@ async def provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitorin
     Provisions PaloAlto Firewall Traffic to Malicious URL Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(

@@ -90,6 +90,21 @@ from app.integrations.monitoring_alert.services.provision import (
     provision_office365_threat_intel_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_paloalto_firewall_virus_allowed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
     provision_paloalto_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
@@ -327,6 +342,42 @@ async def invoke_provision_paloalto_monitoring_alert(
     await provision_paloalto_monitoring_alert(request)
 
 
+async def invoke_provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_paloalto_firewall_virus_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_paloalto_firewall_virus_allowed_monitoring_alert(request)
+
+
+async def invoke_provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert(request)
+
+
+async def invoke_provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert(
+        request,
+    )
+
+
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
 ):
@@ -360,6 +411,11 @@ PROVISION_FUNCTIONS = {
     "FORTINET_WIDS_WIRELESS_WEAK_ENCRYPTION_DETECTED": invoke_provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert,
     "FORTINET_SUSPICIOUS_SUPER_ADMIN_LOGIN_DETECTED": invoke_provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert,
     "PALOALTO_ALERT": invoke_provision_paloalto_monitoring_alert,
+    "PALOALTO_FIREWALL_TRAFFIC_TO_PHISHING_URL_ALLOWED": invoke_provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert,
+    "PALOALTO_FIREWALL_TRAFFIC_TO_MALICIOUS_URL_ALLOWED": invoke_provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert,
+    "PALOALTO_FIREWALL_VIRUS_ALLOWED": invoke_provision_paloalto_firewall_virus_allowed_monitoring_alert,
+    "PALOALTO_FIREWALL_TOR_TRAFFIC_ALLOWED": invoke_provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert,
+    "PALOALTO_FIREWALL_MEDIUM_SEVERITY_CORRELATION_EVENT_DETECTED": invoke_provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }
