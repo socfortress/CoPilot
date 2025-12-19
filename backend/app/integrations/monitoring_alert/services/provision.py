@@ -1862,6 +1862,7 @@ async def provision_fortinet_suspicious_super_admin_login_detected_monitoring_al
     )
 
 
+# ! -- PaloAlto Monitoring Alerts -- ! #
 async def provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
@@ -1952,6 +1953,360 @@ async def provision_paloalto_monitoring_alert(
     return ProvisionWazuhMonitoringAlertResponse(
         success=True,
         message="Palo Alto monitoring alerts provisioned successfully",
+    )
+
+
+async def provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions PaloAlto Firewall Traffic to Phishing URL Allowed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALOALTO - FIREWALL TRAFFIC TO PHISHING URL ALLOWED",
+            description=(
+                "Detects when the Palo Alto Networks firewall does not block traffic to a URL known to be used in phishing "
+                "attacks. "
+                "An adversary can abuse this by directing victims to the phishing site, potentially stealing credentials, "
+                "deploying malware, or conducting other malicious activities."
+            ),
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query=(
+                    "syslog_type:palo_alto_fw AND event_log_name:THREAT AND pan_log_subtype:url AND alert_category:phishing "
+                    "AND (event_severity:critical OR event_severity:high OR event_severity:medium) "
+                    "AND !vendor_event_action:deny AND !vendor_event_action:drop AND !vendor_event_action:reset AND !vendor_event_action:block"
+                ),
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="PALOALTO", require_values=True),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="PaloAlto firewall traffic to phishing URL allowed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions PaloAlto Firewall Traffic to Malicious URL Allowed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALOALTO - FIREWALL TRAFFIC TO MALICIOUS URL ALLOWED",
+            description=(
+                "Detects when the Palo Alto Networks firewall does not block traffic to a URL associated with malware "
+                "distribution or operation. "
+                "This typically indicates a lapse in the firewall's threat intelligence or a misconfiguration. "
+                "An adversary can abuse this by using the unblocked URL to download malware onto a target system, establish "
+                "a command and control channel, or exfiltrate data."
+            ),
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query=(
+                    "syslog_type:palo_alto_fw AND event_log_name:THREAT AND pan_log_subtype:url AND alert_category:malware "
+                    "AND (event_severity:critical OR event_severity:high OR event_severity:medium) "
+                    "AND !vendor_event_action:deny AND !vendor_event_action:drop AND !vendor_event_action:reset AND !vendor_event_action:block"
+                ),
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="PALOALTO", require_values=True),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="PaloAlto firewall traffic to malicious URL allowed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_paloalto_firewall_virus_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions PaloAlto Firewall Virus Allowed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_paloalto_firewall_virus_allowed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALOALTO - FIREWALL VIRUS ALLOWED",
+            description=(
+                "Detects active network communication associated with known malware that is being allowed by the Palo Alto "
+                "Networks firewall. "
+                "This may indicate an ongoing security threat, where malicious traffic is bypassing firewall protections, "
+                "potentially leading to system compromise, data exfiltration, or further infiltration within the network."
+            ),
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query=(
+                    "syslog_type:palo_alto_fw AND event_log_name:THREAT AND pan_log_subtype:virus "
+                    "AND !vendor_event_action:deny AND !vendor_event_action:drop AND !vendor_event_action:reset AND !vendor_event_action:block"
+                ),
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="PALOALTO", require_values=True),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="PaloAlto firewall virus allowed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions PaloAlto Firewall TOR Traffic Allowed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALOALTO - FIREWALL TOR TRAFFIC ALLOWED",
+            description=(
+                "Detects allowed network traffic to the TOR network. Adversaries can use TOR to anonymize their network "
+                "activity, bypass security controls, and evade detection while conducting malicious operations. "
+                "This could lead to unauthorized access, data exfiltration, and compliance violations if deemed malicious."
+            ),
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:palo_alto_fw AND event_log_name:TRAFFIC AND application_name:tor AND vendor_event_action:allow",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="PALOALTO", require_values=True),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="PaloAlto firewall TOR traffic allowed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions PaloAlto Firewall Medium Severity Correlation Event Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert "
+        f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="PALOALTO - FIREWALL MEDIUM SEVERITY CORRELATION EVENT DETECTED",
+            description=(
+                "Detects medium severity correlation events generated by Palo Alto Networks firewall's automated correlation "
+                "engine. "
+                "The correlation engine connects isolated network events and looks for patterns that indicate a more "
+                "significant event. "
+                "This helps identify suspicious traffic patterns and network anomalies which, when correlated, indicate with "
+                "a high probability that a host on the network has been compromised."
+            ),
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:palo_alto_fw AND event_log_name:CORRELATION AND vendor_alert_severity:medium",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="PALOALTO", require_values=True),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="PaloAlto firewall medium severity correlation event detected monitoring alert provisioned successfully",
     )
 
 
