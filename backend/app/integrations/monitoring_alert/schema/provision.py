@@ -209,6 +209,19 @@ class AvailableMonitoringAlerts(str, Enum):
         "This helps identify suspicious traffic patterns and network anomalies which, when correlated, indicate with "
         "a high probability that a host on the network has been compromised."
     )
+    # ! --- SentinelOne alerts ---
+    SENTINELONE_NEW_ACTIVE_THREAT_MALICIOUS_DETECTED = "Threat with confidence level malicious detected"
+    SENTINELONE_NEW_ACTIVE_THREAT_SUSPICIOUS_DETECTED = "Threat with confidence level suspicious detected"
+    SENTINELONE_NEW_MITIGATION_KILL_PERFORMED_SUCCESSFULLY = "Kill performed successfully"
+    SENTINELONE_NEW_MITIGATION_QUARANTINE_PERFORMED_SUCCESSFULLY = "Quarantine performed successfully"
+    SENTINELONE_NEW_EXCLUSION_WAS_ADDED_OR_MODIFIED_BY_USER = "Exclusion was added/modified by user"
+    SENTINELONE_NEW_PATH_EXCLUSION_ADDED = "Path Exclusion added"
+    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE = (
+        'A management user changed the analyst verdict to "True Positive".'
+    )
+    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE = (
+        'A management user changed the analyst verdict to "False Positive".'
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):
