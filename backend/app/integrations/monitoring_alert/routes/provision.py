@@ -30,10 +30,58 @@ from app.integrations.monitoring_alert.services.provision import (
 )
 from app.integrations.monitoring_alert.services.provision import provision_custom_alert
 from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_admin_user_created_from_public_ip_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_firewall_virus_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_ips_botnet_activity_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_ips_malicious_url_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
     provision_fortinet_system_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
     provision_fortinet_utm_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_rogue_access_point_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_threat_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
@@ -154,6 +202,124 @@ async def invoke_provision_fortinet_utm_monitoring_alert(
     await provision_fortinet_utm_monitoring_alert(request)
 
 
+async def invoke_provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_rogue_access_point_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_rogue_access_point_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_firewall_virus_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_firewall_virus_detected_monitoring_alert(request)
+
+
+async def invoke_provision_fortinet_wids_wireless_threat_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_threat_detected_monitoring_alert(request)
+
+
+async def invoke_provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_ips_malicious_url_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_ips_malicious_url_detected_monitoring_alert(request)
+
+
+async def invoke_provision_fortinet_ips_botnet_activity_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_ips_botnet_activity_detected_monitoring_alert(request)
+
+
+async def invoke_provision_fortinet_admin_user_created_from_public_ip_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_admin_user_created_from_public_ip_monitoring_alert(request)
+
+
+async def invoke_provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert(
+        request,
+    )
+
+
 async def invoke_provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
@@ -177,6 +343,22 @@ PROVISION_FUNCTIONS = {
     "CROWDSTRIKE_ALERT": invoke_provision_crowdstrike_monitoring_alert,
     "FORTINET_SYSTEM": invoke_provision_fortinet_system_monitoring_alert,
     "FORTINET_UTM": invoke_provision_fortinet_utm_monitoring_alert,
+    "FORTINET_FORTIWEB_PATH_TRAVERSAL_VULNERABILITY_EXPLOITATION_ATTEMPT": invoke_provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_VALID_CLIENT_MISASSOCIATION_DETECTED": invoke_provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_MANAGEMENT_FLOODING_DETECTED": invoke_provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_EAPOL_PACKET_FLOODING_DETECTED": invoke_provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert,
+    "FORTINET_WIDS_ROGUE_ACCESS_POINT_DETECTED": invoke_provision_fortinet_wids_rogue_access_point_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_LONG_DURATION_ATTACK_DETECTED": invoke_provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert,
+    "FORTINET_FIREWALL_VIRUS_DETECTED": invoke_provision_fortinet_firewall_virus_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_THREAT_DETECTED": invoke_provision_fortinet_wids_wireless_threat_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_INVALID_MAC_OUI_DETECTED": invoke_provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_ASLEAP_ATTACK_DETECTED": invoke_provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert,
+    "FORTINET_IPS_MALICIOUS_URL_DETECTED": invoke_provision_fortinet_ips_malicious_url_detected_monitoring_alert,
+    "FORTINET_IPS_BOTNET_ACTIVITY_DETECTED": invoke_provision_fortinet_ips_botnet_activity_detected_monitoring_alert,
+    "FORTINET_ADMIN_USER_CREATED_FROM_PUBLIC_IP": invoke_provision_fortinet_admin_user_created_from_public_ip_monitoring_alert,
+    "FORTINET_SUSPICIOUS_CONFIG_FILE_ACCESS_FROM_EXTERNAL_NETWORK": invoke_provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert,
+    "FORTINET_WIDS_WIRELESS_WEAK_ENCRYPTION_DETECTED": invoke_provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert,
+    "FORTINET_SUSPICIOUS_SUPER_ADMIN_LOGIN_DETECTED": invoke_provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert,
     "PALOALTO_ALERT": invoke_provision_paloalto_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed

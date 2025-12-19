@@ -38,6 +38,7 @@ class AvailableMonitoringAlerts(str, Enum):
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the CrowdStrike alert is detected."
     )
+    # ! --- Fortinet / FortiGate alerts ---
     FORTINET_SYSTEM = (
         "This alert monitors the Fortinet System events. When an alert is detected, it triggers an "
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
@@ -47,6 +48,128 @@ class AvailableMonitoringAlerts(str, Enum):
         "This alert monitors the Fortinet UTM events. When an alert is detected, it triggers an "
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the Fortinet alert is detected."
+    )
+    FORTINET_FORTIWEB_PATH_TRAVERSAL_VULNERABILITY_EXPLOITATION_ATTEMPT = (
+        "Detects potential exploitation attempts targeting CVE-2025-64446, a critical path traversal vulnerability "
+        "affecting Fortinet FortiWeb Web Application Firewalls (WAF). "
+        "An adversary can abuse this flaw, which requires no authentication, to create new, unauthorized "
+        "administrative user accounts on the exposed device. "
+        "This provides the threat actor with full administrative control over the security appliance, allowing "
+        "them to bypass security policies, neutralize the WAF, and establish a persistent backdoor for further "
+        "network intrusions."
+    )
+    FORTINET_WIDS_WIRELESS_VALID_CLIENT_MISASSOCIATION_DETECTED = (
+        "Detects when FortiGate Wireless IDS identifies an incident where a legitimate wireless client associates "
+        "with a rogue or unauthorized access point (AP), a behavior known as valid client misassociation. "
+        "Attackers may set up malicious APs to impersonate trusted networks, tricking legitimate clients into "
+        "connecting. "
+        "This tactic is commonly used in evil twin attacks to intercept traffic, harvest credentials, or inject "
+        "malicious payloads. Identifying such associations is essential to safeguarding wireless network integrity "
+        "and preventing data leakage."
+    )
+    FORTINET_WIDS_WIRELESS_MANAGEMENT_FLOODING_DETECTED = (
+        "Detects when FortiGate Wireless IDS identifies abnormal surges of wireless management frames, such as "
+        "authentication, association, or probe requests, which may indicate a management frame flooding attack. "
+        "Adversaries use this technique to disrupt wireless network operations, exhaust access point resources, or "
+        "perform denial-of-service (DoS) attacks. "
+        "Continuous monitoring of management frame activity helps with the early identification and mitigation of "
+        "wireless network disruptions."
+    )
+    FORTINET_WIDS_WIRELESS_EAPOL_PACKET_FLOODING_DETECTED = (
+        "Detects a flood of EAPOL (Extensible Authentication Protocol over LAN) packets on the wireless network "
+        "identified by FortiGate Wireless IDS. "
+        "Such flooding can exhaust network resources, disrupt normal authentication processes, or exploit "
+        "weaknesses in WPA/WPA2 handshakes. "
+        "Monitoring for this behavior is crucial to maintaining secure and stable wireless authentication services "
+        "in enterprise environments."
+    )
+    FORTINET_WIDS_ROGUE_ACCESS_POINT_DETECTED = (
+        "Detects the rogue access point (AP) in the network as reported by FortiGate Wireless IDS. "
+        "Rogue APs are unauthorized wireless access points connected to a network, often used by attackers to "
+        "bypass security controls, capture sensitive data, or conduct man-in-the-middle attacks. "
+        "Detection of rogue APs is critical to maintaining wireless network integrity and preventing unauthorized "
+        "access."
+    )
+    FORTINET_WIDS_WIRELESS_LONG_DURATION_ATTACK_DETECTED = (
+        "Detects a long duration attack on the wireless network identified by FortiGate Wireless IDS. "
+        "These attacks often involve persistent connections to rogue access points or the use of compromised "
+        "clients to maintain unauthorized access over an extended period. "
+        "Such activity may be used by adversaries for sustained data exfiltration, network reconnaissance, or to "
+        "establish footholds in the environment. "
+        "Monitoring these patterns is crucial to detecting stealthy and persistent wireless threats."
+    )
+    FORTINET_FIREWALL_VIRUS_DETECTED = (
+        "Detects the virus in the network identified by FortiGate Firewall. "
+        "This may indicate the presence of malware or a malicious file attempting to execute or transfer within "
+        "the network. "
+        "Threat actors may use malware to gain access, maintain persistence, or exfiltrate data. Monitoring such "
+        "events can help identify compromised systems or prevent further infection spread."
+    )
+    FORTINET_WIDS_WIRELESS_THREAT_DETECTED = (
+        "Detects potential wireless-based security threats as identified by FortiGate Wireless IDS. "
+        "These threats may include spoofed access points, EAPOL flooding, deauthentication attacks, or other "
+        "suspicious wireless behaviors. "
+        "Monitoring such events is critical to protecting against wireless intrusion attempts, maintaining the "
+        "integrity of the Wi-Fi network, and preventing unauthorized access or denial-of-service conditions caused "
+        "by malicious actors."
+    )
+    FORTINET_WIDS_WIRELESS_INVALID_MAC_OUI_DETECTED = (
+        "Detects instances where a FortiGate Wireless IDS identifies a client with an invalid or unrecognized MAC "
+        "Organizationally Unique Identifier (OUI). "
+        "This may indicate the presence of unauthorized, rogue, or potentially malicious devices attempting to "
+        "connect to the wireless network. "
+        "Monitoring for invalid MAC OUIs helps strengthen network access controls and prevent unauthorized access."
+    )
+    FORTINET_WIDS_WIRELESS_ASLEAP_ATTACK_DETECTED = (
+        "Detects the presence of an Asleap attack in a wireless network identified by FortiGate Wireless IDS. "
+        "Asleap is a tool used to exploit weak authentication in LEAP (Lightweight Extensible Authentication "
+        "Protocol), potentially allowing attackers to capture and crack wireless credentials. "
+        "Monitoring for this activity helps identify unauthorized attempts to compromise wireless network security "
+        "and protect sensitive credentials."
+    )
+    FORTINET_IPS_MALICIOUS_URL_DETECTED = (
+        "Detects when FortiGate Intrusion Prevention System (IPS) identifies access to a known malicious URL. "
+        "This activity may indicate attempts to connect to command and control infrastructure, deliver malware, or "
+        "exfiltrate data. "
+        "Monitoring these detections helps identify potential threats, prevent compromise, and maintain network "
+        "security."
+    )
+    FORTINET_IPS_BOTNET_ACTIVITY_DETECTED = (
+        "Detects botnet-related activity identified by FortiGate Intrusion Prevention System (IPS). This may "
+        "indicate that a host within the network is communicating with known botnet command and control servers or "
+        "exhibiting behavior consistent with botnet infections. Monitoring these events helps identify compromised "
+        "systems, prevent data exfiltration, and mitigate the spread of malicious activity within the environment."
+    )
+    FORTINET_ADMIN_USER_CREATED_FROM_PUBLIC_IP = (
+        "Detects the creation of a new administrator user account on a Fortinet FortiGate device originating from "
+        "a public IP address. "
+        "An adversary who gains access to the management interface may create unauthorized admin accounts to "
+        "establish persistent, privileged control over the firewall. "
+        "By creating these accounts from external or atypical network locations, attackers can maintain long-term "
+        "access, modify security policies, exfiltrate sensitive data, or prepare the environment for additional "
+        "malicious activity."
+    )
+    FORTINET_SUSPICIOUS_CONFIG_FILE_ACCESS_FROM_EXTERNAL_NETWORK = (
+        "Detects attempts to download a FortiGate configuration file from an external or publicly accessible "
+        "network source. "
+        "Adversaries may abuse this behavior to obtain sensitive configuration data, including administrative "
+        "credentials, network topology details, VPN settings, or firewall policies. "
+        "Access to this information can enable further compromise through targeted lateral movement, privilege "
+        "escalation, or tailored exploitation of exposed services."
+    )
+    FORTINET_WIDS_WIRELESS_WEAK_ENCRYPTION_DETECTED = (
+        "Detects wireless access points using weak or deprecated encryption protocols, as reported by FortiGate "
+        "Wireless IDS. "
+        "Risky encryption methods, such as WEP or misconfigured WPA settings, may allow adversaries to eavesdrop "
+        "on network traffic or perform cryptographic attacks to gain unauthorized access. "
+        "Identifying and remediating such vulnerabilities is essential to ensure wireless network confidentiality "
+        "and compliance with security best practices."
+    )
+    FORTINET_SUSPICIOUS_SUPER_ADMIN_LOGIN_DETECTED = (
+        "Detects a super admin login attempt to a FortiGate firewall originating from a suspicious or public IP "
+        "address. "
+        "This may indicate an attempt to exploit CVE-2025-24472 which allows unauthenticated attackers to gain "
+        "super admin privileges on vulnerable FortiOS devices (<7.0.16) with exposed management interfaces."
     )
     PALOALTO_ALERT = (
         "This alert monitors the PaloAlto events. When an alert is detected, it triggers an "
