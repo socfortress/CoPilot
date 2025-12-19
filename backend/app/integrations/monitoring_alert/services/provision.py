@@ -2310,6 +2310,464 @@ async def provision_paloalto_firewall_medium_severity_correlation_event_detected
     )
 
 
+# ! SentinelOne Monitoring Alerts -- ! #
+async def provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Active Threat Malicious Detected.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW ACTIVE THREAT MALICIOUS DETECTED",
+            description="Threat with confidence level malicious detected",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:sentinelone AND cat:MALWARE AND threatConfidenceLevel:malicious",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne new active threat malicious detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Active Threat Suspicious Detected.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW ACTIVE THREAT SUSPICIOUS DETECTED",
+            description="Threat with confidence level suspicious detected",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:sentinelone AND cat:MALWARE AND threatConfidenceLevel:suspicious",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne new active threat suspicious detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Mitigation, Kill performed successfully.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW MITIGATION KILL PERFORMED SUCCESSFULLY",
+            description="Kill performed successfully",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:sentinelone AND cat:MITIGATION AND eventDesc:"Kill performed successfully"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne mitigation kill performed successfully monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Mitigation, Quarantine performed successfully.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert "
+        f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW MITIGATION QUARANTINE PERFORMED SUCCESSFULLY",
+            description="Quarantine performed successfully",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:sentinelone AND cat:MITIGATION AND eventDesc:"Quarantine performed successfully"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne mitigation quarantine performed successfully monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Exclusion was added/modified by user.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW EXCLUSION WAS ADDED OR MODIFIED BY USER",
+            description="Exclusion was added/modified by user",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:sentinelone AND cat:WHITELISTBLACKLIST AND eventDesc:"Exclusion was added/modified by user"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne exclusion added/modified by user monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_new_path_exclusion_added_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: New Path Exclusion added.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_new_path_exclusion_added_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SENTINELONE - NEW PATH EXCLUSION ADDED",
+            description="Path Exclusion added",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:sentinelone AND cat:WHITELISTBLACKLIST AND eventDesc:"Path Exclusion added"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="SentinelOne path exclusion added monitoring alert provisioned successfully",
+    )
+
+
+async def provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: Analyst verdict changed to True Positive.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title='SENTINELONE - ANALYST VERDICT CHANGED TO "TRUE POSITIVE"',
+            description="A management user changed the analyst verdict to True positive.",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:sentinelone AND cat:THREATMANAGEMENT AND data_newAnalystVerdict:true_positive",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message='SentinelOne analyst verdict changed to "True Positive" monitoring alert provisioned successfully',
+    )
+
+
+async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions SentinelOne: Analyst verdict changed to False Positive.
+    """
+    logger.info(
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title='SENTINELONE - ANALYST VERDICT CHANGED TO "FALSE POSITIVE"',
+            description="A management user changed the analyst verdict to False Positive.",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_type:sentinelone AND cat:THREATMANAGEMENT AND data_newAnalystVerdict:false_positive",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="SENTINELONE", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message='SentinelOne analyst verdict changed to "False Positive" monitoring alert provisioned successfully',
+    )
+
+
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions custom monitoring alerts.
