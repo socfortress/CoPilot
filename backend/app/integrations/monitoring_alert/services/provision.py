@@ -947,6 +947,921 @@ async def provision_fortinet_utm_monitoring_alert(
     )
 
 
+async def provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet FortiWeb Path Traversal Vulnerability Exploitation Attempt monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert "
+        f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - FORTIWEB PATH TRAVERSAL VULNERABILITY EXPLOITATION ATTEMPT",
+            description="FORTINET - FORTIWEB PATH TRAVERSAL VULNERABILITY EXPLOITATION ATTEMPT",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query=r"syslog_type:fortinet AND httpmethod:POST AND !action:blocked AND !action:block AND !action:reset AND !action:drop AND !action:dropped AND (url:/\/system\/admin%3F/ OR url:/\/cgi\-bin\/fwbcgi/)",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet FortiWeb path traversal vulnerability exploitation attempt monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Valid Client Misassociation Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert "
+        f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS VALID CLIENT MISASSOCIATION DETECTED",
+            description="FORTINET - WIDS WIRELESS VALID CLIENT MISASSOCIATION DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless valid_client_misassoc detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless valid client misassociation detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Management Flooding Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS MANAGEMENT FLOODING DETECTED",
+            description="FORTINET - WIDS WIRELESS MANAGEMENT FLOODING DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless management flooding detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless management flooding detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless EAPOL Packet Flooding Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS EAPOL PACKET FLOODING DETECTED",
+            description="FORTINET - WIDS WIRELESS EAPOL PACKET FLOODING DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless EAPOL packet flooding detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless EAPOL packet flooding detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_rogue_access_point_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Rogue Access Point Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_rogue_access_point_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS ROGUE ACCESS POINT DETECTED",
+            description="FORTINET - WIDS ROGUE ACCESS POINT DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND (logdesc:"Rogue AP detected" OR logdesc:"Rogue AP activity" OR logdesc:"Rogue AP on air" OR logdesc:"Fake AP on air" OR logdesc:"Fake AP detected" OR logdesc:"Offending AP on air" OR logdesc:"Offending AP detected")',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS rogue access point detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Long Duration Attack Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS LONG DURATION ATTACK DETECTED",
+            description="FORTINET - WIDS WIRELESS LONG DURATION ATTACK DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless long duration attack detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless long duration attack detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_firewall_virus_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet Firewall Virus Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_firewall_virus_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - FIREWALL VIRUS DETECTED",
+            description="FORTINET - FIREWALL VIRUS DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND subtype:"virus" AND !action:"blocked"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet firewall virus detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_threat_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Threat Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_threat_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS THREAT DETECTED",
+            description="FORTINET - WIDS WIRELESS THREAT DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless threat detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless threat detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Invalid MAC OUI Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS INVALID MAC OUI DETECTED",
+            description="FORTINET - WIDS WIRELESS INVALID MAC OUI DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless invalid MAC OUI detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless invalid MAC OUI detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Asleap Attack Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS ASLEAP ATTACK DETECTED",
+            description="FORTINET - WIDS WIRELESS ASLEAP ATTACK DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND logdesc:"Wireless Asleap attack detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless Asleap attack detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_ips_malicious_url_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet IPS Malicious URL Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_ips_malicious_url_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - IPS MALICIOUS URL DETECTED",
+            description="FORTINET - IPS MALICIOUS URL DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND subtype:"ips" AND attack:"malicious-url" AND action:"detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet IPS malicious URL detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_ips_botnet_activity_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet IPS Botnet Activity Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_ips_botnet_activity_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - IPS BOTNET ACTIVITY DETECTED",
+            description="FORTINET - IPS BOTNET ACTIVITY DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND subtype:"ips" AND attack:"botnet" AND action:"detected"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet IPS botnet activity detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_admin_user_created_from_public_ip_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet Admin User Created from Public IP monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_admin_user_created_from_public_ip_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - ADMIN USER CREATED FROM PUBLIC IP",
+            description="FORTINET - ADMIN USER CREATED FROM PUBLIC IP",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND subtype:"system" AND logdesc:"Object attribute configured" AND action:"Add" AND cfgpath:"system.admin"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet admin user created from public IP monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet Suspicious Config File Access from External Network monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert "
+        f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - SUSPICIOUS CONFIG FILE ACCESS FROM EXTERNAL NETWORK",
+            description="FORTINET - SUSPICIOUS CONFIG FILE ACCESS FROM EXTERNAL NETWORK",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND msg:"System config file has been downloaded" AND status:"success"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet suspicious config file access from external network monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet WIDS Wireless Weak Encryption Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - WIDS WIRELESS WEAK ENCRYPTION DETECTED",
+            description="FORTINET - WIDS WIRELESS WEAK ENCRYPTION DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND (logdesc:"Wireless risky_encryption detected" OR logdesc:"Wireless Weak WEP IV detected")',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet WIDS wireless weak encryption detected monitoring alert provisioned successfully",
+    )
+
+
+async def provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Fortinet Suspicious Super Admin Login Detected monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="FORTINET - SUSPICIOUS SUPER ADMIN LOGIN DETECTED",
+            description="FORTINET - SUSPICIOUS SUPER ADMIN LOGIN DETECTED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='syslog_type:fortinet AND subtype:"system" AND logdesc:"Admin login successful" AND profile:"super_admin" AND method:"jsconsole" AND status:"success" AND srcip_reserved_ip:false',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="FORTINET", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Fortinet suspicious super admin login detected monitoring alert provisioned successfully",
+    )
+
+
 async def provision_paloalto_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
