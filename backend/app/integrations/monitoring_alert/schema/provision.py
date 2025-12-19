@@ -216,12 +216,8 @@ class AvailableMonitoringAlerts(str, Enum):
     SENTINELONE_NEW_MITIGATION_QUARANTINE_PERFORMED_SUCCESSFULLY = "Quarantine performed successfully"
     SENTINELONE_NEW_EXCLUSION_WAS_ADDED_OR_MODIFIED_BY_USER = "Exclusion was added/modified by user"
     SENTINELONE_NEW_PATH_EXCLUSION_ADDED = "Path Exclusion added"
-    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE = (
-        'A management user changed the analyst verdict to "True Positive".'
-    )
-    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE = (
-        'A management user changed the analyst verdict to "False Positive".'
-    )
+    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE = 'A management user changed the analyst verdict to "True Positive".'
+    SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE = 'A management user changed the analyst verdict to "False Positive".'
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):

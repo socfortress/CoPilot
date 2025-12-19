@@ -2309,6 +2309,7 @@ async def provision_paloalto_firewall_medium_severity_correlation_event_detected
         message="PaloAlto firewall medium severity correlation event detected monitoring alert provisioned successfully",
     )
 
+
 # ! SentinelOne Monitoring Alerts -- ! #
 async def provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
@@ -2317,8 +2318,7 @@ async def provision_sentinelone_new_active_threat_malicious_detected_monitoring_
     Provisions SentinelOne: New Active Threat Malicious Detected.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2375,8 +2375,7 @@ async def provision_sentinelone_new_active_threat_suspicious_detected_monitoring
     Provisions SentinelOne: New Active Threat Suspicious Detected.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2433,8 +2432,7 @@ async def provision_sentinelone_new_mitigation_kill_performed_successfully_monit
     Provisions SentinelOne: New Mitigation, Kill performed successfully.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2549,8 +2547,7 @@ async def provision_sentinelone_new_exclusion_was_added_or_modified_by_user_moni
     Provisions SentinelOne: New Exclusion was added/modified by user.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2607,8 +2604,7 @@ async def provision_sentinelone_new_path_exclusion_added_monitoring_alert(
     Provisions SentinelOne: New Path Exclusion added.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_path_exclusion_added_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_path_exclusion_added_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2665,8 +2661,7 @@ async def provision_sentinelone_analyst_verdict_changed_to_true_positive_monitor
     Provisions SentinelOne: Analyst verdict changed to True Positive.
     """
     logger.info(
-        "Invoking provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2723,8 +2718,7 @@ async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monito
     Provisions SentinelOne: Analyst verdict changed to False Positive.
     """
     logger.info(
-        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert "
-        f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert " f"with request: {request.dict()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(

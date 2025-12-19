@@ -108,6 +108,30 @@ from app.integrations.monitoring_alert.services.provision import (
     provision_paloalto_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_sentinelone_new_path_exclusion_added_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
@@ -378,6 +402,70 @@ async def invoke_provision_paloalto_firewall_medium_severity_correlation_event_d
     )
 
 
+async def invoke_provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_new_path_exclusion_added_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_new_path_exclusion_added_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert(
+        request,
+    )
+
+
+async def invoke_provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert(
+        request,
+    )
+
+
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
 ):
@@ -416,6 +504,14 @@ PROVISION_FUNCTIONS = {
     "PALOALTO_FIREWALL_VIRUS_ALLOWED": invoke_provision_paloalto_firewall_virus_allowed_monitoring_alert,
     "PALOALTO_FIREWALL_TOR_TRAFFIC_ALLOWED": invoke_provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert,
     "PALOALTO_FIREWALL_MEDIUM_SEVERITY_CORRELATION_EVENT_DETECTED": invoke_provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert,
+    "SENTINELONE_NEW_ACTIVE_THREAT_MALICIOUS_DETECTED": invoke_provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert,
+    "SENTINELONE_NEW_ACTIVE_THREAT_SUSPICIOUS_DETECTED": invoke_provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert,
+    "SENTINELONE_NEW_MITIGATION_KILL_PERFORMED_SUCCESSFULLY": invoke_provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert,
+    "SENTINELONE_NEW_MITIGATION_QUARANTINE_PERFORMED_SUCCESSFULLY": invoke_provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert,
+    "SENTINELONE_NEW_EXCLUSION_WAS_ADDED_OR_MODIFIED_BY_USER": invoke_provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert,
+    "SENTINELONE_NEW_PATH_EXCLUSION_ADDED": invoke_provision_sentinelone_new_path_exclusion_added_monitoring_alert,
+    "SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE": invoke_provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert,
+    "SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE": invoke_provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }
