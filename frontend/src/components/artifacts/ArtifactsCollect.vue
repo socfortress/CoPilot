@@ -73,37 +73,63 @@
         <!-- Parameters Section -->
         <div v-if="selectedArtifactParameters.length" class="parameters-section my-4">
             <n-card title="Artifact Parameters" size="small">
+                <template #header-extra>
+                    <n-tag size="small" type="info">
+                        {{ selectedArtifactParameters.length }} parameter{{ selectedArtifactParameters.length !== 1 ? 's' : '' }}
+                    </n-tag>
+                </template>
                 <n-spin :show="loadingParameters">
-                    <div class="flex flex-col gap-3">
-                        <div v-for="param in selectedArtifactParameters" :key="param.name" class="parameter-field">
-                            <n-form-item :label="param.name" :label-props="{ style: 'font-weight: 500' }">
-                                <template #label>
+                    <n-scrollbar style="max-height: 400px">
+                        <div class="parameters-grid">
+                            <div v-for="param in selectedArtifactParameters" :key="param.name" class="parameter-field">
+                                <div class="parameter-header">
                                     <div class="flex items-center gap-2">
-                                        <span>{{ param.name }}</span>
-                                        <n-popover v-if="param.description" trigger="hover" placement="top">
-                                            <template #trigger>
-                                                <Icon :name="InfoIcon" :size="14" class="cursor-help opacity-60" />
-                                            </template>
-                                            <div class="max-w-sm">
-                                                <div v-if="param.description" class="mb-2">
-                                                    {{ param.description }}
-                                                </div>
-                                                <div v-if="param.type" class="text-xs opacity-70">
-                                                    Type: <code>{{ param.type }}</code>
-                                                </div>
-                                            </div>
-                                        </n-popover>
+                                        <span class="parameter-name">{{ param.name }}</span>
+                                        <n-tag v-if="param.type" size="tiny" :bordered="false">
+                                            {{ param.type }}
+                                        </n-tag>
                                     </div>
-                                </template>
+                                    <n-popover v-if="param.description" trigger="hover" placement="top">
+                                        <template #trigger>
+                                            <Icon :name="InfoIcon" :size="16" class="cursor-help text-gray-400 hover:text-gray-600" />
+                                        </template>
+                                        <div class="parameter-tooltip">
+                                            <div class="font-medium mb-2">{{ param.name }}</div>
+                                            <div class="text-sm">{{ param.description }}</div>
+                                            <div v-if="param.default" class="text-xs mt-2 opacity-70">
+                                                Default: <code class="bg-gray-100 px-1 rounded">{{ param.default }}</code>
+                                            </div>
+                                        </div>
+                                    </n-popover>
+                                </div>
                                 <n-input
                                     v-model:value="parameterValues[param.name]"
-                                    :placeholder="param.default?.toString() || ''"
+                                    :placeholder="param.default?.toString() || 'Enter value...'"
                                     size="small"
                                     clearable
-                                />
-                            </n-form-item>
+                                    class="mt-2"
+                                >
+                                    <template v-if="param.default" #suffix>
+                                        <n-tooltip trigger="hover" placement="top">
+                                            <template #trigger>
+                                                <n-button
+                                                    text
+                                                    size="tiny"
+                                                    @click="parameterValues[param.name] = param.default?.toString() || ''"
+                                                >
+                                                    <Icon name="carbon:reset" :size="14" />
+                                                </n-button>
+                                            </template>
+                                            Reset to default
+                                        </n-tooltip>
+                                    </template>
+                                </n-input>
+                                <div v-if="param.description" class="parameter-description">
+                                    {{ param.description }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </n-scrollbar>
                 </n-spin>
             </n-card>
         </div>
@@ -131,7 +157,7 @@
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts.d"
-import { NButton, NCard, NEmpty, NFormItem, NInput, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { NButton, NCard, NEmpty, NInput, NPopover, NScrollbar, NSelect, NSpin, NTag, NTooltip, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
@@ -357,20 +383,67 @@ onBeforeMount(() => {
 </script>
 
 <style scoped>
+.parameters-grid {
+    display: grid;
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
 .parameter-field {
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.75rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
 }
 
-.parameter-field:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+.parameter-field:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Dark mode support if needed */
+.parameter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.parameter-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.parameter-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}
+
+.parameter-tooltip {
+    max-width: 400px;
+}
+
+/* Dark mode support */
 @media (prefers-color-scheme: dark) {
     .parameter-field {
-        border-bottom-color: #374151;
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    .parameter-field:hover {
+        border-color: #4b5563;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .parameter-name {
+        color: #f3f4f6;
+    }
+
+    .parameter-description {
+        color: #9ca3af;
     }
 }
 </style>
