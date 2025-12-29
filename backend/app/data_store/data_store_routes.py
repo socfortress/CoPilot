@@ -3,7 +3,10 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
+from fastapi import UploadFile
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from loguru import logger
@@ -15,13 +18,72 @@ from sqlalchemy.orm import selectinload
 from app.auth.utils import AuthHandler
 from app.data_store.data_store_operations import delete_agent_artifact_file
 from app.data_store.data_store_operations import download_agent_artifact_file
+from app.data_store.data_store_operations import upload_file_to_datastore
 from app.data_store.data_store_schema import AgentDataStoreData
 from app.data_store.data_store_schema import AgentDataStoreListResponse
 from app.data_store.data_store_schema import AgentDataStoreResponse
+from app.data_store.data_store_schema import FileUploadResponse
 from app.db.db_session import get_db
 from app.db.universal_models import AgentDataStore
 
 agent_data_store_router = APIRouter()
+
+
+@agent_data_store_router.post(
+    "/upload",
+    response_model=FileUploadResponse,
+    description="Upload a file to the data store",
+    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def upload_file(
+    file: UploadFile = File(...),
+    bucket_name: str = Form(...),
+    object_name: str = Form(...),
+) -> FileUploadResponse:
+    """
+    Upload a file to the specified bucket and object path in the data store.
+
+    Args:
+        file: The file to upload
+        bucket_name: The name of the bucket to upload to
+        object_name: The object path/name within the bucket (e.g., "folder/subfolder/file.txt")
+
+    Returns:
+        FileUploadResponse with upload details
+    """
+    try:
+        logger.info(f"Uploading file {file.filename} to bucket {bucket_name} as {object_name}")
+
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File name is required",
+            )
+
+        # Upload the file to MinIO
+        upload_result = await upload_file_to_datastore(
+            file=file,
+            bucket_name=bucket_name,
+            object_name=object_name,
+        )
+
+        return FileUploadResponse(
+            success=True,
+            message=f"File {file.filename} uploaded successfully",
+            bucket_name=upload_result["bucket_name"],
+            object_key=upload_result["object_key"],
+            file_name=upload_result["file_name"],
+            file_size=upload_result["file_size"],
+            file_hash=upload_result["file_hash"],
+            content_type=upload_result.get("content_type"),
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to upload file: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload file: {str(e)}",
+        )
 
 
 @agent_data_store_router.get(

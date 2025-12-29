@@ -5,6 +5,17 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
+class FileUploadResponse(BaseModel):
+    success: bool
+    message: str
+    bucket_name: str
+    object_key: str
+    file_name: str
+    file_size: int
+    file_hash: str
+    content_type: Optional[str] = None
+
+
 class CaseDataStoreCreation(BaseModel):
     case_id: int
     bucket_name: str = Field(max_length=255)
