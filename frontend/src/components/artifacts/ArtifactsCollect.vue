@@ -1,156 +1,156 @@
 <template>
-    <div class="artifacts-collect">
-        <div class="header flex items-start justify-end gap-2">
-            <div v-if="isDirty" class="info flex gap-5">
-                <n-popover overlap placement="bottom-start">
-                    <template #trigger>
-                        <div class="bg-default rounded-lg">
-                            <n-button size="small" class="cursor-help!">
-                                <template #icon>
-                                    <Icon :name="InfoIcon" />
-                                </template>
-                            </n-button>
-                        </div>
-                    </template>
-                    <div class="flex flex-col gap-2">
-                        <div class="box">
-                            Total :
-                            <code>{{ total }}</code>
-                        </div>
-                    </div>
-                </n-popover>
-            </div>
-            <div class="flex grow flex-wrap items-center justify-end gap-2">
-                <div v-if="!hideHostnameField" class="grow basis-56">
-                    <n-select
-                        v-model:value="filters.hostname"
-                        :options="agentHostnameOptions"
-                        placeholder="Agent hostname"
-                        clearable
-                        filterable
-                        :disabled="loading"
-                        size="small"
-                        :loading="loadingAgents"
-                    />
-                </div>
-                <div class="grow basis-56">
-                    <n-select
-                        v-model:value="filters.artifact_name"
-                        :options="artifactsOptions"
-                        placeholder="Artifact name"
-                        clearable
-                        :disabled="loading"
-                        filterable
-                        size="small"
-                        :loading="loadingArtifacts"
-                        @update:value="onArtifactSelect"
-                    />
-                </div>
-                <div v-if="!hideVelociraptorIdField" class="grow basis-56">
-                    <n-input
-                        v-model:value="filters.velociraptor_id"
-                        placeholder="Velociraptor ID"
-                        clearable
-                        :readonly="loading"
-                        size="small"
-                    />
-                </div>
-                <div>
-                    <n-button
-                        size="small"
-                        type="primary"
-                        secondary
-                        :loading="loading"
-                        :disabled="!areFiltersValid"
-                        @click="getData()"
-                    >
-                        Submit
-                    </n-button>
-                </div>
-            </div>
-        </div>
+	<div class="artifacts-collect">
+		<div class="header flex items-start justify-end gap-2">
+			<div v-if="isDirty" class="info flex gap-5">
+				<n-popover overlap placement="bottom-start">
+					<template #trigger>
+						<div class="bg-default rounded-lg">
+							<n-button size="small" class="cursor-help!">
+								<template #icon>
+									<Icon :name="InfoIcon" />
+								</template>
+							</n-button>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2">
+						<div class="box">
+							Total :
+							<code>{{ total }}</code>
+						</div>
+					</div>
+				</n-popover>
+			</div>
+			<div class="flex grow flex-wrap items-center justify-end gap-2">
+				<div v-if="!hideHostnameField" class="grow basis-56">
+					<n-select
+						v-model:value="filters.hostname"
+						:options="agentHostnameOptions"
+						placeholder="Agent hostname"
+						clearable
+						filterable
+						:disabled="loading"
+						size="small"
+						:loading="loadingAgents"
+					/>
+				</div>
+				<div class="grow basis-56">
+					<n-select
+						v-model:value="filters.artifact_name"
+						:options="artifactsOptions"
+						placeholder="Artifact name"
+						clearable
+						:disabled="loading"
+						filterable
+						size="small"
+						:loading="loadingArtifacts"
+						@update:value="onArtifactSelect"
+					/>
+				</div>
+				<div v-if="!hideVelociraptorIdField" class="grow basis-56">
+					<n-input
+						v-model:value="filters.velociraptor_id"
+						placeholder="Velociraptor ID"
+						clearable
+						:readonly="loading"
+						size="small"
+					/>
+				</div>
+				<div>
+					<n-button
+						size="small"
+						type="primary"
+						secondary
+						:loading="loading"
+						:disabled="!areFiltersValid"
+						@click="getData()"
+					>
+						Submit
+					</n-button>
+				</div>
+			</div>
+		</div>
 
-        <!-- Parameters Section -->
-        <div v-if="selectedArtifactParameters.length" class="parameters-section my-4">
-            <n-card title="Artifact Parameters" size="small">
-                <template #header-extra>
-                    <n-tag size="small" type="info">
-                        {{ selectedArtifactParameters.length }} parameter{{ selectedArtifactParameters.length !== 1 ? 's' : '' }}
-                    </n-tag>
-                </template>
-                <n-spin :show="loadingParameters">
-                    <n-scrollbar style="max-height: 400px">
-                        <div class="parameters-grid">
-                            <div v-for="param in selectedArtifactParameters" :key="param.name" class="parameter-field">
-                                <div class="parameter-header">
-                                    <div class="flex items-center gap-2">
-                                        <span class="parameter-name">{{ param.name }}</span>
-                                        <n-tag v-if="param.type" size="tiny" :bordered="false">
-                                            {{ param.type }}
-                                        </n-tag>
-                                    </div>
-                                    <n-popover v-if="param.description" trigger="hover" placement="top">
-                                        <template #trigger>
-                                            <Icon :name="InfoIcon" :size="16" class="cursor-help text-gray-400 hover:text-gray-600" />
-                                        </template>
-                                        <div class="parameter-tooltip">
-                                            <div class="font-medium mb-2">{{ param.name }}</div>
-                                            <div class="text-sm">{{ param.description }}</div>
-                                            <div v-if="param.default" class="text-xs mt-2 opacity-70">
-                                                Default: <code class="bg-gray-100 px-1 rounded">{{ param.default }}</code>
-                                            </div>
-                                        </div>
-                                    </n-popover>
-                                </div>
-                                <n-input
-                                    v-model:value="parameterValues[param.name]"
-                                    :placeholder="param.default?.toString() || 'Enter value...'"
-                                    size="small"
-                                    clearable
-                                    class="mt-2"
-                                >
-                                    <template v-if="param.default" #suffix>
-                                        <n-tooltip trigger="hover" placement="top">
-                                            <template #trigger>
-                                                <n-button
-                                                    text
-                                                    size="tiny"
-                                                    @click="parameterValues[param.name] = escapeBackslashes(param.default?.toString() || '')"
-                                                >
-                                                    <Icon name="carbon:reset" :size="14" />
-                                                </n-button>
-                                            </template>
-                                            Reset to default
-                                        </n-tooltip>
-                                    </template>
-                                </n-input>
-                                <div v-if="param.description" class="parameter-description">
-                                    {{ param.description }}
-                                </div>
-                            </div>
-                        </div>
-                    </n-scrollbar>
-                </n-spin>
-            </n-card>
-        </div>
+		<!-- Parameters Section -->
+		<div v-if="selectedArtifactParameters.length" class="parameters-section my-4">
+			<n-card title="Artifact Parameters" size="small">
+				<template #header-extra>
+					<n-tag size="small" type="info">
+						{{ selectedArtifactParameters.length }} parameter{{ selectedArtifactParameters.length !== 1 ? 's' : '' }}
+					</n-tag>
+				</template>
+				<n-spin :show="loadingParameters">
+					<n-scrollbar style="max-height: 400px">
+						<div class="parameters-grid">
+							<div v-for="param in selectedArtifactParameters" :key="param.name" class="parameter-field">
+								<div class="parameter-header">
+									<div class="flex items-center gap-2">
+										<span class="parameter-name">{{ param.name }}</span>
+										<n-tag v-if="param.type" size="tiny" :bordered="false">
+											{{ param.type }}
+										</n-tag>
+									</div>
+									<n-popover v-if="param.description" trigger="hover" placement="top">
+										<template #trigger>
+											<Icon :name="InfoIcon" :size="16" class="cursor-help text-gray-400 hover:text-gray-600" />
+										</template>
+										<div class="parameter-tooltip">
+											<div class="font-medium mb-2">{{ param.name }}</div>
+											<div class="text-sm">{{ param.description }}</div>
+											<div v-if="param.default" class="text-xs mt-2 opacity-70">
+												Default: <code class="bg-gray-100 px-1 rounded">{{ param.default }}</code>
+											</div>
+										</div>
+									</n-popover>
+								</div>
+								<n-input
+									v-model:value="parameterValues[param.name]"
+									:placeholder="param.default?.toString() || 'Enter value...'"
+									size="small"
+									clearable
+									class="mt-2"
+								>
+									<template v-if="param.default" #suffix>
+										<n-tooltip trigger="hover" placement="top">
+											<template #trigger>
+												<n-button
+													text
+													size="tiny"
+													@click="parameterValues[param.name] = escapeBackslashes(param.default?.toString() || '')"
+												>
+													<Icon name="carbon:reset" :size="14" />
+												</n-button>
+											</template>
+											Reset to default
+										</n-tooltip>
+									</template>
+								</n-input>
+								<div v-if="param.description" class="parameter-description">
+									{{ param.description }}
+								</div>
+							</div>
+						</div>
+					</n-scrollbar>
+				</n-spin>
+			</n-card>
+		</div>
 
-        <n-spin :show="loading">
-            <div class="my-7 flex min-h-52 flex-col gap-3">
-                <template v-if="collectList.length">
-                    <CollectItem
-                        v-for="collect of collectList"
-                        :key="`${collect.___id}`"
-                        embedded
-                        :collect="collect"
-                        class="item-appear item-appear-bottom item-appear-005"
-                    />
-                </template>
-                <template v-else>
-                    <n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
-                </template>
-            </div>
-        </n-spin>
-    </div>
+		<n-spin :show="loading">
+			<div class="my-7 flex min-h-52 flex-col gap-3">
+				<template v-if="collectList.length">
+					<CollectItem
+						v-for="collect of collectList"
+						:key="`${collect.___id}`"
+						embedded
+						:collect="collect"
+						class="item-appear item-appear-bottom item-appear-005"
+					/>
+				</template>
+				<template v-else>
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
+				</template>
+			</div>
+		</n-spin>
+	</div>
 </template>
 
 <script setup lang="ts">
