@@ -1,6 +1,16 @@
 export interface Artifact {
 	description: string
 	name: string
+	author?: string | null
+    precondition?: string | null
+    parameters?: ArtifactParameter[]
+}
+
+export interface ArtifactParameter {
+    name: string
+    description?: string
+    type?: string
+    default?: string | boolean | null
 }
 
 export interface CollectResult {

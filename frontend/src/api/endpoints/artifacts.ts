@@ -65,6 +65,9 @@ export default {
 
 		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(url)
 	},
+	getByName(artifactName: string) {
+        return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(`/artifacts/artifact/${artifactName}`)
+    },
 	collect(payload: CollectRequest) {
 		return HttpClient.post<FlaskBaseResponse & { results: CollectResult[] }>(`/artifacts/collect`, payload)
 	},

@@ -1,5 +1,8 @@
 from datetime import datetime
+from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Union
 
 import httpx
 from fastapi import HTTPException
@@ -14,6 +17,7 @@ from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import CollectFileBody
+from app.connectors.velociraptor.schema.artifacts import ParameterKeyValue
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
@@ -88,7 +92,7 @@ async def get_artifacts() -> ArtifactsResponse:
     """
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
-    query = create_query("SELECT name,description FROM artifact_definitions()")
+    query = create_query("SELECT name,description,parameters FROM artifact_definitions()")
     all_artifacts = velociraptor_service.execute_query(query)
     try:
         if all_artifacts["success"]:
@@ -154,6 +158,78 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
             status_code=500,
             detail=f"Failed to get artifact '{artifact_name}': {err}",
         )
+
+
+async def validate_artifact_parameters(
+    artifact_name: str,
+    provided_parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]],
+) -> None:
+    """
+    Validates that the provided parameters match the artifact's expected parameters.
+
+    Args:
+        artifact_name (str): The name of the artifact to validate against.
+        provided_parameters (Optional[Dict]): The parameters provided in the request.
+
+    Raises:
+        HTTPException: If any provided parameter is not valid for the artifact.
+    """
+    if not provided_parameters:
+        return  # No parameters to validate
+
+    # Fetch the artifact details
+    artifact_response = await get_artifact_by_name(artifact_name)
+
+    if not artifact_response.artifacts or len(artifact_response.artifacts) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Artifact {artifact_name} not found",
+        )
+
+    artifact = artifact_response.artifacts[0]
+
+    # If the artifact has no parameters defined, reject any provided parameters
+    if not artifact.parameters:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Artifact {artifact_name} does not accept any parameters",
+        )
+
+    # Get valid parameter names from the artifact
+    valid_param_names = {param.name for param in artifact.parameters}
+
+    logger.info(f"Valid parameters for artifact {artifact_name}: {valid_param_names}")
+    logger.info(f"Provided parameters for artifact {artifact_name}: {provided_parameters}")
+
+    # Check if provided parameters are valid
+    # Handle both direct key-value pairs and the 'env' list format
+    if isinstance(provided_parameters, dict):
+        if "env" in provided_parameters and isinstance(provided_parameters["env"], list):
+            # Handle env list format
+            for param_pair in provided_parameters["env"]:
+                # Check if it's a ParameterKeyValue model or a dict
+                if isinstance(param_pair, ParameterKeyValue):
+                    param_name = param_pair.key
+                elif isinstance(param_pair, dict) and "key" in param_pair:
+                    param_name = param_pair["key"]
+                else:
+                    continue
+
+                if param_name not in valid_param_names:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Parameter '{param_name}' is not valid for artifact {artifact_name}. Valid parameters: {', '.join(sorted(valid_param_names))}",
+                    )
+        else:
+            # Handle direct key-value format
+            for param_name in provided_parameters.keys():
+                if param_name not in valid_param_names:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Parameter '{param_name}' is not valid for artifact {artifact_name}. Valid parameters: {', '.join(sorted(valid_param_names))}",
+                    )
+
+    logger.info(f"All provided parameters are valid for artifact {artifact_name}")
 
 
 async def get_artifact_parameters_by_prefix_service(
