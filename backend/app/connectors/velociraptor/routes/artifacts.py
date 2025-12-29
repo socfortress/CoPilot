@@ -32,7 +32,8 @@ from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_mo
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_file_collection
-from app.connectors.velociraptor.services.artifacts import run_remote_command, validate_artifact_parameters
+from app.connectors.velociraptor.services.artifacts import run_remote_command
+from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 

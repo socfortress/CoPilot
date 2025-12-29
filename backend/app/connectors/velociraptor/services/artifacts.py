@@ -1,5 +1,8 @@
 from datetime import datetime
-from typing import Optional, Dict, Union, List
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import httpx
 from fastapi import HTTPException
@@ -14,10 +17,11 @@ from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import CollectFileBody
+from app.connectors.velociraptor.schema.artifacts import ParameterKeyValue
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.schema.artifacts import RunCommandResponse, ParameterKeyValue
+from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
 
 
@@ -155,6 +159,7 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
             detail=f"Failed to get artifact '{artifact_name}': {err}",
         )
 
+
 async def validate_artifact_parameters(
     artifact_name: str,
     provided_parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]],
@@ -225,6 +230,7 @@ async def validate_artifact_parameters(
                     )
 
     logger.info(f"All provided parameters are valid for artifact {artifact_name}")
+
 
 async def get_artifact_parameters_by_prefix_service(
     artifact_name: str,
