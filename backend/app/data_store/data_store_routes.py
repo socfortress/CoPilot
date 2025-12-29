@@ -33,7 +33,6 @@ agent_data_store_router = APIRouter()
     "/upload",
     response_model=FileUploadResponse,
     description="Upload a file to the data store",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def upload_file(
     file: UploadFile = File(...),
