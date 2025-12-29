@@ -115,7 +115,7 @@
                                                 <n-button
                                                     text
                                                     size="tiny"
-                                                    @click="parameterValues[param.name] = param.default?.toString() || ''"
+                                                    @click="parameterValues[param.name] = escapeBackslashes(param.default?.toString() || '')"
                                                 >
                                                     <Icon name="carbon:reset" :size="14" />
                                                 </n-button>
@@ -217,6 +217,16 @@ const artifactsOptions = computed(() => {
     return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
 
+// Function to escape backslashes in Windows paths
+function escapeBackslashes(value: string): string {
+    // Only escape if it looks like a Windows path (contains backslashes)
+    if (value && typeof value === 'string' && value.includes('\\')) {
+        // Replace single backslashes with double backslashes
+        return value.replace(/\\/g, '\\\\')
+    }
+    return value
+}
+
 async function onArtifactSelect(artifactName: string | null) {
     selectedArtifactParameters.value = []
     parameterValues.value = {}
@@ -236,10 +246,11 @@ async function onArtifactSelect(artifactName: string | null) {
             if (artifact.parameters?.length) {
                 selectedArtifactParameters.value = artifact.parameters
 
-                // Initialize parameter values with defaults
+                // Initialize parameter values with defaults (with escaped backslashes)
                 artifact.parameters.forEach(param => {
                     if (param.default !== undefined && param.default !== null && param.default !== "") {
-                        parameterValues.value[param.name] = param.default.toString()
+                        const defaultValue = param.default.toString()
+                        parameterValues.value[param.name] = escapeBackslashes(defaultValue)
                     }
                 })
             }
