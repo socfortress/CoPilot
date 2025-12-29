@@ -470,7 +470,7 @@ async def collect_artifact(
     )
 
     # Assuming run_artifact_collection is an async function and takes a session as a parameter
-    return await run_artifact_collection(collect_artifact_body)
+    return await run_artifact_collection(collect_artifact_body, session)
 
 
 @velociraptor_artifacts_router.post(

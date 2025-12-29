@@ -303,20 +303,171 @@ async def get_artifact_parameters_by_prefix_service(
         )
 
 
+# async def run_artifact_collection(
+#     collect_artifact_body: CollectArtifactBody,
+# ) -> CollectArtifactResponse:
+#     """
+#     Run an artifact collection on a client with optional parameters.
+
+#     Args:
+#         collect_artifact_body: The body of the request with optional parameters.
+
+#     Returns:
+#         CollectArtifactResponse: A dictionary containing the success status, message and results.
+#     """
+#     velociraptor_service = await UniversalService.create("Velociraptor")
+#     try:
+#         # Build the query dynamically based on whether parameters are provided
+#         parameters = getattr(collect_artifact_body, "parameters", None)
+
+#         if parameters:
+#             # Velociraptor expects parameters in a very specific format
+#             # For the "env" parameter, we need to construct a dict
+#             if "env" in parameters and isinstance(parameters["env"], list):
+#                 env_dict = {}
+#                 for item in parameters["env"]:
+#                     env_dict[item.key] = item.value
+
+#                 # Format the query with proper VQL syntax
+#                 query = create_query(
+#                     f"SELECT collect_client("
+#                     f"org_id='{collect_artifact_body.velociraptor_org}', "
+#                     f"client_id='{collect_artifact_body.velociraptor_id}', "
+#                     f"artifacts=['{collect_artifact_body.artifact_name}'], "
+#                     f"env=dict(",
+#                 )
+
+#                 # Add each environment variable as a key-value pair
+#                 env_parts = []
+#                 for key, value in env_dict.items():
+#                     # Escape any single quotes in the values
+#                     escaped_value = value.replace("'", "\\'")
+#                     env_parts.append(f"`{key}`='{escaped_value}'")
+
+#                 query += ", ".join(env_parts)
+#                 query += ")) FROM scope()"
+#             else:
+#                 # Handle other types of parameters
+#                 query = create_query(
+#                     f"SELECT collect_client("
+#                     f"org_id='{collect_artifact_body.velociraptor_org}', "
+#                     f"client_id='{collect_artifact_body.velociraptor_id}', "
+#                     f"artifacts=['{collect_artifact_body.artifact_name}']",
+#                 )
+
+#                 # Add other parameters if needed
+#                 for param_key, param_value in parameters.items():
+#                     if isinstance(param_value, str):
+#                         query += f", `{param_key}`='{param_value}'"
+
+#                 query += ") FROM scope()"
+#         else:
+#             # Original query without parameters
+#             query = create_query(
+#                 f"SELECT collect_client("
+#                 f"org_id='{collect_artifact_body.velociraptor_org}', "
+#                 f"client_id='{collect_artifact_body.velociraptor_id}', "
+#                 f"artifacts=['{collect_artifact_body.artifact_name}']) "
+#                 f"FROM scope()",
+#             )
+
+#         logger.info(f"Running artifact collection with query: {query}")
+#         flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
+#         logger.info(f"Successfully ran artifact collection on {flow}")
+
+#         # Check if results are available
+#         if not flow.get("results") or len(flow["results"]) == 0:
+#             logger.error("No results returned from query execution")
+#             raise HTTPException(
+#                 status_code=500,
+#                 detail="Query execution did not return any results",
+#             )
+
+#         # Instead of relying on get_artifact_key, extract the flow_id directly from results
+#         # by checking all keys in the first result for a flow_id
+#         result_dict = flow["results"][0]
+#         flow_id = None
+
+#         # Look for any key that has a flow_id in its value
+#         for key, value in result_dict.items():
+#             if isinstance(value, dict) and "flow_id" in value:
+#                 flow_id = value["flow_id"]
+#                 logger.debug(f"Found flow_id {flow_id} in key: {key}")
+#                 break
+
+#         if not flow_id:
+#             logger.error(f"Could not find flow_id in results: {result_dict}")
+#             raise HTTPException(
+#                 status_code=500,
+#                 detail="Failed to extract flow ID from results",
+#             )
+
+#         logger.info(f"Extracted flow_id: {flow_id}")
+
+#         completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
+#         logger.info(f"Successfully watched flow completion on {completed}")
+
+#         results = velociraptor_service.read_collection_results(
+#             client_id=collect_artifact_body.velociraptor_id,
+#             flow_id=flow_id,
+#             org_id=collect_artifact_body.velociraptor_org,
+#             artifact=collect_artifact_body.artifact_name,
+#         )
+
+#         logger.info(f"Successfully read collection results on {results}")
+
+#         return CollectArtifactResponse(
+#             success=results["success"],
+#             message=results["message"],
+#             results=results["results"],
+#         )
+#     except HTTPException as he:  # Catch HTTPException separately to propagate the original message
+#         logger.error(
+#             f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
+#         )
+#         raise he
+#     except Exception as err:
+#         logger.error(
+#             f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+#         )
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+#         )
+
 async def run_artifact_collection(
     collect_artifact_body: CollectArtifactBody,
+    session: AsyncSession,  # Add session parameter
 ) -> CollectArtifactResponse:
     """
-    Run an artifact collection on a client with optional parameters.
+    Run an artifact collection on a client with optional parameters and upload results to MinIO.
 
     Args:
         collect_artifact_body: The body of the request with optional parameters.
+        session: Database session for storing metadata.
 
     Returns:
         CollectArtifactResponse: A dictionary containing the success status, message and results.
     """
+    from sqlalchemy import select
+
+    from app.db.universal_models import AgentDataStore
+    from app.db.universal_models import Agents
+
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
+        # Get agent details from database
+        result = await session.execute(
+            select(Agents).where(Agents.velociraptor_id == collect_artifact_body.velociraptor_id),
+        )
+        agent = result.scalars().first()
+
+        if not agent:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found",
+            )
+
         # Build the query dynamically based on whether parameters are provided
         parameters = getattr(collect_artifact_body, "parameters", None)
 
@@ -416,10 +567,47 @@ async def run_artifact_collection(
 
         logger.info(f"Successfully read collection results on {results}")
 
+        # Fetch the collected file from filestore and upload to MinIO
+        file_data = None
+        try:
+            logger.info("Fetching collected file from filestore and uploading to MinIO")
+            file_data = await fetch_file_from_filestore(
+                client_id=collect_artifact_body.velociraptor_id,
+                flow_id=flow_id,
+                org_id=collect_artifact_body.velociraptor_org,
+                agent_id=agent.agent_id,
+            )
+
+            # Save metadata to database if file upload was successful
+            if file_data.get("success"):
+                agent_data_store = AgentDataStore(
+                    agent_id=agent.agent_id,
+                    velociraptor_id=collect_artifact_body.velociraptor_id,
+                    artifact_name=collect_artifact_body.artifact_name,
+                    flow_id=flow_id,
+                    bucket_name=file_data["bucket_name"],
+                    object_key=file_data["object_key"],
+                    file_name=file_data["file_name"],
+                    content_type=file_data.get("content_type", "application/zip"),
+                    file_size=file_data["file_size"],
+                    file_hash=file_data["file_hash"],
+                    collection_time=datetime.utcnow(),
+                    status="completed",
+                )
+                session.add(agent_data_store)
+                await session.commit()
+                await session.refresh(agent_data_store)
+
+                logger.info(f"Saved artifact metadata to database with ID {agent_data_store.id}")
+        except Exception as file_err:
+            logger.warning(f"Failed to upload file to MinIO, but artifact collection succeeded: {file_err}")
+            # Continue execution even if file upload fails
+
         return CollectArtifactResponse(
             success=results["success"],
             message=results["message"],
             results=results["results"],
+            file_info=file_data if file_data and file_data.get("success") else None,
         )
     except HTTPException as he:  # Catch HTTPException separately to propagate the original message
         logger.error(
