@@ -32,7 +32,7 @@ from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_mo
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_file_collection
-from app.connectors.velociraptor.services.artifacts import run_remote_command
+from app.connectors.velociraptor.services.artifacts import run_remote_command, validate_artifact_parameters
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 
@@ -451,6 +451,12 @@ async def collect_artifact(
             status_code=400,
             detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
         )
+
+    # Validate parameters if provided
+    await validate_artifact_parameters(
+        collect_artifact_body.artifact_name,
+        collect_artifact_body.parameters,
+    )
 
     collect_artifact_body.velociraptor_id = await get_velociraptor_id(
         session,
