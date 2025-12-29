@@ -115,6 +115,68 @@ async def list_case_report_template_data_store_files(bucket_name: Optional[str] 
     return objects_list
 
 
+async def upload_file_to_datastore(
+    file: UploadFile,
+    bucket_name: str,
+    object_name: str,
+) -> dict:
+    """
+    Upload a file to MinIO data store.
+
+    Args:
+        file: The file to upload
+        bucket_name: The name of the bucket
+        object_name: The object path/name within the bucket
+
+    Returns:
+        dict: Upload details including object_key, file_size, file_hash, and content_type
+    """
+    client = await create_session()
+
+    # Create bucket if it doesn't exist
+    await create_bucket_if_not_exists(bucket_name)
+
+    logger.info(f"Uploading file {file.filename} to bucket {bucket_name} as {object_name}")
+
+    # Define the temporary file path
+    temp_file_path = os.path.join(os.getcwd(), file.filename)
+
+    # Save the file to the temporary location and calculate hash
+    sha256_hash = hashlib.sha256()
+    async with aiofiles.open(temp_file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+        sha256_hash.update(content)
+
+    file_hash = sha256_hash.hexdigest()
+    file_size = os.path.getsize(temp_file_path)
+
+    # Determine content type
+    content_type = file.content_type or "application/octet-stream"
+
+    # Upload the file to MinIO
+    await client.fput_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+        file_path=temp_file_path,
+        content_type=content_type,
+    )
+
+    # Remove the temporary file after upload
+    os.remove(temp_file_path)
+
+    logger.info(f"Successfully uploaded {file.filename} ({file_size} bytes) to {bucket_name}/{object_name}")
+
+    return {
+        "bucket_name": bucket_name,
+        "object_key": object_name,
+        "file_name": file.filename,
+        "file_size": file_size,
+        "file_hash": file_hash,
+        "content_type": content_type,
+    }
+
+
 async def create_buckets() -> None:
     await create_bucket_if_not_exists("copilot-cases")
 
