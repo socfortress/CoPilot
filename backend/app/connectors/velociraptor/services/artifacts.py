@@ -88,7 +88,7 @@ async def get_artifacts() -> ArtifactsResponse:
     """
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
-    query = create_query("SELECT name,description FROM artifact_definitions()")
+    query = create_query("SELECT name,description,parameters FROM artifact_definitions()")
     all_artifacts = velociraptor_service.execute_query(query)
     try:
         if all_artifacts["success"]:
