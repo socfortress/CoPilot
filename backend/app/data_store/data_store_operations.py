@@ -394,3 +394,216 @@ async def delete_agent_artifact_file(agent_id: str, flow_id: str, file_name: str
     object_key = f"{agent_id}/{flow_id}/{file_name}"
 
     await delete_file(bucket_name, object_key)
+
+
+async def store_file_in_minio(
+    file_content: bytes,
+    bucket_name: str,
+    object_key: str,
+    content_type: str = "application/octet-stream",
+) -> dict:
+    """
+    Store file content directly in MinIO without requiring an UploadFile object.
+    Useful for programmatically generated files like CSV reports.
+
+    Args:
+        file_content: The file content as bytes
+        bucket_name: The name of the bucket
+        object_key: The object path/name within the bucket
+        content_type: MIME type of the file
+
+    Returns:
+        dict: Upload details including success status, object_key, file_size, and file_hash
+    """
+    import tempfile
+
+    client = await create_session()
+
+    # Create bucket if it doesn't exist
+    await create_bucket_if_not_exists(bucket_name)
+
+    logger.info(f"Storing file to bucket {bucket_name} as {object_key}")
+
+    try:
+        # Calculate file hash
+        sha256_hash = hashlib.sha256()
+        sha256_hash.update(file_content)
+        file_hash = sha256_hash.hexdigest()
+        file_size = len(file_content)
+
+        # Create a temporary file to upload
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+
+        # Upload the file to MinIO
+        await client.fput_object(
+            bucket_name=bucket_name,
+            object_name=object_key,
+            file_path=temp_file_path,
+            content_type=content_type,
+        )
+
+        # Remove the temporary file after upload
+        os.remove(temp_file_path)
+
+        logger.info(f"Successfully stored file ({file_size} bytes) to {bucket_name}/{object_key}")
+
+        return {
+            "success": True,
+            "bucket_name": bucket_name,
+            "object_key": object_key,
+            "file_size": file_size,
+            "file_hash": file_hash,
+            "content_type": content_type,
+        }
+
+    except Exception as e:
+        logger.error(f"Error storing file in MinIO: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
+async def retrieve_file_from_minio(
+    bucket_name: str,
+    object_key: str,
+) -> dict:
+    """
+    Retrieve file content from MinIO.
+
+    Args:
+        bucket_name: The name of the bucket
+        object_key: The object path/name within the bucket
+
+    Returns:
+        dict: Contains success status and file_content (bytes) if successful, or error message
+    """
+    client = await create_session()
+
+    logger.info(f"Retrieving file {object_key} from bucket {bucket_name}")
+
+    try:
+        # Check if the file exists
+        await client.stat_object(bucket_name, object_key)
+
+        # Download the file
+        async with aiohttp.ClientSession() as session:
+            response = await client.get_object(bucket_name, object_key, session)
+            if response is None:
+                raise Exception("Received None response from get_object")
+            if not isinstance(response, aiohttp.ClientResponse):
+                raise Exception("Response is not an instance of aiohttp.ClientResponse")
+
+            file_content = await response.read()
+            response.close()
+
+            logger.info(f"Successfully retrieved file {object_key} from bucket {bucket_name}")
+
+            return {
+                "success": True,
+                "file_content": file_content,
+            }
+
+    except Exception as e:
+        logger.error(f"Error retrieving file from MinIO: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
+async def delete_file_from_minio(
+    bucket_name: str,
+    object_key: str,
+) -> dict:
+    """
+    Delete a file from MinIO.
+
+    Args:
+        bucket_name: The name of the bucket
+        object_key: The object path/name within the bucket
+
+    Returns:
+        dict: Contains success status and message
+    """
+    client = await create_session()
+
+    logger.info(f"Deleting file {object_key} from bucket {bucket_name}")
+
+    try:
+        # Check if the file exists
+        await client.stat_object(bucket_name, object_key)
+
+        # Delete the file
+        await client.remove_object(bucket_name, object_key)
+
+        logger.info(f"Successfully deleted file {object_key} from bucket {bucket_name}")
+
+        return {
+            "success": True,
+            "message": f"File {object_key} deleted successfully",
+        }
+
+    except Exception as e:
+        logger.error(f"Error deleting file from MinIO: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
+async def list_files_in_bucket(
+    bucket_name: str,
+    prefix: Optional[str] = None,
+) -> dict:
+    """
+    List all files in a bucket with optional prefix filtering.
+
+    Args:
+        bucket_name: The name of the bucket
+        prefix: Optional prefix to filter objects
+
+    Returns:
+        dict: Contains success status and list of object names
+    """
+    client = await create_session()
+
+    logger.info(f"Listing files in bucket {bucket_name}" + (f" with prefix {prefix}" if prefix else ""))
+
+    try:
+        # Check if bucket exists
+        if not await client.bucket_exists(bucket_name):
+            return {
+                "success": False,
+                "error": f"Bucket {bucket_name} does not exist",
+                "objects": [],
+            }
+
+        # List objects
+        objects = client.list_objects(bucket_name, prefix=prefix or "", recursive=True)
+        object_list = []
+
+        async for obj in objects:
+            object_list.append({
+                "object_name": obj.object_name,
+                "size": obj.size,
+                "last_modified": obj.last_modified,
+            })
+
+        logger.info(f"Found {len(object_list)} files in bucket {bucket_name}")
+
+        return {
+            "success": True,
+            "objects": object_list,
+            "count": len(object_list),
+        }
+
+    except Exception as e:
+        logger.error(f"Error listing files in bucket: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "objects": [],
+        }

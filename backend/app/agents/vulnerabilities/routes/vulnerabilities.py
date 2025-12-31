@@ -19,6 +19,17 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
 from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilitySearchResponse,
 )
+from fastapi.responses import StreamingResponse
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportGenerateRequest,
+    VulnerabilityReportListResponse,
+    VulnerabilityReportGenerateResponse,
+)
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    generate_vulnerability_csv_report,
+    list_vulnerability_reports,
+    get_vulnerability_report_download,
+)
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncRequest
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
@@ -36,6 +47,7 @@ from app.agents.vulnerabilities.services.vulnerabilities import sync_all_vulnera
 from app.agents.vulnerabilities.services.vulnerabilities import (
     sync_vulnerabilities_for_agent,
 )
+import io
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
@@ -449,3 +461,115 @@ async def search_vulnerabilities(
     except Exception as e:
         logger.error(f"Error in vulnerability search endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to search vulnerabilities: {e}")
+
+@vulnerabilities_router.post(
+    "/reports/generate",
+    response_model=VulnerabilityReportGenerateResponse,
+    description="Generate a CSV vulnerability report for a specific customer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def generate_report(
+    request: VulnerabilityReportGenerateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> VulnerabilityReportGenerateResponse:
+    """
+    Generate a CSV vulnerability report for a specific customer.
+
+    The report will include all vulnerabilities matching the specified filters
+    and will be stored in MinIO for later retrieval.
+
+    **Features:**
+    - Generates comprehensive CSV report with all vulnerability details
+    - Applies same filtering as search endpoint
+    - Stores report in MinIO for persistent access
+    - Tracks report metadata in database
+    - Optional EPSS scoring inclusion
+
+    **Report Contents:**
+    - CVE ID, Severity, Title
+    - Agent Name, Customer Code
+    - Package details (name, version, architecture)
+    - Detection and publication dates
+    - EPSS scores (if enabled)
+    - References
+
+    Args:
+        request: Report generation request with filters
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        VulnerabilityReportGenerateResponse with report details and download URL
+    """
+    return await generate_vulnerability_csv_report(db, current_user, request)
+
+
+@vulnerabilities_router.get(
+    "/reports",
+    response_model=VulnerabilityReportListResponse,
+    description="List available vulnerability reports",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_reports(
+    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> VulnerabilityReportListResponse:
+    """
+    List all available vulnerability reports.
+
+    Reports are filtered based on user access permissions.
+
+    **Features:**
+    - Lists all reports accessible to the user
+    - Includes report metadata and statistics
+    - Provides download URLs for each report
+    - Filters by customer if specified
+
+    Args:
+        customer_code: Optional filter by customer code
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        VulnerabilityReportListResponse with list of available reports
+    """
+    return await list_vulnerability_reports(db, current_user, customer_code)
+
+
+@vulnerabilities_router.get(
+    "/reports/{report_id}/download",
+    description="Download a vulnerability report CSV file",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def download_report(
+    report_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Download a vulnerability report CSV file.
+
+    **Features:**
+    - Retrieves report from MinIO storage
+    - Verifies user has access to the customer
+    - Returns CSV file as downloadable attachment
+
+    Args:
+        report_id: ID of the report to download
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        StreamingResponse with CSV file
+    """
+    report_data = await get_vulnerability_report_download(db, current_user, report_id)
+
+    return StreamingResponse(
+        io.BytesIO(report_data["file_content"]),
+        media_type=report_data["content_type"],
+        headers={
+            "Content-Disposition": f'attachment; filename="{report_data["file_name"]}"'
+        },
+    )

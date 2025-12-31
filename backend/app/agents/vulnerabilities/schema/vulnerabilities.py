@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List
 from typing import Optional
+from typing import Any
+from typing import Dict
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -138,3 +140,41 @@ class VulnerabilitySearchResponse(BaseModel):
     success: bool
     message: str
     filters_applied: dict = {}
+
+class VulnerabilityReportGenerateRequest(BaseModel):
+    customer_code: str
+    report_name: Optional[str] = None  # Auto-generate if not provided
+    agent_name: Optional[str] = None
+    severity: Optional[str] = None
+    cve_id: Optional[str] = None
+    package_name: Optional[str] = None
+    include_epss: bool = False
+
+class VulnerabilityReportResponse(BaseModel):
+    id: int
+    report_name: str
+    customer_code: str
+    file_name: str
+    file_size: int
+    generated_at: datetime
+    generated_by: int
+    total_vulnerabilities: int
+    critical_count: int
+    high_count: int
+    medium_count: int
+    low_count: int
+    filters_applied: Dict[str, Any]
+    status: str
+    download_url: Optional[str] = None
+
+class VulnerabilityReportListResponse(BaseModel):
+    reports: List[VulnerabilityReportResponse]
+    total_count: int
+    success: bool
+    message: str
+
+class VulnerabilityReportGenerateResponse(BaseModel):
+    success: bool
+    message: str
+    report: Optional[VulnerabilityReportResponse] = None
+    error: Optional[str] = None
