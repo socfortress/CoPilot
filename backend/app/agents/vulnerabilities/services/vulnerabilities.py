@@ -1220,6 +1220,7 @@ async def generate_vulnerability_csv_report(
     db_session: AsyncSession,
     current_user: User,
     request: VulnerabilityReportGenerateRequest,
+    report_id: Optional[int] = None,
 ) -> VulnerabilityReportGenerateResponse:
     """
     Generate a CSV vulnerability report for a specific customer and store it in MinIO
@@ -1228,6 +1229,7 @@ async def generate_vulnerability_csv_report(
         db_session: Database session
         current_user: Current authenticated user
         request: Report generation request with filters
+        report_id: Optional existing report ID (for background task updates)
 
     Returns:
         VulnerabilityReportGenerateResponse with report details
@@ -1239,6 +1241,16 @@ async def generate_vulnerability_csv_report(
         )
 
         if "*" not in accessible_customers and request.customer_code not in accessible_customers:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = "Insufficient permissions"
+                    await db_session.commit()
+
             return VulnerabilityReportGenerateResponse(
                 success=False,
                 message=f"Access denied to customer {request.customer_code}",
@@ -1252,6 +1264,16 @@ async def generate_vulnerability_csv_report(
         customer = customer_result.scalars().first()
 
         if not customer:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = "Customer not found"
+                    await db_session.commit()
+
             return VulnerabilityReportGenerateResponse(
                 success=False,
                 message=f"Customer {request.customer_code} not found",
@@ -1280,6 +1302,16 @@ async def generate_vulnerability_csv_report(
             )
 
             if not search_result.success:
+                # If we have a report_id, update it to failed status
+                if report_id:
+                    stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                    result = await db_session.execute(stmt)
+                    report = result.scalars().first()
+                    if report:
+                        report.status = "failed"
+                        report.error_message = search_result.message
+                        await db_session.commit()
+
                 return VulnerabilityReportGenerateResponse(
                     success=False,
                     message="Failed to fetch vulnerability data",
@@ -1369,6 +1401,16 @@ async def generate_vulnerability_csv_report(
         )
 
         if not minio_result["success"]:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = minio_result.get("error", "Unknown error")
+                    await db_session.commit()
+
             return VulnerabilityReportGenerateResponse(
                 success=False,
                 message="Failed to store report in MinIO",
@@ -1387,30 +1429,60 @@ async def generate_vulnerability_csv_report(
             filters["package_name"] = request.package_name
         filters["include_epss"] = request.include_epss
 
-        # Create database record
-        report_record = VulnerabilityReport(
-            report_name=report_name,
-            customer_code=request.customer_code,
-            bucket_name=bucket_name,
-            object_key=object_key,
-            file_name=file_name,
-            file_size=len(csv_content),
-            file_hash=file_hash,
-            generated_by=current_user.id,
-            filters_json=json.dumps(filters),
-            total_vulnerabilities=len(all_vulnerabilities),
-            critical_count=sum(1 for v in all_vulnerabilities if v.severity == "Critical"),
-            high_count=sum(1 for v in all_vulnerabilities if v.severity == "High"),
-            medium_count=sum(1 for v in all_vulnerabilities if v.severity == "Medium"),
-            low_count=sum(1 for v in all_vulnerabilities if v.severity == "Low"),
-            status="completed",
-        )
+        # Check if we're updating an existing report or creating a new one
+        if report_id:
+            # Update existing report (background task scenario)
+            stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+            result = await db_session.execute(stmt)
+            report_record = result.scalars().first()
 
-        db_session.add(report_record)
-        await db_session.commit()
-        await db_session.refresh(report_record)
+            if report_record:
+                report_record.file_size = len(csv_content)
+                report_record.file_hash = file_hash
+                report_record.total_vulnerabilities = len(all_vulnerabilities)
+                report_record.critical_count = sum(1 for v in all_vulnerabilities if v.severity == "Critical")
+                report_record.high_count = sum(1 for v in all_vulnerabilities if v.severity == "High")
+                report_record.medium_count = sum(1 for v in all_vulnerabilities if v.severity == "Medium")
+                report_record.low_count = sum(1 for v in all_vulnerabilities if v.severity == "Low")
+                report_record.status = "completed"
+                report_record.error_message = None
 
-        logger.info(f"Successfully generated vulnerability report: {report_name}")
+                await db_session.commit()
+                await db_session.refresh(report_record)
+
+                logger.info(f"Successfully updated vulnerability report: {report_name} (ID: {report_id})")
+            else:
+                logger.error(f"Report ID {report_id} not found for update")
+                return VulnerabilityReportGenerateResponse(
+                    success=False,
+                    message=f"Report ID {report_id} not found",
+                    error="Report not found",
+                )
+        else:
+            # Create new database record (synchronous scenario)
+            report_record = VulnerabilityReport(
+                report_name=report_name,
+                customer_code=request.customer_code,
+                bucket_name=bucket_name,
+                object_key=object_key,
+                file_name=file_name,
+                file_size=len(csv_content),
+                file_hash=file_hash,
+                generated_by=current_user.id,
+                filters_json=json.dumps(filters),
+                total_vulnerabilities=len(all_vulnerabilities),
+                critical_count=sum(1 for v in all_vulnerabilities if v.severity == "Critical"),
+                high_count=sum(1 for v in all_vulnerabilities if v.severity == "High"),
+                medium_count=sum(1 for v in all_vulnerabilities if v.severity == "Medium"),
+                low_count=sum(1 for v in all_vulnerabilities if v.severity == "Low"),
+                status="completed",
+            )
+
+            db_session.add(report_record)
+            await db_session.commit()
+            await db_session.refresh(report_record)
+
+            logger.info(f"Successfully generated vulnerability report: {report_name}")
 
         # Build response
         report_response = VulnerabilityReportResponse(
@@ -1439,6 +1511,20 @@ async def generate_vulnerability_csv_report(
 
     except Exception as e:
         logger.error(f"Error generating vulnerability report: {e}")
+
+        # If we have a report_id, update it to failed status
+        if report_id:
+            try:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = str(e)
+                    await db_session.commit()
+            except Exception as update_error:
+                logger.error(f"Failed to update report status: {update_error}")
+
         return VulnerabilityReportGenerateResponse(
             success=False,
             message="Failed to generate vulnerability report",

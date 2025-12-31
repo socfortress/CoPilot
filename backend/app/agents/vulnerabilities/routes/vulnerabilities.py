@@ -30,6 +30,10 @@ from app.agents.vulnerabilities.services.vulnerabilities import (
     list_vulnerability_reports,
     get_vulnerability_report_download,
 )
+from sqlalchemy.future import select
+from app.db.universal_models import VulnerabilityReport
+from datetime import datetime
+import json
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncRequest
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
@@ -503,6 +507,143 @@ async def generate_report(
         VulnerabilityReportGenerateResponse with report details and download URL
     """
     return await generate_vulnerability_csv_report(db, current_user, request)
+
+
+@vulnerabilities_router.post(
+    "/reports/generate/background",
+    response_model=dict,
+    description="Generate a CSV vulnerability report as a background task (recommended for large datasets)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def generate_report_background(
+    request: VulnerabilityReportGenerateRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Generate a CSV vulnerability report as a background task.
+
+    This endpoint is recommended for large datasets that may take significant time
+    to process. The report will be generated asynchronously and can be retrieved
+    later via the list/download endpoints.
+
+    **Workflow:**
+    1. Submit report generation request (returns immediately with report_id)
+    2. Poll the `/reports` endpoint to check for completion
+    3. Download the completed report via `/reports/{report_id}/download`
+
+    **Features:**
+    - Non-blocking operation (immediate response)
+    - Generates comprehensive CSV report with all vulnerability details
+    - Applies same filtering as search endpoint
+    - Stores report in MinIO for later retrieval
+    - Tracks report metadata and status in database
+    - Handles large datasets efficiently
+
+    **Status Tracking:**
+    - Reports are created with status "processing"
+    - Check status via `/reports` endpoint
+    - Status changes to "completed" when done
+    - If errors occur, status becomes "failed" with error message
+
+    Args:
+        request: Report generation request with filters
+        background_tasks: FastAPI background tasks
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        dict: Confirmation with queued report details
+    """
+    logger.info(f"Queueing vulnerability report generation for customer: {request.customer_code}")
+
+    try:
+        # Create a "processing" report record immediately
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        report_name = request.report_name or f"vulnerability_report_{timestamp}"
+
+        # Build filters JSON
+        filters = {}
+        if request.agent_name:
+            filters["agent_name"] = request.agent_name
+        if request.severity:
+            filters["severity"] = request.severity
+        if request.cve_id:
+            filters["cve_id"] = request.cve_id
+        if request.package_name:
+            filters["package_name"] = request.package_name
+        filters["include_epss"] = request.include_epss
+
+        # Create placeholder report record
+        report_record = VulnerabilityReport(
+            report_name=report_name,
+            customer_code=request.customer_code,
+            bucket_name="vulnerability-reports",
+            object_key=f"{request.customer_code}/{report_name}.csv",
+            file_name=f"{report_name}.csv",
+            file_size=0,
+            file_hash="pending",
+            generated_by=current_user.id,
+            filters_json=json.dumps(filters),
+            status="processing",
+        )
+
+        db.add(report_record)
+        await db.commit()
+        await db.refresh(report_record)
+
+        report_id = report_record.id
+
+        # Define the background task
+        async def generate_report_task():
+            try:
+                # Create a new database session for the background task
+                async with get_db_session() as bg_db:
+                    result = await generate_vulnerability_csv_report(
+                        bg_db,
+                        current_user,
+                        request,
+                        report_id=report_id
+                    )
+
+                    if result.success:
+                        logger.info(f"Successfully completed background report generation (ID: {report_id})")
+                    else:
+                        logger.error(f"Background report generation failed (ID: {report_id}): {result.error}")
+
+            except Exception as e:
+                logger.error(f"Background report generation failed (ID: {report_id}): {e}")
+                # Update report status to failed
+                try:
+                    async with get_db_session() as bg_db:
+                        stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                        result_db = await bg_db.execute(stmt)
+                        report = result_db.scalars().first()
+                        if report:
+                            report.status = "failed"
+                            report.error_message = str(e)
+                            await bg_db.commit()
+                except Exception as update_error:
+                    logger.error(f"Failed to update report status: {update_error}")
+
+        # Add the task to background tasks
+        background_tasks.add_task(generate_report_task)
+
+        return {
+            "success": True,
+            "message": "Report generation queued successfully",
+            "report_id": report_id,
+            "report_name": report_name,
+            "customer_code": request.customer_code,
+            "status": "processing",
+            "check_status_url": "/api/v1/vulnerabilities/reports",
+            "download_url": f"/api/v1/vulnerabilities/reports/{report_id}/download",
+        }
+
+    except Exception as e:
+        logger.error(f"Error queueing report generation: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to queue report generation: {e}")
 
 
 @vulnerabilities_router.get(
