@@ -1668,3 +1668,84 @@ async def get_vulnerability_report_download(
     except Exception as e:
         logger.error(f"Error retrieving vulnerability report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve report: {e}")
+
+
+async def delete_vulnerability_report(
+    db_session: AsyncSession,
+    current_user: User,
+    report_id: int,
+) -> Dict[str, Any]:
+    """
+    Delete a vulnerability report and its associated file from MinIO.
+
+    Args:
+        db_session: Database session
+        current_user: Current authenticated user
+        report_id: ID of the report to delete
+
+    Returns:
+        Dict with success status and details
+    """
+    from app.data_store.data_store_operations import delete_file_from_minio
+
+    try:
+        # Get the report record
+        stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+        result = await db_session.execute(stmt)
+        report = result.scalars().first()
+
+        if not report:
+            return {
+                "success": False,
+                "error": f"Report with ID {report_id} not found",
+            }
+
+        # Verify customer access
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(
+            current_user, db_session
+        )
+
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
+            return {
+                "success": False,
+                "error": f"Access denied to delete report for customer {report.customer_code}",
+            }
+
+        logger.info(f"Deleting vulnerability report ID {report_id} for customer {report.customer_code}")
+
+        # Delete file from MinIO
+        minio_result = await delete_file_from_minio(
+            bucket_name=report.bucket_name,
+            object_key=report.object_key,
+        )
+
+        if not minio_result["success"]:
+            logger.warning(
+                f"Failed to delete file from MinIO for report {report_id}: {minio_result.get('error')}. "
+                "Proceeding with database deletion."
+            )
+
+        # Store report details before deletion
+        report_name = report.report_name
+        customer_code = report.customer_code
+
+        # Delete database record
+        await db_session.delete(report)
+        await db_session.commit()
+
+        logger.info(f"Successfully deleted vulnerability report ID {report_id}")
+
+        return {
+            "success": True,
+            "message": f"Report '{report_name}' deleted successfully",
+            "report_id": report_id,
+            "report_name": report_name,
+            "customer_code": customer_code,
+        }
+
+    except Exception as e:
+        logger.error(f"Error deleting vulnerability report {report_id}: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }

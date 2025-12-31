@@ -714,3 +714,95 @@ async def download_report(
             "Content-Disposition": f'attachment; filename="{report_data["file_name"]}"'
         },
     )
+
+@vulnerabilities_router.delete(
+    "/reports/{report_id}",
+    response_model=dict,
+    description="Delete a vulnerability report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_report(
+    report_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Delete a vulnerability report and its associated file from MinIO.
+
+    This endpoint removes both the database record and the CSV file stored in MinIO.
+    Users can only delete reports for customers they have access to.
+
+    **Features:**
+    - Deletes report metadata from database
+    - Removes CSV file from MinIO storage
+    - Verifies user has access to the customer
+    - Provides detailed error messages
+
+    **Access Control:**
+    - Admin/analyst users: Can delete reports for customers they have access to
+    - Customer users: Can only delete reports for their assigned customers
+
+    Args:
+        report_id: ID of the report to delete
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        dict: Confirmation of successful deletion
+    """
+    from app.data_store.data_store_operations import delete_file_from_minio
+    from app.middleware.customer_access import customer_access_handler
+
+    try:
+        # Get the report record
+        stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+        result = await db.execute(stmt)
+        report = result.scalars().first()
+
+        if not report:
+            raise HTTPException(status_code=404, detail=f"Report with ID {report_id} not found")
+
+        # Verify customer access
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(
+            current_user, db
+        )
+
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access denied to delete report for customer {report.customer_code}"
+            )
+
+        logger.info(f"Deleting vulnerability report ID {report_id} for customer {report.customer_code}")
+
+        # Delete file from MinIO
+        minio_result = await delete_file_from_minio(
+            bucket_name=report.bucket_name,
+            object_key=report.object_key,
+        )
+
+        if not minio_result["success"]:
+            logger.warning(
+                f"Failed to delete file from MinIO for report {report_id}: {minio_result.get('error')}. "
+                "Proceeding with database deletion."
+            )
+
+        # Delete database record
+        await db.delete(report)
+        await db.commit()
+
+        logger.info(f"Successfully deleted vulnerability report ID {report_id}")
+
+        return {
+            "success": True,
+            "message": f"Report '{report.report_name}' deleted successfully",
+            "report_id": report_id,
+            "report_name": report.report_name,
+            "customer_code": report.customer_code,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting vulnerability report {report_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
