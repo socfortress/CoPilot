@@ -49,3 +49,54 @@ export interface VulnerabilitySearchQuery {
 	page_size?: number
 	include_epss?: boolean
 }
+
+export interface VulnerabilityReport {
+    id: number
+    report_name: string
+    customer_code: string
+    file_name: string
+    file_size: number
+    generated_at: string
+    generated_by: number
+    total_vulnerabilities: number
+    critical_count: number
+    high_count: number
+    medium_count: number
+    low_count: number
+    filters_applied: Record<string, string | number | boolean>
+    status: "processing" | "completed" | "failed"
+    error_message?: string | null
+    download_url: string
+}
+
+export interface VulnerabilityReportGenerateRequest {
+    customer_code: string
+    report_name?: string
+    agent_name?: string
+    severity?: VulnerabilitySeverity
+    cve_id?: string
+    package_name?: string
+    include_epss?: boolean
+}
+
+export interface VulnerabilityReportGenerateResponse {
+    success: boolean
+    message: string
+    report?: VulnerabilityReport
+    error?: string
+}
+
+export interface VulnerabilityReportListResponse {
+    success: boolean
+    message: string
+    reports: VulnerabilityReport[]
+    total_count: number
+}
+
+export interface VulnerabilityReportDeleteResponse {
+    success: boolean
+    message: string
+    report_id: number
+    report_name: string
+    customer_code: string
+}
