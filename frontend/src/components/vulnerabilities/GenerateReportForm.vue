@@ -80,7 +80,7 @@ const formData = ref<VulnerabilityReportGenerateRequest>({
     severity: undefined,
     cve_id: "",
     package_name: "",
-    include_epss: true
+    include_epss: false
 })
 
 const severityOptions = [
