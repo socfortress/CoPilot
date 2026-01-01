@@ -2767,6 +2767,7 @@ async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monito
         message='SentinelOne analyst verdict changed to "False Positive" monitoring alert provisioned successfully',
     )
 
+
 # ! --- Mimecast Monitoring Alerts --- ! #
 async def provision_mimecast_compromised_site_url_accessed_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
@@ -3354,7 +3355,7 @@ async def provision_mimecast_source_code_file_in_email_attachment_monitoring_ale
             priority=2,
             config=GraylogAlertProvisionConfig(
                 type="aggregation-v1",
-                query='integration:mimecast AND (AttNames:/\\.py$/ OR AttNames:/\\.java$/ OR AttNames:/\\.c$/ OR AttNames:/\\.cs$/ OR AttNames:/\\.cpp$/ OR AttNames:/\\.jsp$/ OR AttNames:/\\.vba$/ OR AttNames:/\\.class$/)',
+                query="integration:mimecast AND (AttNames:/\\.py$/ OR AttNames:/\\.java$/ OR AttNames:/\\.c$/ OR AttNames:/\\.cs$/ OR AttNames:/\\.cpp$/ OR AttNames:/\\.jsp$/ OR AttNames:/\\.vba$/ OR AttNames:/\\.class$/)",
                 query_parameters=[],
                 streams=[],
                 group_by=[],
@@ -3450,6 +3451,7 @@ async def provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_al
         success=True,
         message="Mimecast URL with dangerous file type accessed monitoring alert provisioned successfully",
     )
+
 
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """
