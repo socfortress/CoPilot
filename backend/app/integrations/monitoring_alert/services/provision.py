@@ -2768,6 +2768,691 @@ async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monito
     )
 
 
+# ! --- Mimecast Monitoring Alerts --- ! #
+async def provision_mimecast_compromised_site_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Compromised Site URL Accessed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_compromised_site_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - COMPROMISED SITE URL ACCESSED",
+            description="MIMECAST - COMPROMISED SITE URL ACCESSED",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND (category:"Compromised" OR category:"Botnets" OR category:"Attacker Controlled Infrastructure") AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block" AND !adminOverride:"Hold" AND !adminOverride:"Block" AND !adminOverride:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast compromised site URL accessed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_executable_file_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Executable File Attachment Delivered monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_executable_file_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - EXECUTABLE FILE ATTACHMENT DELIVERED",
+            description="MIMECAST - EXECUTABLE FILE ATTACHMENT DELIVERED",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND (Route:"Inbound" OR Dir:"Inbound" OR route:"inbound") AND (file_type:"application/x-dosexec" OR file_type:"application/x-msdownload" OR file_type:"application/x-executable" OR file_type:"application/vnd.microsoft.portable-executable") AND !actionTriggered:"Hold" AND !actionTriggered:"Block" AND !actionTriggered:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast executable file attachment delivered monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_malicious_email_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Malicious Email Attachment Delivered monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_malicious_email_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - MALICIOUS EMAIL ATTACHMENT DELIVERED",
+            description="MIMECAST - MALICIOUS EMAIL ATTACHMENT DELIVERED",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND scanResult:"malicious" AND (Route:"Inbound" OR Dir:"Inbound" OR route:"inbound") AND !actionTriggered:"Hold" AND !actionTriggered:"Block" AND !actionTriggered:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast malicious email attachment delivered monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_malicious_email_link_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Malicious Email Link Accessed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_malicious_email_link_accessed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - MALICIOUS EMAIL LINK ACCESSED",
+            description="MIMECAST - MALICIOUS EMAIL LINK ACCESSED",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND scanResult:"malicious" AND !action:"block"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast malicious email link accessed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast P2P File Sharing URL Accessed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - P2P FILE SHARING URL ACCESSED",
+            description="MIMECAST - P2P FILE SHARING URL ACCESSED",
+            priority=3,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND category:"Peer-to-Peer" AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block" AND !adminOverride:"Hold" AND !adminOverride:"Block" AND !adminOverride:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast P2P file sharing URL accessed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_anonymizer_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Anonymizer URL Accessed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_anonymizer_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - ANONYMIZER URL ACCESSED",
+            description="MIMECAST - ANONYMIZER URL ACCESSED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND category:"Anonymizers" AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block" AND !adminOverride:"Hold" AND !adminOverride:"Block" AND !adminOverride:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast anonymizer URL accessed monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_impersonation_email_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Impersonation Email Delivered monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_impersonation_email_delivered_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - IMPERSONATION EMAIL DELIVERED",
+            description="MIMECAST - IMPERSONATION EMAIL DELIVERED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND taggedMalicious:true AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast impersonation email delivered monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_malicious_outbound_email_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Malicious Outbound Email monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_malicious_outbound_email_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - MALICIOUS OUTBOUND EMAIL",
+            description="MIMECAST - MALICIOUS OUTBOUND EMAIL",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND Dir:"Outbound" AND category:"Malware" AND scanResult:"malicious" AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block" AND !adminOverride:"Hold" AND !adminOverride:"Block" AND !adminOverride:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast malicious outbound email monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Malicious RTF Attachment Delivered monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - MALICIOUS RTF ATTACHMENT DELIVERED",
+            description="MIMECAST - MALICIOUS RTF ATTACHMENT DELIVERED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND scanResult:"malicious" AND fileName:/\\.rtf$/ AND !actionTriggered:"Hold" AND !actionTriggered:"Block" AND !actionTriggered:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast malicious RTF attachment delivered monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_phishing_email_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Phishing Email Delivered monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_phishing_email_delivered_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - PHISHING EMAIL DELIVERED",
+            description="MIMECAST - PHISHING EMAIL DELIVERED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND category:"Phishing & Fraud" AND (Route:"Inbound" OR Dir:"Inbound" OR route:"inbound") AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast phishing email delivered monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_source_code_file_in_email_attachment_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast Source Code File In Email Attachment monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_source_code_file_in_email_attachment_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - SOURCE CODE FILE IN EMAIL ATTACHMENT",
+            description="MIMECAST - SOURCE CODE FILE IN EMAIL ATTACHMENT",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="integration:mimecast AND (AttNames:/\\.py$/ OR AttNames:/\\.java$/ OR AttNames:/\\.c$/ OR AttNames:/\\.cs$/ OR AttNames:/\\.cpp$/ OR AttNames:/\\.jsp$/ OR AttNames:/\\.vba$/ OR AttNames:/\\.class$/)",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast source code file in email attachment monitoring alert provisioned successfully",
+    )
+
+
+async def provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Mimecast URL with Dangerous File Type Accessed monitoring alert.
+    """
+    logger.info(
+        "Invoking provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert " f"with request: {request.dict()}",
+    )
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="MIMECAST - URL WITH DANGEROUS FILE TYPE ACCESSED",
+            description="MIMECAST - URL WITH DANGEROUS FILE TYPE ACCESSED",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query='integration:mimecast AND category:"Dangerous file extension" AND !action:"hold" AND !action:"block" AND !action:"bounce" AND !actions:"Hold" AND !actions:"Block" AND !adminOverride:"Hold" AND !adminOverride:"Block" AND !adminOverride:"Bounce"',
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={"expression": None},
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                event_limit=1000,
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="${source._id}", require_values=True)],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(type="template-v1", template="${source.syslog_customer}", require_values=True),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="MIMECAST", require_values=True)],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[GraylogAlertProvisionProvider(type="template-v1", template="NONE", require_values=True)],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(grace_period_ms=0, backlog_size=None),
+            alert=True,
+        ),
+    )
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Mimecast URL with dangerous file type accessed monitoring alert provisioned successfully",
+    )
+
+
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions custom monitoring alerts.
