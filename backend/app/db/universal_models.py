@@ -424,3 +424,41 @@ class CustomerPortalSettings(SQLModel, table=True):
             logo_base64=defaults["logo_base64"],
             logo_mime_type=defaults["logo_mime_type"],
         )
+
+
+class VulnerabilityReport(SQLModel, table=True):
+    __tablename__ = "vulnerability_reports"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Report metadata
+    report_name: str = Field(max_length=255, nullable=False)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+
+    # MinIO storage details
+    bucket_name: str = Field(max_length=255, nullable=False, default="vulnerability-reports")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: customer_code/report_name_timestamp.csv
+    file_name: str = Field(max_length=255, nullable=False)  # CSV filename
+    file_size: int = Field(nullable=False)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False)  # SHA-256 hash
+
+    # Report generation details
+    generated_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    generated_by: int = Field(nullable=False)  # User ID who generated the report
+
+    # Report filters applied
+    filters_json: Optional[str] = Field(sa_column=Column(Text), nullable=True)  # JSON string of filters used
+
+    # Statistics
+    total_vulnerabilities: int = Field(default=0)
+    critical_count: int = Field(default=0)
+    high_count: int = Field(default=0)
+    medium_count: int = Field(default=0)
+    low_count: int = Field(default=0)
+
+    # Status
+    status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
+    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Relationship to Customers table
+    customer: Optional["Customers"] = Relationship()

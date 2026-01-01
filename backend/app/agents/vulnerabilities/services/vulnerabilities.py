@@ -1,3 +1,7 @@
+import csv
+import hashlib
+import io
+import json
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -6,6 +10,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import desc
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +18,18 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilitiesResponse,
 )
 from app.agents.vulnerabilities.schema.vulnerabilities import AgentVulnerabilityOut
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportGenerateRequest,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportGenerateResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportListResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportResponse,
+)
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySearchItem
 from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilitySearchResponse,
@@ -25,8 +42,11 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
+from app.data_store.data_store_operations import store_file_in_minio
 from app.db.universal_models import Agents
 from app.db.universal_models import AgentVulnerabilities
+from app.db.universal_models import Customers
+from app.db.universal_models import VulnerabilityReport
 from app.middleware.customer_access import customer_access_handler
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
@@ -1195,3 +1215,528 @@ async def search_vulnerabilities_from_indexer(
             message=f"Unexpected error occurred: {e}",
             filters_applied=filters_applied if "filters_applied" in locals() else {},
         )
+
+
+async def generate_vulnerability_csv_report(
+    db_session: AsyncSession,
+    current_user: User,
+    request: VulnerabilityReportGenerateRequest,
+    report_id: Optional[int] = None,
+) -> VulnerabilityReportGenerateResponse:
+    """
+    Generate a CSV vulnerability report for a specific customer and store it in MinIO
+
+    Args:
+        db_session: Database session
+        current_user: Current authenticated user
+        request: Report generation request with filters
+        report_id: Optional existing report ID (for background task updates)
+
+    Returns:
+        VulnerabilityReportGenerateResponse with report details
+    """
+    try:
+        # Verify customer access
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+
+        if "*" not in accessible_customers and request.customer_code not in accessible_customers:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = "Insufficient permissions"
+                    await db_session.commit()
+
+            return VulnerabilityReportGenerateResponse(
+                success=False,
+                message=f"Access denied to customer {request.customer_code}",
+                error="Insufficient permissions",
+            )
+
+        # Verify customer exists
+        customer_result = await db_session.execute(select(Customers).filter(Customers.customer_code == request.customer_code))
+        customer = customer_result.scalars().first()
+
+        if not customer:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = "Customer not found"
+                    await db_session.commit()
+
+            return VulnerabilityReportGenerateResponse(
+                success=False,
+                message=f"Customer {request.customer_code} not found",
+                error="Customer not found",
+            )
+
+        logger.info(f"Generating vulnerability report for customer: {request.customer_code}")
+
+        # Fetch ALL vulnerabilities (no pagination)
+        all_vulnerabilities = []
+        page = 1
+        page_size = 1000  # Large page size for efficiency
+
+        while True:
+            search_result = await search_vulnerabilities_from_indexer(
+                db_session=db_session,
+                current_user=current_user,
+                customer_code=request.customer_code,
+                agent_name=request.agent_name,
+                severity=request.severity,
+                cve_id=request.cve_id,
+                package_name=request.package_name,
+                page=page,
+                page_size=page_size,
+                include_epss=request.include_epss,
+            )
+
+            if not search_result.success:
+                # If we have a report_id, update it to failed status
+                if report_id:
+                    stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                    result = await db_session.execute(stmt)
+                    report = result.scalars().first()
+                    if report:
+                        report.status = "failed"
+                        report.error_message = search_result.message
+                        await db_session.commit()
+
+                return VulnerabilityReportGenerateResponse(
+                    success=False,
+                    message="Failed to fetch vulnerability data",
+                    error=search_result.message,
+                )
+
+            all_vulnerabilities.extend(search_result.vulnerabilities)
+
+            if not search_result.has_next:
+                break
+
+            page += 1
+
+        logger.info(f"Fetched {len(all_vulnerabilities)} vulnerabilities for report")
+
+        # Generate CSV content
+        csv_buffer = io.StringIO()
+        csv_writer = csv.writer(csv_buffer)
+
+        # Write headers
+        headers = [
+            "CVE ID",
+            "Severity",
+            "Title",
+            "Agent Name",
+            "Customer Code",
+            "Package Name",
+            "Package Version",
+            "Package Architecture",
+            "Detected At",
+            "Published At",
+            "Base Score",
+        ]
+
+        if request.include_epss:
+            headers.extend(["EPSS Score", "EPSS Percentile"])
+
+        headers.append("References")
+        csv_writer.writerow(headers)
+
+        # Write data rows
+        for vuln in all_vulnerabilities:
+            row = [
+                vuln.cve_id,
+                vuln.severity,
+                vuln.title,
+                vuln.agent_name,
+                vuln.customer_code or "",
+                vuln.package_name or "",
+                vuln.package_version or "",
+                vuln.package_architecture or "",
+                vuln.detected_at.isoformat() if vuln.detected_at else "",
+                vuln.published_at.isoformat() if vuln.published_at else "",
+                vuln.base_score or "",
+            ]
+
+            if request.include_epss:
+                row.extend(
+                    [
+                        vuln.epss_score or "",
+                        vuln.epss_percentile or "",
+                    ],
+                )
+
+            row.append(vuln.references or "")
+            csv_writer.writerow(row)
+
+        # Get CSV content as bytes
+        csv_content = csv_buffer.getvalue().encode("utf-8")
+        csv_buffer.close()
+
+        # Generate file name
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        report_name = request.report_name or f"vulnerability_report_{timestamp}"
+        file_name = f"{report_name}.csv"
+
+        # Calculate file hash
+        file_hash = hashlib.sha256(csv_content).hexdigest()
+
+        # Store in MinIO
+        object_key = f"{request.customer_code}/{file_name}"
+        bucket_name = "vulnerability-reports"
+
+        minio_result = await store_file_in_minio(
+            file_content=csv_content,
+            bucket_name=bucket_name,
+            object_key=object_key,
+            content_type="text/csv",
+        )
+
+        if not minio_result["success"]:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = minio_result.get("error", "Unknown error")
+                    await db_session.commit()
+
+            return VulnerabilityReportGenerateResponse(
+                success=False,
+                message="Failed to store report in MinIO",
+                error=minio_result.get("error", "Unknown error"),
+            )
+
+        # Build filters JSON
+        filters = {}
+        if request.agent_name:
+            filters["agent_name"] = request.agent_name
+        if request.severity:
+            filters["severity"] = request.severity
+        if request.cve_id:
+            filters["cve_id"] = request.cve_id
+        if request.package_name:
+            filters["package_name"] = request.package_name
+        filters["include_epss"] = request.include_epss
+
+        # Check if we're updating an existing report or creating a new one
+        if report_id:
+            # Update existing report (background task scenario)
+            stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+            result = await db_session.execute(stmt)
+            report_record = result.scalars().first()
+
+            if report_record:
+                report_record.file_size = len(csv_content)
+                report_record.file_hash = file_hash
+                report_record.total_vulnerabilities = len(all_vulnerabilities)
+                report_record.critical_count = sum(1 for v in all_vulnerabilities if v.severity == "Critical")
+                report_record.high_count = sum(1 for v in all_vulnerabilities if v.severity == "High")
+                report_record.medium_count = sum(1 for v in all_vulnerabilities if v.severity == "Medium")
+                report_record.low_count = sum(1 for v in all_vulnerabilities if v.severity == "Low")
+                report_record.status = "completed"
+                report_record.error_message = None
+
+                await db_session.commit()
+                await db_session.refresh(report_record)
+
+                logger.info(f"Successfully updated vulnerability report: {report_name} (ID: {report_id})")
+            else:
+                logger.error(f"Report ID {report_id} not found for update")
+                return VulnerabilityReportGenerateResponse(
+                    success=False,
+                    message=f"Report ID {report_id} not found",
+                    error="Report not found",
+                )
+        else:
+            # Create new database record (synchronous scenario)
+            report_record = VulnerabilityReport(
+                report_name=report_name,
+                customer_code=request.customer_code,
+                bucket_name=bucket_name,
+                object_key=object_key,
+                file_name=file_name,
+                file_size=len(csv_content),
+                file_hash=file_hash,
+                generated_by=current_user.id,
+                filters_json=json.dumps(filters),
+                total_vulnerabilities=len(all_vulnerabilities),
+                critical_count=sum(1 for v in all_vulnerabilities if v.severity == "Critical"),
+                high_count=sum(1 for v in all_vulnerabilities if v.severity == "High"),
+                medium_count=sum(1 for v in all_vulnerabilities if v.severity == "Medium"),
+                low_count=sum(1 for v in all_vulnerabilities if v.severity == "Low"),
+                status="completed",
+            )
+
+            db_session.add(report_record)
+            await db_session.commit()
+            await db_session.refresh(report_record)
+
+            logger.info(f"Successfully generated vulnerability report: {report_name}")
+
+        # Build response
+        report_response = VulnerabilityReportResponse(
+            id=report_record.id,
+            report_name=report_record.report_name,
+            customer_code=report_record.customer_code,
+            file_name=report_record.file_name,
+            file_size=report_record.file_size,
+            generated_at=report_record.generated_at,
+            generated_by=report_record.generated_by,
+            total_vulnerabilities=report_record.total_vulnerabilities,
+            critical_count=report_record.critical_count,
+            high_count=report_record.high_count,
+            medium_count=report_record.medium_count,
+            low_count=report_record.low_count,
+            filters_applied=json.loads(report_record.filters_json or "{}"),
+            status=report_record.status,
+            download_url=f"/api/v1/vulnerabilities/reports/{report_record.id}/download",
+        )
+
+        return VulnerabilityReportGenerateResponse(
+            success=True,
+            message=f"Successfully generated report with {len(all_vulnerabilities)} vulnerabilities",
+            report=report_response,
+        )
+
+    except Exception as e:
+        logger.error(f"Error generating vulnerability report: {e}")
+
+        # If we have a report_id, update it to failed status
+        if report_id:
+            try:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = str(e)
+                    await db_session.commit()
+            except Exception as update_error:
+                logger.error(f"Failed to update report status: {update_error}")
+
+        return VulnerabilityReportGenerateResponse(
+            success=False,
+            message="Failed to generate vulnerability report",
+            error=str(e),
+        )
+
+
+async def list_vulnerability_reports(
+    db_session: AsyncSession,
+    current_user: User,
+    customer_code: Optional[str] = None,
+) -> VulnerabilityReportListResponse:
+    """
+    List available vulnerability reports
+
+    Args:
+        db_session: Database session
+        current_user: Current authenticated user
+        customer_code: Optional filter by customer code
+
+    Returns:
+        VulnerabilityReportListResponse with list of reports
+    """
+    try:
+        # Get accessible customers
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+
+        # Build query
+        query = select(VulnerabilityReport).order_by(desc(VulnerabilityReport.generated_at))
+
+        # Apply customer filtering
+        if "*" not in accessible_customers:
+            query = query.filter(VulnerabilityReport.customer_code.in_(accessible_customers))
+
+        if customer_code:
+            if "*" not in accessible_customers and customer_code not in accessible_customers:
+                return VulnerabilityReportListResponse(
+                    reports=[],
+                    total_count=0,
+                    success=True,
+                    message=f"Access denied to customer {customer_code}",
+                )
+            query = query.filter(VulnerabilityReport.customer_code == customer_code)
+
+        result = await db_session.execute(query)
+        reports = result.scalars().all()
+
+        report_list = []
+        for report in reports:
+            report_response = VulnerabilityReportResponse(
+                id=report.id,
+                report_name=report.report_name,
+                customer_code=report.customer_code,
+                file_name=report.file_name,
+                file_size=report.file_size,
+                generated_at=report.generated_at,
+                generated_by=report.generated_by,
+                total_vulnerabilities=report.total_vulnerabilities,
+                critical_count=report.critical_count,
+                high_count=report.high_count,
+                medium_count=report.medium_count,
+                low_count=report.low_count,
+                filters_applied=json.loads(report.filters_json or "{}"),
+                status=report.status,
+                download_url=f"/api/v1/vulnerabilities/reports/{report.id}/download",
+            )
+            report_list.append(report_response)
+
+        return VulnerabilityReportListResponse(
+            reports=report_list,
+            total_count=len(report_list),
+            success=True,
+            message=f"Found {len(report_list)} vulnerability reports",
+        )
+
+    except Exception as e:
+        logger.error(f"Error listing vulnerability reports: {e}")
+        return VulnerabilityReportListResponse(
+            reports=[],
+            total_count=0,
+            success=False,
+            message=f"Failed to list reports: {e}",
+        )
+
+
+async def get_vulnerability_report_download(
+    db_session: AsyncSession,
+    current_user: User,
+    report_id: int,
+) -> Dict[str, Any]:
+    """
+    Get vulnerability report for download
+
+    Args:
+        db_session: Database session
+        current_user: Current authenticated user
+        report_id: Report ID to download
+
+    Returns:
+        Dict with file_content, file_name, and content_type
+    """
+    try:
+        # Get report record
+        result = await db_session.execute(select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id))
+        report = result.scalars().first()
+
+        if not report:
+            raise HTTPException(status_code=404, detail="Report not found")
+
+        # Verify customer access
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
+            raise HTTPException(status_code=403, detail="Access denied to this report")
+
+        # Retrieve file from MinIO
+        from app.data_store.data_store_operations import retrieve_file_from_minio
+
+        file_data = await retrieve_file_from_minio(
+            bucket_name=report.bucket_name,
+            object_key=report.object_key,
+        )
+
+        if not file_data["success"]:
+            raise HTTPException(status_code=500, detail="Failed to retrieve report file")
+
+        return {
+            "file_content": file_data["file_content"],
+            "file_name": report.file_name,
+            "content_type": "text/csv",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving vulnerability report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve report: {e}")
+
+
+async def delete_vulnerability_report(
+    db_session: AsyncSession,
+    current_user: User,
+    report_id: int,
+) -> Dict[str, Any]:
+    """
+    Delete a vulnerability report and its associated file from MinIO.
+
+    Args:
+        db_session: Database session
+        current_user: Current authenticated user
+        report_id: ID of the report to delete
+
+    Returns:
+        Dict with success status and details
+    """
+    from app.data_store.data_store_operations import delete_file_from_minio
+
+    try:
+        # Get the report record
+        stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+        result = await db_session.execute(stmt)
+        report = result.scalars().first()
+
+        if not report:
+            return {
+                "success": False,
+                "error": f"Report with ID {report_id} not found",
+            }
+
+        # Verify customer access
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
+            return {
+                "success": False,
+                "error": f"Access denied to delete report for customer {report.customer_code}",
+            }
+
+        logger.info(f"Deleting vulnerability report ID {report_id} for customer {report.customer_code}")
+
+        # Delete file from MinIO
+        minio_result = await delete_file_from_minio(
+            bucket_name=report.bucket_name,
+            object_key=report.object_key,
+        )
+
+        if not minio_result["success"]:
+            logger.warning(
+                f"Failed to delete file from MinIO for report {report_id}: {minio_result.get('error')}. "
+                "Proceeding with database deletion.",
+            )
+
+        # Store report details before deletion
+        report_name = report.report_name
+        customer_code = report.customer_code
+
+        # Delete database record
+        await db_session.delete(report)
+        await db_session.commit()
+
+        logger.info(f"Successfully deleted vulnerability report ID {report_id}")
+
+        return {
+            "success": True,
+            "message": f"Report '{report_name}' deleted successfully",
+            "report_id": report_id,
+            "report_name": report_name,
+            "customer_code": customer_code,
+        }
+
+    except Exception as e:
+        logger.error(f"Error deleting vulnerability report {report_id}: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }

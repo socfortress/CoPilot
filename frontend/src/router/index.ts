@@ -272,12 +272,34 @@ const router = createRouter({
 				}
 			]
 		},
+		// {
+		// 	path: "/report-creation",
+		// 	name: "ReportCreation",
+		// 	component: () => import("@/views/ReportCreation.vue"),
+		// 	meta: { title: "Report Creation", auth: true, roles: RouteRole.All }
+		// },
 		{
-			path: "/report-creation",
-			name: "ReportCreation",
-			component: () => import("@/views/ReportCreation.vue"),
-			meta: { title: "Report Creation", auth: true, roles: RouteRole.All }
-		},
+            path: "/report-creation",
+            redirect: "/report-creation/general",
+            meta: {
+                auth: true,
+                roles: RouteRole.All
+            },
+            children: [
+                {
+                    path: "general",
+                    name: "ReportCreation",
+                    component: () => import("@/views/ReportCreation.vue"),
+                    meta: { title: "General Reports" }
+                },
+                {
+                    path: "vulnerability-reports",
+                    name: "VulnerabilityReports",
+                    component: () => import("@/components/vulnerabilities/VulnerabilityReports.vue"),
+                    meta: { title: "Vulnerability Reports" }
+                }
+            ]
+        },
 		{
 			path: "/scheduler",
 			name: "Scheduler",
