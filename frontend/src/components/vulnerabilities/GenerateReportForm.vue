@@ -1,63 +1,64 @@
 <template>
-    <n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
-        <n-form-item label="Report Name" path="report_name">
-            <n-input
-                v-model:value="formData.report_name"
-                placeholder="Leave empty for auto-generated name"
-                clearable
-            />
-        </n-form-item>
+	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+		<n-form-item label="Report Name" path="report_name">
+			<n-input
+				v-model:value="formData.report_name"
+				placeholder="Leave empty for auto-generated name"
+				clearable
+			/>
+		</n-form-item>
 
-        <n-form-item label="Customer" path="customer_code" required>
-            <n-select
-                v-model:value="formData.customer_code"
-                :options="customers"
-                placeholder="Select customer"
-                filterable
-            />
-        </n-form-item>
+		<n-form-item label="Customer" path="customer_code" required>
+			<n-select
+				v-model:value="formData.customer_code"
+				:options="customers"
+				placeholder="Select customer"
+				filterable
+			/>
+		</n-form-item>
 
-        <n-divider>Optional Filters</n-divider>
+		<n-divider>Optional Filters</n-divider>
 
-        <n-form-item label="Agent Name" path="agent_name">
-            <n-input v-model:value="formData.agent_name" placeholder="Filter by agent hostname" clearable />
-        </n-form-item>
+		<n-form-item label="Agent Name" path="agent_name">
+			<n-input v-model:value="formData.agent_name" placeholder="Filter by agent hostname" clearable />
+		</n-form-item>
 
-        <n-form-item label="Severity" path="severity">
-            <n-select
-                v-model:value="formData.severity"
-                :options="severityOptions"
-                placeholder="Filter by severity"
-                clearable
-            />
-        </n-form-item>
+		<n-form-item label="Severity" path="severity">
+			<n-select
+				v-model:value="formData.severity"
+				:options="severityOptions"
+				placeholder="Filter by severity"
+				clearable
+			/>
+		</n-form-item>
 
-        <n-form-item label="CVE ID" path="cve_id">
-            <n-input v-model:value="formData.cve_id" placeholder="Filter by CVE ID" clearable />
-        </n-form-item>
+		<n-form-item label="CVE ID" path="cve_id">
+			<n-input v-model:value="formData.cve_id" placeholder="Filter by CVE ID" clearable />
+		</n-form-item>
 
-        <n-form-item label="Package Name" path="package_name">
-            <n-input v-model:value="formData.package_name" placeholder="Filter by package name" clearable />
-        </n-form-item>
+		<n-form-item label="Package Name" path="package_name">
+			<n-input v-model:value="formData.package_name" placeholder="Filter by package name" clearable />
+		</n-form-item>
 
-        <n-form-item label="Include EPSS Scores" path="include_epss">
-            <n-switch v-model:value="formData.include_epss">
-                <template #checked>Enabled</template>
-                <template #unchecked>Disabled</template>
-            </n-switch>
-        </n-form-item>
+		<n-form-item label="Include EPSS Scores" path="include_epss">
+			<n-switch v-model:value="formData.include_epss">
+				<template #checked>Enabled</template>
+				<template #unchecked>Disabled</template>
+			</n-switch>
+		</n-form-item>
 
-        <div class="flex justify-end gap-3 mt-6">
-            <n-button @click="$emit('cancel')">Cancel</n-button>
-            <n-button type="primary" :loading="loading" @click="handleSubmit">Generate Report</n-button>
-        </div>
-    </n-form>
+		<div class="flex justify-end gap-3 mt-6">
+			<n-button @click="$emit('cancel')">Cancel</n-button>
+			<n-button type="primary" :loading="loading" @click="handleSubmit">Generate Report</n-button>
+		</div>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { NForm, NFormItem, NInput, NSelect, NButton, NDivider, NSwitch, type FormInst, type FormRules } from "naive-ui"
+import type { FormInst, FormRules } from "naive-ui"
 import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities.d"
+import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch } from "naive-ui"
+import { ref } from "vue"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 
 interface Props {

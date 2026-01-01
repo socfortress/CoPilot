@@ -1,10 +1,10 @@
 import type {
-    VulnerabilitySearchQuery,
+    VulnerabilityReportDeleteResponse,
     VulnerabilityReportGenerateRequest,
     VulnerabilityReportGenerateResponse,
     VulnerabilityReportListResponse,
-    VulnerabilityReportDeleteResponse,
-	VulnerabilitySearchResponse,
+    VulnerabilitySearchQuery,
+	VulnerabilitySearchResponse
 } from "@/types/vulnerabilities.d"
 import { HttpClient } from "../httpClient"
 
