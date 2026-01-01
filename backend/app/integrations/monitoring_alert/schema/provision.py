@@ -218,6 +218,55 @@ class AvailableMonitoringAlerts(str, Enum):
     SENTINELONE_NEW_PATH_EXCLUSION_ADDED = "Path Exclusion added"
     SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE = 'A management user changed the analyst verdict to "True Positive".'
     SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE = 'A management user changed the analyst verdict to "False Positive".'
+    # ! --- Mimecast alerts ---
+    MIMECAST_COMPROMISED_SITE_URL_ACCESSED = (
+        "Detects user clicks on compromised websites classified by Mimecast, which were delivered via email. "
+        "Adversaries can exploit these links to direct users to malicious sites hosting malware, phishing pages, or spam content."
+    )
+    MIMECAST_EXECUTABLE_FILE_ATTACHMENT_DELIVERED = (
+        "Detects emails containing executable file attachments that have been delivered to a user's mailbox, as identified by Mimecast. "
+        "An adversary can abuse this delivery method to distribute malicious payloads, including malware, ransomware, or other executables designed to compromise the recipient's system."
+    )
+    MIMECAST_MALICIOUS_EMAIL_ATTACHMENT_DELIVERED = (
+        "Detects emails containing malicious attachments identified by Mimecast that have been delivered to a user's mailbox. "
+        "Attackers commonly use spearphishing emails with malicious attachments to compromise systems by tricking recipients into opening them."
+    )
+    MIMECAST_MALICIOUS_EMAIL_LINK_ACCESSED = (
+        "Detects instances where users click on malicious URLs embedded in emails. "
+        "These URLs may redirect to phishing sites, initiate malware downloads, or enable advanced threats, posing risks to user and organizational security."
+    )
+    MIMECAST_P2P_FILE_SHARING_URL_ACCESSED = (
+        "Detects a user clicking on a peer-to-peer file sharing URL, as classified by Mimecast, that was delivered via email. "
+        "Adversaries can abuse P2P file-sharing platforms to distribute malicious files, such as malware, ransomware, or unauthorized software, by embedding these links in phishing emails."
+    )
+    MIMECAST_ANONYMIZER_URL_ACCESSED = (
+        "Detects user clicks on anonymizer URLs classified by Mimecast that arrived in an email. "
+        "An adversary can abuse anonymizer services to mask their identity and hide the origin of malicious traffic, making it harder to trace their activities."
+    )
+    MIMECAST_IMPERSONATION_EMAIL_DELIVERED = (
+        "Detects unblocked email messages flagged by Mimecast as potential impersonation attempts. "
+        "These emails are strong indicators of Business Email Compromise (BEC), a sophisticated phishing tactic in which attackers impersonate trusted entities to deceive recipients."
+    )
+    MIMECAST_MALICIOUS_OUTBOUND_EMAIL = (
+        "Detects outbound emails identified by Mimecast as malicious, including those containing phishing links, malware-laden attachments, or other suspicious content. "
+        "Monitoring these events is crucial in identifying potential account compromises or unauthorized activities aimed at distributing threats to external recipients."
+    )
+    MIMECAST_MALICIOUS_RTF_ATTACHMENT_DELIVERED = (
+        "Detects emails containing malicious rtf file attachments identified by Mimecast that have been delivered to a user's mailbox. "
+        "Adversaries can abuse malicious RTF files to exploit vulnerabilities in applications that process these files, potentially executing arbitrary code or delivering malware."
+    )
+    MIMECAST_PHISHING_EMAIL_DELIVERED = (
+        "Detects unblocked email messages flagged as phishing by Mimecast, indicating their successful delivery to recipients' mailboxes. "
+        "Such emails may contain malicious attachments, URLs, or deceptive content."
+    )
+    MIMECAST_SOURCE_CODE_FILE_IN_EMAIL_ATTACHMENT = (
+        "Detects the presence of source code files in email attachments by analyzing Mimecast email logs. "
+        "This activity may indicate potential insider threats, as internal users could be attempting to exfiltrate sensitive or proprietary information."
+    )
+    MIMECAST_URL_WITH_DANGEROUS_FILE_TYPE_ACCESSED = (
+        "Detects user clicks on URLs containing dangerous file types, as classified by Mimecast, that were delivered via email. "
+        "Adversaries often use emails with embedded URLs linking to files with extensions commonly associated with malware, such as .exe, .bat, .js, or .msi."
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):

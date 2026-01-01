@@ -139,6 +139,42 @@ from app.integrations.monitoring_alert.services.provision import (
 )
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_compromised_site_url_accessed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_executable_file_attachment_delivered_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_malicious_email_attachment_delivered_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_malicious_email_link_accessed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_anonymizer_url_accessed_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_impersonation_email_delivered_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_malicious_outbound_email_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_phishing_email_delivered_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_source_code_file_in_email_attachment_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert,
+)
 
 monitoring_alerts_provision_router = APIRouter()
 
@@ -465,6 +501,77 @@ async def invoke_provision_sentinelone_analyst_verdict_changed_to_false_positive
         request,
     )
 
+async def invoke_provision_mimecast_compromised_site_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_compromised_site_url_accessed_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_executable_file_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_executable_file_attachment_delivered_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_malicious_email_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_malicious_email_attachment_delivered_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_malicious_email_link_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_malicious_email_link_accessed_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_anonymizer_url_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_anonymizer_url_accessed_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_impersonation_email_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_impersonation_email_delivered_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_malicious_outbound_email_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_malicious_outbound_email_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_phishing_email_delivered_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_phishing_email_delivered_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_source_code_file_in_email_attachment_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_source_code_file_in_email_attachment_monitoring_alert(request)
+
+
+async def invoke_provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    await provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert(request)
+
 
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
@@ -512,6 +619,18 @@ PROVISION_FUNCTIONS = {
     "SENTINELONE_NEW_PATH_EXCLUSION_ADDED": invoke_provision_sentinelone_new_path_exclusion_added_monitoring_alert,
     "SENTINELONE_ANALYST_VERDICT_CHANGED_TO_TRUE_POSITIVE": invoke_provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert,
     "SENTINELONE_ANALYST_VERDICT_CHANGED_TO_FALSE_POSITIVE": invoke_provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert,
+    "MIMECAST_COMPROMISED_SITE_URL_ACCESSED": invoke_provision_mimecast_compromised_site_url_accessed_monitoring_alert,
+    "MIMECAST_EXECUTABLE_FILE_ATTACHMENT_DELIVERED": invoke_provision_mimecast_executable_file_attachment_delivered_monitoring_alert,
+    "MIMECAST_MALICIOUS_EMAIL_ATTACHMENT_DELIVERED": invoke_provision_mimecast_malicious_email_attachment_delivered_monitoring_alert,
+    "MIMECAST_MALICIOUS_EMAIL_LINK_ACCESSED": invoke_provision_mimecast_malicious_email_link_accessed_monitoring_alert,
+    "MIMECAST_P2P_FILE_SHARING_URL_ACCESSED": invoke_provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert,
+    "MIMECAST_ANONYMIZER_URL_ACCESSED": invoke_provision_mimecast_anonymizer_url_accessed_monitoring_alert,
+    "MIMECAST_IMPERSONATION_EMAIL_DELIVERED": invoke_provision_mimecast_impersonation_email_delivered_monitoring_alert,
+    "MIMECAST_MALICIOUS_OUTBOUND_EMAIL": invoke_provision_mimecast_malicious_outbound_email_monitoring_alert,
+    "MIMECAST_MALICIOUS_RTF_ATTACHMENT_DELIVERED": invoke_provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert,
+    "MIMECAST_PHISHING_EMAIL_DELIVERED": invoke_provision_mimecast_phishing_email_delivered_monitoring_alert,
+    "MIMECAST_SOURCE_CODE_FILE_IN_EMAIL_ATTACHMENT": invoke_provision_mimecast_source_code_file_in_email_attachment_monitoring_alert,
+    "MIMECAST_URL_WITH_DANGEROUS_FILE_TYPE_ACCESSED": invoke_provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert,
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }
