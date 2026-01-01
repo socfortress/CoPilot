@@ -7,7 +7,7 @@ from loguru import logger
 from packaging.version import Version
 
 # Current version - update this with each release
-CURRENT_VERSION = "0.1.16"
+CURRENT_VERSION = "0.1.17"
 VERSION_CHECK_URL = "https://api.github.com/repos/socfortress/CoPilot/releases/latest"
 
 
