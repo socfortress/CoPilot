@@ -1,3 +1,7 @@
+import csv
+import hashlib
+import io
+import json
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -6,6 +10,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import desc
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +18,18 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilitiesResponse,
 )
 from app.agents.vulnerabilities.schema.vulnerabilities import AgentVulnerabilityOut
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportGenerateRequest,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportGenerateResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportListResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportResponse,
+)
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySearchItem
 from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilitySearchResponse,
@@ -25,31 +42,14 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
+from app.data_store.data_store_operations import store_file_in_minio
 from app.db.universal_models import Agents
 from app.db.universal_models import AgentVulnerabilities
+from app.db.universal_models import Customers
+from app.db.universal_models import VulnerabilityReport
 from app.middleware.customer_access import customer_access_handler
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
-import csv
-import hashlib
-import io
-import json
-from app.data_store.data_store_operations import (
-    store_file_in_minio,
-)
-
-from sqlalchemy import desc
-
-
-from app.agents.vulnerabilities.schema.vulnerabilities import (
-    VulnerabilityReportGenerateRequest,
-    VulnerabilityReportResponse,
-    VulnerabilityReportListResponse,
-    VulnerabilityReportGenerateResponse,
-)
-
-from app.db.universal_models import VulnerabilityReport, Customers
-
 
 
 async def get_epss_score_for_cve(cve_id: str) -> tuple[Optional[str], Optional[str]]:
@@ -1216,6 +1216,7 @@ async def search_vulnerabilities_from_indexer(
             filters_applied=filters_applied if "filters_applied" in locals() else {},
         )
 
+
 async def generate_vulnerability_csv_report(
     db_session: AsyncSession,
     current_user: User,
@@ -1236,9 +1237,7 @@ async def generate_vulnerability_csv_report(
     """
     try:
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         if "*" not in accessible_customers and request.customer_code not in accessible_customers:
             # If we have a report_id, update it to failed status
@@ -1258,9 +1257,7 @@ async def generate_vulnerability_csv_report(
             )
 
         # Verify customer exists
-        customer_result = await db_session.execute(
-            select(Customers).filter(Customers.customer_code == request.customer_code)
-        )
+        customer_result = await db_session.execute(select(Customers).filter(Customers.customer_code == request.customer_code))
         customer = customer_result.scalars().first()
 
         if not customer:
@@ -1369,16 +1366,18 @@ async def generate_vulnerability_csv_report(
             ]
 
             if request.include_epss:
-                row.extend([
-                    vuln.epss_score or "",
-                    vuln.epss_percentile or "",
-                ])
+                row.extend(
+                    [
+                        vuln.epss_score or "",
+                        vuln.epss_percentile or "",
+                    ],
+                )
 
             row.append(vuln.references or "")
             csv_writer.writerow(row)
 
         # Get CSV content as bytes
-        csv_content = csv_buffer.getvalue().encode('utf-8')
+        csv_content = csv_buffer.getvalue().encode("utf-8")
         csv_buffer.close()
 
         # Generate file name
@@ -1550,9 +1549,7 @@ async def list_vulnerability_reports(
     """
     try:
         # Get accessible customers
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         # Build query
         query = select(VulnerabilityReport).order_by(desc(VulnerabilityReport.generated_at))
@@ -1630,18 +1627,14 @@ async def get_vulnerability_report_download(
     """
     try:
         # Get report record
-        result = await db_session.execute(
-            select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
-        )
+        result = await db_session.execute(select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id))
         report = result.scalars().first()
 
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         if "*" not in accessible_customers and report.customer_code not in accessible_customers:
             raise HTTPException(status_code=403, detail="Access denied to this report")
@@ -1701,9 +1694,7 @@ async def delete_vulnerability_report(
             }
 
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         if "*" not in accessible_customers and report.customer_code not in accessible_customers:
             return {
@@ -1722,7 +1713,7 @@ async def delete_vulnerability_report(
         if not minio_result["success"]:
             logger.warning(
                 f"Failed to delete file from MinIO for report {report_id}: {minio_result.get('error')}. "
-                "Proceeding with database deletion."
+                "Proceeding with database deletion.",
             )
 
         # Store report details before deletion

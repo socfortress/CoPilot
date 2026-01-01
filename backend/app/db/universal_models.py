@@ -425,6 +425,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             logo_mime_type=defaults["logo_mime_type"],
         )
 
+
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"
 

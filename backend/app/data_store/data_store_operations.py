@@ -586,11 +586,13 @@ async def list_files_in_bucket(
         object_list = []
 
         async for obj in objects:
-            object_list.append({
-                "object_name": obj.object_name,
-                "size": obj.size,
-                "last_modified": obj.last_modified,
-            })
+            object_list.append(
+                {
+                    "object_name": obj.object_name,
+                    "size": obj.size,
+                    "last_modified": obj.last_modified,
+                },
+            )
 
         logger.info(f"Found {len(object_list)} files in bucket {bucket_name}")
 

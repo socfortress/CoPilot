@@ -1,3 +1,6 @@
+import io
+import json
+from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -7,8 +10,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
+from fastapi.responses import StreamingResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.agents.vulnerabilities.schema.vulnerabilities import (
     AgentVulnerabilitiesResponse,
@@ -17,32 +22,35 @@ from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilityDeleteResponse,
 )
 from app.agents.vulnerabilities.schema.vulnerabilities import (
-    VulnerabilitySearchResponse,
-)
-from fastapi.responses import StreamingResponse
-from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilityReportGenerateRequest,
-    VulnerabilityReportListResponse,
+)
+from app.agents.vulnerabilities.schema.vulnerabilities import (
     VulnerabilityReportGenerateResponse,
 )
-from app.agents.vulnerabilities.services.vulnerabilities import (
-    generate_vulnerability_csv_report,
-    list_vulnerability_reports,
-    get_vulnerability_report_download,
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilityReportListResponse,
 )
-from sqlalchemy.future import select
-from app.db.universal_models import VulnerabilityReport
-from datetime import datetime
-import json
+from app.agents.vulnerabilities.schema.vulnerabilities import (
+    VulnerabilitySearchResponse,
+)
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilityStatsResponse
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncRequest
 from app.agents.vulnerabilities.schema.vulnerabilities import VulnerabilitySyncResponse
 from app.agents.vulnerabilities.services.vulnerabilities import delete_vulnerabilities
 from app.agents.vulnerabilities.services.vulnerabilities import (
+    generate_vulnerability_csv_report,
+)
+from app.agents.vulnerabilities.services.vulnerabilities import (
     get_vulnerabilities_by_agent,
 )
 from app.agents.vulnerabilities.services.vulnerabilities import (
+    get_vulnerability_report_download,
+)
+from app.agents.vulnerabilities.services.vulnerabilities import (
     get_vulnerability_statistics,
+)
+from app.agents.vulnerabilities.services.vulnerabilities import (
+    list_vulnerability_reports,
 )
 from app.agents.vulnerabilities.services.vulnerabilities import (
     search_vulnerabilities_from_indexer,
@@ -51,11 +59,11 @@ from app.agents.vulnerabilities.services.vulnerabilities import sync_all_vulnera
 from app.agents.vulnerabilities.services.vulnerabilities import (
     sync_vulnerabilities_for_agent,
 )
-import io
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
+from app.db.universal_models import VulnerabilityReport
 
 # Create router for vulnerability endpoints
 vulnerabilities_router = APIRouter()
@@ -466,6 +474,7 @@ async def search_vulnerabilities(
         logger.error(f"Error in vulnerability search endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to search vulnerabilities: {e}")
 
+
 @vulnerabilities_router.post(
     "/reports/generate",
     response_model=VulnerabilityReportGenerateResponse,
@@ -600,12 +609,7 @@ async def generate_report_background(
             try:
                 # Create a new database session for the background task
                 async with get_db_session() as bg_db:
-                    result = await generate_vulnerability_csv_report(
-                        bg_db,
-                        current_user,
-                        request,
-                        report_id=report_id
-                    )
+                    result = await generate_vulnerability_csv_report(bg_db, current_user, request, report_id=report_id)
 
                     if result.success:
                         logger.info(f"Successfully completed background report generation (ID: {report_id})")
@@ -710,10 +714,9 @@ async def download_report(
     return StreamingResponse(
         io.BytesIO(report_data["file_content"]),
         media_type=report_data["content_type"],
-        headers={
-            "Content-Disposition": f'attachment; filename="{report_data["file_name"]}"'
-        },
+        headers={"Content-Disposition": f'attachment; filename="{report_data["file_name"]}"'},
     )
+
 
 @vulnerabilities_router.delete(
     "/reports/{report_id}",
@@ -763,15 +766,10 @@ async def delete_report(
             raise HTTPException(status_code=404, detail=f"Report with ID {report_id} not found")
 
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
 
         if "*" not in accessible_customers and report.customer_code not in accessible_customers:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Access denied to delete report for customer {report.customer_code}"
-            )
+            raise HTTPException(status_code=403, detail=f"Access denied to delete report for customer {report.customer_code}")
 
         logger.info(f"Deleting vulnerability report ID {report_id} for customer {report.customer_code}")
 
@@ -784,7 +782,7 @@ async def delete_report(
         if not minio_result["success"]:
             logger.warning(
                 f"Failed to delete file from MinIO for report {report_id}: {minio_result.get('error')}. "
-                "Proceeding with database deletion."
+                "Proceeding with database deletion.",
             )
 
         # Delete database record
