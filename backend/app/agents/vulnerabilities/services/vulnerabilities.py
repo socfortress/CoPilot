@@ -880,9 +880,7 @@ async def search_vulnerabilities_from_indexer(
 
     # Override customer_code based on user permissions
     if "*" not in accessible_customers:
-        # User has limited access - filter by their accessible customers
         if customer_code and customer_code not in accessible_customers:
-            # User requested a customer they don't have access to
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
@@ -899,7 +897,6 @@ async def search_vulnerabilities_from_indexer(
                 message=f"Access denied to customer {customer_code}",
                 filters_applied={},
             )
-        # If no customer_code specified or user has access, we'll filter by accessible customers later
 
     # Build filters applied dict for response
     filters_applied = {}
@@ -914,14 +911,12 @@ async def search_vulnerabilities_from_indexer(
     if package_name:
         filters_applied["package_name"] = package_name
 
-    # Create Elasticsearch client
     es_client = None
     try:
         # Initialize Elasticsearch client
         es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-        # Always get all agents to build hostname to customer_code mapping
-        # This ensures we can always provide customer_code in the response
+        # Get all agents for customer code mapping
         all_agents_query = select(Agents)
         all_agents_result = await db_session.execute(all_agents_query)
         all_agents = all_agents_result.scalars().all()
@@ -940,7 +935,6 @@ async def search_vulnerabilities_from_indexer(
 
         # Apply user access restrictions first
         if "*" not in accessible_customers:
-            # User has limited access - only show their customers' agents
             query = query.filter(Agents.customer_code.in_(accessible_customers))
 
         # Apply additional filters if specified
@@ -971,7 +965,6 @@ async def search_vulnerabilities_from_indexer(
             )
 
         # Build list of agent hostnames for Elasticsearch filtering
-        # If user has restricted access, always filter by their accessible agents
         if "*" not in accessible_customers or customer_code or agent_name:
             for agent in agents:
                 if agent.hostname:
@@ -1016,163 +1009,35 @@ async def search_vulnerabilities_from_indexer(
         if package_name:
             es_query["bool"]["must"].append({"wildcard": {"package.name": f"*{package_name}*"}})
 
-        # Calculate pagination
-        start_index = (page - 1) * page_size
+        # First, get total count and severity aggregations
+        count_response = await es_client.count(index=",".join(vuln_indices), body={"query": es_query})
+        total_count = count_response["count"]
 
-        # Create Elasticsearch client
-        es_client = None
-        try:
-            es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+        # Get severity aggregations
+        agg_response = await es_client.search(
+            index=",".join(vuln_indices),
+            body={
+                "query": es_query,
+                "size": 0,
+                "aggs": {"severity_counts": {"terms": {"field": "vulnerability.severity", "size": 10}}},
+            },
+        )
 
-            # First, get total count and severity aggregations
-            count_response = await es_client.count(index=",".join(vuln_indices), body={"query": es_query})
-            total_count = count_response["count"]
+        # Extract severity counts
+        severity_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
+        if "aggregations" in agg_response and "severity_counts" in agg_response["aggregations"]:
+            for bucket in agg_response["aggregations"]["severity_counts"]["buckets"]:
+                severity_value = bucket["key"]
+                count = bucket["doc_count"]
+                if severity_value in severity_counts:
+                    severity_counts[severity_value] = count
 
-            # Get severity aggregations
-            agg_response = await es_client.search(
-                index=",".join(vuln_indices),
-                body={
-                    "query": es_query,
-                    "size": 0,  # We don't need documents, just aggregations
-                    "aggs": {"severity_counts": {"terms": {"field": "vulnerability.severity", "size": 10}}},
-                },
-            )
+        # Calculate pagination info
+        total_pages = (total_count + page_size - 1) // page_size
+        has_next = page < total_pages
+        has_previous = page > 1
 
-            # Extract severity counts from aggregation response
-            severity_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
-            if "aggregations" in agg_response and "severity_counts" in agg_response["aggregations"]:
-                for bucket in agg_response["aggregations"]["severity_counts"]["buckets"]:
-                    severity = bucket["key"]
-                    count = bucket["doc_count"]
-                    if severity in severity_counts:
-                        severity_counts[severity] = count
-
-            # Calculate pagination info
-            total_pages = (total_count + page_size - 1) // page_size
-            has_next = page < total_pages
-            has_previous = page > 1
-
-            if total_count == 0:
-                return VulnerabilitySearchResponse(
-                    vulnerabilities=[],
-                    total_count=0,
-                    critical_count=0,
-                    high_count=0,
-                    medium_count=0,
-                    low_count=0,
-                    page=page,
-                    page_size=page_size,
-                    total_pages=0,
-                    has_next=False,
-                    has_previous=False,
-                    success=True,
-                    message="No vulnerabilities found matching the specified criteria",
-                    filters_applied=filters_applied,
-                )
-
-            # Get the actual results with pagination
-            search_response = await es_client.search(
-                index=",".join(vuln_indices),
-                body={
-                    "query": es_query,
-                    "sort": [{"vulnerability.detected_at": {"order": "desc"}}, {"vulnerability.severity": {"order": "asc"}}],
-                    "from": start_index,
-                    "size": page_size,
-                },
-            )
-
-            vulnerabilities = []
-            for hit in search_response["hits"]["hits"]:
-                try:
-                    source = hit["_source"]
-                    agent_data = source.get("agent", {})
-                    agent_hostname = agent_data.get("name", "unknown")
-
-                    # Get customer code from our mapping
-                    agent_customer_code = customer_agent_map.get(agent_hostname)
-
-                    # Process the vulnerability data
-                    vuln_data = process_wazuh_document(hit)
-
-                    # Get EPSS score for the CVE (if requested)
-                    epss_score, epss_percentile = None, None
-                    if include_epss:
-                        epss_score, epss_percentile = await get_epss_score_for_cve(vuln_data.cve_id)
-
-                    vulnerability_item = VulnerabilitySearchItem(
-                        cve_id=vuln_data.cve_id,
-                        severity=vuln_data.severity,
-                        title=vuln_data.title,
-                        agent_name=agent_hostname,
-                        customer_code=agent_customer_code,
-                        references=vuln_data.references,
-                        detected_at=vuln_data.detected_at,
-                        published_at=vuln_data.published_at,
-                        base_score=vuln_data.base_score,
-                        package_name=vuln_data.package_name,
-                        package_version=vuln_data.package_version,
-                        package_architecture=vuln_data.package_architecture,
-                        epss_score=epss_score,
-                        epss_percentile=epss_percentile,
-                    )
-                    vulnerabilities.append(vulnerability_item)
-
-                except Exception as e:
-                    logger.error(f"Error processing vulnerability document: {e}")
-                    continue
-
-            # Sort vulnerabilities by EPSS score (highest to lowest) if EPSS is included
-            if include_epss:
-                # Sort by EPSS score descending, treating None/null as 0
-                # Then by severity (Critical=0, High=1, Medium=2, Low=3) for tie-breaking
-                severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
-
-                def get_epss_sort_key(vuln):
-                    # Convert EPSS score to float for sorting, handle string/None values
-                    epss_score = vuln.epss_score
-                    if epss_score is None:
-                        epss_float = 0.0
-                    else:
-                        try:
-                            epss_float = float(epss_score)
-                        except (ValueError, TypeError):
-                            epss_float = 0.0
-                    return (
-                        -epss_float,  # Negative for descending order
-                        severity_order.get(vuln.severity, 4),  # Secondary sort by severity
-                        vuln.cve_id,  # Tertiary sort by CVE ID for consistency
-                    )
-
-                vulnerabilities.sort(key=get_epss_sort_key)
-                logger.info(f"Sorted {len(vulnerabilities)} vulnerabilities by EPSS score (highest to lowest)")
-
-            message = f"Found {len(vulnerabilities)} vulnerabilities on page {page} of {total_pages}"
-            if filters_applied:
-                message += f" with filters: {filters_applied}"
-            if include_epss:
-                message += " (sorted by EPSS score, highest to lowest)"
-            else:
-                message += " (sorted by detection date and severity)"
-
-            return VulnerabilitySearchResponse(
-                vulnerabilities=vulnerabilities,
-                total_count=total_count,
-                critical_count=severity_counts["Critical"],
-                high_count=severity_counts["High"],
-                medium_count=severity_counts["Medium"],
-                low_count=severity_counts["Low"],
-                page=page,
-                page_size=page_size,
-                total_pages=total_pages,
-                has_next=has_next,
-                has_previous=has_previous,
-                success=True,
-                message=message,
-                filters_applied=filters_applied,
-            )
-
-        except Exception as e:
-            logger.error(f"Error searching vulnerabilities from indexer: {e}")
+        if total_count == 0:
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
@@ -1185,20 +1050,155 @@ async def search_vulnerabilities_from_indexer(
                 total_pages=0,
                 has_next=False,
                 has_previous=False,
-                success=False,
-                message=f"Failed to search vulnerabilities: {e}",
-                filters_applied=filters_applied if "filters_applied" in locals() else {},
+                success=True,
+                message="No vulnerabilities found matching the specified criteria",
+                filters_applied=filters_applied,
             )
-        finally:
-            # Ensure the Elasticsearch client session is properly closed
-            if es_client:
-                try:
-                    await es_client.close()
-                except Exception as close_error:
-                    logger.warning(f"Error closing Elasticsearch client: {close_error}")
+
+        # Calculate start index
+        start_index = (page - 1) * page_size
+
+        # Check if pagination exceeds Elasticsearch's 10,000 result window
+        if start_index >= 10000:
+            logger.warning(
+                f"Deep pagination requested (page {page}, start_index {start_index}). "
+                f"Elasticsearch limits pagination to 10,000 results. "
+                f"Please use more specific filters or export to CSV report.",
+            )
+
+            return VulnerabilitySearchResponse(
+                vulnerabilities=[],
+                total_count=total_count,
+                critical_count=severity_counts["Critical"],
+                high_count=severity_counts["High"],
+                medium_count=severity_counts["Medium"],
+                low_count=severity_counts["Low"],
+                page=page,
+                page_size=page_size,
+                total_pages=total_pages,
+                has_next=has_next,
+                has_previous=has_previous,
+                success=False,
+                message=(
+                    f"Deep pagination not supported beyond 10,000 results (requested page {page}, position {start_index}). "
+                    "Please use more specific filters to narrow down results or use the CSV export feature "
+                    "for accessing all vulnerabilities. Maximum supported page: 200 (with page_size=50)."
+                ),
+                filters_applied=filters_applied,
+            )
+
+        # Use standard pagination (within Elasticsearch limits)
+        search_response = await es_client.search(
+            index=",".join(vuln_indices),
+            body={
+                "query": es_query,
+                "sort": [
+                    {"vulnerability.detected_at": {"order": "desc"}},
+                    {"vulnerability.severity": {"order": "asc"}},
+                    {"_id": {"order": "asc"}},  # Tiebreaker for consistent sorting
+                ],
+                "from": start_index,
+                "size": page_size,
+            },
+        )
+        hits = search_response["hits"]["hits"]
+
+        # Process the results
+        vulnerabilities = []
+        for hit in hits:
+            try:
+                source = hit["_source"]
+                agent_data = source.get("agent", {})
+                agent_hostname = agent_data.get("name", "unknown")
+
+                # Get customer code from our mapping
+                agent_customer_code = customer_agent_map.get(agent_hostname)
+
+                # Process the vulnerability data
+                vuln_data = process_wazuh_document(hit)
+
+                # Get EPSS score for the CVE (if requested)
+                epss_score, epss_percentile = None, None
+                if include_epss:
+                    epss_score, epss_percentile = await get_epss_score_for_cve(vuln_data.cve_id)
+
+                vulnerability_item = VulnerabilitySearchItem(
+                    cve_id=vuln_data.cve_id,
+                    severity=vuln_data.severity,
+                    title=vuln_data.title,
+                    agent_name=agent_hostname,
+                    customer_code=agent_customer_code,
+                    references=vuln_data.references,
+                    detected_at=vuln_data.detected_at,
+                    published_at=vuln_data.published_at,
+                    base_score=vuln_data.base_score,
+                    package_name=vuln_data.package_name,
+                    package_version=vuln_data.package_version,
+                    package_architecture=vuln_data.package_architecture,
+                    epss_score=epss_score,
+                    epss_percentile=epss_percentile,
+                )
+                vulnerabilities.append(vulnerability_item)
+
+            except Exception as e:
+                logger.error(f"Error processing vulnerability document: {e}")
+                continue
+
+        # Sort vulnerabilities by EPSS score if included
+        if include_epss:
+            severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+
+            def get_epss_sort_key(vuln):
+                epss_score_val = vuln.epss_score
+                if epss_score_val is None:
+                    epss_float = 0.0
+                else:
+                    try:
+                        epss_float = float(epss_score_val)
+                    except (ValueError, TypeError):
+                        epss_float = 0.0
+                return (
+                    -epss_float,
+                    severity_order.get(vuln.severity, 4),
+                    vuln.cve_id,
+                )
+
+            vulnerabilities.sort(key=get_epss_sort_key)
+            logger.info(f"Sorted {len(vulnerabilities)} vulnerabilities by EPSS score (highest to lowest)")
+
+        message = f"Found {len(vulnerabilities)} vulnerabilities on page {page} of {total_pages}"
+        if filters_applied:
+            message += f" with filters: {filters_applied}"
+        if include_epss:
+            message += " (sorted by EPSS score, highest to lowest)"
+        else:
+            message += " (sorted by detection date and severity)"
+
+        # Add helpful message when approaching the limit
+        if start_index + page_size > 9000:
+            message += (
+                ". Note: Approaching pagination limit (10,000 results). Consider using filters or CSV export for complete data access."
+            )
+
+        return VulnerabilitySearchResponse(
+            vulnerabilities=vulnerabilities,
+            total_count=total_count,
+            critical_count=severity_counts["Critical"],
+            high_count=severity_counts["High"],
+            medium_count=severity_counts["Medium"],
+            low_count=severity_counts["Low"],
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+            has_next=has_next,
+            has_previous=has_previous,
+            success=True,
+            message=message,
+            filters_applied=filters_applied,
+        )
 
     except Exception as e:
-        logger.error(f"Unexpected error in search_vulnerabilities_from_indexer: {e}")
+        logger.error(f"Error searching vulnerabilities from indexer: {e}")
         return VulnerabilitySearchResponse(
             vulnerabilities=[],
             total_count=0,
@@ -1212,9 +1212,261 @@ async def search_vulnerabilities_from_indexer(
             has_next=False,
             has_previous=False,
             success=False,
-            message=f"Unexpected error occurred: {e}",
+            message=f"Failed to search vulnerabilities: {e}",
             filters_applied=filters_applied if "filters_applied" in locals() else {},
         )
+    finally:
+        if es_client:
+            try:
+                await es_client.close()
+            except Exception as close_error:
+                logger.warning(f"Error closing Elasticsearch client: {close_error}")
+
+
+async def fetch_all_vulnerabilities_for_export(
+    db_session: AsyncSession,
+    current_user: User,
+    customer_code: str,
+    agent_name: Optional[str] = None,
+    severity: Optional[str] = None,
+    cve_id: Optional[str] = None,
+    package_name: Optional[str] = None,
+    include_epss: bool = True,
+) -> List[VulnerabilitySearchItem]:
+    """
+    Fetch ALL vulnerabilities for CSV export using scroll API (no pagination limits).
+
+    This function is specifically designed for report generation and can handle
+    unlimited result sets by using Elasticsearch's scroll API.
+
+    Args:
+        db_session: Database session for agent lookup
+        current_user: Current authenticated user for customer access filtering
+        customer_code: Customer code to filter by
+        agent_name: Optional agent hostname filter
+        severity: Optional severity filter
+        cve_id: Optional CVE ID filter
+        package_name: Optional package name filter
+        include_epss: Whether to include EPSS scores
+
+    Returns:
+        List of all matching vulnerabilities (no pagination)
+    """
+    logger.info(
+        f"Fetching ALL vulnerabilities for export with filters: customer_code={customer_code}, "
+        f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
+        f"package_name={package_name}, include_epss={include_epss}",
+    )
+
+    # Apply customer access filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
+
+    if "*" not in accessible_customers and customer_code not in accessible_customers:
+        logger.warning(f"User {current_user.username} denied access to customer {customer_code}")
+        return []
+
+    es_client = None
+    scroll_id = None
+
+    try:
+        # Initialize Elasticsearch client
+        es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+
+        # Get all agents for customer code mapping
+        all_agents_query = select(Agents)
+        all_agents_result = await db_session.execute(all_agents_query)
+        all_agents = all_agents_result.scalars().all()
+
+        # Build complete agent hostname to customer code mapping
+        customer_agent_map = {}
+        for agent in all_agents:
+            if agent.hostname:
+                customer_agent_map[agent.hostname] = agent.customer_code
+
+        # Get agent information for filtering
+        agent_hostnames = []
+        query = select(Agents).filter(Agents.customer_code == customer_code)
+
+        if agent_name:
+            query = query.filter(Agents.hostname == agent_name)
+
+        result = await db_session.execute(query)
+        agents = result.scalars().all()
+
+        if not agents:
+            logger.warning(f"No agents found for customer {customer_code}")
+            return []
+
+        for agent in agents:
+            if agent.hostname:
+                agent_hostnames.append(agent.hostname)
+
+        # Get vulnerability indices
+        vuln_indices = await get_vulnerabilities_indices()
+        if not vuln_indices:
+            logger.warning("No vulnerability indices found")
+            return []
+
+        # Build Elasticsearch query
+        es_query = {"bool": {"must": []}}
+
+        # Add agent filter
+        if agent_hostnames:
+            es_query["bool"]["must"].append({"terms": {"agent.name": agent_hostnames}})
+
+        # Add severity filter
+        if severity:
+            es_query["bool"]["must"].append({"term": {"vulnerability.severity": severity}})
+
+        # Add CVE ID filter
+        if cve_id:
+            es_query["bool"]["must"].append({"term": {"vulnerability.id": cve_id}})
+
+        # Add package name filter
+        if package_name:
+            es_query["bool"]["must"].append({"wildcard": {"package.name": f"*{package_name}*"}})
+
+        # Use scroll API for unlimited results
+        all_vulnerabilities = []
+        scroll_size = 1000  # Process 1000 at a time
+
+        logger.info(f"Starting scroll search across {len(vuln_indices)} indices")
+
+        # Initial scroll request
+        scroll_response = await es_client.search(
+            index=",".join(vuln_indices),
+            body={
+                "query": es_query,
+                "sort": [
+                    {"vulnerability.detected_at": {"order": "desc"}},
+                    {"vulnerability.severity": {"order": "asc"}},
+                    {"_id": {"order": "asc"}},
+                ],
+            },
+            scroll="5m",  # Keep scroll context alive for 5 minutes
+            size=scroll_size,
+        )
+
+        scroll_id = scroll_response["_scroll_id"]
+        hits = scroll_response["hits"]["hits"]
+
+        logger.info(f"Initial scroll batch: {len(hits)} results")
+
+        # Process initial batch
+        for hit in hits:
+            try:
+                source = hit["_source"]
+                agent_data = source.get("agent", {})
+                agent_hostname = agent_data.get("name", "unknown")
+                agent_customer_code = customer_agent_map.get(agent_hostname)
+
+                vuln_data = process_wazuh_document(hit)
+
+                # Get EPSS score if requested
+                epss_score, epss_percentile = None, None
+                if include_epss:
+                    epss_score, epss_percentile = await get_epss_score_for_cve(vuln_data.cve_id)
+
+                vulnerability_item = VulnerabilitySearchItem(
+                    cve_id=vuln_data.cve_id,
+                    severity=vuln_data.severity,
+                    title=vuln_data.title,
+                    agent_name=agent_hostname,
+                    customer_code=agent_customer_code,
+                    references=vuln_data.references,
+                    detected_at=vuln_data.detected_at,
+                    published_at=vuln_data.published_at,
+                    base_score=vuln_data.base_score,
+                    package_name=vuln_data.package_name,
+                    package_version=vuln_data.package_version,
+                    package_architecture=vuln_data.package_architecture,
+                    epss_score=epss_score,
+                    epss_percentile=epss_percentile,
+                )
+                all_vulnerabilities.append(vulnerability_item)
+
+            except Exception as e:
+                logger.error(f"Error processing vulnerability document: {e}")
+                continue
+
+        # Continue scrolling through all results
+        scroll_count = 1
+        while len(hits) > 0:
+            try:
+                scroll_response = await es_client.scroll(scroll_id=scroll_id, scroll="5m")
+                scroll_id = scroll_response["_scroll_id"]
+                hits = scroll_response["hits"]["hits"]
+
+                if not hits:
+                    break
+
+                scroll_count += 1
+                logger.info(f"Scroll batch {scroll_count}: {len(hits)} results (total so far: {len(all_vulnerabilities)})")
+
+                # Process batch
+                for hit in hits:
+                    try:
+                        source = hit["_source"]
+                        agent_data = source.get("agent", {})
+                        agent_hostname = agent_data.get("name", "unknown")
+                        agent_customer_code = customer_agent_map.get(agent_hostname)
+
+                        vuln_data = process_wazuh_document(hit)
+
+                        # Get EPSS score if requested
+                        epss_score, epss_percentile = None, None
+                        if include_epss:
+                            epss_score, epss_percentile = await get_epss_score_for_cve(vuln_data.cve_id)
+
+                        vulnerability_item = VulnerabilitySearchItem(
+                            cve_id=vuln_data.cve_id,
+                            severity=vuln_data.severity,
+                            title=vuln_data.title,
+                            agent_name=agent_hostname,
+                            customer_code=agent_customer_code,
+                            references=vuln_data.references,
+                            detected_at=vuln_data.detected_at,
+                            published_at=vuln_data.published_at,
+                            base_score=vuln_data.base_score,
+                            package_name=vuln_data.package_name,
+                            package_version=vuln_data.package_version,
+                            package_architecture=vuln_data.package_architecture,
+                            epss_score=epss_score,
+                            epss_percentile=epss_percentile,
+                        )
+                        all_vulnerabilities.append(vulnerability_item)
+
+                    except Exception as e:
+                        logger.error(f"Error processing vulnerability document: {e}")
+                        continue
+
+            except Exception as scroll_error:
+                logger.error(f"Error during scroll: {scroll_error}")
+                break
+
+        logger.info(f"Successfully fetched {len(all_vulnerabilities)} total vulnerabilities using scroll API")
+
+        return all_vulnerabilities
+
+    except Exception as e:
+        logger.error(f"Error fetching vulnerabilities for export: {e}")
+        raise
+
+    finally:
+        # Always clear the scroll context
+        if scroll_id and es_client:
+            try:
+                await es_client.clear_scroll(scroll_id=scroll_id)
+                logger.info("Cleared scroll context")
+            except Exception as clear_error:
+                logger.warning(f"Could not clear scroll context: {clear_error}")
+
+        # Close ES client
+        if es_client:
+            try:
+                await es_client.close()
+            except Exception as close_error:
+                logger.warning(f"Error closing Elasticsearch client: {close_error}")
 
 
 async def generate_vulnerability_csv_report(
@@ -1279,50 +1531,36 @@ async def generate_vulnerability_csv_report(
 
         logger.info(f"Generating vulnerability report for customer: {request.customer_code}")
 
-        # Fetch ALL vulnerabilities (no pagination)
-        all_vulnerabilities = []
-        page = 1
-        page_size = 1000  # Large page size for efficiency
-
-        while True:
-            search_result = await search_vulnerabilities_from_indexer(
-                db_session=db_session,
-                current_user=current_user,
-                customer_code=request.customer_code,
-                agent_name=request.agent_name,
-                severity=request.severity,
-                cve_id=request.cve_id,
-                package_name=request.package_name,
-                page=page,
-                page_size=page_size,
-                include_epss=request.include_epss,
-            )
-
-            if not search_result.success:
-                # If we have a report_id, update it to failed status
-                if report_id:
-                    stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
-                    result = await db_session.execute(stmt)
-                    report = result.scalars().first()
-                    if report:
-                        report.status = "failed"
-                        report.error_message = search_result.message
-                        await db_session.commit()
-
-                return VulnerabilityReportGenerateResponse(
-                    success=False,
-                    message="Failed to fetch vulnerability data",
-                    error=search_result.message,
-                )
-
-            all_vulnerabilities.extend(search_result.vulnerabilities)
-
-            if not search_result.has_next:
-                break
-
-            page += 1
+        # Fetch ALL vulnerabilities using scroll API (no pagination limits)
+        all_vulnerabilities = await fetch_all_vulnerabilities_for_export(
+            db_session=db_session,
+            current_user=current_user,
+            customer_code=request.customer_code,
+            agent_name=request.agent_name,
+            severity=request.severity,
+            cve_id=request.cve_id,
+            package_name=request.package_name,
+            include_epss=request.include_epss,
+        )
 
         logger.info(f"Fetched {len(all_vulnerabilities)} vulnerabilities for report")
+
+        if not all_vulnerabilities:
+            # If we have a report_id, update it to failed status
+            if report_id:
+                stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+                result = await db_session.execute(stmt)
+                report = result.scalars().first()
+                if report:
+                    report.status = "failed"
+                    report.error_message = "No vulnerabilities found matching criteria"
+                    await db_session.commit()
+
+            return VulnerabilityReportGenerateResponse(
+                success=False,
+                message="No vulnerabilities found matching the specified criteria",
+                error="No data to export",
+            )
 
         # Generate CSV content
         csv_buffer = io.StringIO()
