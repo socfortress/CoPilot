@@ -1529,7 +1529,36 @@ async def generate_vulnerability_csv_report(
                 error="Customer not found",
             )
 
-        logger.info(f"Generating vulnerability report for customer: {request.customer_code}")
+        # If report_id exists, get the existing report name and object_key
+        # Otherwise generate new ones
+        if report_id:
+            stmt = select(VulnerabilityReport).filter(VulnerabilityReport.id == report_id)
+            result = await db_session.execute(stmt)
+            existing_report = result.scalars().first()
+
+            if not existing_report:
+                return VulnerabilityReportGenerateResponse(
+                    success=False,
+                    message=f"Report ID {report_id} not found",
+                    error="Report not found",
+                )
+
+            # Use existing report name and paths
+            report_name = existing_report.report_name
+            file_name = existing_report.file_name
+            object_key = existing_report.object_key
+            bucket_name = existing_report.bucket_name
+
+            logger.info(f"Generating vulnerability report for existing record: {report_name} (ID: {report_id})")
+        else:
+            # Generate new report name for synchronous generation
+            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            report_name = request.report_name or f"vulnerability_report_{timestamp}"
+            file_name = f"{report_name}.csv"
+            object_key = f"{request.customer_code}/{file_name}"
+            bucket_name = "vulnerability-reports"
+
+            logger.info(f"Generating new vulnerability report: {report_name}")
 
         # Fetch ALL vulnerabilities using scroll API (no pagination limits)
         all_vulnerabilities = await fetch_all_vulnerabilities_for_export(
@@ -1618,18 +1647,10 @@ async def generate_vulnerability_csv_report(
         csv_content = csv_buffer.getvalue().encode("utf-8")
         csv_buffer.close()
 
-        # Generate file name
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        report_name = request.report_name or f"vulnerability_report_{timestamp}"
-        file_name = f"{report_name}.csv"
-
         # Calculate file hash
         file_hash = hashlib.sha256(csv_content).hexdigest()
 
-        # Store in MinIO
-        object_key = f"{request.customer_code}/{file_name}"
-        bucket_name = "vulnerability-reports"
-
+        # Store in MinIO using the paths we determined earlier
         minio_result = await store_file_in_minio(
             file_content=csv_content,
             bucket_name=bucket_name,
