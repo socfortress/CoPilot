@@ -126,7 +126,7 @@ def build_event_stream_config(
     Returns:
         WazuhEventStream: The configured Wazuh event stream.
     """
-    sanitized_name = request.customer_name.replace(" ", "_")
+    sanitized_name = request.customer_code.replace(" ", "_")
     return WazuhEventStream(
         title=f"{request.customer_name} - Wazuh EDR EVENTS",
         description=f"{request.customer_name} - Wazuh EDR EVENTS",
