@@ -540,7 +540,7 @@ async def fetch_agent_os(agent_id: str, session: AsyncSession) -> str:
     agent_os_lower = agent_os.lower()
     if "windows" in agent_os_lower:
         return "Windows"
-    elif "linux" in agent_os_lower:
+    elif "linux" in agent_os_lower or "ubuntu" in agent_os_lower:
         return "Linux"
     elif "macos" in agent_os_lower or "mac" in agent_os_lower:
         return "MacOS"
