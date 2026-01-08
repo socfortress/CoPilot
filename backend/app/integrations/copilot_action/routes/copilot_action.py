@@ -374,6 +374,7 @@ async def invoke_action_on_agent(
     copilot_action_name: str,
     copilot_action_details: ActionDetailResponse,
     parameters: dict,
+    session: AsyncSession,
 ) -> CollectArtifactResponse:
     """
     Invoke a Copilot Action on a single agent.
@@ -383,7 +384,7 @@ async def invoke_action_on_agent(
         copilot_action_name: Name of the action
         copilot_action_details: Action details from the service
         parameters: Parameters for the action
-
+        session: Database session
     Returns:
         CollectArtifactResponse: Response from the artifact collection
     """
@@ -401,7 +402,7 @@ async def invoke_action_on_agent(
         logger.info(f"Built artifact collection request for {agent.hostname}")
 
         # Execute the collection
-        response = await run_artifact_collection(artifact_body)
+        response = await run_artifact_collection(artifact_body, session)
         logger.info(f"Successfully invoked Copilot action on {agent.hostname}")
 
         return response
@@ -464,7 +465,7 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
 
         for agent in agents:
             try:
-                response = await invoke_action_on_agent(agent, body.copilot_action_name, copilot_action_details, final_parameters)
+                response = await invoke_action_on_agent(agent, body.copilot_action_name, copilot_action_details, final_parameters, session)
                 responses.append(response)
                 successful_agents.append(agent.hostname)
 
