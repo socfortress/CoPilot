@@ -63,6 +63,7 @@ NETWORK_INTEGRATIONS = [
     "CROWDSTRIKE",
     "FORTINET",
     "Fortinet",
+    "Sonicwall",
     # Add other network integrations as needed
 ]
 

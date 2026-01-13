@@ -117,6 +117,12 @@ class CatoDashboard(Enum):
 class DefenderForEndpointDashboard(Enum):
     DEFENDERFORENDPOINT_SUMMARY = ("DefenderForEndpoint", "summary.json")
 
+class SonicwallDashboard(Enum):
+    SONICWALL_SUMMARY = ("Sonicwall", "sonicwall_summary.json")
+    SONICWALL_VPN = ("Sonicwall", "sonicwall_vpn.json")
+    SONICWALL_APP_CONTROL = ("Sonicwall", "sonicwall_app_control.json")
+    SONICWALL_SD_WAN = ("Sonicwall", "sonicwall_sdwan.json")
+    SONICWALL_IPS = ("Sonicwall", "sonicwall_ips.json")
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
@@ -154,6 +160,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(BitdefenderDashboard)
             + list(CatoDashboard)
             + list(DefenderForEndpointDashboard)
+            + list(SonicwallDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')

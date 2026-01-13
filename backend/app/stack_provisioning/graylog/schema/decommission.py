@@ -16,6 +16,10 @@ class AvailableNetworkConnectors(str, Enum):
         "The Crowdstrike Network Connector which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Crowdstrike logs and the SOCFortress SIEM stack."
     )
+    SONICWALL = (
+        "The Sonicwall Network Connector which includes Input, Stream, Pipeline Rules,"
+        " Pipelines, and Lookup Tables for Sonicwall logs and the SOCFortress SIEM stack."
+    )
 
 
 class DecommissionNetworkContentPackRequest(BaseModel):

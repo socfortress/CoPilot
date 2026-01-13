@@ -31,6 +31,9 @@ class AvailableContentPacks(str, Enum):
     SOCFORTRESS_BITDEFENDER_STREAM = "The Bitdefender Stream content pack"
     SOCFORTRESS_DEFENDER_FOR_ENDPOINT_INPUT_TCP = "The Defender for Endpoint Input TCP content pack"
     SOCFORTRESS_DEFENDER_FOR_ENDPOINT_STREAM = "The Defender for Endpoint Stream content pack"
+    SOCFORTRESS_SONICWALL_INPUT_SYSLOG_TLS = "The Sonicwall Input Syslog TLS content pack"
+    SOCFORTRESS_SONICWALL_STREAM = "The Sonicwall Stream content pack"
+    SOCFORTRESS_SONICWALL_PROCESSING_PIPELINE = "The Sonicwall Processing Pipeline content pack"
 
 
 class ContentPackKeywords(BaseModel):
@@ -45,6 +48,16 @@ class ContentPackKeywords(BaseModel):
         None,
         example=514,
         description="The syslog port of the content pack",
+    )
+    tls_cert_file: Optional[str] = Field(
+        None,
+        example="/etc/graylog/sonicwall/cert.pem",
+        description="The TLS certificate file path of the content pack",
+    )
+    tls_key_file: Optional[str] = Field(
+        None,
+        example="/etc/graylog/sonicwall/key.pem",
+        description="The TLS key file path of the content pack",
     )
 
 
@@ -147,4 +160,14 @@ class ReplaceContentPackKeywords(BaseModel):
         ...,
         example=514,
         description="The syslog port",
+    )
+    TLS_CERT_FILE: Optional[str] = Field(
+        None,
+        example="/etc/graylog/sonicwall/cert.pem",
+        description="The TLS certificate file path",
+    )
+    TLS_KEY_FILE: Optional[str] = Field(
+        None,
+        example="/etc/graylog/sonicwall/key.pem",
+        description="The TLS key file path",
     )

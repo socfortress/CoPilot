@@ -32,6 +32,17 @@ export interface FortinetProvisionPayload extends FortinetProvision {
 	integration_name: string
 }
 
+export interface SonicwallProvision {
+	tcp_enabled: boolean
+	hot_data_retention: number
+	index_replicas: number
+}
+
+export interface SonicwallProvisionPayload extends SonicwallProvision {
+	customer_code: string
+	integration_name: string
+}
+
 export default {
 	// #region Network Connector
 	getAvailableNetworkConnectors() {
@@ -76,6 +87,14 @@ export default {
 			integration_name: networkConnectorName
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/stack_provisioning/graylog/provision/fortinet`, payload)
+	},
+	sonicwallProvision(customerCode: string, networkConnectorName: string, props: SonicwallProvision) {
+		const payload: SonicwallProvisionPayload = {
+			...props,
+			customer_code: customerCode,
+			integration_name: networkConnectorName
+		}
+		return HttpClient.post<FlaskBaseResponse>(`/stack_provisioning/graylog/provision/sonicwall`, payload)
 	}
 	// #endregion
 }

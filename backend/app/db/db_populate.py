@@ -612,6 +612,7 @@ def get_available_network_connectors_list():
     """
     available_network_connectors = [
         ("Fortinet", "Integrate Fortinet with SOCFortress."),
+        ("Sonicwall", "Integrate Sonicwall with SOCFortress."),
         # ... Add more available network_connectors as needed ...
     ]
 
@@ -702,6 +703,9 @@ async def get_available_network_connectors_auth_keys_list(session: AsyncSession)
     available_network_connectors_auth_keys = []
     available_network_connectors = [
         ("Fortinet", "SYSLOG_PORT"),
+        ("Sonicwall", "SYSLOG_PORT"),
+        ("Sonicwall", "TLS_CERT_FILE"),
+        ("Sonicwall", "TLS_KEY_FILE"),
         # ... Add more available network_connectors auth keys as needed ...
     ]
     logger.info("Getting available network_connectors auth keys.")
