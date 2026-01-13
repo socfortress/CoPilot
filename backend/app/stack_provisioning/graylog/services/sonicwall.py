@@ -266,7 +266,7 @@ async def create_customer_network_connector_meta(
         customer_code=customer_details.customer_code,
         network_connector_name="SONICWALL",
         graylog_stream_id=stream_id,
-        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SONICWALL LOGS AND EVENTS")),
+        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - TLS")),
         graylog_pipeline_id=((await get_pipeline_id(subscription="SONICWALL"))[0]),
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
