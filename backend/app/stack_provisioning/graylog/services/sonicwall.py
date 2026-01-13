@@ -24,7 +24,6 @@ from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationRe
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
@@ -33,13 +32,13 @@ from app.customers.routes.customers import get_customer_meta
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
-from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
-from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
-from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
 from app.stack_provisioning.graylog.schema.provision import ContentPackKeywords
 from app.stack_provisioning.graylog.schema.provision import (
     ProvisionNetworkContentPackRequest,
 )
+from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
+from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
+from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
 from app.stack_provisioning.graylog.services.provision import (
     provision_content_pack_network_connector,
 )
@@ -166,7 +165,6 @@ async def get_stream_and_index_ids(customer_details: SonicwallCustomerDetails):
         content_pack_name=f"{customer_details.customer_name}_SONICWALL_STREAM",
     )
 
-
     content_pack_input_id = await get_content_pack_id_by_content_pack_name(
         content_pack_name=f"{customer_details.customer_name}_SONICWALL_INPUT_SYSLOG_TLS",
     )
@@ -266,7 +264,9 @@ async def create_customer_network_connector_meta(
         customer_code=customer_details.customer_code,
         network_connector_name="SONICWALL",
         graylog_stream_id=stream_id,
-        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - TLS")),
+        graylog_input_id=(
+            await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - TLS")
+        ),
         graylog_pipeline_id=((await get_pipeline_id(subscription="SONICWALL"))[0]),
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,

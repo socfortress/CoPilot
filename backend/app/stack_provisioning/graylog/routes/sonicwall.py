@@ -14,10 +14,10 @@ from app.network_connectors.routes import (
 )
 from app.network_connectors.schema import CustomerNetworkConnectors
 from app.network_connectors.schema import CustomerNetworkConnectorsResponse
-from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallRequest
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
+from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
 from app.stack_provisioning.graylog.services.sonicwall import provision_sonicwall
 
 stack_provisioning_graylog_sonicwall_router = APIRouter()
