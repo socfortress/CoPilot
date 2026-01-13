@@ -260,6 +260,8 @@ async def process_content_pack(content_pack, content_pack_request):
         customer_name=content_pack_request.keywords.customer_name,
         customer_code=content_pack_request.keywords.customer_code,
         SYSLOG_PORT=content_pack_request.keywords.syslog_port,
+        TLS_CERT_FILE=content_pack_request.keywords.tls_cert_file,
+        TLS_KEY_FILE=content_pack_request.keywords.tls_key_file,
     )
     if "PROCESSING_PIPELINE" not in content_pack:
         content_pack = replace_keywords_in_json_complex(content_pack, replace_content_pack_keywords.dict())

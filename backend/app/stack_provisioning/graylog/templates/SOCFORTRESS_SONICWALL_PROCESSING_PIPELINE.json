@@ -1,0 +1,489 @@
+{
+  "v": 1,
+  "id": "36cc5ea6-7755-4e4d-896f-5749df3a4cb3",
+  "rev": 1,
+  "name": "SOCFORTRESS_SONICWALL_PROCESSING_PIPELINE",
+  "summary": "SOCFORTRESS_SONICWALL_PROCESSING_PIPELINE",
+  "description": "",
+  "vendor": "SOCFortress",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "69453bf6-cb99-4b47-9475-45a6ca364542",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Warning"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Warning"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Warning\"\nwhen to_long($message.level) == 4\nthen\nset_field(\"syslog_level\", \"Warning\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "81b553f2-7e54-4305-ba49-b1e44ac2960a",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA\"\nwhen\n    to_long($message.level) == 1 AND $message.fw_action == \"NA\" AND $message.msg_cat != \"IPS Detection Alert\"\nthen\n    drop_message();\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "b15ef1f4-a91b-441f-bbec-6cf80860d434",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL SRC IP - THREAT INTEL"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL SRC IP - THREAT INTEL"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL SRC IP - THREAT INTEL\"\nwhen\n ! has_field(\"src_ip_reserved_ip\")\nthen\nlet ip_and_ampersand = concat(to_string($message.src_ip), \"&customer_code=\");\nlet new_key = concat(ip_and_ampersand, to_string($message.syslog_customer));\n let ldata = lookup(\n lookup_table: \"threatintellookup\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "253ee75a-97a8-44c4-b0aa-7b27e3bafee9",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Emergency"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Emergency"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Emergency\"\nwhen to_long($message.level) == 0\nthen\nset_field(\"syslog_level\", \"Emergency\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "fcbd228d-3b3d-4746-82d9-f8b54a54377a",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SonicWall dst - Extract IP, Port and Interface"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SonicWall dst - Extract IP, Port and Interface"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SonicWall dst - Extract IP, Port and Interface\"\nwhen\nhas_field(\"dst\")\nthen\n    let result1 = regex(\"^([0-9,\\\\.]+)\",to_string($message.dst));\n    set_field(\"dst_ip\", result1[\"0\"]);\n    let result2 = regex(\"^[0-9,\\\\.]+\\\\:([0-9]+)\",to_string($message.dst));\n    set_field(\"dst_port\", result2[\"0\"]);    \n    let result3 = regex(\"^[0-9,\\\\.]+\\\\:[0-9]+\\\\:([A-Z,0-9]+)\",to_string($message.dst));\n    set_field(\"dst_interface\", result3[\"0\"]);\n    let result4 = regex(\"^[0-9,\\\\.]+\\\\:([A-Z,0-9]+)$\",to_string($message.dst));\n    set_field(\"dst_interface\", result4[\"0\"]);        \nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "4717aa45-7ede-45db-8130-5702924969f6",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Debug"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Debug"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Debug\"\nwhen to_long($message.level) == 7\nthen\nset_field(\"syslog_level\", \"Debug\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "8e894827-c82d-4480-9750-920fb10bd0c4",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "DROP SONICWALL LOGS - LEVEL 6, CONNS"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "DROP SONICWALL LOGS - LEVEL 6, CONNS"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"DROP SONICWALL LOGS - LEVEL 6, CONNS\"\nwhen\n    to_long($message.level) == 6 AND ($message.msg == \"Connection Closed\" OR $message.msg == \"Connection Opened\")\nthen\n    drop_message();\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "58c692b4-7f2f-465d-ba44-59d8a1f13312",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL DST IP - THREAT INTEL"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL DST IP - THREAT INTEL"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL DST IP - THREAT INTEL\"\nwhen\n ! has_field(\"dst_ip_reserved_ip\")\nthen\nlet ip_and_ampersand = concat(to_string($message.dst_ip), \"&customer_code=\");\nlet new_key = concat(ip_and_ampersand, to_string($message.syslog_customer));\n let ldata = lookup(\n lookup_table: \"threatintellookup\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "9773b642-8a13-43e7-b4f7-84e29fb61dd6",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Critical"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Critical"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Critical\"\nwhen to_long($message.level) == 2\nthen\nset_field(\"syslog_level\", \"Critical\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "6bec12f2-dbc8-446c-b0a0-066938cda27a",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "OVERRIDE SYSLOG LEVEL AFTER IoC FOUND"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "OVERRIDE SYSLOG LEVEL AFTER IoC FOUND"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nwhen\n has_field(\"threat_intel_value\")\nthen\n set_field(\"syslog_level\", \"ALERT\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3d3f27de-7806-4184-b909-63885f7b1391",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL - key_value_parser"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL - key_value_parser"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL - key_value_parser\"\nwhen\n    has_field(\"message\")\nthen\n    set_fields(\n        fields:\n            key_value(\n                value: to_string($message.message),\n                trim_value_chars: \"\\\"\",\n                delimiters: \" \",\n                kv_delimiters: \"=\"\n            )\n    );\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "5d9310c5-3dea-48a3-ab91-0a14618074b3",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SonicWall src - Extract IP, Port and Interface"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SonicWall src - Extract IP, Port and Interface"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SonicWall src - Extract IP, Port and Interface\"\nwhen\nhas_field(\"src\")\nthen\n    let result1 = regex(\"^([0-9,\\\\.]+)\",to_string($message.src));\n    set_field(\"src_ip\", result1[\"0\"]);\n    let result2 = regex(\"^[0-9,\\\\.]+\\\\:([0-9]+)\",to_string($message.src));\n    set_field(\"src_port\", result2[\"0\"]);    \n    let result3 = regex(\"^[0-9,\\\\.]+\\\\:[0-9]+\\\\:([A-Z,0-9]+)\",to_string($message.src));\n    set_field(\"src_interface\", result3[\"0\"]);\n    let result4 = regex(\"^[0-9,\\\\.]+\\\\:([A-Z,0-9]+)$\",to_string($message.src));\n    set_field(\"src_interface\", result4[\"0\"]);        \nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "353eaac6-15e4-4bb5-8e3d-71e04b5115e5",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Notice"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Notice"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Notice\"\nwhen to_long($message.level) == 5\nthen\nset_field(\"syslog_level\", \"Notice\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "d0335e13-f48c-4601-bd1e-2a945585ca96",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Alert"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Alert"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Alert\"\nwhen to_long($message.level) == 1\nthen\nset_field(\"syslog_level\", \"Alert\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "5ee057f5-290e-4549-86e4-8f384b3a5112",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Error"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - Error"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Error\"\nwhen to_long($message.level) == 3\nthen\nset_field(\"syslog_level\", \"Error\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "93adfd3a-6cd2-4335-875a-38970729a6c8",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - INFO"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL CREATE FIELD SYSLOG LEVEL - INFO"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"SONICWALL CREATE FIELD SYSLOG LEVEL - INFO\"\nwhen to_long($message.level) == 6\nthen\nset_field(\"syslog_level\", \"INFO\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline",
+        "version": "1"
+      },
+      "id": "37a1065a-77e2-4a3f-b63d-0053200ec995",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "SONICWALL PROCESSING PIPELINE"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "SONICWALL PROCESSING PIPELINE"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "pipeline \"SONICWALL PROCESSING PIPELINE\"\nstage 0 match either\nrule \"SONICWALL - key_value_parser\"\nstage 1 match pass\nrule \"DROP SONICWALL LOGS - LEVEL 6, CONNS\"\nrule \"DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA\"\nstage 2 match pass\nrule \"SonicWall dst - Extract IP, Port and Interface\"\nrule \"SonicWall src - Extract IP, Port and Interface\"\nstage 3 match pass\nrule \"SONICWALL DST IP - THREAT INTEL\"\nrule \"SONICWALL SRC IP - THREAT INTEL\"\nstage 4 match either\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Emergency\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Warning\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Debug\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Alert\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Critical\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Notice\"\nrule \"SONICWALL CREATE FIELD SYSLOG LEVEL - Error\"\nstage 5 match either\nrule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    }
+  ]
+}
