@@ -1,8 +1,10 @@
 import os
+import ssl
 
 from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy import text
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,9 +24,35 @@ from app.db.db_populate import add_available_network_connectors_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_populate import delete_connectors_if_exist
-from app.db.db_session import SQLALCHEMY_DATABASE_URI
-from app.db.db_session import db_password
 from app.schedulers.routes.scheduler import delete_job
+from settings import DB_TLS
+from settings import DB_TLS_CA
+from settings import SQLALCHEMY_DATABASE_URI
+from settings import TLS_VERIFY
+from settings import mysql_password
+
+
+def _tls_connect_args_for_url(url_str: str) -> dict:
+    """
+    Build connect_args for TLS only when using a MySQL driver.
+    Uses settings.py: DB_TLS, TLS_VERIFY, DB_TLS_CA.
+    """
+    if not DB_TLS:
+        return {}
+    try:
+        drivername = make_url(url_str).drivername  # e.g., 'mysql+pymysql'
+    except Exception:
+        drivername = ""
+    if not drivername.startswith("mysql"):
+        return {}
+
+    if TLS_VERIFY:
+        ctx = ssl.create_default_context(cafile=DB_TLS_CA or None)
+        ctx.check_hostname = True
+    else:
+        ctx = ssl._create_unverified_context()
+        ctx.check_hostname = False
+    return {"ssl": ctx}
 
 
 async def create_database_if_not_exists(db_url: str, db_name: str):
@@ -35,7 +63,10 @@ async def create_database_if_not_exists(db_url: str, db_name: str):
         db_url (str): Database URL to connect to MySQL server (without database part).
         db_name (str): The name of the database to create.
     """
-    engine = create_engine(db_url)
+    engine = create_engine(
+        db_url,
+        connect_args=_tls_connect_args_for_url(db_url),
+    )
     conn = engine.connect()
     try:
         # Check if database exists
@@ -64,7 +95,10 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
         db_user_name (str): The name of the user to create.
     """
     db_name = "copilot"
-    engine = create_engine(db_url)
+    engine = create_engine(
+        db_url,
+        connect_args=_tls_connect_args_for_url(db_url),
+    )
     conn = engine.connect()
     try:
         # Check if user exists
@@ -73,8 +107,8 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
         if not exists:
             # Create user if it does not exist
             conn.execute("commit")
-            conn.execute(text(f"CREATE USER '{db_user_name}'@'%' IDENTIFIED BY '{db_password}';"))
-            logger.info(f"User '{db_user_name}' created successfully with password '{db_password}'.")
+            conn.execute(text(f"CREATE USER '{db_user_name}'@'%' IDENTIFIED BY '{mysql_password}';"))
+            logger.info(f"User '{db_user_name}' created successfully with password '{mysql_password}'.")
             conn.execute(text(f"GRANT ALL PRIVILEGES ON {db_name}.* TO '{db_user_name}'@'%';"))
             logger.info(f"User '{db_user_name}' created successfully and granted all privileges to the '{db_name}' database.")
         else:
@@ -108,6 +142,61 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
 #         raise e
 
 
+# def apply_migrations():
+#     """
+#     Applies Alembic migrations to ensure the database schema is up to date.
+#     """
+#     logger.info("Applying migrations")
+
+#     # Navigate up three levels from db_setup.py to the backend directory, then to the alembic directory
+#     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+#     alembic_directory = os.path.join(base_dir, "alembic")
+
+#     logger.info(f"base_dir: {base_dir}")
+#     logger.info(f"Alembic directory: {alembic_directory}")
+
+#     alembic_cfg = Config(os.path.join(alembic_directory, "alembic.ini"))
+#     alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
+#     alembic_cfg.set_main_option("script_location", alembic_directory)
+
+#     # Check current revision first
+#     logger.info("Checking current database revision...")
+#     try:
+#         from sqlalchemy import create_engine
+
+#         from alembic.script import ScriptDirectory
+
+#         # Get current revision
+#         engine = create_engine(SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
+#         with engine.connect() as connection:
+#             from alembic.runtime.migration import MigrationContext
+
+#             context = MigrationContext.configure(connection)
+#             current_rev = context.get_current_revision()
+#             logger.info(f"Current database revision: {current_rev}")
+
+#         # Get head revision
+#         script = ScriptDirectory.from_config(alembic_cfg)
+#         head_rev = script.get_current_head()
+#         logger.info(f"Target head revision: {head_rev}")
+
+#         if current_rev == head_rev:
+#             logger.info("Database is already up to date!")
+#             return
+
+#     except Exception as e:
+#         logger.warning(f"Could not check current revision: {e}")
+
+#     # Apply migrations to the latest revision
+#     logger.info("Starting migration upgrade...")
+#     try:
+#         command.upgrade(alembic_cfg, "head")
+#         logger.info("Migrations completed successfully!")
+#     except Exception as e:  # Catch any exception
+#         logger.error(f"Error applying migrations: {e}")
+#         raise e
+
+
 def apply_migrations():
     """
     Applies Alembic migrations to ensure the database schema is up to date.
@@ -122,21 +211,22 @@ def apply_migrations():
     logger.info(f"Alembic directory: {alembic_directory}")
 
     alembic_cfg = Config(os.path.join(alembic_directory, "alembic.ini"))
-    alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
+    # Migrations use the sync driver
+    pymysql_url = SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql")
+    alembic_cfg.set_main_option("sqlalchemy.url", pymysql_url)
     alembic_cfg.set_main_option("script_location", alembic_directory)
 
-    # Check current revision first
+    # Check current revision first (use TLS if configured)
     logger.info("Checking current database revision...")
     try:
-        from sqlalchemy import create_engine
-
+        from alembic.runtime.migration import MigrationContext
         from alembic.script import ScriptDirectory
 
-        # Get current revision
-        engine = create_engine(SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
+        engine = create_engine(
+            pymysql_url,
+            connect_args=_tls_connect_args_for_url(pymysql_url),
+        )
         with engine.connect() as connection:
-            from alembic.runtime.migration import MigrationContext
-
             context = MigrationContext.configure(connection)
             current_rev = context.get_current_revision()
             logger.info(f"Current database revision: {current_rev}")

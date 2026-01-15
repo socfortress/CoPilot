@@ -1,15 +1,12 @@
-import os
-
 import requests
-from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy import select
 
 from app.auth.services.universal import get_scheduler_password
 from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
-
-load_dotenv()
+from settings import SERVER_IP
+from settings import SERVER_PORT
 
 
 def scheduler_login():
@@ -25,7 +22,7 @@ def scheduler_login():
 
     # Get an auth token
     token_response = requests.post(
-        f"http://{os.getenv('SERVER_IP')}:5000/auth/token",
+        f"http://{SERVER_IP}:{SERVER_PORT}/auth/token",
         headers={
             "accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
