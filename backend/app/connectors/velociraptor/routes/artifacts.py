@@ -320,7 +320,10 @@ async def get_all_artifacts_for_os_prefix(
     # Get all the artifacts names that begin with the OS prefix
     artifacts = await get_artifacts()
     artifacts = artifacts.artifacts
-    artifacts_for_os_prefix = [artifact for artifact in artifacts if artifact.name.startswith(os_prefix)]
+    # Match artifacts that start with the OS prefix OR start with "Custom." followed by the OS prefix
+    artifacts_for_os_prefix = [
+        artifact for artifact in artifacts if artifact.name.startswith(os_prefix) or artifact.name.startswith(f"Custom.{os_prefix}")
+    ]
     return ArtifactsResponse(
         success=True,
         message=f"All artifacts for OS prefix {os_prefix} retrieved",
