@@ -77,7 +77,7 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 				if (this.uncommittedJournalEntriesThreshold) {
 					this.getGraylogCheck()
 				}
-				this.getClusterHealth()
+				// this.getClusterHealth()
 				this.getHealthchecks()
 			}
 		},
