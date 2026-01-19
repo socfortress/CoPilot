@@ -24,7 +24,6 @@ from app.db.db_session import get_db
 active_response_router = APIRouter()
 
 
-
 async def verify_active_response_name(active_response_name: str) -> None:
     """
     Verify the active response name
