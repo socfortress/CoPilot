@@ -74,7 +74,7 @@ This method provides:
 ### Architecture
 
 ```
-SonicWall (UDP) → Syslog-NG Collector (Local Network) → TLS → SIEM Stack
+SonicWall (UDP) > Syslog-NG Collector (Local Network) > TLS > SIEM Stack
 ```
 
 ### Step 1: Deploy Local Log Collector
