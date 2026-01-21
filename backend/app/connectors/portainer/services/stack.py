@@ -107,6 +107,7 @@ async def _prepare_template_variables(request: ProvisionNewCustomer, node_count:
         "REPLACE_API": request.wazuh_api_port,
         "NUMBER_OF_NODES": str(node_count),
         "customer_name": formatted_customer_name,
+        "customer_code": formatted_customer_code,
     }
 
 
@@ -123,7 +124,7 @@ async def _create_stack_payload(template: str, variables: Dict[str, str], swarm_
         Dict[str, Any]: The payload for stack creation
     """
     return {
-        "Name": f"wazuh-worker-{variables['customer_name']}",
+        "Name": f"wazuh-worker-{variables['customer_code']}",
         "StackFileContent": template,
         "SwarmID": swarm_id,
         "Env": [],
