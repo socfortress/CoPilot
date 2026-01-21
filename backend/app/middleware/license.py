@@ -983,8 +983,7 @@ async def is_feature_enabled_route(feature_name: str, session: AsyncSession = De
     except HTTPException as e:
         if e.status_code == 400:  # Feature not enabled
             return IsFeatureEnabledResponse(
-                enabled=False,
-                success=True,
+                status_code=400,
                 message=e.detail,
             )
         else:
