@@ -91,7 +91,7 @@
 								<n-form-item label="Index shards" path="index_shards" class="grow">
 									<n-input-number v-model:value="form.index_shards" min="0" class="grow" />
 								</n-form-item>
-								<n-form-item label="Hot Data Retention" path="hot_data_retention" class="grow">
+								<n-form-item label="Hot Data Retention (days)" path="hot_data_retention" class="grow">
 									<n-input-number v-model:value="form.hot_data_retention" min="0" class="grow" />
 								</n-form-item>
 							</div>
