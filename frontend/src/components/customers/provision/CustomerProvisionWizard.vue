@@ -154,7 +154,7 @@
 									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
 								</n-form-item>
 								<div class="mt-2 text-sm text-gray-500">
-									Deploys a Wazuh worker node to collect and process security events from agents. The worker connects to the Wazuh master and forwards logs to the indexer.
+									Multi-tenancy (SOCFortress Pro Services only): Deploys a dedicated worker used in SOCFortress-managed multi-tenant Wazuh environments. Leave off for single-tenant deployments.
 								</div>
 							</n-card>
 							<n-card class="grow">
@@ -166,7 +166,7 @@
 									/>
 								</n-form-item>
 								<div class="mt-2 text-sm text-gray-500">
-									Deploys an HA Proxy load balancer to distribute agents connections across multiple Wazuh workers. Provides high availability and fault tolerance for agent communication.
+									Multi-tenancy (SOCFortress Pro Services only): Deploys the load balancer used to route agent connections across multi-tenant Wazuh workers for high availability. Leave off for single-tenant deployments.
 								</div>
 							</n-card>
 						</div>
