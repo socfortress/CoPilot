@@ -153,6 +153,9 @@
 								<n-form-item label="Deploy Wazuh Worker" path="provision_wazuh_worker">
 									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
 								</n-form-item>
+								<div class="mt-2 text-sm text-gray-500">
+									Deploys a Wazuh worker node to collect and process security events from agents. The worker connects to the Wazuh master and forwards logs to the indexer.
+								</div>
 							</n-card>
 							<n-card class="grow">
 								<n-form-item label="Deploy HA Proxy" path="provision_ha_proxy">
@@ -162,6 +165,9 @@
 										:disabled="!form.provision_wazuh_worker"
 									/>
 								</n-form-item>
+								<div class="mt-2 text-sm text-gray-500">
+									Deploys an HA Proxy load balancer to distribute agents connections across multiple Wazuh workers. Provides high availability and fault tolerance for agent communication.
+								</div>
 							</n-card>
 						</div>
 
