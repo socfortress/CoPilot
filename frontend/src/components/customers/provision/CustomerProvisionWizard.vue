@@ -478,7 +478,7 @@ function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerP
 		// step1
 		customer_code: customerCode.value,
 		customer_name: customerName.value,
-		customer_grafana_org_name: "",
+		customer_grafana_org_name: customerName.value,
 		dfir_iris_username: "",
 
 		// step 2
