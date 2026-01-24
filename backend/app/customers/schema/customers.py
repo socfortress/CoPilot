@@ -89,6 +89,10 @@ class CustomerMetaRequestBody(BaseModel):
         ...,
         description="Wazuh log ingestion port for the customer",
     )
+    customer_meta_wazuh_api_port: str = Field(
+        ...,
+        description="Wazuh API port for the customer",
+    )
     customer_meta_wazuh_auth_password: str = Field(
         ...,
         description="Wazuh auth password for the customer",

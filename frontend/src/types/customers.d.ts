@@ -31,6 +31,7 @@ export interface CustomerMeta {
 	customer_meta_wazuh_auth_password: string
 	customer_meta_iris_customer_id: number
 	customer_meta_office365_organization_id: string
+	customer_meta_wazuh_api_port: string
 }
 
 export type CustomerHealthcheckSource = "wazuh" | "velociraptor"
