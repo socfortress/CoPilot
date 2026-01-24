@@ -126,6 +126,16 @@ class SonicwallDashboard(Enum):
     SONICWALL_IPS = ("Sonicwall", "sonicwall_ips.json")
 
 
+class SentinelOneDashboard(Enum):
+    SENTINELONE_EPP_ADMINISTRATIVE = ("Sentinelone", "sentinelone_epp_administrative.json")
+    SENTINELONE_EPP_MITIGATION = ("Sentinelone", "sentinelone_epp_mitigation.json")
+    SENTINELONE_EPP_RANGER = ("Sentinelone", "sentinelone_epp_ranger.json")
+    SENTINELONE_EPP_WHITELISTBLACKLIST = ("Sentinelone", "sentinelone_epp_whitelistblacklist.json")
+    SENTINELONE_EPP_MALWARE = ("Sentinelone", "sentinelone_epp_malware.json")
+    SENTINELONE_EPP_OPERATIONS = ("Sentinelone", "sentinelone_epp_operations.json")
+    SENTINELONE_EPP_SUMMARY = ("Sentinelone", "sentinelone_epp_summary.json")
+
+
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
         ...,
@@ -163,6 +173,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(CatoDashboard)
             + list(DefenderForEndpointDashboard)
             + list(SonicwallDashboard)
+            + list(SentinelOneDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
