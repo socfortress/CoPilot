@@ -125,6 +125,7 @@ class SonicwallDashboard(Enum):
     SONICWALL_SD_WAN = ("Sonicwall", "sonicwall_sdwan.json")
     SONICWALL_IPS = ("Sonicwall", "sonicwall_ips.json")
 
+
 class SentinelOneDashboard(Enum):
     SENTINELONE_EPP_ADMINISTRATIVE = ("Sentinelone", "sentinelone_epp_administrative.json")
     SENTINELONE_EPP_MITIGATION = ("Sentinelone", "sentinelone_epp_mitigation.json")

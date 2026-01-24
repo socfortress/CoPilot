@@ -37,7 +37,9 @@ from app.stack_provisioning.graylog.schema.provision import (
     ProvisionNetworkContentPackRequest,
 )
 from app.stack_provisioning.graylog.schema.sentinelone import ProvisionSentinelOneKeys
-from app.stack_provisioning.graylog.schema.sentinelone import ProvisionSentinelOneResponse
+from app.stack_provisioning.graylog.schema.sentinelone import (
+    ProvisionSentinelOneResponse,
+)
 from app.stack_provisioning.graylog.schema.sentinelone import SentinelOneCustomerDetails
 from app.stack_provisioning.graylog.services.provision import (
     provision_content_pack_network_connector,
@@ -159,9 +161,7 @@ async def get_stream_and_index_ids(customer_details: SentinelOneCustomerDetails)
     Returns:
         tuple: A tuple containing the stream ID and index ID.
     """
-    stream_id = await get_stream_id_by_stream_name(
-        stream_name=f"{customer_details.customer_name} - SENTINELONE ALERTS AND EVENTS"
-    )
+    stream_id = await get_stream_id_by_stream_name(stream_name=f"{customer_details.customer_name} - SENTINELONE ALERTS AND EVENTS")
     index_id = (await create_index_set(request=customer_details)).data.id
     content_pack_stream_id = await get_content_pack_id_by_content_pack_name(
         content_pack_name=f"{customer_details.customer_name}_SENTINELONE_STREAM",
@@ -266,11 +266,7 @@ async def create_customer_network_connector_meta(
         customer_code=customer_details.customer_code,
         network_connector_name="SENTINELONE",
         graylog_stream_id=stream_id,
-        graylog_input_id=(
-            await get_input_id_by_input_name(
-                input_name=f"{customer_details.customer_name} - SENTINELONE ALERTS AND EVENTS"
-            )
-        ),
+        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SENTINELONE ALERTS AND EVENTS")),
         graylog_pipeline_id=((await get_pipeline_id(subscription="SENTINELONE"))[0]),
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
@@ -338,9 +334,7 @@ async def provision_sentinelone(
         )
 
     await provision_content_pack(customer_details)
-    stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(
-        customer_details
-    )
+    stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
     customer_network_connector_meta = await create_customer_network_connector_meta(
         customer_details,
         stream_id,
@@ -351,9 +345,7 @@ async def provision_sentinelone(
     )
     await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
     pipeline_id = await get_pipeline_id(subscription="SENTINELONE")
-    await connect_stream_to_pipeline(
-        stream_and_pipeline=StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
-    )
+    await connect_stream_to_pipeline(stream_and_pipeline=StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id))
 
     # Grafana Deployment
     customer_network_connector_meta.grafana_datasource_uid = (
