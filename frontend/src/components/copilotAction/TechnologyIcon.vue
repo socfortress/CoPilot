@@ -1,36 +1,38 @@
 <template>
-	<Icon :name="getTechnologyIcon(action.technology)" :size />
+	<Icon v-if="technology" :name="getTechnologyIcon(technology)" :size />
 </template>
 
 <script setup lang="ts">
-import type { CopilotAction } from "@/types/copilotAction.d"
 import Icon from "@/components/common/Icon.vue"
 import { iconFromOs } from "@/utils"
 
-const { action, size = 14 } = defineProps<{ action: CopilotAction; size?: number }>()
+const { technology, size = 14 } = defineProps<{
+    technology?: string
+    size?: number
+}>()
 
-function getTechnologyIcon(technology: string): string {
-	if (
-		technology.toLowerCase().includes("win") ||
-		technology.toLowerCase().includes("lin") ||
-		technology.toLowerCase().includes("mac")
-	) {
-		return iconFromOs(technology)
-	}
+function getTechnologyIcon(tech: string | undefined): string {
+    if (!tech) return "carbon:application"
 
-	if (technology.toLowerCase().includes("wazuh")) {
-		return "carbon:security"
-	}
-	if (technology.toLowerCase().includes("velociraptor")) {
-		return "fluent-emoji-high-contrast:eagle"
-	}
-	if (technology.toLowerCase().includes("network")) {
-		return "carbon:network-3"
-	}
-	if (technology.toLowerCase().includes("cloud")) {
-		return "carbon:cloud"
-	}
+    const techLower = tech.toLowerCase()
 
-	return "carbon:application"
+    if (techLower.includes("win") || techLower.includes("lin") || techLower.includes("mac")) {
+        return iconFromOs(tech)
+    }
+
+    if (techLower.includes("wazuh")) {
+        return "carbon:security"
+    }
+    if (techLower.includes("velociraptor")) {
+        return "fluent-emoji-high-contrast:eagle"
+    }
+    if (techLower.includes("network")) {
+        return "carbon:network-3"
+    }
+    if (techLower.includes("cloud")) {
+        return "carbon:cloud"
+    }
+
+    return "carbon:application"
 }
 </script>
