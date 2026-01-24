@@ -494,6 +494,19 @@ export default function getItems(): MenuMixedOption[] {
                             { default: () => "Vulnerability Reports" }
                         ),
                     key: "VulnerabilityReports"
+                },
+				{
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "SCAReports"
+                                }
+                            },
+                            { default: () => "SCA Reports" }
+                        ),
+                    key: "SCAReports"
                 }
             ]
         },
