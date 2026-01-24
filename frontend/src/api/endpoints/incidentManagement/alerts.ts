@@ -177,6 +177,15 @@ export default {
 			}
 		)
 	},
+	deleteAlertsByTitle(titleFilter: string) {
+        return HttpClient.delete<
+            FlaskBaseResponse & {
+                deleted_alert_ids: number[]
+                not_deleted_alert_ids: number[]
+                message: string
+            }
+        >(`/incidents/db_operations/alerts/by-title/${encodeURIComponent(titleFilter)}`)
+    },
 	getAlertContext(alertContextId: number) {
 		return HttpClient.get<FlaskBaseResponse & { alert_context: AlertContext }>(
 			`/incidents/db_operations/alert/context/${alertContextId}`
