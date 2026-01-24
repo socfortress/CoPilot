@@ -1,138 +1,138 @@
 <template>
-    <n-form ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
-        <!-- Technology Info Alert -->
-        <n-alert v-if="action?.technology" type="info" class="mb-4" size="small">
-            <template #header>
-                <div class="flex items-center gap-2">
-                    <TechnologyIcon :technology="action.technology" :size="16" />
-                    <span>{{ action.technology }} Action</span>
-                </div>
-            </template>
-            Only showing agents compatible with {{ action.technology }} technology
-            <template v-if="incompatibleAgentCount > 0">
-                ({{ incompatibleAgentCount }} incompatible agent{{ incompatibleAgentCount !== 1 ? 's' : '' }} hidden)
-            </template>
-        </n-alert>
+	<n-form ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
+		<!-- Technology Info Alert -->
+		<n-alert v-if="action?.technology" type="info" class="mb-4" size="small">
+			<template #header>
+				<div class="flex items-center gap-2">
+					<TechnologyIcon :technology="action.technology" :size="16" />
+					<span>{{ action.technology }} Action</span>
+				</div>
+			</template>
+			Only showing agents compatible with {{ action.technology }} technology
+			<template v-if="incompatibleAgentCount > 0">
+				({{ incompatibleAgentCount }} incompatible agent{{ incompatibleAgentCount !== 1 ? 's' : '' }} hidden)
+			</template>
+		</n-alert>
 
-        <n-form-item label="Target Agents" path="agent_names" required>
-            <div class="flex flex-col gap-2 w-full">
-                <n-select
-                    v-model:value="formValue.agent_names"
-                    :options="filteredAgentOptions"
-                    :loading="loadingAgents"
-                    multiple
-                    filterable
-                    placeholder="Select target agents"
-                    :max-tag-count="3"
-                >
-                    <template #empty>
-                        <n-empty description="No compatible agents found" />
-                    </template>
-                </n-select>
-                <div class="flex gap-2 justify-end">
-                    <n-button
-                        secondary
-                        type="primary"
-                        size="small"
-                        :disabled="loadingAgents || filteredAgentOptions.length === 0"
-                        @click="selectAllAgents"
-                    >
-                        <template #icon>
-                            <Icon name="carbon:checkbox-checked-filled" />
-                        </template>
-                        Select All
-                    </n-button>
-                    <n-button
-                        v-if="formValue.agent_names.length > 0"
-                        secondary
-                        size="small"
-                        @click="clearAllAgents"
-                    >
-                        <template #icon>
-                            <Icon name="carbon:close" />
-                        </template>
-                        Clear
-                    </n-button>
-                </div>
-            </div>
-        </n-form-item>
+		<n-form-item label="Target Agents" path="agent_names" required>
+			<div class="flex flex-col gap-2 w-full">
+				<n-select
+					v-model:value="formValue.agent_names"
+					:options="filteredAgentOptions"
+					:loading="loadingAgents"
+					multiple
+					filterable
+					placeholder="Select target agents"
+					:max-tag-count="3"
+				>
+					<template #empty>
+						<n-empty description="No compatible agents found" />
+					</template>
+				</n-select>
+				<div class="flex gap-2 justify-end">
+					<n-button
+						secondary
+						type="primary"
+						size="small"
+						:disabled="loadingAgents || filteredAgentOptions.length === 0"
+						@click="selectAllAgents"
+					>
+						<template #icon>
+							<Icon name="carbon:checkbox-checked-filled" />
+						</template>
+						Select All
+					</n-button>
+					<n-button
+						v-if="formValue.agent_names.length > 0"
+						secondary
+						size="small"
+						@click="clearAllAgents"
+					>
+						<template #icon>
+							<Icon name="carbon:close" />
+						</template>
+						Clear
+					</n-button>
+				</div>
+			</div>
+		</n-form-item>
 
-        <!-- Parameters Section -->
-        <div v-if="action?.script_parameters?.length" class="mb-4">
-            <n-divider>Parameters</n-divider>
-            <div v-for="param in action.script_parameters" :key="param.name" class="mb-3">
-                <n-form-item
-                    :label="param.name"
-                    :path="`parameters.${param.name}`"
-                    :required="param.required"
-                >
-                    <template #label>
-                        <div class="flex items-center gap-2">
-                            <span>{{ param.name }}</span>
-                            <n-tag v-if="param.type" size="tiny" :bordered="false">
-                                {{ param.type }}
-                            </n-tag>
-                        </div>
-                    </template>
+		<!-- Parameters Section -->
+		<div v-if="action?.script_parameters?.length" class="mb-4">
+			<n-divider>Parameters</n-divider>
+			<div v-for="param in action.script_parameters" :key="param.name" class="mb-3">
+				<n-form-item
+					:label="param.name"
+					:path="`parameters.${param.name}`"
+					:required="param.required"
+				>
+					<template #label>
+						<div class="flex items-center gap-2">
+							<span>{{ param.name }}</span>
+							<n-tag v-if="param.type" size="tiny" :bordered="false">
+								{{ param.type }}
+							</n-tag>
+						</div>
+					</template>
 
-                    <!-- Boolean Parameter -->
-                    <n-switch
-                        v-if="param.type === 'boolean'"
-                        v-model:value="formValue.parameters[param.name]"
-                    />
+					<!-- Boolean Parameter -->
+					<n-switch
+						v-if="param.type === 'boolean'"
+						v-model:value="formValue.parameters[param.name]"
+					/>
 
-                    <!-- Integer Parameter -->
-                    <n-input-number
-                        v-else-if="param.type === 'integer'"
-                        v-model:value="formValue.parameters[param.name]"
-                        :placeholder="param.default?.toString() || 'Enter value...'"
-                        class="w-full"
-                    />
+					<!-- Integer Parameter -->
+					<n-input-number
+						v-else-if="param.type === 'integer'"
+						v-model:value="formValue.parameters[param.name]"
+						:placeholder="param.default?.toString() || 'Enter value...'"
+						class="w-full"
+					/>
 
-                    <!-- String with Enum (Select) -->
-                    <n-select
-                        v-else-if="param.enum?.length"
-                        v-model:value="formValue.parameters[param.name]"
-                        :options="param.enum.map(v => ({ label: v, value: v }))"
-                        :placeholder="param.default?.toString() || 'Select value...'"
-                    />
+					<!-- String with Enum (Select) -->
+					<n-select
+						v-else-if="param.enum?.length"
+						v-model:value="formValue.parameters[param.name]"
+						:options="param.enum.map(v => ({ label: v, value: v }))"
+						:placeholder="param.default?.toString() || 'Select value...'"
+					/>
 
-                    <!-- String Parameter -->
-                    <n-input
-                        v-else
-                        v-model:value="formValue.parameters[param.name]"
-                        :placeholder="param.default?.toString() || 'Enter value...'"
-                        clearable
-                    />
+					<!-- String Parameter -->
+					<n-input
+						v-else
+						v-model:value="formValue.parameters[param.name]"
+						:placeholder="param.default?.toString() || 'Enter value...'"
+						clearable
+					/>
 
-                    <template v-if="param.description" #feedback>
-                        <span class="text-xs text-gray-500">{{ param.description }}</span>
-                    </template>
-                </n-form-item>
-            </div>
-        </div>
+					<template v-if="param.description" #feedback>
+						<span class="text-xs text-gray-500">{{ param.description }}</span>
+					</template>
+				</n-form-item>
+			</div>
+		</div>
 
-        <div class="flex justify-end gap-2">
-            <n-button @click="emit('close')">Cancel</n-button>
-            <n-button
-                type="primary"
-                :loading="loading"
-                :disabled="!isFormValid"
-                @click="handleInvoke"
-            >
-                <template #icon>
-                    <Icon :name="PlayIcon" />
-                </template>
-                Invoke Action
-            </n-button>
-        </div>
-    </n-form>
+		<div class="flex justify-end gap-2">
+			<n-button @click="emit('close')">Cancel</n-button>
+			<n-button
+				type="primary"
+				:loading="loading"
+				:disabled="!isFormValid"
+				@click="handleInvoke"
+			>
+				<template #icon>
+					<Icon :name="PlayIcon" />
+				</template>
+				Invoke Action
+			</n-button>
+		</div>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import type { CopilotAction } from "@/types/copilotAction.d"
-import type { Agent } from "@/types/agents.d"
 import type { FormInst, FormRules } from "naive-ui"
+import type { Agent } from "@/types/agents.d"
+import type { CopilotAction } from "@/types/copilotAction.d"
 import {
     NAlert,
     NButton,

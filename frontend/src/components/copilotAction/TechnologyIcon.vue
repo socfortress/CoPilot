@@ -1,5 +1,5 @@
 <template>
-    <Icon v-if="technology" :name="getTechnologyIcon(technology)" :size />
+	<Icon v-if="technology" :name="getTechnologyIcon(technology)" :size />
 </template>
 
 <script setup lang="ts">
