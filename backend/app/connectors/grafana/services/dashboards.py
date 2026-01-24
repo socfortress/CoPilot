@@ -19,7 +19,7 @@ from app.connectors.grafana.schema.dashboards import HuntressDashboard
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import SapSiemDashboard
-from app.connectors.grafana.schema.dashboards import SonicwallDashboard
+from app.connectors.grafana.schema.dashboards import SonicwallDashboard, SentinelOneDashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.connectors.grafana.utils.universal import create_grafana_client
 
@@ -193,6 +193,7 @@ async def provision_dashboards(
         + list(CatoDashboard)
         + list(DefenderForEndpointDashboard)
         + list(SonicwallDashboard)
+        + list(SentinelOneDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

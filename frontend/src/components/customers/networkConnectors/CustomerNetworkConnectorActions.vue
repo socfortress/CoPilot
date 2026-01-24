@@ -1,138 +1,186 @@
 <template>
-	<div class="contents">
-		<n-button
-			v-if="networkConnector.deployed"
-			:loading="loadingDecommission"
-			type="error"
-			:size="size"
-			secondary
-			@click.stop="decommissionNetworkConnector()"
-		>
-			<template #icon>
-				<Icon :name="DecommissionIcon" />
-			</template>
-			Decommission
-		</n-button>
+    <div class="contents">
+        <n-button
+            v-if="networkConnector.deployed"
+            :loading="loadingDecommission"
+            type="error"
+            :size="size"
+            secondary
+            @click.stop="decommissionNetworkConnector()"
+        >
+            <template #icon>
+                <Icon :name="DecommissionIcon" />
+            </template>
+            Decommission
+        </n-button>
 
-		<n-button
-			v-if="isFortinet && !networkConnector.deployed"
-			:loading="loadingFortinetProvision"
-			type="success"
-			:size="size"
-			secondary
-			@click.stop="showFortinetForm = true"
-		>
-			<template #icon>
-				<Icon :name="DeployIcon" />
-			</template>
-			Deploy
-		</n-button>
+        <n-button
+            v-if="isFortinet && !networkConnector.deployed"
+            :loading="loadingFortinetProvision"
+            type="success"
+            :size="size"
+            secondary
+            @click.stop="showFortinetForm = true"
+        >
+            <template #icon>
+                <Icon :name="DeployIcon" />
+            </template>
+            Deploy
+        </n-button>
 
-		<n-button
-			v-if="isSonicwall && !networkConnector.deployed"
-			:loading="loadingSonicwallProvision"
-			type="success"
-			:size="size"
-			secondary
-			@click.stop="showSonicwallForm = true"
-		>
-			<template #icon>
-				<Icon :name="DeployIcon" />
-			</template>
-			Deploy
-		</n-button>
+        <n-button
+            v-if="isSonicwall && !networkConnector.deployed"
+            :loading="loadingSonicwallProvision"
+            type="success"
+            :size="size"
+            secondary
+            @click.stop="showSonicwallForm = true"
+        >
+            <template #icon>
+                <Icon :name="DeployIcon" />
+            </template>
+            Deploy
+        </n-button>
 
-		<n-button
-			v-if="!hideDeleteButton"
-			:size="size"
-			type="error"
-			ghost
-			:loading="loadingDelete"
-			@click.stop="handleDelete"
-		>
-			<template #icon>
-				<Icon :name="DeleteIcon" :size="15" />
-			</template>
-			Delete
-		</n-button>
+        <n-button
+            v-if="isSentinelOne && !networkConnector.deployed"
+            :loading="loadingSentinelOneProvision"
+            type="success"
+            :size="size"
+            secondary
+            @click.stop="showSentinelOneForm = true"
+        >
+            <template #icon>
+                <Icon :name="DeployIcon" />
+            </template>
+            Deploy
+        </n-button>
 
-		<!-- Fortinet Modal -->
-		<n-modal
-			v-model:show="showFortinetForm"
-			preset="card"
-			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="Fortinet options"
-			:bordered="false"
-			content-class="flex flex-col"
-			segmented
-		>
-			<n-spin v-model:show="loadingFortinetProvision">
-				<FortinetForm v-model:options="fortinetOptions" />
-			</n-spin>
+        <n-button
+            v-if="!hideDeleteButton"
+            :size="size"
+            type="error"
+            ghost
+            :loading="loadingDelete"
+            @click.stop="handleDelete"
+        >
+            <template #icon>
+                <Icon :name="DeleteIcon" :size="15" />
+            </template>
+            Delete
+        </n-button>
 
-			<template #footer>
-				<div class="flex justify-end">
-					<n-button
-						:loading="loadingFortinetProvision"
-						type="success"
-						secondary
-						:disabled="!isFortinetFormValid"
-						@click.stop="fortinetProvision()"
-					>
-						<template #icon>
-							<Icon :name="DeployIcon" />
-						</template>
-						Deploy
-					</n-button>
-				</div>
-			</template>
-		</n-modal>
+        <!-- Fortinet Modal -->
+        <n-modal
+            v-model:show="showFortinetForm"
+            preset="card"
+            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+            title="Fortinet options"
+            :bordered="false"
+            content-class="flex flex-col"
+            segmented
+        >
+            <n-spin v-model:show="loadingFortinetProvision">
+                <FortinetForm v-model:options="fortinetOptions" />
+            </n-spin>
 
-		<!-- SonicWall Modal -->
-		<n-modal
-			v-model:show="showSonicwallForm"
-			preset="card"
-			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="SonicWall options"
-			:bordered="false"
-			content-class="flex flex-col"
-			segmented
-		>
-			<n-spin v-model:show="loadingSonicwallProvision">
-				<SonicwallForm v-model:options="sonicwallOptions" />
-			</n-spin>
+            <template #footer>
+                <div class="flex justify-end">
+                    <n-button
+                        :loading="loadingFortinetProvision"
+                        type="success"
+                        secondary
+                        :disabled="!isFortinetFormValid"
+                        @click.stop="fortinetProvision()"
+                    >
+                        <template #icon>
+                            <Icon :name="DeployIcon" />
+                        </template>
+                        Deploy
+                    </n-button>
+                </div>
+            </template>
+        </n-modal>
 
-			<template #footer>
-				<div class="flex justify-end">
-					<n-button
-						:loading="loadingSonicwallProvision"
-						type="success"
-						secondary
-						:disabled="!isSonicwallFormValid"
-						@click.stop="sonicwallProvision()"
-					>
-						<template #icon>
-							<Icon :name="DeployIcon" />
-						</template>
-						Deploy
-					</n-button>
-				</div>
-			</template>
-		</n-modal>
-	</div>
+        <!-- SonicWall Modal -->
+        <n-modal
+            v-model:show="showSonicwallForm"
+            preset="card"
+            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+            title="SonicWall options"
+            :bordered="false"
+            content-class="flex flex-col"
+            segmented
+        >
+            <n-spin v-model:show="loadingSonicwallProvision">
+                <SonicwallForm v-model:options="sonicwallOptions" />
+            </n-spin>
+
+            <template #footer>
+                <div class="flex justify-end">
+                    <n-button
+                        :loading="loadingSonicwallProvision"
+                        type="success"
+                        secondary
+                        :disabled="!isSonicwallFormValid"
+                        @click.stop="sonicwallProvision()"
+                    >
+                        <template #icon>
+                            <Icon :name="DeployIcon" />
+                        </template>
+                        Deploy
+                    </n-button>
+                </div>
+            </template>
+        </n-modal>
+
+        <!-- SentinelOne Modal -->
+        <n-modal
+            v-model:show="showSentinelOneForm"
+            preset="card"
+            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+            title="SentinelOne options"
+            :bordered="false"
+            content-class="flex flex-col"
+            segmented
+        >
+            <n-spin v-model:show="loadingSentinelOneProvision">
+                <SentinelOneForm v-model:options="sentinelOneOptions" />
+            </n-spin>
+
+            <template #footer>
+                <div class="flex justify-end">
+                    <n-button
+                        :loading="loadingSentinelOneProvision"
+                        type="success"
+                        secondary
+                        :disabled="!isSentinelOneFormValid"
+                        @click.stop="sentinelOneProvision()"
+                    >
+                        <template #icon>
+                            <Icon :name="DeployIcon" />
+                        </template>
+                        Deploy
+                    </n-button>
+                </div>
+            </template>
+        </n-modal>
+    </div>
 </template>
 
 <script setup lang="ts">
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { FortinetModel } from "./provisions/FortinetForm.vue"
 import type { SonicwallModel } from "./provisions/SonicwallForm.vue"
-import type { FortinetProvision, SonicwallProvision } from "@/api/endpoints/networkConnectors"
+import type { SentinelOneModel } from "./provisions/SentinelOneForm.vue"
+import type { FortinetProvision, SentinelOneProvision, SonicwallProvision } from "@/api/endpoints/networkConnectors"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import FortinetForm from "./provisions/FortinetForm.vue"
+import SentinelOneForm from "./provisions/SentinelOneForm.vue"
 import SonicwallForm from "./provisions/SonicwallForm.vue"
 
 const { networkConnector, hideDeleteButton, size } = defineProps<{
@@ -157,22 +205,27 @@ const dialog = useDialog()
 const message = useMessage()
 const loadingFortinetProvision = ref(false)
 const loadingSonicwallProvision = ref(false)
+const loadingSentinelOneProvision = ref(false)
 const loadingDelete = ref(false)
 const loadingDecommission = ref(false)
-const loading = computed(() =>
-    loadingFortinetProvision.value ||
-    loadingSonicwallProvision.value ||
-    loadingDecommission.value ||
-    loadingDelete.value
+const loading = computed(
+    () =>
+        loadingFortinetProvision.value ||
+        loadingSonicwallProvision.value ||
+        loadingSentinelOneProvision.value ||
+        loadingDecommission.value ||
+        loadingDelete.value
 )
 
 const serviceName = computed(() => networkConnector.network_connector_service_name)
 const customerCode = computed(() => networkConnector.customer_code)
 const isFortinet = computed(() => serviceName.value === "Fortinet")
 const isSonicwall = computed(() => serviceName.value === "Sonicwall")
+const isSentinelOne = computed(() => serviceName.value === "Sentinelone")
 
 const showFortinetForm = ref(false)
 const showSonicwallForm = ref(false)
+const showSentinelOneForm = ref(false)
 
 const fortinetOptions = ref<FortinetModel>({
     protocol: "tcp",
@@ -182,6 +235,12 @@ const fortinetOptions = ref<FortinetModel>({
 
 const sonicwallOptions = ref<SonicwallModel>({
     protocol: "tcp",
+    hot_data_retention: 1,
+    index_replicas: 0
+})
+
+const sentinelOneOptions = ref<SentinelOneModel>({
+    protocol: "tls",
     hot_data_retention: 1,
     index_replicas: 0
 })
@@ -201,6 +260,16 @@ const isSonicwallFormValid = computed(() => {
         return false
     }
     if (sonicwallOptions.value.index_replicas === null) {
+        return false
+    }
+    return true
+})
+
+const isSentinelOneFormValid = computed(() => {
+    if (sentinelOneOptions.value.hot_data_retention === null) {
+        return false
+    }
+    if (sentinelOneOptions.value.index_replicas === null) {
         return false
     }
     return true
@@ -268,6 +337,34 @@ function sonicwallProvision() {
         })
         .finally(() => {
             loadingSonicwallProvision.value = false
+        })
+}
+
+function sentinelOneProvision() {
+    loadingSentinelOneProvision.value = true
+
+    const options: SentinelOneProvision = {
+        tls_enabled: sentinelOneOptions.value.protocol === "tls",
+        hot_data_retention: sentinelOneOptions.value.hot_data_retention,
+        index_replicas: sentinelOneOptions.value.index_replicas
+    }
+
+    Api.networkConnectors
+        .sentineloneProvision(customerCode.value, serviceName.value, options)
+        .then(res => {
+            if (res.data.success) {
+                emit("deployed")
+                showSentinelOneForm.value = false
+                message.success(res.data?.message || "SentinelOne customer provisioned successfully.")
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            loadingSentinelOneProvision.value = false
         })
 }
 
