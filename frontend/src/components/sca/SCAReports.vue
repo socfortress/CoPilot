@@ -1,80 +1,80 @@
 <template>
-    <div class="sca-reports">
-        <div class="header mb-6 flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-bold mb-2">SCA Reports</h2>
-                <p class="text-secondary">Generate, manage, and download Security Configuration Assessment reports</p>
-            </div>
-            <n-button type="primary" size="large" @click="showGenerateModal = true">
-                <template #icon>
-                    <Icon :name="AddIcon" />
-                </template>
-                Generate Report
-            </n-button>
-        </div>
+	<div class="sca-reports">
+		<div class="header mb-6 flex items-center justify-between">
+			<div>
+				<h2 class="text-2xl font-bold mb-2">SCA Reports</h2>
+				<p class="text-secondary">Generate, manage, and download Security Configuration Assessment reports</p>
+			</div>
+			<n-button type="primary" size="large" @click="showGenerateModal = true">
+				<template #icon>
+					<Icon :name="AddIcon" />
+				</template>
+				Generate Report
+			</n-button>
+		</div>
 
-        <!-- Filters -->
-        <n-card class="mb-6">
-            <div class="flex gap-4">
-                <n-select
-                    v-model:value="filterCustomerCode"
-                    :options="customerOptions"
-                    placeholder="Filter by Customer"
-                    clearable
-                    filterable
-                    class="flex-1"
-                    @update:value="loadReports"
-                />
-                <n-button :loading="loading" @click="loadReports">
-                    <template #icon>
-                        <Icon :name="RefreshIcon" />
-                    </template>
-                    Refresh
-                </n-button>
-            </div>
-        </n-card>
+		<!-- Filters -->
+		<n-card class="mb-6">
+			<div class="flex gap-4">
+				<n-select
+					v-model:value="filterCustomerCode"
+					:options="customerOptions"
+					placeholder="Filter by Customer"
+					clearable
+					filterable
+					class="flex-1"
+					@update:value="loadReports"
+				/>
+				<n-button :loading="loading" @click="loadReports">
+					<template #icon>
+						<Icon :name="RefreshIcon" />
+					</template>
+					Refresh
+				</n-button>
+			</div>
+		</n-card>
 
-        <!-- Reports Table -->
-        <n-card>
-            <n-data-table
-                :columns="columns"
-                :data="reports"
-                :loading="loading"
-                :pagination="pagination"
-                :row-key="(row: SCAReport) => row.id"
-            />
-        </n-card>
+		<!-- Reports Table -->
+		<n-card>
+			<n-data-table
+				:columns="columns"
+				:data="reports"
+				:loading="loading"
+				:pagination="pagination"
+				:row-key="(row: SCAReport) => row.id"
+			/>
+		</n-card>
 
-        <!-- Generate Report Modal -->
-        <n-modal
-            v-model:show="showGenerateModal"
-            preset="card"
-            title="Generate SCA Report"
-            style="width: 600px; max-width: 90vw;"
-            :closable="true"
-        >
-            <GenerateReportForm
-                :customers="customers"
-                :loading="generating"
-                @generate="handleGenerateReport"
-                @cancel="showGenerateModal = false"
-            />
-        </n-modal>
+		<!-- Generate Report Modal -->
+		<n-modal
+			v-model:show="showGenerateModal"
+			preset="card"
+			title="Generate SCA Report"
+			style="width: 600px; max-width: 90vw;"
+			:closable="true"
+		>
+			<GenerateReportForm
+				:customers="customers"
+				:loading="generating"
+				@generate="handleGenerateReport"
+				@cancel="showGenerateModal = false"
+			/>
+		</n-modal>
 
-        <!-- Delete Confirmation Modal -->
-        <n-modal
-            v-model:show="showDeleteModal"
-            preset="dialog"
-            title="Delete Report"
-            positive-text="Delete"
-            negative-text="Cancel"
-            @positive-click="confirmDelete"
-            @negative-click="showDeleteModal = false"
-        >
-            <p>Are you sure you want to delete the report "{{ reportToDelete?.report_name }}"?</p>
-            <p class="text-secondary mt-2">This action cannot be undone.</p>
-        </n-modal>
-    </div>
+		<!-- Delete Confirmation Modal -->
+		<n-modal
+			v-model:show="showDeleteModal"
+			preset="dialog"
+			title="Delete Report"
+			positive-text="Delete"
+			negative-text="Cancel"
+			@positive-click="confirmDelete"
+			@negative-click="showDeleteModal = false"
+		>
+			<p>Are you sure you want to delete the report "{{ reportToDelete?.report_name }}"?</p>
+			<p class="text-secondary mt-2">This action cannot be undone.</p>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">

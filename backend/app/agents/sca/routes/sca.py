@@ -1,4 +1,6 @@
-from typing import Optional, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -11,16 +13,16 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
-from app.agents.sca.schema.sca import ScaStatsResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
+from app.agents.sca.schema.sca import ScaStatsResponse
+from app.agents.sca.services.sca import delete_sca_report
 from app.agents.sca.services.sca import generate_sca_csv_report
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
 from app.agents.sca.services.sca import list_sca_reports
 from app.agents.sca.services.sca import search_sca_overview
-from app.agents.sca.services.sca import delete_sca_report
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
@@ -267,10 +269,7 @@ async def generate_sca_report(
     Returns:
         SCAReportGenerateResponse: Report generation status and details
     """
-    logger.info(
-        f"Generating SCA report for customer {request.customer_code} "
-        f"with filters: {request.dict(exclude_none=True)}"
-    )
+    logger.info(f"Generating SCA report for customer {request.customer_code} " f"with filters: {request.dict(exclude_none=True)}")
 
     try:
         # Note: This will be processed synchronously for now
@@ -418,8 +417,6 @@ async def download_report(
     except Exception as e:
         logger.error(f"Error downloading SCA report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to download report: {e}")
-
-
 
 
 @sca_router.delete(

@@ -463,6 +463,7 @@ class VulnerabilityReport(SQLModel, table=True):
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
 
+
 class SCAReport(SQLModel, table=True):
     __tablename__ = "sca_reports"
 

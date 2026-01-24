@@ -1,10 +1,10 @@
 import type {
+    ScaOverviewQuery,
+    ScaOverviewResponse,
     SCAReportDeleteResponse,
     SCAReportGenerateRequest,
     SCAReportGenerateResponse,
     SCAReportListResponse,
-    ScaOverviewQuery,
-    ScaOverviewResponse,
     ScaStatsResponse
 } from "@/types/sca.d"
 import { HttpClient } from "../httpClient"

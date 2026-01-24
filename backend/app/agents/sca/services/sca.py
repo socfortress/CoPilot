@@ -16,21 +16,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import AgentScaOverviewItem
 from app.agents.sca.schema.sca import ScaOverviewResponse
+from app.agents.sca.schema.sca import SCAReportGenerateRequest
+from app.agents.sca.schema.sca import SCAReportGenerateResponse
+from app.agents.sca.schema.sca import SCAReportListResponse
+from app.agents.sca.schema.sca import SCAReportResponse
 from app.agents.sca.schema.sca import ScaStatsResponse
-from app.agents.sca.schema.sca import (
-    SCAReportGenerateRequest,
-    SCAReportGenerateResponse,
-    SCAReportListResponse,
-    SCAReportResponse,
-)
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.auth.models.users import User
-from app.data_store.data_store_operations import (
-    delete_file_from_minio,
-    retrieve_file_from_minio,
-    store_file_in_minio,
-)
-from app.db.universal_models import Agents, SCAReport
+from app.data_store.data_store_operations import delete_file_from_minio
+from app.data_store.data_store_operations import retrieve_file_from_minio
+from app.data_store.data_store_operations import store_file_in_minio
+from app.db.universal_models import Agents
+from app.db.universal_models import SCAReport
 from app.middleware.customer_access import customer_access_handler
 
 
@@ -387,6 +384,7 @@ async def get_sca_statistics(
         logger.error(f"Error getting SCA statistics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get SCA statistics: {e}")
 
+
 async def collect_sca_for_report(
     db_session: AsyncSession,
     current_user: User,
@@ -417,13 +415,11 @@ async def collect_sca_for_report(
     logger.info(
         f"Collecting ALL SCA results from Wazuh Manager for report: customer_code={customer_code}, "
         f"agent_name={agent_name}, policy_id={policy_id}, "
-        f"min_score={min_score}, max_score={max_score}"
+        f"min_score={min_score}, max_score={max_score}",
     )
 
     # Apply customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(
-        current_user, db_session
-    )
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
     if "*" not in accessible_customers and customer_code not in accessible_customers:
         logger.warning(f"User {current_user.username} denied access to customer {customer_code}")
@@ -471,9 +467,7 @@ async def generate_sca_csv_report(
     """
     try:
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         if "*" not in accessible_customers and request.customer_code not in accessible_customers:
             # If we have a report_id, update it to failed status
@@ -512,9 +506,7 @@ async def generate_sca_csv_report(
             object_key = existing_report.object_key
             bucket_name = existing_report.bucket_name
 
-            logger.info(
-                f"Generating SCA report for existing record: {report_name} (ID: {report_id})"
-            )
+            logger.info(f"Generating SCA report for existing record: {report_name} (ID: {report_id})")
         else:
             # Generate new report name for synchronous generation
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -676,9 +668,7 @@ async def generate_sca_csv_report(
                 await db_session.commit()
                 await db_session.refresh(report_record)
 
-                logger.info(
-                    f"Successfully updated SCA report: {report_name} (ID: {report_id})"
-                )
+                logger.info(f"Successfully updated SCA report: {report_name} (ID: {report_id})")
             else:
                 logger.error(f"Report ID {report_id} not found for update")
                 return SCAReportGenerateResponse(
@@ -768,9 +758,7 @@ async def list_sca_reports(
     """List available SCA reports"""
     try:
         # Get accessible customers
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
         # Build query
         query = select(SCAReport).order_by(desc(SCAReport.generated_at))
@@ -780,10 +768,7 @@ async def list_sca_reports(
             query = query.filter(SCAReport.customer_code.in_(accessible_customers))
 
         if customer_code:
-            if (
-                "*" not in accessible_customers
-                and customer_code not in accessible_customers
-            ):
+            if "*" not in accessible_customers and customer_code not in accessible_customers:
                 return SCAReportListResponse(
                     reports=[],
                     total_count=0,
@@ -842,23 +827,16 @@ async def get_sca_report_download(
     """Get SCA report for download"""
     try:
         # Get report record
-        result = await db_session.execute(
-            select(SCAReport).filter(SCAReport.id == report_id)
-        )
+        result = await db_session.execute(select(SCAReport).filter(SCAReport.id == report_id))
         report = result.scalars().first()
 
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
-        if (
-            "*" not in accessible_customers
-            and report.customer_code not in accessible_customers
-        ):
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
             raise HTTPException(status_code=403, detail="Access denied to this report")
 
         # Retrieve file from MinIO
@@ -882,6 +860,7 @@ async def get_sca_report_download(
         logger.error(f"Error retrieving SCA report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve report: {e}")
 
+
 async def delete_sca_report(
     db_session: AsyncSession,
     current_user: User,
@@ -900,23 +879,16 @@ async def delete_sca_report(
     """
     try:
         # Get report record
-        result = await db_session.execute(
-            select(SCAReport).filter(SCAReport.id == report_id)
-        )
+        result = await db_session.execute(select(SCAReport).filter(SCAReport.id == report_id))
         report = result.scalars().first()
 
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
         # Verify customer access
-        accessible_customers = await customer_access_handler.get_user_accessible_customers(
-            current_user, db_session
-        )
+        accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
 
-        if (
-            "*" not in accessible_customers
-            and report.customer_code not in accessible_customers
-        ):
+        if "*" not in accessible_customers and report.customer_code not in accessible_customers:
             raise HTTPException(status_code=403, detail="Access denied to this report")
 
         # Delete file from MinIO

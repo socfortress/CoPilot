@@ -1,11 +1,11 @@
+from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from datetime import datetime
-from typing import Any
-from typing import Dict
 
 
 class AgentScaOverviewItem(BaseModel):
@@ -82,8 +82,10 @@ class ScaStatsResponse(BaseModel):
     success: bool
     message: str
 
+
 class SCAReportGenerateRequest(BaseModel):
     """Request schema for generating SCA report"""
+
     customer_code: str
     report_name: Optional[str] = None  # Auto-generate if not provided
     agent_name: Optional[str] = None
@@ -94,6 +96,7 @@ class SCAReportGenerateRequest(BaseModel):
 
 class SCAReportResponse(BaseModel):
     """Response schema for SCA report details"""
+
     id: int
     report_name: str
     customer_code: str
@@ -114,6 +117,7 @@ class SCAReportResponse(BaseModel):
 
 class SCAReportListResponse(BaseModel):
     """Response schema for listing SCA reports"""
+
     reports: List[SCAReportResponse]
     total_count: int
     success: bool
@@ -122,6 +126,7 @@ class SCAReportListResponse(BaseModel):
 
 class SCAReportGenerateResponse(BaseModel):
     """Response schema for report generation"""
+
     success: bool
     message: str
     report: Optional[SCAReportResponse] = None
