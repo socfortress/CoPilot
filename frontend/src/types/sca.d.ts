@@ -71,6 +71,53 @@ export interface ScaStatsResponse {
 	message: string
 }
 
+export interface SCAReport {
+    id: number
+    report_name: string
+    customer_code: string
+    file_name: string
+    file_size: number
+    generated_at: string
+    generated_by: number
+    total_policies: number
+    total_checks: number
+    passed_count: number
+    failed_count: number
+    invalid_count: number
+    filters_applied: Record<string, string | number | boolean>
+    status: "processing" | "completed" | "failed"
+    error_message?: string | null
+    download_url: string
+}
+
+export interface SCAReportGenerateRequest {
+    customer_code: string
+    report_name?: string
+    agent_name?: string
+    policy_id?: string
+    min_score?: number
+    max_score?: number
+}
+
+export interface SCAReportGenerateResponse {
+    success: boolean
+    message: string
+    report?: SCAReport
+    error?: string
+}
+
+export interface SCAReportListResponse {
+    success: boolean
+    message: string
+    reports: SCAReport[]
+    total_count: number
+}
+
+export interface SCAReportDeleteResponse {
+    success: boolean
+    message: string
+}
+
 export enum ScaComplianceLevel {
 	Excellent = "Excellent", // 90-100%
 	Good = "Good", // 80-89%
