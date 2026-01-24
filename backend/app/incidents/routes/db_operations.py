@@ -910,6 +910,73 @@ async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession 
     )
 
 
+@incidents_db_operations_router.delete("/alerts/by-title/{title_filter}", response_model=DeleteAlertsResponse)
+async def delete_alerts_by_title_endpoint(
+    title_filter: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Delete alerts matching a title filter.
+
+    The title_filter will match any alert where the title contains the filter string.
+    For example, filtering by "File" will match "File added to the system."
+
+    Args:
+        title_filter: The string to filter alert titles by (case-insensitive partial match)
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        DeleteAlertsResponse with lists of deleted and not deleted alert IDs
+    """
+    logger.info(f"Deleting alerts with title filter '{title_filter}' for user: {current_user.username}")
+
+    # Get customer access filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    # Build query to find matching alerts
+    query = select(Alert).where(Alert.alert_name.ilike(f"%{title_filter}%"))
+
+    # Apply customer filtering if not admin/analyst
+    if "*" not in accessible_customers:
+        query = query.where(Alert.customer_code.in_(accessible_customers))
+
+    result = await db.execute(query)
+    matching_alerts = result.scalars().all()
+
+    if not matching_alerts:
+        return DeleteAlertsResponse(
+            message=f"No alerts found matching title filter: {title_filter}",
+            deleted_alert_ids=[],
+            not_deleted_alert_ids=[],
+            success=True,
+        )
+
+    deleted_alert_ids = []
+    not_deleted_alert_ids = []
+
+    for alert in matching_alerts:
+        try:
+            # Check if alert is linked to a case
+            await is_alert_linked_to_case(alert.id, db)
+            # Delete the alert
+            await delete_alert(alert.id, db)
+            deleted_alert_ids.append(alert.id)
+        except HTTPException as e:
+            if e.status_code == 400:
+                logger.info(f"Alert {alert.id} is linked to a case and cannot be deleted. Skipping.")
+                not_deleted_alert_ids.append(alert.id)
+            else:
+                raise e
+
+    return DeleteAlertsResponse(
+        message=f"Processed {len(matching_alerts)} alerts matching '{title_filter}'. Deleted: {len(deleted_alert_ids)}, Skipped: {len(not_deleted_alert_ids)}",
+        deleted_alert_ids=deleted_alert_ids,
+        not_deleted_alert_ids=not_deleted_alert_ids,
+        success=True,
+    )
+
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=AlertOutResponse)
 async def list_alerts_by_status_endpoint(
     status: AlertStatus,
