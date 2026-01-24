@@ -1,260 +1,260 @@
 <template>
-    <div class="alerts-list">
-        <div ref="header" class="flex items-center justify-end gap-2">
-            <div class="info flex grow gap-2 lg:hidden!">
-                <n-popover overlap placement="left">
-                    <template #trigger>
-                        <div class="bg-default rounded-lg">
-                            <n-button size="small" class="cursor-help!">
-                                <template #icon>
-                                    <Icon :name="InfoIcon" />
-                                </template>
-                            </n-button>
-                        </div>
-                    </template>
-                    <div class="flex flex-col gap-2">
-                        <div class="box">
-                            Total :
-                            <code>
-                                <span v-if="totalFiltered === total">{{ total }}</span>
-                                <span v-else>
-                                    <span>{{ totalFiltered }}</span>
-                                    <span class="opacity-50">/</span>
-                                    <span class="opacity-50">{{ total }}</span>
-                                </span>
-                            </code>
-                        </div>
-                        <div class="box text-error">
-                            Open :
-                            <code>{{ statusOpenTotal }}</code>
-                        </div>
-                        <div class="box text-warning">
-                            In Progress :
-                            <code>{{ statusInProgressTotal }}</code>
-                        </div>
-                        <div class="box text-success">
-                            Close :
-                            <code>{{ statusCloseTotal }}</code>
-                        </div>
-                    </div>
-                </n-popover>
-            </div>
-            <div class="info hidden grow items-center gap-1 text-sm lg:flex">
-                <n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
-                    <div class="flex items-center gap-2">
-                        <span>Total</span>
-                        <code class="py-1">
-                            <span v-if="totalFiltered === total">{{ total }}</span>
-                            <span v-else class="flex gap-1">
-                                <span>{{ totalFiltered }}</span>
-                                <span class="opacity-50">/</span>
-                                <span class="opacity-50">{{ total }}</span>
-                            </span>
-                        </code>
-                    </div>
-                </n-button>
-                <span>/</span>
-                <n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
-                    <div class="flex items-center gap-2">
-                        <span>Open</span>
-                        <code class="text-error py-1">{{ statusOpenTotal }}</code>
-                    </div>
-                </n-button>
-                <span>/</span>
-                <n-button
-                    quaternary
-                    size="small"
-                    @click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
-                >
-                    <div class="flex items-center gap-2">
-                        <span>In Progress</span>
-                        <code class="text-warning py-1">{{ statusInProgressTotal }}</code>
-                    </div>
-                </n-button>
-                <span>/</span>
-                <n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
-                    <div class="flex items-center gap-2">
-                        <span>Close</span>
-                        <code class="text-success py-1">{{ statusCloseTotal }}</code>
-                    </div>
-                </n-button>
-            </div>
-            <n-pagination
-                v-model:page="currentPage"
-                v-model:page-size="pageSize"
-                :page-slot="pageSlot"
-                :show-size-picker="showSizePicker"
-                :page-sizes="pageSizes"
-                :item-count="totalFiltered"
-                :simple="simpleMode"
-            />
-            <n-select
-                v-model:value="sort"
-                size="small"
-                :options="sortOptions"
-                :show-checkmark="false"
-                class="max-w-20"
-                :disabled="loading"
-            />
+	<div class="alerts-list">
+		<div ref="header" class="flex items-center justify-end gap-2">
+			<div class="info flex grow gap-2 lg:hidden!">
+				<n-popover overlap placement="left">
+					<template #trigger>
+						<div class="bg-default rounded-lg">
+							<n-button size="small" class="cursor-help!">
+								<template #icon>
+									<Icon :name="InfoIcon" />
+								</template>
+							</n-button>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2">
+						<div class="box">
+							Total :
+							<code>
+								<span v-if="totalFiltered === total">{{ total }}</span>
+								<span v-else>
+									<span>{{ totalFiltered }}</span>
+									<span class="opacity-50">/</span>
+									<span class="opacity-50">{{ total }}</span>
+								</span>
+							</code>
+						</div>
+						<div class="box text-error">
+							Open :
+							<code>{{ statusOpenTotal }}</code>
+						</div>
+						<div class="box text-warning">
+							In Progress :
+							<code>{{ statusInProgressTotal }}</code>
+						</div>
+						<div class="box text-success">
+							Close :
+							<code>{{ statusCloseTotal }}</code>
+						</div>
+					</div>
+				</n-popover>
+			</div>
+			<div class="info hidden grow items-center gap-1 text-sm lg:flex">
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
+					<div class="flex items-center gap-2">
+						<span>Total</span>
+						<code class="py-1">
+							<span v-if="totalFiltered === total">{{ total }}</span>
+							<span v-else class="flex gap-1">
+								<span>{{ totalFiltered }}</span>
+								<span class="opacity-50">/</span>
+								<span class="opacity-50">{{ total }}</span>
+							</span>
+						</code>
+					</div>
+				</n-button>
+				<span>/</span>
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
+					<div class="flex items-center gap-2">
+						<span>Open</span>
+						<code class="text-error py-1">{{ statusOpenTotal }}</code>
+					</div>
+				</n-button>
+				<span>/</span>
+				<n-button
+					quaternary
+					size="small"
+					@click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
+				>
+					<div class="flex items-center gap-2">
+						<span>In Progress</span>
+						<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
+					</div>
+				</n-button>
+				<span>/</span>
+				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
+					<div class="flex items-center gap-2">
+						<span>Close</span>
+						<code class="text-success py-1">{{ statusCloseTotal }}</code>
+					</div>
+				</n-button>
+			</div>
+			<n-pagination
+				v-model:page="currentPage"
+				v-model:page-size="pageSize"
+				:page-slot="pageSlot"
+				:show-size-picker="showSizePicker"
+				:page-sizes="pageSizes"
+				:item-count="totalFiltered"
+				:simple="simpleMode"
+			/>
+			<n-select
+				v-model:value="sort"
+				size="small"
+				:options="sortOptions"
+				:show-checkmark="false"
+				class="max-w-20"
+				:disabled="loading"
+			/>
 
-            <n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
-                <n-button size="small" secondary @click="showFiltersView = !showFiltersView">
-                    <template #icon>
-                        <Icon :name="FilterIcon" />
-                    </template>
-                </n-button>
-            </n-badge>
+			<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
+				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+					<template #icon>
+						<Icon :name="FilterIcon" />
+					</template>
+				</n-button>
+			</n-badge>
 
-            <n-button size="small" secondary @click="showDeleteByTitleModal = true">
-                <template #icon>
-                    <Icon :name="TrashIcon" />
-                </template>
-                <span class="hidden sm:inline">Bulk Delete</span>
-            </n-button>
-        </div>
+			<n-button size="small" secondary @click="showDeleteByTitleModal = true">
+				<template #icon>
+					<Icon :name="TrashIcon" />
+				</template>
+				<span class="hidden sm:inline">Bulk Delete</span>
+			</n-button>
+		</div>
 
-        <CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
-            <AlertsFilters
-                :use-query-string="!preset?.length"
-                :preset
-                class="p-3"
-                @submit="applyFilters"
-                @mounted="filtersCTX = $event"
-            />
-        </CollapseKeepAlive>
+		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
+			<AlertsFilters
+				:use-query-string="!preset?.length"
+				:preset
+				class="p-3"
+				@submit="applyFilters"
+				@mounted="filtersCTX = $event"
+			/>
+		</CollapseKeepAlive>
 
-        <n-collapse-transition
-            :show="!!checkedAlerts.length"
-            style="position: sticky; top: calc(var(--toolbar-height) - 24px); z-index: 1"
-        >
-            <n-card content-class="flex flex-wrap items-center gap-3" size="small" class="mt-3 shadow-xl" embedded>
-                <n-popover content-class="p-0!">
-                    <template #trigger>
-                        <n-button secondary size="small">
-                            <div class="flex min-w-8 items-center gap-2">
-                                <span>Selected</span>
-                                <n-badge
-                                    :value="checkedAlerts.length"
-                                    color="rgba(var(--border-color-rgb) / 0.3)"
-                                    class="font-mono!"
-                                />
-                            </div>
-                        </n-button>
-                    </template>
-                    <template #default>
-                        <div class="py-4">
-                            <n-scrollbar trigger="none" class="max-h-150 px-3 [&_.n-scrollbar-container]:rounded-lg">
-                                <div class="flex max-w-lg flex-col gap-2">
-                                    <AlertItem
-                                        v-for="alert of checkedAlerts"
-                                        :key="alert.id"
-                                        embedded
-                                        compact
-                                        selectable
-                                        checked
-                                        :alert-data="alert"
-                                        @check="toggleCheck(alert)"
-                                        @deleted="deleted(alert)"
-                                        @updated="updateAlert($event)"
-                                    />
-                                </div>
-                            </n-scrollbar>
-                        </div>
-                    </template>
-                    <template #footer>
-                        <div class="flex justify-between">
-                            <n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
-                            <n-button size="small" secondary @click="resetChecked()">Uncheck all</n-button>
-                        </div>
-                    </template>
-                </n-popover>
+		<n-collapse-transition
+			:show="!!checkedAlerts.length"
+			style="position: sticky; top: calc(var(--toolbar-height) - 24px); z-index: 1"
+		>
+			<n-card content-class="flex flex-wrap items-center gap-3" size="small" class="mt-3 shadow-xl" embedded>
+				<n-popover content-class="p-0!">
+					<template #trigger>
+						<n-button secondary size="small">
+							<div class="flex min-w-8 items-center gap-2">
+								<span>Selected</span>
+								<n-badge
+									:value="checkedAlerts.length"
+									color="rgba(var(--border-color-rgb) / 0.3)"
+									class="font-mono!"
+								/>
+							</div>
+						</n-button>
+					</template>
+					<template #default>
+						<div class="py-4">
+							<n-scrollbar trigger="none" class="max-h-150 px-3 [&_.n-scrollbar-container]:rounded-lg">
+								<div class="flex max-w-lg flex-col gap-2">
+									<AlertItem
+										v-for="alert of checkedAlerts"
+										:key="alert.id"
+										embedded
+										compact
+										selectable
+										checked
+										:alert-data="alert"
+										@check="toggleCheck(alert)"
+										@deleted="deleted(alert)"
+										@updated="updateAlert($event)"
+									/>
+								</div>
+							</n-scrollbar>
+						</div>
+					</template>
+					<template #footer>
+						<div class="flex justify-between">
+							<n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
+							<n-button size="small" secondary @click="resetChecked()">Uncheck all</n-button>
+						</div>
+					</template>
+				</n-popover>
 
-                <AlertMergeCaseButton
-                    v-if="checkedNoLinkedAlerts.length"
-                    :alerts="checkedNoLinkedAlerts"
-                    size="small"
-                    @updated="updateAlert"
-                    @merged="resetChecked()"
-                />
+				<AlertMergeCaseButton
+					v-if="checkedNoLinkedAlerts.length"
+					:alerts="checkedNoLinkedAlerts"
+					size="small"
+					@updated="updateAlert"
+					@merged="resetChecked()"
+				/>
 
-                <n-popconfirm to="body" @positive-click="deleteAlerts()">
-                    <template #trigger>
-                        <n-button size="small" type="error" secondary :loading="deleting">
-                            <template #icon>
-                                <Icon :name="TrashIcon" />
-                            </template>
-                            Delete
-                        </n-button>
-                    </template>
-                    Are you sure you want to delete selected Alerts?
-                </n-popconfirm>
-            </n-card>
-        </n-collapse-transition>
+				<n-popconfirm to="body" @positive-click="deleteAlerts()">
+					<template #trigger>
+						<n-button size="small" type="error" secondary :loading="deleting">
+							<template #icon>
+								<Icon :name="TrashIcon" />
+							</template>
+							Delete
+						</n-button>
+					</template>
+					Are you sure you want to delete selected Alerts?
+				</n-popconfirm>
+			</n-card>
+		</n-collapse-transition>
 
-        <n-modal
-            v-model:show="showDeleteByTitleModal"
-            preset="dialog"
-            title="Delete Alerts by Title"
-            :positive-text="deletingByTitle ? 'Deleting...' : 'Delete'"
-            negative-text="Cancel"
-            :positive-button-props="{ disabled: !titleFilterInput || deletingByTitle }"
-            @positive-click="deleteAlertsByTitle"
-        >
-            <div class="flex flex-col gap-4">
-                <p class="text-sm opacity-70">
-                    Delete all alerts matching a title filter. This will perform a partial, case-insensitive match.
-                </p>
-                <n-input
-                    v-model:value="titleFilterInput"
-                    placeholder="e.g., 'File' to match 'File added to the system.'"
-                    :disabled="deletingByTitle"
-                    @keyup.enter="titleFilterInput && deleteAlertsByTitle()"
-                >
-                    <template #prefix>
-                        <Icon :name="FilterIcon" />
-                    </template>
-                </n-input>
-                <n-alert v-if="titleFilterInput" type="warning" :bordered="false">
-                    This will delete all alerts with titles containing "{{ titleFilterInput }}".
-                    <br />
-                    <strong>This action cannot be undone.</strong>
-                </n-alert>
-            </div>
-        </n-modal>
+		<n-modal
+			v-model:show="showDeleteByTitleModal"
+			preset="dialog"
+			title="Delete Alerts by Title"
+			:positive-text="deletingByTitle ? 'Deleting...' : 'Delete'"
+			negative-text="Cancel"
+			:positive-button-props="{ disabled: !titleFilterInput || deletingByTitle }"
+			@positive-click="deleteAlertsByTitle"
+		>
+			<div class="flex flex-col gap-4">
+				<p class="text-sm opacity-70">
+					Delete all alerts matching a title filter. This will perform a partial, case-insensitive match.
+				</p>
+				<n-input
+					v-model:value="titleFilterInput"
+					placeholder="e.g., 'File' to match 'File added to the system.'"
+					:disabled="deletingByTitle"
+					@keyup.enter="titleFilterInput && deleteAlertsByTitle()"
+				>
+					<template #prefix>
+						<Icon :name="FilterIcon" />
+					</template>
+				</n-input>
+				<n-alert v-if="titleFilterInput" type="warning" :bordered="false">
+					This will delete all alerts with titles containing "{{ titleFilterInput }}".
+					<br />
+					<strong>This action cannot be undone.</strong>
+				</n-alert>
+			</div>
+		</n-modal>
 
-        <n-spin :show="loading">
-            <div class="my-3 flex min-h-52 flex-col gap-2">
-                <template v-if="alertsList.length">
-                    <AlertItem
-                        v-for="alert of alertsList"
-                        :key="alert.id"
-                        selectable
-                        :checked="isChecked(alert)"
-                        :alert-data="alert"
-                        :highlight="highlight === alert.id.toString()"
-                        :details-on-mounted="highlight === alert.id.toString() && !highlightedItemOpened"
-                        class="item-appear item-appear-bottom item-appear-005"
-                        @check="toggleCheck(alert)"
-                        @opened="highlightedItemOpened = true"
-                        @deleted="deleted(alert)"
-                        @updated="updateAlert($event)"
-                    />
-                </template>
-                <template v-else>
-                    <n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
-                </template>
-            </div>
-        </n-spin>
-        <div class="footer flex justify-end">
-            <n-pagination
-                v-if="alertsList.length > 3"
-                v-model:page="currentPage"
-                :page-size="pageSize"
-                :item-count="totalFiltered"
-                :page-slot="6"
-            />
-        </div>
-    </div>
+		<n-spin :show="loading">
+			<div class="my-3 flex min-h-52 flex-col gap-2">
+				<template v-if="alertsList.length">
+					<AlertItem
+						v-for="alert of alertsList"
+						:key="alert.id"
+						selectable
+						:checked="isChecked(alert)"
+						:alert-data="alert"
+						:highlight="highlight === alert.id.toString()"
+						:details-on-mounted="highlight === alert.id.toString() && !highlightedItemOpened"
+						class="item-appear item-appear-bottom item-appear-005"
+						@check="toggleCheck(alert)"
+						@opened="highlightedItemOpened = true"
+						@deleted="deleted(alert)"
+						@updated="updateAlert($event)"
+					/>
+				</template>
+				<template v-else>
+					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
+				</template>
+			</div>
+		</n-spin>
+		<div class="footer flex justify-end">
+			<n-pagination
+				v-if="alertsList.length > 3"
+				v-model:page="currentPage"
+				:page-size="pageSize"
+				:item-count="totalFiltered"
+				:page-slot="6"
+			/>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">

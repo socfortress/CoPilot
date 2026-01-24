@@ -977,6 +977,7 @@ async def delete_alerts_by_title_endpoint(
         success=True,
     )
 
+
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=AlertOutResponse)
 async def list_alerts_by_status_endpoint(
     status: AlertStatus,
