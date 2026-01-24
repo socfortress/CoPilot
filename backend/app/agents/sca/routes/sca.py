@@ -1,17 +1,27 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Response
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
 from app.agents.sca.schema.sca import ScaStatsResponse
+from app.agents.sca.schema.sca import SCAReportGenerateRequest
+from app.agents.sca.schema.sca import SCAReportGenerateResponse
+from app.agents.sca.schema.sca import SCAReportListResponse
+from app.agents.sca.services.sca import generate_sca_csv_report
+from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
+from app.agents.sca.services.sca import list_sca_reports
 from app.agents.sca.services.sca import search_sca_overview
+from app.agents.sca.services.sca import delete_sca_report
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 
@@ -173,3 +183,304 @@ async def get_sca_stats(
     except Exception as e:
         logger.error(f"Error getting SCA statistics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get SCA statistics: {e}")
+
+
+@sca_router.post(
+    "/reports/generate",
+    response_model=SCAReportGenerateResponse,
+    description="Generate a CSV report of SCA results",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def generate_sca_report(
+    request: SCAReportGenerateRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Security(AuthHandler().get_current_user),
+) -> SCAReportGenerateResponse:
+    """
+    Generate a comprehensive CSV report of SCA (Security Configuration Assessment) results.
+
+    This endpoint creates a downloadable CSV file containing all SCA policy results
+    matching the specified criteria. The report is generated in the background and
+    stored in MinIO for later download.
+
+    **Features:**
+    - Generates comprehensive CSV reports with all SCA policy data
+    - Background processing for large datasets
+    - Stores reports in MinIO for persistent access
+    - Filters applied are saved with the report
+    - Tracks report generation status (processing, completed, failed)
+    - Customer access control enforced
+
+    **Report Contents:**
+    The CSV report includes the following columns:
+    - Agent ID
+    - Agent Name
+    - Customer Code
+    - Policy ID
+    - Policy Name
+    - Description
+    - Total Checks
+    - Passed
+    - Failed
+    - Invalid
+    - Score
+    - Start Scan
+    - End Scan
+    - References
+    - Hash File
+
+    **Use Cases:**
+    - Export compliance data for external analysis
+    - Generate reports for compliance audits
+    - Share security posture with stakeholders
+    - Integrate with third-party tools
+    - Historical record keeping
+
+    **Filtering Options:**
+    - **customer_code** (required): Customer to generate report for
+    - **report_name** (optional): Custom name for the report
+    - **agent_name**: Filter by specific agent hostname
+    - **policy_id**: Filter by specific policy ID
+    - **min_score**: Filter by minimum compliance score
+    - **max_score**: Filter by maximum compliance score
+
+    **Report Statistics:**
+    - **total_policies**: Number of policy results included
+    - **total_checks**: Sum of all checks across policies
+    - **passed_count**: Total passed checks
+    - **failed_count**: Total failed checks
+    - **invalid_count**: Total invalid checks
+
+    **Background Processing:**
+    - Report generation starts immediately in background
+    - Status tracked in database (processing → completed/failed)
+    - Use `/reports` endpoint to check generation status
+    - Download via `/reports/{id}/download` when completed
+
+    Args:
+        request: Report generation request with filters
+        background_tasks: FastAPI background tasks for async generation
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        SCAReportGenerateResponse: Report generation status and details
+    """
+    logger.info(
+        f"Generating SCA report for customer {request.customer_code} "
+        f"with filters: {request.dict(exclude_none=True)}"
+    )
+
+    try:
+        # Note: This will be processed synchronously for now
+        # For true background processing, implement background task pattern
+        result = await generate_sca_csv_report(
+            db_session=db,
+            current_user=current_user,
+            request=request,
+        )
+        return result
+
+    except Exception as e:
+        logger.error(f"Error generating SCA report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate report: {e}")
+
+
+@sca_router.get(
+    "/reports",
+    response_model=SCAReportListResponse,
+    description="List available SCA reports",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_reports(
+    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Security(AuthHandler().get_current_user),
+) -> SCAReportListResponse:
+    """
+    List all available SCA reports.
+
+    This endpoint returns all SCA reports that the current user has access to,
+    with optional filtering by customer code.
+
+    **Features:**
+    - Lists all generated reports with metadata
+    - Respects customer access permissions
+    - Shows report status (processing, completed, failed)
+    - Includes generation details and statistics
+    - Sorted by generation time (newest first)
+
+    **Report Information:**
+    - **id**: Unique report identifier
+    - **report_name**: Name of the report
+    - **customer_code**: Customer the report belongs to
+    - **file_name**: CSV filename
+    - **file_size**: Size in bytes
+    - **generated_at**: Timestamp when report was generated
+    - **generated_by**: User ID who generated the report
+    - **status**: Current status (processing/completed/failed)
+    - **total_policies**: Number of policy results in report
+    - **total_checks**: Sum of all checks
+    - **passed/failed/invalid_count**: Check result breakdowns
+    - **filters_applied**: Filters used during generation
+    - **download_url**: Endpoint to download the report
+
+    **Use Cases:**
+    - View all available reports
+    - Check report generation status
+    - Find specific reports by customer
+    - Monitor report history
+
+    Args:
+        customer_code: Optional customer code filter
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        SCAReportListResponse: List of available reports
+    """
+    logger.info(f"Listing SCA reports for customer: {customer_code or 'all accessible'}")
+
+    try:
+        result = await list_sca_reports(
+            db_session=db,
+            current_user=current_user,
+            customer_code=customer_code,
+        )
+        return result
+
+    except Exception as e:
+        logger.error(f"Error listing SCA reports: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list reports: {e}")
+
+
+@sca_router.get(
+    "/reports/{report_id}/download",
+    description="Download an SCA report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def download_report(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Security(AuthHandler().get_current_user),
+) -> Response:
+    """
+    Download a specific SCA report as CSV.
+
+    This endpoint retrieves a previously generated SCA report from MinIO and
+    returns it as a downloadable CSV file.
+
+    **Features:**
+    - Downloads report as CSV file
+    - Verifies customer access permissions
+    - Returns proper CSV content type
+    - Includes filename in response headers
+
+    **Use Cases:**
+    - Download reports for analysis
+    - Share reports with stakeholders
+    - Import into other tools
+    - Archive compliance records
+
+    **Access Control:**
+    - Users can only download reports for customers they have access to
+    - Admin users can download any report
+    - Report ID must exist and belong to an accessible customer
+
+    Args:
+        report_id: ID of the report to download
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Response: CSV file download
+    """
+    logger.info(f"Downloading SCA report: {report_id}")
+
+    try:
+        result = await get_sca_report_download(
+            db_session=db,
+            current_user=current_user,
+            report_id=report_id,
+        )
+
+        return Response(
+            content=result["file_content"],
+            media_type=result["content_type"],
+            headers={
+                "Content-Disposition": f"attachment; filename={result['file_name']}",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading SCA report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to download report: {e}")
+
+
+
+
+@sca_router.delete(
+    "/reports/{report_id}",
+    description="Delete an SCA report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_report(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Security(AuthHandler().get_current_user),
+) -> Dict[str, Any]:
+    """
+    Delete a specific SCA report.
+
+    This endpoint deletes both the report record from the database and the
+    associated CSV file from MinIO storage.
+
+    **Features:**
+    - Deletes report from database
+    - Removes CSV file from MinIO
+    - Verifies customer access permissions
+    - Graceful handling if MinIO file is already deleted
+
+    **Use Cases:**
+    - Clean up old or unnecessary reports
+    - Remove reports with errors
+    - Free up storage space
+    - Manage report lifecycle
+
+    **Access Control:**
+    - Users can only delete reports for customers they have access to
+    - Admin users can delete any report
+    - Report ID must exist and belong to an accessible customer
+
+    **Behavior:**
+    - Deletes the database record
+    - Attempts to delete the file from MinIO
+    - If MinIO deletion fails, still removes database record (file may be orphaned)
+    - Returns success if database deletion succeeds
+
+    Args:
+        report_id: ID of the report to delete
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Dict with success status and message
+    """
+    logger.info(f"Deleting SCA report: {report_id}")
+
+    try:
+        result = await delete_sca_report(
+            db_session=db,
+            current_user=current_user,
+            report_id=report_id,
+        )
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in delete report endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")

@@ -462,3 +462,40 @@ class VulnerabilityReport(SQLModel, table=True):
 
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
+
+class SCAReport(SQLModel, table=True):
+    __tablename__ = "sca_reports"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Report metadata
+    report_name: str = Field(max_length=255, nullable=False)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+
+    # MinIO storage details
+    bucket_name: str = Field(max_length=255, nullable=False, default="sca-reports")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: customer_code/report_name_timestamp.csv
+    file_name: str = Field(max_length=255, nullable=False)  # CSV filename
+    file_size: int = Field(nullable=False, default=0)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False, default="pending")  # SHA-256 hash
+
+    # Report generation details
+    generated_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    generated_by: int = Field(nullable=False)  # User ID who generated the report
+
+    # Report filters applied
+    filters_json: Optional[str] = Field(sa_column=Column(Text), nullable=True)  # JSON string of filters used
+
+    # SCA Statistics
+    total_policies: int = Field(default=0)  # Number of policy results in report
+    total_checks: int = Field(default=0)  # Sum of all checks across policies
+    passed_count: int = Field(default=0)  # Sum of passed checks
+    failed_count: int = Field(default=0)  # Sum of failed checks
+    invalid_count: int = Field(default=0)  # Sum of invalid/not applicable checks
+
+    # Status tracking (for background generation)
+    status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed
+    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+
+    # Relationship to Customers table
+    customer: Optional["Customers"] = Relationship()

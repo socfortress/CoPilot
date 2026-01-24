@@ -3,6 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from datetime import datetime
+from typing import Any
+from typing import Dict
 
 
 class AgentScaOverviewItem(BaseModel):
@@ -78,3 +81,48 @@ class ScaStatsResponse(BaseModel):
     by_customer: dict = {}
     success: bool
     message: str
+
+class SCAReportGenerateRequest(BaseModel):
+    """Request schema for generating SCA report"""
+    customer_code: str
+    report_name: Optional[str] = None  # Auto-generate if not provided
+    agent_name: Optional[str] = None
+    policy_id: Optional[str] = None
+    min_score: Optional[int] = Field(None, ge=0, le=100, description="Minimum score filter")
+    max_score: Optional[int] = Field(None, ge=0, le=100, description="Maximum score filter")
+
+
+class SCAReportResponse(BaseModel):
+    """Response schema for SCA report details"""
+    id: int
+    report_name: str
+    customer_code: str
+    file_name: str
+    file_size: int
+    generated_at: datetime
+    generated_by: int
+    total_policies: int
+    total_checks: int
+    passed_count: int
+    failed_count: int
+    invalid_count: int
+    filters_applied: Dict[str, Any]
+    status: str  # processing, completed, failed
+    error_message: Optional[str] = None
+    download_url: Optional[str] = None
+
+
+class SCAReportListResponse(BaseModel):
+    """Response schema for listing SCA reports"""
+    reports: List[SCAReportResponse]
+    total_count: int
+    success: bool
+    message: str
+
+
+class SCAReportGenerateResponse(BaseModel):
+    """Response schema for report generation"""
+    success: bool
+    message: str
+    report: Optional[SCAReportResponse] = None
+    error: Optional[str] = None
