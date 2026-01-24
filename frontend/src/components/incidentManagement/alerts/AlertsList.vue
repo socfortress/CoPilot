@@ -104,6 +104,13 @@
 					</template>
 				</n-button>
 			</n-badge>
+
+			<n-button size="small" secondary @click="showDeleteByTitleModal = true">
+				<template #icon>
+					<Icon :name="TrashIcon" />
+				</template>
+				<span class="hidden sm:inline">Bulk Delete</span>
+			</n-button>
 		</div>
 
 		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
@@ -184,6 +191,37 @@
 			</n-card>
 		</n-collapse-transition>
 
+		<n-modal
+			v-model:show="showDeleteByTitleModal"
+			preset="dialog"
+			title="Delete Alerts by Title"
+			:positive-text="deletingByTitle ? 'Deleting...' : 'Delete'"
+			negative-text="Cancel"
+			:positive-button-props="{ disabled: !titleFilterInput || deletingByTitle }"
+			@positive-click="deleteAlertsByTitle"
+		>
+			<div class="flex flex-col gap-4">
+				<p class="text-sm opacity-70">
+					Delete all alerts matching a title filter. This will perform a partial, case-insensitive match.
+				</p>
+				<n-input
+					v-model:value="titleFilterInput"
+					placeholder="e.g., 'File' to match 'File added to the system.'"
+					:disabled="deletingByTitle"
+					@keyup.enter="titleFilterInput && deleteAlertsByTitle()"
+				>
+					<template #prefix>
+						<Icon :name="FilterIcon" />
+					</template>
+				</n-input>
+				<n-alert v-if="titleFilterInput" type="warning" :bordered="false">
+					This will delete all alerts with titles containing "{{ titleFilterInput }}".
+					<br />
+					<strong>This action cannot be undone.</strong>
+				</n-alert>
+			</div>
+		</n-modal>
+
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsList.length">
@@ -228,18 +266,21 @@ import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _orderBy from "lodash/orderBy"
 import {
-	NBadge,
-	NButton,
-	NCard,
-	NCollapseTransition,
-	NEmpty,
-	NPagination,
-	NPopconfirm,
-	NPopover,
-	NScrollbar,
-	NSelect,
-	NSpin,
-	useMessage
+    NAlert,
+    NBadge,
+    NButton,
+    NCard,
+    NCollapseTransition,
+    NEmpty,
+    NInput,
+    NModal,
+    NPagination,
+    NPopconfirm,
+    NPopover,
+    NScrollbar,
+    NSelect,
+    NSpin,
+    useMessage
 } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, watch } from "vue"
 import Api from "@/api"
@@ -249,13 +290,13 @@ import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
 const {
-	highlight,
-	preset,
-	showFilters = true
+    highlight,
+    preset,
+    showFilters = true
 } = defineProps<{
-	highlight?: string | null
-	preset?: AlertsListFilter[]
-	showFilters?: boolean
+    highlight?: string | null
+    preset?: AlertsListFilter[]
+    showFilters?: boolean
 }>()
 
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
@@ -269,6 +310,9 @@ const checkedNoLinkedAlerts = computed(() => checkedAlerts.value.filter(alert =>
 const message = useMessage()
 const loading = ref(false)
 const deleting = ref(false)
+const deletingByTitle = ref(false)
+const showDeleteByTitleModal = ref(false)
+const titleFilterInput = ref("")
 const showFiltersView = useStorage<boolean>("incident-management-alerts-list-filters-view-state", false, localStorage)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
@@ -284,8 +328,8 @@ const header = ref()
 const pageSlot = ref(8)
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
 const sortOptions = [
-	{ label: "Desc", value: "desc" },
-	{ label: "Asc", value: "asc" }
+    { label: "Desc", value: "desc" },
+    { label: "Asc", value: "asc" }
 ]
 
 const totalFiltered = ref(0)
@@ -298,43 +342,43 @@ const filtersCTX = ref<{ setFilter: (payload: AlertsListFilter[]) => void } | nu
 const filters = ref<AlertsListFilter[]>([])
 
 const filtered = computed<boolean>(() => {
-	return !!filters.value.length
+    return !!filters.value.length
 })
 
 const highlightedItemFound = ref(!highlight)
 const highlightedItemOpened = ref(!highlight)
 
 watch([currentPage, sort], () => {
-	getData()
+    getData()
 })
 
 watch(pageSize, () => {
-	if (currentPage.value === 1) {
-		getData()
-	} else {
-		currentPage.value = 1
-	}
+    if (currentPage.value === 1) {
+        getData()
+    } else {
+        currentPage.value = 1
+    }
 })
 
 watch(
-	alertsList,
-	() => {
-		if (
-			alertsList.value.length &&
-			!alertsList.value.find(o => o.id.toString() === highlight) &&
-			currentPage.value < totalFiltered.value &&
-			!highlightedItemFound.value
-		) {
-			nextTick(() => {
-				currentPage.value++
-			})
-		}
+    alertsList,
+    () => {
+        if (
+            alertsList.value.length &&
+            !alertsList.value.find(o => o.id.toString() === highlight) &&
+            currentPage.value < totalFiltered.value &&
+            !highlightedItemFound.value
+        ) {
+            nextTick(() => {
+                currentPage.value++
+            })
+        }
 
-		if (alertsList.value.find(o => o.id.toString() === highlight)) {
-			highlightedItemFound.value = true
-		}
-	},
-	{ immediate: true }
+        if (alertsList.value.find(o => o.id.toString() === highlight)) {
+            highlightedItemFound.value = true
+        }
+    },
+    { immediate: true }
 )
 
 provide("assignable-users", availableUsers)
@@ -342,176 +386,223 @@ provide("assignable-users", availableUsers)
 provide("linkable-cases", linkableCases)
 
 function applyFilters(newFilters: AlertsListFilter[]) {
-	filters.value = newFilters
-	getData()
+    filters.value = newFilters
+    getData()
 }
 
 function updateAlert(updatedAlert: Alert) {
-	const alertIndex = alertsList.value.findIndex(o => o.id === updatedAlert.id)
-	if (alertIndex !== -1) {
-		alertsList.value[alertIndex] = updatedAlert
-	}
+    const alertIndex = alertsList.value.findIndex(o => o.id === updatedAlert.id)
+    if (alertIndex !== -1) {
+        alertsList.value[alertIndex] = updatedAlert
+    }
 }
 
 function isChecked(alert: Alert) {
-	return !!checkedAlerts.value.find(o => o.id === alert.id)
+    return !!checkedAlerts.value.find(o => o.id === alert.id)
 }
 
 function toggleCheck(alert: Alert) {
-	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
+    const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
 
-	if (checkedAlerts.value.find(o => o.id === alert.id)) {
-		checkedAlerts.value.splice(alertIndex, 1)
-	} else {
-		checkedAlerts.value.push(alert)
-	}
+    if (checkedAlerts.value.find(o => o.id === alert.id)) {
+        checkedAlerts.value.splice(alertIndex, 1)
+    } else {
+        checkedAlerts.value.push(alert)
+    }
 }
 
 function resetChecked() {
-	checkedAlerts.value = []
+    checkedAlerts.value = []
 }
 
 function setALlChecked() {
-	for (const alert of alertsList.value) {
-		if (!isChecked(alert)) {
-			toggleCheck(alert)
-		}
-	}
+    for (const alert of alertsList.value) {
+        if (!isChecked(alert)) {
+            toggleCheck(alert)
+        }
+    }
 }
 
 function removeChecked(alert: Alert) {
-	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
+    const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
 
-	if (checkedAlerts.value.find(o => o.id === alert.id)) {
-		checkedAlerts.value.splice(alertIndex, 1)
-	}
+    if (checkedAlerts.value.find(o => o.id === alert.id)) {
+        checkedAlerts.value.splice(alertIndex, 1)
+    }
 }
 
 function deleted(alert: Alert) {
-	removeChecked(alert)
-	getData()
+    removeChecked(alert)
+    getData()
 }
 
 function getData() {
-	abortController?.abort()
-	abortController = new AbortController()
+    abortController?.abort()
+    abortController = new AbortController()
 
-	loading.value = true
+    loading.value = true
 
-	const query: Partial<AlertsQuery> = {
-		page: currentPage.value,
-		pageSize: pageSize.value,
-		sort: sort.value
-	}
+    const query: Partial<AlertsQuery> = {
+        page: currentPage.value,
+        pageSize: pageSize.value,
+        sort: sort.value
+    }
 
-	if (filtered.value) {
-		query.filters = filters.value
-	}
+    if (filtered.value) {
+        query.filters = filters.value
+    }
 
-	Api.incidentManagement.alerts
-		.getAlertsList(query, abortController.signal)
-		.then(res => {
-			if (res.data.success) {
-				alertsList.value = res.data?.alerts || []
-				total.value = res.data.total || 0
-				totalFiltered.value = res.data.total_filtered ?? total.value ?? 0
-				statusCloseTotal.value = res.data.closed || 0
-				statusInProgressTotal.value = res.data.in_progress || 0
-				statusOpenTotal.value = res.data.open || 0
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-			loading.value = false
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				alertsList.value = []
+    Api.incidentManagement.alerts
+        .getAlertsList(query, abortController.signal)
+        .then(res => {
+            if (res.data.success) {
+                alertsList.value = res.data?.alerts || []
+                total.value = res.data.total || 0
+                totalFiltered.value = res.data.total_filtered ?? total.value ?? 0
+                statusCloseTotal.value = res.data.closed || 0
+                statusInProgressTotal.value = res.data.in_progress || 0
+                statusOpenTotal.value = res.data.open || 0
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+            loading.value = false
+        })
+        .catch(err => {
+            if (!axios.isCancel(err)) {
+                alertsList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				loading.value = false
-			}
-		})
+                message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+                loading.value = false
+            }
+        })
 }
 
 function getAvailableUsers() {
-	Api.incidentManagement.alerts
-		.getAvailableUsers()
-		.then(res => {
-			if (res.data.success) {
-				availableUsers.value = res.data?.available_users || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
+    Api.incidentManagement.alerts
+        .getAvailableUsers()
+        .then(res => {
+            if (res.data.success) {
+                availableUsers.value = res.data?.available_users || []
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
 }
 
 function getCases() {
-	Api.incidentManagement.cases
-		.getCasesList()
-		.then(res => {
-			if (res.data.success) {
-				linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
+    Api.incidentManagement.cases
+        .getCasesList()
+        .then(res => {
+            if (res.data.success) {
+                linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
 }
 
 function deleteAlerts() {
-	deleting.value = true
+    deleting.value = true
 
-	Api.incidentManagement.alerts
-		.deleteAlerts(checkedAlerts.value.map(o => o.id))
-		.then(res => {
-			if (res.data.success) {
-				if (res.data.deleted_alert_ids.length) {
-					for (const id of res.data.deleted_alert_ids) {
-						toggleCheck({ id } as Alert)
-					}
+    Api.incidentManagement.alerts
+        .deleteAlerts(checkedAlerts.value.map(o => o.id))
+        .then(res => {
+            if (res.data.success) {
+                if (res.data.deleted_alert_ids.length) {
+                    for (const id of res.data.deleted_alert_ids) {
+                        toggleCheck({ id } as Alert)
+                    }
 
-					if (res.data.not_deleted_alert_ids.length) {
-						message.warning("Some alerts could not be deleted.")
-					} else {
-						message.success(res.data?.message || "Alerts deleted successfully.")
-					}
-				} else {
-					message.warning("The selected alerts could not be deleted")
-				}
+                    if (res.data.not_deleted_alert_ids.length) {
+                        message.warning("Some alerts could not be deleted.")
+                    } else {
+                        message.success(res.data?.message || "Alerts deleted successfully.")
+                    }
+                } else {
+                    message.warning("The selected alerts could not be deleted")
+                }
 
-				getData()
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			deleting.value = false
-		})
+                getData()
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            deleting.value = false
+        })
+}
+
+function deleteAlertsByTitle() {
+    if (!titleFilterInput.value) return
+
+    deletingByTitle.value = true
+
+    Api.incidentManagement.alerts
+        .deleteAlertsByTitle(titleFilterInput.value)
+        .then(res => {
+            if (res.data.success) {
+                const deletedCount = res.data.deleted_alert_ids.length
+                const skippedCount = res.data.not_deleted_alert_ids.length
+
+                if (deletedCount > 0) {
+                    if (skippedCount > 0) {
+                        message.warning(
+                            `Deleted ${deletedCount} alert(s). ${skippedCount} alert(s) were skipped (linked to cases).`
+                        )
+                    } else {
+                        message.success(`Successfully deleted ${deletedCount} alert(s).`)
+                    }
+
+                    // Clear any checked alerts that were deleted
+                    checkedAlerts.value = checkedAlerts.value.filter(
+                        alert => !res.data.deleted_alert_ids.includes(alert.id)
+                    )
+
+                    // Refresh the list
+                    getData()
+                } else {
+                    message.info("No alerts were deleted. They may be linked to cases or not found.")
+                }
+
+                // Close modal and reset input
+                showDeleteByTitleModal.value = false
+                titleFilterInput.value = ""
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            deletingByTitle.value = false
+        })
 }
 
 useResizeObserver(header, entries => {
-	const entry = entries[0]
-	const { width } = entry.contentRect
+    const entry = entries[0]
+    const { width } = entry.contentRect
 
-	pageSlot.value = width < 700 ? 5 : 8
-	simpleMode.value = width < 550
+    pageSlot.value = width < 700 ? 5 : 8
+    simpleMode.value = width < 550
 })
 
 onBeforeMount(() => {
-	if (!showFilters && preset?.length) {
-		filters.value = preset
-	}
+    if (!showFilters && preset?.length) {
+        filters.value = preset
+    }
 
-	getData()
-	getAvailableUsers()
-	getCases()
+    getData()
+    getAvailableUsers()
+    getCases()
 })
 </script>
