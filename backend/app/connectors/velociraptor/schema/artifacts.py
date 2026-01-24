@@ -138,6 +138,10 @@ class CollectArtifactBody(BaseBody):
         None,
         description="Optional parameters for the artifact, such as environment variables",
     )
+    data_store_only: Optional[bool] = Field(
+        False,
+        description="If true, only store the collected data in the datastore without sending it back immediately",
+    )
 
     class Config:
         schema_extra = {
@@ -147,6 +151,7 @@ class CollectArtifactBody(BaseBody):
                 "velociraptor_org": "root",
                 "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
                 "parameters": {"env": [{"key": "InstallART", "value": "N"}, {"key": "T1552.001 - 3", "value": "Y"}]},
+                "data_store_only": False,
             },
         }
 

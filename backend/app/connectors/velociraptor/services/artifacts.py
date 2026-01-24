@@ -437,7 +437,7 @@ async def get_artifact_parameters_by_prefix_service(
 
 async def run_artifact_collection(
     collect_artifact_body: CollectArtifactBody,
-    session: AsyncSession,  # Add session parameter
+    session: AsyncSession,
 ) -> CollectArtifactResponse:
     """
     Run an artifact collection on a client with optional parameters and upload results to MinIO.
@@ -558,14 +558,16 @@ async def run_artifact_collection(
         completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = velociraptor_service.read_collection_results(
-            client_id=collect_artifact_body.velociraptor_id,
-            flow_id=flow_id,
-            org_id=collect_artifact_body.velociraptor_org,
-            artifact=collect_artifact_body.artifact_name,
-        )
-
-        logger.info(f"Successfully read collection results on {results}")
+        # Only read collection results if data_store_only is False
+        results = None
+        if not collect_artifact_body.data_store_only:
+            results = velociraptor_service.read_collection_results(
+                client_id=collect_artifact_body.velociraptor_id,
+                flow_id=flow_id,
+                org_id=collect_artifact_body.velociraptor_org,
+                artifact=collect_artifact_body.artifact_name,
+            )
+            logger.info(f"Successfully read collection results on {results}")
 
         # Fetch the collected file from filestore and upload to MinIO
         file_data = None
@@ -603,12 +605,21 @@ async def run_artifact_collection(
             logger.warning(f"Failed to upload file to MinIO, but artifact collection succeeded: {file_err}")
             # Continue execution even if file upload fails
 
-        return CollectArtifactResponse(
-            success=results["success"],
-            message=results["message"],
-            results=results["results"],
-            file_info=file_data if file_data and file_data.get("success") else None,
-        )
+        # Build response based on data_store_only flag
+        if collect_artifact_body.data_store_only:
+            return CollectArtifactResponse(
+                success=True,
+                message="Artifact collected and stored successfully. Results not retrieved.",
+                results=None,
+                file_info=file_data if file_data and file_data.get("success") else None,
+            )
+        else:
+            return CollectArtifactResponse(
+                success=results["success"],
+                message=results["message"],
+                results=results["results"],
+                file_info=file_data if file_data and file_data.get("success") else None,
+            )
     except HTTPException as he:  # Catch HTTPException separately to propagate the original message
         logger.error(
             f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
