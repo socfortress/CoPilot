@@ -1,21 +1,5 @@
 <template>
     <n-form ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
-        <n-form-item label="Target Agents" path="agent_names" required>
-            <n-select
-                v-model:value="formValue.agent_names"
-                :options="filteredAgentOptions"
-                :loading="loadingAgents"
-                multiple
-                filterable
-                placeholder="Select target agents"
-                :max-tag-count="3"
-            >
-                <template #empty>
-                    <n-empty description="No compatible agents found" />
-                </template>
-            </n-select>
-        </n-form-item>
-
         <!-- Technology Info Alert -->
         <n-alert v-if="action?.technology" type="info" class="mb-4" size="small">
             <template #header>
@@ -29,6 +13,49 @@
                 ({{ incompatibleAgentCount }} incompatible agent{{ incompatibleAgentCount !== 1 ? 's' : '' }} hidden)
             </template>
         </n-alert>
+
+        <n-form-item label="Target Agents" path="agent_names" required>
+            <div class="flex flex-col gap-2 w-full">
+                <n-select
+                    v-model:value="formValue.agent_names"
+                    :options="filteredAgentOptions"
+                    :loading="loadingAgents"
+                    multiple
+                    filterable
+                    placeholder="Select target agents"
+                    :max-tag-count="3"
+                >
+                    <template #empty>
+                        <n-empty description="No compatible agents found" />
+                    </template>
+                </n-select>
+                <div class="flex gap-2 justify-end">
+                    <n-button
+                        secondary
+                        type="primary"
+                        size="small"
+                        :disabled="loadingAgents || filteredAgentOptions.length === 0"
+                        @click="selectAllAgents"
+                    >
+                        <template #icon>
+                            <Icon name="carbon:checkbox-checked-filled" />
+                        </template>
+                        Select All
+                    </n-button>
+                    <n-button
+                        v-if="formValue.agent_names.length > 0"
+                        secondary
+                        size="small"
+                        @click="clearAllAgents"
+                    >
+                        <template #icon>
+                            <Icon name="carbon:close" />
+                        </template>
+                        Clear
+                    </n-button>
+                </div>
+            </div>
+        </n-form-item>
 
         <!-- Parameters Section -->
         <div v-if="action?.script_parameters?.length" class="mb-4">
@@ -212,6 +239,18 @@ const incompatibleAgentCount = computed(() => {
 
     return agents.value.filter(agent => !isAgentCompatible(agent, action.technology)).length
 })
+
+// Select all filtered agents
+function selectAllAgents() {
+    formValue.value.agent_names = filteredAgentOptions.value.map(option => option.value)
+    message.success(`Selected ${formValue.value.agent_names.length} agent${formValue.value.agent_names.length !== 1 ? 's' : ''}`)
+}
+
+// Clear all selected agents
+function clearAllAgents() {
+    formValue.value.agent_names = []
+    message.info('Cleared all agents')
+}
 
 const rules: FormRules = {
     agent_names: {
