@@ -1,178 +1,178 @@
 <template>
-    <div class="contents">
-        <n-button
-            v-if="networkConnector.deployed"
-            :loading="loadingDecommission"
-            type="error"
-            :size="size"
-            secondary
-            @click.stop="decommissionNetworkConnector()"
-        >
-            <template #icon>
-                <Icon :name="DecommissionIcon" />
-            </template>
-            Decommission
-        </n-button>
+	<div class="contents">
+		<n-button
+			v-if="networkConnector.deployed"
+			:loading="loadingDecommission"
+			type="error"
+			:size="size"
+			secondary
+			@click.stop="decommissionNetworkConnector()"
+		>
+			<template #icon>
+				<Icon :name="DecommissionIcon" />
+			</template>
+			Decommission
+		</n-button>
 
-        <n-button
-            v-if="isFortinet && !networkConnector.deployed"
-            :loading="loadingFortinetProvision"
-            type="success"
-            :size="size"
-            secondary
-            @click.stop="showFortinetForm = true"
-        >
-            <template #icon>
-                <Icon :name="DeployIcon" />
-            </template>
-            Deploy
-        </n-button>
+		<n-button
+			v-if="isFortinet && !networkConnector.deployed"
+			:loading="loadingFortinetProvision"
+			type="success"
+			:size="size"
+			secondary
+			@click.stop="showFortinetForm = true"
+		>
+			<template #icon>
+				<Icon :name="DeployIcon" />
+			</template>
+			Deploy
+		</n-button>
 
-        <n-button
-            v-if="isSonicwall && !networkConnector.deployed"
-            :loading="loadingSonicwallProvision"
-            type="success"
-            :size="size"
-            secondary
-            @click.stop="showSonicwallForm = true"
-        >
-            <template #icon>
-                <Icon :name="DeployIcon" />
-            </template>
-            Deploy
-        </n-button>
+		<n-button
+			v-if="isSonicwall && !networkConnector.deployed"
+			:loading="loadingSonicwallProvision"
+			type="success"
+			:size="size"
+			secondary
+			@click.stop="showSonicwallForm = true"
+		>
+			<template #icon>
+				<Icon :name="DeployIcon" />
+			</template>
+			Deploy
+		</n-button>
 
-        <n-button
-            v-if="isSentinelOne && !networkConnector.deployed"
-            :loading="loadingSentinelOneProvision"
-            type="success"
-            :size="size"
-            secondary
-            @click.stop="showSentinelOneForm = true"
-        >
-            <template #icon>
-                <Icon :name="DeployIcon" />
-            </template>
-            Deploy
-        </n-button>
+		<n-button
+			v-if="isSentinelOne && !networkConnector.deployed"
+			:loading="loadingSentinelOneProvision"
+			type="success"
+			:size="size"
+			secondary
+			@click.stop="showSentinelOneForm = true"
+		>
+			<template #icon>
+				<Icon :name="DeployIcon" />
+			</template>
+			Deploy
+		</n-button>
 
-        <n-button
-            v-if="!hideDeleteButton"
-            :size="size"
-            type="error"
-            ghost
-            :loading="loadingDelete"
-            @click.stop="handleDelete"
-        >
-            <template #icon>
-                <Icon :name="DeleteIcon" :size="15" />
-            </template>
-            Delete
-        </n-button>
+		<n-button
+			v-if="!hideDeleteButton"
+			:size="size"
+			type="error"
+			ghost
+			:loading="loadingDelete"
+			@click.stop="handleDelete"
+		>
+			<template #icon>
+				<Icon :name="DeleteIcon" :size="15" />
+			</template>
+			Delete
+		</n-button>
 
-        <!-- Fortinet Modal -->
-        <n-modal
-            v-model:show="showFortinetForm"
-            preset="card"
-            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-            title="Fortinet options"
-            :bordered="false"
-            content-class="flex flex-col"
-            segmented
-        >
-            <n-spin v-model:show="loadingFortinetProvision">
-                <FortinetForm v-model:options="fortinetOptions" />
-            </n-spin>
+		<!-- Fortinet Modal -->
+		<n-modal
+			v-model:show="showFortinetForm"
+			preset="card"
+			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Fortinet options"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<n-spin v-model:show="loadingFortinetProvision">
+				<FortinetForm v-model:options="fortinetOptions" />
+			</n-spin>
 
-            <template #footer>
-                <div class="flex justify-end">
-                    <n-button
-                        :loading="loadingFortinetProvision"
-                        type="success"
-                        secondary
-                        :disabled="!isFortinetFormValid"
-                        @click.stop="fortinetProvision()"
-                    >
-                        <template #icon>
-                            <Icon :name="DeployIcon" />
-                        </template>
-                        Deploy
-                    </n-button>
-                </div>
-            </template>
-        </n-modal>
+			<template #footer>
+				<div class="flex justify-end">
+					<n-button
+						:loading="loadingFortinetProvision"
+						type="success"
+						secondary
+						:disabled="!isFortinetFormValid"
+						@click.stop="fortinetProvision()"
+					>
+						<template #icon>
+							<Icon :name="DeployIcon" />
+						</template>
+						Deploy
+					</n-button>
+				</div>
+			</template>
+		</n-modal>
 
-        <!-- SonicWall Modal -->
-        <n-modal
-            v-model:show="showSonicwallForm"
-            preset="card"
-            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-            title="SonicWall options"
-            :bordered="false"
-            content-class="flex flex-col"
-            segmented
-        >
-            <n-spin v-model:show="loadingSonicwallProvision">
-                <SonicwallForm v-model:options="sonicwallOptions" />
-            </n-spin>
+		<!-- SonicWall Modal -->
+		<n-modal
+			v-model:show="showSonicwallForm"
+			preset="card"
+			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="SonicWall options"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<n-spin v-model:show="loadingSonicwallProvision">
+				<SonicwallForm v-model:options="sonicwallOptions" />
+			</n-spin>
 
-            <template #footer>
-                <div class="flex justify-end">
-                    <n-button
-                        :loading="loadingSonicwallProvision"
-                        type="success"
-                        secondary
-                        :disabled="!isSonicwallFormValid"
-                        @click.stop="sonicwallProvision()"
-                    >
-                        <template #icon>
-                            <Icon :name="DeployIcon" />
-                        </template>
-                        Deploy
-                    </n-button>
-                </div>
-            </template>
-        </n-modal>
+			<template #footer>
+				<div class="flex justify-end">
+					<n-button
+						:loading="loadingSonicwallProvision"
+						type="success"
+						secondary
+						:disabled="!isSonicwallFormValid"
+						@click.stop="sonicwallProvision()"
+					>
+						<template #icon>
+							<Icon :name="DeployIcon" />
+						</template>
+						Deploy
+					</n-button>
+				</div>
+			</template>
+		</n-modal>
 
-        <!-- SentinelOne Modal -->
-        <n-modal
-            v-model:show="showSentinelOneForm"
-            preset="card"
-            :style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-            title="SentinelOne options"
-            :bordered="false"
-            content-class="flex flex-col"
-            segmented
-        >
-            <n-spin v-model:show="loadingSentinelOneProvision">
-                <SentinelOneForm v-model:options="sentinelOneOptions" />
-            </n-spin>
+		<!-- SentinelOne Modal -->
+		<n-modal
+			v-model:show="showSentinelOneForm"
+			preset="card"
+			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="SentinelOne options"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<n-spin v-model:show="loadingSentinelOneProvision">
+				<SentinelOneForm v-model:options="sentinelOneOptions" />
+			</n-spin>
 
-            <template #footer>
-                <div class="flex justify-end">
-                    <n-button
-                        :loading="loadingSentinelOneProvision"
-                        type="success"
-                        secondary
-                        :disabled="!isSentinelOneFormValid"
-                        @click.stop="sentinelOneProvision()"
-                    >
-                        <template #icon>
-                            <Icon :name="DeployIcon" />
-                        </template>
-                        Deploy
-                    </n-button>
-                </div>
-            </template>
-        </n-modal>
-    </div>
+			<template #footer>
+				<div class="flex justify-end">
+					<n-button
+						:loading="loadingSentinelOneProvision"
+						type="success"
+						secondary
+						:disabled="!isSentinelOneFormValid"
+						@click.stop="sentinelOneProvision()"
+					>
+						<template #icon>
+							<Icon :name="DeployIcon" />
+						</template>
+						Deploy
+					</n-button>
+				</div>
+			</template>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { FortinetModel } from "./provisions/FortinetForm.vue"
-import type { SonicwallModel } from "./provisions/SonicwallForm.vue"
 import type { SentinelOneModel } from "./provisions/SentinelOneForm.vue"
+import type { SonicwallModel } from "./provisions/SonicwallForm.vue"
 import type { FortinetProvision, SentinelOneProvision, SonicwallProvision } from "@/api/endpoints/networkConnectors"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
