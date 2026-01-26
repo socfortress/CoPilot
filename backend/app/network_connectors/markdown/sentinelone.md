@@ -83,7 +83,7 @@ SentinelOne forwards alerts and events from their cloud endpoints. Configure the
 
 | **SRC IP** | **DST IP** | **PORT** | **FIREWALL ACTION** | **DESCRIPTION** |
 |------------|------------|----------|---------------------|-----------------|
-| HAProxy DMZ | Graylog Server (01/02) | Provided by SOCFortress | Allow | Allow Syslog traffic DMZ → Internal |
+| HAProxy DMZ | Graylog Server (01/02) | Provided by SOCFortress | Allow | Allow Syslog traffic DMZ > Internal |
 
 ## Step 5: Configure Event and Alert Forwarding
 
