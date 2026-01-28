@@ -70,3 +70,136 @@ class SnapshotStatusResponse(BaseModel):
     )
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
+
+
+# Models for listing snapshots
+class SnapshotInfo(BaseModel):
+    """Information about a single snapshot."""
+    snapshot: str = Field(..., description="Name of the snapshot")
+    uuid: Optional[str] = Field(None, description="UUID of the snapshot")
+    version_id: Optional[int] = Field(None, description="Version ID")
+    version: Optional[str] = Field(None, description="OpenSearch version")
+    indices: List[str] = Field(default_factory=list, description="List of indices in the snapshot")
+    include_global_state: Optional[bool] = Field(None, description="Whether global state is included")
+    state: str = Field(..., description="State of the snapshot")
+    start_time: Optional[str] = Field(None, description="Start time of the snapshot")
+    start_time_in_millis: Optional[int] = Field(None, description="Start time in milliseconds")
+    end_time: Optional[str] = Field(None, description="End time of the snapshot")
+    end_time_in_millis: Optional[int] = Field(None, description="End time in milliseconds")
+    duration_in_millis: Optional[int] = Field(None, description="Duration in milliseconds")
+    failures: List[Dict[str, Any]] = Field(default_factory=list, description="List of failures")
+    shards: Dict[str, Any] = Field(default_factory=dict, description="Shard information")
+
+
+class SnapshotListResponse(BaseModel):
+    """Response model for listing snapshots."""
+    repository: str = Field(..., description="Repository name")
+    snapshots: List[SnapshotInfo] = Field(
+        default_factory=list,
+        description="List of snapshots in the repository",
+    )
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+
+# Models for restoring snapshots
+class RestoreSnapshotRequest(BaseModel):
+    """Request model for restoring a snapshot."""
+    repository: str = Field(..., description="Repository name containing the snapshot")
+    snapshot: str = Field(..., description="Name of the snapshot to restore")
+    indices: Optional[List[str]] = Field(
+        None,
+        description="List of indices to restore. If not specified, all indices are restored.",
+    )
+    ignore_unavailable: Optional[bool] = Field(
+        True,
+        description="Whether to ignore unavailable indices",
+    )
+    include_global_state: Optional[bool] = Field(
+        False,
+        description="Whether to restore the global state",
+    )
+    rename_pattern: Optional[str] = Field(
+        None,
+        description="Pattern to match indices to rename",
+        example="wazuh_(.+)",
+    )
+    rename_replacement: Optional[str] = Field(
+        None,
+        description="Replacement string for renamed indices",
+        example="restored_wazuh_$1",
+    )
+    include_aliases: Optional[bool] = Field(
+        True,
+        description="Whether to restore aliases",
+    )
+    partial: Optional[bool] = Field(
+        False,
+        description="Whether to allow partial restore",
+    )
+
+
+class RestoreShardInfo(BaseModel):
+    """Information about restored shards."""
+    total: int = Field(..., description="Total number of shards")
+    failed: int = Field(..., description="Number of failed shards")
+    successful: int = Field(..., description="Number of successful shards")
+
+
+class RestoreIndexInfo(BaseModel):
+    """Information about a restored index."""
+    index: str = Field(..., description="Index name")
+    shards: RestoreShardInfo = Field(..., description="Shard restoration info")
+
+
+class RestoreSnapshotResponse(BaseModel):
+    """Response model for snapshot restoration."""
+    snapshot: str = Field(..., description="Name of the restored snapshot")
+    repository: str = Field(..., description="Repository name")
+    indices: List[str] = Field(default_factory=list, description="List of restored indices")
+    shards: RestoreShardInfo = Field(..., description="Overall shard restoration info")
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+# Models for creating snapshots
+class CreateSnapshotRequest(BaseModel):
+    """Request model for creating a snapshot."""
+    repository: str = Field(..., description="Repository name to store the snapshot")
+    snapshot: str = Field(..., description="Name of the snapshot to create")
+    indices: Optional[List[str]] = Field(
+        None,
+        description="List of indices to include in the snapshot. If not specified, all indices are included.",
+    )
+    ignore_unavailable: Optional[bool] = Field(
+        False,
+        description="Whether to ignore unavailable indices",
+    )
+    include_global_state: Optional[bool] = Field(
+        True,
+        description="Whether to include the global cluster state in the snapshot",
+    )
+    partial: Optional[bool] = Field(
+        False,
+        description="Whether to allow partial snapshots",
+    )
+    wait_for_completion: Optional[bool] = Field(
+        False,
+        description="Whether to wait for the snapshot to complete before returning",
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Custom metadata to attach to the snapshot",
+    )
+
+
+class CreateSnapshotResponse(BaseModel):
+    """Response model for snapshot creation."""
+    snapshot: str = Field(..., description="Name of the created snapshot")
+    repository: str = Field(..., description="Repository name")
+    uuid: Optional[str] = Field(None, description="UUID of the snapshot")
+    state: Optional[str] = Field(None, description="Current state of the snapshot")
+    indices: List[str] = Field(default_factory=list, description="List of indices in the snapshot")
+    shards: Optional[RestoreShardInfo] = Field(None, description="Shard information (if wait_for_completion=true)")
+    accepted: bool = Field(..., description="Whether the snapshot request was accepted")
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
