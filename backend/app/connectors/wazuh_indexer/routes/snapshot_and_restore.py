@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Query
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,8 +31,9 @@ from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snap
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import restore_snapshot
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import update_snapshot_schedule
 from app.db.db_session import get_db
-
+from app.auth.routes.auth import AuthHandler
 wazuh_indexer_snapshots_router = APIRouter()
+auth_handler = AuthHandler()
 
 
 @wazuh_indexer_snapshots_router.get(
@@ -39,6 +41,7 @@ wazuh_indexer_snapshots_router = APIRouter()
     response_model=SnapshotRepositoryListResponse,
     summary="List Snapshot Repositories",
     description="Retrieve a list of all configured snapshot repositories in the Wazuh Indexer.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_snapshot_repositories() -> SnapshotRepositoryListResponse:
     """
@@ -65,6 +68,7 @@ async def get_snapshot_repositories() -> SnapshotRepositoryListResponse:
     response_model=SnapshotStatusResponse,
     summary="Get Snapshot Status",
     description="Retrieve the status of snapshots. Optionally filter by repository and snapshot name.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_snapshots_status(
     repository: Optional[str] = Query(
@@ -113,6 +117,8 @@ async def get_snapshots_status(
     response_model=SnapshotListResponse,
     summary="List Snapshots",
     description="Retrieve a list of all snapshots in a specific repository.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+
 )
 async def get_snapshots(
     repository: str = Path(
@@ -146,6 +152,7 @@ async def get_snapshots(
     response_model=CreateSnapshotResponse,
     summary="Create Snapshot",
     description="Create a new snapshot in a repository.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def create_snapshot_endpoint(
     request: CreateSnapshotRequest,
@@ -180,6 +187,7 @@ async def create_snapshot_endpoint(
     response_model=RestoreSnapshotResponse,
     summary="Restore Snapshot",
     description="Restore a snapshot from a repository.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def restore_snapshot_endpoint(
     request: RestoreSnapshotRequest,
@@ -214,6 +222,7 @@ async def restore_snapshot_endpoint(
     response_model=SnapshotScheduleOperationResponse,
     summary="Create Snapshot Schedule",
     description="Create a new scheduled snapshot configuration.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def create_schedule_endpoint(
     request: SnapshotScheduleCreate,
@@ -247,6 +256,7 @@ async def create_schedule_endpoint(
     response_model=SnapshotScheduleListResponse,
     summary="List Snapshot Schedules",
     description="Retrieve a list of all configured snapshot schedules.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def list_schedules_endpoint(
     enabled_only: bool = Query(
@@ -283,6 +293,7 @@ async def list_schedules_endpoint(
     response_model=SnapshotScheduleOperationResponse,
     summary="Get Snapshot Schedule",
     description="Retrieve a specific snapshot schedule by ID.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_schedule_endpoint(
     schedule_id: int = Path(..., description="ID of the schedule to retrieve"),
@@ -316,6 +327,7 @@ async def get_schedule_endpoint(
     response_model=SnapshotScheduleOperationResponse,
     summary="Update Snapshot Schedule",
     description="Update an existing snapshot schedule.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def update_schedule_endpoint(
     schedule_id: int = Path(..., description="ID of the schedule to update"),
@@ -355,6 +367,7 @@ async def update_schedule_endpoint(
     response_model=SnapshotScheduleOperationResponse,
     summary="Delete Snapshot Schedule",
     description="Delete a snapshot schedule.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def delete_schedule_endpoint(
     schedule_id: int = Path(..., description="ID of the schedule to delete"),
