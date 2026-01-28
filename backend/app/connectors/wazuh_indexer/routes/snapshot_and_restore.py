@@ -11,7 +11,6 @@ from app.connectors.wazuh_indexer.services.snapshot_and_restore import get_snaps
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snapshot_repositories
 
 wazuh_indexer_snapshots_router = APIRouter()
-#test
 
 @wazuh_indexer_snapshots_router.get(
     "/repositories",
