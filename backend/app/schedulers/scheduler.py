@@ -56,6 +56,7 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
+from app.schedulers.services.invoke_snapshot_and_restore import invoke_snapshot_schedules
 from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
@@ -144,6 +145,12 @@ async def initialize_job_metadata():
                 "time_interval": 5,
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
+            },
+            {
+                "job_id": "invoke_snapshot_schedules",
+                "time_interval": 60,
+                "function": invoke_snapshot_schedules,
+                "description": "Invokes Index snapshot schedules execution.",
             },
             # ! Mirgrated SIGMA to VELO ! #
             # {
@@ -256,6 +263,7 @@ def get_function_by_name(function_name: str):
         "resize_wazuh_index_fields": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
         "invoke_sigma_queries_collect": invoke_sigma_queries_collect,
+        "invoke_snapshot_schedules": invoke_snapshot_schedules,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collection,

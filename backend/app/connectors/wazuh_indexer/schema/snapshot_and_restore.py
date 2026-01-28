@@ -219,3 +219,97 @@ class CreateSnapshotResponse(BaseModel):
     accepted: bool = Field(..., description="Whether the snapshot request was accepted")
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
+
+
+# Models for scheduled snapshots
+class SnapshotScheduleCreate(BaseModel):
+    """Request model for creating a snapshot schedule."""
+    name: str = Field(..., description="Friendly name for this schedule")
+    index_pattern: str = Field(
+        ...,
+        description="Index pattern to snapshot (e.g., wazuh_customer_*)",
+        example="wazuh_customer_*",
+    )
+    repository: str = Field(..., description="Repository to store snapshots")
+    enabled: Optional[bool] = Field(True, description="Whether this schedule is active")
+    snapshot_prefix: Optional[str] = Field(
+        "scheduled",
+        description="Prefix for snapshot names",
+    )
+    include_global_state: Optional[bool] = Field(
+        False,
+        description="Include global cluster state",
+    )
+    skip_write_indices: Optional[bool] = Field(
+        True,
+        description="Skip indices currently being written to",
+    )
+    retention_days: Optional[int] = Field(
+        None,
+        description="Number of days to retain snapshots (None = forever)",
+    )
+
+
+class SnapshotScheduleUpdate(BaseModel):
+    """Request model for updating a snapshot schedule."""
+    name: Optional[str] = Field(None, description="Friendly name for this schedule")
+    index_pattern: Optional[str] = Field(None, description="Index pattern to snapshot")
+    repository: Optional[str] = Field(None, description="Repository to store snapshots")
+    enabled: Optional[bool] = Field(None, description="Whether this schedule is active")
+    snapshot_prefix: Optional[str] = Field(None, description="Prefix for snapshot names")
+    include_global_state: Optional[bool] = Field(None, description="Include global cluster state")
+    skip_write_indices: Optional[bool] = Field(None, description="Skip indices currently being written to")
+    retention_days: Optional[int] = Field(None, description="Number of days to retain snapshots")
+
+
+class SnapshotScheduleResponse(BaseModel):
+    """Response model for a snapshot schedule."""
+    id: int = Field(..., description="Schedule ID")
+    name: str = Field(..., description="Friendly name for this schedule")
+    index_pattern: str = Field(..., description="Index pattern to snapshot")
+    repository: str = Field(..., description="Repository to store snapshots")
+    enabled: bool = Field(..., description="Whether this schedule is active")
+    snapshot_prefix: str = Field(..., description="Prefix for snapshot names")
+    include_global_state: bool = Field(..., description="Include global cluster state")
+    skip_write_indices: bool = Field(..., description="Skip indices currently being written to")
+    retention_days: Optional[int] = Field(None, description="Number of days to retain snapshots")
+    last_execution_time: Optional[str] = Field(None, description="Last execution time")
+    last_snapshot_name: Optional[str] = Field(None, description="Name of the last snapshot created")
+    last_execution_status: Optional[str] = Field(None, description="Status of the last execution")
+    created_at: str = Field(..., description="When this schedule was created")
+    updated_at: str = Field(..., description="When this schedule was last updated")
+
+
+class SnapshotScheduleListResponse(BaseModel):
+    """Response model for listing snapshot schedules."""
+    schedules: List[SnapshotScheduleResponse] = Field(
+        default_factory=list,
+        description="List of snapshot schedules",
+    )
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+
+class SnapshotScheduleOperationResponse(BaseModel):
+    """Response model for snapshot schedule operations."""
+    schedule: Optional[SnapshotScheduleResponse] = Field(
+        None,
+        description="The snapshot schedule",
+    )
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+
+class ScheduledSnapshotExecutionResponse(BaseModel):
+    """Response model for scheduled snapshot execution."""
+    schedule_id: int = Field(..., description="Schedule ID that was executed")
+    schedule_name: str = Field(..., description="Schedule name")
+    snapshot_name: Optional[str] = Field(None, description="Name of the created snapshot")
+    indices_snapshotted: List[str] = Field(default_factory=list, description="Indices included in snapshot")
+    skipped_write_indices: List[str] = Field(default_factory=list, description="Indices skipped")
+    already_snapshotted_indices: List[str] = Field(
+        default_factory=list,
+        description="Indices skipped because they were already snapshotted",
+    )
+    success: bool = Field(..., description="Whether the execution was successful")
+    message: str = Field(..., description="Status message")
