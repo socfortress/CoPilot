@@ -32,3 +32,41 @@ class SnapshotRepositoryListResponse(BaseModel):
     )
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
+
+
+class SnapshotShardStatus(BaseModel):
+    """Status of a single shard in a snapshot."""
+    stage: str = Field(..., description="Current stage of the shard snapshot")
+    total_files: Optional[int] = Field(None, alias="total_file_count", description="Total number of files")
+    total_size_in_bytes: Optional[int] = Field(None, description="Total size in bytes")
+    processed_files: Optional[int] = Field(None, alias="processed_file_count", description="Processed files count")
+    processed_size_in_bytes: Optional[int] = Field(None, alias="done_size_in_bytes", description="Processed size in bytes")
+
+
+class SnapshotIndexStatus(BaseModel):
+    """Status of an index within a snapshot."""
+    shards_stats: Dict[str, Any] = Field(default_factory=dict, description="Shard statistics")
+    stats: Dict[str, Any] = Field(default_factory=dict, description="Index statistics")
+    shards: Dict[str, SnapshotShardStatus] = Field(default_factory=dict, description="Individual shard statuses")
+
+
+class SnapshotStatus(BaseModel):
+    """Status of a single snapshot."""
+    snapshot: str = Field(..., description="Name of the snapshot")
+    repository: str = Field(..., description="Repository containing the snapshot")
+    uuid: Optional[str] = Field(None, description="UUID of the snapshot")
+    state: str = Field(..., description="Current state of the snapshot")
+    include_global_state: Optional[bool] = Field(None, description="Whether global state is included")
+    shards_stats: Dict[str, Any] = Field(default_factory=dict, description="Shard statistics")
+    stats: Dict[str, Any] = Field(default_factory=dict, description="Snapshot statistics")
+    indices: Dict[str, SnapshotIndexStatus] = Field(default_factory=dict, description="Index statuses")
+
+
+class SnapshotStatusResponse(BaseModel):
+    """Response model for snapshot status."""
+    snapshots: List[SnapshotStatus] = Field(
+        default_factory=list,
+        description="List of snapshot statuses",
+    )
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
