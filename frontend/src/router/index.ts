@@ -20,11 +20,27 @@ const router = createRouter({
 			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
-			path: "/indices",
-			name: "Indices",
-			component: () => import("@/views/Indices.vue"),
-			meta: { title: "Indices", auth: true, roles: RouteRole.All }
-		},
+            path: "/indices",
+            redirect: "/indices/management",
+            meta: {
+                auth: true,
+                roles: RouteRole.All
+            },
+            children: [
+                {
+                    path: "management",
+                    name: "Indices",
+                    component: () => import("@/views/Indices.vue"),
+                    meta: { title: "Index Management" }
+                },
+                {
+                    path: "snapshots",
+                    name: "Snapshots",
+                    component: () => import("@/views/Snapshots.vue"),
+                    meta: { title: "Snapshot & Restore" }
+                }
+            ]
+        },
 		{
 			path: "/connectors",
 			name: "Connectors",

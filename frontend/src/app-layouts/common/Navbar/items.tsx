@@ -37,18 +37,37 @@ export default function getItems(): MenuMixedOption[] {
             icon: renderIcon(OverviewIcon)
         },
         {
-            label: () =>
-                h(
-                    RouterLink,
-                    {
-                        to: {
-                            name: "Indices"
-                        }
-                    },
-                    { default: () => "Indices" }
-                ),
-            key: "Indices",
-            icon: renderIcon(IndiciesIcon)
+            label: "Indices",
+            key: "IndicesMenu",
+            icon: renderIcon(IndiciesIcon),
+            children: [
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Indices"
+                                }
+                            },
+                            { default: () => "Index Management" }
+                        ),
+                    key: "Indices"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Snapshots"
+                                }
+                            },
+                            { default: () => "Snapshot & Restore" }
+                        ),
+                    key: "Snapshots"
+                }
+            ]
         },
         {
             label: "Agents",

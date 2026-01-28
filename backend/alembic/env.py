@@ -10,6 +10,7 @@ from alembic import context
 from app.auth.models.users import User
 from app.connectors.models import Connectors
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
+from app.connectors.wazuh_indexer.models.snapshot_and_restore import SnapshotSchedule
 
 # from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
 from app.customer_provisioning.models.default_settings import (

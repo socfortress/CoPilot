@@ -25,6 +25,7 @@ import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
 import shuffle from "./endpoints/shuffle"
 import sigma from "./endpoints/sigma"
+import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
@@ -73,5 +74,6 @@ export default {
 	shuffle,
 	copilotMCP,
 	customerPortal,
-	version
+	version,
+	snapshots
 }
