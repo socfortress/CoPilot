@@ -35,6 +35,7 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
+import snapshots from "./endpoints/snapshots"
 
 export default {
 	agents,
@@ -73,5 +74,6 @@ export default {
 	shuffle,
 	copilotMCP,
 	customerPortal,
-	version
+	version,
+	snapshots
 }
