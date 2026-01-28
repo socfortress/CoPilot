@@ -12,7 +12,7 @@
                 />
                 <n-button type="primary" @click="showCreateModal = true" :disabled="!selectedRepository">
                     <template #icon>
-                        <n-icon><AddIcon /></n-icon>
+                        <Icon :name="AddIcon" :size="16" />
                     </template>
                     Create Snapshot
                 </n-button>
@@ -57,14 +57,16 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NEmpty, NIcon, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
-import { AddOutline as AddIcon, RefreshOutline as RefreshIcon } from "@vicons/ionicons5"
+import { NButton, NCard, NDataTable, NEmpty, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import { Icon } from "@iconify/vue"
 import { computed, h, onMounted, ref } from "vue"
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots.d"
 import Api from "@/api"
 import CreateSnapshotForm from "./CreateSnapshotForm.vue"
 import RestoreSnapshotForm from "./RestoreSnapshotForm.vue"
+
+const AddIcon = "carbon:add"
 
 const message = useMessage()
 const loading = ref(false)

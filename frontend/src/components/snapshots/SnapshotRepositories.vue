@@ -1,10 +1,19 @@
 <template>
     <div class="flex flex-col gap-4">
+        <n-alert type="info" :show-icon="true">
+            <template #header>Repository Registration Required</template>
+            Snapshot repositories must be manually registered in your Wazuh Indexer cluster.
+            <n-a href="https://docs.opensearch.org/2.19/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/" target="_blank">
+                View the documentation
+            </n-a>
+            for instructions on how to register a snapshot repository.
+        </n-alert>
+
         <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold">Snapshot Repositories</h2>
             <n-button type="primary" @click="fetchRepositories" :loading="loading">
                 <template #icon>
-                    <n-icon><RefreshIcon /></n-icon>
+                    <Icon :name="RefreshIcon" :size="16" />
                 </template>
                 Refresh
             </n-button>
@@ -27,12 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NEmpty, NIcon, NSpin, useMessage } from "naive-ui"
-import { RefreshOutline as RefreshIcon } from "@vicons/ionicons5"
+import { NA, NAlert, NButton, NCard, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
+import { Icon } from "@iconify/vue"
 import { h, onMounted, ref } from "vue"
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotRepository } from "@/types/snapshots.d"
 import Api from "@/api"
+
+const RefreshIcon = "carbon:refresh"
 
 const message = useMessage()
 const loading = ref(false)

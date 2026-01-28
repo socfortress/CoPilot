@@ -18,6 +18,7 @@ const CustomersIcon = "carbon:user-multiple"
 const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
+const SnapshotsIcon = "carbon:data-backup"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
 
 export default function getItems(): MenuMixedOption[] {
@@ -37,18 +38,37 @@ export default function getItems(): MenuMixedOption[] {
             icon: renderIcon(OverviewIcon)
         },
         {
-            label: () =>
-                h(
-                    RouterLink,
-                    {
-                        to: {
-                            name: "Indices"
-                        }
-                    },
-                    { default: () => "Indices" }
-                ),
-            key: "Indices",
-            icon: renderIcon(IndiciesIcon)
+            label: "Indices",
+            key: "IndicesMenu",
+            icon: renderIcon(IndiciesIcon),
+            children: [
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Indices"
+                                }
+                            },
+                            { default: () => "Index Management" }
+                        ),
+                    key: "Indices"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Snapshots"
+                                }
+                            },
+                            { default: () => "Snapshot & Restore" }
+                        ),
+                    key: "Snapshots"
+                }
+            ]
         },
         {
             label: "Agents",

@@ -5,13 +5,13 @@
             <div class="flex items-center gap-2">
                 <n-button @click="fetchSchedules" :loading="loading">
                     <template #icon>
-                        <n-icon><RefreshIcon /></n-icon>
+                        <Icon :name="RefreshIcon" :size="16" />
                     </template>
                     Refresh
                 </n-button>
                 <n-button type="primary" @click="showCreateModal = true">
                     <template #icon>
-                        <n-icon><AddIcon /></n-icon>
+                        <Icon :name="AddIcon" :size="16" />
                     </template>
                     Create Schedule
                 </n-button>
@@ -58,7 +58,6 @@ import {
     NCard,
     NDataTable,
     NEmpty,
-    NIcon,
     NModal,
     NPopconfirm,
     NSpin,
@@ -66,12 +65,15 @@ import {
     NTag,
     useMessage
 } from "naive-ui"
-import { AddOutline as AddIcon, RefreshOutline as RefreshIcon } from "@vicons/ionicons5"
+import { Icon } from "@iconify/vue"
 import { h, onMounted, ref } from "vue"
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
 import Api from "@/api"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
+
+const AddIcon = "carbon:add"
+const RefreshIcon = "carbon:refresh"
 
 const message = useMessage()
 const loading = ref(false)
