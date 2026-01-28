@@ -11,11 +11,160 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotLis
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotRepository
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotRepositoryListResponse
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatus
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatusResponse
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatusResponse, IndexWriteStatus
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotRequest
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotResponse
+import re
+from collections import defaultdict
+from typing import Dict
+from typing import Tuple
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
+def parse_graylog_index_name(index_name: str) -> Tuple[Optional[str], Optional[int]]:
+    """
+    Parse a Graylog-style index name to extract the base name and index number.
+
+    Graylog naming convention: {base_name}_{number}
+    Examples:
+        - wazuh_customer_01 -> ("wazuh_customer", 1)
+        - wazuh_00002_307 -> ("wazuh_00002", 307)
+        - graylog_0 -> ("graylog", 0)
+
+    Args:
+        index_name: The index name to parse.
+
+    Returns:
+        Tuple of (base_name, index_number) or (None, None) if pattern doesn't match.
+    """
+    # Match pattern: anything followed by underscore and a number at the end
+    pattern = r"^(.+)_(\d+)$"
+    match = re.match(pattern, index_name)
+
+    if match:
+        base_name = match.group(1)
+        index_number = int(match.group(2))
+        return base_name, index_number
+
+    return None, None
+
+
+def identify_write_indices(index_names: List[str]) -> Dict[str, IndexWriteStatus]:
+    """
+    Identify which indices are currently being written to based on Graylog naming convention.
+
+    The index with the highest number for each base name is considered the write index.
+
+    Args:
+        index_names: List of index names to analyze.
+
+    Returns:
+        Dictionary mapping index names to their write status.
+    """
+    # Group indices by base name
+    index_groups: Dict[str, List[Tuple[str, int]]] = defaultdict(list)
+
+    for index_name in index_names:
+        base_name, index_number = parse_graylog_index_name(index_name)
+        if base_name is not None and index_number is not None:
+            index_groups[base_name].append((index_name, index_number))
+
+    # Find the highest numbered index for each base name
+    write_indices: Dict[str, IndexWriteStatus] = {}
+
+    for base_name, indices in index_groups.items():
+        # Sort by index number to find the highest
+        sorted_indices = sorted(indices, key=lambda x: x[1], reverse=True)
+        highest_index_name, highest_index_number = sorted_indices[0]
+
+        # Mark all indices with their write status
+        for index_name, index_number in indices:
+            is_write_index = index_name == highest_index_name
+            write_indices[index_name] = IndexWriteStatus(
+                index_name=index_name,
+                is_write_index=is_write_index,
+                index_number=index_number,
+                base_name=base_name,
+            )
+
+    # Handle indices that don't match the Graylog pattern
+    for index_name in index_names:
+        if index_name not in write_indices:
+            write_indices[index_name] = IndexWriteStatus(
+                index_name=index_name,
+                is_write_index=False,  # Assume non-Graylog indices are not write indices
+                index_number=None,
+                base_name=None,
+            )
+
+    return write_indices
+
+
+async def get_all_indices() -> List[str]:
+    """
+    Get all index names from the Wazuh Indexer.
+
+    Returns:
+        List of index names.
+    """
+    try:
+        es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+        indices = es_client.indices.get_alias(index="*")
+        return list(indices.keys())
+    except Exception as e:
+        logger.error(f"Failed to get indices: {e}")
+        return []
+
+
+async def filter_write_indices(
+    requested_indices: Optional[List[str]] = None,
+) -> Tuple[List[str], List[str]]:
+    """
+    Filter out write indices from the requested indices list.
+
+    Args:
+        requested_indices: List of indices to filter. If None, all indices are considered.
+
+    Returns:
+        Tuple of (indices_to_snapshot, skipped_write_indices).
+    """
+    # Get all indices from the cluster
+    all_indices = await get_all_indices()
+
+    # Identify write indices
+    write_status = identify_write_indices(all_indices)
+
+    # Determine which indices to check
+    if requested_indices:
+        # Expand wildcards if present
+        indices_to_check = []
+        for pattern in requested_indices:
+            if "*" in pattern:
+                # Simple wildcard matching
+                regex_pattern = pattern.replace("*", ".*")
+                for index_name in all_indices:
+                    if re.match(f"^{regex_pattern}$", index_name):
+                        indices_to_check.append(index_name)
+            else:
+                indices_to_check.append(pattern)
+    else:
+        indices_to_check = all_indices
+
+    # Separate write indices from non-write indices
+    indices_to_snapshot = []
+    skipped_write_indices = []
+
+    for index_name in indices_to_check:
+        status = write_status.get(index_name)
+        if status and status.is_write_index:
+            skipped_write_indices.append(index_name)
+            logger.info(
+                f"Skipping write index: {index_name} "
+                f"(base: {status.base_name}, number: {status.index_number})",
+            )
+        else:
+            indices_to_snapshot.append(index_name)
+
+    return indices_to_snapshot, skipped_write_indices
 
 async def list_snapshot_repositories() -> SnapshotRepositoryListResponse:
     """
@@ -289,11 +438,40 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
     try:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
+        # Filter out write indices if requested
+        skipped_write_indices = []
+        indices_to_snapshot = request.indices
+
+        if request.skip_write_indices:
+            indices_to_snapshot, skipped_write_indices = await filter_write_indices(
+                requested_indices=request.indices,
+            )
+
+            if skipped_write_indices:
+                logger.info(
+                    f"Skipping {len(skipped_write_indices)} write indices: {skipped_write_indices}",
+                )
+
+            if not indices_to_snapshot:
+                logger.warning("No indices to snapshot after filtering write indices")
+                return CreateSnapshotResponse(
+                    snapshot=request.snapshot,
+                    repository=request.repository,
+                    uuid=None,
+                    state=None,
+                    indices=[],
+                    skipped_write_indices=skipped_write_indices,
+                    shards=None,
+                    accepted=False,
+                    success=False,
+                    message="No indices to snapshot - all requested indices are currently being written to",
+                )
+
         # Build the snapshot body
         body = {}
 
-        if request.indices:
-            body["indices"] = ",".join(request.indices)
+        if indices_to_snapshot:
+            body["indices"] = ",".join(indices_to_snapshot)
 
         if request.ignore_unavailable is not None:
             body["ignore_unavailable"] = request.ignore_unavailable
@@ -305,7 +483,13 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
             body["partial"] = request.partial
 
         if request.metadata:
-            body["metadata"] = request.metadata
+            # Add skipped indices to metadata for reference
+            metadata = request.metadata.copy()
+            if skipped_write_indices:
+                metadata["skipped_write_indices"] = skipped_write_indices
+            body["metadata"] = metadata
+        elif skipped_write_indices:
+            body["metadata"] = {"skipped_write_indices": skipped_write_indices}
 
         # Create the snapshot
         response = es_client.snapshot.create(
@@ -326,10 +510,11 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
                 successful=shards_data.get("successful", 0),
             )
 
-            logger.info(
-                f"Successfully created snapshot {request.snapshot} "
-                f"in repository {request.repository}",
-            )
+            message = f"Successfully created snapshot {request.snapshot}"
+            if skipped_write_indices:
+                message += f" (skipped {len(skipped_write_indices)} write indices)"
+
+            logger.info(message)
 
             return CreateSnapshotResponse(
                 snapshot=snapshot_data.get("snapshot", request.snapshot),
@@ -337,30 +522,33 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
                 uuid=snapshot_data.get("uuid"),
                 state=snapshot_data.get("state"),
                 indices=snapshot_data.get("indices", []),
+                skipped_write_indices=skipped_write_indices,
                 shards=shards_info,
                 accepted=True,
                 success=True,
-                message=f"Successfully created snapshot {request.snapshot}",
+                message=message,
             )
         else:
             # When not waiting, we get an accepted response
             accepted = response.get("accepted", False)
 
-            logger.info(
-                f"Snapshot {request.snapshot} creation initiated "
-                f"in repository {request.repository} (accepted={accepted})",
-            )
+            message = f"Snapshot {request.snapshot} creation initiated"
+            if skipped_write_indices:
+                message += f" (skipped {len(skipped_write_indices)} write indices)"
+
+            logger.info(message)
 
             return CreateSnapshotResponse(
                 snapshot=request.snapshot,
                 repository=request.repository,
                 uuid=None,
                 state="IN_PROGRESS",
-                indices=request.indices or [],
+                indices=indices_to_snapshot or [],
+                skipped_write_indices=skipped_write_indices,
                 shards=None,
                 accepted=accepted,
                 success=accepted,
-                message=f"Snapshot {request.snapshot} creation initiated" if accepted else "Snapshot request was not accepted",
+                message=message if accepted else "Snapshot request was not accepted",
             )
 
     except Exception as e:
@@ -371,6 +559,7 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
             uuid=None,
             state=None,
             indices=[],
+            skipped_write_indices=[],
             shards=None,
             accepted=False,
             success=False,

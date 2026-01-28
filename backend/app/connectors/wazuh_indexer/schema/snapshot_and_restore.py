@@ -162,6 +162,14 @@ class RestoreSnapshotResponse(BaseModel):
     message: str = Field(..., description="Status message")
 
 # Models for creating snapshots
+class IndexWriteStatus(BaseModel):
+    """Status of an index regarding write activity."""
+    index_name: str = Field(..., description="Name of the index")
+    is_write_index: bool = Field(..., description="Whether this is the current write index")
+    index_number: Optional[int] = Field(None, description="Extracted index number from naming convention")
+    base_name: Optional[str] = Field(None, description="Base name without the index number")
+
+
 class CreateSnapshotRequest(BaseModel):
     """Request model for creating a snapshot."""
     repository: str = Field(..., description="Repository name to store the snapshot")
@@ -190,6 +198,10 @@ class CreateSnapshotRequest(BaseModel):
         None,
         description="Custom metadata to attach to the snapshot",
     )
+    skip_write_indices: Optional[bool] = Field(
+        True,
+        description="Whether to skip indices that are currently being written to (Graylog active indices)",
+    )
 
 
 class CreateSnapshotResponse(BaseModel):
@@ -199,6 +211,10 @@ class CreateSnapshotResponse(BaseModel):
     uuid: Optional[str] = Field(None, description="UUID of the snapshot")
     state: Optional[str] = Field(None, description="Current state of the snapshot")
     indices: List[str] = Field(default_factory=list, description="List of indices in the snapshot")
+    skipped_write_indices: List[str] = Field(
+        default_factory=list,
+        description="List of indices skipped because they are currently being written to",
+    )
     shards: Optional[RestoreShardInfo] = Field(None, description="Shard information (if wait_for_completion=true)")
     accepted: bool = Field(..., description="Whether the snapshot request was accepted")
     success: bool = Field(..., description="Whether the operation was successful")
