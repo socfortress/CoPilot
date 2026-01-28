@@ -18,7 +18,6 @@ const CustomersIcon = "carbon:user-multiple"
 const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
-const SnapshotsIcon = "carbon:data-backup"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
 
 export default function getItems(): MenuMixedOption[] {
