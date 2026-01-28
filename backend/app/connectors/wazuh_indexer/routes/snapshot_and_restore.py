@@ -9,29 +9,66 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotRequest
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreSnapshotRequest
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreSnapshotResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotListResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotRepositoryListResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleCreate
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleListResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleOperationResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleUpdate
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatusResponse
+from app.auth.routes.auth import AuthHandler
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    CreateSnapshotRequest,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    CreateSnapshotResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    RestoreSnapshotRequest,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    RestoreSnapshotResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotListResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotRepositoryListResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleCreate,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleListResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleOperationResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleUpdate,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotStatusResponse,
+)
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import create_snapshot
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import create_snapshot_schedule
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import delete_snapshot_schedule
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import get_snapshot_schedule
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import get_snapshot_status
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snapshot_repositories
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snapshot_schedules
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    create_snapshot_schedule,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    delete_snapshot_schedule,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    get_snapshot_schedule,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    get_snapshot_status,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    list_snapshot_repositories,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    list_snapshot_schedules,
+)
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snapshots
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import restore_snapshot
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import update_snapshot_schedule
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    update_snapshot_schedule,
+)
 from app.db.db_session import get_db
-from app.auth.routes.auth import AuthHandler
+
 wazuh_indexer_snapshots_router = APIRouter()
 auth_handler = AuthHandler()
 
@@ -90,10 +127,7 @@ async def get_snapshots_status(
     Returns:
         SnapshotStatusResponse: Status of the requested snapshots.
     """
-    logger.info(
-        f"Received request to get snapshot status "
-        f"(repository={repository}, snapshot={snapshot})",
-    )
+    logger.info(f"Received request to get snapshot status " f"(repository={repository}, snapshot={snapshot},"),
 
     if snapshot and not repository:
         raise HTTPException(
@@ -118,7 +152,6 @@ async def get_snapshots_status(
     summary="List Snapshots",
     description="Retrieve a list of all snapshots in a specific repository.",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
-
 )
 async def get_snapshots(
     repository: str = Path(
@@ -147,6 +180,7 @@ async def get_snapshots(
 
     return response
 
+
 @wazuh_indexer_snapshots_router.post(
     "/create",
     response_model=CreateSnapshotResponse,
@@ -167,8 +201,7 @@ async def create_snapshot_endpoint(
         CreateSnapshotResponse: Details of the snapshot creation operation.
     """
     logger.info(
-        f"Received request to create snapshot {request.snapshot} "
-        f"in repository {request.repository}",
+        f"Received request to create snapshot {request.snapshot} " f"in repository {request.repository}",
     )
 
     response = await create_snapshot(request=request)
@@ -202,8 +235,7 @@ async def restore_snapshot_endpoint(
         RestoreSnapshotResponse: Details of the restoration operation.
     """
     logger.info(
-        f"Received request to restore snapshot {request.snapshot} "
-        f"from repository {request.repository}",
+        f"Received request to restore snapshot {request.snapshot} " f"from repository {request.repository}",
     )
 
     response = await restore_snapshot(request=request)
@@ -215,6 +247,7 @@ async def restore_snapshot_endpoint(
         )
 
     return response
+
 
 # Snapshot Schedule Routes
 @wazuh_indexer_snapshots_router.post(

@@ -3,7 +3,6 @@ from typing import Optional
 
 from sqlmodel import Field
 from sqlmodel import SQLModel
-from sqlmodel import Text
 
 
 class SnapshotSchedule(SQLModel, table=True):

@@ -9,6 +9,7 @@ from pydantic import Field
 
 class SnapshotRepositorySettings(BaseModel):
     """Settings for a snapshot repository."""
+
     location: Optional[str] = Field(None, description="Repository location/path")
     compress: Optional[bool] = Field(None, description="Whether snapshots are compressed")
     chunk_size: Optional[str] = Field(None, description="Chunk size for snapshot files")
@@ -19,6 +20,7 @@ class SnapshotRepositorySettings(BaseModel):
 
 class SnapshotRepository(BaseModel):
     """Model for a single snapshot repository."""
+
     name: str = Field(..., description="Name of the repository")
     type: str = Field(..., description="Type of the repository (fs, s3, etc.)")
     settings: Dict[str, Any] = Field(default_factory=dict, description="Repository settings")
@@ -26,6 +28,7 @@ class SnapshotRepository(BaseModel):
 
 class SnapshotRepositoryListResponse(BaseModel):
     """Response model for listing snapshot repositories."""
+
     repositories: List[SnapshotRepository] = Field(
         default_factory=list,
         description="List of snapshot repositories",
@@ -36,6 +39,7 @@ class SnapshotRepositoryListResponse(BaseModel):
 
 class SnapshotShardStatus(BaseModel):
     """Status of a single shard in a snapshot."""
+
     stage: str = Field(..., description="Current stage of the shard snapshot")
     total_files: Optional[int] = Field(None, alias="total_file_count", description="Total number of files")
     total_size_in_bytes: Optional[int] = Field(None, description="Total size in bytes")
@@ -45,6 +49,7 @@ class SnapshotShardStatus(BaseModel):
 
 class SnapshotIndexStatus(BaseModel):
     """Status of an index within a snapshot."""
+
     shards_stats: Dict[str, Any] = Field(default_factory=dict, description="Shard statistics")
     stats: Dict[str, Any] = Field(default_factory=dict, description="Index statistics")
     shards: Dict[str, SnapshotShardStatus] = Field(default_factory=dict, description="Individual shard statuses")
@@ -52,6 +57,7 @@ class SnapshotIndexStatus(BaseModel):
 
 class SnapshotStatus(BaseModel):
     """Status of a single snapshot."""
+
     snapshot: str = Field(..., description="Name of the snapshot")
     repository: str = Field(..., description="Repository containing the snapshot")
     uuid: Optional[str] = Field(None, description="UUID of the snapshot")
@@ -64,6 +70,7 @@ class SnapshotStatus(BaseModel):
 
 class SnapshotStatusResponse(BaseModel):
     """Response model for snapshot status."""
+
     snapshots: List[SnapshotStatus] = Field(
         default_factory=list,
         description="List of snapshot statuses",
@@ -75,6 +82,7 @@ class SnapshotStatusResponse(BaseModel):
 # Models for listing snapshots
 class SnapshotInfo(BaseModel):
     """Information about a single snapshot."""
+
     snapshot: str = Field(..., description="Name of the snapshot")
     uuid: Optional[str] = Field(None, description="UUID of the snapshot")
     version_id: Optional[int] = Field(None, description="Version ID")
@@ -93,6 +101,7 @@ class SnapshotInfo(BaseModel):
 
 class SnapshotListResponse(BaseModel):
     """Response model for listing snapshots."""
+
     repository: str = Field(..., description="Repository name")
     snapshots: List[SnapshotInfo] = Field(
         default_factory=list,
@@ -105,6 +114,7 @@ class SnapshotListResponse(BaseModel):
 # Models for restoring snapshots
 class RestoreSnapshotRequest(BaseModel):
     """Request model for restoring a snapshot."""
+
     repository: str = Field(..., description="Repository name containing the snapshot")
     snapshot: str = Field(..., description="Name of the snapshot to restore")
     indices: Optional[List[str]] = Field(
@@ -141,6 +151,7 @@ class RestoreSnapshotRequest(BaseModel):
 
 class RestoreShardInfo(BaseModel):
     """Information about restored shards."""
+
     total: int = Field(..., description="Total number of shards")
     failed: int = Field(..., description="Number of failed shards")
     successful: int = Field(..., description="Number of successful shards")
@@ -148,12 +159,14 @@ class RestoreShardInfo(BaseModel):
 
 class RestoreIndexInfo(BaseModel):
     """Information about a restored index."""
+
     index: str = Field(..., description="Index name")
     shards: RestoreShardInfo = Field(..., description="Shard restoration info")
 
 
 class RestoreSnapshotResponse(BaseModel):
     """Response model for snapshot restoration."""
+
     snapshot: str = Field(..., description="Name of the restored snapshot")
     repository: str = Field(..., description="Repository name")
     indices: List[str] = Field(default_factory=list, description="List of restored indices")
@@ -161,9 +174,11 @@ class RestoreSnapshotResponse(BaseModel):
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
 
+
 # Models for creating snapshots
 class IndexWriteStatus(BaseModel):
     """Status of an index regarding write activity."""
+
     index_name: str = Field(..., description="Name of the index")
     is_write_index: bool = Field(..., description="Whether this is the current write index")
     index_number: Optional[int] = Field(None, description="Extracted index number from naming convention")
@@ -172,6 +187,7 @@ class IndexWriteStatus(BaseModel):
 
 class CreateSnapshotRequest(BaseModel):
     """Request model for creating a snapshot."""
+
     repository: str = Field(..., description="Repository name to store the snapshot")
     snapshot: str = Field(..., description="Name of the snapshot to create")
     indices: Optional[List[str]] = Field(
@@ -206,6 +222,7 @@ class CreateSnapshotRequest(BaseModel):
 
 class CreateSnapshotResponse(BaseModel):
     """Response model for snapshot creation."""
+
     snapshot: str = Field(..., description="Name of the created snapshot")
     repository: str = Field(..., description="Repository name")
     uuid: Optional[str] = Field(None, description="UUID of the snapshot")
@@ -224,6 +241,7 @@ class CreateSnapshotResponse(BaseModel):
 # Models for scheduled snapshots
 class SnapshotScheduleCreate(BaseModel):
     """Request model for creating a snapshot schedule."""
+
     name: str = Field(..., description="Friendly name for this schedule")
     index_pattern: str = Field(
         ...,
@@ -252,6 +270,7 @@ class SnapshotScheduleCreate(BaseModel):
 
 class SnapshotScheduleUpdate(BaseModel):
     """Request model for updating a snapshot schedule."""
+
     name: Optional[str] = Field(None, description="Friendly name for this schedule")
     index_pattern: Optional[str] = Field(None, description="Index pattern to snapshot")
     repository: Optional[str] = Field(None, description="Repository to store snapshots")
@@ -264,6 +283,7 @@ class SnapshotScheduleUpdate(BaseModel):
 
 class SnapshotScheduleResponse(BaseModel):
     """Response model for a snapshot schedule."""
+
     id: int = Field(..., description="Schedule ID")
     name: str = Field(..., description="Friendly name for this schedule")
     index_pattern: str = Field(..., description="Index pattern to snapshot")
@@ -282,6 +302,7 @@ class SnapshotScheduleResponse(BaseModel):
 
 class SnapshotScheduleListResponse(BaseModel):
     """Response model for listing snapshot schedules."""
+
     schedules: List[SnapshotScheduleResponse] = Field(
         default_factory=list,
         description="List of snapshot schedules",
@@ -292,6 +313,7 @@ class SnapshotScheduleListResponse(BaseModel):
 
 class SnapshotScheduleOperationResponse(BaseModel):
     """Response model for snapshot schedule operations."""
+
     schedule: Optional[SnapshotScheduleResponse] = Field(
         None,
         description="The snapshot schedule",
@@ -302,6 +324,7 @@ class SnapshotScheduleOperationResponse(BaseModel):
 
 class ScheduledSnapshotExecutionResponse(BaseModel):
     """Response model for scheduled snapshot execution."""
+
     schedule_id: int = Field(..., description="Schedule ID that was executed")
     schedule_name: str = Field(..., description="Schedule name")
     snapshot_name: Optional[str] = Field(None, description="Name of the created snapshot")

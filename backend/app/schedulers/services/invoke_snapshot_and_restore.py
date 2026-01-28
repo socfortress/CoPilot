@@ -3,7 +3,9 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.future import select
 
-from app.connectors.wazuh_indexer.services.snapshot_and_restore import execute_all_enabled_schedules
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    execute_all_enabled_schedules,
+)
 from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
 
@@ -23,8 +25,7 @@ async def invoke_snapshot_schedules():
 
         if results:
             logger.info(
-                f"Scheduled snapshot execution completed: "
-                f"{successful} successful, {failed} failed out of {len(results)} schedules"
+                f"Scheduled snapshot execution completed: " f"{successful} successful, {failed} failed out of {len(results)} schedules",
             )
 
             # Log details for each execution
@@ -34,12 +35,10 @@ async def invoke_snapshot_schedules():
                         f"  - {result.schedule_name}: SUCCESS "
                         f"(snapshot: {result.snapshot_name}, "
                         f"indices: {len(result.indices_snapshotted)}, "
-                        f"skipped: {len(result.skipped_write_indices)})"
+                        f"skipped: {len(result.skipped_write_indices)}, ",
                     )
                 else:
-                    logger.error(
-                        f"  - {result.schedule_name}: FAILED - {result.message}"
-                    )
+                    logger.error(f"  - {result.schedule_name}: FAILED - {result.message}")
         else:
             logger.info("No enabled snapshot schedules to execute")
 

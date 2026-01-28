@@ -56,8 +56,10 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
-from app.schedulers.services.invoke_snapshot_and_restore import invoke_snapshot_schedules
 from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
+from app.schedulers.services.invoke_snapshot_and_restore import (
+    invoke_snapshot_schedules,
+)
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 

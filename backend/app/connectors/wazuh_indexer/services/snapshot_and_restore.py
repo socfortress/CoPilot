@@ -12,26 +12,53 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.models.snapshot_and_restore import SnapshotSchedule
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotRequest
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import CreateSnapshotResponse
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    CreateSnapshotRequest,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    CreateSnapshotResponse,
+)
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import IndexWriteStatus
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreShardInfo
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreSnapshotRequest
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreSnapshotResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import ScheduledSnapshotExecutionResponse
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    RestoreSnapshotRequest,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    RestoreSnapshotResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    ScheduledSnapshotExecutionResponse,
+)
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotInfo
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotListResponse
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotListResponse,
+)
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotRepository
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotRepositoryListResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleCreate
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleListResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleOperationResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleResponse
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotScheduleUpdate
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotRepositoryListResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleCreate,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleListResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleOperationResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotScheduleUpdate,
+)
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatus
-from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotStatusResponse
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    SnapshotStatusResponse,
+)
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.db_session import get_db_session
+
 
 def parse_graylog_index_name(index_name: str) -> Tuple[Optional[str], Optional[int]]:
     """
@@ -170,14 +197,12 @@ async def filter_write_indices(
         status = write_status.get(index_name)
         if status and status.is_write_index:
             skipped_write_indices.append(index_name)
-            logger.info(
-                f"Skipping write index: {index_name} "
-                f"(base: {status.base_name}, number: {status.index_number})",
-            )
+            logger.info(f"Skipping write index: {index_name} " f"(base: {status.base_name}, number: {status.index_number}, "),
         else:
             indices_to_snapshot.append(index_name)
 
     return indices_to_snapshot, skipped_write_indices
+
 
 def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleResponse:
     """Convert a SnapshotSchedule model to a response model."""
@@ -197,6 +222,7 @@ def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleRespons
         created_at=schedule.created_at.isoformat(),
         updated_at=schedule.updated_at.isoformat(),
     )
+
 
 async def list_snapshot_repositories() -> SnapshotRepositoryListResponse:
     """
@@ -254,10 +280,7 @@ async def get_snapshot_status(
     Returns:
         SnapshotStatusResponse: Response containing snapshot statuses.
     """
-    logger.info(
-        f"Fetching snapshot status from Wazuh Indexer "
-        f"(repository={repository}, snapshot={snapshot})",
-    )
+    logger.info(f"Fetching snapshot status from Wazuh Indexer " f"(repository={repository}, snapshot={snapshot}, "),
 
     try:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
@@ -428,10 +451,7 @@ async def restore_snapshot(request: RestoreSnapshotRequest) -> RestoreSnapshotRe
 
         restored_indices = snapshot_data.get("indices", [])
 
-        logger.info(
-            f"Successfully initiated restore of snapshot {request.snapshot} "
-            f"({len(restored_indices)} indices)",
-        )
+        logger.info(f"Successfully initiated restore of snapshot {request.snapshot} ({len(restored_indices)} indices)")
 
         return RestoreSnapshotResponse(
             snapshot=request.snapshot,
@@ -452,6 +472,7 @@ async def restore_snapshot(request: RestoreSnapshotRequest) -> RestoreSnapshotRe
             success=False,
             message=f"Failed to restore snapshot: {str(e)}",
         )
+
 
 async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotResponse:
     """
@@ -599,7 +620,6 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
         )
 
 
-
 async def create_snapshot_schedule(
     request: SnapshotScheduleCreate,
     session: AsyncSession,
@@ -632,7 +652,7 @@ async def create_snapshot_schedule(
         await session.commit()
         await session.refresh(schedule)
 
-        logger.info(f"Successfully created snapshot schedule: {schedule.name} (ID: {schedule.id})")
+        logger.info(f"Successfully created snapshot schedule: {schedule.name} (ID: {schedule.id},)")
 
         return SnapshotScheduleOperationResponse(
             schedule=_schedule_to_response(schedule),
@@ -710,9 +730,7 @@ async def get_snapshot_schedule(
     logger.info(f"Fetching snapshot schedule ID: {schedule_id}")
 
     try:
-        result = await session.execute(
-            select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id)
-        )
+        result = await session.execute(select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id))
         schedule = result.scalar_one_or_none()
 
         if not schedule:
@@ -756,9 +774,7 @@ async def update_snapshot_schedule(
     logger.info(f"Updating snapshot schedule ID: {schedule_id}")
 
     try:
-        result = await session.execute(
-            select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id)
-        )
+        result = await session.execute(select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id))
         schedule = result.scalar_one_or_none()
 
         if not schedule:
@@ -826,9 +842,7 @@ async def delete_snapshot_schedule(
     logger.info(f"Deleting snapshot schedule ID: {schedule_id}")
 
     try:
-        result = await session.execute(
-            select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id)
-        )
+        result = await session.execute(select(SnapshotSchedule).where(SnapshotSchedule.id == schedule_id))
         schedule = result.scalar_one_or_none()
 
         if not schedule:
@@ -858,6 +872,7 @@ async def delete_snapshot_schedule(
             success=False,
             message=f"Failed to delete snapshot schedule: {str(e)}",
         )
+
 
 async def get_snapshotted_indices_for_schedule(
     schedule: SnapshotSchedule,
@@ -896,16 +911,14 @@ async def get_snapshotted_indices_for_schedule(
                 indices = snap_data.get("indices", [])
                 snapshotted_indices.update(indices)
 
-        logger.info(
-            f"Found {len(snapshotted_indices)} previously snapshotted indices "
-            f"for schedule {schedule.name}"
-        )
+        logger.info(f"Found {len(snapshotted_indices)} previously snapshotted indices " f"for schedule {schedule.name}")
 
         return snapshotted_indices
 
     except Exception as e:
         logger.error(f"Failed to get snapshotted indices for schedule {schedule.name}: {e}")
         return set()
+
 
 async def get_indices_needing_snapshot(
     schedule: SnapshotSchedule,
@@ -976,10 +989,11 @@ async def get_indices_needing_snapshot(
         f"Schedule {schedule.name}: "
         f"{len(indices_to_snapshot)} to snapshot, "
         f"{len(skipped_write_indices)} write indices skipped, "
-        f"{len(already_snapshotted_indices)} already snapshotted"
+        f"{len(already_snapshotted_indices)} already snapshotted",
     )
 
     return indices_to_snapshot, skipped_write_indices, already_snapshotted_indices
+
 
 async def execute_snapshot_schedule(
     schedule: SnapshotSchedule,
@@ -999,9 +1013,7 @@ async def execute_snapshot_schedule(
 
     try:
         # Determine which indices need to be snapshotted
-        indices_to_snapshot, skipped_write_indices, already_snapshotted = await get_indices_needing_snapshot(
-            schedule
-        )
+        indices_to_snapshot, skipped_write_indices, already_snapshotted = await get_indices_needing_snapshot(schedule)
 
         # If no new indices to snapshot, skip this execution
         if not indices_to_snapshot:
@@ -1070,7 +1082,7 @@ async def execute_snapshot_schedule(
                 f"snapshot={snapshot_name}, "
                 f"indices={len(indices_to_snapshot)}, "
                 f"skipped_write={len(skipped_write_indices)}, "
-                f"already_snapshotted={len(already_snapshotted)}"
+                f"already_snapshotted={len(already_snapshotted)}",
             )
         else:
             logger.error(f"Failed to execute schedule {schedule.name}: {response.message}")
@@ -1122,9 +1134,7 @@ async def execute_all_enabled_schedules() -> List[ScheduledSnapshotExecutionResp
 
     async with get_db_session() as session:
         # Get all enabled schedules
-        result = await session.execute(
-            select(SnapshotSchedule).where(SnapshotSchedule.enabled == True)
-        )
+        result = await session.execute(select(SnapshotSchedule).where(SnapshotSchedule.enabled == True))
         schedules = result.scalars().all()
 
         logger.info(f"Found {len(schedules)} enabled snapshot schedules")
@@ -1155,10 +1165,7 @@ async def cleanup_old_snapshots(
     if not schedule.retention_days:
         return {"deleted": 0, "message": "No retention policy configured"}
 
-    logger.info(
-        f"Cleaning up snapshots for schedule {schedule.name} "
-        f"(retention: {schedule.retention_days} days)"
-    )
+    logger.info(f"Cleaning up snapshots for schedule {schedule.name} " f"(retention: {schedule.retention_days} days)")
 
     try:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
