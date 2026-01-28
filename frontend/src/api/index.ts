@@ -25,6 +25,7 @@ import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
 import shuffle from "./endpoints/shuffle"
 import sigma from "./endpoints/sigma"
+import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
@@ -35,7 +36,6 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
-import snapshots from "./endpoints/snapshots"
 
 export default {
 	agents,

@@ -1,73 +1,73 @@
 <template>
-    <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
-        <n-form-item label="Name" path="name">
-            <n-input v-model:value="formData.name" placeholder="Enter a friendly name for this schedule" />
-        </n-form-item>
+	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+		<n-form-item label="Name" path="name">
+			<n-input v-model:value="formData.name" placeholder="Enter a friendly name for this schedule" />
+		</n-form-item>
 
-        <n-form-item label="Index Pattern" path="index_pattern">
-            <n-input v-model:value="formData.index_pattern" placeholder="e.g., wazuh_customer_*" />
-            <template #feedback>
-                Use wildcards (*) to match multiple indices. Example: wazuh_customer_*
-            </template>
-        </n-form-item>
+		<n-form-item label="Index Pattern" path="index_pattern">
+			<n-input v-model:value="formData.index_pattern" placeholder="e.g., wazuh_customer_*" />
+			<template #feedback>
+				Use wildcards (*) to match multiple indices. Example: wazuh_customer_*
+			</template>
+		</n-form-item>
 
-        <n-form-item label="Repository" path="repository">
-            <n-select
-                v-model:value="formData.repository"
-                :options="repositoryOptions"
-                placeholder="Select a repository"
-                :loading="loadingRepositories"
-            />
-        </n-form-item>
+		<n-form-item label="Repository" path="repository">
+			<n-select
+				v-model:value="formData.repository"
+				:options="repositoryOptions"
+				placeholder="Select a repository"
+				:loading="loadingRepositories"
+			/>
+		</n-form-item>
 
-        <n-form-item label="Snapshot Prefix" path="snapshot_prefix">
-            <n-input v-model:value="formData.snapshot_prefix" placeholder="e.g., scheduled" />
-            <template #feedback>
-                Prefix for generated snapshot names. Full name: {prefix}_{schedule_name}_{timestamp}
-            </template>
-        </n-form-item>
+		<n-form-item label="Snapshot Prefix" path="snapshot_prefix">
+			<n-input v-model:value="formData.snapshot_prefix" placeholder="e.g., scheduled" />
+			<template #feedback>
+				Prefix for generated snapshot names. Full name: {prefix}_{schedule_name}_{timestamp}
+			</template>
+		</n-form-item>
 
-        <n-form-item label="Enabled" path="enabled">
-            <n-switch v-model:value="formData.enabled" />
-        </n-form-item>
+		<n-form-item label="Enabled" path="enabled">
+			<n-switch v-model:value="formData.enabled" />
+		</n-form-item>
 
-        <n-form-item label="Skip Write Indices" path="skip_write_indices">
-            <n-switch v-model:value="formData.skip_write_indices" />
-            <span class="ml-2 text-sm text-gray-500">Skip indices currently being written to (recommended)</span>
-        </n-form-item>
+		<n-form-item label="Skip Write Indices" path="skip_write_indices">
+			<n-switch v-model:value="formData.skip_write_indices" />
+			<span class="ml-2 text-sm text-gray-500">Skip indices currently being written to (recommended)</span>
+		</n-form-item>
 
-        <n-form-item label="Include Global State" path="include_global_state">
-            <n-switch v-model:value="formData.include_global_state" />
-        </n-form-item>
+		<n-form-item label="Include Global State" path="include_global_state">
+			<n-switch v-model:value="formData.include_global_state" />
+		</n-form-item>
 
-        <n-form-item label="Retention (Days)" path="retention_days">
-            <n-input-number
-                v-model:value="formData.retention_days"
-                :min="1"
-                :max="365"
-                placeholder="Leave empty for no retention limit"
-                clearable
-                style="width: 100%"
-            />
-            <template #feedback>
-                Automatically delete snapshots older than this many days. Leave empty to keep forever.
-            </template>
-        </n-form-item>
+		<n-form-item label="Retention (Days)" path="retention_days">
+			<n-input-number
+				v-model:value="formData.retention_days"
+				:min="1"
+				:max="365"
+				placeholder="Leave empty for no retention limit"
+				clearable
+				style="width: 100%"
+			/>
+			<template #feedback>
+				Automatically delete snapshots older than this many days. Leave empty to keep forever.
+			</template>
+		</n-form-item>
 
-        <div class="flex justify-end gap-2 mt-4">
-            <n-button @click="$emit('cancel')">Cancel</n-button>
-            <n-button type="primary" @click="handleSubmit" :loading="loading">
-                {{ isEditing ? "Update Schedule" : "Create Schedule" }}
-            </n-button>
-        </div>
-    </n-form>
+		<div class="flex justify-end gap-2 mt-4">
+			<n-button @click="$emit('cancel')">Cancel</n-button>
+			<n-button type="primary" :loading="loading" @click="handleSubmit">
+				{{ isEditing ? "Update Schedule" : "Create Schedule" }}
+			</n-button>
+		</div>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
+import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{

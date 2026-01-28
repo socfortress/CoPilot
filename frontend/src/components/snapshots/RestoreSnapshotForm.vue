@@ -1,64 +1,64 @@
 <template>
-    <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
-        <n-form-item label="Snapshot">
-            <n-input :value="snapshot?.snapshot" disabled />
-        </n-form-item>
+	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+		<n-form-item label="Snapshot">
+			<n-input :value="snapshot?.snapshot" disabled />
+		</n-form-item>
 
-        <n-form-item label="Indices in Snapshot">
-            <n-tag v-for="index in snapshot?.indices.slice(0, 5)" :key="index" size="small" class="mr-1 mb-1">
-                {{ index }}
-            </n-tag>
-            <n-tag v-if="(snapshot?.indices.length || 0) > 5" size="small">
-                +{{ (snapshot?.indices.length || 0) - 5 }} more
-            </n-tag>
-        </n-form-item>
+		<n-form-item label="Indices in Snapshot">
+			<n-tag v-for="index in snapshot?.indices.slice(0, 5)" :key="index" size="small" class="mr-1 mb-1">
+				{{ index }}
+			</n-tag>
+			<n-tag v-if="(snapshot?.indices.length || 0) > 5" size="small">
+				+{{ (snapshot?.indices.length || 0) - 5 }} more
+			</n-tag>
+		</n-form-item>
 
-        <n-form-item label="Indices to Restore" path="indices">
-            <n-input
-                v-model:value="indicesInput"
-                placeholder="Leave empty to restore all indices, or enter specific indices (comma-separated)"
-                type="textarea"
-                :rows="2"
-            />
-        </n-form-item>
+		<n-form-item label="Indices to Restore" path="indices">
+			<n-input
+				v-model:value="indicesInput"
+				placeholder="Leave empty to restore all indices, or enter specific indices (comma-separated)"
+				type="textarea"
+				:rows="2"
+			/>
+		</n-form-item>
 
-        <n-form-item label="Rename Pattern" path="rename_pattern">
-            <n-input v-model:value="formData.rename_pattern" placeholder="e.g., (.+)" />
-        </n-form-item>
+		<n-form-item label="Rename Pattern" path="rename_pattern">
+			<n-input v-model:value="formData.rename_pattern" placeholder="e.g., (.+)" />
+		</n-form-item>
 
-        <n-form-item label="Rename Replacement" path="rename_replacement">
-            <n-input v-model:value="formData.rename_replacement" placeholder="e.g., restored_$1" />
-        </n-form-item>
+		<n-form-item label="Rename Replacement" path="rename_replacement">
+			<n-input v-model:value="formData.rename_replacement" placeholder="e.g., restored_$1" />
+		</n-form-item>
 
-        <n-form-item label="Include Global State" path="include_global_state">
-            <n-switch v-model:value="formData.include_global_state" />
-        </n-form-item>
+		<n-form-item label="Include Global State" path="include_global_state">
+			<n-switch v-model:value="formData.include_global_state" />
+		</n-form-item>
 
-        <n-form-item label="Include Aliases" path="include_aliases">
-            <n-switch v-model:value="formData.include_aliases" />
-        </n-form-item>
+		<n-form-item label="Include Aliases" path="include_aliases">
+			<n-switch v-model:value="formData.include_aliases" />
+		</n-form-item>
 
-        <n-form-item label="Ignore Unavailable" path="ignore_unavailable">
-            <n-switch v-model:value="formData.ignore_unavailable" />
-        </n-form-item>
+		<n-form-item label="Ignore Unavailable" path="ignore_unavailable">
+			<n-switch v-model:value="formData.ignore_unavailable" />
+		</n-form-item>
 
-        <n-alert type="warning" class="mb-4">
-            <strong>Note:</strong> If an index with the same name already exists, use the rename pattern to restore under
-            a different name. Example: Pattern <code>(.+)</code> with replacement <code>restored_$1</code>
-        </n-alert>
+		<n-alert type="warning" class="mb-4">
+			<strong>Note:</strong> If an index with the same name already exists, use the rename pattern to restore under
+			a different name. Example: Pattern <code>(.+)</code> with replacement <code>restored_$1</code>
+		</n-alert>
 
-        <div class="flex justify-end gap-2 mt-4">
-            <n-button @click="$emit('cancel')">Cancel</n-button>
-            <n-button type="primary" @click="handleSubmit" :loading="loading">Restore Snapshot</n-button>
-        </div>
-    </n-form>
+		<div class="flex justify-end gap-2 mt-4">
+			<n-button @click="$emit('cancel')">Cancel</n-button>
+			<n-button type="primary" :loading="loading" @click="handleSubmit">Restore Snapshot</n-button>
+		</div>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
 import type { FormInst, FormRules } from "naive-ui"
-import { ref } from "vue"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
+import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{

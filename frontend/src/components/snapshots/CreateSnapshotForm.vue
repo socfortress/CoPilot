@@ -1,48 +1,48 @@
 <template>
-    <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
-        <n-form-item label="Snapshot Name" path="snapshot">
-            <n-input v-model:value="formData.snapshot" placeholder="Enter snapshot name" />
-        </n-form-item>
+	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+		<n-form-item label="Snapshot Name" path="snapshot">
+			<n-input v-model:value="formData.snapshot" placeholder="Enter snapshot name" />
+		</n-form-item>
 
-        <n-form-item label="Indices" path="indices">
-            <n-input
-                v-model:value="indicesInput"
-                placeholder="Enter index patterns (comma-separated, e.g., wazuh_*)"
-                type="textarea"
-                :rows="2"
-            />
-        </n-form-item>
+		<n-form-item label="Indices" path="indices">
+			<n-input
+				v-model:value="indicesInput"
+				placeholder="Enter index patterns (comma-separated, e.g., wazuh_*)"
+				type="textarea"
+				:rows="2"
+			/>
+		</n-form-item>
 
-        <n-form-item label="Skip Write Indices" path="skip_write_indices">
-            <n-switch v-model:value="formData.skip_write_indices" />
-            <span class="ml-2 text-sm text-gray-500">Skip indices currently being written to</span>
-        </n-form-item>
+		<n-form-item label="Skip Write Indices" path="skip_write_indices">
+			<n-switch v-model:value="formData.skip_write_indices" />
+			<span class="ml-2 text-sm text-gray-500">Skip indices currently being written to</span>
+		</n-form-item>
 
-        <n-form-item label="Include Global State" path="include_global_state">
-            <n-switch v-model:value="formData.include_global_state" />
-        </n-form-item>
+		<n-form-item label="Include Global State" path="include_global_state">
+			<n-switch v-model:value="formData.include_global_state" />
+		</n-form-item>
 
-        <n-form-item label="Ignore Unavailable" path="ignore_unavailable">
-            <n-switch v-model:value="formData.ignore_unavailable" />
-        </n-form-item>
+		<n-form-item label="Ignore Unavailable" path="ignore_unavailable">
+			<n-switch v-model:value="formData.ignore_unavailable" />
+		</n-form-item>
 
-        <n-form-item label="Wait for Completion" path="wait_for_completion">
-            <n-switch v-model:value="formData.wait_for_completion" />
-            <span class="ml-2 text-sm text-gray-500">Wait for snapshot to complete before returning</span>
-        </n-form-item>
+		<n-form-item label="Wait for Completion" path="wait_for_completion">
+			<n-switch v-model:value="formData.wait_for_completion" />
+			<span class="ml-2 text-sm text-gray-500">Wait for snapshot to complete before returning</span>
+		</n-form-item>
 
-        <div class="flex justify-end gap-2 mt-4">
-            <n-button @click="$emit('cancel')">Cancel</n-button>
-            <n-button type="primary" @click="handleSubmit" :loading="loading">Create Snapshot</n-button>
-        </div>
-    </n-form>
+		<div class="flex justify-end gap-2 mt-4">
+			<n-button @click="$emit('cancel')">Cancel</n-button>
+			<n-button type="primary" :loading="loading" @click="handleSubmit">Create Snapshot</n-button>
+		</div>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { NButton, NForm, NFormItem, NInput, NSwitch, useMessage } from "naive-ui"
 import type { FormInst, FormRules } from "naive-ui"
-import { computed, ref } from "vue"
 import type { CreateSnapshotRequest } from "@/types/snapshots.d"
+import { NButton, NForm, NFormItem, NInput, NSwitch, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{

@@ -1,58 +1,61 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">Scheduled Snapshots</h2>
-            <div class="flex items-center gap-2">
-                <n-button @click="fetchSchedules" :loading="loading">
-                    <template #icon>
-                        <Icon :name="RefreshIcon" :size="16" />
-                    </template>
-                    Refresh
-                </n-button>
-                <n-button type="primary" @click="showCreateModal = true">
-                    <template #icon>
-                        <Icon :name="AddIcon" :size="16" />
-                    </template>
-                    Create Schedule
-                </n-button>
-            </div>
-        </div>
+	<div class="flex flex-col gap-4">
+		<div class="flex items-center justify-between">
+			<h2 class="text-lg font-semibold">Scheduled Snapshots</h2>
+			<div class="flex items-center gap-2">
+				<n-button :loading="loading" @click="fetchSchedules">
+					<template #icon>
+						<Icon :name="RefreshIcon" :size="16" />
+					</template>
+					Refresh
+				</n-button>
+				<n-button type="primary" @click="showCreateModal = true">
+					<template #icon>
+						<Icon :name="AddIcon" :size="16" />
+					</template>
+					Create Schedule
+				</n-button>
+			</div>
+		</div>
 
-        <n-spin :show="loading">
-            <n-card>
-                <n-data-table
-                    :columns="columns"
-                    :data="schedules"
-                    :bordered="false"
-                    :single-line="false"
-                    size="small"
-                    :row-key="(row: SnapshotScheduleResponse) => row.id"
-                />
-            </n-card>
-        </n-spin>
+		<n-spin :show="loading">
+			<n-card>
+				<n-data-table
+					:columns="columns"
+					:data="schedules"
+					:bordered="false"
+					:single-line="false"
+					size="small"
+					:row-key="(row: SnapshotScheduleResponse) => row.id"
+				/>
+			</n-card>
+		</n-spin>
 
-        <n-empty v-if="!loading && schedules.length === 0" description="No snapshot schedules configured" />
+		<n-empty v-if="!loading && schedules.length === 0" description="No snapshot schedules configured" />
 
-        <!-- Create Schedule Modal -->
-        <n-modal v-model:show="showCreateModal" preset="dialog" title="Create Snapshot Schedule" style="width: 600px">
-            <SnapshotScheduleForm
-                @success="onScheduleCreated"
-                @cancel="showCreateModal = false"
-            />
-        </n-modal>
+		<!-- Create Schedule Modal -->
+		<n-modal v-model:show="showCreateModal" preset="dialog" title="Create Snapshot Schedule" style="width: 600px">
+			<SnapshotScheduleForm
+				@success="onScheduleCreated"
+				@cancel="showCreateModal = false"
+			/>
+		</n-modal>
 
-        <!-- Edit Schedule Modal -->
-        <n-modal v-model:show="showEditModal" preset="dialog" title="Edit Snapshot Schedule" style="width: 600px">
-            <SnapshotScheduleForm
-                :schedule="selectedSchedule"
-                @success="onScheduleUpdated"
-                @cancel="showEditModal = false"
-            />
-        </n-modal>
-    </div>
+		<!-- Edit Schedule Modal -->
+		<n-modal v-model:show="showEditModal" preset="dialog" title="Edit Snapshot Schedule" style="width: 600px">
+			<SnapshotScheduleForm
+				:schedule="selectedSchedule"
+				@success="onScheduleUpdated"
+				@cancel="showEditModal = false"
+			/>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
+import type { DataTableColumns } from "naive-ui"
+import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
+import { Icon } from "@iconify/vue"
 import {
     NButton,
     NCard,
@@ -65,10 +68,7 @@ import {
     NTag,
     useMessage
 } from "naive-ui"
-import { Icon } from "@iconify/vue"
 import { h, onMounted, ref } from "vue"
-import type { DataTableColumns } from "naive-ui"
-import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
 import Api from "@/api"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
 
@@ -126,7 +126,8 @@ const columns: DataTableColumns<SnapshotScheduleResponse> = [
                 h(
                     NTag,
                     {
-                        type: row.last_execution_status?.startsWith("SUCCESS") ? "success" :
+                        type: row.last_execution_status?.startsWith("SUCCESS")
+? "success" :
                               row.last_execution_status?.startsWith("SKIPPED") ? "warning" : "error",
                         size: "small",
                         class: "mt-1"
