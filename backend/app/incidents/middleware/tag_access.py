@@ -1,4 +1,4 @@
-from typing import Set, Union, Any
+from typing import Set, Union, Any, Dict
 from sqlalchemy import select, and_, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -211,43 +211,52 @@ class TagAccessHandler:
         self,
         user: User,
         db: AsyncSession,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
-        Build filter components for alert queries.
+        Build query filters for alert access based on user's tag permissions.
 
         Returns a dict with:
-        - 'tag_subquery': subquery for filtering by tags (or None if no filtering)
-        - 'include_untagged': whether to include untagged alerts
-        - 'accessible_tags': set of accessible tag IDs
+        - accessible_tags: Set of tag IDs the user can access (or {"*"} for all)
+        - include_untagged: Whether to include alerts without tags
+        - default_tag_id: If set, untagged alerts are treated as having this tag
         """
+        # Check if tag RBAC is enabled
+        if not await self.is_tag_rbac_enabled(db):
+            return {"accessible_tags": {"*"}, "include_untagged": True, "default_tag_id": None}
+
+        # Admins and schedulers have full access
+        if user.role_id in [RoleEnum.admin.value, RoleEnum.scheduler.value]:
+            return {"accessible_tags": {"*"}, "include_untagged": True, "default_tag_id": None}
+
+        # Get user's accessible tags
         accessible_tags = await self.get_user_accessible_tags(user, db)
 
+        # If user has wildcard access, they can see everything
         if "*" in accessible_tags:
-            return {
-                "tag_subquery": None,
-                "include_untagged": True,
-                "accessible_tags": accessible_tags,
-            }
+            return {"accessible_tags": {"*"}, "include_untagged": True, "default_tag_id": None}
 
-        # Determine untagged alert handling
+        # Get settings for untagged alert behavior
+        settings = await self.get_tag_access_settings(db)  # Changed from _get_settings
         include_untagged = False
-        settings = await self.get_tag_access_settings(db)
+        default_tag_id = None
 
         if settings:
             if settings.untagged_alert_behavior == "visible_to_all":
                 include_untagged = True
+            elif settings.untagged_alert_behavior == "admin_only":
+                include_untagged = False
             elif settings.untagged_alert_behavior == "default_tag":
-                if settings.default_tag_id is None:
+                # If user has access to the default tag, they can see untagged alerts
+                default_tag_id = settings.default_tag_id
+                if default_tag_id and default_tag_id in accessible_tags:
                     include_untagged = True
-                elif settings.default_tag_id in accessible_tags:
-                    include_untagged = True
-
-        tag_subquery = self.build_tag_filter_subquery(accessible_tags)
+                else:
+                    include_untagged = False
 
         return {
-            "tag_subquery": tag_subquery,
-            "include_untagged": include_untagged,
             "accessible_tags": accessible_tags,
+            "include_untagged": include_untagged,
+            "default_tag_id": default_tag_id,
         }
 
 

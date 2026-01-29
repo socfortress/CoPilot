@@ -1,11 +1,9 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
-    AlertTag,
     TagAccessSettings,
-    UserTagAssignment,
-    UserTagsResponse,
     TagAccessSettingsResponse,
-    AvailableTagsResponse
+    AvailableTagsResponse,
+    UserTagsResponse
 } from "@/types/incidentManagement/tags.d"
 import { HttpClient } from "../httpClient"
 
@@ -25,20 +23,34 @@ export default {
         return HttpClient.get<AvailableTagsResponse>("/incidents/tag_access/tags")
     },
 
-    // Get tags assigned to a user
+    // Get tags assigned to a user (matches: GET /user/{user_id})
     getUserTags(userId: number) {
-        return HttpClient.get<UserTagsResponse>(`/incidents/tag_access/user/${userId}/tags`)
+        return HttpClient.get<UserTagsResponse>(`/incidents/tag_access/user/${userId}`)
     },
 
-    // Assign tags to a user
+    // Assign tags to a user (matches: PUT /user/{user_id})
     assignUserTags(userId: number, tagIds: number[]) {
-        return HttpClient.put<UserTagsResponse>(`/incidents/tag_access/user/${userId}/tags`, {
+        return HttpClient.put<UserTagsResponse>(`/incidents/tag_access/user/${userId}`, {
             tag_ids: tagIds
         })
     },
 
-    // Remove all tags from a user (grant full access)
-    clearUserTags(userId: number) {
-        return HttpClient.delete<FlaskBaseResponse>(`/incidents/tag_access/user/${userId}/tags`)
+    // Add tags to a user (matches: POST /user/{user_id}/add)
+    addUserTags(userId: number, tagIds: number[]) {
+        return HttpClient.post<UserTagsResponse>(`/incidents/tag_access/user/${userId}/add`, {
+            tag_ids: tagIds
+        })
+    },
+
+    // Remove tags from a user (matches: POST /user/{user_id}/remove)
+    removeUserTags(userId: number, tagIds: number[]) {
+        return HttpClient.post<UserTagsResponse>(`/incidents/tag_access/user/${userId}/remove`, {
+            tag_ids: tagIds
+        })
+    },
+
+    // Get current user's effective access
+    getMyEffectiveAccess() {
+        return HttpClient.get<FlaskBaseResponse>("/incidents/tag_access/me")
     }
 }

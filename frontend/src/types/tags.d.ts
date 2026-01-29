@@ -5,29 +5,34 @@ export interface AlertTag {
 
 export interface TagAccessSettings {
     enabled: boolean
-    untagged_alert_behavior: "visible" | "hidden"
+    untagged_alert_behavior: "visible_to_all" | "admin_only" | "default_tag"
+    default_tag_id?: number | null
 }
 
-export interface UserTagAssignment {
-    user_id: number
-    tag_ids: number[]
+export interface TagAccessSettingsItem {
+    enabled: boolean
+    untagged_alert_behavior: "visible_to_all" | "admin_only" | "default_tag"
+    default_tag_id: number | null
+    default_tag_name: string | null
 }
 
+// Response from GET /settings - settings nested under 'settings' key
+export interface TagAccessSettingsResponse {
+    settings: TagAccessSettingsItem
+    success: boolean
+    message: string
+}
+
+// Response from GET /user/{user_id}
 export interface UserTagsResponse {
     user_id: number
     username: string
-    tag_ids: number[]
-    tags: AlertTag[]
+    accessible_tags: AlertTag[]
     success: boolean
     message: string
 }
 
-export interface TagAccessSettingsResponse {
-    settings: TagAccessSettings
-    success: boolean
-    message: string
-}
-
+// Response from GET /tags
 export interface AvailableTagsResponse {
     tags: AlertTag[]
     success: boolean

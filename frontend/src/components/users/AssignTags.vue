@@ -93,7 +93,7 @@ const hasChanges = computed(() => {
 async function loadSettings() {
     try {
         const res = await Api.tagRbac.getSettings()
-        if (res.data.success) {
+        if (res.data.success && res.data.settings) {
             tagRbacEnabled.value = res.data.settings.enabled
         }
     } catch (error) {
@@ -122,8 +122,10 @@ async function loadUserTags() {
     try {
         const res = await Api.tagRbac.getUserTags(props.user.id)
         if (res.data.success) {
-            selectedTagIds.value = res.data.tag_ids
-            originalTagIds.value = [...res.data.tag_ids]
+            // Backend returns accessible_tags, not tag_ids
+            const tagIds = res.data.accessible_tags.map(tag => tag.id)
+            selectedTagIds.value = tagIds
+            originalTagIds.value = [...tagIds]
         }
     } catch (error) {
         console.error("Failed to load user tags:", error)
@@ -140,7 +142,9 @@ async function saveTags() {
         const res = await Api.tagRbac.assignUserTags(props.user.id, selectedTagIds.value)
         if (res.data.success) {
             message.success("Tag access updated")
-            originalTagIds.value = [...selectedTagIds.value]
+            // Update original from response
+            const tagIds = res.data.accessible_tags.map(tag => tag.id)
+            originalTagIds.value = [...tagIds]
             emit("success")
         } else {
             message.error(res.data.message || "Failed to update tag access")
@@ -157,7 +161,8 @@ async function clearAllTags() {
 
     saving.value = true
     try {
-        const res = await Api.tagRbac.clearUserTags(props.user.id)
+        // Use assignUserTags with empty array to clear all
+        const res = await Api.tagRbac.assignUserTags(props.user.id, [])
         if (res.data.success) {
             message.success("Tag restrictions cleared")
             selectedTagIds.value = []

@@ -620,13 +620,16 @@ class TagAccessSettingsUpdate(BaseModel):
             )
         return v
 
-
-class TagAccessSettingsResponse(BaseModel):
-    """Response for tag access settings."""
+class TagAccessSettingsItem(BaseModel):
+    """Single tag access settings item."""
     enabled: bool
     untagged_alert_behavior: str
     default_tag_id: Optional[int]
     default_tag_name: Optional[str]
+
+class TagAccessSettingsResponse(BaseModel):
+    """Response for tag access settings."""
+    settings: TagAccessSettingsItem
     success: bool
     message: str
 

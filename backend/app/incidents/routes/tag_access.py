@@ -19,6 +19,7 @@ from app.incidents.schema.db_operations import (
     UserEffectiveAccessResponse,
     UserTagAccessCreate,
     UserTagAccessResponse,
+    TagAccessSettingsItem
 )
 from app.incidents.services import tag_access as tag_access_service
 
@@ -66,10 +67,12 @@ async def get_tag_access_settings(
             default_tag_name = tag.tag
 
     return TagAccessSettingsResponse(
-        enabled=settings.enabled,
-        untagged_alert_behavior=settings.untagged_alert_behavior,
-        default_tag_id=settings.default_tag_id,
-        default_tag_name=default_tag_name,
+        settings=TagAccessSettingsItem(
+            enabled=settings.enabled,
+            untagged_alert_behavior=settings.untagged_alert_behavior,
+            default_tag_id=settings.default_tag_id,
+            default_tag_name=default_tag_name,
+        ),
         success=True,
         message="Settings retrieved successfully",
     )
@@ -114,11 +117,14 @@ async def update_tag_access_settings(
 
     logger.info(f"Admin {current_user.username} updated tag access settings")
 
+    # Return with settings nested under 'settings' key to match schema
     return TagAccessSettingsResponse(
-        enabled=settings.enabled,
-        untagged_alert_behavior=settings.untagged_alert_behavior,
-        default_tag_id=settings.default_tag_id,
-        default_tag_name=default_tag_name,
+        settings=TagAccessSettingsItem(
+            enabled=settings.enabled,
+            untagged_alert_behavior=settings.untagged_alert_behavior,
+            default_tag_id=settings.default_tag_id,
+            default_tag_name=default_tag_name,
+        ),
         success=True,
         message="Settings updated successfully",
     )
