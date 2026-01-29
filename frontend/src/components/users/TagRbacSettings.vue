@@ -1,137 +1,137 @@
 <template>
-    <n-spin :show="loading">
-        <div class="settings-form flex flex-col gap-4">
-            <n-form-item label="Enable Tag RBAC" :show-feedback="false">
-                <n-switch v-model:value="settings.enabled">
-                    <template #checked>On</template>
-                    <template #unchecked>Off</template>
-                </n-switch>
-            </n-form-item>
+	<n-spin :show="loading">
+		<div class="settings-form flex flex-col gap-4">
+			<n-form-item label="Enable Tag RBAC" :show-feedback="false">
+				<n-switch v-model:value="settings.enabled">
+					<template #checked>On</template>
+					<template #unchecked>Off</template>
+				</n-switch>
+			</n-form-item>
 
-            <n-form-item v-if="settings.enabled" label="Untagged Alert Visibility" :show-feedback="false">
-                <n-radio-group v-model:value="settings.untagged_alert_behavior">
-                    <n-space vertical>
-                        <n-radio value="visible_to_all">
-                            <div class="radio-label">
-                                <span class="label">Visible to All</span>
-                                <span class="description">Users can see alerts without tags</span>
-                            </div>
-                        </n-radio>
-                        <n-radio value="admin_only">
-                            <div class="radio-label">
-                                <span class="label">Admin Only</span>
-                                <span class="description">Only admins can see untagged alerts</span>
-                            </div>
-                        </n-radio>
-                        <n-radio value="default_tag">
-                            <div class="radio-label">
-                                <span class="label">Default Tag</span>
-                                <span class="description">Assign untagged alerts to users with a specific tag</span>
-                            </div>
-                        </n-radio>
-                    </n-space>
-                </n-radio-group>
-            </n-form-item>
+			<n-form-item v-if="settings.enabled" label="Untagged Alert Visibility" :show-feedback="false">
+				<n-radio-group v-model:value="settings.untagged_alert_behavior">
+					<n-space vertical>
+						<n-radio value="visible_to_all">
+							<div class="radio-label">
+								<span class="label">Visible to All</span>
+								<span class="description">Users can see alerts without tags</span>
+							</div>
+						</n-radio>
+						<n-radio value="admin_only">
+							<div class="radio-label">
+								<span class="label">Admin Only</span>
+								<span class="description">Only admins can see untagged alerts</span>
+							</div>
+						</n-radio>
+						<n-radio value="default_tag">
+							<div class="radio-label">
+								<span class="label">Default Tag</span>
+								<span class="description">Assign untagged alerts to users with a specific tag</span>
+							</div>
+						</n-radio>
+					</n-space>
+				</n-radio-group>
+			</n-form-item>
 
-            <n-form-item
-                v-if="settings.enabled && settings.untagged_alert_behavior === 'default_tag'"
-                label="Default Tag"
-                :show-feedback="false"
-            >
-                <n-select
-                    v-model:value="settings.default_tag_id"
-                    filterable
-                    clearable
-                    placeholder="Select a default tag"
-                    :options="tagOptions"
-                    :loading="loadingTags"
-                />
-                <template #help>
-                    <span class="text-xs opacity-70">
-                        Users with access to this tag will also see untagged alerts
-                    </span>
-                </template>
-            </n-form-item>
+			<n-form-item
+				v-if="settings.enabled && settings.untagged_alert_behavior === 'default_tag'"
+				label="Default Tag"
+				:show-feedback="false"
+			>
+				<n-select
+					v-model:value="settings.default_tag_id"
+					filterable
+					clearable
+					placeholder="Select a default tag"
+					:options="tagOptions"
+					:loading="loadingTags"
+				/>
+				<template #help>
+					<span class="text-xs opacity-70">
+						Users with access to this tag will also see untagged alerts
+					</span>
+				</template>
+			</n-form-item>
 
-            <n-divider v-if="settings.enabled" class="!my-2" />
+			<n-divider v-if="settings.enabled" class="!my-2" />
 
-            <n-alert v-if="settings.enabled" type="info" title="How Tag RBAC Works">
-                <div class="info-content">
-                    <p class="intro">
-                        Tag RBAC controls which alerts users can see based on assigned tags.
-                    </p>
+			<n-alert v-if="settings.enabled" type="info" title="How Tag RBAC Works">
+				<div class="info-content">
+					<p class="intro">
+						Tag RBAC controls which alerts users can see based on assigned tags.
+					</p>
 
-                    <div class="section">
-                        <strong>User Access Rules:</strong>
-                        <ul class="info-list">
-                            <li>
-                                <strong>No tags assigned</strong> → User can see
-                                <em>all alerts</em> (no restrictions)
-                            </li>
-                            <li>
-                                <strong>Tags assigned</strong> → User can
-                                <em>only</em> see alerts with matching tags
-                            </li>
-                            <li>
-                                <strong>Admins &amp; Schedulers</strong> → Always have full access
-                            </li>
-                        </ul>
-                    </div>
+					<div class="section">
+						<strong>User Access Rules:</strong>
+						<ul class="info-list">
+							<li>
+								<strong>No tags assigned</strong> → User can see
+								<em>all alerts</em> (no restrictions)
+							</li>
+							<li>
+								<strong>Tags assigned</strong> → User can
+								<em>only</em> see alerts with matching tags
+							</li>
+							<li>
+								<strong>Admins &amp; Schedulers</strong> → Always have full access
+							</li>
+						</ul>
+					</div>
 
-                    <div class="section">
-                        <strong>Untagged Alert Behavior:</strong>
-                        <ul class="info-list">
-                            <li>
-                                <strong>Visible to All:</strong> Everyone sees untagged alerts
-                            </li>
-                            <li>
-                                <strong>Admin Only:</strong> Only admins see untagged alerts
-                            </li>
-                            <li>
-                                <strong>Default Tag:</strong> Users with the selected tag can see untagged alerts
-                            </li>
-                        </ul>
-                    </div>
+					<div class="section">
+						<strong>Untagged Alert Behavior:</strong>
+						<ul class="info-list">
+							<li>
+								<strong>Visible to All:</strong> Everyone sees untagged alerts
+							</li>
+							<li>
+								<strong>Admin Only:</strong> Only admins see untagged alerts
+							</li>
+							<li>
+								<strong>Default Tag:</strong> Users with the selected tag can see untagged alerts
+							</li>
+						</ul>
+					</div>
 
-                    <n-divider class="!my-3" />
+					<n-divider class="!my-3" />
 
-                    <div class="example">
-                        <strong>Example:</strong>
-                        <p>
-                            If analyst "John" is assigned the tag "Network", John will only see alerts tagged
-                            "Network". If untagged behavior is set to "Admin Only", John won't see any untagged
-                            alerts. If set to "Default Tag: Network", John will also see untagged alerts.
-                        </p>
-                    </div>
-                </div>
-            </n-alert>
+					<div class="example">
+						<strong>Example:</strong>
+						<p>
+							If analyst "John" is assigned the tag "Network", John will only see alerts tagged
+							"Network". If untagged behavior is set to "Admin Only", John won't see any untagged
+							alerts. If set to "Default Tag: Network", John will also see untagged alerts.
+						</p>
+					</div>
+				</div>
+			</n-alert>
 
-            <div class="actions flex gap-3">
-                <n-button type="primary" :loading="saving" :disabled="!hasChanges" @click="saveSettings">
-                    Save Settings
-                </n-button>
-                <n-button :disabled="!hasChanges" @click="resetSettings">Cancel</n-button>
-            </div>
-        </div>
-    </n-spin>
+			<div class="actions flex gap-3">
+				<n-button type="primary" :loading="saving" :disabled="!hasChanges" @click="saveSettings">
+					Save Settings
+				</n-button>
+				<n-button :disabled="!hasChanges" @click="resetSettings">Cancel</n-button>
+			</div>
+		</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from "vue"
+import type { AlertTag } from "@/types/incidentManagement/tags.d"
 import {
-    NFormItem,
-    NSwitch,
-    NRadioGroup,
-    NRadio,
-    NSpace,
-    NButton,
     NAlert,
+    NButton,
     NDivider,
-    NSpin,
+    NFormItem,
+    NRadio,
+    NRadioGroup,
     NSelect,
+    NSpace,
+    NSpin,
+    NSwitch,
     useMessage
 } from "naive-ui"
-import type { AlertTag } from "@/types/incidentManagement/tags.d"
+import { computed, onMounted, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 interface TagAccessSettings {

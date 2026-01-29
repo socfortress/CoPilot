@@ -1,8 +1,8 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
+    AvailableTagsResponse,
     TagAccessSettings,
     TagAccessSettingsResponse,
-    AvailableTagsResponse,
     UserTagsResponse
 } from "@/types/incidentManagement/tags.d"
 import { HttpClient } from "../httpClient"

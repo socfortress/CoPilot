@@ -29,6 +29,7 @@ import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
+import tagRbac from "./endpoints/tagRbac"
 import threatIntel from "./endpoints/threatIntel"
 import users from "./endpoints/users"
 import version from "./endpoints/version"
@@ -36,7 +37,6 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
-import tagRbac from "./endpoints/tagRbac"
 
 export default {
 	agents,

@@ -1,62 +1,60 @@
 <template>
-    <div class="assign-tags-box flex flex-col gap-2 px-3 py-2">
-        <div class="title flex items-center gap-2">
-            <Icon :name="TagIcon" :size="16" />
-            <span>Assign Tags</span>
-        </div>
+	<div class="assign-tags-box flex flex-col gap-2 px-3 py-2">
+		<div class="title flex items-center gap-2">
+			<Icon :name="TagIcon" :size="16" />
+			<span>Assign Tags</span>
+		</div>
 
-        <n-spin :show="loading" size="small">
-            <div v-if="!tagRbacEnabled" class="text-xs opacity-70">
-                Tag RBAC is disabled
-            </div>
+		<n-spin :show="loading" size="small">
+			<div v-if="!tagRbacEnabled" class="text-xs opacity-70">
+				Tag RBAC is disabled
+			</div>
 
-            <div v-else class="flex flex-col gap-2">
-                <n-select
-                    v-model:value="selectedTagIds"
-                    multiple
-                    filterable
-                    clearable
-                    size="small"
-                    placeholder="No restrictions (full access)"
-                    :options="tagOptions"
-                    :loading="loadingTags"
-                    :disabled="saving"
-                />
+			<div v-else class="flex flex-col gap-2">
+				<n-select
+					v-model:value="selectedTagIds"
+					multiple
+					filterable
+					clearable
+					size="small"
+					placeholder="No restrictions (full access)"
+					:options="tagOptions"
+					:loading="loadingTags"
+					:disabled="saving"
+				/>
 
-                <div class="flex gap-2">
-                    <n-button
-                        size="small"
-                        type="primary"
-                        :loading="saving"
-                        :disabled="!hasChanges"
-                        @click="saveTags"
-                    >
-                        Save
-                    </n-button>
-                    <n-button
-                        v-if="selectedTagIds.length > 0"
-                        size="small"
-                        quaternary
-                        :disabled="saving"
-                        @click="clearAllTags"
-                    >
-                        Clear All
-                    </n-button>
-                </div>
-            </div>
-        </n-spin>
-    </div>
+				<div class="flex gap-2">
+					<n-button
+						size="small"
+						type="primary"
+						:loading="saving"
+						:disabled="!hasChanges"
+						@click="saveTags"
+					>
+						Save
+					</n-button>
+					<n-button
+						v-if="selectedTagIds.length > 0"
+						size="small"
+						quaternary
+						:disabled="saving"
+						@click="clearAllTags"
+					>
+						Clear All
+					</n-button>
+				</div>
+			</div>
+		</n-spin>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue"
-import { NSelect, NButton, NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import type { User } from "@/types/user.d"
 import type { AlertTag } from "@/types/incidentManagement/tags.d"
+import type { User } from "@/types/user.d"
+import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
-
-const TagIcon = "carbon:tag"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
     user: User | undefined
@@ -65,6 +63,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "success"): void
 }>()
+
+const TagIcon = "carbon:tag"
 
 const message = useMessage()
 

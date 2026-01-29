@@ -1,108 +1,108 @@
 <template>
-    <div class="users-list">
-        <div class="mb-4 flex items-center justify-between gap-5">
-            <div>
-                Total:
-                <strong class="font-mono">{{ usersList.length }}</strong>
-            </div>
-            <div class="flex gap-2">
-                <n-button size="small" @click="showTagRbacSettings = true">
-                    <template #icon>
-                        <Icon :name="SettingsIcon" />
-                    </template>
-                    Tag RBAC Settings
-                </n-button>
-                <n-button size="small" type="primary" @click="showForm = true">
-                    <template #icon>
-                        <Icon :name="UserAddIcon" />
-                    </template>
-                    Add User
-                </n-button>
-            </div>
-        </div>
+	<div class="users-list">
+		<div class="mb-4 flex items-center justify-between gap-5">
+			<div>
+				Total:
+				<strong class="font-mono">{{ usersList.length }}</strong>
+			</div>
+			<div class="flex gap-2">
+				<n-button size="small" @click="showTagRbacSettings = true">
+					<template #icon>
+						<Icon :name="SettingsIcon" />
+					</template>
+					Tag RBAC Settings
+				</n-button>
+				<n-button size="small" type="primary" @click="showForm = true">
+					<template #icon>
+						<Icon :name="UserAddIcon" />
+					</template>
+					Add User
+				</n-button>
+			</div>
+		</div>
 
-        <n-spin :show="loading" content-class="min-h-32">
-            <n-scrollbar x-scrollable class="w-full">
-                <n-table :bordered="false" class="min-w-max">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th class="max-w-75"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="user of usersList"
-                            :key="user.id"
-                            :class="{ highlight: highlight === user.id.toString() }"
-                        >
-                            <td>#{{ user.id }}</td>
-                            <td>
-                                {{ user.username }}
-                            </td>
-                            <td>
-                                {{ user.email }}
-                            </td>
-                            <td>
-                                <n-tag :type="getRoleTagType(user.role_name)" size="small">
-                                    {{ user.role_name || "No Role" }}
-                                </n-tag>
-                            </td>
-                            <td class="max-w-75">
-                                <div v-if="isAdmin" class="flex justify-end">
-                                    <n-dropdown
-                                        trigger="click"
-                                        :options
-                                        display-directive="show"
-                                        :keyboard="false"
-                                        @click="selectedUser = user"
-                                    >
-                                        <n-button text>
-                                            <template #icon>
-                                                <Icon :name="DropdownIcon" :size="24" />
-                                            </template>
-                                        </n-button>
-                                    </n-dropdown>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </n-table>
-            </n-scrollbar>
-        </n-spin>
+		<n-spin :show="loading" content-class="min-h-32">
+			<n-scrollbar x-scrollable class="w-full">
+				<n-table :bordered="false" class="min-w-max">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Username</th>
+							<th>Email</th>
+							<th>Role</th>
+							<th class="max-w-75"></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="user of usersList"
+							:key="user.id"
+							:class="{ highlight: highlight === user.id.toString() }"
+						>
+							<td>#{{ user.id }}</td>
+							<td>
+								{{ user.username }}
+							</td>
+							<td>
+								{{ user.email }}
+							</td>
+							<td>
+								<n-tag :type="getRoleTagType(user.role_name)" size="small">
+									{{ user.role_name || "No Role" }}
+								</n-tag>
+							</td>
+							<td class="max-w-75">
+								<div v-if="isAdmin" class="flex justify-end">
+									<n-dropdown
+										trigger="click"
+										:options
+										display-directive="show"
+										:keyboard="false"
+										@click="selectedUser = user"
+									>
+										<n-button text>
+											<template #icon>
+												<Icon :name="DropdownIcon" :size="24" />
+											</template>
+										</n-button>
+									</n-dropdown>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</n-table>
+			</n-scrollbar>
+		</n-spin>
 
-        <n-modal
-            v-model:show="showTagRbacSettings"
-            display-directive="show"
-            preset="card"
-            :style="{ maxWidth: 'min(500px, 90vw)', overflow: 'hidden' }"
-            title="Tag RBAC Settings"
-            :bordered="false"
-            segmented
-        >
-            <TagRbacSettings />
-        </n-modal>
+		<n-modal
+			v-model:show="showTagRbacSettings"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(500px, 90vw)', overflow: 'hidden' }"
+			title="Tag RBAC Settings"
+			:bordered="false"
+			segmented
+		>
+			<TagRbacSettings />
+		</n-modal>
 
-        <n-modal
-            v-model:show="showForm"
-            display-directive="show"
-            preset="card"
-            :style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-            title="Add a new User"
-            :bordered="false"
-            content-class="flex flex-col"
-            segmented
-        >
-            <SignUp
-                :unavailable-username-list="usernameList"
-                :unavailable-email-list="emailList"
-                @success="addUserSuccess()"
-            />
-        </n-modal>
-    </div>
+		<n-modal
+			v-model:show="showForm"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Add a new User"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<SignUp
+				:unavailable-username-list="usernameList"
+				:unavailable-email-list="emailList"
+				@success="addUserSuccess()"
+			/>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
