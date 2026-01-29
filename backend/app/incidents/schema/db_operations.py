@@ -553,3 +553,118 @@ class CaseReportTemplateDataStoreListResponse(BaseModel):
 
 class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
+
+
+# ============================================
+# Tag Access RBAC Schemas
+# ============================================
+
+
+class AlertTagItem(BaseModel):
+    """Single tag item for responses."""
+
+    id: int
+    tag: str
+
+
+class TagAccessCreate(BaseModel):
+    """Base schema for creating tag access."""
+
+    tag_ids: List[int]
+
+
+class UserTagAccessCreate(TagAccessCreate):
+    """Assign tags to a user."""
+
+    user_id: int
+
+
+class RoleTagAccessCreate(TagAccessCreate):
+    """Assign tags to a role."""
+
+    role_id: int
+
+
+class UserTagAccessResponse(BaseModel):
+    """Response for user tag access operations."""
+
+    user_id: int
+    username: str
+    accessible_tags: List[AlertTagItem]
+    success: bool
+    message: str
+
+
+class RoleTagAccessResponse(BaseModel):
+    """Response for role tag access operations."""
+
+    role_id: int
+    role_name: str
+    accessible_tags: List[AlertTagItem]
+    success: bool
+    message: str
+
+
+class UntaggedAlertBehavior(str, Enum):
+    """Options for handling untagged alerts when tag RBAC is enabled."""
+
+    VISIBLE_TO_ALL = "visible_to_all"
+    ADMIN_ONLY = "admin_only"
+    DEFAULT_TAG = "default_tag"
+
+
+class TagAccessSettingsUpdate(BaseModel):
+    """Update tag access settings."""
+
+    enabled: bool
+    untagged_alert_behavior: UntaggedAlertBehavior = UntaggedAlertBehavior.VISIBLE_TO_ALL
+    default_tag_id: Optional[int] = None
+
+    @validator("default_tag_id")
+    def validate_default_tag(cls, v, values):
+        if values.get("untagged_alert_behavior") == UntaggedAlertBehavior.DEFAULT_TAG and v is None:
+            raise HTTPException(
+                status_code=400,
+                detail="default_tag_id is required when untagged_alert_behavior is 'default_tag'",
+            )
+        return v
+
+
+class TagAccessSettingsItem(BaseModel):
+    """Single tag access settings item."""
+
+    enabled: bool
+    untagged_alert_behavior: str
+    default_tag_id: Optional[int]
+    default_tag_name: Optional[str]
+
+
+class TagAccessSettingsResponse(BaseModel):
+    """Response for tag access settings."""
+
+    settings: TagAccessSettingsItem
+    success: bool
+    message: str
+
+
+class UserEffectiveAccessResponse(BaseModel):
+    """Shows effective access for a user (combines role + user-specific access)."""
+
+    user_id: int
+    username: str
+    role_id: Optional[int]
+    role_name: Optional[str]
+    accessible_customers: List[str]
+    accessible_tags: List[AlertTagItem]
+    is_tag_unrestricted: bool
+    tag_rbac_enabled: bool
+    success: bool
+    message: str
+
+
+class AllTagsResponse(BaseModel):
+    """Response for listing all available tags."""
+
+    tags: List[AlertTagItem]
+    success: bool
+    message: str

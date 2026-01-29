@@ -255,3 +255,26 @@ class VeloSigmaExclusion(SQLModel, table=True):
     last_matched_at: Optional[datetime] = Field(nullable=True, description="When this exclusion last matched an alert")
     match_count: int = Field(default=0, description="How many times this exclusion has matched")
     enabled: bool = Field(default=True, description="Whether this exclusion is active")
+
+
+class TagAccessSettings(SQLModel, table=True):
+    """Global settings for tag-based access control."""
+
+    __tablename__ = "incident_management_tag_access_settings"
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    # Whether tag-based RBAC is enabled (False = current behavior, no filtering)
+    enabled: bool = Field(default=False)
+
+    # How to handle untagged alerts: "admin_only", "visible_to_all", "default_tag"
+    untagged_alert_behavior: str = Field(default="visible_to_all", max_length=50)
+
+    # If untagged_alert_behavior is "default_tag", which tag to use
+    default_tag_id: Optional[int] = Field(
+        foreign_key="incident_management_alerttag.id",
+        nullable=True,
+    )
+
+    # Last modified
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[str] = Field(max_length=100, nullable=True)

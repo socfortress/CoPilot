@@ -21,6 +21,7 @@ class Role(SQLModel, table=True):
     description: str = Field(max_length=256)
 
     user: Optional["User"] = Relationship(back_populates="role")
+    tag_access: List["RoleTagAccess"] = Relationship(back_populates="role")
 
 
 class UserCustomerAccess(SQLModel, table=True):
@@ -34,6 +35,32 @@ class UserCustomerAccess(SQLModel, table=True):
     user: "User" = Relationship(back_populates="customer_access")
 
 
+class UserTagAccess(SQLModel, table=True):
+    """Defines which tags a user can access (allow-list)."""
+
+    __tablename__ = "user_tag_access"
+    id: Optional[int] = Field(primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    tag_id: int = Field(foreign_key="incident_management_alerttag.id")
+    created_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
+
+    # Relationships
+    user: "User" = Relationship(back_populates="tag_access")
+
+
+class RoleTagAccess(SQLModel, table=True):
+    """Defines which tags a role can access (allow-list)."""
+
+    __tablename__ = "role_tag_access"
+    id: Optional[int] = Field(primary_key=True)
+    role_id: int = Field(foreign_key="role.id")
+    tag_id: int = Field(foreign_key="incident_management_alerttag.id")
+    created_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
+
+    # Relationships
+    role: "Role" = Relationship(back_populates="tag_access")
+
+
 class User(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
     username: str = Field(index=True, max_length=256)
@@ -45,6 +72,7 @@ class User(SQLModel, table=True):
     smtp: "SMTP" = Relationship(back_populates="user")
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")
+    tag_access: List["UserTagAccess"] = Relationship(back_populates="user")
 
 
 # Enum class for role_id 1,2

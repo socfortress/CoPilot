@@ -5,7 +5,13 @@
 				Total:
 				<strong class="font-mono">{{ usersList.length }}</strong>
 			</div>
-			<div>
+			<div class="flex gap-2">
+				<n-button size="small" @click="showTagRbacSettings = true">
+					<template #icon>
+						<Icon :name="SettingsIcon" />
+					</template>
+					Tag RBAC Settings
+				</n-button>
 				<n-button size="small" type="primary" @click="showForm = true">
 					<template #icon>
 						<Icon :name="UserAddIcon" />
@@ -69,6 +75,18 @@
 		</n-spin>
 
 		<n-modal
+			v-model:show="showTagRbacSettings"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(500px, 90vw)', overflow: 'hidden' }"
+			title="Tag RBAC Settings"
+			:bordered="false"
+			segmented
+		>
+			<TagRbacSettings />
+		</n-modal>
+
+		<n-modal
 			v-model:show="showForm"
 			display-directive="show"
 			preset="card"
@@ -100,14 +118,18 @@ const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue")
 const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
 const AssignRole = defineAsyncComponent(() => import("./AssignRole.vue"))
 const AssignCustomer = defineAsyncComponent(() => import("./AssignCustomer.vue"))
+const AssignTags = defineAsyncComponent(() => import("./AssignTags.vue"))
+const TagRbacSettings = defineAsyncComponent(() => import("./TagRbacSettings.vue"))
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
 const UserAddIcon = "carbon:user-follow"
+const SettingsIcon = "carbon:settings"
 const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
 const loadingDelete = ref(false)
 const showForm = ref(false)
+const showTagRbacSettings = ref(false)
 const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
 const selectedUser = ref<User | null>(null)
@@ -116,109 +138,118 @@ const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
 function getRoleTagType(roleName: string | null | undefined) {
-	switch (roleName?.toLowerCase()) {
-		case "admin":
-			return "error"
-		case "analyst":
-			return "warning"
-		case "scheduler":
-			return "info"
-		case "customer_user":
-			return "success"
-		default:
-			return "default"
-	}
+    switch (roleName?.toLowerCase()) {
+        case "admin":
+            return "error"
+        case "analyst":
+            return "warning"
+        case "scheduler":
+            return "info"
+        case "customer_user":
+            return "success"
+        default:
+            return "default"
+    }
 }
 
 const options = [
-	{
-		key: "AssignRole",
-		type: "render",
-		render: () =>
-			h(AssignRole, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers
-			})
-	},
-	{
-		key: "AssignCustomer",
-		type: "render",
-		render: () =>
-			h(AssignCustomer, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers
-			})
-	},
-	{
-		key: "ChangePassword",
-		type: "render",
-		render: () => h(ChangePassword, { user: selectedUser.value || undefined })
-	},
-	{
-		key: "DeleteUser",
-		type: "render",
-		render: () =>
-			h(DeleteUser, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers,
-				onLoading: updateLoadingDelete
-			})
-	}
+    {
+        key: "AssignRole",
+        type: "render",
+        render: () =>
+            h(AssignRole, {
+                user: selectedUser.value || undefined,
+                onSuccess: getUsers
+            })
+    },
+    {
+        key: "AssignCustomer",
+        type: "render",
+        render: () =>
+            h(AssignCustomer, {
+                user: selectedUser.value || undefined,
+                onSuccess: getUsers
+            })
+    },
+    {
+        key: "AssignTags",
+        type: "render",
+        render: () =>
+            h(AssignTags, {
+                user: selectedUser.value || undefined,
+                onSuccess: getUsers
+            })
+    },
+    {
+        key: "ChangePassword",
+        type: "render",
+        render: () => h(ChangePassword, { user: selectedUser.value || undefined })
+    },
+    {
+        key: "DeleteUser",
+        type: "render",
+        render: () =>
+            h(DeleteUser, {
+                user: selectedUser.value || undefined,
+                onSuccess: getUsers,
+                onLoading: updateLoadingDelete
+            })
+    }
 ]
 
 function updateLoadingDelete(value: boolean) {
-	loadingDelete.value = value
+    loadingDelete.value = value
 }
 
 function addUserSuccess() {
-	getUsers()
-	showForm.value = false
+    getUsers()
+    showForm.value = false
 }
 
 function getUsers() {
-	loadingUsers.value = true
+    loadingUsers.value = true
 
-	Api.users
-		.getUsers()
-		.then(res => {
-			if (res.data.success) {
-				usersList.value = res.data?.users || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			usersList.value = []
+    Api.users
+        .getUsers()
+        .then(res => {
+            if (res.data.success) {
+                usersList.value = res.data?.users || []
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            usersList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingUsers.value = false
-		})
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            loadingUsers.value = false
+        })
 }
 
 onBeforeMount(() => {
-	getUsers()
+    getUsers()
 })
 </script>
 
 <style lang="scss" scoped>
 .users-list {
-	border-radius: var(--border-radius);
-	overflow: hidden;
+    border-radius: var(--border-radius);
+    overflow: hidden;
 
-	tr:hover {
-		td {
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
+    tr:hover {
+        td {
+            background-color: rgba(var(--primary-color-rgb) / 0.05);
+        }
+    }
 
-	.highlight {
-		td {
-			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
+    .highlight {
+        td {
+            border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+            border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+            background-color: rgba(var(--primary-color-rgb) / 0.05);
+        }
+    }
 }
 </style>

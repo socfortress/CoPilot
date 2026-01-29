@@ -29,6 +29,7 @@ import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
+import tagRbac from "./endpoints/tagRbac"
 import threatIntel from "./endpoints/threatIntel"
 import users from "./endpoints/users"
 import version from "./endpoints/version"
@@ -75,5 +76,6 @@ export default {
 	copilotMCP,
 	customerPortal,
 	version,
-	snapshots
+	snapshots,
+	tagRbac
 }

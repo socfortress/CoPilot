@@ -109,6 +109,7 @@ from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alert_total_by_customer_codes
+from app.incidents.services.db_operations import alert_total_for_user
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
@@ -118,6 +119,7 @@ from app.incidents.services.db_operations import alerts_closed_by_customer_codes
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
+from app.incidents.services.db_operations import alerts_closed_for_user
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
@@ -127,6 +129,7 @@ from app.incidents.services.db_operations import alerts_in_progress_by_customer_
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
+from app.incidents.services.db_operations import alerts_in_progress_for_user
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
@@ -136,6 +139,7 @@ from app.incidents.services.db_operations import alerts_open_by_customer_codes
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
+from app.incidents.services.db_operations import alerts_open_for_user
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
 from app.incidents.services.db_operations import alerts_total_by_ioc
@@ -434,13 +438,13 @@ async def update_alert_escalated_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update alert escalated status with customer access validation"""
+    """Update alert escalated status with customer and tag access validation"""
     logger.info(
         f"Updating alert {escalate_alert.alert_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}",
     )
 
-    # Get the alert first to check customer access
-    alert = await get_alert_by_id(escalate_alert.alert_id, db)
+    # Get the alert first to check customer and tag access
+    alert = await get_alert_by_id(escalate_alert.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -456,8 +460,8 @@ async def create_comment_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -472,8 +476,8 @@ async def edit_comment_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -494,8 +498,8 @@ async def delete_comment_endpoint(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
 
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -774,52 +778,24 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
     )
 
 
-# @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
-# async def list_alerts_endpoint(
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(25, ge=1),
-#     order: str = Query("desc", regex="^(asc|desc)$"),
-#     db: AsyncSession = Depends(get_db),
-# ):
-#     return AlertOutResponse(
-#         alerts=await list_alerts(db, page=page, page_size=page_size, order=order),
-#         total=await alert_total(db),
-#         open=await alerts_open(db),
-#         in_progress=await alerts_in_progress(db),
-#         closed=await alerts_closed(db),
-#         success=True,
-#         message="Alerts retrieved successfully",
-#     )
-
-
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
 async def list_alerts_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", regex="^(asc|desc)$"),
-    current_user: User = Depends(AuthHandler().get_current_user),  # Get the full user object
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """List alerts with automatic customer and tag filtering"""
     logger.info(f"Listing alerts for user: {current_user.username} with role_id: {current_user.role_id}")
-    """List alerts with automatic customer filtering"""
+
     alerts = await list_alerts_for_user(current_user, db, page, page_size, order)
 
-    # Get totals with customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
-
-    logger.info(f"User {current_user.username} has access to customers: {accessible_customers}")
-    if "*" in accessible_customers:
-        # Admin/analyst - use existing total functions
-        total = await alert_total(db)
-        open_alerts = await alerts_open(db)
-        in_progress = await alerts_in_progress(db)
-        closed = await alerts_closed(db)
-    else:
-        # Customer user - filter totals by their customers
-        total = await alert_total_by_customer_codes(db, accessible_customers)
-        open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
-        in_progress = await alerts_in_progress_by_customer_codes(db, accessible_customers)
-        closed = await alerts_closed_by_customer_codes(db, accessible_customers)
+    # Get totals with both customer and tag filtering
+    total = await alert_total_for_user(current_user, db)
+    open_alerts = await alerts_open_for_user(current_user, db)
+    in_progress = await alerts_in_progress_for_user(current_user, db)
+    closed = await alerts_closed_for_user(current_user, db)
 
     return AlertOutResponse(
         alerts=alerts,
@@ -838,11 +814,11 @@ async def get_alert_by_id_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get alert by ID with customer access validation"""
+    """Get alert by ID with customer and tag access validation"""
     logger.info(f"Getting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get the alert first
-    alert = await get_alert_by_id(alert_id, db)
+    # Get the alert with tag access check
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -857,11 +833,11 @@ async def delete_alert_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete alert with customer access validation"""
+    """Delete alert with customer and tag access validation"""
     logger.info(f"Deleting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get the alert first to check customer access
-    alert = await get_alert_by_id(alert_id, db)
+    # Get the alert first to check customer and tag access
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -1175,25 +1151,6 @@ async def list_alerts_by_title_endpoint(
     )
 
 
-# @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
-# async def list_alerts_by_customer_code_endpoint(
-#     customer_code: str,
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(25, ge=1),
-#     order: str = Query("desc", regex="^(asc|desc)$"),
-#     db: AsyncSession = Depends(get_db),
-# ):
-#     return AlertOutResponse(
-#         alerts=await list_alerts_by_customer_code(customer_code, db, page=page, page_size=page_size, order=order),
-#         total=await alerts_total_by_customer_code(db, customer_code),
-#         open=await alerts_open_by_customer_code(db, customer_code),
-#         in_progress=await alerts_in_progress_by_customer_code(db, customer_code),
-#         closed=await alerts_closed_by_customer_code(db, customer_code),
-#         success=True,
-#         message="Alerts retrieved successfully",
-#     )
-
-
 @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
 async def list_alerts_by_customer_code_endpoint(
     customer_code: str,
@@ -1284,31 +1241,7 @@ async def list_alerts_multiple_filters_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Endpoint to list alerts with multiple filters and customer access control.
-
-    Parameters:
-    - assigned_to (str, optional): Filter by assigned user.
-    - alert_title (str, optional): Filter by alert title.
-    - customer_code (str, optional): Filter by customer code.
-    - source (str, optional): Filter by source.
-    - asset_name (str, optional): Filter by asset name.
-    - status (str, optional): Filter by status.
-    - tags (List[str], optional): Filter by tags.
-    - ioc_value (str, optional): Filter by IoC value.
-    - page (int, default=1): Page number.
-    - page_size (int, default=25): Number of alerts per page.
-    - order (str, default='desc'): Sorting order ('asc' or 'desc').
-    - current_user (User): Current authenticated user.
-    - db (AsyncSession): Database session.
-
-    Returns:
-    - alerts (List[AlertOut]): List of alerts matching the filters.
-    - total (int): Total number of alerts matching the filters.
-    - open (int): Number of open alerts matching the filters.
-    - in_progress (int): Number of alerts in progress matching the filters.
-    - closed (int): Number of closed alerts matching the filters.
-    - success (bool): Indicates if the operation was successful.
-    - message (str): Success message.
+    Endpoint to list alerts with multiple filters and customer/tag access control.
     """
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
@@ -1322,10 +1255,10 @@ async def list_alerts_multiple_filters_endpoint(
             raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
 
         # If no customer_code specified, use the first accessible customer for single customer users
-        # For multi-customer users, we'll need to modify the query to handle multiple customers
         if not customer_code and len(accessible_customers) == 1:
             customer_code = accessible_customers[0]
 
+    # Pass user for tag filtering
     alerts = await list_alerts_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
@@ -1339,51 +1272,35 @@ async def list_alerts_multiple_filters_endpoint(
         page=page,
         page_size=page_size,
         order=order,
+        user=current_user,  # Pass user for tag filtering
     )
 
-    # Get totals with customer filtering
-    if "*" in accessible_customers:
-        # Admin/analyst - use existing total functions
-        total = await alerts_total_multiple_filters(
-            assigned_to=assigned_to,
-            alert_title=alert_title,
-            customer_code=customer_code,
-            source=source,
-            asset_name=asset_name,
-            status=status,
-            tags=tags,
-            ioc_value=ioc_value,
-            db=db,
-        )
-        open_alerts = await alerts_open(db)
-        in_progress = await alerts_in_progress(db)
-        closed = await alerts_closed(db)
-        total_unfiltered = await alert_total(db)
-    else:
-        # Customer user - filter totals by their customers
-        total = await alerts_total_multiple_filters(
-            assigned_to=assigned_to,
-            alert_title=alert_title,
-            customer_code=customer_code,
-            source=source,
-            asset_name=asset_name,
-            status=status,
-            tags=tags,
-            ioc_value=ioc_value,
-            db=db,
-        )
-        open_alerts = await alerts_open_by_customer_codes(db, accessible_customers)
-        in_progress = await alerts_in_progress_by_customer_codes(db, accessible_customers)
-        closed = await alerts_closed_by_customer_codes(db, accessible_customers)
-        total_unfiltered = await alert_total_by_customer_codes(db, accessible_customers)
+    # Get totals with both customer and tag filtering
+    total = await alert_total_for_user(current_user, db)
+    open_alerts = await alerts_open_for_user(current_user, db)
+    in_progress = await alerts_in_progress_for_user(current_user, db)
+    closed = await alerts_closed_for_user(current_user, db)
+
+    # Get filtered total
+    total_filtered = await alerts_total_multiple_filters(
+        assigned_to=assigned_to,
+        alert_title=alert_title,
+        customer_code=customer_code,
+        source=source,
+        asset_name=asset_name,
+        status=status,
+        tags=tags,
+        ioc_value=ioc_value,
+        db=db,
+    )
 
     return AlertOutResponse(
         alerts=alerts,
-        total_filtered=total,
+        total_filtered=total_filtered,
         open=open_alerts,
         in_progress=in_progress,
         closed=closed,
-        total=total_unfiltered,
+        total=total,
         success=True,
         message="Alerts retrieved successfully",
     )
