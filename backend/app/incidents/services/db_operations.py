@@ -1280,44 +1280,6 @@ async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSessi
     return db_alert_context
 
 
-# async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
-#     result = await db.execute(
-#         select(Alert)
-#         .where(Alert.id == alert_id)
-#         .options(
-#             selectinload(Alert.comments),
-#             selectinload(Alert.assets),
-#             selectinload(Alert.cases).selectinload(CaseAlertLink.case),
-#             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-#         ),
-#     )
-#     alert = result.scalars().first()
-#     if not alert:
-#         raise HTTPException(status_code=404, detail="Alert not found")
-
-#     comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
-#     assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
-#     tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-#     linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
-
-#     alert_out = AlertOut(
-#         id=alert.id,
-#         alert_creation_time=alert.alert_creation_time,
-#         time_closed=alert.time_closed,
-#         alert_name=alert.alert_name,
-#         alert_description=alert.alert_description,
-#         status=alert.status,
-#         customer_code=alert.customer_code,
-#         source=alert.source,
-#         assigned_to=alert.assigned_to,
-#         escalated=alert.escalated,
-#         comments=comments,
-#         assets=assets,
-#         tags=tags,
-#         linked_cases=linked_cases,
-#     )
-
-#     return alert_out
 
 async def get_alert_by_id(alert_id: int, db: AsyncSession, user: Optional[User] = None) -> AlertOut:
     """
