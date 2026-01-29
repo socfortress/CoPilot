@@ -1,4 +1,4 @@
-from typing import Set, Union
+from typing import Set, Union, Any
 from sqlalchemy import select, and_, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -156,6 +156,56 @@ class TagAccessHandler:
             .where(AlertToTag.tag_id.in_(accessible_tags))
             .distinct()
         )
+
+    async def check_alert_tag_access(
+        self,
+        user: User,
+        alert: Any,  # Alert or AlertOut object
+        session: AsyncSession,
+    ) -> bool:
+        """
+        Check if a user has tag-based access to a specific alert.
+
+        Args:
+            user: The user to check access for
+            alert: The alert object (must have 'tags' attribute)
+            session: Database session
+
+        Returns:
+            True if user has access, False otherwise
+        """
+        # Get user's tag filters
+        tag_filters = await self.build_alert_query_filters(user, session)
+        accessible_tags = tag_filters["accessible_tags"]
+
+        # If user has wildcard access, allow everything
+        if "*" in accessible_tags:
+            return True
+
+        # Get alert's tag IDs
+        alert_tag_ids = set()
+        if hasattr(alert, 'tags') and alert.tags:
+            for tag_item in alert.tags:
+                # Handle both AlertToTag objects and AlertTagBase objects
+                if hasattr(tag_item, 'tag_id'):
+                    alert_tag_ids.add(tag_item.tag_id)
+                elif hasattr(tag_item, 'id'):
+                    alert_tag_ids.add(tag_item.id)
+
+        # Check if alert is untagged
+        is_untagged = len(alert_tag_ids) == 0
+
+        # If alert is untagged, check if untagged alerts are allowed
+        if is_untagged:
+            return tag_filters["include_untagged"]
+
+        # Check if user has access to any of the alert's tags
+        if accessible_tags:
+            accessible_tag_ids = set(accessible_tags)
+            if alert_tag_ids & accessible_tag_ids:  # Intersection
+                return True
+
+        return False
 
     async def build_alert_query_filters(
         self,

@@ -432,19 +432,59 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
 
 
+# @incidents_db_operations_router.put("/alert/escalated", response_model=AlertResponse)
+# async def update_alert_escalated_endpoint(
+#     escalate_alert: EscalateAlert,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     """Update alert escalated status with customer access validation"""
+#     logger.info(
+#         f"Updating alert {escalate_alert.alert_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}",
+#     )
+
+#     # Get the alert first to check customer access
+#     alert = await get_alert_by_id(escalate_alert.alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(status_code=403, detail=f"Access denied to alert {escalate_alert.alert_id} - insufficient customer permissions")
+
+#     updated_alert = await update_alert_escalated(escalate_alert.alert_id, escalate_alert.escalated, db)
+#     return AlertResponse(alert=updated_alert, success=True, message="Alert escalated status updated successfully")
+
+
+
+
+# @incidents_db_operations_router.post("/alert/comment", response_model=CommentResponse)
+# async def create_comment_endpoint(
+#     comment: CommentCreate,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     # Get the alert to check customer access
+#     alert = await get_alert_by_id(comment.alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
+
+#     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
+
+
 @incidents_db_operations_router.put("/alert/escalated", response_model=AlertResponse)
 async def update_alert_escalated_endpoint(
     escalate_alert: EscalateAlert,
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update alert escalated status with customer access validation"""
+    """Update alert escalated status with customer and tag access validation"""
     logger.info(
         f"Updating alert {escalate_alert.alert_id} escalated status for user: {current_user.username} with role_id: {current_user.role_id}",
     )
 
-    # Get the alert first to check customer access
-    alert = await get_alert_by_id(escalate_alert.alert_id, db)
+    # Get the alert first to check customer and tag access
+    alert = await get_alert_by_id(escalate_alert.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -460,8 +500,8 @@ async def create_comment_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -470,14 +510,55 @@ async def create_comment_endpoint(
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
 
+# @incidents_db_operations_router.put("/alert/comment", response_model=CommentResponse)
+# async def edit_comment_endpoint(
+#     comment: CommentEdit,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     # Get the alert to check customer access
+#     alert = await get_alert_by_id(comment.alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
+
+#     return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
+
+
+# @incidents_db_operations_router.delete("/alert/comment/{comment_id}")
+# async def delete_comment_endpoint(
+#     comment_id: int,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     # First get the comment to find the alert_id
+#     result = await db.execute(select(Comment).where(Comment.id == comment_id))
+#     comment = result.scalars().first()
+#     if not comment:
+#         raise HTTPException(status_code=404, detail="Comment not found")
+
+#     # Get the alert to check customer access
+#     alert = await get_alert_by_id(comment.alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(
+#             status_code=403,
+#             detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions",
+#         )
+
+#     await delete_comment(comment_id, db)
+#     return {"message": "Comment deleted successfully", "success": True}
+
 @incidents_db_operations_router.put("/alert/comment", response_model=CommentResponse)
 async def edit_comment_endpoint(
     comment: CommentEdit,
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -498,8 +579,8 @@ async def delete_comment_endpoint(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
 
-    # Get the alert to check customer access
-    alert = await get_alert_by_id(comment.alert_id, db)
+    # Get the alert to check customer and tag access
+    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -846,17 +927,57 @@ async def list_alerts_endpoint(
     )
 
 
+# @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
+# async def get_alert_by_id_endpoint(
+#     alert_id: int,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     """Get alert by ID with customer access validation"""
+#     logger.info(f"Getting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+#     # Get the alert first
+#     alert = await get_alert_by_id(alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient customer permissions")
+
+#     return AlertOutResponse(alerts=[alert], success=True, message="Alert retrieved successfully")
+
+
+# @incidents_db_operations_router.delete("/alert/{alert_id}")
+# async def delete_alert_endpoint(
+#     alert_id: int,
+#     current_user: User = Depends(AuthHandler().get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     """Delete alert with customer access validation"""
+#     logger.info(f"Deleting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
+
+#     # Get the alert first to check customer access
+#     alert = await get_alert_by_id(alert_id, db)
+
+#     # Check if user has access to this alert's customer
+#     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+#         raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient customer permissions")
+
+#     await is_alert_linked_to_case(alert_id, db)
+#     await delete_alert(alert_id, db)
+#     return {"message": "Alert deleted successfully", "success": True}
+
+
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(
     alert_id: int,
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get alert by ID with customer access validation"""
+    """Get alert by ID with customer and tag access validation"""
     logger.info(f"Getting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get the alert first
-    alert = await get_alert_by_id(alert_id, db)
+    # Get the alert with tag access check
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -871,11 +992,11 @@ async def delete_alert_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete alert with customer access validation"""
+    """Delete alert with customer and tag access validation"""
     logger.info(f"Deleting alert {alert_id} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get the alert first to check customer access
-    alert = await get_alert_by_id(alert_id, db)
+    # Get the alert first to check customer and tag access
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
@@ -884,7 +1005,6 @@ async def delete_alert_endpoint(
     await is_alert_linked_to_case(alert_id, db)
     await delete_alert(alert_id, db)
     return {"message": "Alert deleted successfully", "success": True}
-
 
 @incidents_db_operations_router.delete("/alerts", response_model=DeleteAlertsResponse)
 async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
