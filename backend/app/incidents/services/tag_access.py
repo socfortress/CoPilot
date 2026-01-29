@@ -1,13 +1,18 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 from loguru import logger
-from sqlalchemy import delete, select
+from sqlalchemy import delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.users import Role, RoleTagAccess, User, UserTagAccess
-from app.incidents.models import AlertTag, TagAccessSettings
-
+from app.auth.models.users import Role
+from app.auth.models.users import RoleTagAccess
+from app.auth.models.users import User
+from app.auth.models.users import UserTagAccess
+from app.incidents.models import AlertTag
+from app.incidents.models import TagAccessSettings
 
 # ============================================
 # Tag Access Settings
@@ -72,9 +77,7 @@ async def update_tag_access_settings(
 async def get_user_accessible_tags(user_id: int, db: AsyncSession) -> List[AlertTag]:
     """Get all tags a user has direct access to (not including role-based)."""
     result = await db.execute(
-        select(AlertTag)
-        .join(UserTagAccess, UserTagAccess.tag_id == AlertTag.id)
-        .where(UserTagAccess.user_id == user_id),
+        select(AlertTag).join(UserTagAccess, UserTagAccess.tag_id == AlertTag.id).where(UserTagAccess.user_id == user_id),
     )
     return list(result.scalars().all())
 
@@ -168,9 +171,7 @@ async def remove_user_tag_access(
 async def get_role_accessible_tags(role_id: int, db: AsyncSession) -> List[AlertTag]:
     """Get all tags a role has access to."""
     result = await db.execute(
-        select(AlertTag)
-        .join(RoleTagAccess, RoleTagAccess.tag_id == AlertTag.id)
-        .where(RoleTagAccess.role_id == role_id),
+        select(AlertTag).join(RoleTagAccess, RoleTagAccess.tag_id == AlertTag.id).where(RoleTagAccess.role_id == role_id),
     )
     return list(result.scalars().all())
 

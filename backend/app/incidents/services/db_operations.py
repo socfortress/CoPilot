@@ -28,6 +28,7 @@ from app.data_store.data_store_operations import upload_case_data_store
 from app.data_store.data_store_operations import upload_case_report_template_data_store
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
+from app.incidents.middleware.tag_access import tag_access_handler
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
@@ -79,7 +80,6 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.middleware.customer_access import customer_access_handler
-from app.incidents.middleware.tag_access import tag_access_handler
 
 
 async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
@@ -238,9 +238,12 @@ async def alerts_open_by_customer_codes(db: AsyncSession, customer_codes: List[s
     result = await db.execute(select(Alert).where((Alert.status == "OPEN") & (Alert.customer_code.in_(customer_codes))))
     return len(result.scalars().all())
 
+
 async def alert_total_for_user(user: User, db: AsyncSession) -> int:
     """Get total alerts count with customer and tag filtering"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     filters = []
 
@@ -284,7 +287,9 @@ async def alert_total_for_user(user: User, db: AsyncSession) -> int:
 
 async def alerts_open_for_user(user: User, db: AsyncSession) -> int:
     """Get open alerts count with customer and tag filtering"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     filters = [Alert.status == "OPEN"]
 
@@ -328,7 +333,9 @@ async def alerts_open_for_user(user: User, db: AsyncSession) -> int:
 
 async def alerts_in_progress_for_user(user: User, db: AsyncSession) -> int:
     """Get in-progress alerts count with customer and tag filtering"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     filters = [Alert.status == "IN_PROGRESS"]
 
@@ -372,7 +379,9 @@ async def alerts_in_progress_for_user(user: User, db: AsyncSession) -> int:
 
 async def alerts_closed_for_user(user: User, db: AsyncSession) -> int:
     """Get closed alerts count with customer and tag filtering"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     filters = [Alert.status == "CLOSED"]
 
@@ -412,6 +421,7 @@ async def alerts_closed_for_user(user: User, db: AsyncSession) -> int:
     query = select(func.count(Alert.id)).where(*filters)
     result = await db.execute(query)
     return result.scalar_one()
+
 
 async def alerts_total_multiple_filters(
     db: AsyncSession,
@@ -1280,7 +1290,6 @@ async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSessi
     return db_alert_context
 
 
-
 async def get_alert_by_id(alert_id: int, db: AsyncSession, user: Optional[User] = None) -> AlertOut:
     """
     Get alert by ID with optional tag-based access validation.
@@ -1309,10 +1318,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession, user: Optional[User] 
     if user:
         has_access = await tag_access_handler.check_alert_tag_access(user, alert, db)
         if not has_access:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Access denied to alert {alert_id} - insufficient tag permissions"
-            )
+            raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient tag permissions")
 
     comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
     assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
@@ -2260,7 +2266,9 @@ async def list_alerts_multiple_filters(
     user: Optional[User] = None,  # New parameter for tag filtering
 ) -> List[AlertOut]:
     """List alerts with multiple filters including tag-based RBAC"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
@@ -2379,7 +2387,9 @@ async def list_alerts_for_user(
     order: str = "desc",
 ) -> List[AlertOut]:
     """List alerts filtered by user's customer access and tag access"""
-    from sqlalchemy import or_, and_, exists
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
 
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)

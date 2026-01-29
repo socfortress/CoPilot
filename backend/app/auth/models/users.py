@@ -37,6 +37,7 @@ class UserCustomerAccess(SQLModel, table=True):
 
 class UserTagAccess(SQLModel, table=True):
     """Defines which tags a user can access (allow-list)."""
+
     __tablename__ = "user_tag_access"
     id: Optional[int] = Field(primary_key=True)
     user_id: int = Field(foreign_key="user.id")
@@ -49,6 +50,7 @@ class UserTagAccess(SQLModel, table=True):
 
 class RoleTagAccess(SQLModel, table=True):
     """Defines which tags a role can access (allow-list)."""
+
     __tablename__ = "role_tag_access"
     id: Optional[int] = Field(primary_key=True)
     role_id: int = Field(foreign_key="role.id")

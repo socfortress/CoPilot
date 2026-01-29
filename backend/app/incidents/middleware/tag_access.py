@@ -1,10 +1,19 @@
-from typing import Set, Union, Any, Dict
-from sqlalchemy import select, and_, exists
-from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
+from typing import Any
+from typing import Dict
+from typing import Set
+from typing import Union
 
-from app.auth.models.users import User, RoleEnum, UserTagAccess, RoleTagAccess
-from app.incidents.models import Alert, AlertToTag, TagAccessSettings
+from loguru import logger
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.models.users import RoleEnum
+from app.auth.models.users import RoleTagAccess
+from app.auth.models.users import User
+from app.auth.models.users import UserTagAccess
+from app.incidents.models import Alert
+from app.incidents.models import AlertToTag
+from app.incidents.models import TagAccessSettings
 
 
 class TagAccessHandler:
@@ -57,17 +66,13 @@ class TagAccessHandler:
         accessible_tags: Set[int] = set()
 
         # Get user-specific tag access
-        user_tags_result = await db.execute(
-            select(UserTagAccess.tag_id).where(UserTagAccess.user_id == user.id)
-        )
+        user_tags_result = await db.execute(select(UserTagAccess.tag_id).where(UserTagAccess.user_id == user.id))
         user_tags = {row[0] for row in user_tags_result}
         accessible_tags.update(user_tags)
 
         # Get role-based tag access
         if user.role_id:
-            role_tags_result = await db.execute(
-                select(RoleTagAccess.tag_id).where(RoleTagAccess.role_id == user.role_id)
-            )
+            role_tags_result = await db.execute(select(RoleTagAccess.tag_id).where(RoleTagAccess.role_id == user.role_id))
             role_tags = {row[0] for row in role_tags_result}
             accessible_tags.update(role_tags)
 
@@ -106,9 +111,7 @@ class TagAccessHandler:
 
     async def _get_alert_tag_ids(self, alert_id: int, db: AsyncSession) -> Set[int]:
         """Get all tag IDs for an alert."""
-        result = await db.execute(
-            select(AlertToTag.tag_id).where(AlertToTag.alert_id == alert_id)
-        )
+        result = await db.execute(select(AlertToTag.tag_id).where(AlertToTag.alert_id == alert_id))
         return {row[0] for row in result}
 
     async def _can_access_untagged_alert(self, user: User, db: AsyncSession) -> bool:
@@ -151,11 +154,7 @@ class TagAccessHandler:
             return select(Alert.id).where(Alert.id == -1)
 
         # Subquery: alert IDs that have at least one accessible tag
-        return (
-            select(AlertToTag.alert_id)
-            .where(AlertToTag.tag_id.in_(accessible_tags))
-            .distinct()
-        )
+        return select(AlertToTag.alert_id).where(AlertToTag.tag_id.in_(accessible_tags)).distinct()
 
     async def check_alert_tag_access(
         self,
@@ -184,12 +183,12 @@ class TagAccessHandler:
 
         # Get alert's tag IDs
         alert_tag_ids = set()
-        if hasattr(alert, 'tags') and alert.tags:
+        if hasattr(alert, "tags") and alert.tags:
             for tag_item in alert.tags:
                 # Handle both AlertToTag objects and AlertTagBase objects
-                if hasattr(tag_item, 'tag_id'):
+                if hasattr(tag_item, "tag_id"):
                     alert_tag_ids.add(tag_item.tag_id)
-                elif hasattr(tag_item, 'id'):
+                elif hasattr(tag_item, "id"):
                     alert_tag_ids.add(tag_item.id)
 
         # Check if alert is untagged

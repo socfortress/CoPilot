@@ -1,6 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,19 +11,15 @@ from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.middleware.tag_access import tag_access_handler
-from app.incidents.schema.db_operations import (
-    AlertTagItem,
-    AllTagsResponse,
-    RoleTagAccessCreate,
-    RoleTagAccessResponse,
-    TagAccessCreate,
-    TagAccessSettingsResponse,
-    TagAccessSettingsUpdate,
-    UserEffectiveAccessResponse,
-    UserTagAccessCreate,
-    UserTagAccessResponse,
-    TagAccessSettingsItem
-)
+from app.incidents.schema.db_operations import AlertTagItem
+from app.incidents.schema.db_operations import AllTagsResponse
+from app.incidents.schema.db_operations import RoleTagAccessResponse
+from app.incidents.schema.db_operations import TagAccessCreate
+from app.incidents.schema.db_operations import TagAccessSettingsItem
+from app.incidents.schema.db_operations import TagAccessSettingsResponse
+from app.incidents.schema.db_operations import TagAccessSettingsUpdate
+from app.incidents.schema.db_operations import UserEffectiveAccessResponse
+from app.incidents.schema.db_operations import UserTagAccessResponse
 from app.incidents.services import tag_access as tag_access_service
 
 tag_access_router = APIRouter()
@@ -483,6 +482,7 @@ async def get_my_effective_access(
     else:
         # Get specific tags user can access
         from sqlalchemy import select
+
         from app.incidents.models import AlertTag
 
         if accessible_tag_ids:

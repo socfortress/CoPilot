@@ -256,8 +256,10 @@ class VeloSigmaExclusion(SQLModel, table=True):
     match_count: int = Field(default=0, description="How many times this exclusion has matched")
     enabled: bool = Field(default=True, description="Whether this exclusion is active")
 
+
 class TagAccessSettings(SQLModel, table=True):
     """Global settings for tag-based access control."""
+
     __tablename__ = "incident_management_tag_access_settings"
     id: Optional[int] = Field(default=None, primary_key=True)
 

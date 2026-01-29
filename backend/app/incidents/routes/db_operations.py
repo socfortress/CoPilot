@@ -102,10 +102,6 @@ from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 # from app.incidents.services.db_operations import alerts_closed_multiple_filters
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
-from app.incidents.services.db_operations import alert_total_for_user
-from app.incidents.services.db_operations import alerts_open_for_user
-from app.incidents.services.db_operations import alerts_in_progress_for_user
-from app.incidents.services.db_operations import alerts_closed_for_user
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
@@ -113,6 +109,7 @@ from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alert_total_by_customer_codes
+from app.incidents.services.db_operations import alert_total_for_user
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
@@ -122,6 +119,7 @@ from app.incidents.services.db_operations import alerts_closed_by_customer_codes
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
+from app.incidents.services.db_operations import alerts_closed_for_user
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
@@ -131,6 +129,7 @@ from app.incidents.services.db_operations import alerts_in_progress_by_customer_
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
+from app.incidents.services.db_operations import alerts_in_progress_for_user
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
@@ -140,6 +139,7 @@ from app.incidents.services.db_operations import alerts_open_by_customer_codes
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
+from app.incidents.services.db_operations import alerts_open_for_user
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
 from app.incidents.services.db_operations import alerts_total_by_ioc
@@ -808,7 +808,6 @@ async def list_alerts_endpoint(
     )
 
 
-
 @incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
 async def get_alert_by_id_endpoint(
     alert_id: int,
@@ -847,6 +846,7 @@ async def delete_alert_endpoint(
     await is_alert_linked_to_case(alert_id, db)
     await delete_alert(alert_id, db)
     return {"message": "Alert deleted successfully", "success": True}
+
 
 @incidents_db_operations_router.delete("/alerts", response_model=DeleteAlertsResponse)
 async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
@@ -1149,7 +1149,6 @@ async def list_alerts_by_title_endpoint(
         success=True,
         message="Alerts retrieved successfully",
     )
-
 
 
 @incidents_db_operations_router.get("/alerts/customer/{customer_code}", response_model=AlertOutResponse)
