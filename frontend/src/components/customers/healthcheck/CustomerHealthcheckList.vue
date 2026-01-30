@@ -3,13 +3,13 @@
 		<div>
 			<n-input-group>
 				<n-select
-					v-model:value="filters.unit"
+					v-model:value="filterUnit"
 					:options="unitOptions"
 					placeholder="Time unit"
 					clearable
 					class="w-28!"
 				/>
-				<n-input-number v-model:value="filters.time" :min="1" clearable placeholder="Time" class="w-32!" />
+				<n-input-number v-model:value="filterTime" :min="1" clearable placeholder="Time" class="w-32!" />
 			</n-input-group>
 		</div>
 	</div>
@@ -58,15 +58,22 @@ import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/cus
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
 import { NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 
-const { source, customerCode } = defineProps<{
+const props = defineProps<{
 	source: CustomerHealthcheckSource
 	customerCode: string
+	filters: Partial<{ time: number; unit: "minutes" | "hours" | "days" }>
 }>()
+
+const emit = defineEmits<{
+	(e: "update:filters", value: Partial<{ time: number; unit: "minutes" | "hours" | "days" }>): void
+}>()
+
+const { source, customerCode } = props
 
 const CheckIcon = "carbon:checkmark-outline"
 const AlertIcon = "mdi:alert-outline"
@@ -82,7 +89,20 @@ const unitOptions = [
 	{ label: "Days", value: "days" }
 ]
 
-const filters = ref<Partial<{ time: number; unit: "minutes" | "hours" | "days" }>>({})
+const filters = computed({
+	get: () => props.filters,
+	set: (value) => emit("update:filters", value)
+})
+
+const filterTime = computed({
+	get: () => props.filters.time,
+	set: (value) => emit("update:filters", { ...props.filters, time: value })
+})
+
+const filterUnit = computed({
+	get: () => props.filters.unit,
+	set: (value) => emit("update:filters", { ...props.filters, unit: value })
+})
 
 function getList() {
 	loading.value = true
