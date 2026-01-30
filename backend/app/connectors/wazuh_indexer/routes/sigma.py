@@ -336,38 +336,39 @@ async def run_active_sigma_queries_endpoint(
     Returns:
         SigmaQueryOutResponse: The Sigma queries response.
     """
-    active_sigma_queries = await list_active_sigma_queries(db)
-    tasks = []
+    # ! Commenting Out for now, will revisit later if needed ! #
+    # active_sigma_queries = await list_active_sigma_queries(db)
+    # tasks = []
 
-    for query in active_sigma_queries:
-        time_interval_delta = parse_time_interval(query.time_interval)
-        logger.info(f"Time interval delta: {time_interval_delta}")
-        current_time = datetime.now()
-        logger.info(f"Current time: {current_time}")
-        logger.info(f"Last execution time: {query.last_execution_time}")
+    # for query in active_sigma_queries:
+    #     time_interval_delta = parse_time_interval(query.time_interval)
+    #     logger.info(f"Time interval delta: {time_interval_delta}")
+    #     current_time = datetime.now()
+    #     logger.info(f"Current time: {current_time}")
+    #     logger.info(f"Last execution time: {query.last_execution_time}")
 
-        # Check if the current time is less than the last execution time
-        if current_time < query.last_execution_time or current_time - query.last_execution_time >= time_interval_delta:
-            logger.info(f"Running Sigma query: {query.rule_name}")
-            task = execute_query(
-                RunActiveSigmaQueries(
-                    query=query.rule_query,
-                    time_interval=query.time_interval,
-                    last_execution_time=query.last_execution_time,
-                    rule_name=query.rule_name,
-                    index=index_name,
-                ),
-                session=db,
-            )
-            tasks.append(task)
-            # Update the last execution time to the current time
-            query.last_execution_time = current_time
+    #     # Check if the current time is less than the last execution time
+    #     if current_time < query.last_execution_time or current_time - query.last_execution_time >= time_interval_delta:
+    #         logger.info(f"Running Sigma query: {query.rule_name}")
+    #         task = execute_query(
+    #             RunActiveSigmaQueries(
+    #                 query=query.rule_query,
+    #                 time_interval=query.time_interval,
+    #                 last_execution_time=query.last_execution_time,
+    #                 rule_name=query.rule_name,
+    #                 index=index_name,
+    #             ),
+    #             session=db,
+    #         )
+    #         tasks.append(task)
+    #         # Update the last execution time to the current time
+    #         query.last_execution_time = current_time
 
-    # Run all tasks concurrently
-    await asyncio.gather(*tasks)
+    # # Run all tasks concurrently
+    # await asyncio.gather(*tasks)
 
-    # Commit the changes to the database
-    await db.commit()
+    # # Commit the changes to the database
+    # await db.commit()
 
     return SigmaQueryOutResponse(
         success=True,
