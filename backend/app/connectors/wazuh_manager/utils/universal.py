@@ -1,7 +1,8 @@
 import asyncio
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -17,9 +18,11 @@ from app.db.db_session import get_db_session
 # Token Cache Implementation
 # =============================================================================
 
+
 @dataclass
 class CachedToken:
     """Cached authentication token with expiration"""
+
     token: str
     expires_at: datetime
     connector_url: str
@@ -60,13 +63,7 @@ class WazuhTokenCache:
             logger.debug(f"Using cached token for {connector_name}")
             return {"Authorization": f"Bearer {cached.token}"}
 
-    async def set(
-        self,
-        connector_name: str,
-        token: str,
-        connector_url: str,
-        ttl_minutes: Optional[int] = None
-    ):
+    async def set(self, connector_name: str, token: str, connector_url: str, ttl_minutes: Optional[int] = None):
         """Cache a new token"""
         async with self._lock:
             ttl = timedelta(minutes=ttl_minutes) if ttl_minutes else self._default_ttl
@@ -77,9 +74,7 @@ class WazuhTokenCache:
                 expires_at=expires_at,
                 connector_url=connector_url,
             )
-            logger.debug(
-                f"Cached token for {connector_name}, expires at {expires_at.isoformat()}"
-            )
+            logger.debug(f"Cached token for {connector_name}, expires at {expires_at.isoformat()}")
 
     async def invalidate(self, connector_name: str):
         """Remove cached token for a connector"""
@@ -103,6 +98,7 @@ _token_cache = WazuhTokenCache(default_ttl_minutes=10)
 # Public Cache Management Functions
 # =============================================================================
 
+
 async def invalidate_wazuh_token_cache(connector_name: str = "Wazuh-Manager"):
     """
     Invalidate cached token for a connector.
@@ -116,9 +112,11 @@ async def invalidate_wazuh_token_cache(connector_name: str = "Wazuh-Manager"):
 # Existing Wazuh Manager Utility Functions
 # ============================================================================
 
+
 async def clear_all_wazuh_token_caches():
     """Clear all cached Wazuh tokens"""
     await _token_cache.clear()
+
 
 async def verify_wazuh_manager_credentials(
     attributes: Dict[str, Any],
@@ -231,6 +229,7 @@ async def verify_wazuh_manager_connection(connector_name: str) -> str:
 
 #         return None
 
+
 async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str, str]]:
     """
     Returns the authentication token headers for the Wazuh manager service.
@@ -277,7 +276,7 @@ async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str,
             await _token_cache.set(
                 connector_name=connector_name,
                 token=token,
-                connector_url=attributes['connector_url'],
+                connector_url=attributes["connector_url"],
             )
 
             return {"Authorization": f"Bearer {token}"}
@@ -356,6 +355,7 @@ async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str,
 #             "success": False,
 #             "message": f"Failed to send GET request to {endpoint} with error: {e}",
 #         }
+
 
 async def send_get_request(
     endpoint: str,

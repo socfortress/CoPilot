@@ -1,8 +1,9 @@
+import asyncio
 import csv
 import hashlib
 import io
 import json
-import asyncio
+from asyncio import Semaphore
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -29,11 +30,11 @@ from app.data_store.data_store_operations import retrieve_file_from_minio
 from app.data_store.data_store_operations import store_file_in_minio
 from app.db.universal_models import Agents
 from app.db.universal_models import SCAReport
-from asyncio import Semaphore
 from app.middleware.customer_access import customer_access_handler
 
 # Default concurrency limit for parallel API requests
 DEFAULT_MAX_CONCURRENT_REQUESTS = 100
+
 
 async def get_all_agents_from_db(
     db_session: AsyncSession,
@@ -224,6 +225,7 @@ async def get_all_agents_from_db(
 #             max_score=max_score,
 #         )
 
+
 async def collect_sca_for_single_agent(
     agent: Agents,
     semaphore: Semaphore,
@@ -341,10 +343,7 @@ async def collect_sca_for_all_agents(
                 logger.info(f"No agents found matching hostname: {agent_name}")
                 return []
 
-        logger.info(
-            f"Collecting SCA data for {len(agents)} agents "
-            f"(max concurrent: {max_concurrent_requests})"
-        )
+        logger.info(f"Collecting SCA data for {len(agents)} agents " f"(max concurrent: {max_concurrent_requests})")
 
         # Create semaphore to limit concurrent requests to Wazuh Manager
         semaphore = Semaphore(max_concurrent_requests)
@@ -381,10 +380,7 @@ async def collect_sca_for_all_agents(
                     successful_agents += 1
                 all_sca_results.extend(result)
 
-        logger.info(
-            f"Collected {len(all_sca_results)} SCA policy results from "
-            f"{successful_agents} agents ({failed_agents} failed)"
-        )
+        logger.info(f"Collected {len(all_sca_results)} SCA policy results from " f"{successful_agents} agents ({failed_agents} failed)")
 
         return all_sca_results
 
@@ -456,7 +452,6 @@ async def search_sca_overview(
             max_score=max_score,
             max_concurrent_requests=max_concurrent_requests,
         )
-
 
         # Sort results by agent's minimum score (lowest first)
         if all_sca_results:
