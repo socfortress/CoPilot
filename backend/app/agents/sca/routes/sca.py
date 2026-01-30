@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Dict
 from typing import Optional
+from typing import AsyncGenerator
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -8,8 +9,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Response
+import json
 from fastapi import Security
 from loguru import logger
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
@@ -23,6 +26,7 @@ from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
 from app.agents.sca.services.sca import list_sca_reports
 from app.agents.sca.services.sca import search_sca_overview
+from app.agents.sca.services.sca import stream_sca_for_all_agents
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
@@ -132,6 +136,86 @@ async def search_sca_results_overview(
     except Exception as e:
         logger.error(f"Error in SCA overview search endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to search SCA results: {e}")
+
+@sca_router.get(
+    "/overview/stream",
+    description="Stream SCA results across all agents as they are collected",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def stream_sca_results_overview(
+    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
+    policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
+    policy_name: Optional[str] = Query(None, description="Filter by policy name (partial matching)"),
+    min_score: Optional[int] = Query(None, description="Filter by minimum score (0-100)", ge=0, le=100),
+    max_score: Optional[int] = Query(None, description="Filter by maximum score (0-100)", ge=0, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Stream SCA results as Server-Sent Events (SSE).
+
+    Results are sent as they are collected from each agent, allowing the frontend
+    to display data progressively without waiting for all agents to complete.
+
+    **Event Types:**
+    - `start`: Initial event with total agent count
+    - `agent_result`: SCA results for a single agent
+    - `agent_error`: Error collecting data from an agent
+    - `progress`: Progress update (agents processed so far)
+    - `complete`: Final event with summary statistics
+    - `error`: Fatal error that stops the stream
+
+    **Example Events:**
+    ```
+    event: start
+    data: {"total_agents": 50, "message": "Starting SCA collection..."}
+
+    event: agent_result
+    data: {"agent_id": "001", "agent_name": "server1", "policies": [...]}
+
+    event: progress
+    data: {"processed": 10, "total": 50, "successful": 8, "failed": 2}
+
+    event: complete
+    data: {"total_results": 150, "total_agents": 50, "average_score": 78.5, ...}
+    ```
+    """
+    logger.info(
+        f"Streaming SCA overview with filters: "
+        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"policy_id={policy_id}, policy_name={policy_name}, "
+        f"min_score={min_score}, max_score={max_score}",
+    )
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        try:
+            async for event in stream_sca_for_all_agents(
+                db_session=db,
+                customer_code=customer_code,
+                agent_name=agent_name,
+                policy_id=policy_id,
+                policy_name=policy_name,
+                min_score=min_score,
+                max_score=max_score,
+            ):
+                # Format as SSE
+                event_type = event.get("event", "message")
+                data = json.dumps(event.get("data", {}))
+                yield f"event: {event_type}\ndata: {data}\n\n"
+        except Exception as e:
+            logger.error(f"Error in SSE stream: {e}")
+            error_data = json.dumps({"error": str(e), "message": "Stream error occurred"})
+            yield f"event: error\ndata: {error_data}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
 
 
 @sca_router.get(

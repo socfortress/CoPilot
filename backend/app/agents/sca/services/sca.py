@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 from asyncio import Semaphore
+from typing import AsyncGenerator
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -1152,3 +1153,236 @@ async def delete_sca_report(
     except Exception as e:
         logger.error(f"Error deleting SCA report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
+
+
+
+
+
+async def stream_sca_for_all_agents(
+    db_session: AsyncSession,
+    customer_code: Optional[str] = None,
+    agent_name: Optional[str] = None,
+    policy_id: Optional[str] = None,
+    policy_name: Optional[str] = None,
+    min_score: Optional[int] = None,
+    max_score: Optional[int] = None,
+    max_concurrent_requests: int = DEFAULT_MAX_CONCURRENT_REQUESTS,
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """
+    Stream SCA results for all agents as they are collected.
+
+    Yields SSE-formatted events as results come in from each agent.
+
+    Args:
+        db_session: Database session to use
+        customer_code: Optional customer code filter
+        agent_name: Optional agent name filter
+        policy_id: Optional policy ID filter
+        policy_name: Optional policy name filter (partial matching)
+        min_score: Optional minimum score filter
+        max_score: Optional maximum score filter
+        max_concurrent_requests: Maximum concurrent API requests
+
+    Yields:
+        Dict with 'event' type and 'data' payload
+    """
+    try:
+        # Get agents from database
+        agents = await get_all_agents_from_db(db_session, customer_code)
+
+        if not agents:
+            yield {
+                "event": "complete",
+                "data": {
+                    "total_results": 0,
+                    "total_agents": 0,
+                    "message": "No agents found",
+                },
+            }
+            return
+
+        # Filter agents by name if specified
+        if agent_name:
+            agents = [a for a in agents if a.hostname == agent_name]
+            if not agents:
+                yield {
+                    "event": "complete",
+                    "data": {
+                        "total_results": 0,
+                        "total_agents": 0,
+                        "message": f"No agents found matching hostname: {agent_name}",
+                    },
+                }
+                return
+
+        total_agents = len(agents)
+
+        # Send start event
+        yield {
+            "event": "start",
+            "data": {
+                "total_agents": total_agents,
+                "message": f"Starting SCA collection for {total_agents} agents...",
+            },
+        }
+
+        # Create semaphore for rate limiting
+        semaphore = Semaphore(max_concurrent_requests)
+
+        # Track statistics
+        all_results: List[AgentScaOverviewItem] = []
+        processed_count = 0
+        successful_count = 0
+        failed_count = 0
+
+        # Create a queue to receive results as they complete
+        result_queue: asyncio.Queue = asyncio.Queue()
+
+        async def collect_and_queue(agent: Agents):
+            """Collect SCA for an agent and put result in queue"""
+            result = await collect_sca_for_single_agent(
+                agent=agent,
+                semaphore=semaphore,
+                policy_id=policy_id,
+                policy_name=policy_name,
+                min_score=min_score,
+                max_score=max_score,
+            )
+            await result_queue.put((agent, result))
+
+        # Start all tasks
+        tasks = [asyncio.create_task(collect_and_queue(agent)) for agent in agents]
+
+        # Process results as they come in
+        for _ in range(total_agents):
+            try:
+                # Wait for next result with timeout
+                agent, results = await asyncio.wait_for(
+                    result_queue.get(),
+                    timeout=60.0  # 60 second timeout per agent
+                )
+
+                processed_count += 1
+
+                if results:
+                    successful_count += 1
+                    all_results.extend(results)
+
+                    # Yield agent results
+                    yield {
+                        "event": "agent_result",
+                        "data": {
+                            "agent_id": agent.agent_id,
+                            "agent_name": agent.hostname,
+                            "customer_code": agent.customer_code,
+                            "policy_count": len(results),
+                            "policies": [
+                                {
+                                    "policy_id": r.policy_id,
+                                    "policy_name": r.policy_name,
+                                    "description": r.description,
+                                    "total_checks": r.total_checks,
+                                    "pass_count": r.pass_count,
+                                    "fail_count": r.fail_count,
+                                    "invalid_count": r.invalid_count,
+                                    "score": r.score,
+                                    "start_scan": r.start_scan,
+                                    "end_scan": r.end_scan,
+                                    "references": r.references,
+                                    "hash_file": r.hash_file,
+                                }
+                                for r in results
+                            ],
+                        },
+                    }
+                else:
+                    # Agent had no SCA data (not necessarily an error)
+                    yield {
+                        "event": "agent_empty",
+                        "data": {
+                            "agent_id": agent.agent_id,
+                            "agent_name": agent.hostname,
+                            "message": "No SCA data available",
+                        },
+                    }
+
+                # Yield progress update every 5 agents or on last agent
+                if processed_count % 5 == 0 or processed_count == total_agents:
+                    yield {
+                        "event": "progress",
+                        "data": {
+                            "processed": processed_count,
+                            "total": total_agents,
+                            "successful": successful_count,
+                            "failed": failed_count,
+                            "results_so_far": len(all_results),
+                            "percent_complete": round((processed_count / total_agents) * 100, 1),
+                        },
+                    }
+
+            except asyncio.TimeoutError:
+                failed_count += 1
+                processed_count += 1
+                yield {
+                    "event": "agent_error",
+                    "data": {
+                        "agent_id": "unknown",
+                        "message": "Timeout waiting for agent response",
+                    },
+                }
+            except Exception as e:
+                failed_count += 1
+                processed_count += 1
+                logger.error(f"Error processing agent result: {e}")
+                yield {
+                    "event": "agent_error",
+                    "data": {
+                        "message": str(e),
+                    },
+                }
+
+        # Wait for all tasks to complete (cleanup)
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Calculate final statistics
+        unique_agents = set(item.agent_id for item in all_results)
+        unique_policies = set(item.policy_id for item in all_results)
+
+        total_checks = sum(item.total_checks for item in all_results)
+        total_passes = sum(item.pass_count for item in all_results)
+        total_fails = sum(item.fail_count for item in all_results)
+        total_invalid = sum(item.invalid_count for item in all_results)
+
+        average_score = (
+            sum(item.score for item in all_results) / len(all_results)
+            if all_results else 0.0
+        )
+
+        # Yield completion event
+        yield {
+            "event": "complete",
+            "data": {
+                "total_results": len(all_results),
+                "total_agents": len(unique_agents),
+                "total_policies": len(unique_policies),
+                "average_score": round(average_score, 2),
+                "total_checks": total_checks,
+                "total_passes": total_passes,
+                "total_fails": total_fails,
+                "total_invalid": total_invalid,
+                "agents_processed": processed_count,
+                "agents_successful": successful_count,
+                "agents_failed": failed_count,
+                "message": f"Completed SCA collection: {len(all_results)} results from {len(unique_agents)} agents",
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Error in SCA streaming: {e}")
+        yield {
+            "event": "error",
+            "data": {
+                "error": str(e),
+                "message": "Fatal error during SCA collection",
+            },
+        }

@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import List from "@/components/sca/List.vue"
+import List from "@/components/sca/StreamingList.vue"
 </script>

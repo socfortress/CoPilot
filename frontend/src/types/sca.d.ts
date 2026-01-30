@@ -125,3 +125,48 @@ export enum ScaComplianceLevel {
 	Poor = "Poor", // 60-69%
 	Critical = "Critical" // <60%
 }
+
+// Streaming event types
+export interface ScaStreamStartEvent {
+    total_agents: number
+    message: string
+}
+
+export interface ScaStreamAgentResult {
+    agent_id: string
+    agent_name: string
+    customer_code: string | null
+    policy_count: number
+    policies: AgentScaOverviewItem[]
+}
+
+export interface ScaStreamProgress {
+    processed: number
+    total: number
+    successful: number
+    failed: number
+    results_so_far: number
+    percent_complete: number
+}
+
+export interface ScaStreamComplete {
+    total_results: number
+    total_agents: number
+    total_policies: number
+    average_score: number
+    total_checks: number
+    total_passes: number
+    total_fails: number
+    total_invalid: number
+    agents_processed: number
+    agents_successful: number
+    agents_failed: number
+    message: string
+}
+
+export interface ScaStreamError {
+    error?: string
+    message: string
+    agent_id?: string
+    agent_name?: string
+}
