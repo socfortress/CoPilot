@@ -100,6 +100,16 @@
 							{{ customerInfo?.parent_customer_code }}
 						</template>
 					</Badge>
+
+					<Badge type="splitted" :color="customer.is_provisioned ? 'success' : 'danger'" bright>
+						<template #iconLeft>
+							<Icon :name="ProvisionIcon" :size="13" />
+						</template>
+						<template #label>Status</template>
+						<template #value>
+							{{ customer.is_provisioned ? "Provisioned" : "Not Provisioned" }}
+						</template>
+					</Badge>
 				</div>
 			</template>
 
@@ -281,6 +291,7 @@ const InfoIcon = "carbon:information"
 const ArrowIcon = "carbon:arrow-left"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
+const ProvisionIcon = "carbon:network-3"
 
 const showDetails = ref(false)
 const selectedTabsGroup = ref<"customer" | "agents" | "wazuh_worker">("customer")
