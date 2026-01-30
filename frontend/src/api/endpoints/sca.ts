@@ -7,9 +7,8 @@ import type {
 	SCAReportListResponse,
 	ScaStatsResponse
 } from "@/types/sca.d"
-import { fetchEventSource } from "@microsoft/fetch-event-source"
-import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "../httpClient"
+import { createSSEStream } from "../sseClient"
 
 export default {
 	/**
@@ -32,7 +31,7 @@ export default {
 	},
 
 	/**
-	 * Stream SCA results using fetch-event-source (supports Authorization header)
+	 * Stream SCA results using SSE client (token + params gestiti automaticamente)
 	 */
 	async streamScaOverview(
 		query: ScaOverviewQuery | undefined,
@@ -46,65 +45,28 @@ export default {
 		},
 		abortController?: AbortController
 	): Promise<void> {
-		const authStore = useAuthStore()
-
-		const params = new URLSearchParams()
-		if (query?.customer_code) params.append("customer_code", query.customer_code)
-		if (query?.agent_name) params.append("agent_name", query.agent_name)
-		if (query?.policy_id) params.append("policy_id", query.policy_id)
-		if (query?.policy_name) params.append("policy_name", query.policy_name)
-		if (query?.min_score !== undefined) params.append("min_score", query.min_score.toString())
-		if (query?.max_score !== undefined) params.append("max_score", query.max_score.toString())
-
-		const queryString = params.toString()
-		const url = `/api/sca/overview/stream${queryString ? `?${queryString}` : ""}`
-
-		await fetchEventSource(url, {
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${authStore.userToken}`, // Adjust based on your store
-				Accept: "text/event-stream"
-			},
-			signal: abortController?.signal,
-			onopen(response) {
-				if (response.ok) {
-					return Promise.resolve()
-				}
-				throw new Error(`Failed to connect: ${response.status} ${response.statusText}`)
-			},
-			onmessage(event) {
-				if (!event.data) return
-
-				try {
-					const data = JSON.parse(event.data)
-					switch (event.event) {
-						case "start":
-							handlers.onStart?.(data)
-							break
-						case "agent_result":
-							handlers.onAgentResult?.(data)
-							break
-						case "agent_empty":
-							handlers.onAgentEmpty?.(data)
-							break
-						case "progress":
-							handlers.onProgress?.(data)
-							break
-						case "complete":
-							handlers.onComplete?.(data)
-							break
-						case "error":
-						case "agent_error":
-							handlers.onError?.(data)
-							break
+		await createSSEStream({
+			path: "/sca/overview/stream",
+			params: query
+				? {
+						customer_code: query.customer_code,
+						agent_name: query.agent_name,
+						policy_id: query.policy_id,
+						policy_name: query.policy_name,
+						min_score: query.min_score,
+						max_score: query.max_score
 					}
-				} catch (e) {
-					console.error("Failed to parse SSE data:", e)
-				}
-			},
-			onerror(err) {
-				handlers.onError?.(err)
-				throw err // Rethrow to stop retrying
+				: undefined,
+			signal: abortController?.signal,
+			handlers: {
+				start: data => handlers.onStart?.(data),
+				agent_result: data => handlers.onAgentResult?.(data),
+				agent_empty: data => handlers.onAgentEmpty?.(data),
+				progress: data => handlers.onProgress?.(data),
+				complete: data => handlers.onComplete?.(data),
+				error: data => handlers.onError?.(data),
+				agent_error: data => handlers.onError?.(data),
+				onError: err => handlers.onError?.(err)
 			}
 		})
 	},
