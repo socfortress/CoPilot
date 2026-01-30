@@ -15,6 +15,7 @@ export interface Customer {
 	customer_type: string
 	// TODO: consider removing it (logo_file)
 	logo_file: string
+	is_provisioned?: boolean
 }
 
 export interface CustomerMeta {

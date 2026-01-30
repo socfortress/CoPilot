@@ -243,8 +243,18 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     result = await session.execute(select(Customers))
     customers = result.scalars().all()
 
-    # Parse the customer ORM objects into schema objects
-    customers_list = [CustomerRequestBody.from_orm(customer) for customer in customers]
+    # Fetch all customer meta records to check provisioning status
+    meta_result = await session.execute(select(CustomersMeta))
+    customer_metas = meta_result.scalars().all()
+    provisioned_codes = {meta.customer_code for meta in customer_metas}
+
+    # Parse the customer ORM objects into schema objects and add is_provisioned field
+    customers_list = []
+    for customer in customers:
+        customer_data = CustomerRequestBody.from_orm(customer)
+        customer_data.is_provisioned = customer.customer_code in provisioned_codes
+        customers_list.append(customer_data)
+
     return CustomersResponse(
         customers=customers_list,
         success=True,

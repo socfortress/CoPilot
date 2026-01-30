@@ -25,6 +25,7 @@ class CustomerRequestBody(BaseModel):
     country: Optional[str] = Field(None, description="Country")
     customer_type: Optional[str] = Field(None, description="Type of the customer")
     logo_file: Optional[str] = Field(None, description="Logo file for the customer")
+    is_provisioned: Optional[bool] = Field(None, description="Whether the customer has been provisioned")
 
     class Config:
         orm_mode = True
@@ -43,6 +44,7 @@ class CustomerRequestBody(BaseModel):
                 "country": "USA",
                 "customer_type": "Enterprise",
                 "logo_file": "logo.png",
+                "is_provisioned": True,
             },
         }
 
