@@ -1,7 +1,9 @@
+import asyncio
 import csv
 import hashlib
 import io
 import json
+from asyncio import Semaphore
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -29,6 +31,9 @@ from app.data_store.data_store_operations import store_file_in_minio
 from app.db.universal_models import Agents
 from app.db.universal_models import SCAReport
 from app.middleware.customer_access import customer_access_handler
+
+# Default concurrency limit for parallel API requests
+DEFAULT_MAX_CONCURRENT_REQUESTS = 100
 
 
 async def get_all_agents_from_db(
@@ -61,6 +66,242 @@ async def get_all_agents_from_db(
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
 
 
+# async def collect_sca_for_all_agents(
+#     db_session: AsyncSession,
+#     customer_code: Optional[str] = None,
+#     agent_name: Optional[str] = None,
+#     policy_id: Optional[str] = None,
+#     policy_name: Optional[str] = None,
+#     min_score: Optional[int] = None,
+#     max_score: Optional[int] = None,
+# ) -> List[AgentScaOverviewItem]:
+#     """
+#     Collect SCA results for all agents from Wazuh Manager
+
+#     Args:
+#         db_session: Database session to use
+#         customer_code: Optional customer code filter
+#         agent_name: Optional agent name filter
+#         policy_id: Optional policy ID filter
+#         policy_name: Optional policy name filter (partial matching)
+#         min_score: Optional minimum score filter
+#         max_score: Optional maximum score filter
+
+#     Returns:
+#         List of AgentScaOverviewItem objects
+#     """
+#     try:
+#         # Get agents from database
+#         agents = await get_all_agents_from_db(db_session, customer_code)
+
+#         if not agents:
+#             logger.warning("No agents found" + (f" for customer {customer_code}" if customer_code else ""))
+#             return []
+
+#         all_sca_results = []
+
+#         for agent in agents:
+#             # Skip if agent name filter is specified and doesn't match
+#             if agent_name and agent.hostname != agent_name:
+#                 continue
+
+#             try:
+#                 logger.info(f"Collecting SCA results for agent: {agent.hostname}")
+
+#                 # Collect SCA data from Wazuh Manager for this agent
+#                 sca_response = await collect_agent_sca(agent.agent_id)
+
+#                 if not sca_response.success or not sca_response.sca:
+#                     logger.warning(f"No SCA data found for agent {agent.hostname}")
+#                     continue
+
+#                 # Process each SCA policy result for this agent
+#                 for sca_result in sca_response.sca:
+#                     # Apply filters
+#                     if policy_id and sca_result.policy_id != policy_id:
+#                         continue
+
+#                     if policy_name and policy_name.lower() not in sca_result.name.lower():
+#                         continue
+
+#                     if min_score is not None and sca_result.score < min_score:
+#                         continue
+
+#                     if max_score is not None and sca_result.score > max_score:
+#                         continue
+
+#                     # Create overview item
+#                     overview_item = AgentScaOverviewItem(
+#                         agent_id=agent.agent_id,
+#                         agent_name=agent.hostname,
+#                         customer_code=agent.customer_code,
+#                         policy_id=sca_result.policy_id,
+#                         policy_name=sca_result.name,
+#                         description=sca_result.description,
+#                         total_checks=sca_result.total_checks,
+#                         pass_count=sca_result.pass_count,
+#                         fail_count=sca_result.fail,
+#                         invalid_count=sca_result.invalid,
+#                         score=sca_result.score,
+#                         start_scan=sca_result.start_scan,
+#                         end_scan=sca_result.end_scan,
+#                         references=sca_result.references,
+#                         hash_file=sca_result.hash_file,
+#                     )
+
+#                     all_sca_results.append(overview_item)
+
+#             except Exception as e:
+#                 logger.error(f"Error collecting SCA for agent {agent.hostname}: {e}")
+#                 # Continue with other agents even if one fails
+#                 continue
+
+#         logger.info(f"Collected SCA results for {len(all_sca_results)} policy results across agents")
+#         return all_sca_results
+
+#     except Exception as e:
+#         logger.error(f"Error collecting SCA for all agents: {e}")
+#         raise HTTPException(status_code=500, detail=f"Failed to collect SCA results: {e}")
+
+
+# async def search_sca_overview(
+#     db_session: AsyncSession,
+#     customer_code: Optional[str] = None,
+#     agent_name: Optional[str] = None,
+#     policy_id: Optional[str] = None,
+#     policy_name: Optional[str] = None,
+#     min_score: Optional[int] = None,
+#     max_score: Optional[int] = None,
+#     page: int = 1,
+#     page_size: int = 50,
+# ) -> ScaOverviewResponse:
+#     """
+#     Search SCA results across all agents with filtering and pagination
+
+#     Args:
+#         db_session: Database session for agent lookup
+#         customer_code: Optional customer code filter
+#         agent_name: Optional agent hostname filter
+#         policy_id: Optional policy ID filter
+#         policy_name: Optional policy name filter (partial matching)
+#         min_score: Optional minimum score filter
+#         max_score: Optional maximum score filter
+#         page: Page number for pagination
+#         page_size: Number of results per page
+
+#     Returns:
+#         ScaOverviewResponse with paginated results and statistics
+#     """
+#     logger.info(
+#         f"Searching SCA overview with filters: customer_code={customer_code}, "
+#         f"agent_name={agent_name}, policy_id={policy_id}, policy_name={policy_name}, "
+#         f"min_score={min_score}, max_score={max_score}, page={page}, page_size={page_size}",
+#     )
+
+#     # Build filters applied dict for response
+#     filters_applied = {}
+#     if customer_code:
+#         filters_applied["customer_code"] = customer_code
+#     if agent_name:
+#         filters_applied["agent_name"] = agent_name
+#     if policy_id:
+#         filters_applied["policy_id"] = policy_id
+#     if policy_name:
+#         filters_applied["policy_name"] = policy_name
+#     if min_score is not None:
+#         filters_applied["min_score"] = min_score
+#     if max_score is not None:
+#         filters_applied["max_score"] = max_score
+
+#     try:
+#         # Collect all SCA results with filtering
+#         all_sca_results = await collect_sca_for_all_agents(
+#             db_session=db_session,
+#             customer_code=customer_code,
+#             agent_name=agent_name,
+#             policy_id=policy_id,
+#             policy_name=policy_name,
+#             min_score=min_score,
+#             max_score=max_score,
+#         )
+
+
+async def collect_sca_for_single_agent(
+    agent: Agents,
+    semaphore: Semaphore,
+    policy_id: Optional[str] = None,
+    policy_name: Optional[str] = None,
+    min_score: Optional[int] = None,
+    max_score: Optional[int] = None,
+) -> List[AgentScaOverviewItem]:
+    """
+    Collect SCA results for a single agent with semaphore-based rate limiting.
+
+    Args:
+        agent: Agent to collect SCA data for
+        semaphore: Semaphore to limit concurrent requests
+        policy_id: Optional policy ID filter
+        policy_name: Optional policy name filter (partial matching)
+        min_score: Optional minimum score filter
+        max_score: Optional maximum score filter
+
+    Returns:
+        List of AgentScaOverviewItem objects for this agent
+    """
+    async with semaphore:
+        try:
+            logger.debug(f"Collecting SCA results for agent: {agent.hostname} (ID: {agent.agent_id})")
+
+            # Collect SCA data from Wazuh Manager for this agent
+            sca_response = await collect_agent_sca(agent.agent_id)
+
+            if not sca_response.success or not sca_response.sca:
+                logger.debug(f"No SCA data for agent {agent.hostname}")
+                return []
+
+            results = []
+
+            # Process each SCA policy result for this agent
+            for sca_result in sca_response.sca:
+                # Apply filters
+                if policy_id and sca_result.policy_id != policy_id:
+                    continue
+                if policy_name and policy_name.lower() not in sca_result.name.lower():
+                    continue
+                if min_score is not None and sca_result.score < min_score:
+                    continue
+                if max_score is not None and sca_result.score > max_score:
+                    continue
+
+                # Create overview item
+                overview_item = AgentScaOverviewItem(
+                    agent_id=agent.agent_id,
+                    agent_name=agent.hostname,
+                    customer_code=agent.customer_code,
+                    policy_id=sca_result.policy_id,
+                    policy_name=sca_result.name,
+                    description=sca_result.description,
+                    total_checks=sca_result.total_checks,
+                    pass_count=sca_result.pass_count,
+                    fail_count=sca_result.fail,
+                    invalid_count=sca_result.invalid,
+                    score=sca_result.score,
+                    start_scan=sca_result.start_scan,
+                    end_scan=sca_result.end_scan,
+                    references=sca_result.references,
+                    hash_file=sca_result.hash_file,
+                )
+                results.append(overview_item)
+
+            logger.debug(f"Collected {len(results)} SCA results for agent {agent.hostname}")
+            return results
+
+        except Exception as e:
+            logger.error(f"Error collecting SCA for agent {agent.hostname}: {e}")
+            # Return empty list instead of raising - allows other agents to continue
+            return []
+
+
 async def collect_sca_for_all_agents(
     db_session: AsyncSession,
     customer_code: Optional[str] = None,
@@ -69,9 +310,10 @@ async def collect_sca_for_all_agents(
     policy_name: Optional[str] = None,
     min_score: Optional[int] = None,
     max_score: Optional[int] = None,
+    max_concurrent_requests: int = DEFAULT_MAX_CONCURRENT_REQUESTS,
 ) -> List[AgentScaOverviewItem]:
     """
-    Collect SCA results for all agents from Wazuh Manager
+    Collect SCA results for all agents from Wazuh Manager using parallel requests.
 
     Args:
         db_session: Database session to use
@@ -81,6 +323,7 @@ async def collect_sca_for_all_agents(
         policy_name: Optional policy name filter (partial matching)
         min_score: Optional minimum score filter
         max_score: Optional maximum score filter
+        max_concurrent_requests: Maximum number of concurrent API requests (default: 10)
 
     Returns:
         List of AgentScaOverviewItem objects
@@ -93,65 +336,52 @@ async def collect_sca_for_all_agents(
             logger.warning("No agents found" + (f" for customer {customer_code}" if customer_code else ""))
             return []
 
+        # Filter agents by name if specified (do this before parallel processing)
+        if agent_name:
+            agents = [a for a in agents if a.hostname == agent_name]
+            if not agents:
+                logger.info(f"No agents found matching hostname: {agent_name}")
+                return []
+
+        logger.info(f"Collecting SCA data for {len(agents)} agents " f"(max concurrent: {max_concurrent_requests})")
+
+        # Create semaphore to limit concurrent requests to Wazuh Manager
+        semaphore = Semaphore(max_concurrent_requests)
+
+        # Create tasks for parallel execution
+        tasks = [
+            collect_sca_for_single_agent(
+                agent=agent,
+                semaphore=semaphore,
+                policy_id=policy_id,
+                policy_name=policy_name,
+                min_score=min_score,
+                max_score=max_score,
+            )
+            for agent in agents
+        ]
+
+        # Execute all tasks concurrently with gather
+        # return_exceptions=True prevents one failure from canceling all tasks
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Flatten results and filter out exceptions
         all_sca_results = []
+        successful_agents = 0
+        failed_agents = 0
 
-        for agent in agents:
-            # Skip if agent name filter is specified and doesn't match
-            if agent_name and agent.hostname != agent_name:
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error(f"Task for agent {agents[i].hostname} failed: {result}")
+                failed_agents += 1
                 continue
+            if isinstance(result, list):
+                if result:  # Only count as successful if we got data
+                    successful_agents += 1
+                all_sca_results.extend(result)
 
-            try:
-                logger.info(f"Collecting SCA results for agent: {agent.hostname}")
+        logger.info(f"Collected {len(all_sca_results)} SCA policy results from " f"{successful_agents} agents ({failed_agents} failed)")
 
-                # Collect SCA data from Wazuh Manager for this agent
-                sca_response = await collect_agent_sca(agent.agent_id)
-
-                if not sca_response.success or not sca_response.sca:
-                    logger.warning(f"No SCA data found for agent {agent.hostname}")
-                    continue
-
-                # Process each SCA policy result for this agent
-                for sca_result in sca_response.sca:
-                    # Apply filters
-                    if policy_id and sca_result.policy_id != policy_id:
-                        continue
-
-                    if policy_name and policy_name.lower() not in sca_result.name.lower():
-                        continue
-
-                    if min_score is not None and sca_result.score < min_score:
-                        continue
-
-                    if max_score is not None and sca_result.score > max_score:
-                        continue
-
-                    # Create overview item
-                    overview_item = AgentScaOverviewItem(
-                        agent_id=agent.agent_id,
-                        agent_name=agent.hostname,
-                        customer_code=agent.customer_code,
-                        policy_id=sca_result.policy_id,
-                        policy_name=sca_result.name,
-                        description=sca_result.description,
-                        total_checks=sca_result.total_checks,
-                        pass_count=sca_result.pass_count,
-                        fail_count=sca_result.fail,
-                        invalid_count=sca_result.invalid,
-                        score=sca_result.score,
-                        start_scan=sca_result.start_scan,
-                        end_scan=sca_result.end_scan,
-                        references=sca_result.references,
-                        hash_file=sca_result.hash_file,
-                    )
-
-                    all_sca_results.append(overview_item)
-
-            except Exception as e:
-                logger.error(f"Error collecting SCA for agent {agent.hostname}: {e}")
-                # Continue with other agents even if one fails
-                continue
-
-        logger.info(f"Collected SCA results for {len(all_sca_results)} policy results across agents")
         return all_sca_results
 
     except Exception as e:
@@ -169,6 +399,7 @@ async def search_sca_overview(
     max_score: Optional[int] = None,
     page: int = 1,
     page_size: int = 50,
+    max_concurrent_requests: int = DEFAULT_MAX_CONCURRENT_REQUESTS,
 ) -> ScaOverviewResponse:
     """
     Search SCA results across all agents with filtering and pagination
@@ -183,6 +414,7 @@ async def search_sca_overview(
         max_score: Optional maximum score filter
         page: Page number for pagination
         page_size: Number of results per page
+        max_concurrent_requests: Maximum concurrent API requests (default: 10)
 
     Returns:
         ScaOverviewResponse with paginated results and statistics
@@ -209,7 +441,7 @@ async def search_sca_overview(
         filters_applied["max_score"] = max_score
 
     try:
-        # Collect all SCA results with filtering
+        # Collect all SCA results with filtering (now uses parallel requests)
         all_sca_results = await collect_sca_for_all_agents(
             db_session=db_session,
             customer_code=customer_code,
@@ -218,6 +450,7 @@ async def search_sca_overview(
             policy_name=policy_name,
             min_score=min_score,
             max_score=max_score,
+            max_concurrent_requests=max_concurrent_requests,
         )
 
         # Sort results by agent's minimum score (lowest first)

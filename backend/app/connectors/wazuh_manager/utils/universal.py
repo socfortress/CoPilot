@@ -1,4 +1,8 @@
+import asyncio
 import json
+from dataclasses import dataclass
+from datetime import datetime
+from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -9,6 +13,109 @@ from loguru import logger
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
+
+# =============================================================================
+# Token Cache Implementation
+# =============================================================================
+
+
+@dataclass
+class CachedToken:
+    """Cached authentication token with expiration"""
+
+    token: str
+    expires_at: datetime
+    connector_url: str
+
+
+class WazuhTokenCache:
+    """
+    Thread-safe cache for Wazuh Manager authentication tokens.
+
+    Caches tokens per connector name to support multiple Wazuh Manager instances.
+    Default TTL is 10 minutes (Wazuh tokens typically expire after 15-30 minutes).
+    """
+
+    def __init__(self, default_ttl_minutes: int = 10):
+        self._cache: Dict[str, CachedToken] = {}
+        self._lock = asyncio.Lock()
+        self._default_ttl = timedelta(minutes=default_ttl_minutes)
+
+    async def get(self, connector_name: str) -> Optional[Dict[str, str]]:
+        """
+        Get cached token headers if valid.
+
+        Returns:
+            Dict with Authorization header if token is valid, None otherwise
+        """
+        async with self._lock:
+            if connector_name not in self._cache:
+                return None
+
+            cached = self._cache[connector_name]
+
+            # Check if token is expired (with 30 second buffer)
+            if datetime.utcnow() >= (cached.expires_at - timedelta(seconds=30)):
+                logger.debug(f"Cached token for {connector_name} has expired")
+                del self._cache[connector_name]
+                return None
+
+            logger.debug(f"Using cached token for {connector_name}")
+            return {"Authorization": f"Bearer {cached.token}"}
+
+    async def set(self, connector_name: str, token: str, connector_url: str, ttl_minutes: Optional[int] = None):
+        """Cache a new token"""
+        async with self._lock:
+            ttl = timedelta(minutes=ttl_minutes) if ttl_minutes else self._default_ttl
+            expires_at = datetime.utcnow() + ttl
+
+            self._cache[connector_name] = CachedToken(
+                token=token,
+                expires_at=expires_at,
+                connector_url=connector_url,
+            )
+            logger.debug(f"Cached token for {connector_name}, expires at {expires_at.isoformat()}")
+
+    async def invalidate(self, connector_name: str):
+        """Remove cached token for a connector"""
+        async with self._lock:
+            if connector_name in self._cache:
+                del self._cache[connector_name]
+                logger.debug(f"Invalidated cached token for {connector_name}")
+
+    async def clear(self):
+        """Clear all cached tokens"""
+        async with self._lock:
+            self._cache.clear()
+            logger.debug("Cleared all cached Wazuh tokens")
+
+
+# Global token cache instance
+_token_cache = WazuhTokenCache(default_ttl_minutes=10)
+
+
+# =============================================================================
+# Public Cache Management Functions
+# =============================================================================
+
+
+async def invalidate_wazuh_token_cache(connector_name: str = "Wazuh-Manager"):
+    """
+    Invalidate cached token for a connector.
+
+    Call this when credentials are updated or if you receive auth errors.
+    """
+    await _token_cache.invalidate(connector_name)
+
+
+# ============================================================================
+# Existing Wazuh Manager Utility Functions
+# ============================================================================
+
+
+async def clear_all_wazuh_token_caches():
+    """Clear all cached Wazuh tokens"""
+    await _token_cache.clear()
 
 
 async def verify_wazuh_manager_credentials(
@@ -76,25 +183,82 @@ async def verify_wazuh_manager_connection(connector_name: str) -> str:
     return await verify_wazuh_manager_credentials(attributes)
 
 
-async def create_wazuh_manager_client(connector_name: str) -> str:
+# async def create_wazuh_manager_client(connector_name: str) -> str:
+#     """
+#     Returns the authentication token for the Wazuh manager service.
+
+#     Returns:
+#         str: Authentication token for the Wazuh manager service.
+#     """
+#     logger.info("Getting Wazuh Manager authentication token")
+#     # attributes = get_connector_info_from_db(connector_name)
+#     async with AsyncSessionLocal() as session:
+#         attributes = await get_connector_info_from_db(connector_name, session)
+#     if attributes is None:
+#         logger.error("No Wazuh Manager connector found in the database")
+#         return None
+#     logger.info(
+#         f"Verifying the wazuh-manager connection to {attributes['connector_url']}",
+#     )
+#     try:
+#         wazuh_auth_token = requests.get(
+#             f"{attributes['connector_url']}/security/user/authenticate",
+#             auth=(
+#                 attributes["connector_username"],
+#                 attributes["connector_password"],
+#             ),
+#             verify=False,
+#         )
+
+#         if wazuh_auth_token.status_code == 200:
+#             logger.debug("Wazuh Authentication Token successful")
+#             wazuh_auth_token = wazuh_auth_token.json()
+#             wazuh_auth_token = wazuh_auth_token["data"]["token"]
+
+#             return {"Authorization": f"Bearer {wazuh_auth_token}"}
+#         else:
+#             logger.error(
+#                 f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
+#             )
+
+#             return None
+#     except Exception as e:
+#         logger.error(
+#             f"Connection to {attributes['connector_url']} failed with error: {e}",
+#         )
+
+#         return None
+
+
+async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str, str]]:
     """
-    Returns the authentication token for the Wazuh manager service.
+    Returns the authentication token headers for the Wazuh manager service.
+
+    Uses cached token if available and valid, otherwise fetches a new one.
 
     Returns:
-        str: Authentication token for the Wazuh manager service.
+        Dict with Authorization header, or None if authentication fails
     """
-    logger.info("Getting Wazuh Manager authentication token")
-    # attributes = get_connector_info_from_db(connector_name)
+    # Check cache first
+    cached_headers = await _token_cache.get(connector_name)
+    if cached_headers is not None:
+        return cached_headers
+
+    logger.info(f"Fetching new Wazuh Manager authentication token for {connector_name}")
+
     async with AsyncSessionLocal() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
+
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+
     logger.info(
-        f"Verifying the wazuh-manager connection to {attributes['connector_url']}",
+        f"Authenticating to wazuh-manager at {attributes['connector_url']}",
     )
+
     try:
-        wazuh_auth_token = requests.get(
+        response = requests.get(
             f"{attributes['connector_url']}/security/user/authenticate",
             auth=(
                 attributes["connector_username"],
@@ -103,24 +267,94 @@ async def create_wazuh_manager_client(connector_name: str) -> str:
             verify=False,
         )
 
-        if wazuh_auth_token.status_code == 200:
+        if response.status_code == 200:
             logger.debug("Wazuh Authentication Token successful")
-            wazuh_auth_token = wazuh_auth_token.json()
-            wazuh_auth_token = wazuh_auth_token["data"]["token"]
+            token_data = response.json()
+            token = token_data["data"]["token"]
 
-            return {"Authorization": f"Bearer {wazuh_auth_token}"}
-        else:
-            logger.error(
-                f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
+            # Cache the token
+            await _token_cache.set(
+                connector_name=connector_name,
+                token=token,
+                connector_url=attributes["connector_url"],
             )
 
+            return {"Authorization": f"Bearer {token}"}
+        else:
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {response.text}",
+            )
             return None
+
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
         )
-
         return None
+
+
+# async def send_get_request(
+#     endpoint: str,
+#     params: Optional[Dict[str, Any]] = None,
+#     connector_name: str = "Wazuh-Manager",
+# ) -> Dict[str, Any]:
+#     """
+#     Sends a GET request to the Wazuh Manager service.
+
+#     Args:
+#         endpoint (str): The endpoint to send the GET request to.
+#         params (Optional[Dict[str, Any]], optional): The parameters to send with the GET request. Defaults to None.
+#         connector_name (str, optional): The name of the connector to use. Defaults to "Wazuh-Manager".
+
+#     Returns:
+#         Dict[str, Any]: The response from the GET request.
+#     """
+#     logger.info(f"Sending GET request to {endpoint}")
+#     wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+#     # attributes = get_connector_info_from_db(connector_name)
+#     async with AsyncSessionLocal() as session:
+#         attributes = await get_connector_info_from_db(connector_name, session)
+
+#     if attributes is None:
+#         logger.error("No Wazuh Manager connector found in the database")
+#         return None
+#     try:
+#         # Check if raw response is requested - support both old and new ways
+#         # Old way: params == {"raw": True} (exact match for backward compatibility)
+#         # New way: params contains "raw": True (for requests with multiple parameters)
+#         is_raw_request = (params == {"raw": True}) or (params and params.get("raw", False))
+
+#         if is_raw_request:
+#             response = requests.get(
+#                 f"{attributes['connector_url']}{endpoint}",
+#                 headers=wazuh_manager_client,
+#                 params=params,
+#                 verify=False,
+#             )
+#             response.raise_for_status()
+#             return {
+#                 "data": response.text,
+#                 "success": True,
+#                 "message": "Successfully retrieved data",
+#             }
+#         response = requests.get(
+#             f"{attributes['connector_url']}{endpoint}",
+#             headers=wazuh_manager_client,
+#             params=params,
+#             verify=False,
+#         )
+#         response.raise_for_status()
+#         return {
+#             "data": response.json(),
+#             "success": True,
+#             "message": "Successfully retrieved data",
+#         }
+#     except Exception as e:
+#         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+#         return {
+#             "success": False,
+#             "message": f"Failed to send GET request to {endpoint} with error: {e}",
+#         }
 
 
 async def send_get_request(
@@ -141,17 +375,25 @@ async def send_get_request(
     """
     logger.info(f"Sending GET request to {endpoint}")
     wazuh_manager_client = await create_wazuh_manager_client(connector_name)
-    # attributes = get_connector_info_from_db(connector_name)
+
+    if wazuh_manager_client is None:
+        logger.error("Failed to get Wazuh Manager client")
+        return {
+            "success": False,
+            "message": "Failed to authenticate with Wazuh Manager",
+        }
+
     async with AsyncSessionLocal() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
 
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
-        return None
+        return {
+            "success": False,
+            "message": "No Wazuh Manager connector found in the database",
+        }
+
     try:
-        # Check if raw response is requested - support both old and new ways
-        # Old way: params == {"raw": True} (exact match for backward compatibility)
-        # New way: params contains "raw": True (for requests with multiple parameters)
         is_raw_request = (params == {"raw": True}) or (params and params.get("raw", False))
 
         if is_raw_request:
@@ -167,12 +409,34 @@ async def send_get_request(
                 "success": True,
                 "message": "Successfully retrieved data",
             }
+
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             verify=False,
         )
+
+        # Handle 401 Unauthorized - token may have expired on server side
+        if response.status_code == 401:
+            logger.warning("Received 401 Unauthorized, invalidating cached token and retrying")
+            await _token_cache.invalidate(connector_name)
+
+            # Retry with fresh token
+            wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+            if wazuh_manager_client is None:
+                return {
+                    "success": False,
+                    "message": "Failed to re-authenticate with Wazuh Manager",
+                }
+
+            response = requests.get(
+                f"{attributes['connector_url']}{endpoint}",
+                headers=wazuh_manager_client,
+                params=params,
+                verify=False,
+            )
+
         response.raise_for_status()
         return {
             "data": response.json(),

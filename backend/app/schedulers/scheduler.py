@@ -215,6 +215,7 @@ async def schedule_enabled_jobs(scheduler):
             "wazuh_index_fields_resize",
             "invoke_huntress_integration_collection",
             "invoke_cato_integration_collect",
+            "invoke_sigma_queries_collect",
         ]
 
         # Disable each job in the list
