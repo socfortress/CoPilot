@@ -15,38 +15,50 @@
 	</div>
 	<n-spin :show="loading">
 		<div class="flex min-h-52 flex-col gap-6">
-			<div v-if="healthyList.length" class="flex flex-col gap-2 not-last:mb-5">
-				<div class="text-primary mb-2 flex items-center gap-2">
-					<Icon :name="CheckIcon" :size="16" />
-					Healthy
-					<code>{{ healthyList.length }}</code>
-				</div>
-				<CustomerHealthcheckItem
-					v-for="item of healthyList"
-					:key="item.id"
-					:health-data="item"
-					:source="source"
-					type="healthy"
-					embedded
-					class="item-appear item-appear-bottom item-appear-005"
-				/>
-			</div>
-			<div v-if="unhealthyList.length" class="flex flex-col gap-2 not-last:mb-5">
-				<div class="text-warning mb-2 flex items-center gap-2">
-					<Icon :name="AlertIcon" :size="16" />
-					Unhealthy
-					<code>{{ unhealthyList.length }}</code>
-				</div>
-				<CustomerHealthcheckItem
-					v-for="item of unhealthyList"
-					:key="item.id"
-					:health-data="item"
-					:source="source"
-					type="unhealthy"
-					embedded
-					class="item-appear item-appear-bottom item-appear-005"
-				/>
-			</div>
+			<n-collapse v-if="healthyList.length" :default-expanded-names="['healthy']">
+				<n-collapse-item name="healthy">
+					<template #header>
+						<div class="text-primary flex items-center gap-2">
+							<Icon :name="CheckIcon" :size="16" />
+							Healthy
+							<code>{{ healthyList.length }}</code>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2">
+						<CustomerHealthcheckItem
+							v-for="item of healthyList"
+							:key="item.id"
+							:health-data="item"
+							:source="source"
+							type="healthy"
+							embedded
+							class="item-appear item-appear-bottom item-appear-005"
+						/>
+					</div>
+				</n-collapse-item>
+			</n-collapse>
+			<n-collapse v-if="unhealthyList.length" :default-expanded-names="['unhealthy']">
+				<n-collapse-item name="unhealthy">
+					<template #header>
+						<div class="text-warning flex items-center gap-2">
+							<Icon :name="AlertIcon" :size="16" />
+							Unhealthy
+							<code>{{ unhealthyList.length }}</code>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2">
+						<CustomerHealthcheckItem
+							v-for="item of unhealthyList"
+							:key="item.id"
+							:health-data="item"
+							:source="source"
+							type="unhealthy"
+							embedded
+							class="item-appear item-appear-bottom item-appear-005"
+						/>
+					</div>
+				</n-collapse-item>
+			</n-collapse>
 			<n-empty v-if="!healthyList.length && !unhealthyList.length && !loading" class="h-48 justify-center" />
 		</div>
 	</n-spin>
@@ -57,7 +69,7 @@ import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
-import { NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
+import { NCollapse, NCollapseItem, NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
