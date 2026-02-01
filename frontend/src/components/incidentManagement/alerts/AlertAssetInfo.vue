@@ -105,7 +105,31 @@ const loading = ref(false)
 const showAlertDetails = ref(false)
 const alertDetails = ref<AlertDetails | null>(null)
 const alertDetailsInfo = computed(() => _omit(alertDetails.value, ["_source"]))
-const alertDetailsSource = computed(() => alertDetails.value?._source)
+const alertDetailsSource = computed(() => {
+	if (!alertDetails.value?._source) return undefined
+
+	const source = alertDetails.value._source
+	const priorityKeys = ["timestamp", "agent_name"] // Keys to show first
+	const endKeys = ["message"] // Keys to show last
+
+	// Separate priority keys, end keys, and other keys
+	const existingPriorityKeys = priorityKeys.filter(key => key in source)
+	const existingEndKeys = endKeys.filter(key => key in source)
+	const otherKeys = Object.keys(source)
+		.filter(key => !priorityKeys.includes(key) && !endKeys.includes(key))
+		.sort() // Sort alphabetically
+
+	// Combine: priority keys first, then sorted other keys, then end keys
+	const sortedKeys = [...existingPriorityKeys, ...otherKeys, ...existingEndKeys]
+
+	// Create new object with sorted keys
+	const sortedSource: Record<string, any> = {}
+	sortedKeys.forEach(key => {
+		sortedSource[key] = source[key]
+	})
+
+	return sortedSource
+})
 
 watch(showAlertDetails, val => {
 	if (val && !alertDetails.value) {
