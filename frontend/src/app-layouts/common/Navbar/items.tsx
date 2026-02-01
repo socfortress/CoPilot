@@ -37,9 +37,9 @@ export default function getItems(): MenuMixedOption[] {
             icon: renderIcon(OverviewIcon)
         },
         {
-            label: "Indices",
-            key: "IndicesMenu",
-            icon: renderIcon(IndiciesIcon),
+            label: "Incident Management",
+            key: "IncidentManagement",
+            icon: renderIcon(IncidentManagementIcon),
             children: [
                 {
                     label: () =>
@@ -47,12 +47,12 @@ export default function getItems(): MenuMixedOption[] {
                             RouterLink,
                             {
                                 to: {
-                                    name: "Indices"
+                                    name: "IncidentManagement-Sources"
                                 }
                             },
-                            { default: () => "Index Management" }
+                            { default: () => "Sources" }
                         ),
-                    key: "Indices"
+                    key: "IncidentManagement-Sources"
                 },
                 {
                     label: () =>
@@ -60,14 +60,116 @@ export default function getItems(): MenuMixedOption[] {
                             RouterLink,
                             {
                                 to: {
-                                    name: "Snapshots"
+                                    name: "IncidentManagement-Alerts"
                                 }
                             },
-                            { default: () => "Snapshot & Restore" }
+                            { default: () => "Alerts" }
                         ),
-                    key: "Snapshots"
+                    key: "IncidentManagement-Alerts"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "IncidentManagement-Cases"
+                                }
+                            },
+                            { default: () => "Cases" }
+                        ),
+                    key: "IncidentManagement-Cases"
+                }
+                /*
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "IncidentManagement-Sigma"
+                                }
+                            },
+                            { default: () => "SIGMA" }
+                        ),
+                    key: "IncidentManagement-Sigma"
+                }
+                */
+            ]
+        },
+        {
+            label: "Alerts",
+            key: "Alerts",
+            icon: renderIcon(AlertsIcon),
+            children: [
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Alerts-SIEM"
+                                }
+                            },
+                            { default: () => "SIEM" }
+                        ),
+                    key: "Alerts-SIEM"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Alerts-Mitre"
+                                }
+                            },
+                            { default: () => "MITRE ATT&CK" }
+                        ),
+                    key: "Alerts-Mitre"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Alerts-AtomicRedTeam"
+                                }
+                            },
+                            { default: () => "Atomic Red Team" }
+                        ),
+                    key: "Alerts-AtomicRedTeam"
                 }
             ]
+        },
+        {
+            label: () =>
+                h(
+                    RouterLink,
+                    {
+                        to: {
+                            name: "Artifacts"
+                        }
+                    },
+                    { default: () => "Artifacts" }
+                ),
+            key: "Artifacts",
+            icon: renderIcon(ArtifactsIcon)
+        },
+        {
+            label: () =>
+                h(
+                    RouterLink,
+                    {
+                        to: {
+                            name: "Customers"
+                        }
+                    },
+                    { default: () => "Customers" }
+                ),
+            key: "Customers",
+            icon: renderIcon(CustomersIcon)
         },
         {
             label: "Agents",
@@ -168,18 +270,97 @@ export default function getItems(): MenuMixedOption[] {
             ]
         },
         {
+            label: "Report Creation",
+            key: "ReportCreation",
+            icon: renderIcon(ReportCreationIcon),
+            children: [
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "ReportCreation"
+                                }
+                            },
+                            { default: () => "General Reports" }
+                        ),
+                    key: "ReportCreation"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "VulnerabilityReports"
+                                }
+                            },
+                            { default: () => "Vulnerability Reports" }
+                        ),
+                    key: "VulnerabilityReports"
+                },
+				{
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "SCAReports"
+                                }
+                            },
+                            { default: () => "SCA Reports" }
+                        ),
+                    key: "SCAReports"
+                }
+            ]
+        },
+        {
             label: () =>
                 h(
                     RouterLink,
                     {
                         to: {
-                            name: "Connectors"
+                            name: "Healthcheck"
                         }
                     },
-                    { default: () => "Connectors" }
+                    { default: () => "Healthcheck" }
                 ),
-            key: "Connectors",
-            icon: renderIcon(ConnectorsIcon)
+            key: "Healthcheck",
+            icon: renderIcon(HealthcheckIcon)
+        },
+        {
+            label: "Indices",
+            key: "IndicesMenu",
+            icon: renderIcon(IndiciesIcon),
+            children: [
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Indices"
+                                }
+                            },
+                            { default: () => "Index Management" }
+                        ),
+                    key: "Indices"
+                },
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "Snapshots"
+                                }
+                            },
+                            { default: () => "Snapshot & Restore" }
+                        ),
+                    key: "Snapshots"
+                }
+            ]
         },
         {
             label: "Graylog",
@@ -228,214 +409,18 @@ export default function getItems(): MenuMixedOption[] {
             ]
         },
         {
-            label: "Alerts",
-            key: "Alerts",
-            icon: renderIcon(AlertsIcon),
-            children: [
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Alerts-SIEM"
-                                }
-                            },
-                            { default: () => "SIEM" }
-                        ),
-                    key: "Alerts-SIEM"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Alerts-Mitre"
-                                }
-                            },
-                            { default: () => "MITRE ATT&CK" }
-                        ),
-                    key: "Alerts-Mitre"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Alerts-AtomicRedTeam"
-                                }
-                            },
-                            { default: () => "Atomic Red Team" }
-                        ),
-                    key: "Alerts-AtomicRedTeam"
-                }
-            ]
-        },
-        {
             label: () =>
                 h(
                     RouterLink,
                     {
                         to: {
-                            name: "Artifacts"
+                            name: "Connectors"
                         }
                     },
-                    { default: () => "Artifacts" }
+                    { default: () => "Connectors" }
                 ),
-            key: "Artifacts",
-            icon: renderIcon(ArtifactsIcon)
-        },
-        /*
-        {
-            label: "SOC",
-            key: "Soc",
-            icon: renderIcon(SocIcon),
-            children: [
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Soc-Alerts"
-                                }
-                            },
-                            { default: () => "Alerts" }
-                        ),
-                    key: "Soc-Alerts"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Soc-Cases"
-                                }
-                            },
-                            { default: () => "Cases" }
-                        ),
-                    key: "Soc-Cases"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Soc-Users"
-                                }
-                            },
-                            { default: () => "Users" }
-                        ),
-                    key: "Soc-Users"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "Soc-PendingAlerts"
-                                }
-                            },
-                            { default: () => "Pending Alerts" }
-                        ),
-                    key: "Soc-PendingAlerts"
-                }
-            ]
-        },
-        */
-        {
-            label: "Incident Management",
-            key: "IncidentManagement",
-            icon: renderIcon(IncidentManagementIcon),
-            children: [
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Sources"
-                                }
-                            },
-                            { default: () => "Sources" }
-                        ),
-                    key: "IncidentManagement-Sources"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Alerts"
-                                }
-                            },
-                            { default: () => "Alerts" }
-                        ),
-                    key: "IncidentManagement-Alerts"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Cases"
-                                }
-                            },
-                            { default: () => "Cases" }
-                        ),
-                    key: "IncidentManagement-Cases"
-                }
-                /*
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Sigma"
-                                }
-                            },
-                            { default: () => "SIGMA" }
-                        ),
-                    key: "IncidentManagement-Sigma"
-                }
-                */
-            ]
-        },
-        {
-            label: () =>
-                h(
-                    RouterLink,
-                    {
-                        to: {
-                            name: "Healthcheck"
-                        }
-                    },
-                    { default: () => "Healthcheck" }
-                ),
-            key: "Healthcheck",
-            icon: renderIcon(HealthcheckIcon)
-        },
-        {
-            label: () =>
-                h(
-                    RouterLink,
-                    {
-                        to: {
-                            name: "Customers"
-                        }
-                    },
-                    { default: () => "Customers" }
-                ),
-            key: "Customers",
-            icon: renderIcon(CustomersIcon)
+            key: "Connectors",
+            icon: renderIcon(ConnectorsIcon)
         },
         {
             label: "External Services",
@@ -480,52 +465,6 @@ export default function getItems(): MenuMixedOption[] {
                             { default: () => "Singul App Auth" }
                         ),
                     key: "ExternalServices-SingulAppAuth"
-                }
-            ]
-        },
-        {
-            label: "Report Creation",
-            key: "ReportCreation",
-            icon: renderIcon(ReportCreationIcon),
-            children: [
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "ReportCreation"
-                                }
-                            },
-                            { default: () => "General Reports" }
-                        ),
-                    key: "ReportCreation"
-                },
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "VulnerabilityReports"
-                                }
-                            },
-                            { default: () => "Vulnerability Reports" }
-                        ),
-                    key: "VulnerabilityReports"
-                },
-				{
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "SCAReports"
-                                }
-                            },
-                            { default: () => "SCA Reports" }
-                        ),
-                    key: "SCAReports"
                 }
             ]
         },
