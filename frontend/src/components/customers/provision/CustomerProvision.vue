@@ -36,7 +36,7 @@
 							{{ key }}
 						</template>
 						<template #value>
-							{{ value || "-" }}
+							{{ formatValue(key, value) }}
 						</template>
 					</CardKV>
 				</div>
@@ -76,6 +76,19 @@ const dialog = useDialog()
 const message = useMessage()
 
 const customerNameSanitized = computed<string>(() => customerName.value || customerMeta.value?.customer_name || "")
+
+function formatValue(key: string, value: any): string {
+	if (!value) return "-"
+
+	// Add field-specific formatting rules here
+	const formatRules: Record<string, (val: any) => string> = {
+		customer_meta_index_retention: (val) => `${val} days`
+		// Add more formatting rules as needed:
+		// another_field: (val) => `${val} units`,
+	}
+
+	return formatRules[key] ? formatRules[key](value) : value
+}
 
 function submitted(newData: CustomerMeta) {
 	emit("submitted", newData)
