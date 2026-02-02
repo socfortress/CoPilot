@@ -1,9 +1,20 @@
 <template>
 	<div class="customers-list">
 		<div class="header mb-4 flex items-center justify-between gap-2">
-			<div>
-				Total:
-				<strong class="font-mono">{{ totalCustomers }}</strong>
+			<div class="flex items-center gap-4">
+				<div>
+					Total:
+					<strong class="font-mono">{{ totalCustomers }}</strong>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-sm">Sort by:</span>
+					<n-select
+						v-model:value="sortOption"
+						:options="sortOptions"
+						style="width: 120px"
+						size="small"
+					/>
+				</div>
 			</div>
 			<div class="flex items-center gap-3">
 				<slot></slot>
@@ -11,9 +22,9 @@
 		</div>
 		<n-spin :show="loadingCustomers">
 			<div class="min-h-52">
-				<template v-if="customersList.length">
+				<template v-if="sortedCustomersList.length">
 					<CustomerItem
-						v-for="customer of customersList"
+						v-for="customer of sortedCustomersList"
 						:key="customer.customer_code"
 						:customer
 						:highlight="customer.customer_code === highlight"
@@ -32,7 +43,7 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers.d"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CustomerItem from "./CustomerItem.vue"
@@ -47,9 +58,30 @@ const { highlight, reload } = toRefs(props)
 const message = useMessage()
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
+const sortOption = ref<string>("ID")
+
+const sortOptions = [
+	{ label: "ID", value: "ID" },
+	{ label: "A-Z", value: "A-Z" }
+]
 
 const totalCustomers = computed<number>(() => {
 	return customersList.value.length || 0
+})
+
+const sortedCustomersList = computed<Customer[]>(() => {
+	const customers = [...customersList.value]
+
+	if (sortOption.value === "A-Z") {
+		return customers.sort((a, b) => {
+			const nameA = a.customer_name.toLowerCase()
+			const nameB = b.customer_name.toLowerCase()
+			return nameA.localeCompare(nameB)
+		})
+	}
+
+	// For "ID" option, return original order (by creation/ID)
+	return customers
 })
 
 function getCustomers() {
