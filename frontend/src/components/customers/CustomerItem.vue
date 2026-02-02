@@ -211,7 +211,11 @@
 					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
-								<CustomerHealthcheckList source="wazuh" :customer-code="customer.customer_code" />
+								<CustomerHealthcheckList
+								source="wazuh"
+								:customer-code="customer.customer_code"
+								v-model:filters="healthcheckFilters"
+							/>
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
@@ -225,6 +229,7 @@
 								<CustomerHealthcheckList
 									source="velociraptor"
 									:customer-code="customer.customer_code"
+									v-model:filters="healthcheckFilters"
 								/>
 							</div>
 						</n-scrollbar>
@@ -259,6 +264,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
 import { hashMD5 } from "@/utils"
 
 const props = defineProps<{
@@ -301,6 +307,7 @@ const message = useMessage()
 const customerInfo = ref<Customer | null>(null)
 const customerMeta = ref<CustomerMeta | null>(null)
 const customerPortainerStackId = ref<number | null>(null)
+const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
 const fallbackAvatar = computed(() => {
