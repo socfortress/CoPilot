@@ -1,7 +1,8 @@
+import json
 from typing import Any
+from typing import AsyncGenerator
 from typing import Dict
 from typing import Optional
-from typing import AsyncGenerator
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -9,10 +10,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Response
-import json
 from fastapi import Security
-from loguru import logger
 from fastapi.responses import StreamingResponse
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
@@ -136,6 +136,7 @@ async def search_sca_results_overview(
     except Exception as e:
         logger.error(f"Error in SCA overview search endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to search SCA results: {e}")
+
 
 @sca_router.get(
     "/overview/stream",

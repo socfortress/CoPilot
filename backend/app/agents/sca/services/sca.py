@@ -4,9 +4,9 @@ import hashlib
 import io
 import json
 from asyncio import Semaphore
-from typing import AsyncGenerator
 from datetime import datetime
 from typing import Any
+from typing import AsyncGenerator
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -995,9 +995,6 @@ async def delete_sca_report(
         raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
 
 
-
-
-
 async def stream_sca_for_all_agents(
     db_session: AsyncSession,
     customer_code: Optional[str] = None,
@@ -1097,10 +1094,7 @@ async def stream_sca_for_all_agents(
         for _ in range(total_agents):
             try:
                 # Wait for next result with timeout
-                agent, results = await asyncio.wait_for(
-                    result_queue.get(),
-                    timeout=60.0  # 60 second timeout per agent
-                )
+                agent, results = await asyncio.wait_for(result_queue.get(), timeout=60.0)  # 60 second timeout per agent
 
                 processed_count += 1
 
@@ -1193,10 +1187,7 @@ async def stream_sca_for_all_agents(
         total_fails = sum(item.fail_count for item in all_results)
         total_invalid = sum(item.invalid_count for item in all_results)
 
-        average_score = (
-            sum(item.score for item in all_results) / len(all_results)
-            if all_results else 0.0
-        )
+        average_score = sum(item.score for item in all_results) / len(all_results) if all_results else 0.0
 
         # Yield completion event
         yield {
