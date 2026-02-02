@@ -47,6 +47,7 @@
 		"@fontsource/jetbrains-mono": "^5.2.8",
 		"@fontsource/lexend": "^5.2.11",
 		"@fontsource/public-sans": "^5.2.7",
+		"@microsoft/fetch-event-source": "^2.0.1",
 		"@shikijs/markdown-it": "^3.19.0",
 		"@singulio/app-auth-search": "^0.0.3",
 		"@types/codemirror": "^5.60.17",
