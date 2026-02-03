@@ -50,7 +50,8 @@ from app.db.db_session import get_db
 
 # App specific imports
 # from app.db.db_session import session
-from app.db.universal_models import Agents, AgentDataStore
+from app.db.universal_models import AgentDataStore
+from app.db.universal_models import Agents
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
