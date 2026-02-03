@@ -259,7 +259,7 @@ class AgentDataStore(SQLModel, table=True):
 class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"
     id: Optional[int] = Field(primary_key=True)
-    timestamp: datetime = Field(default=datetime.utcnow())
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
     event_type: str = Field(default="Info", max_length=256)
     user_id: int = Field(default=None, nullable=True)
     route: str = Field(default=None, nullable=True, max_length=256)
