@@ -86,12 +86,14 @@ watch(textFilter, val => {
 })
 
 const agentsFiltered = computed(() => {
-	return agents.value.filter(({ hostname, ip_address, agent_id, label }) =>
-		(hostname + ip_address + agent_id + label)
-			.toString()
-			.toLowerCase()
-			.includes(textFilterDebounced.value.toString().toLowerCase())
-	)
+	return agents.value
+		.filter(({ hostname, ip_address, agent_id, label }) =>
+			(hostname + ip_address + agent_id + label)
+				.toString()
+				.toLowerCase()
+				.includes(textFilterDebounced.value.toString().toLowerCase())
+		)
+		.sort((a, b) => a.agent_id.localeCompare(b.agent_id))
 })
 
 const itemsPaginated = computed(() => {
