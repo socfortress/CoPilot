@@ -93,7 +93,7 @@ const agentsFiltered = computed(() => {
 				.toLowerCase()
 				.includes(textFilterDebounced.value.toString().toLowerCase())
 		)
-		.sort((a, b) => a.agent_id.localeCompare(b.agent_id))
+		.sort((a, b) => parseInt(a.agent_id) - parseInt(b.agent_id))
 })
 
 const itemsPaginated = computed(() => {
