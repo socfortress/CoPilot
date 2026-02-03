@@ -110,6 +110,16 @@
 							{{ customer.is_provisioned ? "Provisioned" : "Not Provisioned" }}
 						</template>
 					</Badge>
+
+					<Badge v-if="customer.is_provisioned && agentCount !== null" type="splitted" color="primary">
+						<template #iconLeft>
+							<Icon :name="AgentsIcon" :size="13" />
+						</template>
+						<template #label>Agents</template>
+						<template #value>
+							{{ agentCount }}
+						</template>
+					</Badge>
 				</div>
 			</template>
 
@@ -298,6 +308,7 @@ const ArrowIcon = "carbon:arrow-left"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
 const ProvisionIcon = "carbon:network-3"
+const AgentsIcon = "carbon:devices"
 
 const showDetails = ref(false)
 const selectedTabsGroup = ref<"customer" | "agents" | "wazuh_worker">("customer")
@@ -307,6 +318,7 @@ const message = useMessage()
 const customerInfo = ref<Customer | null>(null)
 const customerMeta = ref<CustomerMeta | null>(null)
 const customerPortainerStackId = ref<number | null>(null)
+const agentCount = ref<number | null>(null)
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
@@ -359,6 +371,19 @@ function getPortainerStackId() {
 	})
 }
 
+function getAgentCount() {
+	Api.customers
+		.getCustomerAgents(customer.value.customer_code)
+		.then(res => {
+			if (res.data.success) {
+				agentCount.value = res.data.agents?.length || 0
+			}
+		})
+		.catch(err => {
+			console.error("Failed to fetch agent count:", err)
+		})
+}
+
 function deletedItem() {
 	showDetails.value = false
 	emit("delete")
@@ -386,6 +411,10 @@ onBeforeMount(() => {
 
 	if (customer.value.customer_code && !customer.value.customer_name) {
 		getFull()
+	}
+
+	if (customer.value.is_provisioned) {
+		getAgentCount()
 	}
 })
 </script>
