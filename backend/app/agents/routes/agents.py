@@ -50,7 +50,7 @@ from app.db.db_session import get_db
 
 # App specific imports
 # from app.db.db_session import session
-from app.db.universal_models import Agents
+from app.db.universal_models import Agents, AgentDataStore
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
@@ -141,6 +141,9 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
 
     """
     try:
+        # First delete related records from agent_datastore
+        await db.execute(delete(AgentDataStore).filter(AgentDataStore.agent_id == agent_id))
+        # Then delete the agent
         await db.execute(delete(Agents).filter(Agents.agent_id == agent_id))
         await db.commit()
     except Exception as e:
