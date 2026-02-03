@@ -91,8 +91,9 @@ const username = computed(() => {
 	return user?.username || ""
 })
 
-function formatDate(timestamp: string | number | Date, utc: boolean = true): string {
-	return dayjs(timestamp).utc(utc).format(dFormats.datetime)
+function formatDate(timestamp: string | number | Date): string {
+    // Parse as UTC (since backend stores in UTC without 'Z' suffix - maybe address later), then convert to local
+    return dayjs.utc(timestamp).local().format(dFormats.datetime)
 }
 </script>
 
