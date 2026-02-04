@@ -178,9 +178,9 @@
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 							>
 								<option value="">All Statuses</option>
-								<option value="open">Open</option>
-								<option value="in_progress">In Progress</option>
-								<option value="closed">Closed</option>
+								<option value="OPEN">Open</option>
+								<option value="IN_PROGRESS">In Progress</option>
+								<option value="CLOSED">Closed</option>
 							</select>
 						</div>
 						<div>
