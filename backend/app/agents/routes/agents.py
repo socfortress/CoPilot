@@ -1,7 +1,8 @@
 import asyncio
 import csv
 import io
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime, timedelta
 
 # from fastapi import BackgroundTasks
 from fastapi import APIRouter
@@ -24,6 +25,10 @@ from app.agents.schema.agents import AgentWazuhUpgradeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
+from app.agents.schema.agents import BulkDeleteAgentRequest
+from app.agents.schema.agents import BulkDeleteAgentResult
+from app.agents.schema.agents import BulkDeleteAgentsResponse
+from app.agents.schema.agents import BulkDeleteFilterRequest
 from app.agents.services.status import get_agents_by_customer_code
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
@@ -94,6 +99,68 @@ async def check_wazuh_manager_version() -> bool:
     except Exception as e:
         logger.error(f"Failed to check Wazuh Manager version: {e}")
         return False
+
+async def delete_single_agent(
+    db: AsyncSession,
+    agent_id: str,
+    agent: Agents,
+) -> BulkDeleteAgentResult:
+    """
+    Delete a single agent and return the result.
+    This function handles errors gracefully and returns a result object.
+
+    Args:
+        db (AsyncSession): The database session.
+        agent_id (str): The ID of the agent to delete.
+        agent (Agents): The agent object from the database.
+
+    Returns:
+        BulkDeleteAgentResult: The result of the deletion attempt.
+    """
+    errors = []
+
+    # Try to delete from Wazuh
+    try:
+        await delete_agent_wazuh(agent_id)
+    except Exception as e:
+        error_msg = f"Failed to delete from Wazuh: {str(e)}"
+        logger.warning(f"Agent {agent_id}: {error_msg}")
+        errors.append(error_msg)
+
+    # Try to delete from Velociraptor if applicable
+    if agent.velociraptor_id and agent.velociraptor_id != "Unknown":
+        try:
+            await delete_agent_velociraptor(agent.velociraptor_id)
+        except Exception as e:
+            error_msg = f"Failed to delete from Velociraptor: {str(e)}"
+            logger.warning(f"Agent {agent_id}: {error_msg}")
+            errors.append(error_msg)
+
+    # Delete from database
+    try:
+        await delete_agent_from_database(db=db, agent_id=agent_id)
+    except Exception as e:
+        error_msg = f"Failed to delete from database: {str(e)}"
+        logger.error(f"Agent {agent_id}: {error_msg}")
+        errors.append(error_msg)
+        return BulkDeleteAgentResult(
+            agent_id=agent_id,
+            success=False,
+            message=f"Failed to delete agent: {'; '.join(errors)}",
+        )
+
+    if errors:
+        return BulkDeleteAgentResult(
+            agent_id=agent_id,
+            success=True,
+            message=f"Agent deleted from database but with warnings: {'; '.join(errors)}",
+        )
+
+    return BulkDeleteAgentResult(
+        agent_id=agent_id,
+        success=True,
+        message="Agent deleted successfully",
+    )
 
 
 agents_router = APIRouter()
@@ -238,6 +305,180 @@ async def get_customer_agents_for_dashboard(
         logger.error(f"Failed to fetch agents for customer {customer_code}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents for customer {customer_code}")
 
+@agents_router.post(
+    "/bulk/delete",
+    response_model=BulkDeleteAgentsResponse,
+    description="Delete multiple agents by their IDs",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def bulk_delete_agents(
+    request: BulkDeleteAgentRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> BulkDeleteAgentsResponse:
+    """
+    Delete multiple agents by their IDs.
+    User must have access to each agent's customer.
+    If an agent fails to delete, the process continues with the remaining agents.
+
+    Args:
+        request (BulkDeleteAgentRequest): The request containing agent IDs to delete.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
+
+    Returns:
+        BulkDeleteAgentsResponse: The response containing results for each deletion attempt.
+    """
+    logger.info(f"Bulk deleting {len(request.agent_ids)} agents")
+
+    results: List[BulkDeleteAgentResult] = []
+    successful_count = 0
+    failed_count = 0
+
+    for agent_id in request.agent_ids:
+        # Check customer access for each agent
+        base_query = select(Agents).filter(Agents.agent_id == agent_id)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user,
+            session,
+            base_query,
+            Agents.customer_code,
+        )
+
+        result = await session.execute(filtered_query)
+        agent = result.scalars().first()
+
+        if not agent:
+            results.append(
+                BulkDeleteAgentResult(
+                    agent_id=agent_id,
+                    success=False,
+                    message="Agent not found or access denied",
+                ),
+            )
+            failed_count += 1
+            continue
+
+        # Delete the agent
+        delete_result = await delete_single_agent(db=session, agent_id=agent_id, agent=agent)
+        results.append(delete_result)
+
+        if delete_result.success:
+            successful_count += 1
+        else:
+            failed_count += 1
+
+    return BulkDeleteAgentsResponse(
+        success=failed_count == 0,
+        message=f"Bulk deletion completed: {successful_count} successful, {failed_count} failed",
+        total_requested=len(request.agent_ids),
+        successful_deletions=successful_count,
+        failed_deletions=failed_count,
+        results=results,
+    )
+
+
+@agents_router.post(
+    "/bulk/delete/filter",
+    response_model=BulkDeleteAgentsResponse,
+    description="Delete multiple agents based on filter conditions",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def bulk_delete_agents_by_filter(
+    request: BulkDeleteFilterRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> BulkDeleteAgentsResponse:
+    """
+    Delete multiple agents based on filter conditions.
+    User must have access to each agent's customer.
+    If an agent fails to delete, the process continues with the remaining agents.
+
+    Filter conditions:
+    - customer_code: Filter by customer code
+    - status: Filter by agent status ('disconnected', 'never_connected', 'active')
+    - disconnected_days: Filter agents disconnected for more than X days
+
+    Args:
+        request (BulkDeleteFilterRequest): The filter conditions.
+        current_user (User): The authenticated user.
+        session (AsyncSession): The database session.
+
+    Returns:
+        BulkDeleteAgentsResponse: The response containing results for each deletion attempt.
+    """
+    logger.info(f"Bulk deleting agents with filters: {request}")
+
+    # Safety check: require at least one filter to be specified
+    if not request.customer_code and not request.status and not request.disconnected_days:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one filter condition must be specified to prevent accidental bulk deletion of all agents",
+        )
+
+    # Build the base query with filters
+    base_query = select(Agents)
+
+    if request.customer_code:
+        base_query = base_query.filter(Agents.customer_code == request.customer_code)
+
+    if request.status:
+        if request.status.lower() == "disconnected":
+            base_query = base_query.filter(Agents.wazuh_agent_status == "disconnected")
+        elif request.status.lower() == "never_connected":
+            base_query = base_query.filter(Agents.wazuh_agent_status == "never_connected")
+        elif request.status.lower() == "active":
+            base_query = base_query.filter(Agents.wazuh_agent_status == "active")
+
+    if request.disconnected_days:
+        cutoff_date = datetime.utcnow() - timedelta(days=request.disconnected_days)
+        # Filter agents whose last keep alive is older than the cutoff
+        base_query = base_query.filter(Agents.wazuh_last_seen < cutoff_date)
+
+    # Apply customer access filtering
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user,
+        session,
+        base_query,
+        Agents.customer_code,
+    )
+
+    result = await session.execute(filtered_query)
+    agents_to_delete = result.scalars().all()
+
+    if not agents_to_delete:
+        return BulkDeleteAgentsResponse(
+            success=True,
+            message="No agents found matching the filter criteria",
+            total_requested=0,
+            successful_deletions=0,
+            failed_deletions=0,
+            results=[],
+        )
+
+    logger.info(f"Found {len(agents_to_delete)} agents matching filter criteria")
+
+    results: List[BulkDeleteAgentResult] = []
+    successful_count = 0
+    failed_count = 0
+
+    for agent in agents_to_delete:
+        delete_result = await delete_single_agent(db=session, agent_id=agent.agent_id, agent=agent)
+        results.append(delete_result)
+
+        if delete_result.success:
+            successful_count += 1
+        else:
+            failed_count += 1
+
+    return BulkDeleteAgentsResponse(
+        success=failed_count == 0,
+        message=f"Bulk deletion completed: {successful_count} successful, {failed_count} failed",
+        total_requested=len(agents_to_delete),
+        successful_deletions=successful_count,
+        failed_deletions=failed_count,
+        results=results,
+    )
 
 @agents_router.get(
     "/{agent_id}",
