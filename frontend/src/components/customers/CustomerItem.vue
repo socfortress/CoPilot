@@ -222,10 +222,10 @@
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
 								<CustomerHealthcheckList
-								source="wazuh"
-								:customer-code="customer.customer_code"
-								v-model:filters="healthcheckFilters"
-							/>
+									v-model:filters="healthcheckFilters"
+									source="wazuh"
+									:customer-code="customer.customer_code"
+								/>
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
@@ -237,9 +237,9 @@
 						<n-scrollbar style="max-height: 470px" trigger="none">
 							<div class="p-6 pt-2">
 								<CustomerHealthcheckList
+									v-model:filters="healthcheckFilters"
 									source="velociraptor"
 									:customer-code="customer.customer_code"
-									v-model:filters="healthcheckFilters"
 								/>
 							</div>
 						</n-scrollbar>

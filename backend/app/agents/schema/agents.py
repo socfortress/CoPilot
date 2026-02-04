@@ -1,4 +1,6 @@
 from typing import List
+from typing import Literal
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -57,3 +59,28 @@ class AgentUpdateCustomerCodeResponse(BaseModel):
 class AgentWazuhUpgradeResponse(BaseModel):
     success: bool
     message: str
+
+
+class BulkDeleteAgentRequest(BaseModel):
+    agent_ids: List[str] = Field(..., description="List of agent IDs to delete")
+
+
+class BulkDeleteFilterRequest(BaseModel):
+    customer_code: Optional[str] = Field(None, description="Filter by customer code")
+    status: Optional[Literal["disconnected", "never_connected", "active"]] = Field(None, description="Filter by agent status")
+    disconnected_days: Optional[int] = Field(None, description="Filter agents disconnected for more than X days", ge=1)
+
+
+class BulkDeleteAgentResult(BaseModel):
+    agent_id: str
+    success: bool
+    message: str
+
+
+class BulkDeleteAgentsResponse(BaseModel):
+    success: bool
+    message: str
+    total_requested: int
+    successful_deletions: int
+    failed_deletions: int
+    results: List[BulkDeleteAgentResult]

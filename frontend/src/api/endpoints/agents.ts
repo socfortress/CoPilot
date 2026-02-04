@@ -3,6 +3,9 @@ import type {
 	AgentArtifactData,
 	AgentSca,
 	AgentVulnerabilities,
+	BulkDeleteAgentRequest,
+    BulkDeleteAgentsResponse,
+    BulkDeleteFilterRequest,
 	OutdatedVelociraptorAgents,
 	OutdatedWazuhAgents,
 	ScaPolicyResult
@@ -29,6 +32,22 @@ export default {
 	deleteAgent(agentId: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/agents/${agentId}/delete`)
 	},
+	/**
+	 * Bulk delete agents by their IDs
+	 * @param agentIds - Array of agent IDs to delete
+	 */
+    bulkDeleteAgents(agentIds: string[]) {
+        const payload: BulkDeleteAgentRequest = { agent_ids: agentIds }
+        return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
+    },
+    /**
+     * Bulk delete agents based on filter conditions
+     * At least one filter must be specified
+     * @param filters - Filter conditions (customer_code, status, disconnected_days)
+     */
+    bulkDeleteAgentsByFilter(filters: BulkDeleteFilterRequest) {
+        return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete/filter`, filters)
+    },
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
