@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.sql import func
 
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
@@ -47,7 +48,7 @@ from app.integrations.alert_escalation.schema.escalate_alert import CustomerCode
 from app.integrations.routes import get_customer_by_auth_key
 
 
-async def fetch_settings(field: str, value: str, session: AsyncSession):
+async def fetch_settings(field: str, value: str, session: AsyncSession, case_insensitive: bool = False):
     """
     Fetch settings based on the field and value.
 
@@ -55,16 +56,26 @@ async def fetch_settings(field: str, value: str, session: AsyncSession):
         field (str): The field to check.
         value (str): The value to check.
         session (AsyncSession): The database session.
+        case_insensitive (bool): Whether to perform case-insensitive comparison.
 
     Returns:
         AlertCreationSettings: The settings if found, None otherwise.
     """
-    logger.info(f"Checking if {field}: {value} is valid.")
-    result = await session.execute(
-        select(AlertCreationSettings).where(
-            getattr(AlertCreationSettings, field) == value,
-        ),
-    )
+    logger.info(f"Checking if {field}: {value} is valid (case_insensitive={case_insensitive}).")
+
+    if case_insensitive:
+        result = await session.execute(
+            select(AlertCreationSettings).where(
+                func.lower(getattr(AlertCreationSettings, field)) == value.lower(),
+            ),
+        )
+    else:
+        result = await session.execute(
+            select(AlertCreationSettings).where(
+                getattr(AlertCreationSettings, field) == value,
+            ),
+        )
+
     settings = result.scalars().first()
     logger.info(f"Settings: {settings}")
     return settings
@@ -82,6 +93,13 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> A
         bool: True if the customer code is valid, False otherwise.
     """
     settings = await fetch_settings("customer_code", customer_code, session)
+
+    if settings:
+        return settings
+
+    # If no settings found customer_code, try with the lowered customer_name
+    normalized_code = customer_code.lower().replace("_", " ")
+    settings = await fetch_settings("customer_name", normalized_code, session, case_insensitive=True)
 
     if settings:
         return settings
