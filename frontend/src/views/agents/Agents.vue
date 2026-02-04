@@ -1,30 +1,30 @@
 <template>
-    <div class="page page-wrapped page-without-footer flex flex-col">
-        <div class="wrapper flex grow gap-4">
-            <div class="sidebar">
-                <AgentToolbar
-                    v-model="textFilter"
-                    :syncing="loadingSync"
-                    :agents-length="agents.length"
-                    :agents-filtered-length="agentsFiltered.length"
-                    :agents-critical="agentsCritical"
-                    :agents-online="agentsOnline"
-                    :selection-mode="selectionMode"
-                    :selected-count="selectedAgents.length"
-                    @run="runCommand($event)"
-                    @click="gotoAgent($event.agent_id)"
-                    @bulk-delete="showBulkDeleteModal = true"
-                    @update:selection-mode="selectionMode = $event"
-                    @clear-selection="clearSelection"
-                />
-            </div>
-            <div class="main flex grow flex-col overflow-hidden">
-                <n-spin class="flex h-full w-full flex-col overflow-hidden" :show="loadingAgents">
-                    <n-scrollbar class="grow">
-                        <div class="agents-list flex grow flex-col gap-3">
-                            <template v-if="agentsFiltered.length">
-                                <AgentCard
-                                    v-for="agent in itemsPaginated"
+	<div class="page page-wrapped page-without-footer flex flex-col">
+		<div class="wrapper flex grow gap-4">
+			<div class="sidebar">
+				<AgentToolbar
+					v-model="textFilter"
+					:syncing="loadingSync"
+					:agents-length="agents.length"
+					:agents-filtered-length="agentsFiltered.length"
+					:agents-critical="agentsCritical"
+					:agents-online="agentsOnline"
+					:selection-mode="selectionMode"
+					:selected-count="selectedAgents.length"
+					@run="runCommand($event)"
+					@click="gotoAgent($event.agent_id)"
+					@bulk-delete="showBulkDeleteModal = true"
+					@update:selection-mode="selectionMode = $event"
+					@clear-selection="clearSelection"
+				/>
+			</div>
+			<div class="main flex grow flex-col overflow-hidden">
+				<n-spin class="flex h-full w-full flex-col overflow-hidden" :show="loadingAgents">
+					<n-scrollbar class="grow">
+						<div class="agents-list flex grow flex-col gap-3">
+							<template v-if="agentsFiltered.length">
+								<AgentCard
+									v-for="agent in itemsPaginated"
 									:key="agent.agent_id"
 									:agent
 									:show-actions="!selectionMode"
@@ -36,39 +36,39 @@
 									@delete="syncAgents()"
 									@click="handleAgentClick(agent)"
 									@toggle-selection="toggleAgentSelection(agent)"
-                                />
-                            </template>
-                            <template v-else>
-                                <n-empty
-                                    v-if="!loadingAgents"
-                                    description="No items found"
-                                    class="h-48 justify-center"
-                                />
-                            </template>
-                        </div>
-                    </n-scrollbar>
-                </n-spin>
+								/>
+							</template>
+							<template v-else>
+								<n-empty
+									v-if="!loadingAgents"
+									description="No items found"
+									class="h-48 justify-center"
+								/>
+							</template>
+						</div>
+					</n-scrollbar>
+				</n-spin>
 
-                <div class="pagination-wrapper">
-                    <n-pagination
-                        v-model:page="page"
-                        :page-size="pageSize"
-                        :page-slot="5"
-                        :item-count="agentsFiltered.length"
-                    />
-                </div>
-            </div>
-        </div>
+				<div class="pagination-wrapper">
+					<n-pagination
+						v-model:page="page"
+						:page-size="pageSize"
+						:page-slot="5"
+						:item-count="agentsFiltered.length"
+					/>
+				</div>
+			</div>
+		</div>
 
-        <!-- Bulk Delete Modal -->
-        <BulkDeleteModal
-            v-model:show="showBulkDeleteModal"
-            :selected-agents="selectedAgents"
-            :customers="uniqueCustomers"
-            @remove-selection="removeFromSelection"
-            @deleted="onBulkDeleteComplete"
-        />
-    </div>
+		<!-- Bulk Delete Modal -->
+		<BulkDeleteModal
+			v-model:show="showBulkDeleteModal"
+			:selected-agents="selectedAgents"
+			:customers="uniqueCustomers"
+			@remove-selection="removeFromSelection"
+			@deleted="onBulkDeleteComplete"
+		/>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -116,7 +116,7 @@ const agentsFiltered = computed(() => {
                 .toLowerCase()
                 .includes(textFilterDebounced.value.toString().toLowerCase())
         )
-        .sort((a, b) => parseInt(a.agent_id) - parseInt(b.agent_id))
+        .sort((a, b) => Number.parseInt(a.agent_id) - Number.parseInt(b.agent_id))
 })
 
 const itemsPaginated = computed(() => {

@@ -1,181 +1,181 @@
 <template>
-    <div class="sca-streaming-list">
-        <!-- Progress Header -->
-        <n-card v-if="isStreaming || streamComplete" class="mb-4">
-            <div class="flex flex-col gap-4">
-                <!-- Progress Bar -->
-                <div class="flex items-center gap-4">
-                    <n-progress
-                        type="line"
-                        :percentage="progress.percent_complete"
-                        :status="streamError ? 'error' : streamComplete ? 'success' : 'default'"
-                        :show-indicator="true"
-                        class="flex-grow"
-                    />
-                    <n-button
-                        v-if="!isStreaming && !streamComplete"
-                        type="primary"
-                        @click="startStream"
-                        :loading="isConnecting"
-                    >
-                        <template #icon>
-                            <Icon :name="RefreshIcon" />
-                        </template>
-                        Load SCA Data
-                    </n-button>
-                    <n-button
-                        v-if="isStreaming"
-                        type="error"
-                        @click="stopStream"
-                    >
-                        <template #icon>
-                            <Icon :name="StopIcon" />
-                        </template>
-                        Stop
-                    </n-button>
-                    <n-button
-                        v-if="streamComplete"
-                        @click="startStream"
-                    >
-                        <template #icon>
-                            <Icon :name="RefreshIcon" />
-                        </template>
-                        Refresh
-                    </n-button>
-                </div>
+	<div class="sca-streaming-list">
+		<!-- Progress Header -->
+		<n-card v-if="isStreaming || streamComplete" class="mb-4">
+			<div class="flex flex-col gap-4">
+				<!-- Progress Bar -->
+				<div class="flex items-center gap-4">
+					<n-progress
+						type="line"
+						:percentage="progress.percent_complete"
+						:status="streamError ? 'error' : streamComplete ? 'success' : 'default'"
+						:show-indicator="true"
+						class="flex-grow"
+					/>
+					<n-button
+						v-if="!isStreaming && !streamComplete"
+						type="primary"
+						:loading="isConnecting"
+						@click="startStream"
+					>
+						<template #icon>
+							<Icon :name="RefreshIcon" />
+						</template>
+						Load SCA Data
+					</n-button>
+					<n-button
+						v-if="isStreaming"
+						type="error"
+						@click="stopStream"
+					>
+						<template #icon>
+							<Icon :name="StopIcon" />
+						</template>
+						Stop
+					</n-button>
+					<n-button
+						v-if="streamComplete"
+						@click="startStream"
+					>
+						<template #icon>
+							<Icon :name="RefreshIcon" />
+						</template>
+						Refresh
+					</n-button>
+				</div>
 
-                <!-- Status Text -->
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-secondary">
-                        {{ statusMessage }}
-                    </span>
-                    <div class="flex gap-4">
-                        <span>
-                            Agents:
-                            <code class="text-success">{{ progress.successful }}</code>
-                            /
-                            <code>{{ progress.total }}</code>
-                            <code v-if="progress.failed > 0" class="text-error ml-1">
-                                ({{ progress.failed }} failed)
-                            </code>
-                        </span>
-                        <span>
-                            Results: <code>{{ results.length }}</code>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </n-card>
+				<!-- Status Text -->
+				<div class="flex items-center justify-between text-sm">
+					<span class="text-secondary">
+						{{ statusMessage }}
+					</span>
+					<div class="flex gap-4">
+						<span>
+							Agents:
+							<code class="text-success">{{ progress.successful }}</code>
+							/
+							<code>{{ progress.total }}</code>
+							<code v-if="progress.failed > 0" class="text-error ml-1">
+								({{ progress.failed }} failed)
+							</code>
+						</span>
+						<span>
+							Results: <code>{{ results.length }}</code>
+						</span>
+					</div>
+				</div>
+			</div>
+		</n-card>
 
-        <!-- Statistics Summary (shown when complete) -->
-        <n-card v-if="streamComplete && stats" class="mb-4">
-            <div class="flex flex-wrap justify-between gap-4">
-                <n-statistic label="Total Agents" :value="stats.total_agents" />
-                <n-statistic label="Total Policies" :value="stats.total_policies" />
-                <n-statistic label="Average Score">
-                    <template #default>
-                        <span :class="getScoreClass(stats.average_score)">
-                            {{ stats.average_score }}%
-                        </span>
-                    </template>
-                </n-statistic>
-                <n-statistic label="Checks" :value="stats.total_checks" />
-                <n-statistic label="Passed" :value="stats.total_passes" class="text-success" />
-                <n-statistic label="Failed" :value="stats.total_fails" class="text-error" />
-            </div>
-        </n-card>
+		<!-- Statistics Summary (shown when complete) -->
+		<n-card v-if="streamComplete && stats" class="mb-4">
+			<div class="flex flex-wrap justify-between gap-4">
+				<n-statistic label="Total Agents" :value="stats.total_agents" />
+				<n-statistic label="Total Policies" :value="stats.total_policies" />
+				<n-statistic label="Average Score">
+					<template #default>
+						<span :class="getScoreClass(stats.average_score)">
+							{{ stats.average_score }}%
+						</span>
+					</template>
+				</n-statistic>
+				<n-statistic label="Checks" :value="stats.total_checks" />
+				<n-statistic label="Passed" :value="stats.total_passes" class="text-success" />
+				<n-statistic label="Failed" :value="stats.total_fails" class="text-error" />
+			</div>
+		</n-card>
 
-        <!-- Filters -->
-        <n-card class="mb-4">
-            <div class="flex flex-wrap gap-4">
-                <n-select
-                    v-model:value="filters.customer_code"
-                    placeholder="All Customers"
-                    :options="customerOptions"
-                    clearable
-                    class="w-48"
-                    @update:value="onFilterChange"
-                />
-                <n-input
-                    v-model:value="filters.agent_name"
-                    placeholder="Agent Name"
-                    clearable
-                    class="w-48"
-                    @update:value="onFilterChange"
-                />
-                <n-input
-                    v-model:value="filters.policy_name"
-                    placeholder="Policy Name"
-                    clearable
-                    class="w-48"
-                    @update:value="onFilterChange"
-                />
-                <n-input-number
-                    v-model:value="filters.min_score"
-                    placeholder="Min Score"
-                    :min="0"
-                    :max="100"
-                    clearable
-                    class="w-32"
-                    @update:value="onFilterChange"
-                />
-                <n-input-number
-                    v-model:value="filters.max_score"
-                    placeholder="Max Score"
-                    :min="0"
-                    :max="100"
-                    clearable
-                    class="w-32"
-                    @update:value="onFilterChange"
-                />
-            </div>
-        </n-card>
+		<!-- Filters -->
+		<n-card class="mb-4">
+			<div class="flex flex-wrap gap-4">
+				<n-select
+					v-model:value="filters.customer_code"
+					placeholder="All Customers"
+					:options="customerOptions"
+					clearable
+					class="w-48"
+					@update:value="onFilterChange"
+				/>
+				<n-input
+					v-model:value="filters.agent_name"
+					placeholder="Agent Name"
+					clearable
+					class="w-48"
+					@update:value="onFilterChange"
+				/>
+				<n-input
+					v-model:value="filters.policy_name"
+					placeholder="Policy Name"
+					clearable
+					class="w-48"
+					@update:value="onFilterChange"
+				/>
+				<n-input-number
+					v-model:value="filters.min_score"
+					placeholder="Min Score"
+					:min="0"
+					:max="100"
+					clearable
+					class="w-32"
+					@update:value="onFilterChange"
+				/>
+				<n-input-number
+					v-model:value="filters.max_score"
+					placeholder="Max Score"
+					:min="0"
+					:max="100"
+					clearable
+					class="w-32"
+					@update:value="onFilterChange"
+				/>
+			</div>
+		</n-card>
 
-        <!-- Results List -->
-        <div class="results-container">
-            <n-spin :show="isConnecting">
-                <!-- Empty State -->
-                <n-empty
-                    v-if="!isStreaming && !streamComplete && filteredResults.length === 0"
-                    description="Click 'Load SCA Data' to start collecting results"
-                    class="py-12"
-                >
-                    <template #extra>
-                        <n-button type="primary" @click="startStream">
-                            Load SCA Data
-                        </n-button>
-                    </template>
-                </n-empty>
+		<!-- Results List -->
+		<div class="results-container">
+			<n-spin :show="isConnecting">
+				<!-- Empty State -->
+				<n-empty
+					v-if="!isStreaming && !streamComplete && filteredResults.length === 0"
+					description="Click 'Load SCA Data' to start collecting results"
+					class="py-12"
+				>
+					<template #extra>
+						<n-button type="primary" @click="startStream">
+							Load SCA Data
+						</n-button>
+					</template>
+				</n-empty>
 
-                <!-- Results Table -->
-                <n-data-table
-                    v-else
-                    :columns="columns"
-                    :data="paginatedResults"
-                    :pagination="pagination"
-                    :loading="isConnecting"
-                    :row-key="(row: AgentScaOverviewItem) => `${row.agent_id}-${row.policy_id}`"
-                    striped
-                />
-            </n-spin>
-        </div>
+				<!-- Results Table -->
+				<n-data-table
+					v-else
+					:columns="columns"
+					:data="paginatedResults"
+					:pagination="pagination"
+					:loading="isConnecting"
+					:row-key="(row: AgentScaOverviewItem) => `${row.agent_id}-${row.policy_id}`"
+					striped
+				/>
+			</n-spin>
+		</div>
 
-        <!-- Error Display -->
-        <n-alert v-if="streamError" type="error" class="mt-4" closable @close="streamError = null">
-            <template #header>Stream Error</template>
-            {{ streamError }}
-        </n-alert>
-    </div>
+		<!-- Error Display -->
+		<n-alert v-if="streamError" type="error" class="mt-4" closable @close="streamError = null">
+			<template #header>Stream Error</template>
+			{{ streamError }}
+		</n-alert>
+	</div>
 </template>
 
 <script setup lang="ts">
+import type { DataTableColumns } from "naive-ui"
 import type {
     AgentScaOverviewItem,
     ScaOverviewQuery,
     ScaStreamComplete,
     ScaStreamProgress
 } from "@/types/sca.d"
-import type { DataTableColumns } from "naive-ui"
 import {
     NAlert,
     NButton,
@@ -192,8 +192,8 @@ import {
 } from "naive-ui"
 import { computed, h, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
 
 const RefreshIcon = "carbon:refresh"
 const StopIcon = "carbon:stop"

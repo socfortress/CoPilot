@@ -1,83 +1,83 @@
 <template>
-    <CardEntity
-        class="agent-card"
-        :loading
-        :embedded
-        :hoverable
-        :clickable
-        :class="{ critical: agent.critical_asset, selectable, selected }"
-    >
-        <div class="card-content">
-            <!-- Selection checkbox -->
-            <div v-if="selectable" class="selection-checkbox" @click.stop>
-                <n-checkbox :checked="selected" @update:checked="$emit('toggle-selection')" />
-            </div>
+	<CardEntity
+		class="agent-card"
+		:loading
+		:embedded
+		:hoverable
+		:clickable
+		:class="{ critical: agent.critical_asset, selectable, selected }"
+	>
+		<div class="card-content">
+			<!-- Selection checkbox -->
+			<div v-if="selectable" class="selection-checkbox" @click.stop>
+				<n-checkbox :checked="selected" @update:checked="$emit('toggle-selection')" />
+			</div>
 
-            <div class="wrapper">
-                <div class="agent-header">
-                    <div class="title">
-                        <n-tooltip>
-                            {{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
-                            <template #trigger>
-                                <div class="hostname" :class="{ online: isOnline }">
-                                    {{ agent.hostname }}
-                                </div>
-                            </template>
-                        </n-tooltip>
-                        <div class="critical" :class="{ active: agent.critical_asset }">
-                            <n-tooltip>
-                                Toggle Critical Assets
-                                <template #trigger>
-                                    <n-button
-                                        quaternary
-                                        circle
-                                        :type="agent.critical_asset ? 'warning' : 'default'"
-                                        @click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-                                    >
-                                        <template #icon>
-                                            <Icon :name="StarIcon" />
-                                        </template>
-                                    </n-button>
-                                </template>
-                            </n-tooltip>
-                        </div>
-                        <div v-show="agent.quarantined" class="quarantined">
-                            <n-tooltip>
-                                Quarantined
-                                <template #trigger>
-                                    <Icon :name="QuarantinedIcon" :size="18" />
-                                </template>
-                            </n-tooltip>
-                        </div>
-                    </div>
-                    <div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
-                </div>
-                <div class="agent-info">
-                    <div class="os" :title="agent.os">
-                        {{ agent.os }}
-                    </div>
-                    <div class="ip-address" :title="agent.ip_address">
-                        {{ agent.ip_address }}
-                    </div>
-                </div>
+			<div class="wrapper">
+				<div class="agent-header">
+					<div class="title">
+						<n-tooltip>
+							{{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
+							<template #trigger>
+								<div class="hostname" :class="{ online: isOnline }">
+									{{ agent.hostname }}
+								</div>
+							</template>
+						</n-tooltip>
+						<div class="critical" :class="{ active: agent.critical_asset }">
+							<n-tooltip>
+								Toggle Critical Assets
+								<template #trigger>
+									<n-button
+										quaternary
+										circle
+										:type="agent.critical_asset ? 'warning' : 'default'"
+										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+									>
+										<template #icon>
+											<Icon :name="StarIcon" />
+										</template>
+									</n-button>
+								</template>
+							</n-tooltip>
+						</div>
+						<div v-show="agent.quarantined" class="quarantined">
+							<n-tooltip>
+								Quarantined
+								<template #trigger>
+									<Icon :name="QuarantinedIcon" :size="18" />
+								</template>
+							</n-tooltip>
+						</div>
+					</div>
+					<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
+				</div>
+				<div class="agent-info">
+					<div class="os" :title="agent.os">
+						{{ agent.os }}
+					</div>
+					<div class="ip-address" :title="agent.ip_address">
+						{{ agent.ip_address }}
+					</div>
+				</div>
 
-                <div v-if="showActions" class="agent-actions">
-                    <div class="box">
-                        <n-tooltip>
-                            Delete
-                            <template #trigger>
-                                <n-button quaternary circle type="error" @click.stop="handleDelete">
-                                    <template #icon>
-                                        <Icon :name="DeleteIcon" />
-                                    </template>
-                                </n-button>
-                            </template>
-                        </n-tooltip>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </CardEntity>
+				<div v-if="showActions" class="agent-actions">
+					<div class="box">
+						<n-tooltip>
+							Delete
+							<template #trigger>
+								<n-button quaternary circle type="error" @click.stop="handleDelete">
+									<template #icon>
+										<Icon :name="DeleteIcon" />
+									</template>
+								</n-button>
+							</template>
+						</n-tooltip>
+					</div>
+				</div>
+			</div>
+		</div>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">

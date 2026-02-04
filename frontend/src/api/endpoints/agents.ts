@@ -33,9 +33,9 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/agents/${agentId}/delete`)
 	},
 	/**
-     * Bulk delete agents by their IDs
-     * @param agentIds - Array of agent IDs to delete
-     */
+	 * Bulk delete agents by their IDs
+	 * @param agentIds - Array of agent IDs to delete
+	 */
     bulkDeleteAgents(agentIds: string[]) {
         const payload: BulkDeleteAgentRequest = { agent_ids: agentIds }
         return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
