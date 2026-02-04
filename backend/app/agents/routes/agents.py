@@ -1,8 +1,10 @@
 import asyncio
 import csv
 import io
-from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+from typing import Optional
 
 # from fastapi import BackgroundTasks
 from fastapi import APIRouter
@@ -22,13 +24,13 @@ from sqlalchemy.future import select
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
 from app.agents.schema.agents import AgentWazuhUpgradeResponse
-from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
-from app.agents.schema.agents import OutdatedWazuhAgentsResponse
-from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.schema.agents import BulkDeleteAgentRequest
 from app.agents.schema.agents import BulkDeleteAgentResult
 from app.agents.schema.agents import BulkDeleteAgentsResponse
 from app.agents.schema.agents import BulkDeleteFilterRequest
+from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
+from app.agents.schema.agents import OutdatedWazuhAgentsResponse
+from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.services.status import get_agents_by_customer_code
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
@@ -99,6 +101,7 @@ async def check_wazuh_manager_version() -> bool:
     except Exception as e:
         logger.error(f"Failed to check Wazuh Manager version: {e}")
         return False
+
 
 async def delete_single_agent(
     db: AsyncSession,
@@ -305,6 +308,7 @@ async def get_customer_agents_for_dashboard(
         logger.error(f"Failed to fetch agents for customer {customer_code}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents for customer {customer_code}")
 
+
 @agents_router.post(
     "/bulk/delete",
     response_model=BulkDeleteAgentsResponse,
@@ -479,6 +483,7 @@ async def bulk_delete_agents_by_filter(
         failed_deletions=failed_count,
         results=results,
     )
+
 
 @agents_router.get(
     "/{agent_id}",
