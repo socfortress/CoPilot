@@ -121,3 +121,31 @@ export interface AgentArtifactData {
 	notes: string | null
 	status: string
 }
+
+// Bulk Delete Types
+export type BulkDeleteAgentStatus = "disconnected" | "never_connected" | "active"
+
+export interface BulkDeleteAgentRequest {
+    agent_ids: string[]
+}
+
+export interface BulkDeleteFilterRequest {
+    customer_code?: string
+    status?: BulkDeleteAgentStatus
+    disconnected_days?: number
+}
+
+export interface BulkDeleteAgentResult {
+    agent_id: string
+    success: boolean
+    message: string
+}
+
+export interface BulkDeleteAgentsResponse {
+    success: boolean
+    message: string
+    total_requested: number
+    successful_deletions: number
+    failed_deletions: number
+    results: BulkDeleteAgentResult[]
+}
