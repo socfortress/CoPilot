@@ -1,88 +1,88 @@
 <template>
-    <div class="patch-tuesday-list">
-        <!-- Header -->
-        <div class="header flex items-center justify-between gap-4 mb-4">
-            <div class="flex items-center gap-3">
-                <Icon :name="CalendarIcon" :size="26" class="text-primary-color" />
-                <h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
-            </div>
-            <div class="flex items-center gap-2">
-                <n-button
-                    :loading="loading"
-                    :disabled="loading"
-                    type="primary"
-                    secondary
-                    @click="fetchData"
-                >
-                    <template #icon>
-                        <Icon :name="RefreshIcon" />
-                    </template>
-                    Refresh
-                </n-button>
-            </div>
-        </div>
+	<div class="patch-tuesday-list">
+		<!-- Header -->
+		<div class="header flex items-center justify-between gap-4 mb-4">
+			<div class="flex items-center gap-3">
+				<Icon :name="CalendarIcon" :size="26" class="text-primary-color" />
+				<h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
+			</div>
+			<div class="flex items-center gap-2">
+				<n-button
+					:loading="loading"
+					:disabled="loading"
+					type="primary"
+					secondary
+					@click="fetchData"
+				>
+					<template #icon>
+						<Icon :name="RefreshIcon" />
+					</template>
+					Refresh
+				</n-button>
+			</div>
+		</div>
 
-        <!-- Stats Cards -->
-        <PatchTuesdayStats :summary="summary" :loading="loading" class="mb-4" />
+		<!-- Stats Cards -->
+		<PatchTuesdayStats :summary="summary" :loading="loading" class="mb-4" />
 
-        <!-- Filters -->
-        <PatchTuesdayFilters
-            v-model:filters="filters"
-            :cycles="availableCycles"
-            :families="availableFamilies"
-            :loading="loading"
-            class="mb-4"
-            @update:filters="handleFiltersChange"
-        />
+		<!-- Filters -->
+		<PatchTuesdayFilters
+			v-model:filters="filters"
+			:cycles="availableCycles"
+			:families="availableFamilies"
+			:loading="loading"
+			class="mb-4"
+			@update:filters="handleFiltersChange"
+		/>
 
-        <!-- Items List -->
-        <n-spin :show="loading">
-            <div v-if="filteredItems.length > 0" class="items-grid">
-                <PatchTuesdayCard
-                    v-for="item in paginatedItems"
-                    :key="`${item.cve}-${item.affected.product}`"
-                    :item="item"
-                    @click="openItemDetail(item)"
-                />
-            </div>
+		<!-- Items List -->
+		<n-spin :show="loading">
+			<div v-if="filteredItems.length > 0" class="items-grid">
+				<PatchTuesdayCard
+					v-for="item in paginatedItems"
+					:key="`${item.cve}-${item.affected.product}`"
+					:item="item"
+					@click="openItemDetail(item)"
+				/>
+			</div>
 
-            <n-empty
-                v-else-if="!loading"
-                description="No vulnerabilities found for the selected filters"
-                class="py-12"
-            />
-        </n-spin>
+			<n-empty
+				v-else-if="!loading"
+				description="No vulnerabilities found for the selected filters"
+				class="py-12"
+			/>
+		</n-spin>
 
-        <!-- Pagination -->
-        <div v-if="filteredItems.length > pageSize" class="flex justify-center mt-4">
-            <n-pagination
-                v-model:page="currentPage"
-                :page-count="totalPages"
-                :page-size="pageSize"
-                show-quick-jumper
-            />
-        </div>
+		<!-- Pagination -->
+		<div v-if="filteredItems.length > pageSize" class="flex justify-center mt-4">
+			<n-pagination
+				v-model:page="currentPage"
+				:page-count="totalPages"
+				:page-size="pageSize"
+				show-quick-jumper
+			/>
+		</div>
 
-        <!-- Detail Drawer -->
-        <n-drawer v-model:show="showDetail" :width="600" placement="right">
-            <n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable>
-                <PatchTuesdayDetail v-if="selectedItem" :item="selectedItem" />
-            </n-drawer-content>
-        </n-drawer>
-    </div>
+		<!-- Detail Drawer -->
+		<n-drawer v-model:show="showDetail" :width="600" placement="right">
+			<n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable>
+				<PatchTuesdayDetail v-if="selectedItem" :item="selectedItem" />
+			</n-drawer-content>
+		</n-drawer>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { NButton, NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import patchTuesdayApi from "@/api/endpoints/patchTuesday"
-import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import type { PatchTuesdayFilters as FiltersType } from "./types"
-import PatchTuesdayStats from "./PatchTuesdayStats.vue"
-import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
+import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
+import { NButton, NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
+import { computed, onMounted, ref, watch } from "vue"
+import patchTuesdayApi from "@/api/endpoints/patchTuesday"
+import Icon from "@/components/common/Icon.vue"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
+import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
+import PatchTuesdayStats from "./PatchTuesdayStats.vue"
 
 const CalendarIcon = "carbon:calendar"
 const RefreshIcon = "carbon:refresh"

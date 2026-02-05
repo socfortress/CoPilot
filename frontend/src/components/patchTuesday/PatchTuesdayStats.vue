@@ -1,107 +1,111 @@
 <template>
-    <div class="patch-tuesday-stats">
-        <n-grid :x-gap="16" :y-gap="16" :cols="'1 s:2 m:4 l:5'">
-            <!-- Total CVEs -->
-            <n-grid-item>
-                <n-card size="small" :bordered="false" class="stat-card">
-                    <div class="stat-content">
-                        <div class="stat-icon total">
-                            <Icon :name="ShieldIcon" :size="24" />
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">{{ summary?.unique_cves ?? "-" }}</span>
-                            <span class="stat-label">Unique CVEs</span>
-                        </div>
-                    </div>
-                </n-card>
-            </n-grid-item>
+	<div class="patch-tuesday-stats">
+		<n-grid :x-gap="16" :y-gap="16" cols="1 s:2 m:4 l:5">
+			<!-- Total CVEs -->
+			<n-grid-item>
+				<n-card size="small" :bordered="false" class="stat-card">
+					<div class="stat-content">
+						<div class="stat-icon total">
+							<Icon :name="ShieldIcon" :size="24" />
+						</div>
+						<div class="stat-info">
+							<span class="stat-value">{{ summary?.unique_cves ?? "-" }}</span>
+							<span class="stat-label">Unique CVEs</span>
+						</div>
+					</div>
+				</n-card>
+			</n-grid-item>
 
-            <!-- P0 Emergency -->
-            <n-grid-item>
-                <n-card size="small" :bordered="false" class="stat-card priority-p0">
-                    <div class="stat-content">
-                        <div class="stat-icon p0">
-                            <Icon :name="AlertIcon" :size="24" />
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">{{ summary?.by_priority?.P0 ?? 0 }}</span>
-                            <span class="stat-label">P0 Emergency</span>
-                        </div>
-                    </div>
-                </n-card>
-            </n-grid-item>
+			<!-- P0 Emergency -->
+			<n-grid-item>
+				<n-card size="small" :bordered="false" class="stat-card priority-p0">
+					<div class="stat-content">
+						<div class="stat-icon p0">
+							<Icon :name="AlertIcon" :size="24" />
+						</div>
+						<div class="stat-info">
+							<span class="stat-value">{{ summary?.by_priority?.P0 ?? 0 }}</span>
+							<span class="stat-label">P0 Emergency</span>
+						</div>
+					</div>
+				</n-card>
+			</n-grid-item>
 
-            <!-- P1 High -->
-            <n-grid-item>
-                <n-card size="small" :bordered="false" class="stat-card priority-p1">
-                    <div class="stat-content">
-                        <div class="stat-icon p1">
-                            <Icon :name="UrgentIcon" :size="24" />
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">{{ summary?.by_priority?.P1 ?? 0 }}</span>
-                            <span class="stat-label">P1 High</span>
-                        </div>
-                    </div>
-                </n-card>
-            </n-grid-item>
+			<!-- P1 High -->
+			<n-grid-item>
+				<n-card size="small" :bordered="false" class="stat-card priority-p1">
+					<div class="stat-content">
+						<div class="stat-icon p1">
+							<Icon :name="UrgentIcon" :size="24" />
+						</div>
+						<div class="stat-info">
+							<span class="stat-value">{{ summary?.by_priority?.P1 ?? 0 }}</span>
+							<span class="stat-label">P1 High</span>
+						</div>
+					</div>
+				</n-card>
+			</n-grid-item>
 
-            <!-- P2 Medium -->
-            <n-grid-item>
-                <n-card size="small" :bordered="false" class="stat-card priority-p2">
-                    <div class="stat-content">
-                        <div class="stat-icon p2">
-                            <Icon :name="InfoIcon" :size="24" />
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">{{ summary?.by_priority?.P2 ?? 0 }}</span>
-                            <span class="stat-label">P2 Medium</span>
-                        </div>
-                    </div>
-                </n-card>
-            </n-grid-item>
+			<!-- P2 Medium -->
+			<n-grid-item>
+				<n-card size="small" :bordered="false" class="stat-card priority-p2">
+					<div class="stat-content">
+						<div class="stat-icon p2">
+							<Icon :name="InfoIcon" :size="24" />
+						</div>
+						<div class="stat-info">
+							<span class="stat-value">{{ summary?.by_priority?.P2 ?? 0 }}</span>
+							<span class="stat-label">P2 Medium</span>
+						</div>
+					</div>
+				</n-card>
+			</n-grid-item>
 
-            <!-- P3 Low -->
-            <n-grid-item>
-                <n-card size="small" :bordered="false" class="stat-card priority-p3">
-                    <div class="stat-content">
-                        <div class="stat-icon p3">
-                            <Icon :name="CheckIcon" :size="24" />
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">{{ summary?.by_priority?.P3 ?? 0 }}</span>
-                            <span class="stat-label">P3 Low</span>
-                        </div>
-                    </div>
-                </n-card>
-            </n-grid-item>
-        </n-grid>
+			<!-- P3 Low -->
+			<n-grid-item>
+				<n-card size="small" :bordered="false" class="stat-card priority-p3">
+					<div class="stat-content">
+						<div class="stat-icon p3">
+							<Icon :name="CheckIcon" :size="24" />
+						</div>
+						<div class="stat-info">
+							<span class="stat-value">{{ summary?.by_priority?.P3 ?? 0 }}</span>
+							<span class="stat-label">P3 Low</span>
+						</div>
+					</div>
+				</n-card>
+			</n-grid-item>
+		</n-grid>
 
-        <!-- Additional Info Bar -->
-        <div v-if="summary" class="info-bar mt-4">
-            <n-space :size="24">
-                <span class="info-item">
-                    <Icon :name="CalendarIcon" class="mr-1" />
-                    Patch Tuesday: <strong>{{ formatDate(summary.patch_tuesday_date) }}</strong>
-                </span>
-                <span class="info-item">
-                    <Icon :name="DatabaseIcon" class="mr-1" />
-                    Total Records: <strong>{{ summary.total_records }}</strong>
-                </span>
-                <span class="info-item">
-                    <Icon :name="ClockIcon" class="mr-1" />
-                    Generated: <strong>{{ formatDateTime(summary.generated_utc) }}</strong>
-                </span>
-            </n-space>
-        </div>
-    </div>
+		<!-- Additional Info Bar -->
+		<div v-if="summary" class="info-bar mt-4">
+			<n-space :size="24">
+				<span class="info-item">
+					<Icon :name="CalendarIcon" class="mr-1" />
+					Patch Tuesday: <strong>{{ formatDate(summary.patch_tuesday_date) }}</strong>
+				</span>
+				<span class="info-item">
+					<Icon :name="DatabaseIcon" class="mr-1" />
+					Total Records: <strong>{{ summary.total_records }}</strong>
+				</span>
+				<span class="info-item">
+					<Icon :name="ClockIcon" class="mr-1" />
+					Generated: <strong>{{ formatDateTime(summary.generated_utc) }}</strong>
+				</span>
+			</n-space>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
+import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import { NCard, NGrid, NGridItem, NSpace } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
 
+defineProps<{
+    summary: PatchTuesdaySummary | null
+    loading?: boolean
+}>()
 const AlertIcon = "carbon:warning"
 const CalendarIcon = "carbon:calendar"
 const CheckIcon = "carbon:checkmark-filled"
@@ -110,11 +114,6 @@ const DatabaseIcon = "carbon:data-base"
 const InfoIcon = "carbon:information"
 const ShieldIcon = "carbon:security"
 const UrgentIcon = "carbon:warning-hex"
-
-defineProps<{
-    summary: PatchTuesdaySummary | null
-    loading?: boolean
-}>()
 
 function formatDate(dateStr: string): string {
     if (!dateStr) return "-"

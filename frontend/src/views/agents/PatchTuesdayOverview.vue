@@ -1,7 +1,7 @@
 <template>
-    <div class="page">
-        <PatchTuesdayList />
-    </div>
+	<div class="page">
+		<PatchTuesdayList />
+	</div>
 </template>
 
 <script setup lang="ts">

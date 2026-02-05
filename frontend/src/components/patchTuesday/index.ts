@@ -1,6 +1,6 @@
-export { default as PatchTuesdayList } from "./PatchTuesdayList.vue"
 export { default as PatchTuesdayCard } from "./PatchTuesdayCard.vue"
 export { default as PatchTuesdayDetail } from "./PatchTuesdayDetail.vue"
 export { default as PatchTuesdayFilters } from "./PatchTuesdayFilters.vue"
-export { default as PatchTuesdayStats } from "./PatchTuesdayStats.vue"
+export { default as PatchTuesdayList } from "./PatchTuesdayList.vue"
 export { default as PatchTuesdayPriorityBadge } from "./PatchTuesdayPriorityBadge.vue"
+export { default as PatchTuesdayStats } from "./PatchTuesdayStats.vue"

@@ -19,6 +19,7 @@ import license from "./endpoints/license"
 import logs from "./endpoints/logs"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
+import patchTuesday from "./endpoints/patchTuesday"
 import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
 import sca from "./endpoints/sca"
@@ -37,7 +38,6 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
-import patchTuesday from "./endpoints/patchTuesday"
 
 export default {
 	agents,

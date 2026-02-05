@@ -1,89 +1,88 @@
 <template>
-    <n-card
-        size="small"
-        :bordered="false"
-        hoverable
-        class="patch-tuesday-card"
-        :class="[`priority-${item.prioritization.priority.toLowerCase()}`]"
-    >
-        <!-- Header -->
-        <div class="card-header">
-            <div class="cve-info">
-                <span class="cve-id">{{ item.cve }}</span>
-                <PatchTuesdayPriorityBadge :priority="item.prioritization.priority" />
-            </div>
-            <div class="badges">
-                <n-tag v-if="item.kev.in_kev" type="error" size="small" round>
-                    <template #icon>
-                        <Icon :name="AlertIcon" />
-                    </template>
-                    KEV
-                </n-tag>
-                <n-tag v-if="item.severity" :type="getSeverityType(item.severity)" size="small">
-                    {{ item.severity }}
-                </n-tag>
-            </div>
-        </div>
+	<n-card
+		size="small"
+		:bordered="false"
+		hoverable
+		class="patch-tuesday-card"
+		:class="[`priority-${item.prioritization.priority.toLowerCase()}`]"
+	>
+		<!-- Header -->
+		<div class="card-header">
+			<div class="cve-info">
+				<span class="cve-id">{{ item.cve }}</span>
+				<PatchTuesdayPriorityBadge :priority="item.prioritization.priority" />
+			</div>
+			<div class="badges">
+				<n-tag v-if="item.kev.in_kev" type="error" size="small" round>
+					<template #icon>
+						<Icon :name="AlertIcon" />
+					</template>
+					KEV
+				</n-tag>
+				<n-tag v-if="item.severity" :type="getSeverityType(item.severity)" size="small">
+					{{ item.severity }}
+				</n-tag>
+			</div>
+		</div>
 
-        <!-- Title -->
-        <p class="card-title">{{ item.title || "No title available" }}</p>
+		<!-- Title -->
+		<p class="card-title">{{ item.title || "No title available" }}</p>
 
-        <!-- Product Info -->
-        <div class="product-info">
-            <n-tag size="small" :bordered="false">
-                {{ item.affected.family }}
-            </n-tag>
-            <span class="product-name">{{ truncateProduct(item.affected.product) }}</span>
-        </div>
+		<!-- Product Info -->
+		<div class="product-info">
+			<n-tag size="small" :bordered="false">
+				{{ item.affected.family }}
+			</n-tag>
+			<span class="product-name">{{ truncateProduct(item.affected.product) }}</span>
+		</div>
 
-        <!-- Scores Row -->
-        <div class="scores-row">
-            <div v-if="item.cvss.base !== null" class="score-item">
-                <span class="score-label">CVSS</span>
-                <span class="score-value" :class="getCvssClass(item.cvss.base)">
-                    {{ item.cvss.base.toFixed(1) }}
-                </span>
-            </div>
-            <div v-if="item.epss.score !== null" class="score-item">
-                <span class="score-label">EPSS</span>
-                <span class="score-value">{{ (item.epss.score * 100).toFixed(1) }}%</span>
-            </div>
-            <div v-if="item.epss.percentile !== null" class="score-item">
-                <span class="score-label">Percentile</span>
-                <span class="score-value">{{ (item.epss.percentile * 100).toFixed(0) }}%</span>
-            </div>
-        </div>
+		<!-- Scores Row -->
+		<div class="scores-row">
+			<div v-if="item.cvss.base !== null" class="score-item">
+				<span class="score-label">CVSS</span>
+				<span class="score-value" :class="getCvssClass(item.cvss.base)">
+					{{ item.cvss.base.toFixed(1) }}
+				</span>
+			</div>
+			<div v-if="item.epss.score !== null" class="score-item">
+				<span class="score-label">EPSS</span>
+				<span class="score-value">{{ (item.epss.score * 100).toFixed(1) }}%</span>
+			</div>
+			<div v-if="item.epss.percentile !== null" class="score-item">
+				<span class="score-label">Percentile</span>
+				<span class="score-value">{{ (item.epss.percentile * 100).toFixed(0) }}%</span>
+			</div>
+		</div>
 
-        <!-- KB Articles -->
-        <div v-if="item.remediation.kbs.length > 0" class="kb-row">
-            <Icon :name="LinkIcon" :size="14" />
-            <span class="kb-list">{{ item.remediation.kbs.slice(0, 3).join(", ") }}</span>
-            <span v-if="item.remediation.kbs.length > 3" class="kb-more">
-                +{{ item.remediation.kbs.length - 3 }} more
-            </span>
-        </div>
+		<!-- KB Articles -->
+		<div v-if="item.remediation.kbs.length > 0" class="kb-row">
+			<Icon :name="LinkIcon" :size="14" />
+			<span class="kb-list">{{ item.remediation.kbs.slice(0, 3).join(", ") }}</span>
+			<span v-if="item.remediation.kbs.length > 3" class="kb-more">
+				+{{ item.remediation.kbs.length - 3 }} more
+			</span>
+		</div>
 
-        <!-- SLA Hint -->
-        <div class="sla-hint">
-            <Icon :name="ClockIcon" :size="14" />
-            <span>{{ getSlaHint(item.prioritization.suggested_sla) }}</span>
-        </div>
-    </n-card>
+		<!-- SLA Hint -->
+		<div class="sla-hint">
+			<Icon :name="ClockIcon" :size="14" />
+			<span>{{ getSlaHint(item.prioritization.suggested_sla) }}</span>
+		</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
+import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
 import { NCard, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
-
-const AlertIcon = "carbon:warning"
-const ClockIcon = "carbon:time"
-const LinkIcon = "carbon:link"
 
 defineProps<{
     item: PatchTuesdayItem
 }>()
+const AlertIcon = "carbon:warning"
+const ClockIcon = "carbon:time"
+const LinkIcon = "carbon:link"
 
 function getSeverityType(severity: string): "error" | "warning" | "info" | "default" {
     const s = severity.toLowerCase()
@@ -102,7 +101,7 @@ function getCvssClass(score: number): string {
 
 function truncateProduct(product: string): string {
     if (product.length <= 40) return product
-    return product.substring(0, 40) + "..."
+    return `${product.substring(0, 40)}...`
 }
 
 function getSlaHint(sla: string): string {
