@@ -7,14 +7,26 @@ from loguru import logger
 
 from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     AvailableCyclesResponse,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdayRequest,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdayResponse,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdaySummaryResponse,
 )
 from app.integrations.microsoft_patch_tuesday.services.microsoft_patch_tuesday import (
     get_available_cycles,
+)
+from app.integrations.microsoft_patch_tuesday.services.microsoft_patch_tuesday import (
     get_patch_tuesday,
+)
+from app.integrations.microsoft_patch_tuesday.services.microsoft_patch_tuesday import (
     get_patch_tuesday_summary,
+)
+from app.integrations.microsoft_patch_tuesday.services.microsoft_patch_tuesday import (
     search_cves_in_patch_tuesday,
 )
 
@@ -182,6 +194,8 @@ async def get_by_priority(
     if response.summary:
         from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
             PatchTuesdaySummary,
+        )
+        from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
             PriorityCounts,
         )
 

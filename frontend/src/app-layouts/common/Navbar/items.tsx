@@ -254,6 +254,19 @@ export default function getItems(): MenuMixedOption[] {
                         ),
                     key: "VulnerabilityOverview"
                 },
+				{
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "PatchTuesday"
+                                }
+                            },
+                            { default: () => "Patch Tuesday" }
+                        ),
+                    key: "PatchTuesday"
+                },
                 {
                     label: () =>
                         h(

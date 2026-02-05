@@ -12,18 +12,44 @@ from loguru import logger
 
 from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     AffectedProduct,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     AvailableCyclesResponse,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     CVSSInfo,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     EPSSInfo,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     KEVInfo,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdayItem,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdayRequest,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdayResponse,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdaySummary,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PatchTuesdaySummaryResponse,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PrioritizationInfo,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     PriorityCounts,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     RemediationInfo,
+)
+from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     SourceInfo,
 )
 
@@ -171,8 +197,7 @@ async def fetch_json(url: str, params: Optional[Dict[str, str]] = None, timeout:
         body = response.text.lstrip()
         if "application/json" not in ctype and body.startswith("<"):
             raise RuntimeError(
-                f"Endpoint returned non-JSON (Content-Type: {ctype}). "
-                "The MSRC API may have returned XML instead of JSON."
+                f"Endpoint returned non-JSON (Content-Type: {ctype}). " "The MSRC API may have returned XML instead of JSON.",
             )
 
         try:
@@ -578,7 +603,7 @@ async def fetch_patch_tuesday_data(
             -(r.cvss.base or 0.0),
             r.cve,
             r.affected.product,
-        )
+        ),
     )
 
     summary = PatchTuesdaySummary(
@@ -592,9 +617,7 @@ async def fetch_patch_tuesday_data(
         by_severity=dict(sorted(severity_counts.items(), key=lambda kv: (-kv[1], kv[0]))),
     )
 
-    logger.info(
-        f"Processed {summary.unique_cves} unique CVEs, {summary.total_records} total records for cycle {cycle_norm}"
-    )
+    logger.info(f"Processed {summary.unique_cves} unique CVEs, {summary.total_records} total records for cycle {cycle_norm}")
 
     return items, summary
 

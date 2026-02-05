@@ -60,6 +60,7 @@ from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license
 from app.routers import logs
+from app.routers import microsoft_patch_tuesday
 from app.routers import mimecast
 from app.routers import modules
 from app.routers import monitoring_alert
@@ -77,7 +78,6 @@ from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import version
-from app.routers import microsoft_patch_tuesday
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
