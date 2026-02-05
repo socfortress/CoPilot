@@ -60,6 +60,7 @@ from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license
 from app.routers import logs
+from app.routers import microsoft_patch_tuesday
 from app.routers import mimecast
 from app.routers import modules
 from app.routers import monitoring_alert
@@ -135,6 +136,7 @@ api_router.include_router(cortex.router)
 api_router.include_router(velociraptor.router)
 api_router.include_router(shuffle.router)
 api_router.include_router(sublime.router)
+api_router.include_router(microsoft_patch_tuesday.router)
 api_router.include_router(customers.router)
 api_router.include_router(healthcheck.router)
 api_router.include_router(smtp.router)

@@ -101,7 +101,13 @@ const router = createRouter({
 					name: "ScaOverview",
 					component: () => import("@/views/agents/ScaOverview.vue"),
 					meta: { title: "SCA Overview" }
-				}
+				},
+				{
+				path: "/patch-tuesday",
+				name: "PatchTuesday",
+				component: () => import("@/views/agents/PatchTuesdayOverview.vue"),
+				meta: { title: "Patch Tuesday" }
+			}
 			]
 		},
 		{
