@@ -77,6 +77,7 @@ from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import version
+from app.routers import microsoft_patch_tuesday
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
@@ -135,6 +136,7 @@ api_router.include_router(cortex.router)
 api_router.include_router(velociraptor.router)
 api_router.include_router(shuffle.router)
 api_router.include_router(sublime.router)
+api_router.include_router(microsoft_patch_tuesday.router)
 api_router.include_router(customers.router)
 api_router.include_router(healthcheck.router)
 api_router.include_router(smtp.router)
