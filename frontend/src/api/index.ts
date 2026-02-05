@@ -37,6 +37,7 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
+import patchTuesday from "./endpoints/patchTuesday"
 
 export default {
 	agents,
@@ -71,6 +72,7 @@ export default {
 	vulnerabilities,
 	sca,
 	wazuh,
+	patchTuesday,
 	portainer,
 	shuffle,
 	copilotMCP,
