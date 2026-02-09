@@ -347,6 +347,16 @@ const router = createRouter({
 			meta: { title: "Web Vuln. Assess.", auth: true, roles: RouteRole.All }
 		},
 		{
+			path: "/github-audit",
+			name: "GitHubAudit",
+			component: () => import("@/views/GitHubAuditOverview.vue"),
+			meta: {
+				title: "GitHub Audit",
+				auth: true,
+				roles: RouteRole.All
+			}
+		},
+		{
 			path: "/customer-portal",
 			name: "CustomerPortal",
 			component: () => import("@/views/CustomerPortal.vue"),

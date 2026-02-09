@@ -51,6 +51,7 @@ from app.routers import defenderforendpoint
 from app.routers import dfir_iris
 from app.routers import dnstwist
 from app.routers import duo
+from app.routers import github_audit
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
@@ -135,6 +136,7 @@ api_router.include_router(dfir_iris.router)
 api_router.include_router(cortex.router)
 api_router.include_router(velociraptor.router)
 api_router.include_router(shuffle.router)
+api_router.include_router(github_audit.router)
 api_router.include_router(sublime.router)
 api_router.include_router(microsoft_patch_tuesday.router)
 api_router.include_router(customers.router)

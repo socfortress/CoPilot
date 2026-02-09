@@ -11,6 +11,7 @@ import copilotMCP from "./endpoints/copilotMCP"
 import customerPortal from "./endpoints/customerPortal"
 import customers from "./endpoints/customers"
 import flow from "./endpoints/flow"
+import githubAudit from "./endpoints/githubAudit"
 import graylog from "./endpoints/graylog"
 import healthchecks from "./endpoints/healthchecks"
 import incidentManagement from "./endpoints/incidentManagement"
@@ -61,6 +62,7 @@ export default {
 	stackProvisioning,
 	reporting,
 	license,
+	githubAudit,
 	scheduler,
 	networkConnectors,
 	cloudSecurityAssessment,

@@ -10,6 +10,7 @@
 				<StackProvisioningButton size="small" type="primary" />
 				<CloudSecurityAssessmentButton size="small" type="primary" />
 				<WebVulnerabilityAssessmentButton size="small" type="primary" />
+				<GitHubAuditButton size="small" type="primary" />
 			</div>
 			<div class="right-box hidden gap-3 min-[70rem]:flex">
 				<ActiveResponseWizardButton size="small" type="primary" />
@@ -72,6 +73,7 @@
 					<StackProvisioningButton size="small" type="primary" />
 					<CloudSecurityAssessmentButton size="small" type="primary" />
 					<WebVulnerabilityAssessmentButton size="small" type="primary" />
+					<GitHubAuditButton size="small" type="primary" />
 					<ActiveResponseWizardButton size="small" type="primary" />
 					<ThreatIntelButton size="small" type="primary" />
 				</div>
@@ -88,6 +90,7 @@ import ActiveResponseWizardButton from "@/components/activeResponse/ActiveRespon
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import VersionUpdateBanner from "@/components/common/VersionUpdateBanner.vue"
+import GitHubAuditButton from "@/components/githubAudit/GitHubAuditButton.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
@@ -110,26 +113,26 @@ const showQuickActions = ref(false)
 const { gotoIndex, gotoGraylogPipelines } = useGoto()
 
 useResizeObserver(page, entries => {
-	const entry = entries[0]
-	const { width } = entry.contentRect
+    const entry = entries[0]
+    const { width } = entry.contentRect
 
-	cardDirection.value = width > 500 ? "horizontal" : "vertical"
+    cardDirection.value = width > 500 ? "horizontal" : "vertical"
 })
 </script>
 
 <style lang="scss" scoped>
 .page {
-	.section {
-		margin-bottom: calc(var(--spacing) * 6);
+    .section {
+        margin-bottom: calc(var(--spacing) * 6);
 
-		.columns {
-			display: flex;
-			gap: calc(var(--spacing) * 6);
+        .columns {
+            display: flex;
+            gap: calc(var(--spacing) * 6);
 
-			.stretchy {
-				height: 100%;
-			}
-		}
-	}
+            .stretchy {
+                height: 100%;
+            }
+        }
+    }
 }
 </style>
