@@ -910,7 +910,7 @@ class GitHubAuditService:
             failed = sum(1 for c in scorable_checks if c.status == AuditStatus.FAIL)
             warnings = sum(1 for c in scorable_checks if c.status == AuditStatus.WARNING)
 
-            # Count findings by severity (FAIL and WARNING both count)
+            # Count findings by severity (FAIL status only for severity counts)
             critical = sum(
                 1 for c in scorable_checks
                 if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.CRITICAL
@@ -928,18 +928,36 @@ class GitHubAuditService:
                 if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.LOW
             )
 
-            # Calculate score based on pass rate with severity weighting
+            # Calculate score using weighted pass rate
+            # Weight checks by severity: CRITICAL=4, HIGH=3, MEDIUM=2, LOW=1
             if total_checks > 0:
-                # Base score from pass rate
-                base_score = (passed / total_checks) * 100
+                total_weight = 0
+                earned_weight = 0
 
-                # Apply severity penalties
-                severity_penalty = (critical * 10) + (high * 5) + (medium * 2) + (low * 1)
+                for check in scorable_checks:
+                    weight = 1  # default
+                    if check.severity == SeverityLevel.CRITICAL:
+                        weight = 4
+                    elif check.severity == SeverityLevel.HIGH:
+                        weight = 3
+                    elif check.severity == SeverityLevel.MEDIUM:
+                        weight = 2
+                    elif check.severity == SeverityLevel.LOW:
+                        weight = 1
 
-                # Final score (minimum 0)
-                score = max(0.0, base_score - severity_penalty)
+                    total_weight += weight
+                    if check.status == AuditStatus.PASS:
+                        earned_weight += weight
+                    elif check.status == AuditStatus.WARNING:
+                        # Warnings get partial credit
+                        earned_weight += weight * 0.5
+
+                score = (earned_weight / total_weight) * 100 if total_weight > 0 else 100.0
             else:
-                score = 100.0  # No checks = perfect score (nothing to fail)
+                score = 100.0  # No checks = perfect score
+
+            # Round to 1 decimal place
+            score = round(score, 1)
 
             # Determine grade
             if score >= 90:
@@ -955,7 +973,7 @@ class GitHubAuditService:
 
             logger.info(
                 f"Audit complete - Total: {total_checks}, Passed: {passed}, "
-                f"Failed: {failed}, Warnings: {warnings}, Score: {score:.1f}, Grade: {grade}"
+                f"Failed: {failed}, Warnings: {warnings}, Score: {score}, Grade: {grade}"
             )
 
             summary = AuditSummary(
@@ -970,7 +988,7 @@ class GitHubAuditService:
                 high_findings=high,
                 medium_findings=medium,
                 low_findings=low,
-                score=round(score, 1),
+                score=score,
                 grade=grade,
             )
 
@@ -987,7 +1005,7 @@ class GitHubAuditService:
 
             return GitHubAuditResponse(
                 success=True,
-                message=f"Audit completed successfully. Score: {score:.1f} ({grade})",
+                message=f"Audit completed successfully. Score: {score} ({grade})",
                 summary=summary,
                 organization_results=org_results,
                 repository_results=repo_results,
