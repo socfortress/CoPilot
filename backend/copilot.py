@@ -66,6 +66,7 @@ from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import network_connectors
 from app.routers import nuclei
+from app.routers import github_audit
 from app.routers import office365
 from app.routers import portainer
 from app.routers import sap_siem
@@ -135,6 +136,7 @@ api_router.include_router(dfir_iris.router)
 api_router.include_router(cortex.router)
 api_router.include_router(velociraptor.router)
 api_router.include_router(shuffle.router)
+api_router.include_router(github_audit.router)
 api_router.include_router(sublime.router)
 api_router.include_router(microsoft_patch_tuesday.router)
 api_router.include_router(customers.router)
