@@ -1,83 +1,85 @@
 <template>
-	<div ref="page" class="page">
-		<!-- Add version banner at the top -->
-		<div class="section">
-			<VersionUpdateBanner />
-		</div>
+    <div ref="page" class="page">
+        <!-- Add version banner at the top -->
+        <div class="section">
+            <VersionUpdateBanner />
+        </div>
 
-		<div class="section flex justify-end gap-3 min-[70rem]:justify-between">
-			<div class="left-box hidden gap-3 min-[70rem]:flex">
-				<StackProvisioningButton size="small" type="primary" />
-				<CloudSecurityAssessmentButton size="small" type="primary" />
-				<WebVulnerabilityAssessmentButton size="small" type="primary" />
-			</div>
-			<div class="right-box hidden gap-3 min-[70rem]:flex">
-				<ActiveResponseWizardButton size="small" type="primary" />
-				<ThreatIntelButton size="small" type="primary" />
-			</div>
-			<div class="mobile-box block min-[70rem]:hidden">
-				<n-button size="small" type="primary" @click="showQuickActions = true">
-					<template #icon>
-						<Icon :name="QuickActionsIcon" />
-					</template>
-					Quick Actions
-				</n-button>
-			</div>
-		</div>
-		<div class="section">
-			<div class="grid grid-flow-row-dense grid-cols-12 gap-6">
-				<div class="xs:col-span-12 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
-					<AgentsCard class="h-full" />
-				</div>
-				<div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
-					<HealthcheckCard class="h-full" />
-				</div>
-				<div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
-					<CustomersCard class="h-full" />
-				</div>
-				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
-					<IncidentAlerts class="h-full" />
-				</div>
-				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
-					<IncidentCases class="h-full" />
-				</div>
-			</div>
-		</div>
-		<div class="section">
-			<IndicesMarquee @click="gotoIndex($event.index)" />
-		</div>
-		<div class="section">
-			<div class="columns flex-col lg:flex-row">
-				<div class="col basis-1/2">
-					<ClusterHealth class="stretchy" />
-				</div>
-				<div class="col basis-1/2">
-					<NodeAllocation class="stretchy" />
-				</div>
-			</div>
-		</div>
-		<div class="section">
-			<PipeList @open-rule="gotoGraylogPipelines($event)" />
-		</div>
+        <div class="section flex justify-end gap-3 min-[70rem]:justify-between">
+            <div class="left-box hidden gap-3 min-[70rem]:flex">
+                <StackProvisioningButton size="small" type="primary" />
+                <CloudSecurityAssessmentButton size="small" type="primary" />
+                <WebVulnerabilityAssessmentButton size="small" type="primary" />
+                <GitHubAuditButton size="small" type="primary" />
+            </div>
+            <div class="right-box hidden gap-3 min-[70rem]:flex">
+                <ActiveResponseWizardButton size="small" type="primary" />
+                <ThreatIntelButton size="small" type="primary" />
+            </div>
+            <div class="mobile-box block min-[70rem]:hidden">
+                <n-button size="small" type="primary" @click="showQuickActions = true">
+                    <template #icon>
+                        <Icon :name="QuickActionsIcon" />
+                    </template>
+                    Quick Actions
+                </n-button>
+            </div>
+        </div>
+        <div class="section">
+            <div class="grid grid-flow-row-dense grid-cols-12 gap-6">
+                <div class="xs:col-span-12 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
+                    <AgentsCard class="h-full" />
+                </div>
+                <div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
+                    <HealthcheckCard class="h-full" />
+                </div>
+                <div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
+                    <CustomersCard class="h-full" />
+                </div>
+                <div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
+                    <IncidentAlerts class="h-full" />
+                </div>
+                <div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
+                    <IncidentCases class="h-full" />
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <IndicesMarquee @click="gotoIndex($event.index)" />
+        </div>
+        <div class="section">
+            <div class="columns flex-col lg:flex-row">
+                <div class="col basis-1/2">
+                    <ClusterHealth class="stretchy" />
+                </div>
+                <div class="col basis-1/2">
+                    <NodeAllocation class="stretchy" />
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <PipeList @open-rule="gotoGraylogPipelines($event)" />
+        </div>
 
-		<n-drawer
-			v-model:show="showQuickActions"
-			:width="300"
-			style="max-width: 90vw"
-			:trap-focus="false"
-			display-directive="show"
-		>
-			<n-drawer-content title="Quick Actions" closable :native-scrollbar="false">
-				<div class="flex flex-col gap-3">
-					<StackProvisioningButton size="small" type="primary" />
-					<CloudSecurityAssessmentButton size="small" type="primary" />
-					<WebVulnerabilityAssessmentButton size="small" type="primary" />
-					<ActiveResponseWizardButton size="small" type="primary" />
-					<ThreatIntelButton size="small" type="primary" />
-				</div>
-			</n-drawer-content>
-		</n-drawer>
-	</div>
+        <n-drawer
+            v-model:show="showQuickActions"
+            :width="300"
+            style="max-width: 90vw"
+            :trap-focus="false"
+            display-directive="show"
+        >
+            <n-drawer-content title="Quick Actions" closable :native-scrollbar="false">
+                <div class="flex flex-col gap-3">
+                    <StackProvisioningButton size="small" type="primary" />
+                    <CloudSecurityAssessmentButton size="small" type="primary" />
+                    <WebVulnerabilityAssessmentButton size="small" type="primary" />
+                    <GitHubAuditButton size="small" type="primary" />
+                    <ActiveResponseWizardButton size="small" type="primary" />
+                    <ThreatIntelButton size="small" type="primary" />
+                </div>
+            </n-drawer-content>
+        </n-drawer>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -88,6 +90,7 @@ import ActiveResponseWizardButton from "@/components/activeResponse/ActiveRespon
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import VersionUpdateBanner from "@/components/common/VersionUpdateBanner.vue"
+import GitHubAuditButton from "@/components/githubAudit/GitHubAuditButton.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
@@ -110,26 +113,26 @@ const showQuickActions = ref(false)
 const { gotoIndex, gotoGraylogPipelines } = useGoto()
 
 useResizeObserver(page, entries => {
-	const entry = entries[0]
-	const { width } = entry.contentRect
+    const entry = entries[0]
+    const { width } = entry.contentRect
 
-	cardDirection.value = width > 500 ? "horizontal" : "vertical"
+    cardDirection.value = width > 500 ? "horizontal" : "vertical"
 })
 </script>
 
 <style lang="scss" scoped>
 .page {
-	.section {
-		margin-bottom: calc(var(--spacing) * 6);
+    .section {
+        margin-bottom: calc(var(--spacing) * 6);
 
-		.columns {
-			display: flex;
-			gap: calc(var(--spacing) * 6);
+        .columns {
+            display: flex;
+            gap: calc(var(--spacing) * 6);
 
-			.stretchy {
-				height: 100%;
-			}
-		}
-	}
+            .stretchy {
+                height: 100%;
+            }
+        }
+    }
 }
 </style>

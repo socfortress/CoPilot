@@ -38,6 +38,7 @@ import vulnerabilities from "./endpoints/vulnerabilities"
 import wazuh from "./endpoints/wazuh"
 import indices from "./endpoints/wazuh/indices"
 import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
+import githubAudit from "./endpoints/githubAudit"
 
 export default {
 	agents,
@@ -61,6 +62,7 @@ export default {
 	stackProvisioning,
 	reporting,
 	license,
+	githubAudit,
 	scheduler,
 	networkConnectors,
 	cloudSecurityAssessment,
