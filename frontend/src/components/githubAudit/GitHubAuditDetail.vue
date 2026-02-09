@@ -241,11 +241,32 @@ const showDrawer = computed({
     set: (value) => emit("update:show", value)
 })
 
+// Watch for drawer opening
 watch(
     () => props.show,
     (show) => {
         if (show && props.config) {
             activeTab.value = "overview"
+            // Reset state
+            reports.value = []
+            exclusions.value = []
+            currentPage.value = 1
+            // Load data
+            loadReports()
+            loadExclusions()
+        }
+    },
+    { immediate: true }
+)
+
+// Watch for config changes while drawer is open
+watch(
+    () => props.config?.id,
+    (newId, oldId) => {
+        if (newId && newId !== oldId && props.show) {
+            reports.value = []
+            exclusions.value = []
+            currentPage.value = 1
             loadReports()
             loadExclusions()
         }
@@ -253,7 +274,13 @@ watch(
 )
 
 async function loadReports() {
-    if (!props.config || loadingReports.value) return
+    if (!props.config) {
+        console.warn("loadReports called but config is null")
+        return
+    }
+    if (loadingReports.value) {
+        return
+    }
 
     loadingReports.value = true
     try {
@@ -265,6 +292,7 @@ async function loadReports() {
         reports.value = response.data.reports || []
         totalReports.value = response.data.total_count || 0
     } catch (error: any) {
+        console.error("Failed to load reports:", error)
         message.error("Failed to load reports")
     } finally {
         loadingReports.value = false
@@ -279,6 +307,7 @@ async function loadExclusions() {
         const response = await Api.githubAudit.getExclusions(props.config.id)
         exclusions.value = response.data.exclusions || []
     } catch (error: any) {
+        console.error("Failed to load exclusions:", error)
         message.error("Failed to load exclusions")
     } finally {
         loadingExclusions.value = false
@@ -292,7 +321,8 @@ async function runAudit() {
     try {
         await Api.githubAudit.runAuditFromConfig(props.config.id)
         message.success("Audit completed successfully")
-        loadReports()
+        // Reload reports after audit completes
+        await loadReports()
         emit("updated")
     } catch (error: any) {
         message.error(error.response?.data?.detail || "Failed to run audit")
