@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 
-from app.integrations.github_audit.routes.github_audit import (
-    github_audit_router,
-)
+from app.integrations.github_audit.routes.github_audit import github_audit_router
 
 # Instantiate the APIRouter
 router = APIRouter()

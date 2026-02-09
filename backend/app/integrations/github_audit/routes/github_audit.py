@@ -1,6 +1,5 @@
 from datetime import datetime
 from datetime import timezone
-from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -12,7 +11,6 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
@@ -20,23 +18,26 @@ from app.integrations.github_audit.model import GitHubAuditBaseline
 from app.integrations.github_audit.model import GitHubAuditCheckExclusion
 from app.integrations.github_audit.model import GitHubAuditConfig
 from app.integrations.github_audit.model import GitHubAuditReport
+from app.integrations.github_audit.schema.github_audit import AvailableChecksResponse
+from app.integrations.github_audit.schema.github_audit import GitHubAuditBaselineCreate
 from app.integrations.github_audit.schema.github_audit import (
-    AvailableChecksResponse,
-    GitHubAuditBaselineCreate,
     GitHubAuditBaselineResponse,
-    GitHubAuditBaselineUpdate,
-    GitHubAuditConfigCreate,
-    GitHubAuditConfigResponse,
-    GitHubAuditConfigUpdate,
-    GitHubAuditExclusionCreate,
-    GitHubAuditExclusionResponse,
-    GitHubAuditExclusionUpdate,
-    GitHubAuditReportListResponse,
-    GitHubAuditReportResponse,
-    GitHubAuditRequest,
-    GitHubAuditResponse,
-    GitHubAuditSummaryResponse,
 )
+from app.integrations.github_audit.schema.github_audit import GitHubAuditConfigCreate
+from app.integrations.github_audit.schema.github_audit import GitHubAuditConfigResponse
+from app.integrations.github_audit.schema.github_audit import GitHubAuditConfigUpdate
+from app.integrations.github_audit.schema.github_audit import GitHubAuditExclusionCreate
+from app.integrations.github_audit.schema.github_audit import (
+    GitHubAuditExclusionResponse,
+)
+from app.integrations.github_audit.schema.github_audit import GitHubAuditExclusionUpdate
+from app.integrations.github_audit.schema.github_audit import (
+    GitHubAuditReportListResponse,
+)
+from app.integrations.github_audit.schema.github_audit import GitHubAuditReportResponse
+from app.integrations.github_audit.schema.github_audit import GitHubAuditRequest
+from app.integrations.github_audit.schema.github_audit import GitHubAuditResponse
+from app.integrations.github_audit.schema.github_audit import GitHubAuditSummaryResponse
 from app.integrations.github_audit.services.github_audit import run_github_audit
 from app.integrations.github_audit.services.github_audit import run_github_audit_summary
 
@@ -320,8 +321,7 @@ async def run_audit_from_config(
             audit_response.top_findings = [
                 f
                 for f in audit_response.top_findings
-                if (f.check_id, f.resource_name) not in exclusion_set
-                and (f.check_id, None) not in exclusion_set
+                if (f.check_id, f.resource_name) not in exclusion_set and (f.check_id, None) not in exclusion_set
             ]
 
         # Update report with results
@@ -650,8 +650,7 @@ async def get_exclusions(
 
     if not include_expired:
         query = query.where(
-            (GitHubAuditCheckExclusion.expires_at.is_(None))
-            | (GitHubAuditCheckExclusion.expires_at > datetime.now(timezone.utc)),
+            (GitHubAuditCheckExclusion.expires_at.is_(None)) | (GitHubAuditCheckExclusion.expires_at > datetime.now(timezone.utc)),
         )
 
     result = await session.execute(query)
@@ -777,9 +776,7 @@ async def create_baseline(
     # Deactivate other baselines for this config
     if baseline.is_active:
         await session.execute(
-            select(GitHubAuditBaseline)
-            .where(GitHubAuditBaseline.config_id == config_id)
-            .where(GitHubAuditBaseline.is_active == True),
+            select(GitHubAuditBaseline).where(GitHubAuditBaseline.config_id == config_id).where(GitHubAuditBaseline.is_active == True),
         )
         existing = await session.execute(
             select(GitHubAuditBaseline).where(

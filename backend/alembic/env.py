@@ -41,10 +41,13 @@ from app.incidents.models import FieldName
 from app.incidents.models import IoC
 from app.incidents.models import IoCFieldName
 from app.incidents.models import Notification
-from app.integrations.github_audit.model import GitHubAuditConfig, GitHubAuditReport, GitHubAuditCheckExclusion, GitHubAuditBaseline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from app.integrations.github_audit.model import GitHubAuditBaseline
+from app.integrations.github_audit.model import GitHubAuditCheckExclusion
+from app.integrations.github_audit.model import GitHubAuditConfig
+from app.integrations.github_audit.model import GitHubAuditReport
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.network_connectors.models.network_connectors import AvailableNetworkConnectors

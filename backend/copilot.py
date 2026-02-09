@@ -51,6 +51,7 @@ from app.routers import defenderforendpoint
 from app.routers import dfir_iris
 from app.routers import dnstwist
 from app.routers import duo
+from app.routers import github_audit
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
@@ -66,7 +67,6 @@ from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import network_connectors
 from app.routers import nuclei
-from app.routers import github_audit
 from app.routers import office365
 from app.routers import portainer
 from app.routers import sap_siem

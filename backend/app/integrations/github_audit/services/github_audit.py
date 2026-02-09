@@ -15,9 +15,7 @@ from app.integrations.github_audit.schema.github_audit import AuditStatus
 from app.integrations.github_audit.schema.github_audit import AuditSummary
 from app.integrations.github_audit.schema.github_audit import GitHubAuditRequest
 from app.integrations.github_audit.schema.github_audit import GitHubAuditResponse
-from app.integrations.github_audit.schema.github_audit import (
-    GitHubAuditSummaryResponse,
-)
+from app.integrations.github_audit.schema.github_audit import GitHubAuditSummaryResponse
 from app.integrations.github_audit.schema.github_audit import MemberAuditResult
 from app.integrations.github_audit.schema.github_audit import OrganizationAuditResult
 from app.integrations.github_audit.schema.github_audit import RepositoryAuditResult
@@ -174,9 +172,7 @@ class GitHubAuditService:
             status=AuditStatus.PASS if two_factor_required else AuditStatus.FAIL,
             severity=SeverityLevel.CRITICAL,
             description="Checks if 2FA is required for all organization members",
-            recommendation="Enable 2FA requirement in Organization Settings > Authentication security"
-            if not two_factor_required
-            else None,
+            recommendation="Enable 2FA requirement in Organization Settings > Authentication security" if not two_factor_required else None,
             resource_name=self.organization,
             resource_type="organization",
         )
@@ -195,9 +191,7 @@ class GitHubAuditService:
             status=AuditStatus.PASS if is_secure else AuditStatus.WARNING,
             severity=SeverityLevel.MEDIUM,
             description=f"Default repository permission is set to '{default_permission}'",
-            recommendation="Set default repository permission to 'read' or 'none' to follow least privilege"
-            if not is_secure
-            else None,
+            recommendation="Set default repository permission to 'read' or 'none' to follow least privilege" if not is_secure else None,
             details={"current_permission": default_permission},
             resource_name=self.organization,
             resource_type="organization",
@@ -214,9 +208,7 @@ class GitHubAuditService:
             status=AuditStatus.WARNING if can_create else AuditStatus.PASS,
             severity=SeverityLevel.LOW,
             description="Members can create repositories" if can_create else "Members cannot create repositories",
-            recommendation="Consider restricting repository creation to admins for better governance"
-            if can_create
-            else None,
+            recommendation="Consider restricting repository creation to admins for better governance" if can_create else None,
             resource_name=self.organization,
             resource_type="organization",
         )
@@ -231,9 +223,7 @@ class GitHubAuditService:
             category="organization",
             status=AuditStatus.FAIL if can_create_public else AuditStatus.PASS,
             severity=SeverityLevel.HIGH,
-            description="Members can create public repositories"
-            if can_create_public
-            else "Members cannot create public repositories",
+            description="Members can create public repositories" if can_create_public else "Members cannot create public repositories",
             recommendation="Restrict public repository creation to prevent accidental exposure of internal code"
             if can_create_public
             else None,
@@ -653,9 +643,7 @@ class GitHubAuditService:
             category="repository",
             status=AuditStatus.PASS if pvr_enabled else AuditStatus.WARNING,
             severity=SeverityLevel.LOW,
-            description="Private vulnerability reporting is enabled"
-            if pvr_enabled
-            else "Private vulnerability reporting is not enabled",
+            description="Private vulnerability reporting is enabled" if pvr_enabled else "Private vulnerability reporting is not enabled",
             recommendation="Enable private vulnerability reporting to allow security researchers to report issues confidentially"
             if not pvr_enabled
             else None,
@@ -911,22 +899,12 @@ class GitHubAuditService:
             warnings = sum(1 for c in scorable_checks if c.status == AuditStatus.WARNING)
 
             # Count findings by severity (FAIL status only for severity counts)
-            critical = sum(
-                1 for c in scorable_checks
-                if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.CRITICAL
-            )
-            high = sum(
-                1 for c in scorable_checks
-                if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.HIGH
-            )
+            critical = sum(1 for c in scorable_checks if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.CRITICAL)
+            high = sum(1 for c in scorable_checks if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.HIGH)
             medium = sum(
-                1 for c in scorable_checks
-                if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.MEDIUM
+                1 for c in scorable_checks if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.MEDIUM
             )
-            low = sum(
-                1 for c in scorable_checks
-                if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.LOW
-            )
+            low = sum(1 for c in scorable_checks if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.LOW)
 
             # Calculate score using weighted pass rate
             # Weight checks by severity: CRITICAL=4, HIGH=3, MEDIUM=2, LOW=1
@@ -973,7 +951,7 @@ class GitHubAuditService:
 
             logger.info(
                 f"Audit complete - Total: {total_checks}, Passed: {passed}, "
-                f"Failed: {failed}, Warnings: {warnings}, Score: {score}, Grade: {grade}"
+                f"Failed: {failed}, Warnings: {warnings}, Score: {score}, Grade: {grade}",
             )
 
             summary = AuditSummary(
@@ -1005,7 +983,7 @@ class GitHubAuditService:
 
             return GitHubAuditResponse(
                 success=True,
-                message=f"Audit completed successfully. Score: {score} ({grade})",
+                message=f"Audit completed successfully. Score: {score} ({grade},)",
                 summary=summary,
                 organization_results=org_results,
                 repository_results=repo_results,
