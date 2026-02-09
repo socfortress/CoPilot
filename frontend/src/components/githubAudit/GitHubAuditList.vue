@@ -3,12 +3,20 @@
         <n-card>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold m-0">GitHub Audit Configurations</h2>
-                <n-button type="primary" @click="openCreateForm">
-                    <template #icon>
-                        <n-icon><Icon :name="AddIcon" /></n-icon>
-                    </template>
-                    New Configuration
-                </n-button>
+                <n-space>
+                    <n-button quaternary @click="showInfo = true">
+                        <template #icon>
+                            <n-icon><Icon :name="InfoIcon" /></n-icon>
+                        </template>
+                        Reference Guide
+                    </n-button>
+                    <n-button type="primary" @click="openCreateForm">
+                        <template #icon>
+                            <n-icon><Icon :name="AddIcon" /></n-icon>
+                        </template>
+                        New Configuration
+                    </n-button>
+                </n-space>
             </div>
 
             <div class="github-audit-filters flex gap-4 flex-wrap items-center mb-4">
@@ -79,27 +87,32 @@
             @updated="loadConfigs"
             @edit="openEditForm"
         />
+
+        <GitHubAuditInfo v-model:show="showInfo" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue"
-import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpin, useMessage } from "naive-ui"
+import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
 import GitHubAuditConfigForm from "./GitHubAuditConfigForm.vue"
 import GitHubAuditDetail from "./GitHubAuditDetail.vue"
+import GitHubAuditInfo from "./GitHubAuditInfo.vue"
 import Api from "@/api"
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 
 const AddIcon = "ion:add"
 const SearchIcon = "ion:search-outline"
+const InfoIcon = "ion:information-circle-outline"
 
 const message = useMessage()
 const loading = ref(false)
 const configs = ref<GitHubAuditConfig[]>([])
 const showForm = ref(false)
 const showDetail = ref(false)
+const showInfo = ref(false)
 const selectedConfig = ref<GitHubAuditConfig | null>(null)
 
 // Filters
