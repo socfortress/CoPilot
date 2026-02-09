@@ -441,7 +441,33 @@ async def get_reports(
     session: AsyncSession = Depends(get_db),
 ) -> GitHubAuditReportListResponse:
     """Get list of GitHub audit reports with optional filters."""
-    query = select(GitHubAuditReport).order_by(GitHubAuditReport.audit_started_at.desc())
+    from sqlalchemy import func
+
+    # Select only the columns we need for the list view (exclude large JSON columns)
+    query = select(
+        GitHubAuditReport.id,
+        GitHubAuditReport.config_id,
+        GitHubAuditReport.customer_code,
+        GitHubAuditReport.report_name,
+        GitHubAuditReport.organization,
+        GitHubAuditReport.audit_started_at,
+        GitHubAuditReport.audit_completed_at,
+        GitHubAuditReport.audit_duration_seconds,
+        GitHubAuditReport.total_repos_audited,
+        GitHubAuditReport.total_checks,
+        GitHubAuditReport.passed_checks,
+        GitHubAuditReport.failed_checks,
+        GitHubAuditReport.warning_checks,
+        GitHubAuditReport.critical_findings,
+        GitHubAuditReport.high_findings,
+        GitHubAuditReport.medium_findings,
+        GitHubAuditReport.low_findings,
+        GitHubAuditReport.score,
+        GitHubAuditReport.grade,
+        GitHubAuditReport.status,
+        GitHubAuditReport.triggered_by,
+        GitHubAuditReport.triggered_by_user,
+    ).order_by(GitHubAuditReport.audit_started_at.desc())
 
     if customer_code:
         query = query.where(GitHubAuditReport.customer_code == customer_code)
@@ -452,41 +478,51 @@ async def get_reports(
     if status:
         query = query.where(GitHubAuditReport.status == status)
 
-    # Get total count
-    count_result = await session.execute(query)
-    total = len(count_result.scalars().all())
+    # Get total count using a separate count query
+    count_query = select(func.count(GitHubAuditReport.id))
+    if customer_code:
+        count_query = count_query.where(GitHubAuditReport.customer_code == customer_code)
+    if config_id:
+        count_query = count_query.where(GitHubAuditReport.config_id == config_id)
+    if organization:
+        count_query = count_query.where(GitHubAuditReport.organization == organization)
+    if status:
+        count_query = count_query.where(GitHubAuditReport.status == status)
+
+    count_result = await session.execute(count_query)
+    total = count_result.scalar() or 0
 
     # Apply pagination
     query = query.offset(offset).limit(limit)
     result = await session.execute(query)
-    reports = result.scalars().all()
+    rows = result.all()
 
-    # Don't include full_report in list response
+    # Convert rows to dictionaries
     report_summaries = []
-    for report in reports:
+    for row in rows:
         report_dict = {
-            "id": report.id,
-            "config_id": report.config_id,
-            "customer_code": report.customer_code,
-            "report_name": report.report_name,
-            "organization": report.organization,
-            "audit_started_at": report.audit_started_at,
-            "audit_completed_at": report.audit_completed_at,
-            "audit_duration_seconds": report.audit_duration_seconds,
-            "total_repos_audited": report.total_repos_audited,
-            "total_checks": report.total_checks,
-            "passed_checks": report.passed_checks,
-            "failed_checks": report.failed_checks,
-            "warning_checks": report.warning_checks,
-            "critical_findings": report.critical_findings,
-            "high_findings": report.high_findings,
-            "medium_findings": report.medium_findings,
-            "low_findings": report.low_findings,
-            "score": report.score,
-            "grade": report.grade,
-            "status": report.status,
-            "triggered_by": report.triggered_by,
-            "triggered_by_user": report.triggered_by_user,
+            "id": row.id,
+            "config_id": row.config_id,
+            "customer_code": row.customer_code,
+            "report_name": row.report_name,
+            "organization": row.organization,
+            "audit_started_at": row.audit_started_at,
+            "audit_completed_at": row.audit_completed_at,
+            "audit_duration_seconds": row.audit_duration_seconds,
+            "total_repos_audited": row.total_repos_audited,
+            "total_checks": row.total_checks,
+            "passed_checks": row.passed_checks,
+            "failed_checks": row.failed_checks,
+            "warning_checks": row.warning_checks,
+            "critical_findings": row.critical_findings,
+            "high_findings": row.high_findings,
+            "medium_findings": row.medium_findings,
+            "low_findings": row.low_findings,
+            "score": row.score,
+            "grade": row.grade,
+            "status": row.status,
+            "triggered_by": row.triggered_by,
+            "triggered_by_user": row.triggered_by_user,
         }
         report_summaries.append(report_dict)
 
