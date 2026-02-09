@@ -1,7 +1,7 @@
 <template>
-    <div class="page">
-        <GitHubAuditList />
-    </div>
+	<div class="page">
+		<GitHubAuditList />
+	</div>
 </template>
 
 <script setup lang="ts">

@@ -1,29 +1,29 @@
 <template>
-    <div class="github-audit-stats">
-        <n-grid :cols="4" :x-gap="16" :y-gap="16">
-            <n-gi>
-                <n-statistic label="Total Configs" :value="stats.totalConfigs" />
-            </n-gi>
-            <n-gi>
-                <n-statistic label="Active Configs" :value="stats.activeConfigs" />
-            </n-gi>
-            <n-gi>
-                <n-statistic label="Total Reports" :value="stats.totalReports" />
-            </n-gi>
-            <n-gi>
-                <n-statistic label="Avg Score">
-                    <template #default>
-                        <span :class="scoreClass">{{ stats.avgScore.toFixed(1) }}%</span>
-                    </template>
-                </n-statistic>
-            </n-gi>
-        </n-grid>
-    </div>
+	<div class="github-audit-stats">
+		<n-grid :cols="4" :x-gap="16" :y-gap="16">
+			<n-gi>
+				<n-statistic label="Total Configs" :value="stats.totalConfigs" />
+			</n-gi>
+			<n-gi>
+				<n-statistic label="Active Configs" :value="stats.activeConfigs" />
+			</n-gi>
+			<n-gi>
+				<n-statistic label="Total Reports" :value="stats.totalReports" />
+			</n-gi>
+			<n-gi>
+				<n-statistic label="Avg Score">
+					<template #default>
+						<span :class="scoreClass">{{ stats.avgScore.toFixed(1) }}%</span>
+					</template>
+				</n-statistic>
+			</n-gi>
+		</n-grid>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
 import { NGi, NGrid, NStatistic } from "naive-ui"
+import { computed } from "vue"
 
 const props = defineProps<{
     stats: {

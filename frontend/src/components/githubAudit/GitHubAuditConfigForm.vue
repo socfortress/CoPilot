@@ -1,142 +1,144 @@
 <template>
-    <n-drawer v-model:show="showDrawer" :width="600" placement="right">
-        <n-drawer-content :title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'" closable>
-            <n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
-                <n-divider title-placement="left">Basic Settings</n-divider>
+	<n-drawer v-model:show="showDrawer" :width="600" placement="right">
+		<n-drawer-content :title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'" closable>
+			<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+				<n-divider title-placement="left">Basic Settings</n-divider>
 
-                <n-form-item label="Customer" path="customer_code">
-                    <n-select
-                        v-model:value="formData.customer_code"
-                        placeholder="Select customer"
-                        :options="customerOptions"
-                        :disabled="isEdit"
-                        filterable
-                    />
-                </n-form-item>
+				<n-form-item label="Customer" path="customer_code">
+					<n-select
+						v-model:value="formData.customer_code"
+						placeholder="Select customer"
+						:options="customerOptions"
+						:disabled="isEdit"
+						filterable
+					/>
+				</n-form-item>
 
-                <n-form-item label="GitHub Organization" path="organization">
-                    <n-input v-model:value="formData.organization" placeholder="e.g., my-org" />
-                </n-form-item>
+				<n-form-item label="GitHub Organization" path="organization">
+					<n-input v-model:value="formData.organization" placeholder="e.g., my-org" />
+				</n-form-item>
 
-                <n-form-item label="GitHub Token" path="github_token">
-                    <n-input
-                        v-model:value="formData.github_token"
-                        type="password"
-                        show-password-on="click"
-                        :placeholder="isEdit ? 'Leave blank to keep existing token' : 'ghp_xxxxxxxxxxxx'"
-                    />
-                </n-form-item>
+				<n-form-item label="GitHub Token" path="github_token">
+					<n-input
+						v-model:value="formData.github_token"
+						type="password"
+						show-password-on="click"
+						:placeholder="isEdit ? 'Leave blank to keep existing token' : 'ghp_xxxxxxxxxxxx'"
+					/>
+				</n-form-item>
 
-                <n-form-item label="Token Type" path="token_type">
-                    <n-radio-group v-model:value="formData.token_type">
-                        <n-radio value="pat">Personal Access Token</n-radio>
-                        <n-radio value="app">GitHub App</n-radio>
-                    </n-radio-group>
-                </n-form-item>
+				<n-form-item label="Token Type" path="token_type">
+					<n-radio-group v-model:value="formData.token_type">
+						<n-radio value="pat">Personal Access Token</n-radio>
+						<n-radio value="app">GitHub App</n-radio>
+					</n-radio-group>
+				</n-form-item>
 
-                <n-form-item label="Enabled">
-                    <n-switch v-model:value="formData.enabled" />
-                </n-form-item>
+				<n-form-item label="Enabled">
+					<n-switch v-model:value="formData.enabled" />
+				</n-form-item>
 
-                <n-divider title-placement="left">Audit Scope</n-divider>
+				<n-divider title-placement="left">Audit Scope</n-divider>
 
-                <n-grid :cols="2" :x-gap="16">
-                    <n-gi>
-                        <n-form-item label="Include Repositories">
-                            <n-switch v-model:value="formData.include_repos" />
-                        </n-form-item>
-                    </n-gi>
-                    <n-gi>
-                        <n-form-item label="Include Workflows">
-                            <n-switch v-model:value="formData.include_workflows" />
-                        </n-form-item>
-                    </n-gi>
-                    <n-gi>
-                        <n-form-item label="Include Members">
-                            <n-switch v-model:value="formData.include_members" />
-                        </n-form-item>
-                    </n-gi>
-                    <n-gi>
-                        <n-form-item label="Include Archived Repos">
-                            <n-switch v-model:value="formData.include_archived_repos" />
-                        </n-form-item>
-                    </n-gi>
-                </n-grid>
+				<n-grid :cols="2" :x-gap="16">
+					<n-gi>
+						<n-form-item label="Include Repositories">
+							<n-switch v-model:value="formData.include_repos" />
+						</n-form-item>
+					</n-gi>
+					<n-gi>
+						<n-form-item label="Include Workflows">
+							<n-switch v-model:value="formData.include_workflows" />
+						</n-form-item>
+					</n-gi>
+					<n-gi>
+						<n-form-item label="Include Members">
+							<n-switch v-model:value="formData.include_members" />
+						</n-form-item>
+					</n-gi>
+					<n-gi>
+						<n-form-item label="Include Archived Repos">
+							<n-switch v-model:value="formData.include_archived_repos" />
+						</n-form-item>
+					</n-gi>
+				</n-grid>
 
-                <n-form-item label="Repository Filter Mode">
-                    <n-radio-group v-model:value="formData.repo_filter_mode">
-                        <n-radio value="all">All Repositories</n-radio>
-                        <n-radio value="include">Include Only</n-radio>
-                        <n-radio value="exclude">Exclude</n-radio>
-                    </n-radio-group>
-                </n-form-item>
+				<n-form-item label="Repository Filter Mode">
+					<n-radio-group v-model:value="formData.repo_filter_mode">
+						<n-radio value="all">All Repositories</n-radio>
+						<n-radio value="include">Include Only</n-radio>
+						<n-radio value="exclude">Exclude</n-radio>
+					</n-radio-group>
+				</n-form-item>
 
-                <n-form-item v-if="formData.repo_filter_mode !== 'all'" label="Repository List">
-                    <n-dynamic-tags v-model:value="formData.repo_filter_list" />
-                    <template #feedback>
-                        Enter repository names to {{ formData.repo_filter_mode }}
-                    </template>
-                </n-form-item>
+				<n-form-item v-if="formData.repo_filter_mode !== 'all'" label="Repository List">
+					<n-dynamic-tags v-model:value="formData.repo_filter_list" />
+					<template #feedback>
+						Enter repository names to {{ formData.repo_filter_mode }}
+					</template>
+				</n-form-item>
 
-                <n-divider title-placement="left">Schedule</n-divider>
+				<n-divider title-placement="left">Schedule</n-divider>
 
-                <n-form-item label="Enable Scheduled Audits">
-                    <n-switch v-model:value="formData.auto_audit_enabled" />
-                </n-form-item>
+				<n-form-item label="Enable Scheduled Audits">
+					<n-switch v-model:value="formData.auto_audit_enabled" />
+				</n-form-item>
 
-                <n-form-item v-if="formData.auto_audit_enabled" label="Schedule (Cron)" path="audit_schedule_cron">
-                    <n-input v-model:value="formData.audit_schedule_cron" placeholder="0 0 * * 1 (Weekly on Monday)" />
-                    <template #feedback>
-                        <n-text depth="3">Use cron format. Example: "0 0 * * 1" for weekly on Monday at midnight</n-text>
-                    </template>
-                </n-form-item>
+				<n-form-item v-if="formData.auto_audit_enabled" label="Schedule (Cron)" path="audit_schedule_cron">
+					<n-input v-model:value="formData.audit_schedule_cron" placeholder="0 0 * * 1 (Weekly on Monday)" />
+					<template #feedback>
+						<n-text depth="3">Use cron format. Example: "0 0 * * 1" for weekly on Monday at midnight</n-text>
+					</template>
+				</n-form-item>
 
-                <n-divider title-placement="left">Notifications</n-divider>
+				<n-divider title-placement="left">Notifications</n-divider>
 
-                <n-grid :cols="2" :x-gap="16">
-                    <n-gi>
-                        <n-form-item label="Notify on Critical">
-                            <n-switch v-model:value="formData.notify_on_critical" />
-                        </n-form-item>
-                    </n-gi>
-                    <n-gi>
-                        <n-form-item label="Notify on High">
-                            <n-switch v-model:value="formData.notify_on_high" />
-                        </n-form-item>
-                    </n-gi>
-                </n-grid>
+				<n-grid :cols="2" :x-gap="16">
+					<n-gi>
+						<n-form-item label="Notify on Critical">
+							<n-switch v-model:value="formData.notify_on_critical" />
+						</n-form-item>
+					</n-gi>
+					<n-gi>
+						<n-form-item label="Notify on High">
+							<n-switch v-model:value="formData.notify_on_high" />
+						</n-form-item>
+					</n-gi>
+				</n-grid>
 
-                <n-form-item label="Notification Webhook URL">
-                    <n-input v-model:value="formData.notification_webhook_url" placeholder="https://..." />
-                </n-form-item>
+				<n-form-item label="Notification Webhook URL">
+					<n-input v-model:value="formData.notification_webhook_url" placeholder="https://..." />
+				</n-form-item>
 
-                <n-form-item label="Notification Email">
-                    <n-input v-model:value="formData.notification_email" placeholder="security@example.com" />
-                </n-form-item>
+				<n-form-item label="Notification Email">
+					<n-input v-model:value="formData.notification_email" placeholder="security@example.com" />
+				</n-form-item>
 
-                <n-divider title-placement="left">Thresholds</n-divider>
+				<n-divider title-placement="left">Thresholds</n-divider>
 
-                <n-form-item label="Minimum Passing Score">
-                    <n-slider v-model:value="formData.minimum_passing_score" :min="0" :max="100" :step="5" />
-                    <n-input-number v-model:value="formData.minimum_passing_score" :min="0" :max="100" style="width: 100px; margin-left: 16px" />
-                </n-form-item>
-            </n-form>
+				<n-form-item label="Minimum Passing Score">
+					<n-slider v-model:value="formData.minimum_passing_score" :min="0" :max="100" :step="5" />
+					<n-input-number v-model:value="formData.minimum_passing_score" :min="0" :max="100" style="width: 100px; margin-left: 16px" />
+				</n-form-item>
+			</n-form>
 
-            <template #footer>
-                <div class="flex justify-end gap-3">
-                    <n-button @click="showDrawer = false">Cancel</n-button>
-                    <n-button type="primary" :loading="saving" @click="handleSubmit">
-                        {{ isEdit ? "Update" : "Create" }}
-                    </n-button>
-                </div>
-            </template>
-        </n-drawer-content>
-    </n-drawer>
+			<template #footer>
+				<div class="flex justify-end gap-3">
+					<n-button @click="showDrawer = false">Cancel</n-button>
+					<n-button type="primary" :loading="saving" @click="handleSubmit">
+						{{ isEdit ? "Update" : "Create" }}
+					</n-button>
+				</div>
+			</template>
+		</n-drawer-content>
+	</n-drawer>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import type { FormInst, FormRules } from "naive-ui"
+import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 import {
+
     NButton,
     NDivider,
     NDrawer,
@@ -154,12 +156,10 @@ import {
     NSlider,
     NSwitch,
     NText,
-    useMessage,
-    type FormInst,
-    type FormRules
+    useMessage
 } from "naive-ui"
+import { computed, onMounted, reactive, ref, watch } from "vue"
 import Api from "@/api"
-import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 
 const props = defineProps<{
     show: boolean
@@ -183,7 +183,8 @@ const showDrawer = computed({
 
 const isEdit = computed(() => !!props.config)
 
-const defaultFormData = (): GitHubAuditConfigCreate => ({
+function defaultFormData(): GitHubAuditConfigCreate {
+  return {
     customer_code: "",
     github_token: "",
     organization: "",
@@ -202,7 +203,8 @@ const defaultFormData = (): GitHubAuditConfigCreate => ({
     notification_webhook_url: null,
     notification_email: null,
     minimum_passing_score: 70
-})
+}
+}
 
 const formData = reactive<GitHubAuditConfigCreate>(defaultFormData())
 

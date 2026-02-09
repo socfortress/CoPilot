@@ -1,107 +1,107 @@
 <template>
-    <div class="github-audit-list">
-        <n-card>
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold m-0">GitHub Audit Configurations</h2>
-                <n-space>
-                    <n-button quaternary @click="showInfo = true">
-                        <template #icon>
-                            <n-icon><Icon :name="InfoIcon" /></n-icon>
-                        </template>
-                        Reference Guide
-                    </n-button>
-                    <n-button type="primary" @click="openCreateForm">
-                        <template #icon>
-                            <n-icon><Icon :name="AddIcon" /></n-icon>
-                        </template>
-                        New Configuration
-                    </n-button>
-                </n-space>
-            </div>
+	<div class="github-audit-list">
+		<n-card>
+			<div class="flex justify-between items-center mb-4">
+				<h2 class="text-xl font-semibold m-0">GitHub Audit Configurations</h2>
+				<n-space>
+					<n-button quaternary @click="showInfo = true">
+						<template #icon>
+							<n-icon><Icon :name="InfoIcon" /></n-icon>
+						</template>
+						Reference Guide
+					</n-button>
+					<n-button type="primary" @click="openCreateForm">
+						<template #icon>
+							<n-icon><Icon :name="AddIcon" /></n-icon>
+						</template>
+						New Configuration
+					</n-button>
+				</n-space>
+			</div>
 
-            <div class="github-audit-filters flex gap-4 flex-wrap items-center mb-4">
-                <n-select
-                    v-model:value="filterCustomerCode"
-                    placeholder="Filter by Customer"
-                    clearable
-                    :options="customerOptions"
-                    :loading="loadingCustomers"
-                    style="min-width: 200px"
-                    @update:value="loadConfigs"
-                />
-                <n-select
-                    v-model:value="filterStatus"
-                    placeholder="Filter by Status"
-                    clearable
-                    :options="statusOptions"
-                    style="min-width: 150px"
-                    @update:value="loadConfigs"
-                />
-                <n-input
-                    v-model:value="filterOrganization"
-                    placeholder="Search organization..."
-                    clearable
-                    style="min-width: 200px"
-                    @keyup.enter="loadConfigs"
-                    @clear="loadConfigs"
-                >
-                    <template #prefix>
-                        <n-icon><Icon :name="SearchIcon" /></n-icon>
-                    </template>
-                </n-input>
-            </div>
+			<div class="github-audit-filters flex gap-4 flex-wrap items-center mb-4">
+				<n-select
+					v-model:value="filterCustomerCode"
+					placeholder="Filter by Customer"
+					clearable
+					:options="customerOptions"
+					:loading="loadingCustomers"
+					style="min-width: 200px"
+					@update:value="loadConfigs"
+				/>
+				<n-select
+					v-model:value="filterStatus"
+					placeholder="Filter by Status"
+					clearable
+					:options="statusOptions"
+					style="min-width: 150px"
+					@update:value="loadConfigs"
+				/>
+				<n-input
+					v-model:value="filterOrganization"
+					placeholder="Search organization..."
+					clearable
+					style="min-width: 200px"
+					@keyup.enter="loadConfigs"
+					@clear="loadConfigs"
+				>
+					<template #prefix>
+						<n-icon><Icon :name="SearchIcon" /></n-icon>
+					</template>
+				</n-input>
+			</div>
 
-            <n-spin :show="loading">
-                <div v-if="configs.length === 0 && !loading" class="text-center py-8">
-                    <n-empty description="No configurations found">
-                        <template #extra>
-                            <n-button type="primary" @click="openCreateForm">Create your first configuration</n-button>
-                        </template>
-                    </n-empty>
-                </div>
+			<n-spin :show="loading">
+				<div v-if="configs.length === 0 && !loading" class="text-center py-8">
+					<n-empty description="No configurations found">
+						<template #extra>
+							<n-button type="primary" @click="openCreateForm">Create your first configuration</n-button>
+						</template>
+					</n-empty>
+				</div>
 
-                <n-grid v-else :cols="2" :x-gap="16" :y-gap="16">
-                    <n-gi v-for="config in configs" :key="config.id">
-                        <GitHubAuditCard
-                            :config="config"
-                            @click="openDetail(config)"
-                            @edit="openEditForm"
-                            @audit-complete="loadConfigs"
-                        />
-                    </n-gi>
-                </n-grid>
-            </n-spin>
-        </n-card>
+				<n-grid v-else :cols="2" :x-gap="16" :y-gap="16">
+					<n-gi v-for="config in configs" :key="config.id">
+						<GitHubAuditCard
+							:config="config"
+							@click="openDetail(config)"
+							@edit="openEditForm"
+							@audit-complete="loadConfigs"
+						/>
+					</n-gi>
+				</n-grid>
+			</n-spin>
+		</n-card>
 
-        <GitHubAuditConfigForm
-            v-if="showForm"
-            v-model:show="showForm"
-            :config="selectedConfig"
-            @saved="onConfigSaved"
-        />
+		<GitHubAuditConfigForm
+			v-if="showForm"
+			v-model:show="showForm"
+			:config="selectedConfig"
+			@saved="onConfigSaved"
+		/>
 
-        <GitHubAuditDetail
-            v-if="showDetail"
-            v-model:show="showDetail"
-            :config="selectedConfig"
-            @updated="loadConfigs"
-            @edit="openEditForm"
-        />
+		<GitHubAuditDetail
+			v-if="showDetail"
+			v-model:show="showDetail"
+			:config="selectedConfig"
+			@updated="loadConfigs"
+			@edit="openEditForm"
+		/>
 
-        <GitHubAuditInfo v-model:show="showInfo" />
-    </div>
+		<GitHubAuditInfo v-model:show="showInfo" />
+	</div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
+import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
+import { onMounted, ref } from "vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
 import GitHubAuditConfigForm from "./GitHubAuditConfigForm.vue"
 import GitHubAuditDetail from "./GitHubAuditDetail.vue"
 import GitHubAuditInfo from "./GitHubAuditInfo.vue"
-import Api from "@/api"
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 
 const AddIcon = "ion:add"
 const SearchIcon = "ion:search-outline"

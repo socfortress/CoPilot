@@ -1,10 +1,10 @@
 <template>
-    <n-button :size="size" :type="type" @click="goToGitHubAudit">
-        <template #icon>
-            <Icon :name="GitHubIcon" />
-        </template>
-        GitHub Audit
-    </n-button>
+	<n-button :size="size" :type="type" @click="goToGitHubAudit">
+		<template #icon>
+			<Icon :name="GitHubIcon" />
+		</template>
+		GitHub Audit
+	</n-button>
 </template>
 
 <script setup lang="ts">

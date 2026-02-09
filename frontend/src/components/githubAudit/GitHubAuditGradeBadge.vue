@@ -1,12 +1,12 @@
 <template>
-    <n-tag :type="gradeType" :bordered="false" round size="small">
-        {{ grade }}
-    </n-tag>
+	<n-tag :type="gradeType" :bordered="false" round size="small">
+		{{ grade }}
+	</n-tag>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
 import { NTag } from "naive-ui"
+import { computed } from "vue"
 
 const props = defineProps<{
     grade: string

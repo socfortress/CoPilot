@@ -1,50 +1,52 @@
 <template>
-    <n-modal v-model:show="showModal" preset="dialog" title="Add Exclusion" style="width: 500px">
-        <n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
-            <n-form-item label="Check to Exclude" path="check_id">
-                <n-select
-                    v-model:value="formData.check_id"
-                    placeholder="Select a check"
-                    :options="checkOptions"
-                    filterable
-                />
-            </n-form-item>
+	<n-modal v-model:show="showModal" preset="dialog" title="Add Exclusion" style="width: 500px">
+		<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+			<n-form-item label="Check to Exclude" path="check_id">
+				<n-select
+					v-model:value="formData.check_id"
+					placeholder="Select a check"
+					:options="checkOptions"
+					filterable
+				/>
+			</n-form-item>
 
-            <n-form-item label="Resource Name (Optional)">
-                <n-input
-                    v-model:value="formData.resource_name"
-                    placeholder="e.g., specific repository name (leave blank for all)"
-                />
-            </n-form-item>
+			<n-form-item label="Resource Name (Optional)">
+				<n-input
+					v-model:value="formData.resource_name"
+					placeholder="e.g., specific repository name (leave blank for all)"
+				/>
+			</n-form-item>
 
-            <n-form-item label="Reason" path="reason">
-                <n-input
-                    v-model:value="formData.reason"
-                    type="textarea"
-                    placeholder="Why is this check being excluded?"
-                    :rows="3"
-                />
-            </n-form-item>
+			<n-form-item label="Reason" path="reason">
+				<n-input
+					v-model:value="formData.reason"
+					type="textarea"
+					placeholder="Why is this check being excluded?"
+					:rows="3"
+				/>
+			</n-form-item>
 
-            <n-form-item label="Approved By">
-                <n-input v-model:value="formData.approved_by" placeholder="Name of approver" />
-            </n-form-item>
+			<n-form-item label="Approved By">
+				<n-input v-model:value="formData.approved_by" placeholder="Name of approver" />
+			</n-form-item>
 
-            <n-form-item label="Expires At">
-                <n-date-picker v-model:value="expiresAtTimestamp" type="datetime" clearable />
-            </n-form-item>
-        </n-form>
+			<n-form-item label="Expires At">
+				<n-date-picker v-model:value="expiresAtTimestamp" type="datetime" clearable />
+			</n-form-item>
+		</n-form>
 
-        <template #action>
-            <n-button @click="showModal = false">Cancel</n-button>
-            <n-button type="primary" :loading="saving" @click="handleSubmit">Create</n-button>
-        </template>
-    </n-modal>
+		<template #action>
+			<n-button @click="showModal = false">Cancel</n-button>
+			<n-button type="primary" :loading="saving" @click="handleSubmit">Create</n-button>
+		</template>
+	</n-modal>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from "vue"
+import type { FormInst, FormRules } from "naive-ui"
+import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import {
+
     NButton,
     NDatePicker,
     NForm,
@@ -52,12 +54,10 @@ import {
     NInput,
     NModal,
     NSelect,
-    useMessage,
-    type FormInst,
-    type FormRules
+    useMessage
 } from "naive-ui"
+import { computed, onMounted, reactive, ref } from "vue"
 import Api from "@/api"
-import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 
 const props = defineProps<{
     show: boolean
