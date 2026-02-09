@@ -902,19 +902,44 @@ class GitHubAuditService:
             for member in member_results:
                 all_checks.extend(member.checks)
 
-            total_checks = len(all_checks)
-            passed = sum(1 for c in all_checks if c.status == AuditStatus.PASS)
-            failed = sum(1 for c in all_checks if c.status == AuditStatus.FAIL)
-            warnings = sum(1 for c in all_checks if c.status == AuditStatus.WARNING)
+            # Filter out NOT_APPLICABLE checks for scoring
+            scorable_checks = [c for c in all_checks if c.status != AuditStatus.NOT_APPLICABLE]
 
-            critical = sum(1 for c in all_checks if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.CRITICAL)
-            high = sum(1 for c in all_checks if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.HIGH)
-            medium = sum(1 for c in all_checks if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.MEDIUM)
-            low = sum(1 for c in all_checks if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.LOW)
+            total_checks = len(scorable_checks)
+            passed = sum(1 for c in scorable_checks if c.status == AuditStatus.PASS)
+            failed = sum(1 for c in scorable_checks if c.status == AuditStatus.FAIL)
+            warnings = sum(1 for c in scorable_checks if c.status == AuditStatus.WARNING)
 
-            # Calculate score (100 - penalty for failures)
-            score_deductions = (critical * 25) + (high * 15) + (medium * 5) + (low * 2)
-            score = max(0.0, 100.0 - min(score_deductions, 100))
+            # Count findings by severity (FAIL and WARNING both count)
+            critical = sum(
+                1 for c in scorable_checks
+                if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.CRITICAL
+            )
+            high = sum(
+                1 for c in scorable_checks
+                if c.status == AuditStatus.FAIL and c.severity == SeverityLevel.HIGH
+            )
+            medium = sum(
+                1 for c in scorable_checks
+                if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.MEDIUM
+            )
+            low = sum(
+                1 for c in scorable_checks
+                if c.status in [AuditStatus.FAIL, AuditStatus.WARNING] and c.severity == SeverityLevel.LOW
+            )
+
+            # Calculate score based on pass rate with severity weighting
+            if total_checks > 0:
+                # Base score from pass rate
+                base_score = (passed / total_checks) * 100
+
+                # Apply severity penalties
+                severity_penalty = (critical * 10) + (high * 5) + (medium * 2) + (low * 1)
+
+                # Final score (minimum 0)
+                score = max(0.0, base_score - severity_penalty)
+            else:
+                score = 100.0  # No checks = perfect score (nothing to fail)
 
             # Determine grade
             if score >= 90:
@@ -927,6 +952,11 @@ class GitHubAuditService:
                 grade = "D"
             else:
                 grade = "F"
+
+            logger.info(
+                f"Audit complete - Total: {total_checks}, Passed: {passed}, "
+                f"Failed: {failed}, Warnings: {warnings}, Score: {score:.1f}, Grade: {grade}"
+            )
 
             summary = AuditSummary(
                 organization=self.organization,
