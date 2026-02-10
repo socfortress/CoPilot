@@ -6,12 +6,14 @@ from fastapi import Security
 
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
+from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSizeResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
 from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
 
 # from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
 from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
+from app.connectors.wazuh_indexer.services.monitoring import indices_size_per_customer
 from app.connectors.wazuh_indexer.services.monitoring import indices_stats
 from app.connectors.wazuh_indexer.services.monitoring import node_allocation
 from app.connectors.wazuh_indexer.services.monitoring import (
@@ -99,6 +101,35 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
         return indices_stats_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
+
+
+@wazuh_indexer_router.get(
+    "/indices/size-per-customer",
+    response_model=CustomerIndicesSizeResponse,
+    description="Fetch Wazuh Indexer indices size aggregated per customer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, HTTPException]:
+    """
+    Fetch Wazuh Indexer indices size per customer.
+
+    This endpoint retrieves the total indices size aggregated per customer,
+    where customer is extracted from index names (e.g., wazuh-copilot_37 -> copilot).
+
+    Returns:
+        CustomerIndicesSizeResponse: A Pydantic model representing the indices size per customer.
+
+    Raises:
+        HTTPException: An exception with a 500 status code is raised if the data cannot be retrieved.
+    """
+    try:
+        response = await indices_size_per_customer()
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve indices size per customer: {str(e)}",
+        )
 
 
 @wazuh_indexer_router.get(

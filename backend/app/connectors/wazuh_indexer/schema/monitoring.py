@@ -78,3 +78,17 @@ class ShardsResponse(BaseModel):
     shards: Optional[List[Shards]]
     message: str
     success: bool
+
+
+class CustomerIndicesSize(BaseModel):
+    customer: str
+    total_size_bytes: int
+    total_size_human: str
+    index_count: int
+    indices: List[str]
+
+
+class CustomerIndicesSizeResponse(BaseModel):
+    customer_sizes: Optional[List[CustomerIndicesSize]]
+    message: str
+    success: bool
