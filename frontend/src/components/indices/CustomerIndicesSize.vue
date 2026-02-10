@@ -6,9 +6,34 @@
                     <div class="customer-header">
                         <div class="customer-name">
                             <n-text strong>{{ customer.customer }}</n-text>
-                            <n-tag size="small" :bordered="false" type="info">
-                                {{ customer.index_count }} {{ customer.index_count === 1 ? "index" : "indices" }}
-                            </n-tag>
+                            <n-popover trigger="click" placement="bottom" :width="300">
+                                <template #trigger>
+                                    <n-tag
+                                        size="small"
+                                        :bordered="false"
+                                        type="info"
+                                        class="clickable-tag"
+                                    >
+                                        {{ customer.index_count }} {{ customer.index_count === 1 ? "index" : "indices" }}
+                                    </n-tag>
+                                </template>
+                                <div class="indices-popover">
+                                    <div class="popover-header">
+                                        <n-text strong>Indices for {{ customer.customer }}</n-text>
+                                    </div>
+                                    <n-scrollbar style="max-height: 200px">
+                                        <div class="indices-list">
+                                            <div
+                                                v-for="index in customer.indices"
+                                                :key="index"
+                                                class="index-item"
+                                            >
+                                                <n-text code>{{ index }}</n-text>
+                                            </div>
+                                        </div>
+                                    </n-scrollbar>
+                                </div>
+                            </n-popover>
                         </div>
                         <n-text class="customer-size">{{ customer.total_size_human }}</n-text>
                     </div>
@@ -29,7 +54,7 @@
 
 <script lang="ts" setup>
 import Api from "@/api"
-import { NCard, NEmpty, NProgress, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
+import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 
 interface CustomerIndicesSize {
@@ -111,12 +136,39 @@ onBeforeMount(() => {
                 display: flex;
                 align-items: center;
                 gap: 8px;
+
+                .clickable-tag {
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+
+                    &:hover {
+                        opacity: 0.8;
+                    }
+                }
             }
 
             .customer-size {
                 font-weight: 600;
                 font-family: var(--font-family-mono);
             }
+        }
+    }
+}
+
+.indices-popover {
+    .popover-header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .indices-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .index-item {
+            padding: 4px 0;
         }
     }
 }
