@@ -1,39 +1,39 @@
 <template>
-    <div class="page">
-        <div class="section">
-            <IndicesMarquee :indices="indices" @click="setIndex" />
-        </div>
+	<div class="page">
+		<div class="section">
+			<IndicesMarquee :indices="indices" @click="setIndex" />
+		</div>
 
-        <div class="section">
-            <Details v-model="currentIndex" :indices="indices" />
-        </div>
+		<div class="section">
+			<Details v-model="currentIndex" :indices="indices" />
+		</div>
 
-        <div class="section">
-            <div class="columns flex">
-                <div class="col basis-1/2">
-                    <ClusterHealth class="stretchy" />
-                </div>
-                <div class="col basis-1/2">
-                    <UnhealthyIndices :indices="indices" class="stretchy" @click="setIndex" />
-                </div>
-            </div>
-        </div>
+		<div class="section">
+			<div class="columns flex">
+				<div class="col basis-1/2">
+					<ClusterHealth class="stretchy" />
+				</div>
+				<div class="col basis-1/2">
+					<UnhealthyIndices :indices="indices" class="stretchy" @click="setIndex" />
+				</div>
+			</div>
+		</div>
 
-        <div class="section">
-            <CustomerIndicesSize @click="setIndex" />
-        </div>
+		<div class="section">
+			<CustomerIndicesSize @click="setIndex" />
+		</div>
 
-        <n-card class="section overflow-hidden" content-style="padding:0">
-            <div class="columns column-1200 flex gap-0!">
-                <div class="col basis-2/5">
-                    <NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
-                </div>
-                <div class="col basis-3/5 overflow-hidden">
-                    <TopIndices :indices="indices" style="border-radius: 0" :bordered="false" />
-                </div>
-            </div>
-        </n-card>
-    </div>
+		<n-card class="section overflow-hidden" content-style="padding:0">
+			<div class="columns column-1200 flex gap-0!">
+				<div class="col basis-2/5">
+					<NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
+				</div>
+				<div class="col basis-3/5 overflow-hidden">
+					<TopIndices :indices="indices" style="border-radius: 0" :bordered="false" />
+				</div>
+			</div>
+		</n-card>
+	</div>
 </template>
 
 <script lang="ts" setup>

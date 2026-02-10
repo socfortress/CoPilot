@@ -1,62 +1,62 @@
 <template>
-    <n-card title="Storage per Customer" :bordered="bordered">
-        <n-spin :show="loading">
-            <div v-if="customerSizes && customerSizes.length > 0" class="customer-list">
-                <div v-for="customer in customerSizes" :key="customer.customer" class="customer-item">
-                    <div class="customer-header">
-                        <div class="customer-name">
-                            <n-text strong>{{ customer.customer }}</n-text>
-                            <n-popover trigger="click" placement="bottom" :width="300">
-                                <template #trigger>
-                                    <n-tag
-                                        size="small"
-                                        :bordered="false"
-                                        type="info"
-                                        class="clickable-tag"
-                                    >
-                                        {{ customer.index_count }} {{ customer.index_count === 1 ? "index" : "indices" }}
-                                    </n-tag>
-                                </template>
-                                <div class="indices-popover">
-                                    <div class="popover-header">
-                                        <n-text strong>Indices for {{ customer.customer }}</n-text>
-                                    </div>
-                                    <n-scrollbar style="max-height: 200px">
-                                        <div class="indices-list">
-                                            <div
-                                                v-for="index in customer.indices"
-                                                :key="index"
-                                                class="index-item"
-                                                @click="selectIndex(index)"
-                                            >
-                                                <n-text code class="index-link">{{ index }}</n-text>
-                                            </div>
-                                        </div>
-                                    </n-scrollbar>
-                                </div>
-                            </n-popover>
-                        </div>
-                        <n-text class="customer-size">{{ customer.total_size_human }}</n-text>
-                    </div>
-                    <n-progress
-                        type="line"
-                        :percentage="getPercentage(customer.total_size_bytes)"
-                        :show-indicator="false"
-                        :height="8"
-                        :border-radius="4"
-                        :color="getProgressColor(customer.total_size_bytes)"
-                    />
-                </div>
-            </div>
-            <n-empty v-else-if="!loading" description="No customer data available" />
-        </n-spin>
-    </n-card>
+	<n-card title="Storage per Customer" :bordered="bordered">
+		<n-spin :show="loading">
+			<div v-if="customerSizes && customerSizes.length > 0" class="customer-list">
+				<div v-for="customer in customerSizes" :key="customer.customer" class="customer-item">
+					<div class="customer-header">
+						<div class="customer-name">
+							<n-text strong>{{ customer.customer }}</n-text>
+							<n-popover trigger="click" placement="bottom" :width="300">
+								<template #trigger>
+									<n-tag
+										size="small"
+										:bordered="false"
+										type="info"
+										class="clickable-tag"
+									>
+										{{ customer.index_count }} {{ customer.index_count === 1 ? "index" : "indices" }}
+									</n-tag>
+								</template>
+								<div class="indices-popover">
+									<div class="popover-header">
+										<n-text strong>Indices for {{ customer.customer }}</n-text>
+									</div>
+									<n-scrollbar style="max-height: 200px">
+										<div class="indices-list">
+											<div
+												v-for="index in customer.indices"
+												:key="index"
+												class="index-item"
+												@click="selectIndex(index)"
+											>
+												<n-text code class="index-link">{{ index }}</n-text>
+											</div>
+										</div>
+									</n-scrollbar>
+								</div>
+							</n-popover>
+						</div>
+						<n-text class="customer-size">{{ customer.total_size_human }}</n-text>
+					</div>
+					<n-progress
+						type="line"
+						:percentage="getPercentage(customer.total_size_bytes)"
+						:show-indicator="false"
+						:height="8"
+						:border-radius="4"
+						:color="getProgressColor(customer.total_size_bytes)"
+					/>
+				</div>
+			</div>
+			<n-empty v-else-if="!loading" description="No customer data available" />
+		</n-spin>
+	</n-card>
 </template>
 
 <script lang="ts" setup>
-import Api from "@/api"
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 
 interface CustomerIndicesSize {
     customer: string
