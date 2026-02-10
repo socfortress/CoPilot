@@ -14,5 +14,18 @@ export default {
 	},
 	getClusterHealth() {
 		return HttpClient.get<FlaskBaseResponse & { cluster_health: ClusterHealth }>("/wazuh_indexer/health")
-	}
+	},
+	getIndicesSizePerCustomer() {
+    return HttpClient.get<{
+        customer_sizes: {
+            customer: string
+            total_size_bytes: number
+            total_size_human: string
+            index_count: number
+            indices: string[]
+        }[]
+        message: string
+        success: boolean
+    }>(`/wazuh_indexer/indices/size-per-customer`)
+}
 }
