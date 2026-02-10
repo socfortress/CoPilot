@@ -1,14 +1,16 @@
+import re
 from typing import Dict
 from typing import Union
-import re
 
 from loguru import logger
 
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
+from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSize
+from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSizeResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStats
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
-from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocation, CustomerIndicesSize, CustomerIndicesSizeResponse
+from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocation
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
 from app.connectors.wazuh_indexer.schema.monitoring import Shards
 from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
@@ -155,6 +157,7 @@ async def output_shard_number_to_be_set_based_on_nodes() -> int:
         e = f"Shards check failed with error: {e}"
         raise Exception(str(e))
 
+
 def parse_size_to_bytes(size_str: str) -> int:
     """
     Convert a human-readable size string to bytes.
@@ -167,15 +170,15 @@ def parse_size_to_bytes(size_str: str) -> int:
 
     # Define multipliers
     multipliers = {
-        'b': 1,
-        'kb': 1024,
-        'mb': 1024 ** 2,
-        'gb': 1024 ** 3,
-        'tb': 1024 ** 4,
+        "b": 1,
+        "kb": 1024,
+        "mb": 1024**2,
+        "gb": 1024**3,
+        "tb": 1024**4,
     }
 
     # Match number and unit
-    match = re.match(r'^([\d.]+)\s*([a-z]+)$', size_str)
+    match = re.match(r"^([\d.]+)\s*([a-z]+)$", size_str)
     if match:
         value = float(match.group(1))
         unit = match.group(2)
@@ -190,7 +193,7 @@ def parse_size_to_bytes(size_str: str) -> int:
 
 def bytes_to_human_readable(size_bytes: int) -> str:
     """Convert bytes to human-readable format."""
-    for unit in ['b', 'kb', 'mb', 'gb', 'tb']:
+    for unit in ["b", "kb", "mb", "gb", "tb"]:
         if abs(size_bytes) < 1024.0:
             return f"{size_bytes:.2f}{unit}"
         size_bytes /= 1024.0
@@ -207,12 +210,12 @@ def extract_customer_from_index(index_name: str) -> str:
         - wazuh-509dine2v_0 -> 509dine2v
     """
     # Match pattern: prefix-customer_suffix or prefix_customer_suffix
-    match = re.match(r'^[^-_]+-([^_]+)_', index_name)
+    match = re.match(r"^[^-_]+-([^_]+)_", index_name)
     if match:
         return match.group(1)
 
     # Fallback: try underscore as first separator
-    match = re.match(r'^[^_]+_([^_]+)_', index_name)
+    match = re.match(r"^[^_]+_([^_]+)_", index_name)
     if match:
         return match.group(1)
 

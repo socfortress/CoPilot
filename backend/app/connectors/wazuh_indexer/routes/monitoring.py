@@ -6,18 +6,18 @@ from fastapi import Security
 
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
+from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSizeResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
 from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
-from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSizeResponse
-
 
 # from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
 from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
+from app.connectors.wazuh_indexer.services.monitoring import indices_size_per_customer
 from app.connectors.wazuh_indexer.services.monitoring import indices_stats
 from app.connectors.wazuh_indexer.services.monitoring import node_allocation
 from app.connectors.wazuh_indexer.services.monitoring import (
-    output_shard_number_to_be_set_based_on_nodes, indices_size_per_customer
+    output_shard_number_to_be_set_based_on_nodes,
 )
 from app.connectors.wazuh_indexer.services.monitoring import shards
 from app.connectors.wazuh_indexer.utils.universal import resize_wazuh_index_fields
@@ -102,6 +102,7 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
 
+
 @wazuh_indexer_router.get(
     "/indices/size-per-customer",
     response_model=CustomerIndicesSizeResponse,
@@ -129,6 +130,7 @@ async def get_indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, 
             status_code=500,
             detail=f"Failed to retrieve indices size per customer: {str(e)}",
         )
+
 
 @wazuh_indexer_router.get(
     "/shards",

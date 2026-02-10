@@ -79,6 +79,7 @@ class ShardsResponse(BaseModel):
     message: str
     success: bool
 
+
 class CustomerIndicesSize(BaseModel):
     customer: str
     total_size_bytes: int
