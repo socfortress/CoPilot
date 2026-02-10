@@ -6,6 +6,7 @@
 		:hoverable
 		:clickable
 		:class="{ critical: agent.critical_asset, selectable, selected }"
+		@click="$emit('click')"
 	>
 		<div class="card-content">
 			<!-- Selection checkbox -->
