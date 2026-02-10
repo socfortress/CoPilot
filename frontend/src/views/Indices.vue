@@ -20,7 +20,7 @@
         </div>
 
         <div class="section">
-            <CustomerIndicesSize />
+            <CustomerIndicesSize @click="setIndex" />
         </div>
 
         <n-card class="section overflow-hidden" content-style="padding:0">

@@ -27,8 +27,9 @@
                                                 v-for="index in customer.indices"
                                                 :key="index"
                                                 class="index-item"
+                                                @click="selectIndex(index)"
                                             >
-                                                <n-text code>{{ index }}</n-text>
+                                                <n-text code class="index-link">{{ index }}</n-text>
                                             </div>
                                         </div>
                                     </n-scrollbar>
@@ -69,6 +70,10 @@ defineProps<{
     bordered?: boolean
 }>()
 
+const emit = defineEmits<{
+    (e: "click", value: string): void
+}>()
+
 const message = useMessage()
 const themeVars = useThemeVars()
 
@@ -90,6 +95,10 @@ function getProgressColor(sizeBytes: number): string {
     if (percentage >= 80) return themeVars.value.errorColor
     if (percentage >= 60) return themeVars.value.warningColor
     return themeVars.value.primaryColor
+}
+
+function selectIndex(indexName: string) {
+    emit("click", indexName)
 }
 
 function getCustomerIndicesSize() {
@@ -169,6 +178,17 @@ onBeforeMount(() => {
 
         .index-item {
             padding: 4px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: var(--hover-color);
+            }
+
+            .index-link {
+                cursor: pointer;
+            }
         }
     }
 }
