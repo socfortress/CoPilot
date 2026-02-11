@@ -6,6 +6,7 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.graylog.utils.routing import get_current_graylog_connector
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -73,25 +74,30 @@ async def verify_graylog_connection(connector_name: str) -> str:
 async def send_get_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
-    connector_name: str = "Graylog",
+    #connector_name: str = "Graylog",
+    connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Sends a GET request to the Graylog service.
 
     Args:
         endpoint (str): The endpoint to send the GET request to.
-        params (Optional[Dict[str, Any]], optional): The parameters to send with the GET request. Defaults to None.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylogr".
+        params (Optional[Dict[str, Any]], optional): The parameters to send with the GET request.
+        connector_name (Optional[str], optional): The name of the connector to use.
+            If not provided, uses the current context or defaults to "Graylog".
 
     Returns:
         Dict[str, Any]: The response from the GET request.
     """
-    logger.info(f"Sending GET request to {endpoint}")
-    async with get_db_session() as session:  # This will correctly enter the context manager
+    # Use provided connector_name, or fall back to context-based resolution
+    if connector_name is None:
+        connector_name = get_current_graylog_connector()
+
+    logger.info(f"Sending GET request to {endpoint} using connector: {connector_name}")
+    async with get_db_session() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
-        return None
+        raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
     try:
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",
@@ -125,7 +131,8 @@ async def send_get_request(
 async def send_post_request(
     endpoint: str,
     data: Dict[str, Any] = None,
-    connector_name: str = "Graylog",
+    #connector_name: str = "Graylog",
+    connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the Graylog service.
@@ -133,20 +140,21 @@ async def send_post_request(
     Args:
         endpoint (str): The endpoint to send the POST request to.
         data (Dict[str, Any]): The data to send with the POST request.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        connector_name (Optional[str], optional): The name of the connector to use.
+            If not provided, uses the current context or defaults to "Graylog".
 
     Returns:
         Dict[str, Any]: The response from the POST request.
     """
-    logger.info(f"Sending POST request to {endpoint}")
-    async with get_db_session() as session:  # This will correctly enter the context manager
+    # Use provided connector_name, or fall back to context-based resolution
+    if connector_name is None:
+        connector_name = get_current_graylog_connector()
+
+    logger.info(f"Sending POST request to {endpoint} using connector: {connector_name}")
+    async with get_db_session() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
-        return {
-            "success": False,
-            "message": "No Graylog connector found in the database",
-        }
+        raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
 
     try:
         response = requests.post(
@@ -205,25 +213,30 @@ async def send_post_request(
 async def send_delete_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
-    connector_name: str = "Graylog",
+    #connector_name: str = "Graylog",
+    connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Sends a DELETE request to the Graylog service.
 
     Args:
         endpoint (str): The endpoint to send the DELETE request to.
-        params (Optional[Dict[str, Any]], optional): The parameters to send with the DELETE request. Defaults to None.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        params (Optional[Dict[str, Any]], optional): The parameters to send with the DELETE request.
+        connector_name (Optional[str], optional): The name of the connector to use.
+            If not provided, uses the current context or defaults to "Graylog".
 
     Returns:
         Dict[str, Any]: The response from the DELETE request.
     """
-    logger.info(f"Sending DELETE request to {endpoint}")
-    async with get_db_session() as session:  # This will correctly enter the context manager
+    # Use provided connector_name, or fall back to context-based resolution
+    if connector_name is None:
+        connector_name = get_current_graylog_connector()
+
+    logger.info(f"Sending DELETE request to {endpoint} using connector: {connector_name}")
+    async with get_db_session() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
-        return None
+        raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
     try:
         response = requests.delete(
             f"{attributes['connector_url']}{endpoint}",
@@ -258,20 +271,26 @@ async def send_delete_request(
 async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
-    connector_name: str = "Graylog",
+    #connector_name: str = "Graylog",
+    connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Sends a PUT request to the Graylog service.
 
     Args:
         endpoint (str): The endpoint to send the PUT request to.
-        data (Optional[Dict[str, Any]]): The data to send with the PUT request.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        data (Optional[Dict[str, Any]], optional): The data to send with the PUT request.
+        connector_name (Optional[str], optional): The name of the connector to use.
+            If not provided, uses the current context or defaults to "Graylog".
 
     Returns:
         Dict[str, Any]: The response from the PUT request.
     """
-    logger.info(f"Sending PUT request to {endpoint} with payload {data}")
+    # Use provided connector_name, or fall back to context-based resolution
+    if connector_name is None:
+        connector_name = get_current_graylog_connector()
+
+    logger.info(f"Sending PUT request to {endpoint} using connector: {connector_name}")
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:

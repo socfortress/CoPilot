@@ -12,6 +12,9 @@ from app.network_connectors.routes import find_customer_network_connector
 from app.network_connectors.routes import (
     get_customer_network_connectors_by_customer_code,
 )
+from app.connectors.graylog.utils.routing import GraylogContext
+from app.connectors.graylog.utils.routing import set_graylog_context
+from app.connectors.graylog.utils.routing import clear_graylog_context
 from app.network_connectors.schema import CustomerNetworkConnectors
 from app.network_connectors.schema import CustomerNetworkConnectorsResponse
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
@@ -83,7 +86,7 @@ def extract_sonicwall_keys(
 @stack_provisioning_graylog_sonicwall_router.post(
     "/graylog/provision/sonicwall",
     response_model=ProvisionSonicwallResponse,
-    description="Provision SonicWall for the customer.",
+    description="Provision SonicWall for the customer. Uses Graylog-Network instance for all Graylog operations.",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_sonicwall_route(
@@ -91,31 +94,39 @@ async def provision_sonicwall_route(
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionSonicwallResponse:
     """
-    Provision SonicWall for the customer
+    Provision SonicWall for the customer.
+    Uses Graylog-Network instance for all Graylog operations.
     """
-    customer_integration_response = await get_customer_integration_response(
-        provision_sonicwall_request.customer_code,
-        session,
-    )
+    # Set the Graylog context for this request - all downstream Graylog calls will use Graylog-Network
+    set_graylog_context(GraylogContext.NETWORK)
 
-    customer_integration = await find_customer_network_connector(
-        provision_sonicwall_request.customer_code,
-        provision_sonicwall_request.integration_name,
-        customer_integration_response,
-    )
+    try:
+        customer_integration_response = await get_customer_integration_response(
+            provision_sonicwall_request.customer_code,
+            session,
+        )
 
-    sonicwall_keys = extract_sonicwall_keys(customer_integration)
+        customer_integration = await find_customer_network_connector(
+            provision_sonicwall_request.customer_code,
+            provision_sonicwall_request.integration_name,
+            customer_integration_response,
+        )
 
-    return await provision_sonicwall(
-        customer_details=SonicwallCustomerDetails(
-            customer_code=provision_sonicwall_request.customer_code,
-            customer_name=customer_integration.customer_name,
-            tls_cert_file=sonicwall_keys["TLS_CERT_FILE"],
-            tls_key_file=sonicwall_keys["TLS_KEY_FILE"],
-            syslog_port=int(sonicwall_keys["SYSLOG_PORT"]),
-            hot_data_retention=provision_sonicwall_request.hot_data_retention,
-            index_replicas=provision_sonicwall_request.index_replicas,
-        ),
-        keys=ProvisionSonicwallKeys(**sonicwall_keys),
-        session=session,
-    )
+        sonicwall_keys = extract_sonicwall_keys(customer_integration)
+
+        return await provision_sonicwall(
+            customer_details=SonicwallCustomerDetails(
+                customer_code=provision_sonicwall_request.customer_code,
+                customer_name=customer_integration.customer_name,
+                tls_cert_file=sonicwall_keys["TLS_CERT_FILE"],
+                tls_key_file=sonicwall_keys["TLS_KEY_FILE"],
+                syslog_port=int(sonicwall_keys["SYSLOG_PORT"]),
+                hot_data_retention=provision_sonicwall_request.hot_data_retention,
+                index_replicas=provision_sonicwall_request.index_replicas,
+            ),
+            keys=ProvisionSonicwallKeys(**sonicwall_keys),
+            session=session,
+        )
+    finally:
+        # Always clear the context when done
+        clear_graylog_context()

@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from enum import Enum
 from typing import Optional
 
@@ -13,6 +14,47 @@ class GraylogContext(Enum):
     """
     WAZUH = "Graylog"
     NETWORK = "Graylog-Network"
+
+
+# Context variable to hold the current Graylog context
+_graylog_context: ContextVar[Optional[GraylogContext]] = ContextVar(
+    "graylog_context",
+    default=None,
+)
+
+
+def set_graylog_context(context: GraylogContext) -> None:
+    """
+    Sets the Graylog context for the current async context.
+    This should be called at the route/entry point level.
+
+    Args:
+        context (GraylogContext): The Graylog context to use for subsequent calls.
+    """
+    logger.debug(f"Setting Graylog context to: {context.value}")
+    _graylog_context.set(context)
+
+
+def clear_graylog_context() -> None:
+    """
+    Clears the Graylog context, reverting to default behavior.
+    """
+    logger.debug("Clearing Graylog context")
+    _graylog_context.set(None)
+
+
+def get_current_graylog_connector() -> str:
+    """
+    Gets the current Graylog connector name based on the context.
+    Falls back to the default "Graylog" if no context is set.
+
+    Returns:
+        str: The connector name to use.
+    """
+    context = _graylog_context.get()
+    if context is not None:
+        return context.value
+    return GraylogContext.WAZUH.value
 
 
 # Mapping of specific use cases to their Graylog context
@@ -34,46 +76,22 @@ def get_graylog_connector_name(
 ) -> str:
     """
     Returns the appropriate Graylog connector name based on context or use case.
+    If neither is provided, checks for a context variable, then falls back to default.
 
     Args:
         context (Optional[GraylogContext]): The explicit context to use.
-        use_case (Optional[str]): A string identifier for the use case (e.g., "sonicwall", "wazuh").
-            Will be used to look up the appropriate context if no explicit context is provided.
+        use_case (Optional[str]): A string identifier for the use case.
 
     Returns:
         str: The connector name to use for database lookup.
-
-    Examples:
-        >>> get_graylog_connector_name(context=GraylogContext.NETWORK)
-        'Graylog-Network'
-        >>> get_graylog_connector_name(use_case="sonicwall")
-        'Graylog-Network'
-        >>> get_graylog_connector_name()
-        'Graylog'
     """
     if context is not None:
-        logger.debug(f"Using explicit Graylog context: {context.value}")
         return context.value
 
     if use_case is not None:
         use_case_lower = use_case.lower()
         mapped_context = CONTEXT_MAPPING.get(use_case_lower, GraylogContext.WAZUH)
-        logger.debug(f"Mapped use case '{use_case}' to Graylog context: {mapped_context.value}")
         return mapped_context.value
 
-    # Default to primary Graylog
-    logger.debug("Using default Graylog context")
-    return GraylogContext.WAZUH.value
-
-
-def is_network_graylog_configured() -> bool:
-    """
-    Helper function to check if the network Graylog connector exists.
-    This can be used to gracefully fall back to the default Graylog if needed.
-
-    Returns:
-        bool: True if Graylog-Network connector is configured.
-    """
-    # This would need to be implemented with a DB check
-    # For now, return True assuming it's configured
-    return True
+    # Fall back to context variable or default
+    return get_current_graylog_connector()
