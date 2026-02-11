@@ -74,7 +74,7 @@ async def verify_graylog_connection(connector_name: str) -> str:
 async def send_get_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
-    #connector_name: str = "Graylog",
+    # connector_name: str = "Graylog",
     connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -131,7 +131,7 @@ async def send_get_request(
 async def send_post_request(
     endpoint: str,
     data: Dict[str, Any] = None,
-    #connector_name: str = "Graylog",
+    # connector_name: str = "Graylog",
     connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -213,7 +213,7 @@ async def send_post_request(
 async def send_delete_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
-    #connector_name: str = "Graylog",
+    # connector_name: str = "Graylog",
     connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -271,7 +271,7 @@ async def send_delete_request(
 async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
-    #connector_name: str = "Graylog",
+    # connector_name: str = "Graylog",
     connector_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """

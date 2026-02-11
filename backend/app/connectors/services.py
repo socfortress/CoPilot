@@ -83,6 +83,7 @@ class GraylogService(ConnectorServiceInterface):
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
 
+
 # Graylog Network Service (for second Graylog instance)
 class GraylogNetworkService(ConnectorServiceInterface):
     async def verify_authentication(
@@ -90,6 +91,7 @@ class GraylogNetworkService(ConnectorServiceInterface):
         connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
+
 
 # Cortex Service
 class CortexService(ConnectorServiceInterface):

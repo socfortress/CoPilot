@@ -12,6 +12,7 @@ class GraylogContext(Enum):
     WAZUH: Default Graylog instance for Wazuh and third-party integrations (Graylog01)
     NETWORK: Graylog instance for network logs and syslog ingestion (Graylog02)
     """
+
     WAZUH = "Graylog"
     NETWORK = "Graylog-Network"
 

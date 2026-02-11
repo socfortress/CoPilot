@@ -7,14 +7,14 @@ from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
+from app.connectors.graylog.utils.routing import GraylogContext
+from app.connectors.graylog.utils.routing import clear_graylog_context
+from app.connectors.graylog.utils.routing import set_graylog_context
 from app.db.db_session import get_db
 from app.network_connectors.routes import find_customer_network_connector
 from app.network_connectors.routes import (
     get_customer_network_connectors_by_customer_code,
 )
-from app.connectors.graylog.utils.routing import GraylogContext
-from app.connectors.graylog.utils.routing import set_graylog_context
-from app.connectors.graylog.utils.routing import clear_graylog_context
 from app.network_connectors.schema import CustomerNetworkConnectors
 from app.network_connectors.schema import CustomerNetworkConnectorsResponse
 from app.stack_provisioning.graylog.schema.fortinet import FortinetCustomerDetails
