@@ -12,7 +12,7 @@
 				</div>
 				<n-input
 					v-model:value.trim="input"
-					class="max-h-full min-h-20 pb-9"
+					class="max-h-full min-h-20 pt-1 pb-9"
 					type="textarea"
 					placeholder="How can I help you?"
 					:autosize="{
@@ -62,13 +62,13 @@
 							</template>
 							<div class="divide-border flex flex-col divide-y">
 								<div class="px-3 py-2">
-									<div class="flex items-center gap-2 text-sm">
+									<div class="flex items-center justify-between gap-4 text-sm">
 										<div>verbose response</div>
 										<n-switch v-model:value="verbose" size="small" />
 									</div>
 								</div>
 								<div class="px-3 py-2">
-									<div class="flex items-center gap-2 text-sm">
+									<div class="flex items-center justify-between gap-4 text-sm">
 										<div>show example questions</div>
 										<n-switch v-model:value="showQuestions" size="small" />
 									</div>
