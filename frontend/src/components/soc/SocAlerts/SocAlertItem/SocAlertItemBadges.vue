@@ -90,7 +90,7 @@ import { NSpin, NTooltip } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import SocAssignUser from "./SocAssignUser.vue"
 
 const props = defineProps<{
@@ -111,7 +111,7 @@ const SourceIcon = "lucide:arrow-down-right-from-circle"
 const CustomerIcon = "carbon:user"
 const OwnerIcon = "carbon:user-military"
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 
 const ownerName = computed(() => alert.value?.owner?.user_login)
 </script>

@@ -3,13 +3,13 @@ import _capitalize from "lodash/capitalize"
 import { computed, watch } from "vue"
 import { useHealthcheckStore } from "@/stores/healthcheck"
 import { IndexHealth } from "@/types/indices.d"
-import { useGoto } from "./useGoto"
+import { useNavigation } from "./useNavigation"
 import { useNotifications } from "./useNotifications"
 
 export function useHealthchecksNotify() {
 	return {
 		init: () => {
-			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useGoto()
+			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useNavigation()
 
 			const uncommittedJournalEntriesThreshold = useHealthcheckStore().uncommittedJournalEntriesThreshold
 			const uncommittedJournalEntries = computed(() => useHealthcheckStore().uncommittedJournalEntries)

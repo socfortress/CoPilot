@@ -160,7 +160,7 @@ import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
 
 const VulnerabilitiesGrid = defineAsyncComponent(
@@ -186,7 +186,7 @@ const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
-const { gotoAgent } = useGoto()
+const { gotoAgent } = useNavigation()
 const message = useMessage()
 const router = useRouter()
 const dialog = useDialog()

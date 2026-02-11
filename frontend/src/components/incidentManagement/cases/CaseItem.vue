@@ -232,7 +232,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import AlertItem from "../alerts/AlertItem.vue"
@@ -265,7 +265,7 @@ const LinkIcon = "carbon:launch"
 const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

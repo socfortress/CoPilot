@@ -81,11 +81,11 @@ import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import BulkDeleteModal from "@/components/agents/BulkDeleteModal.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
 
 const message = useMessage()
-const { gotoAgent } = useGoto()
+const { gotoAgent } = useNavigation()
 const loadingAgents = ref(false)
 const loadingSync = ref(false)
 const agents = ref<Agent[]>([])

@@ -255,7 +255,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { StateName } from "@/types/soc/case.d"
 import dayjs from "@/utils/dayjs"
@@ -284,7 +284,7 @@ const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
 const AddIcon = "carbon:add-alt"
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)

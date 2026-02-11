@@ -21,12 +21,12 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useThemeStore } from "@/stores/theme"
 import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
 
 const HealthcheckIcon = "ph:heartbeat"
-const { gotoHealthcheck } = useGoto()
+const { gotoHealthcheck } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])

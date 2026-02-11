@@ -21,10 +21,10 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const CustomersIcon = "carbon:user-multiple"
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const customers = ref<Customer[]>([])

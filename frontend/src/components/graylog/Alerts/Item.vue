@@ -82,7 +82,7 @@ import type { AlertsEventElement } from "@/types/graylog/alerts.d"
 import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 
@@ -97,7 +97,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 
 const dFormats = useSettingsStore().dateFormat
-const { gotoIndex } = useGoto()
+const { gotoIndex } = useNavigation()
 
 function formatDateTime(timestamp: string): string {
 	return formatDate(timestamp, dFormats.datetimesec).toString()

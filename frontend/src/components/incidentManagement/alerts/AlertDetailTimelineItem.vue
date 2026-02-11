@@ -55,7 +55,7 @@ import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{ timelineData: AlertTimeline; embedded?: boolean }>()
 
@@ -64,7 +64,7 @@ const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSo
 const { timelineData, embedded } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const { gotoIndex } = useGoto()
+const { gotoIndex } = useNavigation()
 const showDetails = ref(false)
 const timelineDetailsInfo = computed(() => _omit(timelineData.value, ["_source"]))
 const timelineDetailsSource = computed(() => timelineData.value?._source)

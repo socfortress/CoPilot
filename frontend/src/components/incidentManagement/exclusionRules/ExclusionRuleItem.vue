@@ -121,7 +121,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
@@ -154,7 +154,7 @@ const loadingDelete = ref(false)
 const loading = computed(() => updatingStatus.value || loadingDelete.value)
 const editing = ref(false)
 const showDetails = ref(false)
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function openDetails() {

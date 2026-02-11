@@ -56,7 +56,7 @@ import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import Alert from "./Alert.vue"
 
 export interface AlertsSummaryExt extends AlertsSummary {
@@ -70,7 +70,7 @@ const PlaceholderIcon = "ph:question"
 const LinkIcon = "carbon:launch"
 
 const showAllAlerts = ref(false)
-const { gotoIndex } = useGoto()
+const { gotoIndex } = useNavigation()
 </script>
 
 <style lang="scss" scoped>

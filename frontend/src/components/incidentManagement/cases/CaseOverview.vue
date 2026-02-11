@@ -150,7 +150,7 @@ import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -172,7 +172,7 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

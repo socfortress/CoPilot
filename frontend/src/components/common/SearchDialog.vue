@@ -77,7 +77,7 @@ import { computed, onMounted, ref } from "vue"
 import Highlighter from "vue-highlight-words"
 import Icon from "@/components/common/Icon.vue"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { emitter } from "@/emitter"
@@ -116,7 +116,7 @@ const search = ref("")
 const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
-const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useGoto()
+const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useNavigation()
 
 // TODO: review the groups and items
 const groups = ref<Groups>([

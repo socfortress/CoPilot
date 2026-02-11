@@ -22,10 +22,10 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const CasesIcon = "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries"
-const { gotoIncidentManagementCases } = useGoto()
+const { gotoIncidentManagementCases } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const casesList = ref<Case[]>([])

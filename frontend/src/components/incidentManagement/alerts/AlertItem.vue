@@ -279,7 +279,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -321,7 +321,7 @@ const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

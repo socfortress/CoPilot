@@ -95,7 +95,7 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import ScaCardContent from "./ScaCardContent.vue"
@@ -104,7 +104,7 @@ import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 const showDetails = ref(false)

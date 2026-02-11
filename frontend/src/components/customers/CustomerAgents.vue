@@ -33,6 +33,7 @@ import { useRouter } from "vue-router"
 import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{
 	customer: Customer
@@ -43,6 +44,7 @@ const DownloadIcon = "carbon:download"
 
 const loading = ref(false)
 const router = useRouter()
+const { gotoAgent } = useNavigation()
 const message = useMessage()
 const list = ref<Agent[] | []>([])
 

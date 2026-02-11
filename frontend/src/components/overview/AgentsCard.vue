@@ -16,11 +16,11 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
 
 const AgentsIcon = "carbon:network-3"
-const { gotoAgent } = useGoto()
+const { gotoAgent } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const agents = ref<Agent[]>([])

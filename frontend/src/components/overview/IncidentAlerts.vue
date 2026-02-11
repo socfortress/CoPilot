@@ -21,10 +21,10 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const AlertsIcon = "carbon:warning-hex"
-const { gotoIncidentManagementAlerts } = useGoto()
+const { gotoIncidentManagementAlerts } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const total = ref(0)

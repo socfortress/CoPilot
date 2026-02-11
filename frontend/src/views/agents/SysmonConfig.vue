@@ -167,10 +167,10 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const message = useMessage()
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 const loadingList = ref(false)
 const loadingConfig = ref(false)
 const uploadingConfig = ref(false)

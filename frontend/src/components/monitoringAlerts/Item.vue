@@ -50,7 +50,7 @@ import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import AlertActions from "./ItemActions.vue"
 
 const { alert, embedded } = defineProps<{
@@ -65,7 +65,7 @@ const emit = defineEmits<{
 
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer, gotoIndex } = useGoto()
+const { gotoCustomer, gotoIndex } = useNavigation()
 const loadingDelete = ref(false)
 const loadingInvoke = ref(false)
 const loading = computed(() => loadingDelete.value || loadingInvoke.value)

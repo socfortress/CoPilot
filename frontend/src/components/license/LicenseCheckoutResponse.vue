@@ -35,7 +35,7 @@ import { NButton, NCard, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()
 const { type, data } = toRefs(props)
@@ -43,7 +43,7 @@ const { type, data } = toRefs(props)
 const ErrorIcon = "majesticons:exclamation-line"
 const LicenseIcon = "carbon:license"
 const CheckIcon = "carbon:checkmark-outline"
-const { gotoLicense } = useGoto()
+const { gotoLicense } = useNavigation()
 const message = useMessage()
 const loadingLicense = ref(false)
 const license = ref<LicenseKey | null>(null)

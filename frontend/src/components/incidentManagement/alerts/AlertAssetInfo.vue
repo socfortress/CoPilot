@@ -89,7 +89,7 @@ import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{ asset: AlertAsset }>()
 
@@ -99,7 +99,7 @@ const { asset } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
 const ViewIcon = "iconoir:eye-solid"
-const { gotoAgent, gotoIndex, gotoCustomer } = useGoto()
+const { gotoAgent, gotoIndex, gotoCustomer } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showAlertDetails = ref(false)

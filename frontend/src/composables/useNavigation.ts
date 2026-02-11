@@ -1,6 +1,6 @@
 import { useRouter } from "vue-router"
 
-export function useGoto() {
+export function useNavigation() {
 	const router = useRouter()
 
 	function gotoCustomer(params?: { code?: string | number; action?: "add-customer" }) {

@@ -96,7 +96,7 @@ import { SimpleJsonViewer } from "vue-sjv"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { alert } = defineProps<{
@@ -114,7 +114,7 @@ const SocAlertAssetsList = defineAsyncComponent(() => import("../SocAlertAssets/
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer, gotoSocUsers } = useGoto()
+const { gotoCustomer, gotoSocUsers } = useNavigation()
 
 const ownerName = computed(() => alert?.owner?.user_login)
 const ownerId = computed(() => alert?.owner?.id)

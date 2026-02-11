@@ -102,7 +102,7 @@ import IncidentAlerts from "@/components/overview/IncidentAlerts.vue"
 import IncidentCases from "@/components/overview/IncidentCases.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
@@ -110,7 +110,7 @@ const QuickActionsIcon = "ant-design:thunderbolt-outlined"
 const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 const showQuickActions = ref(false)
-const { gotoIndex, gotoGraylogPipelines } = useGoto()
+const { gotoIndex, gotoGraylogPipelines } = useNavigation()
 
 useResizeObserver(page, entries => {
     const entry = entries[0]

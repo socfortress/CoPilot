@@ -27,7 +27,7 @@ import type { Agent } from "@/types/agents.d"
 import { computed, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import AgentVelociraptorIdForm from "./AgentVelociraptorIdForm.vue"
@@ -44,7 +44,7 @@ const { agent } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useGoto()
+const { gotoCustomer } = useNavigation()
 
 const propsSanitized = computed(() => {
 	const obj = []

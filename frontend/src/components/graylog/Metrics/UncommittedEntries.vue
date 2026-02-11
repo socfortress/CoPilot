@@ -29,7 +29,7 @@ import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
@@ -48,7 +48,7 @@ const DangerIcon = "majesticons:exclamation-line"
 
 const style = computed(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
-const { gotoGraylogManagement } = useGoto()
+const { gotoGraylogManagement } = useNavigation()
 
 const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
