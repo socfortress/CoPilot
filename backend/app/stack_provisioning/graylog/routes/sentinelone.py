@@ -7,6 +7,9 @@ from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
+from app.connectors.graylog.utils.routing import GraylogContext
+from app.connectors.graylog.utils.routing import clear_graylog_context
+from app.connectors.graylog.utils.routing import set_graylog_context
 from app.db.db_session import get_db
 from app.network_connectors.routes import find_customer_network_connector
 from app.network_connectors.routes import (
@@ -97,29 +100,34 @@ async def provision_sentinelone_route(
     """
     Provision SentinelOne for the customer
     """
-    customer_integration_response = await get_customer_integration_response(
-        provision_sentinelone_request.customer_code,
-        session,
-    )
+    # Set the Graylog context for this request - all downstream Graylog calls will use Graylog-Network
+    set_graylog_context(GraylogContext.NETWORK)
+    try:
+        customer_integration_response = await get_customer_integration_response(
+            provision_sentinelone_request.customer_code,
+            session,
+        )
 
-    customer_integration = await find_customer_network_connector(
-        provision_sentinelone_request.customer_code,
-        provision_sentinelone_request.integration_name,
-        customer_integration_response,
-    )
+        customer_integration = await find_customer_network_connector(
+            provision_sentinelone_request.customer_code,
+            provision_sentinelone_request.integration_name,
+            customer_integration_response,
+        )
 
-    sentinelone_keys = extract_sentinelone_keys(customer_integration)
+        sentinelone_keys = extract_sentinelone_keys(customer_integration)
 
-    return await provision_sentinelone(
-        customer_details=SentinelOneCustomerDetails(
-            customer_code=provision_sentinelone_request.customer_code,
-            customer_name=customer_integration.customer_name,
-            tls_cert_file=sentinelone_keys["TLS_CERT_FILE"],
-            tls_key_file=sentinelone_keys["TLS_KEY_FILE"],
-            syslog_port=int(sentinelone_keys["SYSLOG_PORT"]),
-            hot_data_retention=provision_sentinelone_request.hot_data_retention,
-            index_replicas=provision_sentinelone_request.index_replicas,
-        ),
-        keys=ProvisionSentinelOneKeys(**sentinelone_keys),
-        session=session,
-    )
+        return await provision_sentinelone(
+            customer_details=SentinelOneCustomerDetails(
+                customer_code=provision_sentinelone_request.customer_code,
+                customer_name=customer_integration.customer_name,
+                tls_cert_file=sentinelone_keys["TLS_CERT_FILE"],
+                tls_key_file=sentinelone_keys["TLS_KEY_FILE"],
+                syslog_port=int(sentinelone_keys["SYSLOG_PORT"]),
+                hot_data_retention=provision_sentinelone_request.hot_data_retention,
+                index_replicas=provision_sentinelone_request.index_replicas,
+            ),
+            keys=ProvisionSentinelOneKeys(**sentinelone_keys),
+            session=session,
+        )
+    finally:
+        clear_graylog_context()

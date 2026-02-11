@@ -7,6 +7,9 @@ from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
+from app.connectors.graylog.utils.routing import GraylogContext
+from app.connectors.graylog.utils.routing import clear_graylog_context
+from app.connectors.graylog.utils.routing import set_graylog_context
 from app.db.db_session import get_db
 from app.network_connectors.routes import find_customer_network_connector
 from app.network_connectors.routes import (
@@ -93,43 +96,50 @@ async def provision_fortinet_route(
     """
     Provision Fortinet for the customer
     """
-    customer_integration_response = await get_customer_integration_response(
-        provision_fortinet_request.customer_code,
-        session,
-    )
 
-    customer_integration = await find_customer_network_connector(
-        provision_fortinet_request.customer_code,
-        provision_fortinet_request.integration_name,
-        customer_integration_response,
-    )
+    # Set the Graylog context for this request - all downstream Graylog calls will use Graylog-Network
+    set_graylog_context(GraylogContext.NETWORK)
 
-    fortinet_keys = extract_fortinet_keys(customer_integration)
-
-    if provision_fortinet_request.tcp_enabled and provision_fortinet_request.udp_enabled:
-        raise HTTPException(
-            status_code=400,
-            detail="Both TCP and UDP are enabled. Please choose one of them.",
-        )
-    elif provision_fortinet_request.tcp_enabled:
-        protocol_type = "TCP"
-    elif provision_fortinet_request.udp_enabled:
-        protocol_type = "UDP"
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Either TCP or UDP should be enabled.",
+    try:
+        customer_integration_response = await get_customer_integration_response(
+            provision_fortinet_request.customer_code,
+            session,
         )
 
-    return await provision_fortinet(
-        customer_details=FortinetCustomerDetails(
-            customer_code=provision_fortinet_request.customer_code,
-            customer_name=customer_integration.customer_name,
-            protocal_type=protocol_type,
-            syslog_port=int(fortinet_keys["SYSLOG_PORT"]),
-            hot_data_retention=provision_fortinet_request.hot_data_retention,
-            index_replicas=provision_fortinet_request.index_replicas,
-        ),
-        keys=ProvisionFortinetKeys(**fortinet_keys),
-        session=session,
-    )
+        customer_integration = await find_customer_network_connector(
+            provision_fortinet_request.customer_code,
+            provision_fortinet_request.integration_name,
+            customer_integration_response,
+        )
+
+        fortinet_keys = extract_fortinet_keys(customer_integration)
+
+        if provision_fortinet_request.tcp_enabled and provision_fortinet_request.udp_enabled:
+            raise HTTPException(
+                status_code=400,
+                detail="Both TCP and UDP are enabled. Please choose one of them.",
+            )
+        elif provision_fortinet_request.tcp_enabled:
+            protocol_type = "TCP"
+        elif provision_fortinet_request.udp_enabled:
+            protocol_type = "UDP"
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Either TCP or UDP should be enabled.",
+            )
+
+        return await provision_fortinet(
+            customer_details=FortinetCustomerDetails(
+                customer_code=provision_fortinet_request.customer_code,
+                customer_name=customer_integration.customer_name,
+                protocal_type=protocol_type,
+                syslog_port=int(fortinet_keys["SYSLOG_PORT"]),
+                hot_data_retention=provision_fortinet_request.hot_data_retention,
+                index_replicas=provision_fortinet_request.index_replicas,
+            ),
+            keys=ProvisionFortinetKeys(**fortinet_keys),
+            session=session,
+        )
+    finally:
+        clear_graylog_context()

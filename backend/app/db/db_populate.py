@@ -151,6 +151,12 @@ def get_connectors_list():
             "Connection to VirusTotal. Make sure you have created an API key.",
         ),
         ("Portainer", "3", "username_password", "Connection to Portainer.", "PORTAINER_ENDPOINT_ID"),
+        (
+            "Graylog-Network",
+            "5.0.7",
+            "username_password",
+            "Connection to Graylog. If you only have one Graylog instance, set this to the same as Graylog.",
+        ),
         # ... Add more connectors as needed ...
     ]
 
