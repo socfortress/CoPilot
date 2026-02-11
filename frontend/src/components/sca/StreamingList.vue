@@ -177,18 +177,18 @@ import type {
     ScaStreamProgress
 } from "@/types/sca.d"
 import {
-    NAlert,
-    NButton,
-    NCard,
-    NDataTable,
-    NEmpty,
-    NInput,
-    NInputNumber,
-    NProgress,
-    NSelect,
-    NSpin,
-    NStatistic,
-    useMessage
+	NAlert,
+	NButton,
+	NCard,
+	NDataTable,
+	NEmpty,
+	NInput,
+	NInputNumber,
+	NProgress,
+	NSelect,
+	NSpin,
+	NStatistic,
+	useMessage
 } from "naive-ui"
 import { computed, h, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"
@@ -210,20 +210,20 @@ const stats = ref<ScaStreamComplete | null>(null)
 const abortController = ref<AbortController | null>(null)
 
 const progress = reactive<ScaStreamProgress>({
-    processed: 0,
-    total: 0,
-    successful: 0,
-    failed: 0,
-    results_so_far: 0,
-    percent_complete: 0
+	processed: 0,
+	total: 0,
+	successful: 0,
+	failed: 0,
+	results_so_far: 0,
+	percent_complete: 0
 })
 
 const filters = reactive<ScaOverviewQuery>({
-    customer_code: undefined,
-    agent_name: undefined,
-    policy_name: undefined,
-    min_score: undefined,
-    max_score: undefined
+	customer_code: undefined,
+	agent_name: undefined,
+	policy_name: undefined,
+	min_score: undefined,
+	max_score: undefined
 })
 
 // Customer options (you'd populate this from your API)
@@ -231,232 +231,233 @@ const customerOptions = ref<{ label: string; value: string }[]>([])
 
 // Computed
 const statusMessage = computed(() => {
-    if (isConnecting.value) return "Connecting..."
-    if (isStreaming.value) return `Collecting SCA data... ${progress.processed}/${progress.total} agents`
-    if (streamComplete.value) return stats.value?.message || "Collection complete"
-    return "Ready to load SCA data"
+	if (isConnecting.value) return "Connecting..."
+	if (isStreaming.value) return `Collecting SCA data... ${progress.processed}/${progress.total} agents`
+	if (streamComplete.value) return stats.value?.message || "Collection complete"
+	return "Ready to load SCA data"
 })
 
 const filteredResults = computed(() => {
-    return results.value.filter(item => {
-        if (filters.policy_name && !item.policy_name.toLowerCase().includes(filters.policy_name.toLowerCase())) {
-            return false
-        }
-        return true
-    })
+	return results.value.filter(item => {
+		if (filters.policy_name && !item.policy_name.toLowerCase().includes(filters.policy_name.toLowerCase())) {
+			return false
+		}
+		return true
+	})
 })
 
 const pagination = reactive({
-    page: 1,
-    pageSize: 25,
-    showSizePicker: true,
-    pageSizes: [10, 25, 50, 100],
-    itemCount: computed(() => filteredResults.value.length),
-    onChange: (page: number) => {
-        pagination.page = page
-    },
-    onUpdatePageSize: (pageSize: number) => {
-        pagination.pageSize = pageSize
-        pagination.page = 1
-    }
+	page: 1,
+	pageSize: 25,
+	showSizePicker: true,
+	pageSizes: [10, 25, 50, 100],
+	itemCount: computed(() => filteredResults.value.length),
+	onChange: (page: number) => {
+		pagination.page = page
+	},
+	onUpdatePageSize: (pageSize: number) => {
+		pagination.pageSize = pageSize
+		pagination.page = 1
+	}
 })
 
 const paginatedResults = computed(() => {
-    const start = (pagination.page - 1) * pagination.pageSize
-    const end = start + pagination.pageSize
-    return filteredResults.value.slice(start, end)
+	const start = (pagination.page - 1) * pagination.pageSize
+	const end = start + pagination.pageSize
+	return filteredResults.value.slice(start, end)
 })
 
 // Table columns
 const columns: DataTableColumns<AgentScaOverviewItem> = [
-    {
-        title: "Agent",
-        key: "agent_name",
-        width: 150,
-        ellipsis: { tooltip: true }
-    },
-    {
-        title: "Customer",
-        key: "customer_code",
-        width: 120
-    },
-    {
-        title: "Policy",
-        key: "policy_name",
-        ellipsis: { tooltip: true }
-    },
-    {
-        title: "Checks",
-        key: "total_checks",
-        width: 80,
-        align: "center"
-    },
-    {
-        title: "Passed",
-        key: "pass_count",
-        width: 80,
-        align: "center",
-        render: (row) => h("span", { class: "text-success" }, row.pass_count)
-    },
-    {
-        title: "Failed",
-        key: "fail_count",
-        width: 80,
-        align: "center",
-        render: (row) => h("span", { class: "text-error" }, row.fail_count)
-    },
-    {
-        title: "Score",
-        key: "score",
-        width: 100,
-        align: "center",
-        sorter: (a, b) => a.score - b.score,
-        render: (row) => h(
-            Badge,
-            {
-                type: "splitted",
-                color: row.score >= 80 ? "success" : row.score >= 60 ? "warning" : "danger"
-            },
-            { label: () => `${row.score}%` }
-        )
-    },
-    {
-        title: "Last Scan",
-        key: "end_scan",
-        width: 160,
-        render: (row) => new Date(row.end_scan).toLocaleString()
-    }
+	{
+		title: "Agent",
+		key: "agent_name",
+		width: 150,
+		ellipsis: { tooltip: true }
+	},
+	{
+		title: "Customer",
+		key: "customer_code",
+		width: 120
+	},
+	{
+		title: "Policy",
+		key: "policy_name",
+		ellipsis: { tooltip: true }
+	},
+	{
+		title: "Checks",
+		key: "total_checks",
+		width: 80,
+		align: "center"
+	},
+	{
+		title: "Passed",
+		key: "pass_count",
+		width: 80,
+		align: "center",
+		render: row => h("span", { class: "text-success" }, row.pass)
+	},
+	{
+		title: "Failed",
+		key: "fail_count",
+		width: 80,
+		align: "center",
+		render: row => h("span", { class: "text-error" }, row.fail)
+	},
+	{
+		title: "Score",
+		key: "score",
+		width: 100,
+		align: "center",
+		sorter: (a, b) => a.score - b.score,
+		render: row =>
+			h(
+				Badge,
+				{
+					type: "splitted",
+					color: row.score >= 80 ? "success" : row.score >= 60 ? "warning" : "danger"
+				},
+				{ label: () => `${row.score}%` }
+			)
+	},
+	{
+		title: "Last Scan",
+		key: "end_scan",
+		width: 160,
+		render: row => new Date(row.end_scan).toLocaleString()
+	}
 ]
 
 // Methods
 function getScoreClass(score: number): string {
-    if (score >= 80) return "text-success"
-    if (score >= 60) return "text-warning"
-    return "text-error"
+	if (score >= 80) return "text-success"
+	if (score >= 60) return "text-warning"
+	return "text-error"
 }
 
 async function startStream() {
-    // Reset state
-    results.value = []
-    stats.value = null
-    streamError.value = null
-    streamComplete.value = false
-    isConnecting.value = true
+	// Reset state
+	results.value = []
+	stats.value = null
+	streamError.value = null
+	streamComplete.value = false
+	isConnecting.value = true
 
-    Object.assign(progress, {
-        processed: 0,
-        total: 0,
-        successful: 0,
-        failed: 0,
-        results_so_far: 0,
-        percent_complete: 0
-    })
+	Object.assign(progress, {
+		processed: 0,
+		total: 0,
+		successful: 0,
+		failed: 0,
+		results_so_far: 0,
+		percent_complete: 0
+	})
 
-    // Abort existing connection if any
-    if (abortController.value) {
-        abortController.value.abort()
-    }
+	// Abort existing connection if any
+	if (abortController.value) {
+		abortController.value.abort()
+	}
 
-    // Create new abort controller
-    abortController.value = new AbortController()
+	// Create new abort controller
+	abortController.value = new AbortController()
 
-    // Build query params
-    const query: ScaOverviewQuery = {}
-    if (filters.customer_code) query.customer_code = filters.customer_code
-    if (filters.agent_name) query.agent_name = filters.agent_name
-    if (filters.policy_name) query.policy_name = filters.policy_name
-    if (filters.min_score !== undefined) query.min_score = filters.min_score
-    if (filters.max_score !== undefined) query.max_score = filters.max_score
+	// Build query params
+	const query: ScaOverviewQuery = {}
+	if (filters.customer_code) query.customer_code = filters.customer_code
+	if (filters.agent_name) query.agent_name = filters.agent_name
+	if (filters.policy_name) query.policy_name = filters.policy_name
+	if (filters.min_score !== undefined) query.min_score = filters.min_score
+	if (filters.max_score !== undefined) query.max_score = filters.max_score
 
-    try {
-        await Api.sca.streamScaOverview(
-            query,
-            {
-                onStart(data) {
-                    isConnecting.value = false
-                    isStreaming.value = true
-                    progress.total = data.total_agents
-                    message.info(data.message)
-                },
-                onAgentResult(data) {
-                    // Add all policies from this agent
-                    for (const policy of data.policies) {
-                        results.value.push({
-                            agent_id: data.agent_id,
-                            agent_name: data.agent_name,
-                            customer_code: data.customer_code,
-                            ...policy
-                        })
-                    }
-                },
-                onAgentEmpty(data) {
-                    // Agent had no SCA data - could log or display if needed
-                    console.debug(`Agent ${data.agent_name} has no SCA data`)
-                },
-                onProgress(data) {
-                    Object.assign(progress, data)
-                },
-                onComplete(data) {
-                    stats.value = data
-                    isStreaming.value = false
-                    streamComplete.value = true
+	try {
+		await Api.sca.streamScaOverview(
+			query,
+			{
+				onStart(data) {
+					isConnecting.value = false
+					isStreaming.value = true
+					progress.total = data.total_agents
+					message.info(data.message)
+				},
+				onAgentResult(data) {
+					// Add all policies from this agent
+					for (const policy of data.policies) {
+						results.value.push({
+							agent_id: data.agent_id,
+							agent_name: data.agent_name,
+							customer_code: data.customer_code,
+							...policy
+						})
+					}
+				},
+				onAgentEmpty(data) {
+					// Agent had no SCA data - could log or display if needed
+					console.warn(`Agent ${data.agent_name} has no SCA data`)
+				},
+				onProgress(data) {
+					Object.assign(progress, data)
+				},
+				onComplete(data) {
+					stats.value = data
+					isStreaming.value = false
+					streamComplete.value = true
 
-                    // Sort results by score (lowest first)
-                    results.value.sort((a, b) => a.score - b.score)
+					// Sort results by score (lowest first)
+					results.value.sort((a, b) => a.score - b.score)
 
-                    message.success(data.message)
-                },
-                onError(error) {
-                    const errorMessage = error?.message || error?.error || "Unknown error"
-                    console.warn("Stream error:", error)
+					message.success(data.message)
+				},
+				onError(error) {
+					const errorMessage = error?.message || error?.error || "Unknown error"
+					console.warn("Stream error:", error)
 
-                    // Only set error if we haven't completed successfully
-                    if (!streamComplete.value) {
-                        streamError.value = errorMessage
-                    }
-                    progress.failed++
-                }
-            },
-            abortController.value
-        )
-    } catch (error: any) {
-        // Don't show error for intentional abort
-        if (error.name !== "AbortError") {
-            streamError.value = error.message || "Connection error"
-            console.error("Stream connection error:", error)
-        }
-    } finally {
-        isStreaming.value = false
-        isConnecting.value = false
-    }
+					// Only set error if we haven't completed successfully
+					if (!streamComplete.value) {
+						streamError.value = errorMessage
+					}
+					progress.failed++
+				}
+			},
+			abortController.value
+		)
+	} catch (error: any) {
+		// Don't show error for intentional abort
+		if (error.name !== "AbortError") {
+			streamError.value = error.message || "Connection error"
+			console.error("Stream connection error:", error)
+		}
+	} finally {
+		isStreaming.value = false
+		isConnecting.value = false
+	}
 }
 
 function stopStream() {
-    if (abortController.value) {
-        abortController.value.abort()
-        abortController.value = null
-    }
-    isStreaming.value = false
-    isConnecting.value = false
-    message.warning("Stream stopped by user")
+	if (abortController.value) {
+		abortController.value.abort()
+		abortController.value = null
+	}
+	isStreaming.value = false
+	isConnecting.value = false
+	message.warning("Stream stopped by user")
 }
 
 function onFilterChange() {
-    // Debounce and restart stream with new filters if already streaming
-    // Or just filter client-side if data is already loaded
-    pagination.page = 1
+	// Debounce and restart stream with new filters if already streaming
+	// Or just filter client-side if data is already loaded
+	pagination.page = 1
 }
 
 // Cleanup on unmount
 onBeforeUnmount(() => {
-    if (abortController.value) {
-        abortController.value.abort()
-    }
+	if (abortController.value) {
+		abortController.value.abort()
+	}
 })
 </script>
 
 <style scoped>
 .results-container {
-    min-height: 400px;
+	min-height: 400px;
 }
 </style>

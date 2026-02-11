@@ -31,11 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowBackOutline, HomeOutline } from '@vicons/ionicons5'
-import { useRouter } from 'vue-router'
+// TODO: refactor
+import { ArrowBackOutline, HomeOutline } from "@vicons/ionicons5"
+import { useRouter } from "vue-router"
 
 interface Props {
-  description?: string
+	description?: string
 }
 
 defineProps<Props>()
@@ -43,19 +44,19 @@ defineProps<Props>()
 const router = useRouter()
 
 function goBack() {
-  router.back()
+	router.back()
 }
 
 function goHome() {
-  router.push('/')
+	router.push("/")
 }
 </script>
 
 <style scoped>
 .access-denied-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 60vh;
 }
 </style>

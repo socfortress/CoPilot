@@ -1,11 +1,7 @@
 <template>
 	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
 		<n-form-item label="Report Name" path="report_name">
-			<n-input
-				v-model:value="formData.report_name"
-				placeholder="Leave empty for auto-generated name"
-				clearable
-			/>
+			<n-input v-model:value="formData.report_name" placeholder="Leave empty for auto-generated name" clearable />
 		</n-form-item>
 
 		<n-form-item label="Customer" path="customer_code" required>
@@ -47,7 +43,7 @@
 			</n-switch>
 		</n-form-item>
 
-		<div class="flex justify-end gap-3 mt-6">
+		<div class="mt-6 flex justify-end gap-3">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="loading" @click="handleSubmit">Generate Report</n-button>
 		</div>
@@ -55,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities.d"
 import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch } from "naive-ui"
@@ -62,76 +59,76 @@ import { ref } from "vue"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
 
 interface Props {
-    customers: Array<{ label: string; value: string }>
-    loading?: boolean
+	customers: Array<{ label: string; value: string }>
+	loading?: boolean
 }
 
 defineProps<Props>()
 
 const emit = defineEmits<{
-    (e: "generate", value: VulnerabilityReportGenerateRequest): void
-    (e: "cancel"): void
+	(e: "generate", value: VulnerabilityReportGenerateRequest): void
+	(e: "cancel"): void
 }>()
 
 const formRef = ref<FormInst | null>(null)
 const formData = ref<VulnerabilityReportGenerateRequest>({
-    customer_code: "",
-    report_name: "",
-    agent_name: "",
-    severity: undefined,
-    cve_id: "",
-    package_name: "",
-    include_epss: false
+	customer_code: "",
+	report_name: "",
+	agent_name: "",
+	severity: undefined,
+	cve_id: "",
+	package_name: "",
+	include_epss: false
 })
 
 const severityOptions = [
-    { label: "Critical", value: VulnerabilitySeverity.Critical },
-    { label: "High", value: VulnerabilitySeverity.High },
-    { label: "Medium", value: VulnerabilitySeverity.Medium },
-    { label: "Low", value: VulnerabilitySeverity.Low }
+	{ label: "Critical", value: VulnerabilitySeverity.Critical },
+	{ label: "High", value: VulnerabilitySeverity.High },
+	{ label: "Medium", value: VulnerabilitySeverity.Medium },
+	{ label: "Low", value: VulnerabilitySeverity.Low }
 ]
 
 const rules: FormRules = {
-    customer_code: [
-        {
-            required: true,
-            message: "Please select a customer",
-            trigger: ["blur", "change"]
-        }
-    ]
+	customer_code: [
+		{
+			required: true,
+			message: "Please select a customer",
+			trigger: ["blur", "change"]
+		}
+	]
 }
 
 async function handleSubmit() {
-    if (!formRef.value) return
+	if (!formRef.value) return
 
-    try {
-        await formRef.value.validate()
+	try {
+		await formRef.value.validate()
 
-        // Clean up empty strings
-        const request: VulnerabilityReportGenerateRequest = {
-            customer_code: formData.value.customer_code,
-            include_epss: formData.value.include_epss
-        }
+		// Clean up empty strings
+		const request: VulnerabilityReportGenerateRequest = {
+			customer_code: formData.value.customer_code,
+			include_epss: formData.value.include_epss
+		}
 
-        if (formData.value.report_name?.trim()) {
-            request.report_name = formData.value.report_name.trim()
-        }
-        if (formData.value.agent_name?.trim()) {
-            request.agent_name = formData.value.agent_name.trim()
-        }
-        if (formData.value.severity) {
-            request.severity = formData.value.severity
-        }
-        if (formData.value.cve_id?.trim()) {
-            request.cve_id = formData.value.cve_id.trim()
-        }
-        if (formData.value.package_name?.trim()) {
-            request.package_name = formData.value.package_name.trim()
-        }
+		if (formData.value.report_name?.trim()) {
+			request.report_name = formData.value.report_name.trim()
+		}
+		if (formData.value.agent_name?.trim()) {
+			request.agent_name = formData.value.agent_name.trim()
+		}
+		if (formData.value.severity) {
+			request.severity = formData.value.severity
+		}
+		if (formData.value.cve_id?.trim()) {
+			request.cve_id = formData.value.cve_id.trim()
+		}
+		if (formData.value.package_name?.trim()) {
+			request.package_name = formData.value.package_name.trim()
+		}
 
-        emit("generate", request)
-    } catch (error) {
-        console.error("Form validation failed:", error)
-    }
+		emit("generate", request)
+	} catch (error) {
+		console.error("Form validation failed:", error)
+	}
 }
 </script>

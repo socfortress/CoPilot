@@ -35,7 +35,7 @@
 					</template>
 					<div class="checked-list flex flex-col gap-2">
 						<div v-for="alertId of checkedList" :key="alertId" class="w-full">
-							<n-button size="small" class="w-full! !justify-start" @click="clearChecked(alertId)">
+							<n-button size="small" class="w-full! justify-start!" @click="clearChecked(alertId)">
 								<template #icon>
 									<Icon :name="CloseIcon" :size="18" />
 								</template>
