@@ -83,6 +83,13 @@ class GraylogService(ConnectorServiceInterface):
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
 
+# Graylog Network Service (for second Graylog instance)
+class GraylogNetworkService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_graylog_connection(connector.connector_name)
 
 # Cortex Service
 class CortexService(ConnectorServiceInterface):
@@ -205,6 +212,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Wazuh-Indexer": WazuhIndexerService,
         "Velociraptor": VelociraptorService,
         "Graylog": GraylogService,
+        "Graylog-Network": GraylogNetworkService,
         "Cortex": CortexService,
         "Shuffle": ShuffleService,
         "Sublime": SublimeService,
