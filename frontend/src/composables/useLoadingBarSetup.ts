@@ -9,7 +9,11 @@ export function useLoadingBarSetup() {
 
 	onMounted(() => {
 		const loadingBar = useLoadingBar()
-		router.beforeEach(() => loadingBar?.start())
+		router.beforeEach((to, current) => {
+			if (to.path !== current.path) {
+				loadingBar?.start()
+			}
+		})
 		router.afterEach(() => loadingBar?.finish())
 		mainStore.setLoadingBar(loadingBar)
 	})

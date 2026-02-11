@@ -26,7 +26,6 @@
 <script lang="ts" setup>
 import BlurEffect from "@/components/common/BlurEffect.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useLoadingBarSetup } from "@/composables/useLoadingBarSetup"
 import { useThemeStore } from "@/stores/theme"
 import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
@@ -45,8 +44,6 @@ const { boxed, gradient } = defineProps<{
 
 const themeStore = useThemeStore()
 const openNav = () => themeStore.openSidebar()
-
-useLoadingBarSetup()
 </script>
 
 <style lang="scss" scoped>

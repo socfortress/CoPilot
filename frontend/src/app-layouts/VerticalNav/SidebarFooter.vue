@@ -42,7 +42,7 @@ const menuOptions = ref([
 						name: "Logout"
 					}
 				},
-				{ default: () => "logout" }
+				{ default: () => "Logout" }
 			),
 		key: "Logout",
 		icon: renderIcon(LogoutIcon)
