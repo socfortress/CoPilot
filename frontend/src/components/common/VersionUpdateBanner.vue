@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { VersionCheckResponse } from "@/types/version.d"
 import { NAlert, NButton, NCollapseTransition, NDivider } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
