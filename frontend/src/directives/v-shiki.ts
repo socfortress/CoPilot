@@ -7,7 +7,11 @@ const vShiki = {
 		el: HTMLElement,
 		binding: { value: { lang?: string; fallbackLang?: string; decode?: boolean } }
 	) => {
-		const code = binding?.value?.decode ? decode(el.children[0].innerHTML) : el.children[0].innerHTML
+		const children = el.children[0]
+
+		if (!children) return
+
+		const code = binding?.value?.decode ? decode(children.innerHTML) : children.innerHTML
 
 		let flouriteDetect = null
 		if (!binding?.value?.lang) {
@@ -18,7 +22,16 @@ const vShiki = {
 		}
 
 		const language = binding?.value?.lang || flouriteDetect || binding?.value?.fallbackLang || "text"
-		const html = (await getHighlighter()).codeToHtml(code, {
+
+		const formattedCode = (val: string) => {
+			try {
+				return JSON.stringify(JSON.parse(val), null, 4)
+			} catch {
+				return val
+			}
+		}
+
+		const html = (await getHighlighter()).codeToHtml(formattedCode(code), {
 			lang: language,
 			themes: codeThemes
 		})
