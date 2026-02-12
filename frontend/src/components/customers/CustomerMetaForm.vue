@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { CustomerMeta } from "@/types/customers.d"
 import _get from "lodash/get"
@@ -40,10 +41,7 @@ import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 
-interface CustomerMetaExt extends Omit<CustomerMeta, "id" | "customer_meta_iris_customer_id"> {
-	id: string
-	customer_meta_iris_customer_id: string
-}
+type CustomerMetaModel = { [K in keyof CustomerMeta]: string }
 
 const props = defineProps<{
 	customerMeta?: CustomerMeta
@@ -68,7 +66,7 @@ const { customerMeta, customerCode, customerName, metaId, resetOnSubmit } = toRe
 
 const loading = ref(false)
 const message = useMessage()
-const form = ref<CustomerMetaExt>(getClearForm())
+const form = ref<CustomerMetaModel>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
 const rules: FormRules = {
@@ -179,6 +177,10 @@ const fieldsMeta: { [key: string]: { label: string; placeholder: string; readonl
 	customer_meta_office365_organization_id: {
 		label: "Office365 Organization ID",
 		placeholder: "Office365 Organization ID..."
+	},
+	customer_meta_wazuh_api_port: {
+		label: "Wazuh API port",
+		placeholder: "Wazuh API port..."
 	}
 }
 
@@ -209,9 +211,9 @@ function validate() {
 	})
 }
 
-function getClearForm(customerMeta?: Partial<CustomerMeta>): CustomerMetaExt {
+function getClearForm(customerMeta?: Partial<CustomerMeta>): CustomerMetaModel {
 	return {
-		id: metaId.value?.toString() || "",
+		id: `${metaId.value}` || "",
 		customer_code: customerCode.value || "",
 		customer_name: customerName.value || "",
 		customer_meta_graylog_index: customerMeta?.customer_meta_graylog_index || "",
@@ -222,12 +224,13 @@ function getClearForm(customerMeta?: Partial<CustomerMeta>): CustomerMetaExt {
 		customer_meta_wazuh_registration_port: customerMeta?.customer_meta_wazuh_registration_port || "",
 		customer_meta_wazuh_log_ingestion_port: customerMeta?.customer_meta_wazuh_log_ingestion_port || "",
 		customer_meta_wazuh_auth_password: customerMeta?.customer_meta_wazuh_auth_password || "",
-		customer_meta_iris_customer_id: customerMeta?.customer_meta_iris_customer_id?.toString() || "",
-		customer_meta_office365_organization_id: customerMeta?.customer_meta_office365_organization_id || ""
+		customer_meta_iris_customer_id: `${customerMeta?.customer_meta_iris_customer_id}` || "",
+		customer_meta_office365_organization_id: customerMeta?.customer_meta_office365_organization_id || "",
+		customer_meta_wazuh_api_port: customerMeta?.customer_meta_wazuh_api_port || ""
 	}
 }
 
-function getPayload(meta: CustomerMetaExt): CustomerMeta {
+function getPayload(meta: CustomerMetaModel): CustomerMeta {
 	return {
 		id: _toSafeInteger(meta.id),
 		customer_code: meta.customer_code,
@@ -241,7 +244,8 @@ function getPayload(meta: CustomerMetaExt): CustomerMeta {
 		customer_meta_wazuh_log_ingestion_port: meta.customer_meta_wazuh_log_ingestion_port,
 		customer_meta_wazuh_auth_password: meta.customer_meta_wazuh_auth_password,
 		customer_meta_iris_customer_id: _toSafeInteger(meta.customer_meta_iris_customer_id),
-		customer_meta_office365_organization_id: meta.customer_meta_office365_organization_id
+		customer_meta_office365_organization_id: meta.customer_meta_office365_organization_id,
+		customer_meta_wazuh_api_port: meta.customer_meta_wazuh_api_port
 	}
 }
 
@@ -259,9 +263,11 @@ function resetForm() {
 function submit() {
 	loading.value = true
 
-	const method = customerMeta.value?.customer_meta_graylog_index ? "updateCustomerMeta" : "createCustomerMeta"
+	const method = customerMeta.value?.customer_meta_graylog_index
+		? Api.customers.updateCustomerMeta
+		: Api.customers.createCustomerMeta
 
-	Api.customers[method](getPayload(form.value), customerCode.value)
+	method(getPayload(form.value), customerCode.value)
 		.then(res => {
 			if (res.data.success) {
 				emit("submitted", res.data.customer_meta)
