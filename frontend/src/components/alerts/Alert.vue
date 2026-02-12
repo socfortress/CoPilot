@@ -220,7 +220,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean; embedded?: boolean }>()
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))

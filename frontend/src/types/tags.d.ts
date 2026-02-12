@@ -18,25 +18,13 @@ export interface TagAccessSettingsItem {
 	default_tag_name: string | null
 }
 
-// Response from GET /settings - settings nested under 'settings' key
-export interface TagAccessSettingsResponse {
-	settings: TagAccessSettingsItem
-	success: boolean
-	message: string
-}
-
-// Response from GET /user/{user_id}
-export interface UserTagsResponse {
+export interface EffectiveAccessResponse {
 	user_id: number
 	username: string
+	role_id: number
+	role_name: string
+	accessible_customers: string[]
 	accessible_tags: AlertTag[]
-	success: boolean
-	message: string
-}
-
-// Response from GET /tags
-export interface AvailableTagsResponse {
-	tags: AlertTag[]
-	success: boolean
-	message: string
+	is_tag_unrestricted: boolean
+	tag_rbac_enabled: boolean
 }

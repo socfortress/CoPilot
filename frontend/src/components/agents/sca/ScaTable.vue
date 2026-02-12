@@ -106,7 +106,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import ScaItem from "./ScaItem.vue"
 
 interface SCAExt extends AgentSca {

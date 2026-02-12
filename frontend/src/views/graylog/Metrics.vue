@@ -48,7 +48,7 @@ import Icon from "@/components/common/Icon.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
 import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const UpdatedIcon = "carbon:update-now"
 const StopIcon = "carbon:stop"

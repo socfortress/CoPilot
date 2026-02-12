@@ -37,7 +37,7 @@ import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 
 const props = defineProps<{
