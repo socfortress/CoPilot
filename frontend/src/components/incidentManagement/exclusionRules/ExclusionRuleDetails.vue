@@ -68,7 +68,7 @@
 							<template #value>
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: entity.customer_code })"
+									@click.stop="routeCustomer({ code: entity.customer_code })"
 								>
 									#{{ entity.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -121,7 +121,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const TargetIcon = "zondicons:target"
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const updatingStatus = ref(false)
 const loading = computed(() => updatingStatus.value)
 const properties = computed(() => _pick(entity.value, ["description", "channel", "title"]))

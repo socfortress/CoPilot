@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<div class="agent-toolbar">
-			<div class="back-btn" @click="gotoAgent()">
+			<div class="back-btn" @click="routeAgent()">
 				<Icon :name="ArrowIcon" :size="16" />
 				<span>Agents list</span>
 			</div>
@@ -186,7 +186,7 @@ const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
-const { gotoAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 const message = useMessage()
 const router = useRouter()
 const dialog = useDialog()
@@ -217,12 +217,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					gotoAgent()
+					routeAgent()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				gotoAgent()
+				routeAgent()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -281,7 +281,7 @@ function handleDelete() {
 				loadingAgent.value = true
 			},
 			cbSuccess: () => {
-				gotoAgent()
+				routeAgent()
 			},
 			cbAfter: () => {
 				loadingAgent.value = false

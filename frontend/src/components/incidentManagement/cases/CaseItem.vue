@@ -138,7 +138,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
+									@click.stop="routeCustomer({ code: caseEntity.customer_code })"
 								>
 									#{{ caseEntity.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -265,7 +265,7 @@ const LinkIcon = "carbon:launch"
 const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

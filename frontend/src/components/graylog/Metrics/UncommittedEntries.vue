@@ -13,7 +13,7 @@
 			</div>
 		</div>
 		<div class="footer">
-			<n-button type="primary" ghost icon-placement="right" @click="gotoGraylogManagement('messages')">
+			<n-button type="primary" ghost icon-placement="right" @click="routeGraylogManagement('messages')">
 				<template #icon>
 					<Icon :name="LinkIcon" :size="14" />
 				</template>
@@ -48,7 +48,7 @@ const DangerIcon = "majesticons:exclamation-line"
 
 const style = computed(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
-const { gotoGraylogManagement } = useNavigation()
+const { routeGraylogManagement } = useNavigation()
 
 const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD

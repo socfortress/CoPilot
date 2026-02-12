@@ -3,7 +3,7 @@ import { useRouter } from "vue-router"
 export function useNavigation() {
 	const router = useRouter()
 
-	function gotoCustomer(params?: { code?: string | number; action?: "add-customer" }) {
+	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
 		if (params?.code) {
 			router.push({ name: "Customers", query: { code: params.code.toString() } })
 		} else if (params?.action) {
@@ -13,7 +13,7 @@ export function useNavigation() {
 		}
 	}
 
-	function gotoAgent(agentId?: string | number) {
+	function routeAgent(agentId?: string | number) {
 		if (agentId) {
 			router.push({ name: "Agent", params: { id: agentId.toString() } })
 		} else {
@@ -21,68 +21,70 @@ export function useNavigation() {
 		}
 	}
 
-	function gotoIndex(indexName?: string) {
+	function routeIndex(indexName?: string) {
 		router.push({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
 
-	function gotoLicense() {
+	function routeLicense() {
 		router.push({ name: "License" })
 	}
 
-	function gotoHealthcheck() {
+	function routeHealthcheck() {
 		router.push({ name: "Healthcheck" })
 	}
 
-	function gotoGraylogMetrics() {
+	function routeGraylogMetrics() {
 		router.push({ name: "Graylog-Metrics" })
 	}
 
-	function gotoGraylogManagement(tabName?: "messages" | "alerts" | "events" | "streams" | "provisioning" | "inputs") {
+	function routeGraylogManagement(
+		tabName?: "messages" | "alerts" | "events" | "streams" | "provisioning" | "inputs"
+	) {
 		router.push({ name: "Graylog-Management", hash: tabName ? `#${tabName}` : undefined })
 	}
 
-	function gotoSocAlerts() {
+	function routeSocAlerts() {
 		router.push({ name: "Soc-Alerts" })
 	}
 
-	function gotoAlerts() {
+	function routeAlerts() {
 		router.push({ name: "Alerts" })
 	}
 
-	function gotoConnectors() {
+	function routeConnectors() {
 		router.push({ name: "Connectors" })
 	}
 
-	function gotoGraylogPipelines(rule?: string) {
+	function routeGraylogPipelines(rule?: string) {
 		router.push({ name: "Graylog-Pipelines", query: rule ? { rule } : {} })
 	}
 
-	function gotoSocUsers(userId?: string | number) {
+	function routeSocUsers(userId?: string | number) {
 		router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 	}
 
-	function gotoIncidentManagementAlerts(alertId?: number) {
+	function routeIncidentManagementAlerts(alertId?: number) {
 		router.push({ name: "IncidentManagement-Alerts", query: alertId ? { alert_id: alertId } : {} })
 	}
 
-	function gotoIncidentManagementCases(caseId?: number) {
+	function routeIncidentManagementCases(caseId?: number) {
 		router.push({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
 
 	return {
-		gotoCustomer,
-		gotoAgent,
-		gotoIndex,
-		gotoLicense,
-		gotoHealthcheck,
-		gotoGraylogMetrics,
-		gotoGraylogManagement,
-		gotoSocAlerts,
-		gotoGraylogPipelines,
-		gotoSocUsers,
-		gotoAlerts,
-		gotoConnectors,
-		gotoIncidentManagementAlerts,
-		gotoIncidentManagementCases
+		routeCustomer,
+		routeAgent,
+		routeIndex,
+		routeLicense,
+		routeHealthcheck,
+		routeGraylogMetrics,
+		routeGraylogManagement,
+		routeSocAlerts,
+		routeGraylogPipelines,
+		routeSocUsers,
+		routeAlerts,
+		routeConnectors,
+		routeIncidentManagementAlerts,
+		routeIncidentManagementCases
 	}
 }

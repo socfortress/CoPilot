@@ -152,7 +152,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: alert.customer_code })"
+									@click.stop="routeCustomer({ code: alert.customer_code })"
 								>
 									#{{ alert.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -321,7 +321,7 @@ const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"
 
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

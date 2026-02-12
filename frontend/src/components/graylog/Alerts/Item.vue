@@ -29,7 +29,7 @@
 					</div>
 					<div class="box">
 						index_name:
-						<code class="text-primary cursor-pointer" @click="gotoIndex(alertsEvent.index_name)">
+						<code class="text-primary cursor-pointer" @click="routeIndex(alertsEvent.index_name)">
 							{{ alertsEvent.index_name }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
@@ -97,7 +97,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 
 const dFormats = useSettingsStore().dateFormat
-const { gotoIndex } = useNavigation()
+const { routeIndex } = useNavigation()
 
 function formatDateTime(timestamp: string): string {
 	return formatDate(timestamp, dFormats.datetimesec).toString()

@@ -49,7 +49,7 @@
 							{{ formatDate(asset.date_update) }}
 						</template>
 					</Badge>
-					<Badge type="active" class="cursor-pointer" @click.stop="gotoAgent(asset.asset_tags)">
+					<Badge type="active" class="cursor-pointer" @click.stop="routeAgent(asset.asset_tags)">
 						<template #iconRight>
 							<Icon :name="LinkIcon" :size="14" />
 						</template>
@@ -80,7 +80,7 @@
 									<code
 										v-if="value && value !== '-'"
 										class="text-primary cursor-pointer"
-										@click.stop="gotoAgent(value)"
+										@click.stop="routeAgent(value)"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -160,7 +160,7 @@ const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifac
 
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
-const { gotoAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat

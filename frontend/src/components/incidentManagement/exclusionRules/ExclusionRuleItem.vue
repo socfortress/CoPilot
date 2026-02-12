@@ -39,7 +39,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer leading-none"
-								@click.stop="gotoCustomer({ code: entity.customer_code })"
+								@click.stop="routeCustomer({ code: entity.customer_code })"
 							>
 								#{{ entity.customer_code }}
 								<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -154,7 +154,7 @@ const loadingDelete = ref(false)
 const loading = computed(() => updatingStatus.value || loadingDelete.value)
 const editing = ref(false)
 const showDetails = ref(false)
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function openDetails() {

@@ -9,7 +9,7 @@ import { useNotifications } from "./useNotifications"
 export function useHealthchecksNotify() {
 	return {
 		init: () => {
-			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useNavigation()
+			const { routeHealthcheck, routeIndex, routeGraylogMetrics } = useNavigation()
 
 			const uncommittedJournalEntriesThreshold = useHealthcheckStore().uncommittedJournalEntriesThreshold
 			const uncommittedJournalEntries = computed(() => useHealthcheckStore().uncommittedJournalEntries)
@@ -30,7 +30,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							gotoGraylogMetrics()
+							routeGraylogMetrics()
 						},
 						actionTitle: "See Graylog Metrics"
 					}
@@ -56,7 +56,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							gotoIndex()
+							routeIndex()
 						},
 						actionTitle: "See Cluster"
 					}
@@ -85,7 +85,7 @@ export function useHealthchecksNotify() {
 								read: false,
 								date: new Date(),
 								action() {
-									gotoHealthcheck()
+									routeHealthcheck()
 								},
 								actionTitle: "See Healthcheck"
 							}

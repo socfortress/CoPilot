@@ -6,14 +6,14 @@
 		</template>
 		<template #mainExtra>
 			<div class="flex flex-wrap items-center gap-3">
-				<Badge type="active" class="cursor-pointer" @click.stop="gotoIndex(alert.alert_index)">
+				<Badge type="active" class="cursor-pointer" @click.stop="routeIndex(alert.alert_index)">
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Index / {{ alert.alert_index }}</template>
 				</Badge>
 
-				<Badge type="active" class="cursor-pointer" @click.stop="gotoCustomer({ code: alert.customer_code })">
+				<Badge type="active" class="cursor-pointer" @click.stop="routeCustomer({ code: alert.customer_code })">
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
@@ -65,7 +65,7 @@ const emit = defineEmits<{
 
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer, gotoIndex } = useNavigation()
+const { routeCustomer, routeIndex } = useNavigation()
 const loadingDelete = ref(false)
 const loadingInvoke = ref(false)
 const loading = computed(() => loadingDelete.value || loadingInvoke.value)

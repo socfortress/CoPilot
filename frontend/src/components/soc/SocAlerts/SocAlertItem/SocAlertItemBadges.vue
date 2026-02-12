@@ -41,7 +41,7 @@
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
 						class="text-primary cursor-pointer"
-						@click="gotoCustomer({ code: alert.customer.customer_code })"
+						@click="routeCustomer({ code: alert.customer.customer_code })"
 					>
 						{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
 						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -111,7 +111,7 @@ const SourceIcon = "lucide:arrow-down-right-from-circle"
 const CustomerIcon = "carbon:user"
 const OwnerIcon = "carbon:user-military"
 
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 
 const ownerName = computed(() => alert.value?.owner?.user_login)
 </script>

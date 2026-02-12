@@ -116,7 +116,7 @@ const search = ref("")
 const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
-const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useNavigation()
+const { routeCustomer, routeSocAlerts, routeAlerts, routeConnectors } = useNavigation()
 
 // TODO: review the groups and items
 const groups = ref<Groups>([
@@ -130,7 +130,7 @@ const groups = ref<Groups>([
 				title: "Add a Customer",
 				label: "Shortcut",
 				action() {
-					gotoCustomer({ action: "add-customer" })
+					routeCustomer({ action: "add-customer" })
 					emitter.emit("action:add-customer")
 				}
 			},
@@ -141,7 +141,7 @@ const groups = ref<Groups>([
 				title: "Configure a connector",
 				label: "Shortcut",
 				action() {
-					gotoConnectors()
+					routeConnectors()
 				}
 			},
 			{
@@ -151,7 +151,7 @@ const groups = ref<Groups>([
 				title: "View Escalated Alerts",
 				label: "Shortcut",
 				action() {
-					gotoSocAlerts()
+					routeSocAlerts()
 				}
 			},
 			{
@@ -161,7 +161,7 @@ const groups = ref<Groups>([
 				title: "View Identified Alerts",
 				label: "Shortcut",
 				action() {
-					gotoAlerts()
+					routeAlerts()
 				}
 			}
 		]

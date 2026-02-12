@@ -162,7 +162,7 @@
 									<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 										<code
 											class="text-primary cursor-pointer"
-											@click.stop="gotoCustomer({ code: value })"
+											@click.stop="routeCustomer({ code: value })"
 										>
 											#{{ value }}
 											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -284,7 +284,7 @@ const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
 const AddIcon = "carbon:add-alt"
 
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)

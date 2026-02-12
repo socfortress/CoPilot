@@ -16,7 +16,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoIndex(asset.index_name)"
+									@click.stop="routeIndex(asset.index_name)"
 								>
 									{{ asset.index_name }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -31,7 +31,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoAgent(asset.agent_id)"
+									@click.stop="routeAgent(asset.agent_id)"
 								>
 									{{ asset.agent_id }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -222,7 +222,7 @@ const FileCollectionForm = defineAsyncComponent(
 
 const ViewIcon = "iconoir:eye-solid"
 const LinkIcon = "carbon:launch"
-const { gotoAgent, gotoIndex } = useNavigation()
+const { routeAgent, routeIndex } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)

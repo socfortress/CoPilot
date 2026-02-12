@@ -19,7 +19,7 @@
 			<h1 class="text-center">Checkout canceled</h1>
 		</template>
 		<div>
-			<n-button @click="gotoLicense()">
+			<n-button @click="routeLicense()">
 				<template #icon>
 					<Icon :name="LicenseIcon" />
 				</template>
@@ -43,7 +43,7 @@ const { type, data } = toRefs(props)
 const ErrorIcon = "majesticons:exclamation-line"
 const LicenseIcon = "carbon:license"
 const CheckIcon = "carbon:checkmark-outline"
-const { gotoLicense } = useNavigation()
+const { routeLicense } = useNavigation()
 const message = useMessage()
 const loadingLicense = ref(false)
 const license = ref<LicenseKey | null>(null)

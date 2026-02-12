@@ -107,7 +107,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click="gotoCustomer({ code: alert.customer_code })"
+								@click="routeCustomer({ code: alert.customer_code })"
 							>
 								{{ alert.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -190,7 +190,7 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

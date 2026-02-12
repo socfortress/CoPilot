@@ -22,7 +22,7 @@
 							>
 								<div class="flex items-center justify-between">
 									<div>{{ customer }}</div>
-									<n-button text @click.stop="gotoCustomer({ code: customer })">
+									<n-button text @click.stop="routeCustomer({ code: customer })">
 										<template #icon>
 											<Icon :size="14" :name="LinkIcon" />
 										</template>
@@ -170,7 +170,7 @@ import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
 const message = useMessage()
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const loadingList = ref(false)
 const loadingConfig = ref(false)
 const uploadingConfig = ref(false)

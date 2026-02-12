@@ -22,7 +22,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click.stop="gotoCustomer({ code: sca.customer_code })"
+								@click.stop="routeCustomer({ code: sca.customer_code })"
 							>
 								#{{ sca.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -182,7 +182,7 @@ import { getComplianceLevel } from "./utils"
 const { sca } = defineProps<{ sca: AgentScaOverviewItem }>()
 
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"

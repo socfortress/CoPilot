@@ -5,7 +5,7 @@
 			hovered
 			class="h-full cursor-pointer"
 			:values
-			@click="gotoIncidentManagementCases()"
+			@click="routeIncidentManagementCases()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="CasesIcon" boxed :box-size="30"></CardStatsIcon>
@@ -25,7 +25,7 @@ import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
 const CasesIcon = "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries"
-const { gotoIncidentManagementCases } = useNavigation()
+const { routeIncidentManagementCases } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const casesList = ref<Case[]>([])

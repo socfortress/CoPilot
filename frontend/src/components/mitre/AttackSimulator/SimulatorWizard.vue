@@ -57,7 +57,7 @@
 									<template #headerExtra>
 										<code
 											class="text-primary cursor-pointer"
-											@click.stop="gotoAgent(selectedAgent.agent_id)"
+											@click.stop="routeAgent(selectedAgent.agent_id)"
 										>
 											{{ selectedAgent.agent_id }}
 											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -182,7 +182,7 @@ const ArrowLeftIcon = "carbon:arrow-left"
 const AttackIcon = "mdi:target"
 const LinkIcon = "carbon:launch"
 
-const { gotoAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const current = ref<number>(1)

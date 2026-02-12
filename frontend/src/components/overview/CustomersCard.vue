@@ -5,7 +5,7 @@
 			hovered
 			class="h-full cursor-pointer"
 			:values="[{ value: total, label: 'Total' }]"
-			@click="gotoCustomer()"
+			@click="routeCustomer()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="CustomersIcon" boxed :box-size="30"></CardStatsIcon>
@@ -24,7 +24,7 @@ import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
 const CustomersIcon = "carbon:user-multiple"
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const customers = ref<Customer[]>([])

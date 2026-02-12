@@ -45,7 +45,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<IndicesMarquee @click="gotoIndex($event.index)" />
+			<IndicesMarquee @click="routeIndex($event.index)" />
 		</div>
 		<div class="section">
 			<div class="columns flex-col lg:flex-row">
@@ -58,7 +58,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<PipeList @open-rule="gotoGraylogPipelines($event)" />
+			<PipeList @open-rule="routeGraylogPipelines($event)" />
 		</div>
 
 		<n-drawer
@@ -110,29 +110,29 @@ const QuickActionsIcon = "ant-design:thunderbolt-outlined"
 const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 const showQuickActions = ref(false)
-const { gotoIndex, gotoGraylogPipelines } = useNavigation()
+const { routeIndex, routeGraylogPipelines } = useNavigation()
 
 useResizeObserver(page, entries => {
-    const entry = entries[0]
-    const { width } = entry.contentRect
+	const entry = entries[0]
+	const { width } = entry.contentRect
 
-    cardDirection.value = width > 500 ? "horizontal" : "vertical"
+	cardDirection.value = width > 500 ? "horizontal" : "vertical"
 })
 </script>
 
 <style lang="scss" scoped>
 .page {
-    .section {
-        margin-bottom: calc(var(--spacing) * 6);
+	.section {
+		margin-bottom: calc(var(--spacing) * 6);
 
-        .columns {
-            display: flex;
-            gap: calc(var(--spacing) * 6);
+		.columns {
+			display: flex;
+			gap: calc(var(--spacing) * 6);
 
-            .stretchy {
-                height: 100%;
-            }
-        }
-    }
+			.stretchy {
+				height: 100%;
+			}
+		}
+	}
 }
 </style>

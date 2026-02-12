@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsMulti title="Healthcheck" hovered class="h-full cursor-pointer" :values @click="gotoHealthcheck()">
+		<CardStatsMulti title="Healthcheck" hovered class="h-full cursor-pointer" :values @click="routeHealthcheck()">
 			<template #icon>
 				<CardStatsIcon
 					:icon-name="HealthcheckIcon"
@@ -26,7 +26,7 @@ import { useThemeStore } from "@/stores/theme"
 import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
 
 const HealthcheckIcon = "ph:heartbeat"
-const { gotoHealthcheck } = useNavigation()
+const { routeHealthcheck } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])

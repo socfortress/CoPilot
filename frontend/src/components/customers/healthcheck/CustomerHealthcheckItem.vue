@@ -54,7 +54,7 @@
 						<div class="flex flex-col gap-1">
 							<div class="box">
 								agent_id:
-								<code class="text-primary cursor-pointer" @click="gotoAgent(healthData.agent_id)">
+								<code class="text-primary cursor-pointer" @click="routeAgent(healthData.agent_id)">
 									{{ healthData.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
@@ -117,7 +117,7 @@ const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
 const showDetails = ref(false)
-const { gotoAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 
 const agentVersion = computed(() => {
 	let agent = ""

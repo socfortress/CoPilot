@@ -11,7 +11,7 @@
 				:case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }"
 				compact
 				embedded
-				@click="gotoIncidentManagementCases(linkedCase.id)"
+				@click="routeIncidentManagementCases(linkedCase.id)"
 			/>
 			<div class="flex items-center justify-end gap-3">
 				<n-button
@@ -53,7 +53,7 @@ const MenuIcon = "carbon:overflow-menu-horizontal"
 const loadingId = ref<number | false>(false)
 const alert = ref<Alert>(props.alert)
 const message = useMessage()
-const { gotoIncidentManagementCases } = useNavigation()
+const { routeIncidentManagementCases } = useNavigation()
 const linkedCases = computed(() => alert.value?.linked_cases || [])
 
 function updateAlert(updatedAlert: Alert) {

@@ -24,7 +24,7 @@
 								<div v-if="key === '_index'">
 									<code
 										class="text-primary cursor-pointer"
-										@click.stop="gotoIndex(timelineDetailsInfo._index)"
+										@click.stop="routeIndex(timelineDetailsInfo._index)"
 									>
 										{{ timelineDetailsInfo._index }}
 										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -64,7 +64,7 @@ const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSo
 const { timelineData, embedded } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const { gotoIndex } = useNavigation()
+const { routeIndex } = useNavigation()
 const showDetails = ref(false)
 const timelineDetailsInfo = computed(() => _omit(timelineData.value, ["_source"]))
 const timelineDetailsSource = computed(() => timelineData.value?._source)

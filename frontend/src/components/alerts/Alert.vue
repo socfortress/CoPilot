@@ -52,7 +52,7 @@
 								agent_id:
 								<code
 									class="text-primary cursor-pointer"
-									@click.stop="gotoAgent(alert._source.agent_id)"
+									@click.stop="routeAgent(alert._source.agent_id)"
 								>
 									{{ alert._source.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -70,7 +70,7 @@
 								agent_labels_customer:
 								<code
 									class="text-primary cursor-pointer"
-									@click.stop="gotoCustomer({ code: alert._source.agent_labels_customer })"
+									@click.stop="routeCustomer({ code: alert._source.agent_labels_customer })"
 								>
 									{{ alert._source.agent_labels_customer }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -134,7 +134,7 @@
 							</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="text-primary cursor-pointer" @click.stop="gotoAgent(`${value}`)">
+									<code class="text-primary cursor-pointer" @click.stop="routeAgent(`${value}`)">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -142,7 +142,7 @@
 								<template v-else-if="key === 'agent_labels_customer'">
 									<code
 										class="text-primary cursor-pointer"
-										@click.stop="gotoCustomer(value ? { code: value.toString() } : undefined)"
+										@click.stop="routeCustomer(value ? { code: value.toString() } : undefined)"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -235,7 +235,7 @@ const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer, gotoAgent } = useNavigation()
+const { routeCustomer, routeAgent } = useNavigation()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat

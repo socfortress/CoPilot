@@ -6,7 +6,7 @@
 			</template>
 			<template #value>
 				<template v-if="item.key === 'customer_code' && item.val !== '-'">
-					<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: item.val })">
+					<code class="text-primary cursor-pointer" @click="routeCustomer({ code: item.val })">
 						{{ item.val }}
 						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 					</code>
@@ -44,7 +44,7 @@ const { agent } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 
 const propsSanitized = computed(() => {
 	const obj = []

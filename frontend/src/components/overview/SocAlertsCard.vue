@@ -6,7 +6,7 @@
 			:vertical="vertical"
 			hovered
 			class="h-full cursor-pointer"
-			@click="gotoSocAlerts()"
+			@click="routeSocAlerts()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="SOCIcon" boxed :box-size="40"></CardStatsIcon>
@@ -30,7 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const SOCIcon = "carbon:security"
-const { gotoSocAlerts } = useNavigation()
+const { routeSocAlerts } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const alerts = ref<SocAlert[]>([])

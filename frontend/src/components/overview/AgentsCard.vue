@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsMulti title="Agents" hovered class="h-full cursor-pointer" :values @click="gotoAgent()">
+		<CardStatsMulti title="Agents" hovered class="h-full cursor-pointer" :values @click="routeAgent()">
 			<template #icon>
 				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
 			</template>
@@ -20,7 +20,7 @@ import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
 
 const AgentsIcon = "carbon:network-3"
-const { gotoAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const agents = ref<Agent[]>([])
