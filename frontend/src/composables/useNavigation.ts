@@ -3,6 +3,8 @@ import { useRouter } from "vue-router"
 export function useNavigation() {
 	const router = useRouter()
 
+	// TODO: usare routerConstructor come in MDR
+
 	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
 		if (params?.code) {
 			router.push({ name: "Customers", query: { code: params.code.toString() } })
