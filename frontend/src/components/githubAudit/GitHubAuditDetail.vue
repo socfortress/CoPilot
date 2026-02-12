@@ -30,7 +30,9 @@
 								</n-tag>
 							</n-descriptions-item>
 							<n-descriptions-item label="Last Audit">
-								{{ config.last_audit_at ? formatDate(config.last_audit_at) : "Never" }}
+								{{
+									config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "Never"
+								}}
 							</n-descriptions-item>
 							<n-descriptions-item label="Last Score">
 								<template v-if="config.last_audit_score !== null">
@@ -86,7 +88,7 @@
 
 				<n-tab-pane name="reports" tab="Reports">
 					<n-spin :show="loadingReports">
-						<div v-if="reports.length === 0 && !loadingReports" class="text-center py-8">
+						<div v-if="reports.length === 0 && !loadingReports" class="py-8 text-center">
 							<n-empty description="No reports yet">
 								<template #extra>
 									<n-button type="primary" @click="runAudit">Run your first audit</n-button>
@@ -124,7 +126,7 @@
 					</div>
 
 					<n-spin :show="loadingExclusions">
-						<div v-if="exclusions.length === 0 && !loadingExclusions" class="text-center py-8">
+						<div v-if="exclusions.length === 0 && !loadingExclusions" class="py-8 text-center">
 							<n-empty description="No exclusions configured" />
 						</div>
 
@@ -143,7 +145,13 @@
 									<td>{{ exclusion.check_id }}</td>
 									<td>{{ exclusion.resource_name || "All" }}</td>
 									<td>{{ exclusion.reason }}</td>
-									<td>{{ exclusion.expires_at ? formatDate(exclusion.expires_at) : "Never" }}</td>
+									<td>
+										{{
+											exclusion.expires_at
+												? formatDate(exclusion.expires_at, dFormats.datetime)
+												: "Never"
+										}}
+									</td>
 									<td>
 										<n-button text type="error" @click="deleteExclusion(exclusion.id)">
 											<n-icon><Icon :name="DeleteIcon" /></n-icon>
@@ -163,38 +171,41 @@
 				@saved="loadExclusions"
 			/>
 
-			<GitHubAuditReportDetail
-				v-if="showReportDetail"
-				v-model:show="showReportDetail"
-				:report="selectedReport"
-			/>
+			<GitHubAuditReportDetail v-if="showReportDetail" v-model:show="showReportDetail" :report="selectedReport" />
 		</n-drawer-content>
 	</n-drawer>
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditCheckExclusion, GitHubAuditConfig, GitHubAuditReport, GitHubAuditReportSummary } from "@/types/githubAudit.d"
+// TODO: refactor
+import type {
+	GitHubAuditCheckExclusion,
+	GitHubAuditConfig,
+	GitHubAuditReport,
+	GitHubAuditReportSummary
+} from "@/types/githubAudit.d"
 import {
-    NButton,
-    NDescriptions,
-    NDescriptionsItem,
-    NDrawer,
-    NDrawerContent,
-    NEmpty,
-    NIcon,
-    NPagination,
-    NPopconfirm,
-    NSpace,
-    NSpin,
-    NTable,
-    NTabPane,
-    NTabs,
-    NTag,
-    useMessage
+	NButton,
+	NDescriptions,
+	NDescriptionsItem,
+	NDrawer,
+	NDrawerContent,
+	NEmpty,
+	NIcon,
+	NPagination,
+	NPopconfirm,
+	NSpace,
+	NSpin,
+	NTable,
+	NTabPane,
+	NTabs,
+	NTag,
+	useMessage
 } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import GitHubAuditExclusionForm from "./GitHubAuditExclusionForm.vue"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
@@ -202,14 +213,16 @@ import GitHubAuditReportCard from "./GitHubAuditReportCard.vue"
 import GitHubAuditReportDetail from "./GitHubAuditReportDetail.vue"
 
 const props = defineProps<{
-    show: boolean
-    config: GitHubAuditConfig | null
+	show: boolean
+	config: GitHubAuditConfig | null
 }>()
+
 const emit = defineEmits<{
-    (e: "update:show", value: boolean): void
-    (e: "updated"): void
-    (e: "edit", config: GitHubAuditConfig): void
+	(e: "update:show", value: boolean): void
+	(e: "updated"): void
+	(e: "edit", config: GitHubAuditConfig): void
 }>()
+
 const GithubIcon = "mdi:github"
 const PlayIcon = "ion:play"
 const EditIcon = "ion:create-outline"
@@ -217,6 +230,7 @@ const DeleteIcon = "ion:trash-outline"
 const AddIcon = "ion:add"
 
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 const activeTab = ref("overview")
 const running = ref(false)
 
@@ -235,149 +249,149 @@ const exclusions = ref<GitHubAuditCheckExclusion[]>([])
 const showExclusionForm = ref(false)
 
 const showDrawer = computed({
-    get: () => props.show,
-    set: (value) => emit("update:show", value)
+	get: () => props.show,
+	set: value => emit("update:show", value)
 })
 
 // Watch for drawer opening
 watch(
-    () => props.show,
-    (show) => {
-        if (show && props.config) {
-            activeTab.value = "overview"
-            // Reset state
-            reports.value = []
-            exclusions.value = []
-            currentPage.value = 1
-            // Load data
-            loadReports()
-            loadExclusions()
-        }
-    },
-    { immediate: true }
+	() => props.show,
+	show => {
+		if (show && props.config) {
+			activeTab.value = "overview"
+			// Reset state
+			reports.value = []
+			exclusions.value = []
+			currentPage.value = 1
+			// Load data
+			loadReports()
+			loadExclusions()
+		}
+	},
+	{ immediate: true }
 )
 
 // Watch for config changes while drawer is open
 watch(
-    () => props.config?.id,
-    (newId, oldId) => {
-        if (newId && newId !== oldId && props.show) {
-            reports.value = []
-            exclusions.value = []
-            currentPage.value = 1
-            loadReports()
-            loadExclusions()
-        }
-    }
+	() => props.config?.id,
+	(newId, oldId) => {
+		if (newId && newId !== oldId && props.show) {
+			reports.value = []
+			exclusions.value = []
+			currentPage.value = 1
+			loadReports()
+			loadExclusions()
+		}
+	}
 )
 
 async function loadReports() {
-    if (!props.config) {
-        console.warn("loadReports called but config is null")
-        return
-    }
-    if (loadingReports.value) {
-        return
-    }
+	if (!props.config) {
+		console.warn("loadReports called but config is null")
+		return
+	}
+	if (loadingReports.value) {
+		return
+	}
 
-    loadingReports.value = true
-    try {
-        const response = await Api.githubAudit.getReports({
-            configId: props.config.id,
-            limit: pageSize,
-            offset: (currentPage.value - 1) * pageSize
-        })
-        reports.value = response.data.reports || []
-        totalReports.value = response.data.total_count || 0
-    } catch (error: any) {
-        console.error("Failed to load reports:", error)
-        message.error("Failed to load reports")
-    } finally {
-        loadingReports.value = false
-    }
+	loadingReports.value = true
+	try {
+		const response = await Api.githubAudit.getReports({
+			configId: props.config.id,
+			limit: pageSize,
+			offset: (currentPage.value - 1) * pageSize
+		})
+		reports.value = response.data.reports || []
+		totalReports.value = response.data.total_count || 0
+	} catch (error: any) {
+		console.error("Failed to load reports:", error)
+		message.error("Failed to load reports")
+	} finally {
+		loadingReports.value = false
+	}
 }
 
 async function loadExclusions() {
-    if (!props.config || loadingExclusions.value) return
+	if (!props.config || loadingExclusions.value) return
 
-    loadingExclusions.value = true
-    try {
-        const response = await Api.githubAudit.getExclusions(props.config.id)
-        exclusions.value = response.data.exclusions || []
-    } catch (error: any) {
-        console.error("Failed to load exclusions:", error)
-        message.error("Failed to load exclusions")
-    } finally {
-        loadingExclusions.value = false
-    }
+	loadingExclusions.value = true
+	try {
+		const response = await Api.githubAudit.getExclusions(props.config.id)
+		exclusions.value = response.data.exclusions || []
+	} catch (error: any) {
+		console.error("Failed to load exclusions:", error)
+		message.error("Failed to load exclusions")
+	} finally {
+		loadingExclusions.value = false
+	}
 }
 
 async function runAudit() {
-    if (!props.config) return
+	if (!props.config) return
 
-    running.value = true
-    try {
-        await Api.githubAudit.runAuditFromConfig(props.config.id)
-        message.success("Audit completed successfully")
-        // Reload reports after audit completes
-        await loadReports()
-        emit("updated")
-    } catch (error: any) {
-        message.error(error.response?.data?.detail || "Failed to run audit")
-    } finally {
-        running.value = false
-    }
+	running.value = true
+	try {
+		await Api.githubAudit.runAuditFromConfig(props.config.id)
+		message.success("Audit completed successfully")
+		// Reload reports after audit completes
+		await loadReports()
+		emit("updated")
+	} catch (error: any) {
+		message.error(error.response?.data?.detail || "Failed to run audit")
+	} finally {
+		running.value = false
+	}
 }
 
 async function deleteConfig() {
-    if (!props.config) return
+	if (!props.config) return
 
-    try {
-        await Api.githubAudit.deleteConfig(props.config.id)
-        message.success("Configuration deleted")
-        showDrawer.value = false
-        emit("updated")
-    } catch (error: any) {
-        message.error(error.response?.data?.detail || "Failed to delete configuration")
-    }
+	try {
+		await Api.githubAudit.deleteConfig(props.config.id)
+		message.success("Configuration deleted")
+		showDrawer.value = false
+		emit("updated")
+	} catch (error: any) {
+		message.error(error.response?.data?.detail || "Failed to delete configuration")
+	}
 }
 
 async function deleteExclusion(exclusionId: number) {
-    try {
-        await Api.githubAudit.deleteExclusion(exclusionId)
-        message.success("Exclusion deleted")
-        loadExclusions()
-    } catch (error: any) {
-        message.error("Failed to delete exclusion")
-    }
+	try {
+		await Api.githubAudit.deleteExclusion(exclusionId)
+		message.success("Exclusion deleted")
+		loadExclusions()
+	} catch {
+		message.error("Failed to delete exclusion")
+	}
 }
 
 function handleEdit() {
-    if (props.config) {
-        showDrawer.value = false
-        emit("edit", props.config)
-    }
+	if (props.config) {
+		showDrawer.value = false
+		emit("edit", props.config)
+	}
 }
 
 async function openReportDetail(report: GitHubAuditReportSummary) {
-    try {
-        const response = await Api.githubAudit.getReport(report.id)
-        if (response.data.report) {
-            selectedReport.value = response.data.report
-            showReportDetail.value = true
-        }
-    } catch (error: any) {
-        message.error("Failed to load report details")
-    }
+	try {
+		const response = await Api.githubAudit.getReport(report.id)
+		if (response.data.report) {
+			selectedReport.value = response.data.report
+			showReportDetail.value = true
+		}
+	} catch {
+		message.error("Failed to load report details")
+	}
 }
 </script>
 
 <style scoped>
 .space-y-4 > * + * {
-    margin-top: 1rem;
+	margin-top: 1rem;
 }
 
 .space-y-3 > * + * {
-    margin-top: 0.75rem;
+	margin-top: 0.75rem;
 }
 </style>
