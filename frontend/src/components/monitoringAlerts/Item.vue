@@ -6,14 +6,18 @@
 		</template>
 		<template #mainExtra>
 			<div class="flex flex-wrap items-center gap-3">
-				<Badge type="active" class="cursor-pointer" @click.stop="routeIndex(alert.alert_index)">
+				<Badge type="active" class="cursor-pointer" @click.stop="routeIndex(alert.alert_index).navigate()">
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Index / {{ alert.alert_index }}</template>
 				</Badge>
 
-				<Badge type="active" class="cursor-pointer" @click.stop="routeCustomer({ code: alert.customer_code })">
+				<Badge
+					type="active"
+					class="cursor-pointer"
+					@click.stop="routeCustomer({ code: alert.customer_code }).navigate()"
+				>
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>

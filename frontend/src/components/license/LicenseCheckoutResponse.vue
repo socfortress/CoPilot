@@ -19,7 +19,7 @@
 			<h1 class="text-center">Checkout canceled</h1>
 		</template>
 		<div>
-			<n-button @click="routeLicense()">
+			<n-button @click="routeLicense().navigate()">
 				<template #icon>
 					<Icon :name="LicenseIcon" />
 				</template>

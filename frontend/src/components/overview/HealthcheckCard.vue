@@ -1,6 +1,12 @@
 <template>
 	<n-spin :show="loading">
-		<CardStatsMulti title="Healthcheck" hovered class="h-full cursor-pointer" :values @click="routeHealthcheck()">
+		<CardStatsMulti
+			title="Healthcheck"
+			hovered
+			class="h-full cursor-pointer"
+			:values
+			@click="routeHealthcheck().navigate()"
+		>
 			<template #icon>
 				<CardStatsIcon
 					:icon-name="HealthcheckIcon"

@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<div class="agent-toolbar">
-			<div class="back-btn" @click="routeAgent()">
+			<div class="back-btn" @click="routeAgent().navigate()">
 				<Icon :name="ArrowIcon" :size="16" />
 				<span>Agents list</span>
 			</div>
@@ -217,12 +217,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					routeAgent()
+					routeAgent().navigate()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				routeAgent()
+				routeAgent().navigate()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -281,7 +281,7 @@ function handleDelete() {
 				loadingAgent.value = true
 			},
 			cbSuccess: () => {
-				routeAgent()
+				routeAgent().navigate()
 			},
 			cbAfter: () => {
 				loadingAgent.value = false

@@ -6,7 +6,7 @@
 			</template>
 			<template #value>
 				<template v-if="item.key === 'customer_code' && item.val !== '-'">
-					<code class="text-primary cursor-pointer" @click="routeCustomer({ code: item.val })">
+					<code class="text-primary cursor-pointer" @click="routeCustomer({ code: item.val }).navigate()">
 						{{ item.val }}
 						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 					</code>

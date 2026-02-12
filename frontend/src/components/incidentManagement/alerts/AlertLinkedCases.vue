@@ -11,7 +11,7 @@
 				:case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }"
 				compact
 				embedded
-				@click="routeIncidentManagementCases(linkedCase.id)"
+				@click="routeIncidentManagementCases(linkedCase.id).navigate()"
 			/>
 			<div class="flex items-center justify-end gap-3">
 				<n-button

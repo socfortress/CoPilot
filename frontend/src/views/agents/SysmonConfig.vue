@@ -22,7 +22,7 @@
 							>
 								<div class="flex items-center justify-between">
 									<div>{{ customer }}</div>
-									<n-button text @click.stop="routeCustomer({ code: customer })">
+									<n-button text @click.stop="routeCustomer({ code: customer }).navigate()">
 										<template #icon>
 											<Icon :size="14" :name="LinkIcon" />
 										</template>

@@ -16,7 +16,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="routeIndex(asset.index_name)"
+									@click.stop="routeIndex(asset.index_name).navigate()"
 								>
 									{{ asset.index_name }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -31,7 +31,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="routeAgent(asset.agent_id)"
+									@click.stop="routeAgent(asset.agent_id).navigate()"
 								>
 									{{ asset.agent_id }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />

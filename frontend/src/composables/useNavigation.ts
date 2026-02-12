@@ -1,76 +1,88 @@
+import type { RouteLocationRaw } from "vue-router"
 import { useRouter } from "vue-router"
 
 export function useNavigation() {
 	const router = useRouter()
 
-	// TODO: usare routerConstructor come in MDR
+	function routerConstructor(route: RouteLocationRaw) {
+		return {
+			navigate: () => router.push(route),
+			replace: () => router.replace(route),
+			valueOf: () => router.resolve(route).href,
+			toString: () => router.resolve(route).href,
+			fullUrl: () => {
+				const resolved = router.resolve(route)
+				return `${window.location.protocol}//${window.location.host}${resolved.href}`
+			}
+		}
+	}
 
 	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
 		if (params?.code) {
-			router.push({ name: "Customers", query: { code: params.code.toString() } })
+			return routerConstructor({ name: "Customers", query: { code: params.code.toString() } })
 		} else if (params?.action) {
-			router.push({ name: "Customers", query: { action: params.action.toString() } })
+			return routerConstructor({ name: "Customers", query: { action: params.action.toString() } })
 		} else {
-			router.push({ name: "Customers" })
+			return routerConstructor({ name: "Customers" })
 		}
 	}
 
 	function routeAgent(agentId?: string | number) {
 		if (agentId) {
-			router.push({ name: "Agent", params: { id: agentId.toString() } })
+			return routerConstructor({ name: "Agent", params: { id: agentId.toString() } })
 		} else {
-			router.push({ name: "Agents" })
+			return routerConstructor({ name: "Agents" })
 		}
 	}
 
 	function routeIndex(indexName?: string) {
-		router.push({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
+		return routerConstructor({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
 
 	function routeLicense() {
-		router.push({ name: "License" })
+		return routerConstructor({ name: "License" })
 	}
 
 	function routeHealthcheck() {
-		router.push({ name: "Healthcheck" })
+		return routerConstructor({ name: "Healthcheck" })
 	}
 
 	function routeGraylogMetrics() {
-		router.push({ name: "Graylog-Metrics" })
+		return routerConstructor({ name: "Graylog-Metrics" })
 	}
 
 	function routeGraylogManagement(
 		tabName?: "messages" | "alerts" | "events" | "streams" | "provisioning" | "inputs"
 	) {
-		router.push({ name: "Graylog-Management", hash: tabName ? `#${tabName}` : undefined })
+		return routerConstructor({ name: "Graylog-Management", hash: tabName ? `#${tabName}` : undefined })
 	}
 
 	function routeSocAlerts() {
-		router.push({ name: "Soc-Alerts" })
+		return routerConstructor({ name: "Soc-Alerts" })
 	}
 
 	function routeAlerts() {
-		router.push({ name: "Alerts" })
+		return routerConstructor({ name: "Alerts" })
 	}
 
 	function routeConnectors() {
-		router.push({ name: "Connectors" })
+		return routerConstructor({ name: "Connectors" })
 	}
 
 	function routeGraylogPipelines(rule?: string) {
-		router.push({ name: "Graylog-Pipelines", query: rule ? { rule } : {} })
+		return routerConstructor({ name: "Graylog-Pipelines", query: rule ? { rule } : {} })
 	}
 
 	function routeSocUsers(userId?: string | number) {
-		router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
+		return routerConstructor({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 	}
 
 	function routeIncidentManagementAlerts(alertId?: number) {
-		router.push({ name: "IncidentManagement-Alerts", query: alertId ? { alert_id: alertId } : {} })
+		return routerConstructor({ name: "IncidentManagement-Alerts", query: alertId ? { alert_id: alertId } : {} })
 	}
 
 	function routeIncidentManagementCases(caseId?: number) {
-		router.push({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
+		return routerConstructor({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
 
 	return {

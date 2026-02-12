@@ -162,7 +162,7 @@
 									<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 										<code
 											class="text-primary cursor-pointer"
-											@click.stop="routeCustomer({ code: value })"
+											@click.stop="routeCustomer({ code: value }).navigate()"
 										>
 											#{{ value }}
 											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -223,7 +223,7 @@
 							</n-collapse-item>
 						</n-collapse>
 					</div>
-					<n-divider class="!my-2" />
+					<n-divider class="my-2!" />
 					<SocCaseNotesList v-if="baseInfo" v-model:requested="updateNotes" :case-id="baseInfo.case_id" />
 				</n-tab-pane>
 			</n-tabs>

@@ -152,7 +152,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="routeCustomer({ code: alert.customer_code })"
+									@click.stop="routeCustomer({ code: alert.customer_code }).navigate()"
 								>
 									#{{ alert.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />

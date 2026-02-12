@@ -5,7 +5,7 @@
 			hovered
 			class="h-full cursor-pointer"
 			:values="[{ value: total, label: 'Total' }]"
-			@click="routeCustomer()"
+			@click="routeCustomer().navigate()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="CustomersIcon" boxed :box-size="30"></CardStatsIcon>

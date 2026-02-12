@@ -120,7 +120,7 @@
 							<code
 								v-if="caseData.customer_code"
 								class="text-primary cursor-pointer"
-								@click="routeCustomer({ code: caseData.customer_code })"
+								@click="routeCustomer({ code: caseData.customer_code }).navigate()"
 							>
 								{{ caseData.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />

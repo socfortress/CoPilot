@@ -12,7 +12,7 @@
 					:selection-mode="selectionMode"
 					:selected-count="selectedAgents.length"
 					@run="runCommand($event)"
-					@click="routeAgent($event.agent_id)"
+					@click="routeAgent($event.agent_id).navigate()"
 					@bulk-delete="showBulkDeleteModal = true"
 					@update:selection-mode="selectionMode = $event"
 					@clear-selection="clearSelection"
@@ -169,7 +169,7 @@ function handleAgentClick(agent: Agent) {
 	if (selectionMode.value) {
 		toggleAgentSelection(agent)
 	} else {
-		routeAgent(agent.agent_id)
+		routeAgent(agent.agent_id).navigate()
 	}
 }
 

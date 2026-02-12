@@ -18,7 +18,7 @@
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 							<code
 								class="text-primary cursor-pointer"
-								@click="routeCustomer({ code: value.toString() })"
+								@click="routeCustomer({ code: value.toString() }).navigate()"
 							>
 								#{{ value }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -33,7 +33,12 @@
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
 			<div class="grid gap-2 px-7 pt-4">
-				<Badge type="active" style="max-width: 145px" class="cursor-pointer" @click="routeSocUsers(ownerId)">
+				<Badge
+					type="active"
+					style="max-width: 145px"
+					class="cursor-pointer"
+					@click="routeSocUsers(ownerId).navigate()"
+				>
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>

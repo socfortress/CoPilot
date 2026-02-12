@@ -16,7 +16,7 @@
 						{{ item.hostname }}
 					</template>
 					<template #headerExtra>
-						<code class="text-primary cursor-pointer" @click.stop="routeAgent(item.agent_id)">
+						<code class="text-primary cursor-pointer" @click.stop="routeAgent(item.agent_id).navigate()">
 							{{ item.agent_id }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>

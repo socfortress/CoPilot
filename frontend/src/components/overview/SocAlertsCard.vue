@@ -6,7 +6,7 @@
 			:vertical="vertical"
 			hovered
 			class="h-full cursor-pointer"
-			@click="routeSocAlerts()"
+			@click="routeSocAlerts().navigate()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="SOCIcon" boxed :box-size="40"></CardStatsIcon>

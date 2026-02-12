@@ -49,7 +49,7 @@
 							{{ formatDate(asset.date_update) }}
 						</template>
 					</Badge>
-					<Badge type="active" class="cursor-pointer" @click.stop="routeAgent(asset.asset_tags)">
+					<Badge type="active" class="cursor-pointer" @click.stop="routeAgent(asset.asset_tags).navigate()">
 						<template #iconRight>
 							<Icon :name="LinkIcon" :size="14" />
 						</template>
@@ -80,7 +80,7 @@
 									<code
 										v-if="value && value !== '-'"
 										class="text-primary cursor-pointer"
-										@click.stop="routeAgent(value)"
+										@click.stop="routeAgent(value).navigate()"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />

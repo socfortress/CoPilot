@@ -24,7 +24,7 @@
 								<div v-if="key === '_index'">
 									<code
 										class="text-primary cursor-pointer"
-										@click.stop="routeIndex(timelineDetailsInfo._index)"
+										@click.stop="routeIndex(timelineDetailsInfo._index).navigate()"
 									>
 										{{ timelineDetailsInfo._index }}
 										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />

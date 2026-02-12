@@ -30,7 +30,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							routeGraylogMetrics()
+							routeGraylogMetrics().navigate()
 						},
 						actionTitle: "See Graylog Metrics"
 					}
@@ -56,7 +56,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							routeIndex()
+							routeIndex().navigate()
 						},
 						actionTitle: "See Cluster"
 					}
@@ -85,7 +85,7 @@ export function useHealthchecksNotify() {
 								read: false,
 								date: new Date(),
 								action() {
-									routeHealthcheck()
+									routeHealthcheck().navigate()
 								},
 								actionTitle: "See Healthcheck"
 							}

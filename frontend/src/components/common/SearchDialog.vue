@@ -130,7 +130,7 @@ const groups = ref<Groups>([
 				title: "Add a Customer",
 				label: "Shortcut",
 				action() {
-					routeCustomer({ action: "add-customer" })
+					routeCustomer({ action: "add-customer" }).navigate()
 					emitter.emit("action:add-customer")
 				}
 			},
@@ -141,7 +141,7 @@ const groups = ref<Groups>([
 				title: "Configure a connector",
 				label: "Shortcut",
 				action() {
-					routeConnectors()
+					routeConnectors().navigate()
 				}
 			},
 			{
@@ -151,7 +151,7 @@ const groups = ref<Groups>([
 				title: "View Escalated Alerts",
 				label: "Shortcut",
 				action() {
-					routeSocAlerts()
+					routeSocAlerts().navigate()
 				}
 			},
 			{
@@ -161,7 +161,7 @@ const groups = ref<Groups>([
 				title: "View Identified Alerts",
 				label: "Shortcut",
 				action() {
-					routeAlerts()
+					routeAlerts().navigate()
 				}
 			}
 		]

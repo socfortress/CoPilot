@@ -39,7 +39,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer leading-none"
-								@click.stop="routeCustomer({ code: entity.customer_code })"
+								@click.stop="routeCustomer({ code: entity.customer_code }).navigate()"
 							>
 								#{{ entity.customer_code }}
 								<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />

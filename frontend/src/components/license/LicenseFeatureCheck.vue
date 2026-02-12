@@ -14,7 +14,7 @@
 					need to enable this feature. You can manage your features from the License page.
 				</div>
 				<div class="flex justify-end">
-					<n-button @click="routeLicense()">
+					<n-button @click="routeLicense().navigate()">
 						<template #icon>
 							<Icon :name="LicenseIcon" />
 						</template>
@@ -38,7 +38,7 @@
 				</div>
 				<template #footer>
 					<div class="flex justify-end">
-						<n-button @click="routeLicense()">
+						<n-button @click="routeLicense().navigate()">
 							<template #icon>
 								<Icon :name="LicenseIcon" />
 							</template>
@@ -62,7 +62,7 @@
 			</div>
 			<template #footer>
 				<div class="flex justify-end">
-					<n-button @click="routeLicense()">
+					<n-button @click="routeLicense().navigate()">
 						<template #icon>
 							<Icon :name="LicenseIcon" />
 						</template>

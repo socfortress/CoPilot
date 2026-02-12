@@ -107,7 +107,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click="routeCustomer({ code: alert.customer_code })"
+								@click="routeCustomer({ code: alert.customer_code }).navigate()"
 							>
 								{{ alert.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />

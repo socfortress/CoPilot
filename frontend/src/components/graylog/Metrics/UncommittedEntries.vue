@@ -13,7 +13,12 @@
 			</div>
 		</div>
 		<div class="footer">
-			<n-button type="primary" ghost icon-placement="right" @click="routeGraylogManagement('messages')">
+			<n-button
+				type="primary"
+				ghost
+				icon-placement="right"
+				@click="routeGraylogManagement('messages').navigate()"
+			>
 				<template #icon>
 					<Icon :name="LinkIcon" :size="14" />
 				</template>

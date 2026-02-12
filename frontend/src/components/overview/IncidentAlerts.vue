@@ -5,7 +5,7 @@
 			hovered
 			class="h-full cursor-pointer"
 			:values
-			@click="routeIncidentManagementAlerts()"
+			@click="routeIncidentManagementAlerts().navigate()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="AlertsIcon" boxed :box-size="30"></CardStatsIcon>

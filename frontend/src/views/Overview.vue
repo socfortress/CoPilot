@@ -45,7 +45,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<IndicesMarquee @click="routeIndex($event.index)" />
+			<IndicesMarquee @click="routeIndex($event.index).navigate()" />
 		</div>
 		<div class="section">
 			<div class="columns flex-col lg:flex-row">
@@ -58,7 +58,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<PipeList @open-rule="routeGraylogPipelines($event)" />
+			<PipeList @open-rule="routeGraylogPipelines($event).navigate()" />
 		</div>
 
 		<n-drawer

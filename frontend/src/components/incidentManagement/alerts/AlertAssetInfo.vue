@@ -9,20 +9,20 @@
 				<div v-else-if="key === 'customer_code'">
 					<code
 						class="text-primary cursor-pointer"
-						@click.stop="routeCustomer({ code: asset.customer_code })"
+						@click.stop="routeCustomer({ code: asset.customer_code }).navigate()"
 					>
 						#{{ asset.customer_code }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'agent_id'">
-					<code class="text-primary cursor-pointer" @click.stop="routeAgent(asset.agent_id)">
+					<code class="text-primary cursor-pointer" @click.stop="routeAgent(asset.agent_id).navigate()">
 						{{ asset.agent_id }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
 				<div v-else-if="key === 'index_name'">
-					<code class="text-primary cursor-pointer" @click.stop="routeIndex(asset.index_name)">
+					<code class="text-primary cursor-pointer" @click.stop="routeIndex(asset.index_name).navigate()">
 						{{ asset.index_name }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
@@ -61,7 +61,7 @@
 								<div v-if="key === '_index'">
 									<code
 										class="text-primary cursor-pointer"
-										@click.stop="routeIndex(alertDetailsInfo._index)"
+										@click.stop="routeIndex(alertDetailsInfo._index).navigate()"
 									>
 										{{ alertDetailsInfo._index }}
 										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />

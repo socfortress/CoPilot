@@ -22,7 +22,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click.stop="routeCustomer({ code: sca.customer_code })"
+								@click.stop="routeCustomer({ code: sca.customer_code }).navigate()"
 							>
 								#{{ sca.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />

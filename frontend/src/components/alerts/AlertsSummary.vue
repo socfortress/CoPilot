@@ -3,7 +3,7 @@
 		<template #headerMain>
 			<div
 				class="hover:text-primary flex cursor-pointer items-center gap-2"
-				@click="routeIndex(alertsSummary.index_name)"
+				@click="routeIndex(alertsSummary.index_name).navigate()"
 			>
 				<IndexIcon v-if="alertsSummary.indexStats?.health" :health="alertsSummary.indexStats?.health" color />
 				<Icon v-else :name="PlaceholderIcon" :size="18" />
