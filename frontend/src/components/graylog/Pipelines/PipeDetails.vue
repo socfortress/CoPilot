@@ -47,7 +47,7 @@ import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-u
 import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import RulesSmallList from "./RulesSmallList.vue"
 
 interface PipelineFullStageExt extends Omit<PipelineFullStage, "rules" | "rule_ids"> {

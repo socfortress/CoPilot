@@ -10,7 +10,7 @@
 import type { Message } from "@/types/graylog/messages.d"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { message } = defineProps<{ message: Message }>()
 

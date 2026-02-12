@@ -21,7 +21,7 @@ import { computed, h, inject, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { size, showIcon } = defineProps<{ size?: Size; showIcon?: boolean }>()
 

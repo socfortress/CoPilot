@@ -208,7 +208,7 @@ import draggable from "vuedraggable"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import * as defaultSettings from "./defaultSettings"
 import PrintSettings from "./PrintSettings.vue"
 

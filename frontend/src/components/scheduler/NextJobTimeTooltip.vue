@@ -19,7 +19,7 @@ import { ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ jobId: string }>()
 const { jobId } = toRefs(props)

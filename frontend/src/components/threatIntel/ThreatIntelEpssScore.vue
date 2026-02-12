@@ -52,7 +52,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 interface EpssScoreExt extends EpssScore {
 	___id?: string
