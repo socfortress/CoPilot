@@ -40,8 +40,8 @@ import { SimpleJsonViewer } from "vue-sjv"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
 import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils/format"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 interface Prop {

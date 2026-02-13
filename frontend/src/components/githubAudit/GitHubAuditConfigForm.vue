@@ -73,9 +73,7 @@
 
 				<n-form-item v-if="formData.repo_filter_mode !== 'all'" label="Repository List">
 					<n-dynamic-tags v-model:value="formData.repo_filter_list" />
-					<template #feedback>
-						Enter repository names to {{ formData.repo_filter_mode }}
-					</template>
+					<template #feedback>Enter repository names to {{ formData.repo_filter_mode }}</template>
 				</n-form-item>
 
 				<n-divider title-placement="left">Schedule</n-divider>
@@ -87,7 +85,9 @@
 				<n-form-item v-if="formData.auto_audit_enabled" label="Schedule (Cron)" path="audit_schedule_cron">
 					<n-input v-model:value="formData.audit_schedule_cron" placeholder="0 0 * * 1 (Weekly on Monday)" />
 					<template #feedback>
-						<n-text depth="3">Use cron format. Example: "0 0 * * 1" for weekly on Monday at midnight</n-text>
+						<n-text depth="3">
+							Use cron format. Example: "0 0 * * 1" for weekly on Monday at midnight
+						</n-text>
 					</template>
 				</n-form-item>
 
@@ -118,7 +118,12 @@
 
 				<n-form-item label="Minimum Passing Score">
 					<n-slider v-model:value="formData.minimum_passing_score" :min="0" :max="100" :step="5" />
-					<n-input-number v-model:value="formData.minimum_passing_score" :min="0" :max="100" style="width: 100px; margin-left: 16px" />
+					<n-input-number
+						v-model:value="formData.minimum_passing_score"
+						:min="0"
+						:max="100"
+						style="width: 100px; margin-left: 16px"
+					/>
 				</n-form-item>
 			</n-form>
 
@@ -135,40 +140,40 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 import {
-
-    NButton,
-    NDivider,
-    NDrawer,
-    NDrawerContent,
-    NDynamicTags,
-    NForm,
-    NFormItem,
-    NGi,
-    NGrid,
-    NInput,
-    NInputNumber,
-    NRadio,
-    NRadioGroup,
-    NSelect,
-    NSlider,
-    NSwitch,
-    NText,
-    useMessage
+	NButton,
+	NDivider,
+	NDrawer,
+	NDrawerContent,
+	NDynamicTags,
+	NForm,
+	NFormItem,
+	NGi,
+	NGrid,
+	NInput,
+	NInputNumber,
+	NRadio,
+	NRadioGroup,
+	NSelect,
+	NSlider,
+	NSwitch,
+	NText,
+	useMessage
 } from "naive-ui"
 import { computed, onMounted, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
-    show: boolean
-    config?: GitHubAuditConfig | null
+	show: boolean
+	config?: GitHubAuditConfig | null
 }>()
 
 const emit = defineEmits<{
-    (e: "update:show", value: boolean): void
-    (e: "saved"): void
+	(e: "update:show", value: boolean): void
+	(e: "saved"): void
 }>()
 
 const message = useMessage()
@@ -177,118 +182,118 @@ const saving = ref(false)
 const customerOptions = ref<{ label: string; value: string }[]>([])
 
 const showDrawer = computed({
-    get: () => props.show,
-    set: (value) => emit("update:show", value)
+	get: () => props.show,
+	set: value => emit("update:show", value)
 })
 
 const isEdit = computed(() => !!props.config)
 
 function defaultFormData(): GitHubAuditConfigCreate {
-  return {
-    customer_code: "",
-    github_token: "",
-    organization: "",
-    token_type: "pat",
-    enabled: true,
-    auto_audit_enabled: false,
-    audit_schedule_cron: null,
-    include_repos: true,
-    include_workflows: true,
-    include_members: true,
-    include_archived_repos: false,
-    repo_filter_mode: "all",
-    repo_filter_list: [],
-    notify_on_critical: true,
-    notify_on_high: false,
-    notification_webhook_url: null,
-    notification_email: null,
-    minimum_passing_score: 70
-}
+	return {
+		customer_code: "",
+		github_token: "",
+		organization: "",
+		token_type: "pat",
+		enabled: true,
+		auto_audit_enabled: false,
+		audit_schedule_cron: null,
+		include_repos: true,
+		include_workflows: true,
+		include_members: true,
+		include_archived_repos: false,
+		repo_filter_mode: "all",
+		repo_filter_list: [],
+		notify_on_critical: true,
+		notify_on_high: false,
+		notification_webhook_url: null,
+		notification_email: null,
+		minimum_passing_score: 70
+	}
 }
 
 const formData = reactive<GitHubAuditConfigCreate>(defaultFormData())
 
 const rules: FormRules = {
-    customer_code: { required: true, message: "Customer is required", trigger: "blur" },
-    organization: { required: true, message: "Organization is required", trigger: "blur" },
-    github_token: {
-        required: !isEdit.value,
-        message: "GitHub token is required",
-        trigger: "blur"
-    }
+	customer_code: { required: true, message: "Customer is required", trigger: "blur" },
+	organization: { required: true, message: "Organization is required", trigger: "blur" },
+	github_token: {
+		required: !isEdit.value,
+		message: "GitHub token is required",
+		trigger: "blur"
+	}
 }
 
 watch(
-    () => props.config,
-    (config) => {
-        if (config) {
-            Object.assign(formData, {
-                customer_code: config.customer_code,
-                github_token: "",
-                organization: config.organization,
-                token_type: config.token_type,
-                enabled: config.enabled,
-                auto_audit_enabled: config.auto_audit_enabled,
-                audit_schedule_cron: config.audit_schedule_cron,
-                include_repos: config.include_repos,
-                include_workflows: config.include_workflows,
-                include_members: config.include_members,
-                include_archived_repos: config.include_archived_repos,
-                repo_filter_mode: config.repo_filter_mode,
-                repo_filter_list: config.repo_filter_list || [],
-                notify_on_critical: config.notify_on_critical,
-                notify_on_high: config.notify_on_high,
-                notification_webhook_url: config.notification_webhook_url,
-                notification_email: config.notification_email,
-                minimum_passing_score: config.minimum_passing_score
-            })
-        } else {
-            Object.assign(formData, defaultFormData())
-        }
-    },
-    { immediate: true }
+	() => props.config,
+	config => {
+		if (config) {
+			Object.assign(formData, {
+				customer_code: config.customer_code,
+				github_token: "",
+				organization: config.organization,
+				token_type: config.token_type,
+				enabled: config.enabled,
+				auto_audit_enabled: config.auto_audit_enabled,
+				audit_schedule_cron: config.audit_schedule_cron,
+				include_repos: config.include_repos,
+				include_workflows: config.include_workflows,
+				include_members: config.include_members,
+				include_archived_repos: config.include_archived_repos,
+				repo_filter_mode: config.repo_filter_mode,
+				repo_filter_list: config.repo_filter_list || [],
+				notify_on_critical: config.notify_on_critical,
+				notify_on_high: config.notify_on_high,
+				notification_webhook_url: config.notification_webhook_url,
+				notification_email: config.notification_email,
+				minimum_passing_score: config.minimum_passing_score
+			})
+		} else {
+			Object.assign(formData, defaultFormData())
+		}
+	},
+	{ immediate: true }
 )
 
 async function handleSubmit() {
-    try {
-        await formRef.value?.validate()
-    } catch {
-        return
-    }
+	try {
+		await formRef.value?.validate()
+	} catch {
+		return
+	}
 
-    saving.value = true
-    try {
-        if (isEdit.value && props.config) {
-            const updateData: GitHubAuditConfigUpdate = { ...formData }
-            if (!updateData.github_token) {
-                delete updateData.github_token
-            }
-            await Api.githubAudit.updateConfig(props.config.id, updateData)
-            message.success("Configuration updated successfully")
-        } else {
-            await Api.githubAudit.createConfig(formData)
-            message.success("Configuration created successfully")
-        }
-        emit("saved")
-        showDrawer.value = false
-    } catch (error: any) {
-        message.error(error.response?.data?.detail || "Failed to save configuration")
-    } finally {
-        saving.value = false
-    }
+	saving.value = true
+	try {
+		if (isEdit.value && props.config) {
+			const updateData: GitHubAuditConfigUpdate = { ...formData }
+			if (!updateData.github_token) {
+				delete updateData.github_token
+			}
+			await Api.githubAudit.updateConfig(props.config.id, updateData)
+			message.success("Configuration updated successfully")
+		} else {
+			await Api.githubAudit.createConfig(formData)
+			message.success("Configuration created successfully")
+		}
+		emit("saved")
+		showDrawer.value = false
+	} catch (error: any) {
+		message.error(error.response?.data?.detail || "Failed to save configuration")
+	} finally {
+		saving.value = false
+	}
 }
 
 onMounted(async () => {
-    try {
-        const response = await Api.customers.getCustomers()
-        if (response.data.customers) {
-            customerOptions.value = response.data.customers.map((c: any) => ({
-                label: `${c.customer_name} (${c.customer_code})`,
-                value: c.customer_code
-            }))
-        }
-    } catch (error) {
-        console.error("Failed to load customers:", error)
-    }
+	try {
+		const response = await Api.customers.getCustomers()
+		if (response.data.customers) {
+			customerOptions.value = response.data.customers.map((c: any) => ({
+				label: `${c.customer_name} (${c.customer_code})`,
+				value: c.customer_code
+			}))
+		}
+	} catch (error) {
+		console.error("Failed to load customers:", error)
+	}
 })
 </script>
