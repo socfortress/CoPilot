@@ -1,5 +1,7 @@
 # Quickstart (SOC Operators)
 
+![Incident Management → Alerts](../assets/ui/incident-alerts.png)
+
 ## Where you spend most of your time
 
 - **Incident Management → Alerts**: triage, investigate, and decide next actions.
@@ -14,10 +16,16 @@
 - Add comments and assign if needed
 
 ### 2) Create and link a case
+
+![Incident Management → Cases](../assets/ui/incident-cases.png)
+
 - Create a case from the alert when it needs tracking
 - Link related alerts to the same case
 
 ### 3) Attach evidence (artifacts)
+
+![Artifacts](../assets/ui/artifacts.png)
+
 - Upload case artifacts (files, exports)
 - Use report templates when generating customer-ready PDFs
 

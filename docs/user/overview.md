@@ -2,6 +2,8 @@
 
 CoPilot is a “single pane of glass” for operating an open-source SOC/SIEM stack.
 
+![CoPilot Overview dashboard](../assets/ui/overview.png)
+
 ## Two primary user roles
 
 ### SOC operator / analyst

@@ -39,6 +39,30 @@ This page explains what each left‑hand navigation item in CoPilot does and how
 
 ## Left navigation map (what each item does)
 
+Below are screenshots of the main areas (from a lab environment) to help you quickly recognize where you are in the UI.
+
+- Overview: 
+
+  ![Overview](../assets/ui/overview.png)
+
+- Incident Management → Alerts:
+
+  ![Incident Alerts](../assets/ui/incident-alerts.png)
+
+- Connectors:
+
+  ![Connectors](../assets/ui/connectors.png)
+
+- Indices → Index Management:
+
+  ![Indices](../assets/ui/indices-management.png)
+
+- Graylog → Management:
+
+  ![Graylog Management](../assets/ui/graylog-management.png)
+
+---
+
 ### Overview
 
 - **Overview** → `/overview`
