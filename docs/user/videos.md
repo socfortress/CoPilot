@@ -11,163 +11,217 @@ Use these thumbnail grids to jump straight to the video you want.
 <div class="sf-thumb-grid" markdown>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack](https://img.youtube.com/vi/euFrHP0VkD8/hqdefault.jpg)](#vid-euFrHP0VkD8)
+<a href="https://www.youtube.com/watch?v=euFrHP0VkD8" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/euFrHP0VkD8/hqdefault.jpg" alt="Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack">
+</a>
 [Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack](#vid-euFrHP0VkD8)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?](https://img.youtube.com/vi/ffAnV31Ne54/hqdefault.jpg)](#vid-ffAnV31Ne54)
+<a href="https://www.youtube.com/watch?v=ffAnV31Ne54" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/ffAnV31Ne54/hqdefault.jpg" alt="Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?">
+</a>
 [Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?](#vid-ffAnV31Ne54)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Powerful Wazuh Alert Management With CoPilot!](https://img.youtube.com/vi/3p6qiH9UF8U/hqdefault.jpg)](#vid-3p6qiH9UF8U)
+<a href="https://www.youtube.com/watch?v=3p6qiH9UF8U" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/3p6qiH9UF8U/hqdefault.jpg" alt="Powerful Wazuh Alert Management With CoPilot!">
+</a>
 [Powerful Wazuh Alert Management With CoPilot!](#vid-3p6qiH9UF8U)
 <div class="sf-thumb-meta">Best for: Operator</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Introducing the Datastore in CoPilot: Upload Artifacts into Cases with Ease](https://img.youtube.com/vi/GwPyKM2X1EM/hqdefault.jpg)](#vid-GwPyKM2X1EM)
+<a href="https://www.youtube.com/watch?v=GwPyKM2X1EM" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/GwPyKM2X1EM/hqdefault.jpg" alt="Introducing the Datastore in CoPilot: Upload Artifacts into Cases with Ease">
+</a>
 [Introducing the Datastore in CoPilot: Upload Artifacts into Cases with Ease](#vid-GwPyKM2X1EM)
 <div class="sf-thumb-meta">Best for: Operator</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM](https://img.youtube.com/vi/S2ELWusHcxA/hqdefault.jpg)](#vid-S2ELWusHcxA)
+<a href="https://www.youtube.com/watch?v=S2ELWusHcxA" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/S2ELWusHcxA/hqdefault.jpg" alt="Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM">
+</a>
 [Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM](#vid-S2ELWusHcxA)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot](https://img.youtube.com/vi/l9OLtgemYOQ/hqdefault.jpg)](#vid-l9OLtgemYOQ)
+<a href="https://www.youtube.com/watch?v=l9OLtgemYOQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/l9OLtgemYOQ/hqdefault.jpg" alt="Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot">
+</a>
 [Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot](#vid-l9OLtgemYOQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Endpoint Investigation Made Easier: New Velociraptor Features in SOCFORTRESS CoPilot](https://img.youtube.com/vi/R_pG1Gx_7O8/hqdefault.jpg)](#vid-R_pG1Gx_7O8)
+<a href="https://www.youtube.com/watch?v=R_pG1Gx_7O8" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/R_pG1Gx_7O8/hqdefault.jpg" alt="Endpoint Investigation Made Easier: New Velociraptor Features in SOCFORTRESS CoPilot">
+</a>
 [Endpoint Investigation Made Easier: New Velociraptor Features in SOCFORTRESS CoPilot](#vid-R_pG1Gx_7O8)
 <div class="sf-thumb-meta">Best for: Operator</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!](https://img.youtube.com/vi/-2srPC-Dw-0/hqdefault.jpg)](#vid--2srPC-Dw-0)
+<a href="https://www.youtube.com/watch?v=-2srPC-Dw-0" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/-2srPC-Dw-0/hqdefault.jpg" alt="AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!">
+</a>
 [AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!](#vid--2srPC-Dw-0)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg)](#vid-FHjD9QBaLD4)
+<a href="https://www.youtube.com/watch?v=FHjD9QBaLD4" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg" alt="AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!">
+</a>
 [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](#vid-FHjD9QBaLD4)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!](https://img.youtube.com/vi/QaLrmSgEcLI/hqdefault.jpg)](#vid-QaLrmSgEcLI)
+<a href="https://www.youtube.com/watch?v=QaLrmSgEcLI" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/QaLrmSgEcLI/hqdefault.jpg" alt="AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!">
+</a>
 [AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!](#vid-QaLrmSgEcLI)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot](https://img.youtube.com/vi/tguRiVgytso/hqdefault.jpg)](#vid-tguRiVgytso)
+<a href="https://www.youtube.com/watch?v=tguRiVgytso" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/tguRiVgytso/hqdefault.jpg" alt="Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot">
+</a>
 [Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot](#vid-tguRiVgytso)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding](https://img.youtube.com/vi/AH1g3p8s2_o/hqdefault.jpg)](#vid-AH1g3p8s2_o)
+<a href="https://www.youtube.com/watch?v=AH1g3p8s2_o" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/AH1g3p8s2_o/hqdefault.jpg" alt="Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding">
+</a>
 [Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding](#vid-AH1g3p8s2_o)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!](https://img.youtube.com/vi/llm3uSSUhqs/hqdefault.jpg)](#vid-llm3uSSUhqs)
+<a href="https://www.youtube.com/watch?v=llm3uSSUhqs" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/llm3uSSUhqs/hqdefault.jpg" alt="Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!">
+</a>
 [Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!](#vid-llm3uSSUhqs)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle](https://img.youtube.com/vi/Ko5jLfkSCrk/hqdefault.jpg)](#vid-Ko5jLfkSCrk)
+<a href="https://www.youtube.com/watch?v=Ko5jLfkSCrk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Ko5jLfkSCrk/hqdefault.jpg" alt="Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle">
+</a>
 [Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle](#vid-Ko5jLfkSCrk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts](https://img.youtube.com/vi/GWTNA-6Z_Tk/hqdefault.jpg)](#vid-GWTNA-6Z_Tk)
+<a href="https://www.youtube.com/watch?v=GWTNA-6Z_Tk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/GWTNA-6Z_Tk/hqdefault.jpg" alt="Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts">
+</a>
 [Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts](#vid-GWTNA-6Z_Tk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![🚀 Master Sysmon Config Management with CoPilot & Wazuh!](https://img.youtube.com/vi/XT1d49HTqQw/hqdefault.jpg)](#vid-XT1d49HTqQw)
+<a href="https://www.youtube.com/watch?v=XT1d49HTqQw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/XT1d49HTqQw/hqdefault.jpg" alt="🚀 Master Sysmon Config Management with CoPilot & Wazuh!">
+</a>
 [🚀 Master Sysmon Config Management with CoPilot & Wazuh!](#vid-XT1d49HTqQw)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Supercharge Wazuh Active Response with CoPilot: No More Limits!](https://img.youtube.com/vi/Ogr70DWAeTc/hqdefault.jpg)](#vid-Ogr70DWAeTc)
+<a href="https://www.youtube.com/watch?v=Ogr70DWAeTc" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Ogr70DWAeTc/hqdefault.jpg" alt="Supercharge Wazuh Active Response with CoPilot: No More Limits!">
+</a>
 [Supercharge Wazuh Active Response with CoPilot: No More Limits!](#vid-Ogr70DWAeTc)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot](https://img.youtube.com/vi/TMJOBATTK9M/hqdefault.jpg)](#vid-TMJOBATTK9M)
+<a href="https://www.youtube.com/watch?v=TMJOBATTK9M" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/TMJOBATTK9M/hqdefault.jpg" alt="Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot">
+</a>
 [Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot](#vid-TMJOBATTK9M)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team](https://img.youtube.com/vi/tL3oNEx_3M8/hqdefault.jpg)](#vid-tL3oNEx_3M8)
+<a href="https://www.youtube.com/watch?v=tL3oNEx_3M8" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/tL3oNEx_3M8/hqdefault.jpg" alt="Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team">
+</a>
 [Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team](#vid-tL3oNEx_3M8)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Auto-Enrich Wazuh Events with Threat Intel Feeds!](https://img.youtube.com/vi/FJunzP2c_mQ/hqdefault.jpg)](#vid-FJunzP2c_mQ)
+<a href="https://www.youtube.com/watch?v=FJunzP2c_mQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/FJunzP2c_mQ/hqdefault.jpg" alt="Auto-Enrich Wazuh Events with Threat Intel Feeds!">
+</a>
 [Auto-Enrich Wazuh Events with Threat Intel Feeds!](#vid-FJunzP2c_mQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data](https://img.youtube.com/vi/CVVj9HRtjOE/hqdefault.jpg)](#vid-CVVj9HRtjOE)
+<a href="https://www.youtube.com/watch?v=CVVj9HRtjOE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/CVVj9HRtjOE/hqdefault.jpg" alt="Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data">
+</a>
 [Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data](#vid-CVVj9HRtjOE)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Simplify Cloud Security: ScoutSuite and Copilot Tutorial](https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg)](#vid-G3MDJSMvnRo)
+<a href="https://www.youtube.com/watch?v=G3MDJSMvnRo" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg" alt="Simplify Cloud Security: ScoutSuite and Copilot Tutorial">
+</a>
 [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](#vid-G3MDJSMvnRo)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!](https://img.youtube.com/vi/Qnm9SXVJGWw/hqdefault.jpg)](#vid-Qnm9SXVJGWw)
+<a href="https://www.youtube.com/watch?v=Qnm9SXVJGWw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Qnm9SXVJGWw/hqdefault.jpg" alt="Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!">
+</a>
 [Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!](#vid-Qnm9SXVJGWw)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning](https://img.youtube.com/vi/-SVHKuQUxlI/hqdefault.jpg)](#vid--SVHKuQUxlI)
+<a href="https://www.youtube.com/watch?v=-SVHKuQUxlI" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/-SVHKuQUxlI/hqdefault.jpg" alt="Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning">
+</a>
 [Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning](#vid--SVHKuQUxlI)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment](https://img.youtube.com/vi/fNybop2FTRE/hqdefault.jpg)](#vid-fNybop2FTRE)
+<a href="https://www.youtube.com/watch?v=fNybop2FTRE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/fNybop2FTRE/hqdefault.jpg" alt="Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment">
+</a>
 [Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment](#vid-fNybop2FTRE)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot + VirusTotal: Instantly Scan Files for Malware!](https://img.youtube.com/vi/ixxVe_9LAfQ/hqdefault.jpg)](#vid-ixxVe_9LAfQ)
+<a href="https://www.youtube.com/watch?v=ixxVe_9LAfQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/ixxVe_9LAfQ/hqdefault.jpg" alt="CoPilot + VirusTotal: Instantly Scan Files for Malware!">
+</a>
 [CoPilot + VirusTotal: Instantly Scan Files for Malware!](#vid-ixxVe_9LAfQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews](https://img.youtube.com/vi/NUrnlTvLzVk/hqdefault.jpg)](#vid-NUrnlTvLzVk)
+<a href="https://www.youtube.com/watch?v=NUrnlTvLzVk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/NUrnlTvLzVk/hqdefault.jpg" alt="CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews">
+</a>
 [CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews](#vid-NUrnlTvLzVk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
@@ -179,271 +233,361 @@ Use these thumbnail grids to jump straight to the video you want.
 <div class="sf-thumb-grid" markdown>
 
 <div class="sf-thumb-card" markdown>
-[![Copilot - Your Open Source Security Integrator](https://img.youtube.com/vi/qQbex2zAhWI/hqdefault.jpg)](#vid-qQbex2zAhWI)
+<a href="https://www.youtube.com/watch?v=qQbex2zAhWI" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/qQbex2zAhWI/hqdefault.jpg" alt="Copilot - Your Open Source Security Integrator">
+</a>
 [Copilot - Your Open Source Security Integrator](#vid-qQbex2zAhWI)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Copilot - Your Next Open Source Security Tool](https://img.youtube.com/vi/CQolYA30Gls/hqdefault.jpg)](#vid-CQolYA30Gls)
+<a href="https://www.youtube.com/watch?v=CQolYA30Gls" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/CQolYA30Gls/hqdefault.jpg" alt="Copilot - Your Next Open Source Security Tool">
+</a>
 [Copilot - Your Next Open Source Security Tool](#vid-CQolYA30Gls)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot Install](https://img.youtube.com/vi/seITDGXAiJw/hqdefault.jpg)](#vid-seITDGXAiJw)
+<a href="https://www.youtube.com/watch?v=seITDGXAiJw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/seITDGXAiJw/hqdefault.jpg" alt="CoPilot Install">
+</a>
 [CoPilot Install](#vid-seITDGXAiJw)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot Install -- Final Update (I Hope)](https://img.youtube.com/vi/7dUHSMWWTuY/hqdefault.jpg)](#vid-7dUHSMWWTuY)
+<a href="https://www.youtube.com/watch?v=7dUHSMWWTuY" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/7dUHSMWWTuY/hqdefault.jpg" alt="CoPilot Install -- Final Update (I Hope)">
+</a>
 [CoPilot Install -- Final Update (I Hope)](#vid-7dUHSMWWTuY)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack](https://img.youtube.com/vi/euFrHP0VkD8/hqdefault.jpg)](#vid-euFrHP0VkD8)
+<a href="https://www.youtube.com/watch?v=euFrHP0VkD8" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/euFrHP0VkD8/hqdefault.jpg" alt="Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack">
+</a>
 [Wazuh Content Pack For Graylog - Easily Configure Your SOCFortress SIEM Stack](#vid-euFrHP0VkD8)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?](https://img.youtube.com/vi/ffAnV31Ne54/hqdefault.jpg)](#vid-ffAnV31Ne54)
+<a href="https://www.youtube.com/watch?v=ffAnV31Ne54" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/ffAnV31Ne54/hqdefault.jpg" alt="Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?">
+</a>
 [Wazuh Security Configuration Assessment and CoPilot - Are Your Endpoints Compliant?](#vid-ffAnV31Ne54)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM](https://img.youtube.com/vi/S2ELWusHcxA/hqdefault.jpg)](#vid-S2ELWusHcxA)
+<a href="https://www.youtube.com/watch?v=S2ELWusHcxA" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/S2ELWusHcxA/hqdefault.jpg" alt="Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM">
+</a>
 [Supercharge Open-Source Cybersecurity: Velociraptor + Sigma for Your SIEM](#vid-S2ELWusHcxA)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Manage Wazuh Detection Rules with CoPilot](https://img.youtube.com/vi/31lCr80-NVM/hqdefault.jpg)](#vid-31lCr80-NVM)
+<a href="https://www.youtube.com/watch?v=31lCr80-NVM" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/31lCr80-NVM/hqdefault.jpg" alt="Manage Wazuh Detection Rules with CoPilot">
+</a>
 [Manage Wazuh Detection Rules with CoPilot](#vid-31lCr80-NVM)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot](https://img.youtube.com/vi/l9OLtgemYOQ/hqdefault.jpg)](#vid-l9OLtgemYOQ)
+<a href="https://www.youtube.com/watch?v=l9OLtgemYOQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/l9OLtgemYOQ/hqdefault.jpg" alt="Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot">
+</a>
 [Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot](#vid-l9OLtgemYOQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!](https://img.youtube.com/vi/-2srPC-Dw-0/hqdefault.jpg)](#vid--2srPC-Dw-0)
+<a href="https://www.youtube.com/watch?v=-2srPC-Dw-0" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/-2srPC-Dw-0/hqdefault.jpg" alt="AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!">
+</a>
 [AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!](#vid--2srPC-Dw-0)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg)](#vid-FHjD9QBaLD4)
+<a href="https://www.youtube.com/watch?v=FHjD9QBaLD4" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg" alt="AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!">
+</a>
 [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](#vid-FHjD9QBaLD4)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!](https://img.youtube.com/vi/QaLrmSgEcLI/hqdefault.jpg)](#vid-QaLrmSgEcLI)
+<a href="https://www.youtube.com/watch?v=QaLrmSgEcLI" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/QaLrmSgEcLI/hqdefault.jpg" alt="AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!">
+</a>
 [AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!](#vid-QaLrmSgEcLI)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot](https://img.youtube.com/vi/tguRiVgytso/hqdefault.jpg)](#vid-tguRiVgytso)
+<a href="https://www.youtube.com/watch?v=tguRiVgytso" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/tguRiVgytso/hqdefault.jpg" alt="Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot">
+</a>
 [Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot](#vid-tguRiVgytso)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding](https://img.youtube.com/vi/AH1g3p8s2_o/hqdefault.jpg)](#vid-AH1g3p8s2_o)
+<a href="https://www.youtube.com/watch?v=AH1g3p8s2_o" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/AH1g3p8s2_o/hqdefault.jpg" alt="Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding">
+</a>
 [Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding](#vid-AH1g3p8s2_o)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!](https://img.youtube.com/vi/llm3uSSUhqs/hqdefault.jpg)](#vid-llm3uSSUhqs)
+<a href="https://www.youtube.com/watch?v=llm3uSSUhqs" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/llm3uSSUhqs/hqdefault.jpg" alt="Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!">
+</a>
 [Mastering Wazuh's Active Response: Block Malicious IPs with CoPilot & Wazuh!](#vid-llm3uSSUhqs)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle](https://img.youtube.com/vi/Ko5jLfkSCrk/hqdefault.jpg)](#vid-Ko5jLfkSCrk)
+<a href="https://www.youtube.com/watch?v=Ko5jLfkSCrk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Ko5jLfkSCrk/hqdefault.jpg" alt="Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle">
+</a>
 [Revolutionize Your SIEM Alerts: Integrate CoPilot & Shuffle](#vid-Ko5jLfkSCrk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts](https://img.youtube.com/vi/GWTNA-6Z_Tk/hqdefault.jpg)](#vid-GWTNA-6Z_Tk)
+<a href="https://www.youtube.com/watch?v=GWTNA-6Z_Tk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/GWTNA-6Z_Tk/hqdefault.jpg" alt="Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts">
+</a>
 [Tame the Noise: Sigma Exclusions in CoPilot for Velociraptor Alerts](#vid-GWTNA-6Z_Tk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![🚀 Master Sysmon Config Management with CoPilot & Wazuh!](https://img.youtube.com/vi/XT1d49HTqQw/hqdefault.jpg)](#vid-XT1d49HTqQw)
+<a href="https://www.youtube.com/watch?v=XT1d49HTqQw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/XT1d49HTqQw/hqdefault.jpg" alt="🚀 Master Sysmon Config Management with CoPilot & Wazuh!">
+</a>
 [🚀 Master Sysmon Config Management with CoPilot & Wazuh!](#vid-XT1d49HTqQw)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Supercharge Wazuh Active Response with CoPilot: No More Limits!](https://img.youtube.com/vi/Ogr70DWAeTc/hqdefault.jpg)](#vid-Ogr70DWAeTc)
+<a href="https://www.youtube.com/watch?v=Ogr70DWAeTc" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Ogr70DWAeTc/hqdefault.jpg" alt="Supercharge Wazuh Active Response with CoPilot: No More Limits!">
+</a>
 [Supercharge Wazuh Active Response with CoPilot: No More Limits!](#vid-Ogr70DWAeTc)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot](https://img.youtube.com/vi/TMJOBATTK9M/hqdefault.jpg)](#vid-TMJOBATTK9M)
+<a href="https://www.youtube.com/watch?v=TMJOBATTK9M" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/TMJOBATTK9M/hqdefault.jpg" alt="Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot">
+</a>
 [Test Your Wazuh Detection Rules: One-Click Atomic Red Team + Velociraptor + CoPilot](#vid-TMJOBATTK9M)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team](https://img.youtube.com/vi/tL3oNEx_3M8/hqdefault.jpg)](#vid-tL3oNEx_3M8)
+<a href="https://www.youtube.com/watch?v=tL3oNEx_3M8" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/tL3oNEx_3M8/hqdefault.jpg" alt="Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team">
+</a>
 [Simulate Linux Attacks and Tune Detection Rules with Atomic Red Team](#vid-tL3oNEx_3M8)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Indexer and CoPilot Integration](https://img.youtube.com/vi/MKqByrkDqZU/hqdefault.jpg)](#vid-MKqByrkDqZU)
+<a href="https://www.youtube.com/watch?v=MKqByrkDqZU" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/MKqByrkDqZU/hqdefault.jpg" alt="Wazuh Indexer and CoPilot Integration">
+</a>
 [Wazuh Indexer and CoPilot Integration](#vid-MKqByrkDqZU)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Graylog and CoPilot Integration](https://img.youtube.com/vi/MyvPmQ4Cfb0/hqdefault.jpg)](#vid-MyvPmQ4Cfb0)
+<a href="https://www.youtube.com/watch?v=MyvPmQ4Cfb0" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/MyvPmQ4Cfb0/hqdefault.jpg" alt="Graylog and CoPilot Integration">
+</a>
 [Graylog and CoPilot Integration](#vid-MyvPmQ4Cfb0)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Manager and CoPilot Integration](https://img.youtube.com/vi/iI6yKgKC5wk/hqdefault.jpg)](#vid-iI6yKgKC5wk)
+<a href="https://www.youtube.com/watch?v=iI6yKgKC5wk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/iI6yKgKC5wk/hqdefault.jpg" alt="Wazuh Manager and CoPilot Integration">
+</a>
 [Wazuh Manager and CoPilot Integration](#vid-iI6yKgKC5wk)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Velociraptor and Copilot Integration](https://img.youtube.com/vi/-Cqyczg6ELE/hqdefault.jpg)](#vid--Cqyczg6ELE)
+<a href="https://www.youtube.com/watch?v=-Cqyczg6ELE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/-Cqyczg6ELE/hqdefault.jpg" alt="Velociraptor and Copilot Integration">
+</a>
 [Velociraptor and Copilot Integration](#vid--Cqyczg6ELE)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot And InfluxDB - Monitor Your SIEM Stack Servers with InfluxDB and CoPilot!](https://img.youtube.com/vi/vt6M1SzNfjE/hqdefault.jpg)](#vid-vt6M1SzNfjE)
+<a href="https://www.youtube.com/watch?v=vt6M1SzNfjE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/vt6M1SzNfjE/hqdefault.jpg" alt="CoPilot And InfluxDB - Monitor Your SIEM Stack Servers with InfluxDB and CoPilot!">
+</a>
 [CoPilot And InfluxDB - Monitor Your SIEM Stack Servers with InfluxDB and CoPilot!](#vid-vt6M1SzNfjE)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![DFIR-IRIS and CoPilot - Bring your SOC Alerts into CoPilot](https://img.youtube.com/vi/n9koQ1UL-L0/hqdefault.jpg)](#vid-n9koQ1UL-L0)
+<a href="https://www.youtube.com/watch?v=n9koQ1UL-L0" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/n9koQ1UL-L0/hqdefault.jpg" alt="DFIR-IRIS and CoPilot - Bring your SOC Alerts into CoPilot">
+</a>
 [DFIR-IRIS and CoPilot - Bring your SOC Alerts into CoPilot](#vid-n9koQ1UL-L0)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Grafana and CoPilot Integration](https://img.youtube.com/vi/FOOU1PQnd7g/hqdefault.jpg)](#vid-FOOU1PQnd7g)
+<a href="https://www.youtube.com/watch?v=FOOU1PQnd7g" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/FOOU1PQnd7g/hqdefault.jpg" alt="Grafana and CoPilot Integration">
+</a>
 [Grafana and CoPilot Integration](#vid-FOOU1PQnd7g)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Seamless Office365 Integration with Wazuh: Simplified by Copilot](https://img.youtube.com/vi/ihj2F2rA6BQ/hqdefault.jpg)](#vid-ihj2F2rA6BQ)
+<a href="https://www.youtube.com/watch?v=ihj2F2rA6BQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/ihj2F2rA6BQ/hqdefault.jpg" alt="Seamless Office365 Integration with Wazuh: Simplified by Copilot">
+</a>
 [Seamless Office365 Integration with Wazuh: Simplified by Copilot](#vid-ihj2F2rA6BQ)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Unlock Full SIEM Potential: Effortlessly Ingest Crowdstrike Events Into Your Open Source SIEM!](https://img.youtube.com/vi/YOVUOpZDEzM/hqdefault.jpg)](#vid-YOVUOpZDEzM)
+<a href="https://www.youtube.com/watch?v=YOVUOpZDEzM" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/YOVUOpZDEzM/hqdefault.jpg" alt="Unlock Full SIEM Potential: Effortlessly Ingest Crowdstrike Events Into Your Open Source SIEM!">
+</a>
 [Unlock Full SIEM Potential: Effortlessly Ingest Crowdstrike Events Into Your Open Source SIEM!](#vid-YOVUOpZDEzM)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot Event Shipper Configuration - Ingest 3rd Party Logs into your SIEM Stack](https://img.youtube.com/vi/tgWRvOJX5HA/hqdefault.jpg)](#vid-tgWRvOJX5HA)
+<a href="https://www.youtube.com/watch?v=tgWRvOJX5HA" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/tgWRvOJX5HA/hqdefault.jpg" alt="CoPilot Event Shipper Configuration - Ingest 3rd Party Logs into your SIEM Stack">
+</a>
 [CoPilot Event Shipper Configuration - Ingest 3rd Party Logs into your SIEM Stack](#vid-tgWRvOJX5HA)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Unlock Full SIEM Potential: Effortlessly Ingest DUO MFA Events Into Your Open Source SIEM!](https://img.youtube.com/vi/chTthkpMpTY/hqdefault.jpg)](#vid-chTthkpMpTY)
+<a href="https://www.youtube.com/watch?v=chTthkpMpTY" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/chTthkpMpTY/hqdefault.jpg" alt="Unlock Full SIEM Potential: Effortlessly Ingest DUO MFA Events Into Your Open Source SIEM!">
+</a>
 [Unlock Full SIEM Potential: Effortlessly Ingest DUO MFA Events Into Your Open Source SIEM!](#vid-chTthkpMpTY)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![New MITRE ATT&CK Integration in CoPilot – Game Changer for SOC Analysts!](https://img.youtube.com/vi/wK4aA7QrXmE/hqdefault.jpg)](#vid-wK4aA7QrXmE)
+<a href="https://www.youtube.com/watch?v=wK4aA7QrXmE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/wK4aA7QrXmE/hqdefault.jpg" alt="New MITRE ATT&CK Integration in CoPilot – Game Changer for SOC Analysts!">
+</a>
 [New MITRE ATT&CK Integration in CoPilot – Game Changer for SOC Analysts!](#vid-wK4aA7QrXmE)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Supercharge Your Log Ingestion: Webhooks to SIEM Made Easy](https://img.youtube.com/vi/O5SaFwAMMtA/hqdefault.jpg)](#vid-O5SaFwAMMtA)
+<a href="https://www.youtube.com/watch?v=O5SaFwAMMtA" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/O5SaFwAMMtA/hqdefault.jpg" alt="Supercharge Your Log Ingestion: Webhooks to SIEM Made Easy">
+</a>
 [Supercharge Your Log Ingestion: Webhooks to SIEM Made Easy](#vid-O5SaFwAMMtA)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Auto-Enrich Wazuh Events with Threat Intel Feeds!](https://img.youtube.com/vi/FJunzP2c_mQ/hqdefault.jpg)](#vid-FJunzP2c_mQ)
+<a href="https://www.youtube.com/watch?v=FJunzP2c_mQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/FJunzP2c_mQ/hqdefault.jpg" alt="Auto-Enrich Wazuh Events with Threat Intel Feeds!">
+</a>
 [Auto-Enrich Wazuh Events with Threat Intel Feeds!](#vid-FJunzP2c_mQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data](https://img.youtube.com/vi/CVVj9HRtjOE/hqdefault.jpg)](#vid-CVVj9HRtjOE)
+<a href="https://www.youtube.com/watch?v=CVVj9HRtjOE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/CVVj9HRtjOE/hqdefault.jpg" alt="Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data">
+</a>
 [Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data](#vid-CVVj9HRtjOE)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Simplify Cloud Security: ScoutSuite and Copilot Tutorial](https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg)](#vid-G3MDJSMvnRo)
+<a href="https://www.youtube.com/watch?v=G3MDJSMvnRo" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg" alt="Simplify Cloud Security: ScoutSuite and Copilot Tutorial">
+</a>
 [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](#vid-G3MDJSMvnRo)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!](https://img.youtube.com/vi/Qnm9SXVJGWw/hqdefault.jpg)](#vid-Qnm9SXVJGWw)
+<a href="https://www.youtube.com/watch?v=Qnm9SXVJGWw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/Qnm9SXVJGWw/hqdefault.jpg" alt="Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!">
+</a>
 [Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!](#vid-Qnm9SXVJGWw)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning](https://img.youtube.com/vi/-SVHKuQUxlI/hqdefault.jpg)](#vid--SVHKuQUxlI)
+<a href="https://www.youtube.com/watch?v=-SVHKuQUxlI" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/-SVHKuQUxlI/hqdefault.jpg" alt="Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning">
+</a>
 [Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning](#vid--SVHKuQUxlI)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment](https://img.youtube.com/vi/fNybop2FTRE/hqdefault.jpg)](#vid-fNybop2FTRE)
+<a href="https://www.youtube.com/watch?v=fNybop2FTRE" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/fNybop2FTRE/hqdefault.jpg" alt="Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment">
+</a>
 [Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment](#vid-fNybop2FTRE)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot + VirusTotal: Instantly Scan Files for Malware!](https://img.youtube.com/vi/ixxVe_9LAfQ/hqdefault.jpg)](#vid-ixxVe_9LAfQ)
+<a href="https://www.youtube.com/watch?v=ixxVe_9LAfQ" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/ixxVe_9LAfQ/hqdefault.jpg" alt="CoPilot + VirusTotal: Instantly Scan Files for Malware!">
+</a>
 [CoPilot + VirusTotal: Instantly Scan Files for Malware!](#vid-ixxVe_9LAfQ)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews](https://img.youtube.com/vi/NUrnlTvLzVk/hqdefault.jpg)](#vid-NUrnlTvLzVk)
+<a href="https://www.youtube.com/watch?v=NUrnlTvLzVk" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/NUrnlTvLzVk/hqdefault.jpg" alt="CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews">
+</a>
 [CoPilot Supercharges Wazuh with SCA & Vulnerability Overviews](#vid-NUrnlTvLzVk)
 <div class="sf-thumb-meta">Best for: Both</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Wazuh Dashboards in Grafana & Customer Provisioning in CoPilot!](https://img.youtube.com/vi/hC0JHY5WF-U/hqdefault.jpg)](#vid-hC0JHY5WF-U)
+<a href="https://www.youtube.com/watch?v=hC0JHY5WF-U" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/hC0JHY5WF-U/hqdefault.jpg" alt="Wazuh Dashboards in Grafana & Customer Provisioning in CoPilot!">
+</a>
 [Wazuh Dashboards in Grafana & Customer Provisioning in CoPilot!](#vid-hC0JHY5WF-U)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![Create Custom PDF Reports in Grafana Detailing Security Events | Share with Your Clients!](https://img.youtube.com/vi/9xHr5-Wlypw/hqdefault.jpg)](#vid-9xHr5-Wlypw)
+<a href="https://www.youtube.com/watch?v=9xHr5-Wlypw" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/9xHr5-Wlypw/hqdefault.jpg" alt="Create Custom PDF Reports in Grafana Detailing Security Events | Share with Your Clients!">
+</a>
 [Create Custom PDF Reports in Grafana Detailing Security Events | Share with Your Clients!](#vid-9xHr5-Wlypw)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
-[![A Customer Portal for Your Open-Source SIEM Stack](https://img.youtube.com/vi/_bvFejcFwFM/hqdefault.jpg)](#vid-_bvFejcFwFM)
+<a href="https://www.youtube.com/watch?v=_bvFejcFwFM" target="_blank" rel="noopener">
+  <img src="https://img.youtube.com/vi/_bvFejcFwFM/hqdefault.jpg" alt="A Customer Portal for Your Open-Source SIEM Stack">
+</a>
 [A Customer Portal for Your Open-Source SIEM Stack](#vid-_bvFejcFwFM)
 <div class="sf-thumb-meta">Best for: Admin-Engineer</div>
 </div>
