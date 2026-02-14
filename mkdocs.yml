@@ -1,27 +1,48 @@
 site_name: SOCFortress CoPilot Docs
 site_description: User guide and developer/AI-agent documentation for SOCFortress CoPilot
+site_url: https://socfortress.github.io/CoPilot/
 repo_url: https://github.com/socfortress/CoPilot
 edit_uri: edit/main/
 
+# Use pretty URLs (/user/overview/) instead of .html pages.
+use_directory_urls: true
+
 theme:
   name: material
+  language: en
   features:
     - navigation.instant
+    - navigation.instant.progress
     - navigation.sections
     - navigation.expand
     - navigation.tracking
+    - navigation.path
     - navigation.top
+    - navigation.indexes
+    - toc.follow
     - content.code.copy
     - search.suggest
     - search.highlight
 
+plugins:
+  - search
+
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - toc:
       permalink: true
   - tables
   - def_list
   - footnotes
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md

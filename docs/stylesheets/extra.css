@@ -1,0 +1,22 @@
+/* Small tweaks to make the landing page + nav feel less cramped */
+
+/* Slightly wider content for guide-style docs */
+.md-content__inner {
+  max-width: 900px;
+}
+
+/* Make inline code a touch more readable */
+.md-typeset code {
+  font-size: 0.9em;
+}
+
+/* Reduce spacing between list items slightly */
+.md-typeset ul li,
+.md-typeset ol li {
+  margin-bottom: 0.15rem;
+}
+
+/* Nicer horizontal rule */
+.md-typeset hr {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
