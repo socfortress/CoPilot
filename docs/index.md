@@ -2,6 +2,11 @@
 
 CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM stack (Wazuh, Graylog, Velociraptor, Grafana, Shuffle, etc.).
 
+<video autoplay loop muted playsinline style="width:100%; border-radius:16px; margin: 12px 0 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
+  <source src="assets/hero/copilot-hub.webm" type="video/webm">
+  <source src="assets/hero/copilot-hub.mp4" type="video/mp4">
+</video>
+
 <div class="sf-home-grid" markdown>
 
 <div class="sf-card" markdown>

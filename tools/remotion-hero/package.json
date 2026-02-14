@@ -1,0 +1,19 @@
+{
+  "name": "remotion-hero",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render:mp4": "node ./scripts/render.mjs mp4",
+    "render:webm": "node ./scripts/render.mjs webm",
+    "render": "npm run render:webm && npm run render:mp4"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.422",
+    "@remotion/renderer": "^4.0.363",
+    "lucide-react": "^0.542.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remotion": "^4.0.363"
+  }
+}
