@@ -1,0 +1,41 @@
+site_name: SOCFortress CoPilot Docs
+site_description: User guide and developer/AI-agent documentation for SOCFortress CoPilot
+repo_url: https://github.com/socfortress/CoPilot
+edit_uri: edit/main/
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - navigation.tracking
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - tables
+  - def_list
+  - footnotes
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Overview: user/overview.md
+      - Quickstart (Operators): user/operators-quickstart.md
+      - Quickstart (Admins/Engineers): user/admins-quickstart.md
+      - Features by Area: user/features.md
+      - Videos (Playlist): user/videos.md
+  - Developer / AI Agent Docs:
+      - Start Here: README.md
+      - Architecture: architecture/ARCHITECTURE.md
+      - Map: architecture/MAP.md
+      - Deployment: architecture/DEPLOYMENT.md
+      - Data Flows: architecture/DATA_FLOWS.md
+      - Database Schema: architecture/DATABASE_SCHEMA.md
+      - Adding a Connector: integrations/ADDING_A_CONNECTOR.md
