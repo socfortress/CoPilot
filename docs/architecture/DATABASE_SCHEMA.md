@@ -15,6 +15,121 @@ For typical agent change work, these domains are most relevant:
 - Scheduler/job metadata: `scheduled_job_metadata`, `schedulerjob`, `index_snapshot_schedules`
 - Agent data store / artifacts / reports: `agent_datastore`, `incident_management_case_datastore`, `incident_management_case_report_template_datastore`, `vulnerability_reports`, `sca_reports`, `agent_vulnerabilities`
 
+## Critical relationship graph
+
+Compact relationship views for incident workflows and access controls.
+
+### Alerts -> assets (with link fields)
+
+```text
+incident_management_alert
+  id (PK)
+    |
+    | 1-to-many via incident_management_asset.alert_linked
+    v
+incident_management_asset
+  alert_linked (FK -> incident_management_alert.id)
+  alert_context_id (FK -> incident_management_alertcontext.id)
+  index_name, index_id (origin pointer into SIEM index document)
+```
+
+### Cases <-> case-alert links <-> alerts
+
+```text
+incident_management_case                      incident_management_alert
+  id (PK)                                     id (PK)
+     \                                           /
+      \                                         /
+       +-- incident_management_casealertlink --+
+             case_id  (FK -> incident_management_case.id)
+             alert_id (FK -> incident_management_alert.id)
+             PK(case_id, alert_id)
+```
+
+### Tags (alert/tag join)
+
+```text
+incident_management_alert                 incident_management_alerttag
+  id (PK)                                 id (PK), tag
+     \                                      /
+      \                                    /
+       +-- incident_management_alert_to_tag --+
+             alert_id (FK -> incident_management_alert.id)
+             tag_id   (FK -> incident_management_alerttag.id)
+             PK(alert_id, tag_id)
+```
+
+### IoCs (alert/ioc join)
+
+```text
+incident_management_alert                  incident_management_ioc
+  id (PK)                                  id (PK), value/type/description
+     \                                       /
+      \                                     /
+       +-- incident_management_alert_to_ioc --+
+             alert_id (FK -> incident_management_alert.id)
+             ioc_id   (FK -> incident_management_ioc.id)
+             PK(alert_id, ioc_id)
+```
+
+### Comments (alert comments + case comments)
+
+```text
+incident_management_comment
+  alert_id (FK -> incident_management_alert.id)
+  comment, user_name, created_at
+
+incident_management_case_comment
+  case_id (FK -> incident_management_case.id)
+  comment, user_name, created_at
+```
+
+### Case datastore + report template datastore
+
+```text
+incident_management_case
+  id (PK)
+    |
+    | 1-to-many via incident_management_case_datastore.case_id
+    v
+incident_management_case_datastore
+  case_id (FK -> incident_management_case.id)
+  bucket_name, object_key, file_name, file_hash, upload_time
+
+incident_management_case_report_template_datastore
+  (global report templates; no case FK)
+  report_template_name, bucket_name, object_key, file_name, file_hash, upload_time
+```
+
+### Tag access control and alert visibility
+
+```text
+incident_management_tag_access_settings
+  enabled, untagged_alert_behavior, default_tag_id (FK -> incident_management_alerttag.id)
+
+user_tag_access (user_id, tag_id)   role_tag_access (role_id, tag_id)
+        \                                  /
+         +------ allowed tag ids per identity ------+
+                           |
+incident_management_alert_to_tag (alert_id, tag_id)
+                           |
+                   incident_management_alert
+```
+
+When tag access control is enabled, alert visibility is constrained by the tag IDs reachable through `user_tag_access` and/or `role_tag_access` joined through `incident_management_alert_to_tag`. `incident_management_tag_access_settings` controls whether this filtering is active and what happens for untagged alerts (`untagged_alert_behavior`, optional `default_tag_id` fallback).
+
+### SIEM data origin + query pattern
+
+- Graylog alerting uses the `gl-events` index pattern (for example `gl-events*` in query flows).
+- Those Graylog alert documents live in Wazuh indexer storage (OpenSearch-backed).
+- Wazuh indexer is the backing SIEM event store across event sources (endpoints, O365 integrations, network connectors, and other ingested streams).
+- CoPilot commonly resolves and displays SIEM records by querying Wazuh indexer with `index_name` plus `index_id`.
+- Code pointers:
+  - `backend/app/connectors/wazuh_indexer/routes/alerts.py`
+  - `backend/app/connectors/wazuh_indexer/services/alerts.py`
+  - `backend/app/routers/wazuh_indexer.py`
+  - `frontend/src/api/endpoints/alerts.ts`
+
 ## Table Inventory (Alembic-Derived)
 
 ### Customer, Auth, and Core Platform
