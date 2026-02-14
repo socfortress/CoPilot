@@ -32,7 +32,7 @@ nav:
       - Features by Area: user/features.md
       - Videos (Playlist): user/videos.md
   - Developer / AI Agent Docs:
-      - Start Here: README.md
+      - Start Here: developer/start-here.md
       - Architecture: architecture/ARCHITECTURE.md
       - Map: architecture/MAP.md
       - Deployment: architecture/DEPLOYMENT.md
