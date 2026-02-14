@@ -4,12 +4,17 @@ site_url: https://socfortress.github.io/CoPilot/
 repo_url: https://github.com/socfortress/CoPilot
 edit_uri: edit/main/
 
+# Optional: show a link to the repo in the header like many MkDocs sites
+repo_name: socfortress/CoPilot
+
 # Use pretty URLs (/user/overview/) instead of .html pages.
 use_directory_urls: true
 
 theme:
   name: material
   language: en
+  logo: assets/brand/logo.png
+  favicon: assets/brand/favicon.ico
   font:
     text: IBM Plex Sans
     code: JetBrains Mono
@@ -34,6 +39,18 @@ theme:
 plugins:
   - search
 
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/socfortress/CoPilot
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@taylorwalton_socfortress
+    - icon: fontawesome/brands/medium
+      link: https://socfortress.medium.com/
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/socfortressmdr/
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -47,9 +64,6 @@ markdown_extensions:
   - tables
   - def_list
   - footnotes
-
-extra:
-  generator: false
 
 extra_css:
   - stylesheets/socfortress-theme.css

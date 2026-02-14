@@ -1,8 +1,8 @@
-/* Small tweaks to make the landing page + nav feel less cramped */
+/* Small tweaks to make the docs feel more like a product site + guide */
 
 /* Slightly wider content for guide-style docs */
 .md-content__inner {
-  max-width: 900px;
+  max-width: 980px;
 }
 
 /* Make inline code a touch more readable */
@@ -19,4 +19,30 @@
 /* Nicer horizontal rule */
 .md-typeset hr {
   border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Home page cards (DFIR-IRIS-ish layout) */
+.sf-home-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.sf-card {
+  grid-column: span 12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 1.1rem 1.1rem 0.8rem;
+}
+
+.sf-card h2 {
+  margin-top: 0.1rem;
+}
+
+@media (min-width: 900px) {
+  .sf-card {
+    grid-column: span 6;
+  }
 }
