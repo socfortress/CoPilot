@@ -2,6 +2,13 @@
 
 This page is generated from the CoPilot YouTube playlist transcripts and is meant to be used like documentation.
 
+## Jump to your role
+
+[I'm a SOC Operator](#operator-track-soc-operators-analysts){ .md-button .md-button--primary }
+[I'm an Admin/Engineer](#adminengineer-track-admins-engineers){ .md-button .md-button--primary }
+
+---
+
 ## How to use this page
 
 - Start with the section that matches your role.
