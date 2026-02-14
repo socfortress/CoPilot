@@ -52,3 +52,4 @@ repos:
       hooks:
           - id: eslint
             args: ["--config", "frontend/eslint.config.mjs"]
+            exclude: ^(docs/|tools/)

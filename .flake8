@@ -12,3 +12,4 @@ extend-ignore = E203
 exclude =
     .venv
     backend/alembic/env.py
+    docs/*
