@@ -256,3 +256,5 @@ The contents of this repository is available under [AGPL-3.0 license](LICENSE.tx
 If you like this project and want to support it, you can consider becoming a sponsor to help us continue maintaining it and adding new features.
 
 [![GitHub Sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/taylorwalton)
+
+<!-- macbot: test PR comment (no functional change) -->
