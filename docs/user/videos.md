@@ -2,9 +2,16 @@
 
 This page is generated from the CoPilot YouTube playlist transcripts and is meant to be used like documentation.
 
+## Jump to your role
+
+[I'm a SOC Operator](#operator-track-soc-operators-analysts){ .md-button .md-button--primary }
+[I'm an Admin/Engineer](#adminengineer-track-admins-engineers){ .md-button .md-button--primary }
+
+---
+
 ## Browse by thumbnail
 
-Use these thumbnail grids to jump straight to the video you want.
+Use these thumbnail grids to jump straight to a video. Click the **thumbnail** to open YouTube in a new tab; click the **title** to jump to the summary on this page.
 
 ### Operator thumbnails (SOC operators / analysts)
 
