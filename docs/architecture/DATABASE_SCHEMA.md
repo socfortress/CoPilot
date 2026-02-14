@@ -118,6 +118,14 @@ incident_management_alert_to_tag (alert_id, tag_id)
 
 When tag access control is enabled, alert visibility is constrained by the tag IDs reachable through `user_tag_access` and/or `role_tag_access` joined through `incident_management_alert_to_tag`. `incident_management_tag_access_settings` controls whether this filtering is active and what happens for untagged alerts (`untagged_alert_behavior`, optional `default_tag_id` fallback).
 
+**Tag access enforcement location (code pointers)**
+- Core tag RBAC logic: `backend/app/incidents/middleware/tag_access.py` (`TagAccessHandler`)
+  - `is_tag_rbac_enabled()` (global enable/disable)
+  - `build_alert_query_filters()` (computes accessible tags + untagged behavior)
+  - `check_alert_tag_access()` / `can_user_access_alert()` (per-alert decision)
+- Applied in incident DB query layer:
+  - `backend/app/incidents/services/db_operations.py` uses `tag_access_handler.build_alert_query_filters()` to add SQL `exists()` conditions when counting/listing alerts.
+
 ### SIEM data origin + query pattern
 
 - Graylog alerting uses the `gl-events` index pattern (for example `gl-events*` in query flows).
