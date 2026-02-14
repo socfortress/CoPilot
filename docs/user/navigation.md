@@ -148,7 +148,7 @@ This page explains what each left‑hand navigation item in CoPilot does and how
 
 ## Suggested mental model (helps teams onboard)
 
-- **Operators**: 
+- **Operators**:
   - live in *Incident Management* and only dip into *Artifacts* and *Customers* as needed.
 
 - **Admins/Engineers**:
