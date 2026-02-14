@@ -10,6 +10,13 @@ use_directory_urls: true
 theme:
   name: material
   language: en
+  font:
+    text: IBM Plex Sans
+    code: JetBrains Mono
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
   features:
     - navigation.instant
     - navigation.instant.progress
@@ -41,7 +48,11 @@ markdown_extensions:
   - def_list
   - footnotes
 
+extra:
+  generator: false
+
 extra_css:
+  - stylesheets/socfortress-theme.css
   - stylesheets/extra.css
 
 nav:
