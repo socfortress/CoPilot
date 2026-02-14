@@ -1,0 +1,11 @@
+{
+  "name": "copilot-ui-screenshots",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "shots": "node ./screenshots.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.51.1"
+  }
+}
