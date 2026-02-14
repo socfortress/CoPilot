@@ -46,3 +46,42 @@
     grid-column: span 6;
   }
 }
+
+/* Video thumbnail grids */
+.sf-thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  margin: 0.75rem 0 1.5rem;
+}
+
+.sf-thumb-card {
+  grid-column: span 12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 0.75rem;
+}
+
+.sf-thumb-card img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.sf-thumb-card a {
+  text-decoration: none;
+}
+
+.sf-thumb-meta {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+@media (min-width: 900px) {
+  .sf-thumb-card {
+    grid-column: span 4;
+  }
+}
