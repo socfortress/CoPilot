@@ -1,15 +1,54 @@
 # SOCFortress CoPilot Documentation
 
-CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM stack (Wazuh, Graylog, Velociraptor, Grafana, etc.).
+CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM stack (Wazuh, Graylog, Velociraptor, Grafana, Shuffle, etc.).
 
-This documentation is organized into two tracks:
+<div class="sf-home-grid" markdown>
 
-- **User Guide** (operators + admins/engineers)
-- **Developer / AI Agent Docs** (architecture + safe change playbooks)
+<div class="sf-card" markdown>
+
+## New to CoPilot?
+
+Start with the guides and get a working SOC workflow quickly.
+
+[Getting started →](user/operators-quickstart.md){ .md-button .md-button--primary }
+
+</div>
+
+<div class="sf-card" markdown>
+
+## Configure your stack
+
+Admins/engineers: set up connectors + integrations so alerts flow.
+
+[Admin quickstart →](user/admins-quickstart.md){ .md-button .md-button--primary }
+
+</div>
+
+<div class="sf-card" markdown>
+
+## Developer / AI Agent Docs
+
+Architecture, data flows, schema, and safe change playbooks.
+
+[Start here →](developer/start-here.md){ .md-button }
+
+</div>
+
+<div class="sf-card" markdown>
+
+## Video library (summarized)
+
+Use the playlist like documentation: grouped summaries by topic.
+
+[Browse videos →](user/videos.md){ .md-button }
+
+</div>
+
+</div>
 
 ---
 
-## Start here (pick your path)
+## Pick your path
 
 === "SOC operator / analyst"
 
@@ -42,4 +81,4 @@ This documentation is organized into two tracks:
 
 - Use the **left sidebar** (hamburger menu on mobile) to navigate.
 - Use **Search** (top bar) to jump straight to a topic.
-- Every page is stored in‑repo under `docs/` so it can be updated via PRs.
+- Everything lives under `docs/` and is updated via PRs.
