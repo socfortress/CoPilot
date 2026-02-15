@@ -6,11 +6,25 @@ Provisioning is designed to create the *plumbing* that makes customer data land 
 
 ![Customers](../assets/ui/customers.png)
 
+<video autoplay loop muted playsinline style="width:100%; border-radius:16px; margin: 12px 0 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
+  <source src="../assets/hero/customer-provisioning-walkthrough.webm" type="video/webm">
+  <source src="../assets/hero/customer-provisioning-walkthrough.mp4" type="video/mp4">
+</video>
+
 ---
 
 ## What provisioning sets up
 
 When you provision a customer, CoPilot will typically create:
+
+### Also: customer-scoped integrations and network connectors
+
+This same customer context is also where you configure:
+
+- **3rd-party integrations** (for example: Office 365, Mimecast, CrowdStrike, etc.)
+- **Network connectors** (firewalls and network devices)
+
+These are set up **per customer** so that ingestion, routing, and alerting stay tenant-aware.
 
 ### 1) Dedicated customer index + routing (Graylog → Wazuh Indexer)
 
