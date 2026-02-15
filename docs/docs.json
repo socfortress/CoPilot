@@ -194,6 +194,85 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "UI Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "user/ui/overview"
+            ]
+          },
+          {
+            "group": "Incident Management",
+            "pages": [
+              "user/ui/incident-management",
+              "user/ui/incident-alerts",
+              "user/ui/incident-cases",
+              "user/ui/incident-sources"
+            ]
+          },
+          {
+            "group": "Customers",
+            "pages": [
+              "user/ui/customers",
+              "user/customer-provisioning",
+              "user/ui/external-third-party-integrations",
+              "user/ui/external-network-connectors",
+              "user/ui/external-services",
+              "user/ui/connectors"
+            ]
+          },
+          {
+            "group": "Graylog",
+            "pages": [
+              "user/ui/graylog",
+              "user/ui/graylog-management",
+              "user/ui/graylog-pipelines",
+              "user/ui/graylog-metrics"
+            ]
+          },
+          {
+            "group": "Indices",
+            "pages": [
+              "user/ui/indices",
+              "user/ui/indices-management",
+              "user/ui/indices-snapshots"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "user/ui/agents",
+              "user/ui/agents-groups",
+              "user/ui/agents-vulnerability-overview",
+              "user/ui/agents-sca-overview",
+              "user/ui/agents-sysmon-config",
+              "user/ui/agents-patch-tuesday",
+              "user/ui/agents-detection-rules",
+              "user/ui/agents-copilot-actions"
+            ]
+          },
+          {
+            "group": "Reports",
+            "pages": [
+              "user/ui/report-general",
+              "user/ui/report-creation",
+              "user/ui/report-sca",
+              "user/ui/report-vulnerability"
+            ]
+          },
+          {
+            "group": "Other",
+            "pages": [
+              "user/ui/healthcheck",
+              "user/ui/scheduler",
+              "user/ui/artifacts",
+              "user/ui/customer-portal"
+            ]
+          }
+        ]
       }
     ]
   }
