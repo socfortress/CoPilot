@@ -78,6 +78,53 @@ nav:
       - Customer Provisioning (Tenancy): user/customer-provisioning.md
       - Features by Area: user/features.md
       - Navigation Guide (UI): user/navigation.md
+      - UI Guide (mirrors menu):
+          - Start here: user/ui/README.md
+          - Overview: user/ui/overview.md
+          - Incident Management:
+              - Incident Management: user/ui/incident-management.md
+              - Sources: user/ui/incident-sources.md
+              - Alerts: user/ui/incident-alerts.md
+              - Cases: user/ui/incident-cases.md
+          - Alerts:
+              - Alerts: user/ui/alerts.md
+              - SIEM: user/ui/alerts-siem.md
+              - MITRE ATT&CK: user/ui/alerts-mitre.md
+              - Atomic Red Team: user/ui/alerts-atomic-red-team.md
+          - Artifacts: user/ui/artifacts.md
+          - Customers: user/ui/customers.md
+          - Agents:
+              - Agents: user/ui/agents.md
+              - Groups: user/ui/agents-groups.md
+              - Sysmon Config: user/ui/agents-sysmon-config.md
+              - Detection Rules: user/ui/agents-detection-rules.md
+              - CoPilot Actions: user/ui/agents-copilot-actions.md
+              - Vulnerability Overview: user/ui/agents-vulnerability-overview.md
+              - Patch Tuesday: user/ui/agents-patch-tuesday.md
+              - SCA Overview: user/ui/agents-sca-overview.md
+          - Report Creation:
+              - Report Creation: user/ui/report-creation.md
+              - General Reports: user/ui/report-general.md
+              - Vulnerability Reports: user/ui/report-vulnerability.md
+              - SCA Reports: user/ui/report-sca.md
+          - Healthcheck: user/ui/healthcheck.md
+          - Indices:
+              - Indices: user/ui/indices.md
+              - Index Management: user/ui/indices-management.md
+              - Snapshot & Restore: user/ui/indices-snapshots.md
+          - Graylog:
+              - Graylog: user/ui/graylog.md
+              - Management: user/ui/graylog-management.md
+              - Metrics: user/ui/graylog-metrics.md
+              - Pipelines: user/ui/graylog-pipelines.md
+          - Connectors: user/ui/connectors.md
+          - External Services:
+              - External Services: user/ui/external-services.md
+              - 3rd Party Integrations: user/ui/external-third-party-integrations.md
+              - Network Connectors: user/ui/external-network-connectors.md
+              - Singul App Auth: user/ui/external-singul-app-auth.md
+          - Scheduler: user/ui/scheduler.md
+          - Customer Portal: user/ui/customer-portal.md
       - Videos (Playlist): user/videos.md
   - Developer / AI Agent Docs:
       - Start Here: developer/start-here.md
