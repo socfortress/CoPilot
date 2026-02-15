@@ -10,10 +10,10 @@ CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM st
 
 <div class="sf-cta-row" markdown>
 
-[Operator quickstart](user/operators-quickstart.md){ .md-button .md-button--primary }
-[Admin/Engineer quickstart](user/admins-quickstart.md){ .md-button .md-button--primary }
-[UI Guide (by menu)](user/ui/overview.md){ .md-button }
-[Developer docs](developer/start-here.md){ .md-button }
+[Operator quickstart](user/operators-quickstart.md)
+[Admin/Engineer quickstart](user/admins-quickstart.md)
+[UI Reference (menu)](user/ui/overview.md)
+[Developer docs](developer/start-here.md)
 
 </div>
 
@@ -27,9 +27,9 @@ CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM st
 
 <div class="sf-hero-right" markdown>
 
-<video class="sf-hero-video" autoplay loop muted playsinline>
-  <source src="assets/hero/copilot-hub.webm" type="video/webm">
-  <source src="assets/hero/copilot-hub.mp4" type="video/mp4">
+<video class="sf-hero-video" autoPlay loop muted playsInline preload="auto">
+  <source src="/assets/hero/copilot-hub.webm" type="video/webm" />
+  <source src="/assets/hero/copilot-hub.mp4" type="video/mp4" />
 </video>
 
 </div>
@@ -100,7 +100,7 @@ Treat the YouTube playlist like documentation: links + structured bullets (no tr
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-account-multiple:</span> Provision a customer</h3>
+<h3 class="sf-task-title">Provision a customer</h3>
 
 Create a tenant + set up the minimum required configuration.
 
@@ -110,7 +110,7 @@ Create a tenant + set up the minimum required configuration.
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-connection:</span> Add integrations & connectors</h3>
+<h3 class="sf-task-title">Add integrations & connectors</h3>
 
 Connect third‑party sources and external network connectors so data flows into CoPilot.
 
@@ -120,7 +120,7 @@ Connect third‑party sources and external network connectors so data flows into
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-alert:</span> Triage an alert → open a case</h3>
+<h3 class="sf-task-title">Triage an alert → open a case</h3>
 
 Start from an alert, pivot to evidence, and manage work in a case.
 
@@ -130,7 +130,7 @@ Start from an alert, pivot to evidence, and manage work in a case.
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-database:</span> Manage indices</h3>
+<h3 class="sf-task-title">Manage indices</h3>
 
 Find, validate, and troubleshoot index patterns and retention.
 
@@ -140,7 +140,7 @@ Find, validate, and troubleshoot index patterns and retention.
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-magnify:</span> Navigate the UI fast</h3>
+<h3 class="sf-task-title">Navigate the UI fast</h3>
 
 Map the sidebar/menu to routes and learn deep‑link patterns.
 
@@ -150,7 +150,7 @@ Map the sidebar/menu to routes and learn deep‑link patterns.
 
 <div class="sf-task-card" markdown>
 
-<h3 class="sf-task-title"><span class="sf-icon">:material-code-tags:</span> Build / change CoPilot safely</h3>
+<h3 class="sf-task-title">Build / change CoPilot safely</h3>
 
 Architecture, schema source‑of‑truth, and change playbooks.
 

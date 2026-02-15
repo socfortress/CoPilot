@@ -33,7 +33,7 @@ incident_management_asset
   index_name, index_id (origin pointer into SIEM index document)
 ```
 
-### Cases <-> case-alert links <-> alerts
+### Cases ↔ case-alert links ↔ alerts
 
 ```text
 incident_management_case                      incident_management_alert
