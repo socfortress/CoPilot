@@ -1,0 +1,117 @@
+---
+title: Troubleshooting index
+description: Symptom → likely causes → what to check (CoPilot + SIEM stack).
+---
+
+# Troubleshooting index
+
+This page is a **symptom-based index**. Find what you’re seeing, then follow the checks.
+
+> Wireframe note: this is intentionally high-level. As we fill docs, each item will link to deeper pages with exact UI clicks and screenshots.
+
+---
+
+## Ingestion
+
+### No endpoint logs (Wazuh)
+
+Likely causes:
+- Wazuh connector not verified
+- agent not enrolled / offline
+- indexing/storage issue
+- tenant/customer association missing
+
+What to check:
+- CoPilot: Connectors → Wazuh status
+- CoPilot: Agents shows host online
+- Wazuh: agent status + manager logs
+- Indexer/OpenSearch: index health
+
+### No syslog / network logs
+
+Likely causes:
+- device not sending syslog
+- collector not listening / firewall/ACL
+- parsing pipeline not extracting fields
+- routing/tenant association missing
+
+What to check:
+- device syslog destination IP/port
+- collector receive logs
+- Graylog input/stream/pipeline
+
+### No third-party integration events (O365/Mimecast/etc.)
+
+Likely causes:
+- API credentials/scopes wrong
+- export/collector not running
+- routing/tenant association missing
+
+What to check:
+- CoPilot: External Services / Integration status
+- credential permissions
+- ingestion job logs (if applicable)
+
+---
+
+## Visualization
+
+### Grafana dashboards are empty
+
+Likely causes:
+- Grafana connector not verified
+- provisioning not completed
+- index pattern/data source misconfigured
+- data is not flowing yet
+
+What to check:
+- CoPilot: connector status
+- customer provisioning status
+- Grafana: data source points at correct indices
+
+---
+
+## Alerting
+
+### Graylog alerts not showing in CoPilot
+
+Likely causes:
+- Graylog connector not verified
+- event definitions not firing
+- `gl-events*` not being written
+- CoPilot not querying the correct index/pattern
+
+What to check:
+- CoPilot: Graylog connector status
+- Graylog: event definitions + streams
+- Indexer: `gl-events*` exists and has recent docs
+
+---
+
+## Incident workflow
+
+### Can’t create cases / case workflow feels broken
+
+Likely causes:
+- permissions/RBAC
+- missing required configuration
+
+What to check:
+- user permissions/roles
+- customer/tenant context
+
+---
+
+## Response
+
+### Velociraptor actions not working
+
+Likely causes:
+- Velociraptor connector not verified
+- agent not enrolled in Velociraptor org
+- permissions missing
+
+What to check:
+- CoPilot: Velociraptor connector status
+- Velociraptor: client visibility
+- CoPilot: agent metadata has velociraptor identifiers

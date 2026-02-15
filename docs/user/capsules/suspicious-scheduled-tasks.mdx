@@ -1,0 +1,27 @@
+---
+title: "SOC Playbook: Detecting and Removing Suspicious Scheduled Tasks"
+description: Investigate scheduled task persistence alerts and remove malicious tasks.
+---
+
+# SOC Playbook: Detecting and Removing Suspicious Scheduled Tasks
+
+**Video:** https://www.youtube.com/watch?v=5xHxhSBROEc
+
+## Goal
+Identify suspicious scheduled tasks used for persistence and remove them safely.
+
+## When to use
+- Alerts indicating scheduled task creation/modification
+
+## Prereqs
+- Endpoint telemetry (Windows) + investigation pivots
+
+## Procedure (high level)
+1) Triage the alert and identify the host/user/process context
+2) Enumerate scheduled tasks on the endpoint
+3) Identify suspicious task(s) and associated binaries/commands
+4) Contain/remediate and document
+
+## Validation
+- Suspicious task removed/disabled
+- Follow-on telemetry confirms no re-creation

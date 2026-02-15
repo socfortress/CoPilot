@@ -1,0 +1,54 @@
+---
+title: Office 365
+description: Ingest Microsoft 365 audit and sign-in telemetry, then visualize and alert on it in CoPilot.
+---
+
+# Office 365
+
+## What this integration is
+
+Office 365 (Microsoft 365) telemetry is typically **API-collected** audit/sign-in activity that becomes part of your tenant’s SIEM dataset.
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Microsoft 365 → **External Service integration** (API collector)
+2. Events → **SIEM storage** (Wazuh Indexer / OpenSearch-backed)
+3. Optional: events → **Graylog** alert definitions
+4. Alerts → `gl-events*` → **CoPilot Incident Management → Alerts**
+5. Operator workflow → **Cases**
+
+## What data you get (high level)
+
+- Audit activity (user/admin activity)
+- Authentication/sign-in related events (depending on collector scope)
+
+## Setup (wireframe)
+
+- Configure Office 365 under **External Services / 3rd Party Integrations**.
+- Ensure events are **tenant-aware** (associated with the correct customer).
+
+## Success criteria
+
+- [ ] You can locate at least one **recent** Office 365 event in CoPilot
+- [ ] The event is associated with the expected customer
+
+## Dashboards
+
+After provisioning, CoPilot can deploy templated dashboards for supported integrations.
+
+- [ ] Confirm relevant Grafana dashboards for this customer are **populated** (not empty panels)
+
+## Alerts (starter set)
+
+- Suspicious sign-ins (impossible travel / unfamiliar location, if available)
+- Admin role changes
+- Mailbox forwarding / inbox rule changes
+- OAuth consent / suspicious app registrations (if available)
+
+## Troubleshooting
+
+- Verify the external service/integration is connected and healthy
+- Confirm customer code / tenant routing assumptions
+- Validate the ingestion pipeline (collector → storage → CoPilot view)

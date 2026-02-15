@@ -1,0 +1,38 @@
+---
+title: Cisco ASA (syslog)
+---
+
+# Cisco ASA (syslog)
+
+## What you get (high level)
+
+- Firewall connection logs
+- ACL denies/permits
+- VPN-related logs (optional)
+
+## Data path (how it flows)
+
+ASA → syslog → ingestion/collector → Graylog parsing/routing → storage/indexing → alerts (`gl-events*`) → CoPilot Alerts/Cases.
+
+## Setup (wireframe)
+
+- Configure ASA logging + syslog destination.
+- Confirm downstream parsing and tenant-aware routing.
+
+## Success criteria
+
+- [ ] You can find fresh ASA events
+- [ ] You can identify the device/source
+- [ ] Events are routed to the correct customer
+
+## Starter alerts
+
+- Excessive denies/drops
+- VPN auth failures
+- Admin login/config change events
+
+## Troubleshooting
+
+- Confirm logging level
+- Confirm syslog host and interface
+- Confirm event volume is not overwhelming ingestion

@@ -70,7 +70,7 @@ extra_css:
   - stylesheets/extra.css
 
 nav:
-  - Home: index.md
+  - Home: index-mkdocs.md
   - User Guide:
       - Overview: user/overview.md
       - Quickstart (Operators): user/operators-quickstart.md

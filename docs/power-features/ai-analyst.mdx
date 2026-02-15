@@ -1,0 +1,142 @@
+---
+title: AI analyst / AI-assisted investigation
+description: AI-assisted workflows to speed up alert triage, investigation, and knowledge capture across your open-source SIEM stack.
+---
+
+# AI analyst / AI-assisted investigation
+
+CoPilot’s AI features are designed to reduce context switching and speed up common SOC workflows:
+- understand an alert faster ("what am I looking at?")
+- decide what to do next ("benign or investigate?")
+- generate drafts for repetitive engineering tasks (exclusions/tuning)
+- chat with your stack (Wazuh, Velociraptor, CoPilot) using natural language
+
+---
+
+## What it is
+
+In the videos, AI in CoPilot shows up in two main ways:
+
+### 1) AI analyst (alert-focused)
+
+AI analyst is embedded directly into CoPilot’s alert experience.
+
+Typical flow:
+1) Open an alert
+2) Select the impacted asset/hostname
+3) Use **AI analyst** to generate context and suggested next steps
+
+It can help:
+- summarize what triggered the detection
+- explain why the behavior can be suspicious
+- suggest what to validate next (triage steps)
+
+The same area can also support workflows like drafting **Wazuh exclusion rules** for noisy/expected behavior.
+
+### 2) AI chatbot / “chat with your stack” (tool-assisted)
+
+CoPilot can expose an AI chatbot that can interface with:
+- **Wazuh Manager**
+- **Wazuh Indexer (OpenSearch)**
+- **Velociraptor**
+- **CoPilot**
+
+This makes it possible to ask questions like:
+- “show me recent alerts for customer X”
+- “pull surrounding events for this index document”
+- “run a Velociraptor artifact on host Y”
+
+…and have CoPilot handle the underlying API/tool calls.
+
+The chatbot can also be extended with additional “tools” (as shown in the videos), such as:
+- threat intelligence lookups (IP/domain reputation)
+- cyber news summaries
+- internal knowledge base search/summarization
+- high-level attack surface/exposure checks
+
+---
+
+## Why this is a power feature
+
+AI assistance is most valuable after your core stack is stable:
+- alerts are flowing
+- assets/customers are properly scoped
+- investigation pivots work (index_id/index_name, artifacts, cases)
+
+Once that foundation is in place, AI can:
+- reduce time-to-understanding for analysts
+- standardize triage narratives
+- accelerate tuning (without living in XML/rules all day)
+
+---
+
+## Operator workflows (practical)
+
+### Triage an alert faster
+
+1) Open the alert and review key fields (command line, parent process, user, host)
+2) Run **AI analyst** to get:
+   - a plain-English explanation of the detection
+   - what makes it suspicious
+   - recommended validation steps
+3) Decide:
+   - escalate/investigate further, or
+   - mark as expected (and consider tuning)
+
+### Draft a Wazuh exclusion rule (noise reduction)
+
+If an alert is expected/benign but noisy:
+1) collect the key discriminators (image, command line pattern, user, parent, host group)
+2) generate a draft exclusion rule
+3) review it like code (avoid over-broad exclusions)
+4) deploy + validate
+
+### Chat with your stack (investigation + response)
+
+Use the chatbot when you want to do “SOC glue work” quickly:
+- ask questions against recent alerts
+- pivot into index logs for context
+- run Velociraptor collections/artifacts without leaving CoPilot
+
+---
+
+## Setup checklist (high level)
+
+Exact steps depend on your CoPilot release, but the videos show a common pattern:
+
+1) **Update your CoPilot deployment**
+   - pull the latest images
+   - update `docker-compose.yml` with the new AI/MCP service (if required)
+
+2) **Configure AI provider access**
+   - set your model provider API key(s) (example shown in the video: OpenAI)
+
+3) **Configure stack connectivity for tool-assisted chat**
+   - Wazuh Indexer (OpenSearch) URL + credentials
+   - Wazuh Manager connection details (if used)
+   - Velociraptor connection details
+
+4) **Validate permissions + scoping**
+   - ensure users can only summarize/ask questions over data they’re authorized to access (multi-tenant safety)
+
+---
+
+## Safety / guardrails
+
+- Don’t paste secrets into prompts.
+- Treat AI output as a draft: verify before acting.
+- Be careful with exclusion rules: tune precisely to avoid blinding detections.
+- Restrict access: AI can summarize sensitive customer data; enforce RBAC/tenant scoping.
+
+---
+
+## Video context
+
+- AI analyst (alert-context + exclusion-rule assistance):
+  - https://www.youtube.com/watch?v=-2srPC-Dw-0
+
+- AI chatbot + MCP-style “chat with your stack” (Wazuh/Indexer/Velociraptor/CoPilot):
+  - https://www.youtube.com/watch?v=FHjD9QBaLD4
+
+- Expanded AI companion features (threat intel, cyber news, knowledge base search, exposure view):
+  - https://www.youtube.com/watch?v=QaLrmSgEcLI

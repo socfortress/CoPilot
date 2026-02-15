@@ -1,0 +1,64 @@
+---
+title: SentinelOne (syslog over TLS)
+description: Forward SentinelOne alerts/events to the SIEM using TLS (mutual auth).
+---
+
+# SentinelOne (syslog over TLS)
+
+## What this connector is
+
+This connector forwards **SentinelOne** alerts and events to your SIEM using **TLS-encrypted syslog** with **mutual authentication**.
+
+Detailed guide:
+- https://socfortress.supportbench.net/article/sentinelone-syslog-forwarder-to-siem-stack
+
+---
+
+## Architecture
+
+```
+SentinelOne Cloud → TLS (mutual auth) → SIEM Stack
+```
+
+---
+
+## Setup steps (high level)
+
+### 1) Configure Syslog integration in SentinelOne
+
+- Log into the SentinelOne console
+- Go to **Settings → Integrations**
+- Select **Syslog**
+
+Set:
+- **Host:** SIEM FQDN/IP
+- **Port:** typically 6514 for TLS
+- Enable **Use TLS secure connection**
+- Syslog format: **RFC-5424**
+
+### 2) Upload certificates (mutual TLS)
+
+You’ll typically upload:
+- Root CA certificate
+- Client certificate
+- Client private key
+
+### 3) Firewall rules
+
+Ensure inbound rules allow SentinelOne cloud endpoints to reach your syslog listener, and that internal routing allows traffic to Graylog.
+
+### 4) Select event types
+
+In the integration’s Notifications tab, select which event categories to forward.
+
+### 5) Test
+
+Use **Test Connection** and confirm events arrive in the SIEM.
+
+---
+
+## Troubleshooting
+
+- TLS handshake failures: validate PEM formats, chain, and expiry.
+- Missing events: confirm event types selected + verify ingestion parsing.
+- Connectivity: confirm firewall/NAT and correct port.

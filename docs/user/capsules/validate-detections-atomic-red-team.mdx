@@ -1,0 +1,31 @@
+---
+title: "Validate Detections with Atomic Red Team (CoPilot)"
+description: Run controlled simulations to confirm detection rules fire as expected.
+---
+
+# Validate Detections with Atomic Red Team (CoPilot)
+
+**Video:** https://www.youtube.com/watch?v=HXnT-wnpxuQ
+
+## Goal
+Simulate attacker behaviors and verify detections + routing end-to-end.
+
+## When to use
+- After deploying/tuning detection rules
+- After telemetry changes (Sysmon, agent configs)
+
+## Prereqs
+- Atomic Red Team available on a test endpoint
+- Velociraptor artifacts to execute tests remotely
+
+Related:
+- [Atomic Red Team (detection simulation)](/power-features/atomic-red-team)
+
+## Procedure (high level)
+1) Pick a safe atomic test
+2) Execute it via CoPilot/Velociraptor
+3) Confirm the expected alert fires
+4) Tune rules/telemetry if needed
+
+## Validation
+- Alert fires and is visible in the expected UI surface(s)

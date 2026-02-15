@@ -1,0 +1,62 @@
+---
+title: Fortinet FortiGate (syslog)
+description: Configure FortiGate to forward logs to your SIEM via syslog.
+---
+
+# Fortinet FortiGate (syslog)
+
+## What this connector is
+
+This connector covers how to configure a **Fortinet FortiGate** firewall to forward logs to your SIEM using **syslog**.
+
+---
+
+## Data path (how it flows)
+
+1) FortiGate → syslog (TCP/UDP)
+2) SIEM syslog input (typically Graylog)
+3) Stream/index routing + dashboards
+
+---
+
+## Configuration steps (FortiGate)
+
+### Step 1: Access the firewall
+
+- Open the FortiGate web UI (e.g., `https://192.168.1.99`)
+- Log in with administrative credentials
+
+### Step 2: Configure syslog forwarding
+
+In the FortiGate UI:
+
+- Go to **Log & Report**
+- Select **Log Settings**
+- Under **Syslog Servers**, click **Create New**
+
+Configure:
+- **Name:** recognizable name
+- **IP/Domain:** SIEM syslog server
+- **Reliable:** TCP (reliable) or UDP (faster)
+- **Port:** listening port (default 514)
+- **Facility:** e.g., Local7
+- **Source IP:** optional
+
+Note:
+- Syslog format is configured via FortiGate **CLI**. Set the format to **rfc5424**.
+
+### Step 3: Save
+
+Click **OK/Apply**.
+
+### Step 4: Verify reception
+
+Confirm logs appear on the SIEM syslog input.
+
+---
+
+## Additional considerations
+
+- Ensure firewall rules allow outbound syslog traffic to the SIEM.
+- If logs traverse the internet, use a secure transport (VPN/TLS collector pattern).
+- Keep NTP/time sync correct for reliable correlation.

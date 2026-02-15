@@ -1,0 +1,55 @@
+---
+title: Wazuh (endpoints)
+description: Endpoint log ingestion and security telemetry via Wazuh.
+---
+
+# Wazuh (endpoints)
+
+## What this integration is
+
+Wazuh is the primary endpoint telemetry source in many CoPilot deployments.
+
+It provides:
+- endpoint security events
+- agent inventory/health
+- vulnerability and SCA signals (when enabled)
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Endpoints → **Wazuh agent**
+2. Wazuh Manager → decoding/rules → events
+3. Events → **Wazuh Indexer / OpenSearch-backed storage**
+4. Optional: events → **Graylog** for search + alerting (environment-dependent)
+5. Alerts → `gl-events*` → **CoPilot Incident Management → Alerts**
+6. Operator workflow → **Cases**
+
+## Setup (wireframe)
+
+- Configure and verify the **Wazuh connector** in CoPilot.
+- Enroll at least one agent and ensure it’s tagged/routed to the correct customer context.
+
+## Success criteria
+
+- [ ] A test endpoint appears in CoPilot **Agents** and is online
+- [ ] You can find recent endpoint events
+- [ ] (Optional) You can tune detection rules and see changes reflected in alert volume
+
+## Dashboards
+
+After provisioning, default dashboards can be deployed per customer.
+
+- [ ] Confirm dashboards populate for the customer (endpoint/security views)
+
+## Alerts (starter set)
+
+- High-severity authentication events
+- Suspicious process/command execution signals (where applicable)
+- Privilege changes / new admin users
+
+## Troubleshooting
+
+- Confirm agent enrollment and connectivity to Wazuh Manager
+- Confirm indexing/storage health
+- Confirm tenant routing/customer association

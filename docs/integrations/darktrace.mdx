@@ -1,0 +1,62 @@
+---
+title: Darktrace
+description: Ingest Darktrace alert logs (AI Analyst / Model Breach / System Status) into the SOCFortress SIEM stack.
+---
+
+# Darktrace
+
+## What this integration is
+
+This integration ingests **Darktrace** alert logs into your SOCFortress SIEM stack.
+
+Darktrace provides multiple event types that can be useful for SOC operations:
+- AI Analyst alerts
+- Model breach alerts
+- System status alerts
+
+---
+
+## Data path (how it flows)
+
+1) Darktrace → API pull (token-authenticated)
+2) CoPilot collector → SIEM ingestion
+3) Optional: alerting and case workflows
+
+---
+
+## Credentials you’ll need
+
+Darktrace requires an **API token pair** (Public + Private). You typically need one per Master instance.
+
+Ways to obtain tokens:
+
+### Per-user token
+1) Enable “API Access” for a local user (Threat Visualizer → Admin → Permissions)
+2) Log in as that user → Account Settings → generate API tokens
+
+### Global token
+1) Threat Visualizer → System Config → Settings → generate API tokens
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer.
+2) Add **Darktrace** integration under the customer.
+3) Provide the Darktrace API endpoint + token pair.
+4) Validate alerts begin flowing.
+
+---
+
+## Success criteria
+
+- [ ] AI Analyst / Model Breach alerts show up in the SIEM
+- [ ] Events are associated with the correct customer
+
+---
+
+## Troubleshooting
+
+- Confirm the user used for token creation has API access enabled.
+- Confirm tokens are stored correctly and haven’t been rotated.
+- Validate time range/polling schedule in the collector.

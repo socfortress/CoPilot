@@ -1,0 +1,51 @@
+---
+title: Report creation
+description: Generate and export reports (often Grafana dashboards) for customers.
+---
+
+# Report creation
+
+## What it is
+
+CoPilot supports report creation, commonly via Grafana dashboards and PDF generation.
+
+## Who this is for
+
+- **Admin / Platform**: scheduled or ad-hoc reporting for customers
+- **Operator**: case-related evidence packets and summaries (depending on workflow)
+
+## Inputs (what it needs)
+
+- Grafana connector configured (for dashboard-backed reports)
+- Customer provisioning completed (dashboards/org exist)
+
+## Outputs (what you get)
+
+- Report outputs (PDF/exports, depending on configuration)
+- Shareable artifacts for customers and internal documentation
+
+## Where it lives in the UI
+
+- (Wireframe) This page will be updated with the exact menu path/route.
+
+## Success criteria
+
+- [ ] You can generate a report for a customer
+- [ ] Output can be downloaded/shared
+
+## Safety / guardrails
+
+- Reports can contain sensitive event data. Apply RBAC and retention rules.
+
+## Troubleshooting
+
+- Confirm Grafana connectivity
+- Confirm dashboards exist for the customer
+- Confirm report storage/output paths and permissions
+
+## Related UI reference pages
+
+- [Report creation](/user/ui/report-creation)
+- [General reports](/user/ui/report-general)
+- [SCA reports](/user/ui/report-sca)
+- [Vulnerability reports](/user/ui/report-vulnerability)

@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "SOCFortress CoPilot",
-  "description": "SOCFortress CoPilot documentation — operator workflows, admin/engineer configuration, and developer/AI-agent guides.",
+  "description": "SOCFortress CoPilot documentation \u2014 operator workflows, admin/engineer configuration, and developer/AI-agent guides.",
   "logo": {
     "light": "/assets/brand/logo-text.png",
     "dark": "/assets/brand/logo-text.png",
@@ -18,58 +18,25 @@
     "tabs": [
       {
         "tab": "Get Started",
-        "groups": [
-          {
-            "group": "Welcome",
-            "pages": [
-              "index",
-              "getting-started/what-is-copilot",
-              "getting-started/roles-and-mental-model",
-              "getting-started/first-wins"
-            ]
-          },
-          {
-            "group": "Quickstarts",
-            "pages": [
-              "user/operators-quickstart",
-              "user/admins-quickstart"
-            ]
-          },
-          {
-            "group": "Core concepts",
-            "pages": [
-              "user/overview",
-              "user/navigation",
-              "user/features"
-            ]
-          },
-          {
-            "group": "Watch next",
-            "pages": [
-              {
-                "title": "Operator track videos",
-                "href": "/user/videos#operator-track"
-              },
-              {
-                "title": "Admin/Engineer track videos",
-                "href": "/user/videos#adminengineer-track"
-              }
-            ]
-          }
+        "pages": [
+          "getting-started/start-here",
+          "getting-started/what-is-copilot",
+          "getting-started/roles-and-mental-model",
+          "getting-started/first-wins",
+          "user/operators-quickstart",
+          "user/admins-quickstart",
+          "user/overview",
+          "user/navigation",
+          "user/features"
         ]
       },
       {
         "tab": "Operator",
-        "groups": [
+        "pages": [
+          "operator",
+          "user/operators-quickstart",
           {
-            "group": "Start here",
-            "pages": [
-              "operator/index",
-              "user/operators-quickstart"
-            ]
-          },
-          {
-            "group": "Incident workflow",
+            "group": "Incident Management",
             "pages": [
               "user/ui/incident-alerts",
               "user/ui/incident-cases",
@@ -77,19 +44,36 @@
             ]
           },
           {
-            "group": "Reference (by menu)",
+            "group": "Agents",
             "pages": [
-              "user/ui/incident-management",
-              "user/ui/incident-sources"
+              "user/ui/agents",
+              "user/ui/agents-groups",
+              "user/ui/agents-sysmon-config",
+              "user/ui/agents-detection-rules",
+              "user/ui/agents-copilot-actions",
+              "user/ui/agents-vulnerability-overview",
+              "user/ui/agents-patch-tuesday",
+              "user/ui/agents-sca-overview"
+            ]
+          },
+          {
+            "group": "SOCFortress Capsules",
+            "pages": [
+              "user/capsules/index"
+            ]
+          },
+          {
+            "group": "Reporting",
+            "pages": [
+              "user/ui/report-creation",
+              "user/ui/report-general",
+              "user/ui/report-vulnerability",
+              "user/ui/report-sca"
             ]
           },
           {
             "group": "Videos",
             "pages": [
-              {
-                "title": "Operator track",
-                "href": "/user/videos#operator-track"
-              },
               "user/videos"
             ]
           }
@@ -97,180 +81,122 @@
       },
       {
         "tab": "Admin / Platform",
-        "groups": [
+        "pages": [
+          "admin",
+          "user/admins-quickstart",
           {
-            "group": "Start here",
+            "group": "Log ingestion",
             "pages": [
-              "admin/index",
-              "user/admins-quickstart",
-              "user/customer-provisioning"
-            ]
-          },
-          {
-            "group": "Integrations & connectors",
-            "pages": [
+              "user/customer-provisioning",
               "user/ui/external-third-party-integrations",
               "user/ui/external-network-connectors"
             ]
           },
           {
-            "group": "Platform (by menu)",
+            "group": "Alerting (Graylog \u2192 CoPilot)",
             "pages": [
-              "user/ui/customers",
-              "user/ui/indices-management",
-              "user/ui/graylog-management",
-              "user/ui/graylog-pipelines",
-              "user/ui/graylog-metrics"
+              "user/ui/incident-sources",
+              "user/ui/graylog-management"
             ]
           },
           {
-            "group": "Videos",
+            "group": "Indices (Wazuh Indexer)",
             "pages": [
-              {
-                "title": "Admin/Engineer track",
-                "href": "/user/videos#adminengineer-track"
-              },
-              "user/videos"
+              "user/ui/indices-management",
+              "user/ui/indices-snapshots"
+            ]
+          },
+          {
+            "group": "Health (InfluxDB)",
+            "pages": [
+              "user/ui/healthcheck"
+            ]
+          },
+          "user/videos"
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Catalog",
+            "pages": [
+              "integrations",
+              "integrations/wazuh",
+              "integrations/office-365",
+              "integrations/mimecast",
+              "integrations/huntress",
+              "integrations/crowdstrike",
+              "integrations/duo",
+              "integrations/defender-for-endpoint",
+              "integrations/bitdefender",
+              "integrations/carbon-black",
+              "integrations/cato-networks",
+              "integrations/darktrace",
+              "integrations/sap-siem"
+            ]
+          },
+          {
+            "group": "Network connectors (syslog)",
+            "pages": [
+              "integrations/network-connectors",
+              "integrations/network-connectors/fortigate",
+              "integrations/network-connectors/palo-alto",
+              "integrations/network-connectors/cisco-asa",
+              "integrations/network-connectors/sonicwall",
+              "integrations/network-connectors/opnsense",
+              "integrations/network-connectors/sentinelone"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Power Features",
+        "groups": [
+          {
+            "group": "Add-ons",
+            "pages": [
+              "power-features",
+              "power-features/mitre-attack",
+              "power-features/patch-tuesday",
+              "power-features/cloud-security-assessment",
+              "power-features/web-vulnerability-assessment",
+              "power-features/github-audit",
+              "power-features/ai-analyst",
+              "power-features/atomic-red-team",
+              "power-features/report-creation"
             ]
           }
         ]
       },
       {
         "tab": "Developer",
-        "groups": [
-          {
-            "group": "Start here",
-            "pages": [
-              "developer/start-here"
-            ]
-          },
-          {
-            "group": "Architecture",
-            "pages": [
-              "architecture/ARCHITECTURE",
-              "architecture/MAP",
-              "architecture/DEPLOYMENT",
-              "architecture/DATA_FLOWS",
-              "architecture/DATABASE_SCHEMA"
-            ]
-          },
-          {
-            "group": "Integrations",
-            "pages": [
-              "integrations/ADDING_A_CONNECTOR"
-            ]
-          },
-          {
-            "group": "Videos",
-            "pages": [
-              {
-                "title": "Browse videos",
-                "href": "/user/videos"
-              }
-            ]
-          }
+        "pages": [
+          "developer/start-here",
+          "architecture/ARCHITECTURE",
+          "architecture/MAP",
+          "architecture/DEPLOYMENT",
+          "architecture/DATA_FLOWS",
+          "architecture/DATABASE_SCHEMA",
+          "integrations/ADDING_A_CONNECTOR"
         ]
       },
       {
         "tab": "Videos",
-        "groups": [
-          {
-            "group": "Library",
-            "pages": [
-              "videos/index",
-              "user/videos"
-            ]
-          },
-          {
-            "group": "Role tracks",
-            "pages": [
-              {
-                "title": "Operator track",
-                "href": "/user/videos#operator-track"
-              },
-              {
-                "title": "Admin/Engineer track",
-                "href": "/user/videos#adminengineer-track"
-              }
-            ]
-          }
+        "pages": [
+          "videos",
+          "user/videos"
         ]
       },
       {
-        "tab": "UI Reference",
+        "tab": "Reference",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Essentials",
             "pages": [
-              "user/ui/overview"
-            ]
-          },
-          {
-            "group": "Incident Management",
-            "pages": [
-              "user/ui/incident-management",
-              "user/ui/incident-alerts",
-              "user/ui/incident-cases",
-              "user/ui/incident-sources"
-            ]
-          },
-          {
-            "group": "Customers",
-            "pages": [
-              "user/ui/customers",
-              "user/customer-provisioning",
-              "user/ui/external-third-party-integrations",
-              "user/ui/external-network-connectors",
-              "user/ui/external-services",
-              "user/ui/connectors"
-            ]
-          },
-          {
-            "group": "Graylog",
-            "pages": [
-              "user/ui/graylog",
-              "user/ui/graylog-management",
-              "user/ui/graylog-pipelines",
-              "user/ui/graylog-metrics"
-            ]
-          },
-          {
-            "group": "Indices",
-            "pages": [
-              "user/ui/indices",
-              "user/ui/indices-management",
-              "user/ui/indices-snapshots"
-            ]
-          },
-          {
-            "group": "Agents",
-            "pages": [
-              "user/ui/agents",
-              "user/ui/agents-groups",
-              "user/ui/agents-vulnerability-overview",
-              "user/ui/agents-sca-overview",
-              "user/ui/agents-sysmon-config",
-              "user/ui/agents-patch-tuesday",
-              "user/ui/agents-detection-rules",
-              "user/ui/agents-copilot-actions"
-            ]
-          },
-          {
-            "group": "Reports",
-            "pages": [
-              "user/ui/report-general",
-              "user/ui/report-creation",
-              "user/ui/report-sca",
-              "user/ui/report-vulnerability"
-            ]
-          },
-          {
-            "group": "Other",
-            "pages": [
-              "user/ui/healthcheck",
-              "user/ui/scheduler",
-              "user/ui/artifacts",
-              "user/ui/customer-portal"
+              "reference",
+              "reference/troubleshooting",
+              "user/navigation"
             ]
           }
         ]

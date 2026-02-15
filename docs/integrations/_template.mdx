@@ -1,0 +1,49 @@
+---
+title: Integration template
+---
+
+# Integration name
+
+## What this integration is
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Source system → **collector/ingestion** (External Service, integration job, webhook, or syslog)
+2. Events → **SIEM storage** (Wazuh Indexer / OpenSearch-backed)
+3. Optional: events → **Graylog** for search/streaming + alert definitions
+4. Alerts → `gl-events*` → **CoPilot Incident Management → Alerts**
+5. Operator workflow → **Cases**, evidence, response
+
+> Exact wiring varies by integration and environment. This section is meant to make expectations concrete.
+
+## What data you get (high level)
+
+## Setup (wireframe)
+
+- Where to configure it in CoPilot
+- What credentials/permissions are typically needed (high level)
+
+## Success criteria (what “working” looks like)
+
+- [ ] Events are arriving under the correct customer
+- [ ] You can find a recent event and identify the source
+
+## Dashboards
+
+- What dashboards get deployed during provisioning (if applicable)
+- What “populated” looks like
+
+## Alerts (starter set)
+
+List 3–5 high-signal starter detections.
+
+## Troubleshooting
+
+If events aren’t showing up:
+
+- confirm connector/external service is verified
+- confirm routing/tenant association
+- confirm index/stream assumptions
+- confirm Graylog alert plumbing (if used)

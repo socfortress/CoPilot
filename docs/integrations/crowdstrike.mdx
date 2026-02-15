@@ -1,0 +1,169 @@
+---
+title: CrowdStrike
+description: Ingest CrowdStrike Falcon events using the Falcon SIEM Connector and route them into your SOCFortress SIEM stack.
+---
+
+# CrowdStrike
+
+## What this integration is
+
+This integration ingests **CrowdStrike Falcon** events into your SOCFortress SIEM stack using the **Falcon SIEM Connector** (FalconHose).
+
+CrowdStrike events are forwarded to your SIEM (typically Graylog) over syslog, where they can be searched, routed, and used for alerting and investigations.
+
+Vendor references:
+- Integrate with your SIEM: https://www.crowdstrike.com/blog/tech-center/integrate-with-your-siem
+- Get access to Falcon APIs: https://www.crowdstrike.com/blog/tech-center/get-access-falcon-apis/
+
+---
+
+## Prerequisites
+
+- CrowdStrike Falcon console access
+- An API client created with scope that includes **read access for Event streams**
+
+Important:
+- If you are in **CrowdStrike Government cloud**, you must open a support ticket with CrowdStrike to enable the Falcon SIEM Connector.
+
+![CrowdStrike API Settings](/assets/images/crowdstrike/crowdstrike_api_settings.png)
+
+---
+
+## Configuration (Falcon SIEM Connector)
+
+Connector configuration is stored at:
+- `/opt/crowdstrike/etc/cs.falconhoseclient.cfg`
+
+CoPilot provisioning typically generates this for you, but for reference the key values that must be set include:
+- `api_url`
+- `client_id`
+- `client_secret`
+- `syslog_host` / `syslog_port`
+
+Example configuration:
+
+```ini
+[Settings]
+version = 3
+api_url = REPLACE_BASE_URL/sensors/entities/datafeed/v2
+request_token_url = REPLACE_BASE_URL/oauth2/token
+app_id = SIEM-Connector-v2.0.0
+
+enable_correlation_id = false
+format_floats_as_scientific = true
+
+# API Client ID
+client_id = REPLACE_CLIENT_ID
+# API Client Secret
+client_secret = REPLACE_CLIENT_SECRET
+
+# Amount of time (in seconds) we will wait for a connect to complete.
+connection_timeout = 10
+# Amount of time to wait (in seconds) for a server's response headers after fully writing the request.
+read_timeout = 30
+
+# Specify partition number 0 to n or 'all' (without quote) for all partitions
+partition = all
+
+http_proxy =
+
+# Output formats
+# Supported formats are
+#   1.syslog: will output syslog format with flat key=value pairs uses the mapping configuration below.
+;             Use syslog format if CEF/LEEF output is required.
+#   2.json: will output raw json format received from FalconHose API (default)
+output_format = syslog
+
+# Will be true regardless if Syslog is not enabled
+# If path does not exist or user has no permission, log file will be used
+output_to_file = false
+output_path = /var/log/crowdstrike/falconhoseclient/output
+
+# Offset file full filepath and filename
+offset_path = /var/log/crowdstrike/falconhoseclient/stream_offsets
+
+[Output_File_Rotation]
+# If the output is writing to a file, then the settings below will govern output file rotation
+#
+# If true, then the rotation rules will apply. If not, the client will continue to write to the same file.
+rotate_file = true
+# Maximum individual output file size in MB
+max_size = 500
+# Number of backups of the output file to be stored
+max_backups = 10
+# Maximum age of backup output files before it is deleted in DAYS
+max_age = 30
+
+[Logging]
+verbose_log = true
+# Maximum individual log file size in MB
+max_size = 500
+# Number of backups to be stored
+max_backups = 10
+# Maximum age of backup files before it is deleted in DAYS
+max_age = 30
+
+[Syslog]
+send_to_syslog_server = true
+host = REPLACE_SYSLOG_HOST
+port = REPLACE_SYSLOG_PORT
+protocol = tcp
+```
+
+---
+
+## CoPilot provisioning
+
+Once you have saved the CrowdStrike configuration for the customer, you are ready to deploy the integration.
+
+In CoPilot, navigate to the **Customers** section and select the appropriate customer. Provisioning typically creates:
+- Graylog CEF input
+- Graylog stream
+- Graylog index
+- Grafana datasource
+- Grafana dashboards
+- CrowdStrike docker compose file
+
+---
+
+## Deployment (connector container)
+
+The CrowdStrike integration runs via a docker container.
+
+During provisioning, a customer directory is created:
+- `/opt/CoPilot/data/data/<CUSTOMER_NAME>`
+
+Inside you’ll typically find:
+- `<CUSTOMER_NAME>_docker-compose.yml`
+- `cs.falconhoseclient.cfg`
+
+Start the container:
+
+```bash
+docker compose -f /opt/CoPilot/data/data/<CUSTOMER_NAME>/<CUSTOMER_NAME>_docker-compose.yml up -d
+```
+
+You should now see the container running:
+
+![CrowdStrike Running Container](/assets/images/crowdstrike/docker_ps.PNG)
+
+---
+
+## Success criteria
+
+- [ ] CrowdStrike events are arriving in Graylog
+- [ ] Events are routed to the correct customer stream/index
+- [ ] Dashboards populate (after a short delay)
+
+---
+
+## Troubleshooting
+
+- No events:
+  - verify Falcon SIEM Connector is enabled for your tenant (GovCloud note above)
+  - confirm API client has event stream read scope
+  - check connector container logs
+
+- Events arriving but not routed:
+  - confirm Graylog input/stream/index created during provisioning
+  - confirm syslog host/port match your Graylog input

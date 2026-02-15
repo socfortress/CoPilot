@@ -1,0 +1,65 @@
+---
+title: Duo
+description: Ingest Duo authentication logs into the SOCFortress SIEM stack using the Duo Admin API.
+---
+
+# Duo
+
+## What this integration is
+
+This integration ingests **Duo authentication and admin logs** into your SOCFortress SIEM stack via the **Duo Admin API**.
+
+Vendor reference:
+- Duo Admin API overview: https://duo.com/docs/adminapi#overview
+
+---
+
+## What data you get (high level)
+
+- Authentication logs
+- Telephony logs
+- Administrator action logs
+
+---
+
+## Prerequisites
+
+- Duo Admin Panel access
+- **Owner** role (required to create/modify Admin API applications)
+
+---
+
+## Credentials you’ll need
+
+From the Duo Admin Panel “Admin API” application:
+- Integration key
+- Secret key
+- API hostname
+
+Permissions note:
+- Grant the Admin API application **read log** permissions at minimum.
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer.
+2) Add the **Duo** integration under the customer.
+3) Paste the integration key/secret key/API hostname.
+4) Validate logs appear in the SIEM.
+
+---
+
+## Security notes
+
+Treat the Duo secret key like a password:
+- store it in a secure secrets manager
+- rotate if exposure is suspected
+
+---
+
+## Troubleshooting
+
+- Confirm the Admin API application has the required permissions.
+- Confirm the API hostname is correct for your Duo tenant.
+- Check for clock drift on the collector (Duo auth is time-sensitive).

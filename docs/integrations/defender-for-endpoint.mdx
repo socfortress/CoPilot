@@ -1,0 +1,92 @@
+---
+title: Microsoft Defender for Endpoint
+description: Ingest Microsoft Defender for Endpoint alerts into the SOCFortress SIEM stack.
+---
+
+# Microsoft Defender for Endpoint
+
+## What this integration is
+
+This integration ingests **Microsoft Defender for Endpoint** alerts via the Defender for Endpoint API.
+
+Vendor reference:
+- Get alerts API: https://learn.microsoft.com/en-us/defender-endpoint/api/get-alerts
+
+---
+
+## Data path (how it flows)
+
+1) Microsoft Defender for Endpoint → API polling (OAuth2)
+2) Collector → syslog/ingest into Graylog (implementation-dependent)
+3) Graylog → stream/index/dashboards
+
+---
+
+## Prerequisites
+
+- Azure app registration for API access
+- API permissions granted:
+  - `Alert.Read.All`
+  - `Alert.ReadWrite.All`
+
+---
+
+## Credentials & config you’ll need
+
+- Tenant ID
+- Client ID
+- Client secret
+- Token URL: `https://login.microsoftonline.com/<TENANT_ID>/oauth2/token`
+- Syslog host/port (Graylog)
+
+Example (for context; CoPilot provisioning typically fills this):
+
+```yaml
+filebeat.modules:
+- module: microsoft
+  defender_atp:
+    enabled: true
+    var.oauth2.client.id: "CLIENT_ID"
+    var.oauth2.client.secret: "CLIENT_SECRET"
+    var.oauth2.token_url: "https://login.microsoftonline.com/TENANT_ID/oauth2/token"
+
+output.logstash:
+  hosts: ["REPLACE_SYSLOG_HOST:REPLACE_SYSLOG_PORT"]
+```
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer.
+2) Add **Defender for Endpoint** integration under the customer.
+3) Provide tenant/client credentials.
+4) Deploy/start the connector container generated during provisioning.
+
+Provisioning typically creates:
+- Graylog input + stream + index
+- Grafana datasource + dashboards
+- A customer-specific docker compose + Filebeat config
+
+---
+
+## Deployment notes (connector container)
+
+```bash
+docker compose -f /opt/CoPilot/data/data/<CUSTOMER_NAME>/<CUSTOMER_NAME>_docker-compose-defender-for-endpoint.yml up -d
+```
+
+---
+
+## Success criteria
+
+- [ ] Defender alerts are arriving
+- [ ] Events are routed to the correct customer index/stream
+
+---
+
+## Troubleshooting
+
+- Confirm the Azure app has the required permissions and admin consent.
+- Confirm tenant ID/client ID/secret match.
+- Check connector logs for OAuth failures.

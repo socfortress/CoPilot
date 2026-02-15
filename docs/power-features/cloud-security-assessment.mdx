@@ -1,0 +1,121 @@
+---
+title: Cloud security assessment (Scout Suite)
+description: Run Scout Suite scans inside CoPilot to generate cloud posture reports (AWS supported; Azure/GCP may be limited depending on release).
+---
+
+# Cloud security assessment (Scout Suite)
+
+CoPilot can run **Scout Suite** scans and surface the resulting report inside the UI.
+
+Scout Suite is an open-source cloud security assessment tool that scans a cloud account via provider APIs, identifies risky configurations, and generates a report with remediation guidance.
+
+---
+
+## Why this is a power feature
+
+Cloud posture assessment is not required for the initial SIEM bring-up, but it becomes valuable once your core pipeline is healthy.
+
+Use it for:
+- periodic cloud posture reviews (monthly/quarterly)
+- identifying misconfigurations and risky exposures
+- producing a shareable “here’s what to fix next” report for stakeholders
+
+---
+
+## How it works in CoPilot (high level)
+
+1) You create cloud credentials with read-only assessment permissions (provider-specific)
+2) In CoPilot, you create a new cloud assessment report
+3) CoPilot runs Scout Suite in the background
+4) When complete, the report is listed and can be opened/viewed in CoPilot
+
+---
+
+## Supported providers
+
+- **AWS**
+- **Azure**
+- **Google Cloud (GCP)**
+
+CoPilot can run Scout Suite scans for these providers as long as the appropriate credentials and API permissions are in place.
+
+---
+
+## Setup checklist (AWS / Azure / GCP)
+
+### 1) Create a dedicated Scout Suite cloud principal
+
+Create a dedicated identity for assessments:
+- **AWS:** IAM user/role
+- **Azure:** App registration / service principal
+- **GCP:** service account
+
+Guidance:
+- Use **least privilege**.
+- Prefer read-only where possible.
+
+Provider-specific credential setup (recommended):
+- AWS: https://github.com/nccgroup/ScoutSuite/wiki/Amazon-Web-Services
+- Azure: https://github.com/nccgroup/ScoutSuite/wiki/Azure
+- GCP: https://github.com/nccgroup/ScoutSuite/wiki/Google-Cloud-Platform
+
+### 2) Generate credentials
+
+Create the credentials required for the provider you’re scanning.
+
+Common patterns from the Scout Suite wiki:
+- **AWS:** standard AWS credential sources (profiles in `~/.aws/credentials`, environment variables, role assumption, or explicit access keys)
+- **Azure:** Azure CLI login, user-account browser login (MFA-friendly), or service principal (including file-based SDK auth)
+- **GCP:** application-default user credentials or a service account key JSON
+
+### 3) Run the scan in CoPilot
+
+In CoPilot:
+1) Open **Cloud security assessment**
+2) Select provider type (AWS / Azure / GCP)
+3) Set a report name
+4) Enter credentials
+5) Submit
+
+The scan runs in the background. Runtime depends on the size of the cloud environment.
+
+Operational tip (from the video):
+- You can tail CoPilot container logs to see when report generation completes.
+- Use Refresh in the UI; when done, the report appears in the list.
+
+---
+
+## Success criteria
+
+- [ ] You can create a report and the scan completes
+- [ ] The report shows in the UI after refresh
+- [ ] The report content is accessible to authorized users
+
+---
+
+## Safety / guardrails
+
+- Cloud posture reports can contain sensitive inventory details (accounts, resources, IAM relationships).
+  - Restrict access (RBAC) appropriately.
+- Use dedicated credentials and rotate them.
+- Avoid storing long-lived keys if your environment supports roles/short-lived credentials.
+
+---
+
+## Troubleshooting
+
+- Report never appears:
+  - confirm credentials are valid
+  - confirm required API permissions exist
+  - check CoPilot container logs for Scout Suite errors
+
+- Report takes a long time:
+  - large environments can take longer to enumerate
+  - rerun during a quieter window
+
+---
+
+## Video context
+
+Walkthrough + setup:
+- https://www.youtube.com/watch?v=G3MDJSMvnRo
