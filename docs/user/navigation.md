@@ -41,7 +41,7 @@ This page explains what each left‑hand navigation item in CoPilot does and how
 
 Below are screenshots of the main areas (from a lab environment) to help you quickly recognize where you are in the UI.
 
-- Overview: 
+- Overview:
 
   ![Overview](../assets/ui/overview.png)
 
