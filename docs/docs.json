@@ -1,0 +1,179 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "SOCFortress CoPilot",
+  "description": "SOCFortress CoPilot documentation — operator workflows, admin/engineer configuration, and developer/AI-agent guides.",
+  "logo": {
+    "light": "/assets/brand/logo-text.png",
+    "dark": "/assets/brand/logo-text.png",
+    "href": "/"
+  },
+  "favicon": "/assets/brand/favicon.ico",
+  "colors": {
+    "primary": "#f85d3b",
+    "dark": "#f85d3b",
+    "light": "#f85d3b"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "index",
+              "user/overview",
+              "user/navigation",
+              "user/features"
+            ]
+          },
+          {
+            "group": "Quickstarts",
+            "pages": [
+              "user/operators-quickstart",
+              "user/admins-quickstart"
+            ]
+          },
+          {
+            "group": "Provisioning",
+            "pages": [
+              "user/customer-provisioning"
+            ]
+          },
+          {
+            "group": "Videos",
+            "pages": [
+              "user/videos"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "UI Guide",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "user/ui/overview"
+            ]
+          },
+          {
+            "group": "Incident Management",
+            "pages": [
+              "user/ui/incident-management",
+              "user/ui/incident-alerts",
+              "user/ui/incident-cases",
+              "user/ui/incident-sources"
+            ]
+          },
+          {
+            "group": "Customers",
+            "pages": [
+              "user/ui/customers",
+              "user/ui/external-third-party-integrations",
+              "user/ui/external-network-connectors"
+            ]
+          },
+          {
+            "group": "Graylog",
+            "pages": [
+              "user/ui/graylog",
+              "user/ui/graylog-management",
+              "user/ui/graylog-pipelines",
+              "user/ui/graylog-metrics"
+            ]
+          },
+          {
+            "group": "Indices",
+            "pages": [
+              "user/ui/indices",
+              "user/ui/indices-management",
+              "user/ui/indices-snapshots"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "user/ui/agents",
+              "user/ui/agents-groups",
+              "user/ui/agents-vulnerability-overview",
+              "user/ui/agents-sca-overview",
+              "user/ui/agents-sysmon-config",
+              "user/ui/agents-patch-tuesday",
+              "user/ui/agents-detection-rules",
+              "user/ui/agents-copilot-actions"
+            ]
+          },
+          {
+            "group": "Reports",
+            "pages": [
+              "user/ui/report-general",
+              "user/ui/report-creation",
+              "user/ui/report-sca",
+              "user/ui/report-vulnerability"
+            ]
+          },
+          {
+            "group": "Other",
+            "pages": [
+              "user/ui/healthcheck",
+              "user/ui/scheduler",
+              "user/ui/artifacts",
+              "user/ui/customer-portal"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "developer/start-here"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/ARCHITECTURE",
+              "architecture/MAP",
+              "architecture/DEPLOYMENT",
+              "architecture/DATA_FLOWS",
+              "architecture/DATABASE_SCHEMA"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/ADDING_A_CONNECTOR"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "GitHub",
+        "groups": [
+          {
+            "group": "Project",
+            "pages": [
+              {
+                "title": "CoPilot repo",
+                "href": "https://github.com/socfortress/CoPilot"
+              },
+              {
+                "title": "Releases",
+                "href": "https://github.com/socfortress/CoPilot/releases"
+              },
+              {
+                "title": "Issues",
+                "href": "https://github.com/socfortress/CoPilot/issues"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
