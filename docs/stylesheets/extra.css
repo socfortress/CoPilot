@@ -21,7 +21,7 @@
   border-bottom: 1px solid var(--md-default-fg-color--lightest);
 }
 
-/* Home page cards (DFIR-IRIS-ish layout) */
+/* Home page cards / grids */
 .sf-home-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -37,13 +37,116 @@
   padding: 1.1rem 1.1rem 0.8rem;
 }
 
-.sf-card h2 {
+.sf-card h2,
+.sf-card h3 {
   margin-top: 0.1rem;
 }
 
 @media (min-width: 900px) {
   .sf-card {
     grid-column: span 6;
+  }
+}
+
+/* Homepage hero (Mintlify-ish feel, but in MkDocs Material) */
+.sf-hero {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  margin: 0.25rem 0 1.25rem;
+}
+
+.sf-hero-left {
+  grid-column: span 12;
+}
+
+.sf-hero-right {
+  grid-column: span 12;
+}
+
+@media (min-width: 900px) {
+  .sf-hero-left {
+    grid-column: span 6;
+  }
+
+  .sf-hero-right {
+    grid-column: span 6;
+  }
+}
+
+.sf-hero h1 {
+  margin-top: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.sf-hero p {
+  margin-top: 0.35rem;
+  margin-bottom: 0.7rem;
+  font-size: 1.05rem;
+  opacity: 0.9;
+}
+
+.sf-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.sf-cta-row .md-button {
+  margin: 0;
+}
+
+.sf-hero-meta {
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.sf-hero-video {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Small task cards */
+.sf-task-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.sf-task-card {
+  grid-column: span 12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 0.9rem 0.95rem;
+}
+
+.sf-task-title {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin: 0;
+}
+
+.sf-task-title .sf-icon {
+  font-size: 1.1rem;
+}
+
+.sf-task-card p {
+  margin-top: 0.35rem;
+  margin-bottom: 0.6rem;
+  opacity: 0.85;
+}
+
+@media (min-width: 900px) {
+  .sf-task-card {
+    grid-column: span 4;
   }
 }
 

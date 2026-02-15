@@ -4,8 +4,8 @@ This page is generated from the CoPilot YouTube playlist transcripts and is mean
 
 ## Jump to your role
 
-[I'm a SOC Operator](#operator-track-soc-operators-analysts){ .md-button .md-button--primary }
-[I'm an Admin/Engineer](#adminengineer-track-admins-engineers){ .md-button .md-button--primary }
+[I'm a SOC Operator](#operator-track){ .md-button .md-button--primary }
+[I'm an Admin/Engineer](#adminengineer-track){ .md-button .md-button--primary }
 
 ---
 
@@ -607,7 +607,7 @@ Use these thumbnail grids to jump straight to a video. Click the **thumbnail** t
 - Start with the section that matches your role.
 - Videos labeled **Best for: Both** appear in *both* tracks below (by design).
 
-## Operator Track (SOC operators / analysts)
+## Operator Track (SOC operators / analysts) {#operator-track}
 
 Alert triage, case work, investigations, and day-to-day SOC workflows.
 
@@ -1020,7 +1020,7 @@ Alert triage, case work, investigations, and day-to-day SOC workflows.
   - Includes practical walkthrough steps that can be replicated in production-like SOC environments.
 - Key CoPilot features shown: Wazuh integration, SCA visibility, Vulnerability visibility, Enrichment workflows
 
-## Admin/Engineer Track (admins / engineers)
+## Admin/Engineer Track (admins / engineers) {#adminengineer-track}
 
 Connecting sources, configuring integrations, tuning detections, reporting, and platform operations.
 
