@@ -6,9 +6,23 @@ Provisioning is designed to create the *plumbing* that makes customer data land 
 
 ![Customers](../assets/ui/customers.png)
 
-<video autoplay loop muted playsinline style="width:100%; border-radius:16px; margin: 12px 0 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
-  <source src="../assets/hero/customer-provisioning-walkthrough.webm" type="video/webm">
-  <source src="../assets/hero/customer-provisioning-walkthrough.mp4" type="video/mp4">
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="auto"
+  style={{
+    width: '100%',
+    borderRadius: 16,
+    margin: '12px 0 18px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.02)',
+    display: 'block',
+  }}
+>
+  <source src="/assets/hero/customer-provisioning-walkthrough.webm" type="video/webm" />
+  <source src="/assets/hero/customer-provisioning-walkthrough.mp4" type="video/mp4" />
 </video>
 
 ---
