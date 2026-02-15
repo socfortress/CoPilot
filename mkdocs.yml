@@ -75,6 +75,7 @@ nav:
       - Overview: user/overview.md
       - Quickstart (Operators): user/operators-quickstart.md
       - Quickstart (Admins/Engineers): user/admins-quickstart.md
+      - Customer Provisioning (Tenancy): user/customer-provisioning.md
       - Features by Area: user/features.md
       - Navigation Guide (UI): user/navigation.md
       - Videos (Playlist): user/videos.md
