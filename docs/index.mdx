@@ -5,9 +5,6 @@ description: Operate an open-source SOC/SIEM stack from a single pane of glass.
 
 # SOCFortress CoPilot Documentation
 
-<Columns cols={2}>
-  <div>
-
 CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM stack (Wazuh, Graylog, Velociraptor, Grafana, Shuffle, and more).
 
 **Choose your path:**
@@ -24,30 +21,25 @@ CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM st
   Architecture, data flows, schema, and safe change playbooks.
 </Card>
 
-  </div>
-
-  <div
-    style={{
-      width: '100%',
-      borderRadius: 16,
-      overflow: 'hidden',
-      border: '1px solid rgba(255,255,255,0.08)',
-      background: 'rgba(255,255,255,0.02)',
-    }}
+<Frame>
+  <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    preload="auto"
+    controls={false}
+    disablePictureInPicture
+    style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 16 }}
   >
-    <video
-      autoPlay
-      loop
-      muted
-      playsInline
-      preload="auto"
-      style={{ width: '100%', height: 'auto', display: 'block' }}
-    >
-      <source src="/assets/hero/copilot-hub.webm" type="video/webm" />
-      <source src="/assets/hero/copilot-hub.mp4" type="video/mp4" />
-    </video>
-  </div>
-</Columns>
+    <source src="/assets/hero/copilot-hub.webm" type="video/webm" />
+    <source src="/assets/hero/copilot-hub.mp4" type="video/mp4" />
+  </video>
+</Frame>
+
+<div style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>
+  If the animation doesn’t autoplay in your browser, click once to start playback.
+</div>
 
 ## Popular tasks
 
