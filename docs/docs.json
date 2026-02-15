@@ -23,6 +23,7 @@
             "group": "Welcome",
             "pages": [
               "index",
+              "getting-started/what-is-copilot",
               "getting-started/roles-and-mental-model",
               "getting-started/first-wins"
             ]
