@@ -43,7 +43,7 @@ async function main() {
 	// Go to Customers
 	await page.goto(`${BASE_URL}/customers`, {waitUntil: 'domcontentloaded'});
 	await page.waitForTimeout(2000);
-	
+
 	// Screenshot the customers list (baseline)
 	await page.screenshot({path: path.join(OUT_DIR, 'customers-list.png'), fullPage: true});
 
