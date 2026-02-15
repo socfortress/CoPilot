@@ -17,15 +17,14 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "User Guide",
+        "tab": "Get Started",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Welcome",
             "pages": [
               "index",
-              "user/overview",
-              "user/navigation",
-              "user/features"
+              "getting-started/roles-and-mental-model",
+              "getting-started/first-wins"
             ]
           },
           {
@@ -36,91 +35,101 @@
             ]
           },
           {
-            "group": "Provisioning",
+            "group": "Core concepts",
             "pages": [
-              "user/customer-provisioning"
+              "user/overview",
+              "user/navigation",
+              "user/features"
+            ]
+          },
+          {
+            "group": "Watch next",
+            "pages": [
+              {
+                "title": "Operator track videos",
+                "href": "/user/videos#operator-track"
+              },
+              {
+                "title": "Admin/Engineer track videos",
+                "href": "/user/videos#adminengineer-track"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Operator",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "operator/index",
+              "user/operators-quickstart"
+            ]
+          },
+          {
+            "group": "Incident workflow",
+            "pages": [
+              "user/ui/incident-alerts",
+              "user/ui/incident-cases",
+              "user/ui/artifacts"
+            ]
+          },
+          {
+            "group": "Reference (by menu)",
+            "pages": [
+              "user/ui/incident-management",
+              "user/ui/incident-sources"
             ]
           },
           {
             "group": "Videos",
             "pages": [
+              {
+                "title": "Operator track",
+                "href": "/user/videos#operator-track"
+              },
               "user/videos"
             ]
           }
         ]
       },
       {
-        "tab": "UI Guide",
+        "tab": "Admin / Platform",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Start here",
             "pages": [
-              "user/ui/overview"
+              "admin/index",
+              "user/admins-quickstart",
+              "user/customer-provisioning"
             ]
           },
           {
-            "group": "Incident Management",
+            "group": "Integrations & connectors",
             "pages": [
-              "user/ui/incident-management",
-              "user/ui/incident-alerts",
-              "user/ui/incident-cases",
-              "user/ui/incident-sources"
-            ]
-          },
-          {
-            "group": "Customers",
-            "pages": [
-              "user/ui/customers",
               "user/ui/external-third-party-integrations",
               "user/ui/external-network-connectors"
             ]
           },
           {
-            "group": "Graylog",
+            "group": "Platform (by menu)",
             "pages": [
-              "user/ui/graylog",
+              "user/ui/customers",
+              "user/ui/indices-management",
               "user/ui/graylog-management",
               "user/ui/graylog-pipelines",
               "user/ui/graylog-metrics"
             ]
           },
           {
-            "group": "Indices",
+            "group": "Videos",
             "pages": [
-              "user/ui/indices",
-              "user/ui/indices-management",
-              "user/ui/indices-snapshots"
-            ]
-          },
-          {
-            "group": "Agents",
-            "pages": [
-              "user/ui/agents",
-              "user/ui/agents-groups",
-              "user/ui/agents-vulnerability-overview",
-              "user/ui/agents-sca-overview",
-              "user/ui/agents-sysmon-config",
-              "user/ui/agents-patch-tuesday",
-              "user/ui/agents-detection-rules",
-              "user/ui/agents-copilot-actions"
-            ]
-          },
-          {
-            "group": "Reports",
-            "pages": [
-              "user/ui/report-general",
-              "user/ui/report-creation",
-              "user/ui/report-sca",
-              "user/ui/report-vulnerability"
-            ]
-          },
-          {
-            "group": "Other",
-            "pages": [
-              "user/ui/healthcheck",
-              "user/ui/scheduler",
-              "user/ui/artifacts",
-              "user/ui/customer-portal"
+              {
+                "title": "Admin/Engineer track",
+                "href": "/user/videos#adminengineer-track"
+              },
+              "user/videos"
             ]
           }
         ]
@@ -149,26 +158,38 @@
             "pages": [
               "integrations/ADDING_A_CONNECTOR"
             ]
+          },
+          {
+            "group": "Videos",
+            "pages": [
+              {
+                "title": "Browse videos",
+                "href": "/user/videos"
+              }
+            ]
           }
         ]
       },
       {
-        "tab": "GitHub",
+        "tab": "Videos",
         "groups": [
           {
-            "group": "Project",
+            "group": "Library",
+            "pages": [
+              "videos/index",
+              "user/videos"
+            ]
+          },
+          {
+            "group": "Role tracks",
             "pages": [
               {
-                "title": "CoPilot repo",
-                "href": "https://github.com/socfortress/CoPilot"
+                "title": "Operator track",
+                "href": "/user/videos#operator-track"
               },
               {
-                "title": "Releases",
-                "href": "https://github.com/socfortress/CoPilot/releases"
-              },
-              {
-                "title": "Issues",
-                "href": "https://github.com/socfortress/CoPilot/issues"
+                "title": "Admin/Engineer track",
+                "href": "/user/videos#adminengineer-track"
               }
             ]
           }

@@ -1,0 +1,54 @@
+---
+title: Roles & mental model
+description: How to think about CoPilot as a SOC operator vs. admin/engineer vs. developer.
+---
+
+# Roles & mental model
+
+CoPilot is easiest to learn if you separate it into **two jobs**:
+
+1) **Operate incidents** (alerts → cases → evidence → response)
+2) **Make incidents possible** (connect sources/integrations so alerts flow)
+
+## SOC operator / analyst
+
+You spend most of your time in **Incident Management**.
+
+You care about:
+- Is this alert real?
+- What’s the blast radius?
+- What evidence do I need?
+- What do I do next?
+
+**Start here:**
+- [Operator quickstart](/user/operators-quickstart)
+- [Incident alerts (UI reference)](/user/ui/incident-alerts)
+- [Cases (UI reference)](/user/ui/incident-cases)
+- Videos: [Operator track](/user/videos#operator-track)
+
+## Admin / engineer
+
+You care about **data onboarding and reliability**.
+
+You care about:
+- Are sources connected and healthy?
+- Are parsing / streams / pipelines configured correctly?
+- Are indices and retention behaving?
+- Is each customer/tenant provisioned correctly?
+
+**Start here:**
+- [Admin/Engineer quickstart](/user/admins-quickstart)
+- [Customer provisioning](/user/customer-provisioning)
+- Videos: [Admin/Engineer track](/user/videos#adminengineer-track)
+
+## Developer / AI agent
+
+You are extending or modifying CoPilot.
+
+You care about:
+- Architecture + data flows
+- Schema changes (Alembic as source of truth)
+- Adding a connector safely
+
+**Start here:**
+- [Developer start here](/developer/start-here)
