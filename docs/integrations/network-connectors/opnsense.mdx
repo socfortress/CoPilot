@@ -1,0 +1,38 @@
+---
+title: OPNsense (syslog)
+description: Configure OPNsense to forward logs to your SIEM via remote syslog.
+---
+
+# OPNsense (syslog)
+
+## What this connector is
+
+This connector covers how to configure **OPNsense** to forward logs to an external syslog server.
+
+Vendor reference:
+- https://docs.opnsense.org/manual/settingsmenu.html#logging
+
+---
+
+## Configuration steps (OPNsense)
+
+1) Log into the OPNsense web interface
+2) Navigate to **System → Settings → Logging**
+3) Check **Enable Remote Logging**
+4) Enter the syslog server hostname/IP under **Remote log servers**
+   - optionally set port (default 514) and protocol (UDP/TCP)
+5) Click **Save**
+
+---
+
+## Success criteria
+
+- [ ] Logs appear in your SIEM input
+- [ ] Source is attributed to the expected OPNsense device
+
+---
+
+## Notes
+
+- Ensure the network path is secure; consider VPN/TLS forwarding when logs traverse untrusted networks.
+- Ensure firewall rules allow outbound syslog traffic.

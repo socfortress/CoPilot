@@ -1,0 +1,108 @@
+---
+title: Bitdefender (GravityZone)
+description: Ingest Bitdefender GravityZone events into the SOCFortress SIEM stack via the Event Push Service connector.
+---
+
+# Bitdefender (GravityZone)
+
+## What this integration is
+
+This integration ingests **Bitdefender GravityZone** security events into your SIEM stack using GravityZone’s **Event Push Service**.
+
+In SOCFortress CoPilot deployments, Bitdefender typically pushes events to a small HTTP receiver/connector, which then forwards them to **Graylog** over syslog.
+
+---
+
+## Data path (how it flows)
+
+1) Bitdefender GravityZone (cloud) → **Event Push Service**
+2) Event Push Service → **CoPilot-hosted HTTP receiver** (connector)
+3) Receiver → **Graylog input** (syslog)
+4) Graylog → stream/index/dashboards (provisioned)
+5) Optional: Graylog alerting → Incident ingestion (if configured)
+
+---
+
+## Prerequisites
+
+- Bitdefender API access is enabled and an API client is created.
+- Network path is in place so Bitdefender can reach your HTTP receiver.
+- You have a target syslog host/port (Graylog input).
+
+Vendor reference:
+- Event Push Service API connector (CEF): https://www.bitdefender.com/business/support/en/77209-144080-build-an-event-push-service-api-connector-for-cef-standard.html
+
+---
+
+## Credentials & configuration you’ll need
+
+From Bitdefender:
+- API credentials / auth string (connector uses an `authentication_string`)
+
+From your SIEM:
+- Graylog host + port (syslog target)
+
+From your deployment:
+- A public-facing DNS/port so Bitdefender can deliver events to the receiver
+
+Example receiver config (for context; CoPilot provisioning typically generates this for you):
+
+```json
+{
+  "port": 3200,
+  "syslog_port": 10514,
+  "transport": "Tcp",
+  "target": "YOUR_GRAYLOG_SERVER",
+  "authentication_string": "Basic <base64>",
+  "secure": {
+    "enabled": true,
+    "key": "api/config/server.key",
+    "cert": "api/config/server.crt"
+  }
+}
+```
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) **Provision the customer** first (so the tenant wiring exists).
+2) In CoPilot, open the customer and add the **Bitdefender** integration.
+3) Enter the required configuration values.
+4) Deploy/start the Bitdefender connector container generated during provisioning.
+
+Provisioning typically creates:
+- Graylog CEF/syslog input
+- Graylog stream + index
+- Grafana datasource + dashboards
+- Bitdefender docker compose + config
+
+---
+
+## Deployment notes (connector container)
+
+In a standard layout, provisioning creates a customer-specific folder under:
+- `/opt/CoPilot/data/data/<CUSTOMER_NAME>/`
+
+Start the connector:
+
+```bash
+docker compose -f /opt/CoPilot/data/data/<CUSTOMER_NAME>/<CUSTOMER_NAME>_bitdefender_docker-compose.yml up -d
+```
+
+---
+
+## Success criteria
+
+- [ ] Bitdefender events are arriving in Graylog
+- [ ] Events are routed to the customer’s index/stream
+- [ ] Dashboards show non-empty data (after a short delay)
+
+---
+
+## Troubleshooting
+
+- Verify inbound firewall/NAT allows Bitdefender → HTTP receiver traffic.
+- Verify the receiver can reach Graylog syslog input (host/port).
+- Validate TLS cert/key configuration if `secure.enabled=true`.
+- Confirm auth string matches what Bitdefender expects.

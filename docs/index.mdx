@@ -9,6 +9,10 @@ CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM st
 
 **Choose your path:**
 
+<Card title="Start here" icon="map" href="/getting-started/start-here" horizontal>
+  Guided path: ingest → dashboards → alerts → cases → response.
+</Card>
+
 <Card title="SOC Operator / Analyst" icon="siren" href="/user/operators-quickstart" horizontal>
   Alert triage → cases → investigations.
 </Card>
@@ -22,19 +26,29 @@ CoPilot is a **single pane of glass** for operating an open‑source SOC/SIEM st
 </Card>
 
 <Frame>
-  <video
-    autoPlay
-    loop
-    muted
-    playsInline
-    preload="auto"
-    controls={false}
-    disablePictureInPicture
-    style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 16 }}
-  >
-    <source src="/assets/hero/copilot-hub.webm" type="video/webm" />
-    <source src="/assets/hero/copilot-hub.mp4" type="video/mp4" />
-  </video>
+  <div style={{ width: '100%', maxWidth: 1100, margin: '0 auto' }}>
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="auto"
+      controls={false}
+      disablePictureInPicture
+      onClick={(e) => e.currentTarget.play()}
+      style={{
+        width: '100%',
+        aspectRatio: '16 / 9',
+        height: 'auto',
+        display: 'block',
+        borderRadius: 16,
+        background: 'rgba(0,0,0,0.2)',
+      }}
+    >
+      <source src="/assets/hero/copilot-hub.webm" type="video/webm" />
+      <source src="/assets/hero/copilot-hub.mp4" type="video/mp4" />
+    </video>
+  </div>
 </Frame>
 
 <div style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>

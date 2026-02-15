@@ -1,0 +1,38 @@
+---
+title: Palo Alto Networks (syslog)
+---
+
+# Palo Alto Networks (syslog)
+
+## What you get (high level)
+
+- Traffic logs
+- Threat logs
+- System logs (optional)
+
+## Data path (how it flows)
+
+PAN-OS → syslog → ingestion/collector → Graylog parsing/routing → storage/indexing → alerts (`gl-events*`) → CoPilot Alerts/Cases.
+
+## Setup (wireframe)
+
+- Configure PAN-OS to export syslog.
+- Confirm parsing and tenant-aware routing.
+
+## Success criteria
+
+- [ ] You can find fresh PAN logs
+- [ ] You can identify source device
+- [ ] Events are tenant-aware
+
+## Starter alerts
+
+- Threat log severity thresholding (high/critical)
+- Repeated denies/drops from a single source
+- Admin login/config change events
+
+## Troubleshooting
+
+- Confirm syslog profile and server configuration
+- Confirm connectivity and UDP/TCP choice
+- Confirm parsing fields exist

@@ -10,6 +10,94 @@ CoPilot is easiest to learn if you separate it into **two jobs**:
 1) **Operate incidents** (alerts → cases → evidence → response)
 2) **Make incidents possible** (connect sources/integrations so alerts flow)
 
+---
+
+## The mental model (visual)
+
+CoPilot becomes intuitive when you see it as **two loops** that share the same data:
+
+<Columns cols={2}>
+  <Card title="Admin / Platform loop" icon="gear">
+    You make detection possible.
+
+    <Steps>
+      <Step title="Connect & verify">
+        Integrations + syslog connectors are healthy.
+      </Step>
+      <Step title="Ingest & route">
+        Streams/pipelines route logs where they should go.
+      </Step>
+      <Step title="Provision & visualize">
+        Customers/tenants, dashboards, indices, retention.
+      </Step>
+      <Step title="Enable alerting">
+        Event definitions + notifications are configured.
+      </Step>
+      <Step title="Tune & maintain">
+        Reduce noise, validate coverage, keep things reliable.
+      </Step>
+    </Steps>
+  </Card>
+
+  <Card title="Operator loop" icon="siren">
+    You run incidents.
+
+    <Steps>
+      <Step title="Alert appears">
+        New alert lands in Incident Management.
+      </Step>
+      <Step title="Triage">
+        Decide: true positive? priority? scope?
+      </Step>
+      <Step title="Case work">
+        Create a case, collect artifacts/evidence.
+      </Step>
+      <Step title="Respond">
+        Contain, eradicate, recover.
+      </Step>
+      <Step title="Feedback">
+        Feed improvements back into tuning/detections.
+      </Step>
+    </Steps>
+  </Card>
+</Columns>
+
+### How alerts become cases (the shared pipeline)
+
+<Steps>
+  <Step title="1) Data arrives">
+    Endpoints (Wazuh), API integrations (O365/Mimecast/Huntress/CrowdStrike), and syslog devices (FortiGate/PAN‑OS/ASA).
+  </Step>
+  <Step title="2) Normalize & route">
+    Graylog streams/pipelines normalize fields and route logs.
+  </Step>
+  <Step title="3) Detect">
+    Graylog Event Definitions evaluate conditions and generate events.
+  </Step>
+  <Step title="4) Persist">
+    Alerts are written to `gl-events*`.
+  </Step>
+  <Step title="5) Operate">
+    CoPilot surfaces alerts → operators create/work cases → response.
+  </Step>
+</Steps>
+
+### “Where do I click?” (quick map)
+
+<Columns cols={3}>
+  <Card title="Operators" icon="siren" href="/user/operators-quickstart">
+    Incident Management → Alerts → Cases
+  </Card>
+  <Card title="Admins / engineers" icon="gear" href="/user/admins-quickstart">
+    Provisioning → Integrations → Connectors → Indices
+  </Card>
+  <Card title="Developers" icon="code" href="/developer/start-here">
+    Architecture → Data flows → Connectors
+  </Card>
+</Columns>
+
+---
+
 ## SOC operator / analyst
 
 You spend most of your time in **Incident Management**.

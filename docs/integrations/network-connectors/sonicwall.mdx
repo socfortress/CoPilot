@@ -1,0 +1,65 @@
+---
+title: SonicWall (syslog)
+description: Forward SonicWall firewall logs to the SIEM via direct syslog or syslog-ng with TLS.
+---
+
+# SonicWall (syslog)
+
+## What this connector is
+
+This connector covers two approaches for forwarding **SonicWall** logs to your SIEM:
+
+1) Direct syslog forwarding (UDP/TCP)
+2) Syslog-NG collector (local UDP) → TLS forwarding (recommended for production)
+
+Direct syslog guide:
+- https://socfortress.supportbench.net/ar-1084/
+
+---
+
+## Method 1: Direct syslog forwarding (UDP/TCP)
+
+1) Log into SonicWall web management UI
+2) Go to **Log → Settings → Syslog**
+3) Enable syslog
+4) Configure syslog server:
+   - Host/IP
+   - Port
+   - Format (Syslog or CEF)
+   - Optional Syslog ID
+5) Select log categories (attacks, drops, user activity, etc.)
+6) Apply/Accept
+
+Validate logs arrive in the SIEM.
+
+---
+
+## Method 2: Syslog-NG collector (recommended)
+
+### Architecture
+
+```
+SonicWall (UDP) → Syslog-NG Collector (local) → TLS → SIEM Stack
+```
+
+### Steps (high level)
+
+1) Deploy a local syslog-ng collector:
+   - https://socfortress.supportbench.net/article/local-log-collector-using-syslog-ng
+
+2) Point SonicWall syslog destination to the **local collector IP**
+
+3) Configure syslog-ng to forward via **TLS** to the SIEM
+
+4) Verify end-to-end flow:
+   - collector receiving
+   - TLS connection established
+   - SIEM receiving and parsing
+
+---
+
+## Notes
+
+- If logs traverse the internet, prefer TLS forwarding.
+- Keep NTP/time sync correct.
+- Monitor log volume.

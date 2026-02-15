@@ -1,0 +1,186 @@
+---
+title: Start here
+description: A guided checklist to get logs flowing, dashboards populated, and alerts/cases working in SOCFortress CoPilot.
+---
+
+# Start here
+
+This is the **primary onboarding checklist** for CoPilot.
+
+CoPilot sits on top of an open-source SIEM stack. To get value fast, you want this order:
+
+1) **Ingest** (endpoints + integrations + syslog)
+2) **Visualize** (dashboards)
+3) **Detect** (alerts)
+4) **Respond** (alerts → cases → IR)
+
+If you’re unsure what role you are, read [Roles & mental model](/getting-started/roles-and-mental-model) first.
+
+---
+
+## Success definition (what “done” looks like)
+
+You’re “onboarded” when:
+
+- [ ] You can confirm **endpoint logs** are arriving (Wazuh)
+- [ ] You can confirm **integration/syslog logs** are arriving (External Services / Network Connectors)
+- [ ] You can open a **Grafana dashboard** that is populated with real data
+- [ ] A **Graylog alert** appears in CoPilot (**Incident Management → Alerts**)
+- [ ] An operator can open a **case** from an alert and track investigation work
+
+---
+
+## 0) Prereqs (10 minutes)
+
+Do these before troubleshooting anything else.
+
+- [ ] In CoPilot, configure and verify **Connectors** (Wazuh, Graylog, Grafana, Velociraptor).
+  - If a connector can’t verify, stop here and fix connectivity/credentials.
+- [ ] Decide your **customer code** convention (short, stable, no spaces).
+  - You’ll use this for routing/indexing/provisioning.
+
+Helpful pages:
+- [Admin/Engineer quickstart](/user/admins-quickstart)
+- [Customer provisioning (tenancy)](/user/customer-provisioning)
+- [UI navigation guide](/user/navigation)
+
+---
+
+## 1) Ingest logs (make data exist)
+
+### 1A) Endpoints — Wazuh (usually first)
+
+**Goal:** endpoints are enrolled and reporting; CoPilot shows them as healthy.
+
+Checklist:
+- [ ] Enroll at least 1 endpoint (Windows or Linux) into Wazuh.
+- [ ] Confirm the endpoint appears in CoPilot under **Agents** and shows online/healthy.
+- [ ] Confirm the agent is associated with the correct tenant/customer context.
+
+Success criteria:
+- You can point to **one real endpoint** in CoPilot and say “this host is actively producing telemetry.”
+
+Next (UI reference):
+- [Agents](/user/ui/agents)
+- [Agent groups](/user/ui/agents-groups)
+
+### 1B) Third‑party integrations — API sources
+
+Examples: Office 365, Mimecast, Huntress, CrowdStrike.
+
+**Goal:** events are arriving under the correct customer scope.
+
+Checklist:
+- [ ] Configure at least 1 integration under **External Services**.
+- [ ] Confirm events are flowing (don’t worry about dashboards yet).
+
+Success criteria:
+- You can find at least **one recent event** for the integration and tie it to a customer.
+
+Next (UI reference):
+- [External services](/user/ui/external-services)
+- [3rd party integrations](/user/ui/external-third-party-integrations)
+
+### 1C) Network connectors — syslog
+
+**Goal:** syslog events arrive from at least one device/source.
+
+Checklist:
+- [ ] Configure a network connector.
+- [ ] Confirm syslog events are arriving and are tenant-aware (routed/tagged correctly).
+
+Success criteria:
+- You can identify the source device + see fresh events in the expected location.
+
+Next (UI reference):
+- [Network connectors](/user/ui/external-network-connectors)
+
+---
+
+## 2) Visualize (make data understandable)
+
+CoPilot uses **Grafana** for dashboards. During **customer provisioning**, CoPilot can deploy **templated dashboards** so you get immediate visibility.
+
+Checklist:
+- [ ] Verify the **Grafana connector**.
+- [ ] Run **customer provisioning** for a test customer.
+- [ ] Confirm dashboards are deployed into the customer’s Grafana org.
+- [ ] Open at least 1 dashboard and confirm it’s populated (not empty panels).
+
+Success criteria:
+- You can show a dashboard with **real, current** data for a specific customer.
+
+Next:
+- [Customer provisioning](/user/customer-provisioning)
+- Videos (browse by role): [Videos](/user/videos)
+
+---
+
+## 3) Detect (make data actionable)
+
+CoPilot uses **Graylog** for searching and alerting.
+
+Mental model:
+- ingestion → streams/pipelines → event definitions → alerts written to `gl-events*`
+- CoPilot reads those into **Incident Management → Alerts**
+
+Checklist:
+- [ ] Verify the **Graylog connector**.
+- [ ] Ensure alert plumbing exists (built-in definitions or create one custom).
+- [ ] Trigger a test event and confirm an alert is created.
+- [ ] Confirm the alert is visible in CoPilot under **Incident Management → Alerts**.
+
+Success criteria:
+- A new alert appears in CoPilot and you can explain “what fired” + “what data it was based on.”
+
+Next (UI reference):
+- [Graylog management](/user/ui/graylog-management)
+- [Incident alerts](/user/ui/incident-alerts)
+
+---
+
+## 4) Respond (alerts → cases)
+
+Checklist:
+- [ ] Open an alert.
+- [ ] Create a case from it.
+- [ ] Add at least one note/comment/evidence link.
+- [ ] Assign/track status so it’s obvious what’s being worked.
+
+Success criteria:
+- An operator can manage an investigation end-to-end without leaving CoPilot.
+
+Next (UI reference):
+- [Incident cases](/user/ui/incident-cases)
+
+---
+
+## 5) Endpoint IR (Velociraptor)
+
+Velociraptor provides response capabilities: remote commands, artifact collection, and evidence gathering.
+
+Checklist:
+- [ ] Verify the **Velociraptor connector**.
+- [ ] Run one basic artifact collection against a test endpoint.
+- [ ] Confirm you can retrieve/view results in CoPilot.
+
+Success criteria:
+- You can collect at least one artifact and attach/associate results to investigation work.
+
+Next:
+- Velociraptor-focused walkthroughs in [Videos](/user/videos)
+
+---
+
+## 6) Expand (power features)
+
+Once the core SIEM loop is working, layer in these modules:
+
+- Vulnerability + SCA views (Wazuh-backed)
+- Microsoft Patch Tuesday prioritization
+- Cloud security assessment outputs (Scout Suite)
+- Web vulnerability assessment (Nuclei)
+- GitHub audit
+- AI-assisted reporting / report creation
+
+(We’ll link each of these to dedicated pages as we wireframe them.)

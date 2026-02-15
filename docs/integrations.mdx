@@ -1,0 +1,44 @@
+---
+title: Integrations
+description: Source-by-source setup guides and expectations for what data, dashboards, and alerts you get in CoPilot.
+---
+
+# Integrations
+
+This section is a **catalog**.
+
+Pick a source, follow a short setup guide, then validate that:
+
+- logs are ingesting
+- dashboards populate (after provisioning)
+- alerting can be enabled (built-in or custom)
+
+If you’re brand new, start with the guided checklist: [Start here](/getting-started/start-here).
+
+---
+
+## The mental model
+
+Almost every integration follows this pattern:
+
+1. **Ingest** events (API integration or syslog)
+2. Store events in your SIEM datastore (Wazuh Indexer / OpenSearch-backed)
+3. (Often) build alerts in **Graylog** → alerts land in `gl-events*`
+4. CoPilot shows alerts in **Incident Management → Alerts** → operators open **Cases**
+
+---
+
+## First-wave integrations
+
+- [Wazuh (endpoints)](/integrations/wazuh)
+- [Office 365](/integrations/office-365)
+- [Mimecast](/integrations/mimecast)
+- [Huntress](/integrations/huntress)
+- [CrowdStrike](/integrations/crowdstrike)
+
+## Network connectors (syslog)
+
+- [Network connectors overview](/integrations/network-connectors)
+- Fortinet: [FortiGate](/integrations/network-connectors/fortigate)
+- Palo Alto Networks: [PAN-OS](/integrations/network-connectors/palo-alto)
+- Cisco: [ASA](/integrations/network-connectors/cisco-asa)

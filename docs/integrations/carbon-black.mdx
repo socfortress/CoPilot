@@ -1,0 +1,68 @@
+---
+title: Carbon Black Cloud
+description: Ingest Carbon Black Cloud alerts into the SOCFortress SIEM stack.
+---
+
+# Carbon Black Cloud
+
+## What this integration is
+
+This integration ingests **VMware Carbon Black Cloud** alert data into your SOCFortress SIEM stack using the Carbon Black Cloud APIs.
+
+---
+
+## Data path (how it flows)
+
+1) Carbon Black Cloud → API polling/collector
+2) Collector → SIEM ingestion (indexing/search)
+3) Optional: alerting + routing into Incident Management
+
+---
+
+## Prerequisites
+
+- Carbon Black Cloud console access
+- API access enabled
+
+Vendor reference:
+- Alerts API: https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/
+
+---
+
+## Credentials & permissions you’ll need
+
+From the Carbon Black Cloud console:
+- API ID
+- API Secret Key
+- ORG Key
+- ORG ID
+- Base API hostname (e.g., `https://defense.conferdeploy.net`)
+
+The recommended pattern is to create:
+1) a **custom access level** with **Alerts: READ**
+2) an **API key** bound to that access level
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer (tenant wiring).
+2) In CoPilot → customer → Integrations → **Add integration** → **Carbon Black**.
+3) Paste the API credentials + org identifiers.
+4) Deploy/start the collector/connector component (if your deployment model uses a containerized collector).
+
+---
+
+## Success criteria
+
+- [ ] Carbon Black alerts are arriving
+- [ ] Alerts/events are tagged to the correct customer
+
+---
+
+## Troubleshooting
+
+- Confirm API key permissions include alerts read access.
+- Confirm ORG identifiers match your tenant.
+- Validate base URL/region (commercial vs other environments).
+- Check collector logs for rate limiting/auth failures.

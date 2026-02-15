@@ -1,0 +1,51 @@
+---
+title: Huntress
+description: Ingest Huntress telemetry and operationalize it inside CoPilot.
+---
+
+# Huntress
+
+## What this integration is
+
+Huntress provides managed detection/response-style telemetry that can complement endpoint and identity sources.
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Huntress → **External Service integration** (API collector or export)
+2. Events → **SIEM storage** (Wazuh Indexer / OpenSearch-backed)
+3. Optional: events → **Graylog** alert definitions
+4. Alerts → `gl-events*` → **CoPilot Incident Management → Alerts**
+5. Operator workflow → **Cases**
+
+## What data you get (high level)
+
+- Alerts/detections (depending on enabled exports)
+- Host/agent context (depending on integration design)
+
+## Setup (wireframe)
+
+- Configure Huntress under **External Services / 3rd Party Integrations**.
+- Ensure events are tenant-aware.
+
+## Success criteria
+
+- [ ] You can find at least one recent Huntress event/detection
+- [ ] It is associated with the expected customer
+
+## Dashboards
+
+- [ ] Confirm dashboards populate (after provisioning)
+
+## Alerts (starter set)
+
+- High-confidence Huntress detections promoted into SOC alerting
+- Repeated detections on the same host
+- New persistence indicators (if present in telemetry)
+
+## Troubleshooting
+
+- Verify external service status
+- Confirm export mechanism (API/webhook) and permissions
+- Confirm routing

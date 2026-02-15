@@ -12,6 +12,7 @@ Provisioning is designed to create the *plumbing* that makes customer data land 
   muted
   playsInline
   preload="auto"
+  poster="/assets/hero/customer-provisioning-walkthrough-thumb.jpg"
   style={{
     width: '100%',
     borderRadius: 16,
@@ -39,6 +40,36 @@ This same customer context is also where you configure:
 - **Network connectors** (firewalls and network devices)
 
 These are set up **per customer** so that ingestion, routing, and alerting stay tenant-aware.
+
+### Also: Shuffle (SOAR) for tickets + notifications
+
+CoPilot can plug into **Shuffle** (SOAR) so SIEM stack alerts can be forwarded to third‑party tools such as:
+
+- Jira
+- email notifications
+- ConnectWise
+- other ticketing systems / custom webhooks
+
+This allows you to take an alert created by the stack and automatically:
+- create a ticket
+- enrich it with alert context
+- route it to the right destination per customer
+
+#### Per-customer workflows (recommended)
+
+In many environments, different customers want different routing (different Jira projects, different email recipients, different ticketing systems).
+
+CoPilot + Shuffle supports this pattern by letting you map alerts to **different Shuffle workflow IDs per customer**.
+
+Practical example:
+- Customer A → Jira Project `SOC`
+- Customer B → ConnectWise tickets
+- Customer C → email-only notifications
+
+> Tip: The alert context sent to Shuffle is driven by what you map in **Incident Sources** (title/asset/context fields).
+
+Video context:
+- https://www.youtube.com/watch?v=Ko5jLfkSCrk
 
 ### 1) Dedicated customer index + routing (Graylog → Wazuh Indexer)
 

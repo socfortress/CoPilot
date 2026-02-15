@@ -1,0 +1,49 @@
+---
+title: Network connectors (syslog)
+description: Vendor-by-vendor syslog ingestion patterns and validation steps.
+---
+
+# Network connectors (syslog)
+
+Network connectors ingest **syslog events** from firewalls and network devices (and some syslog-forwarding services).
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Network device → **syslog sender** (UDP/TCP)
+2. Syslog collector/ingestion → **Graylog** (inputs/streams/pipelines)
+3. Routed/normalized events → **Wazuh Indexer / OpenSearch-backed storage** (tenant-aware)
+4. Graylog alert definitions → `gl-events*` → **CoPilot Incident Management → Alerts**
+5. Operator workflow → **Cases**
+
+> The key requirement in multi-tenant setups is **tenant-aware routing**.
+
+## Vendor/device guides
+
+- [Fortinet FortiGate](/integrations/network-connectors/fortigate)
+- [Palo Alto Networks](/integrations/network-connectors/palo-alto)
+- [Cisco ASA](/integrations/network-connectors/cisco-asa)
+
+## Success criteria
+
+- [ ] Syslog events are arriving
+- [ ] You can identify the device/source
+- [ ] Events are routed/tagged to the correct customer
+- [ ] You can build at least one alert on top of the data (optional)
+
+## Starter alerts (generic)
+
+These are useful across most firewall/device syslog sources:
+
+- Excessive denies/drops from a single source IP
+- Inbound connections to sensitive ports (RDP/SSH/VPN admin)
+- New admin login or configuration change event
+- Threat/UTM events (if your device emits them)
+
+## Troubleshooting
+
+- Validate the device is sending to the correct IP/port
+- Confirm the collector is listening and receiving
+- Confirm parsing/extraction fields exist (vendor format)
+- Confirm routing rules / customer association

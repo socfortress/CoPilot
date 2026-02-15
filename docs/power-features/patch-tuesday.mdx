@@ -1,0 +1,50 @@
+---
+title: Microsoft Patch Tuesday
+description: Track and prioritize Microsoft monthly vulnerabilities inside CoPilot.
+---
+
+# Microsoft Patch Tuesday
+
+## What it is
+
+CoPilot includes a Patch Tuesday experience to help operators/admins track and prioritize Microsoft monthly vulnerabilities.
+
+## Who this is for
+
+- **Admin / Platform**: triage exposure and prioritize remediation
+- **Operator**: understand which CVEs matter during investigations
+
+## Inputs (what it needs)
+
+- Internet access for Patch Tuesday data fetch (implementation-dependent)
+- No endpoint agent changes required
+
+## Outputs (what you get)
+
+- Cycle summary (current/recent)
+- Search and prioritization helpers
+
+## Where it lives in the UI
+
+- **Agents → Patch Tuesday**
+- Route: `/patch-tuesday`
+
+Operator walkthrough (UI guide):
+- [Patch Tuesday (Microsoft)](/user/ui/agents-patch-tuesday)
+
+## Success criteria
+
+- [ ] Patch Tuesday data loads
+- [ ] You can open a cycle and view prioritized items
+- [ ] You can search for a CVE and get results
+
+## Safety / guardrails
+
+- Patch Tuesday prioritization is guidance. Always validate against your environment and asset exposure.
+
+## Troubleshooting
+
+- If data won’t load:
+  - verify outbound connectivity (if required)
+  - check connector/service health (if applicable)
+  - retry with a different cycle (if UI supports it)

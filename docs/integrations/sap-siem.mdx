@@ -1,0 +1,50 @@
+---
+title: SAP SIEM (Customer Data Cloud)
+description: Collect SAP Customer Data Cloud audit events and forward them into the SOCFortress SIEM stack.
+---
+
+# SAP SIEM (Customer Data Cloud)
+
+## What this integration is
+
+This integration collects **audit events** from SAP Customer Data Cloud (Gigya) and forwards them into your SOCFortress SIEM stack.
+
+It may also support higher-level detections such as:
+- multiple logins detection
+- suspicious login detection
+
+Vendor reference:
+- SAP doc: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/8b8d6fffe113457094a17701f63e3d6a/4143815a70b21014bbc5a10ce4041860.html
+
+---
+
+## Credentials you’ll need
+
+- API Key
+- User Key
+- Secret Key
+- API Domain (site domain)
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer.
+2) Add the **SAP SIEM** integration under the customer.
+3) Provide the API key/user key/secret and domain.
+4) Validate events arrive and are searchable.
+
+---
+
+## Success criteria
+
+- [ ] Audit events appear for the expected tenant
+- [ ] Optional detections (if enabled) mark/analyze events as expected
+
+---
+
+## Troubleshooting
+
+- Confirm you are using the correct domain/region for your SAP tenant.
+- Confirm the secret is the one associated with the userKey.
+- Ensure HTTPS is used when required by the auth method.

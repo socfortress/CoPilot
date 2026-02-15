@@ -1,0 +1,51 @@
+---
+title: Mimecast
+description: Ingest Mimecast security events and turn them into dashboards and alerts in CoPilot.
+---
+
+# Mimecast
+
+## What this integration is
+
+Mimecast telemetry provides email security signals (policy actions, suspicious messages, detections) that are useful for SOC alerting and investigation.
+
+## Data path (how it flows)
+
+**Typical flow:**
+
+1. Mimecast → **External Service integration** (API collector)
+2. Events → **SIEM storage** (Wazuh Indexer / OpenSearch-backed)
+3. Optional: events → **Graylog** alert definitions
+4. Alerts → `gl-events*` → **CoPilot Incident Management → Alerts**
+5. Operator workflow → **Cases**
+
+## What data you get (high level)
+
+- Email security events
+- Policy actions / detections (depends on API endpoints enabled)
+
+## Setup (wireframe)
+
+- Configure Mimecast under **External Services / 3rd Party Integrations**.
+- Confirm events are tenant-aware.
+
+## Success criteria
+
+- [ ] You can locate at least one recent Mimecast event
+- [ ] Events map to the correct customer
+
+## Dashboards
+
+- [ ] After provisioning, confirm dashboards populate for this customer
+
+## Alerts (starter set)
+
+- Spike in blocked/quarantined messages
+- Repeated phishing detections for a user
+- High-risk sender domains or attachment types (if available)
+
+## Troubleshooting
+
+- Verify external service is connected/verified
+- Confirm API credentials/permissions
+- Confirm routing/tenant association

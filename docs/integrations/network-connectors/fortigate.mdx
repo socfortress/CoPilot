@@ -1,0 +1,38 @@
+---
+title: Fortinet FortiGate (syslog)
+---
+
+# Fortinet FortiGate (syslog)
+
+## What you get (high level)
+
+- Firewall traffic logs
+- Threat/UTM logs (depending on FortiGate config)
+- Admin/audit events (optional)
+
+## Data path (how it flows)
+
+FortiGate → syslog → ingestion/collector → Graylog parsing/routing → storage/indexing → alerts (`gl-events*`) → CoPilot Alerts/Cases.
+
+## Setup (wireframe)
+
+- Configure FortiGate to send syslog to your collector.
+- Ensure parsing and tenant-aware routing are in place.
+
+## Success criteria
+
+- [ ] You can find fresh FortiGate events
+- [ ] You can identify the sending device
+- [ ] Events are tenant-aware
+
+## Starter alerts
+
+- Excessive denies from a single source
+- Inbound connections to sensitive services
+- Admin login/config change events
+
+## Troubleshooting
+
+- Confirm FortiGate syslog destination and facility/severity
+- Confirm the collector is reachable from the FortiGate
+- Confirm key parsing fields exist downstream

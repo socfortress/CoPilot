@@ -1,0 +1,65 @@
+---
+title: Cato Networks
+description: Ingest Cato Networks SASE events into the SOCFortress SIEM stack.
+---
+
+# Cato Networks
+
+## What this integration is
+
+This integration ingests **Cato Networks** events into your SOCFortress SIEM stack using the Cato API (commonly via the `eventsFeed` capability).
+
+Vendor reference:
+- Cato API docs: https://api.catonetworks.com/documentation/
+
+---
+
+## Data path (how it flows)
+
+1) Cato Networks → events API feed
+2) CoPilot collector → SIEM ingestion (indexing/search)
+3) Optional: alerting and incident workflows
+
+---
+
+## Prerequisites
+
+- Cato Management Application access
+- API key created with appropriate permissions
+- Event feed enabled (Administration → Event Integrations)
+
+---
+
+## Credentials you’ll need
+
+From Cato:
+- **Account ID** (from the URL)
+- **API key**
+
+API key notes:
+- Choose **View permissions** for read-only ingestion.
+- Copy the key immediately when generated (can’t be retrieved later).
+
+---
+
+## CoPilot setup (recommended workflow)
+
+1) Provision the customer.
+2) Add **Cato Networks** integration under the customer.
+3) Provide account ID + API key.
+4) Validate that events begin flowing.
+
+---
+
+## Success criteria
+
+- [ ] Events show up for the expected customer
+- [ ] You can correlate an event in Cato with an event in the SIEM
+
+---
+
+## Troubleshooting
+
+- Confirm “Event Feed Enabled” is toggled on.
+- Confirm the API key is not expired/revoked.
+- Validate the account ID is correct and in-scope.

@@ -1,0 +1,27 @@
+---
+title: "Detecting & Removing Rogue Local Admin Accounts"
+description: Validate and remediate unauthorized local admin changes.
+---
+
+# Detecting & Removing Rogue Local Admin Accounts
+
+**Video:** https://www.youtube.com/watch?v=ogJMUFMOXLY
+
+## Goal
+Validate a local admin change is unauthorized and remove rogue admin access.
+
+## When to use
+- Alerts indicating local account creation or group membership changes
+
+## Prereqs
+- Endpoint telemetry + identity context
+
+## Procedure (high level)
+1) Validate who/what created the account or modified the group
+2) Confirm whether change is approved
+3) Remove unauthorized accounts / admin group entries
+4) Capture evidence and update the case
+
+## Validation
+- Rogue admin access removed
+- No recurrence after monitoring window
