@@ -17,7 +17,7 @@
 				<div class="flex gap-4 text-sm">
 					<div v-if="config.last_audit_at" class="flex items-center gap-1">
 						<n-icon><Icon :name="ClockIcon" /></n-icon>
-						<span>Last audit: {{ formatDate(config.last_audit_at) }}</span>
+						<span>Last audit: {{ formatDate(config.last_audit_at, dFormats.datetime) }}</span>
 					</div>
 					<div v-if="config.last_audit_grade" class="flex items-center gap-1">
 						<span>Grade:</span>
@@ -67,11 +67,13 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NDivider, NIcon, NProgress, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
 
@@ -91,6 +93,7 @@ const EditIcon = "carbon:edit"
 
 const message = useMessage()
 const running = ref(false)
+const dFormats = useSettingsStore().dateFormat
 
 const scoreStatus = computed(() => {
 	const score = props.config.last_audit_score ?? 0
