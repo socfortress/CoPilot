@@ -6,6 +6,7 @@ import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
 import OverviewPage from "@/views/Overview.vue"
 
+// TODO: refactor
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
@@ -20,27 +21,27 @@ const router = createRouter({
 			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
-            path: "/indices",
-            redirect: "/indices/management",
-            meta: {
-                auth: true,
-                roles: RouteRole.All
-            },
-            children: [
-                {
-                    path: "management",
-                    name: "Indices",
-                    component: () => import("@/views/Indices.vue"),
-                    meta: { title: "Index Management" }
-                },
-                {
-                    path: "snapshots",
-                    name: "Snapshots",
-                    component: () => import("@/views/Snapshots.vue"),
-                    meta: { title: "Snapshot & Restore" }
-                }
-            ]
-        },
+			path: "/indices",
+			redirect: "/indices/management",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "management",
+					name: "Indices",
+					component: () => import("@/views/Indices.vue"),
+					meta: { title: "Index Management" }
+				},
+				{
+					path: "snapshots",
+					name: "Snapshots",
+					component: () => import("@/views/Snapshots.vue"),
+					meta: { title: "Snapshot & Restore" }
+				}
+			]
+		},
 		{
 			path: "/connectors",
 			name: "Connectors",
@@ -103,11 +104,11 @@ const router = createRouter({
 					meta: { title: "SCA Overview" }
 				},
 				{
-				path: "/patch-tuesday",
-				name: "PatchTuesday",
-				component: () => import("@/views/agents/PatchTuesdayOverview.vue"),
-				meta: { title: "Patch Tuesday" }
-			}
+					path: "/patch-tuesday",
+					name: "PatchTuesday",
+					component: () => import("@/views/agents/PatchTuesdayOverview.vue"),
+					meta: { title: "Patch Tuesday" }
+				}
 			]
 		},
 		{
@@ -301,33 +302,33 @@ const router = createRouter({
 		// 	meta: { title: "Report Creation", auth: true, roles: RouteRole.All }
 		// },
 		{
-            path: "/report-creation",
-            redirect: "/report-creation/general",
-            meta: {
-                auth: true,
-                roles: RouteRole.All
-            },
-            children: [
-                {
-                    path: "general",
-                    name: "ReportCreation",
-                    component: () => import("@/views/ReportCreation.vue"),
-                    meta: { title: "General Reports" }
-                },
-                {
-                    path: "vulnerability-reports",
-                    name: "VulnerabilityReports",
-                    component: () => import("@/components/vulnerabilities/VulnerabilityReports.vue"),
-                    meta: { title: "Vulnerability Reports" }
-                },
+			path: "/report-creation",
+			redirect: "/report-creation/general",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "general",
+					name: "ReportCreation",
+					component: () => import("@/views/ReportCreation.vue"),
+					meta: { title: "General Reports" }
+				},
+				{
+					path: "vulnerability-reports",
+					name: "VulnerabilityReports",
+					component: () => import("@/components/vulnerabilities/VulnerabilityReports.vue"),
+					meta: { title: "Vulnerability Reports" }
+				},
 				{
 					path: "sca-reports",
 					name: "SCAReports",
 					component: () => import("@/components/sca/SCAReports.vue"),
 					meta: { title: "SCA Reports" }
 				}
-            ]
-        },
+			]
+		},
 		{
 			path: "/scheduler",
 			name: "Scheduler",
