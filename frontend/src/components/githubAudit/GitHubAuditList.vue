@@ -1,8 +1,8 @@
 <template>
 	<div class="github-audit-list">
 		<n-card>
-			<div class="flex justify-between items-center mb-4">
-				<h2 class="text-xl font-semibold m-0">GitHub Audit Configurations</h2>
+			<div class="mb-4 flex items-center justify-between">
+				<h2 class="m-0 text-xl font-semibold">GitHub Audit Configurations</h2>
 				<n-space>
 					<n-button quaternary @click="showInfo = true">
 						<template #icon>
@@ -19,7 +19,7 @@
 				</n-space>
 			</div>
 
-			<div class="github-audit-filters flex gap-4 flex-wrap items-center mb-4">
+			<div class="github-audit-filters mb-4 flex flex-wrap items-center gap-4">
 				<n-select
 					v-model:value="filterCustomerCode"
 					placeholder="Filter by Customer"
@@ -52,7 +52,7 @@
 			</div>
 
 			<n-spin :show="loading">
-				<div v-if="configs.length === 0 && !loading" class="text-center py-8">
+				<div v-if="configs.length === 0 && !loading" class="py-8 text-center">
 					<n-empty description="No configurations found">
 						<template #extra>
 							<n-button type="primary" @click="openCreateForm">Create your first configuration</n-button>
@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
 import { onMounted, ref } from "vue"
@@ -123,83 +124,83 @@ const customerOptions = ref<{ label: string; value: string }[]>([])
 const loadingCustomers = ref(false)
 
 const statusOptions = [
-    { label: "Enabled", value: "enabled" },
-    { label: "Disabled", value: "disabled" }
+	{ label: "Enabled", value: "enabled" },
+	{ label: "Disabled", value: "disabled" }
 ]
 
 async function loadCustomers() {
-    if (loadingCustomers.value) return
+	if (loadingCustomers.value) return
 
-    loadingCustomers.value = true
-    try {
-        const response = await Api.customers.getCustomers()
-        if (response.data.customers) {
-            customerOptions.value = response.data.customers.map((c: any) => ({
-                label: `${c.customer_name} (${c.customer_code})`,
-                value: c.customer_code
-            }))
-        }
-    } catch (error) {
-        console.error("Failed to load customers:", error)
-    } finally {
-        loadingCustomers.value = false
-    }
+	loadingCustomers.value = true
+	try {
+		const response = await Api.customers.getCustomers()
+		if (response.data.customers) {
+			customerOptions.value = response.data.customers.map((c: any) => ({
+				label: `${c.customer_name} (${c.customer_code})`,
+				value: c.customer_code
+			}))
+		}
+	} catch (error) {
+		console.error("Failed to load customers:", error)
+	} finally {
+		loadingCustomers.value = false
+	}
 }
 
 async function loadConfigs() {
-    if (loading.value) return
+	if (loading.value) return
 
-    loading.value = true
-    try {
-        const response = await Api.githubAudit.getConfigs(filterCustomerCode.value || undefined)
-        if (response.data.configs) {
-            let filteredConfigs = response.data.configs
+	loading.value = true
+	try {
+		const response = await Api.githubAudit.getConfigs(filterCustomerCode.value || undefined)
+		if (response.data.configs) {
+			let filteredConfigs = response.data.configs
 
-            if (filterStatus.value) {
-                const isEnabled = filterStatus.value === "enabled"
-                filteredConfigs = filteredConfigs.filter((c: GitHubAuditConfig) => c.enabled === isEnabled)
-            }
+			if (filterStatus.value) {
+				const isEnabled = filterStatus.value === "enabled"
+				filteredConfigs = filteredConfigs.filter((c: GitHubAuditConfig) => c.enabled === isEnabled)
+			}
 
-            if (filterOrganization.value) {
-                const searchTerm = filterOrganization.value.toLowerCase()
-                filteredConfigs = filteredConfigs.filter((c: GitHubAuditConfig) =>
-                    c.organization.toLowerCase().includes(searchTerm)
-                )
-            }
+			if (filterOrganization.value) {
+				const searchTerm = filterOrganization.value.toLowerCase()
+				filteredConfigs = filteredConfigs.filter((c: GitHubAuditConfig) =>
+					c.organization.toLowerCase().includes(searchTerm)
+				)
+			}
 
-            configs.value = filteredConfigs
-        }
-    } catch (error: any) {
-        message.error(error.response?.data?.detail || "Failed to load configurations")
-        configs.value = []
-    } finally {
-        loading.value = false
-    }
+			configs.value = filteredConfigs
+		}
+	} catch (error: any) {
+		message.error(error.response?.data?.detail || "Failed to load configurations")
+		configs.value = []
+	} finally {
+		loading.value = false
+	}
 }
 
 function openCreateForm() {
-    selectedConfig.value = null
-    showForm.value = true
+	selectedConfig.value = null
+	showForm.value = true
 }
 
 function openEditForm(config: GitHubAuditConfig) {
-    selectedConfig.value = config
-    showDetail.value = false
-    showForm.value = true
+	selectedConfig.value = config
+	showDetail.value = false
+	showForm.value = true
 }
 
 function openDetail(config: GitHubAuditConfig) {
-    selectedConfig.value = config
-    showDetail.value = true
+	selectedConfig.value = config
+	showDetail.value = true
 }
 
 function onConfigSaved() {
-    showForm.value = false
-    loadConfigs()
+	showForm.value = false
+	loadConfigs()
 }
 
 onMounted(() => {
-    loadCustomers()
-    loadConfigs()
+	loadCustomers()
+	loadConfigs()
 })
 </script>

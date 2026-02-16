@@ -73,10 +73,7 @@
 			<div class="filter-item toggle-item">
 				<n-tooltip trigger="hover">
 					<template #trigger>
-						<n-switch
-							:value="filters.kevOnly"
-							@update:value="updateFilter('kevOnly', $event)"
-						>
+						<n-switch :value="filters.kevOnly" @update:value="updateFilter('kevOnly', $event)">
 							<template #checked>KEV</template>
 							<template #unchecked>KEV</template>
 						</n-switch>
@@ -99,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PatchTuesdayFilters } from "./types"
 import { NButton, NCard, NInput, NSelect, NSwitch, NTooltip } from "naive-ui"
 import { computed } from "vue"
@@ -106,96 +104,96 @@ import Icon from "@/components/common/Icon.vue"
 import { PriorityLevel } from "@/types/patchTuesday.d"
 
 const props = defineProps<{
-    filters: PatchTuesdayFilters
-    cycles: string[]
-    families: string[]
-    loading?: boolean
+	filters: PatchTuesdayFilters
+	cycles: string[]
+	families: string[]
+	loading?: boolean
 }>()
 const emit = defineEmits<{
-    (e: "update:filters", filters: PatchTuesdayFilters): void
+	(e: "update:filters", filters: PatchTuesdayFilters): void
 }>()
 const SearchIcon = "carbon:search"
 const ClearIcon = "carbon:close"
 
 const cycleOptions = computed(() =>
-    props.cycles.map(cycle => ({
-        label: cycle,
-        value: cycle
-    }))
+	props.cycles.map(cycle => ({
+		label: cycle,
+		value: cycle
+	}))
 )
 
 const priorityOptions = [
-    { label: "P0 - Emergency", value: PriorityLevel.P0 },
-    { label: "P1 - High", value: PriorityLevel.P1 },
-    { label: "P2 - Medium", value: PriorityLevel.P2 },
-    { label: "P3 - Low", value: PriorityLevel.P3 }
+	{ label: "P0 - Emergency", value: PriorityLevel.P0 },
+	{ label: "P1 - High", value: PriorityLevel.P1 },
+	{ label: "P2 - Medium", value: PriorityLevel.P2 },
+	{ label: "P3 - Low", value: PriorityLevel.P3 }
 ]
 
 const familyOptions = computed(() =>
-    props.families.map(family => ({
-        label: family,
-        value: family
-    }))
+	props.families.map(family => ({
+		label: family,
+		value: family
+	}))
 )
 
 const severityOptions = [
-    { label: "Critical", value: "critical" },
-    { label: "Important", value: "important" },
-    { label: "Moderate", value: "moderate" },
-    { label: "Low", value: "low" }
+	{ label: "Critical", value: "critical" },
+	{ label: "Important", value: "important" },
+	{ label: "Moderate", value: "moderate" },
+	{ label: "Low", value: "low" }
 ]
 
 function updateFilter<K extends keyof PatchTuesdayFilters>(key: K, value: PatchTuesdayFilters[K]) {
-    emit("update:filters", {
-        ...props.filters,
-        [key]: value
-    })
+	emit("update:filters", {
+		...props.filters,
+		[key]: value
+	})
 }
 
 function clearFilters() {
-    emit("update:filters", {
-        cycle: props.filters.cycle, // Keep cycle selected
-        priority: null,
-        family: null,
-        severity: null,
-        searchQuery: "",
-        kevOnly: false
-    })
+	emit("update:filters", {
+		cycle: props.filters.cycle, // Keep cycle selected
+		priority: null,
+		family: null,
+		severity: null,
+		searchQuery: "",
+		kevOnly: false
+	})
 }
 </script>
 
 <style scoped lang="scss">
 .filters-card {
-    background: var(--bg-secondary-color);
-    border-radius: 8px;
+	background: var(--bg-secondary-color);
+	border-radius: 8px;
 
-    .filters-container {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 16px;
-    }
+	.filters-container {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 16px;
+	}
 
-    .filter-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+	.filter-item {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 
-        .filter-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.7;
-        }
+		.filter-label {
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			opacity: 0.7;
+		}
 
-        &.search-item {
-            flex: 1;
-            min-width: 200px;
-        }
+		&.search-item {
+			flex: 1;
+			min-width: 200px;
+		}
 
-        &.toggle-item {
-            padding-bottom: 4px;
-        }
-    }
+		&.toggle-item {
+			padding-bottom: 4px;
+		}
+	}
 }
 </style>

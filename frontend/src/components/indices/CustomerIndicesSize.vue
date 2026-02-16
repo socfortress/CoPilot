@@ -8,13 +8,9 @@
 							<n-text strong>{{ customer.customer }}</n-text>
 							<n-popover trigger="click" placement="bottom" :width="300">
 								<template #trigger>
-									<n-tag
-										size="small"
-										:bordered="false"
-										type="info"
-										class="clickable-tag"
-									>
-										{{ customer.index_count }} {{ customer.index_count === 1 ? "index" : "indices" }}
+									<n-tag size="small" :bordered="false" type="info" class="clickable-tag">
+										{{ customer.index_count }}
+										{{ customer.index_count === 1 ? "index" : "indices" }}
 									</n-tag>
 								</template>
 								<div class="indices-popover">
@@ -54,24 +50,25 @@
 </template>
 
 <script lang="ts" setup>
+// TODO: refactor
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 
 interface CustomerIndicesSize {
-    customer: string
-    total_size_bytes: number
-    total_size_human: string
-    index_count: number
-    indices: string[]
+	customer: string
+	total_size_bytes: number
+	total_size_human: string
+	index_count: number
+	indices: string[]
 }
 
 defineProps<{
-    bordered?: boolean
+	bordered?: boolean
 }>()
 
 const emit = defineEmits<{
-    (e: "click", value: string): void
+	(e: "click", value: string): void
 }>()
 
 const message = useMessage()
@@ -81,115 +78,115 @@ const loading = ref(false)
 const customerSizes = ref<CustomerIndicesSize[]>([])
 
 const maxSize = computed(() => {
-    if (!customerSizes.value.length) return 0
-    return Math.max(...customerSizes.value.map(c => c.total_size_bytes))
+	if (!customerSizes.value.length) return 0
+	return Math.max(...customerSizes.value.map(c => c.total_size_bytes))
 })
 
 function getPercentage(sizeBytes: number): number {
-    if (!maxSize.value) return 0
-    return Math.round((sizeBytes / maxSize.value) * 100)
+	if (!maxSize.value) return 0
+	return Math.round((sizeBytes / maxSize.value) * 100)
 }
 
 function getProgressColor(sizeBytes: number): string {
-    const percentage = getPercentage(sizeBytes)
-    if (percentage >= 80) return themeVars.value.errorColor
-    if (percentage >= 60) return themeVars.value.warningColor
-    return themeVars.value.primaryColor
+	const percentage = getPercentage(sizeBytes)
+	if (percentage >= 80) return themeVars.value.errorColor
+	if (percentage >= 60) return themeVars.value.warningColor
+	return themeVars.value.primaryColor
 }
 
 function selectIndex(indexName: string) {
-    emit("click", indexName)
+	emit("click", indexName)
 }
 
 function getCustomerIndicesSize() {
-    loading.value = true
+	loading.value = true
 
-    Api.wazuh.indices
-        .getIndicesSizePerCustomer()
-        .then(res => {
-            if (res.data.success) {
-                customerSizes.value = res.data.customer_sizes || []
-            } else {
-                message.error(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "Failed to retrieve customer indices size.")
-        })
-        .finally(() => {
-            loading.value = false
-        })
+	Api.wazuh.indices
+		.getIndicesSizePerCustomer()
+		.then(res => {
+			if (res.data.success) {
+				customerSizes.value = res.data.customer_sizes || []
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "Failed to retrieve customer indices size.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 
 onBeforeMount(() => {
-    getCustomerIndicesSize()
+	getCustomerIndicesSize()
 })
 </script>
 
 <style lang="scss" scoped>
 .customer-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 400px;
-    overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-height: 400px;
+	overflow-y: auto;
 
-    .customer-item {
-        .customer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+	.customer-item {
+		.customer-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 6px;
 
-            .customer-name {
-                display: flex;
-                align-items: center;
-                gap: 8px;
+			.customer-name {
+				display: flex;
+				align-items: center;
+				gap: 8px;
 
-                .clickable-tag {
-                    cursor: pointer;
-                    transition: opacity 0.2s;
+				.clickable-tag {
+					cursor: pointer;
+					transition: opacity 0.2s;
 
-                    &:hover {
-                        opacity: 0.8;
-                    }
-                }
-            }
+					&:hover {
+						opacity: 0.8;
+					}
+				}
+			}
 
-            .customer-size {
-                font-weight: 600;
-                font-family: var(--font-family-mono);
-            }
-        }
-    }
+			.customer-size {
+				font-weight: 600;
+				font-family: var(--font-family-mono);
+			}
+		}
+	}
 }
 
 .indices-popover {
-    .popover-header {
-        margin-bottom: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid var(--border-color);
-    }
+	.popover-header {
+		margin-bottom: 8px;
+		padding-bottom: 8px;
+		border-bottom: 1px solid var(--border-color);
+	}
 
-    .indices-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+	.indices-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 
-        .index-item {
-            padding: 4px 0;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+		.index-item {
+			padding: 4px 0;
+			cursor: pointer;
+			border-radius: 4px;
+			transition: background-color 0.2s;
 
-            &:hover {
-                background-color: var(--hover-color);
-            }
+			&:hover {
+				background-color: var(--hover-color);
+			}
 
-            .index-link {
-                cursor: pointer;
-            }
-        }
-    }
+			.index-link {
+				cursor: pointer;
+			}
+		}
+	}
 }
 </style>

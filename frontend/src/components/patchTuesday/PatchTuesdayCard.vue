@@ -72,173 +72,174 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
 import { NCard, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 
 defineProps<{
-    item: PatchTuesdayItem
+	item: PatchTuesdayItem
 }>()
 const AlertIcon = "carbon:warning"
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:link"
 
 function getSeverityType(severity: string): "error" | "warning" | "info" | "default" {
-    const s = severity.toLowerCase()
-    if (s === "critical") return "error"
-    if (s === "important") return "warning"
-    if (s === "moderate") return "info"
-    return "default"
+	const s = severity.toLowerCase()
+	if (s === "critical") return "error"
+	if (s === "important") return "warning"
+	if (s === "moderate") return "info"
+	return "default"
 }
 
 function getCvssClass(score: number): string {
-    if (score >= 9.0) return "critical"
-    if (score >= 7.0) return "high"
-    if (score >= 4.0) return "medium"
-    return "low"
+	if (score >= 9.0) return "critical"
+	if (score >= 7.0) return "high"
+	if (score >= 4.0) return "medium"
+	return "low"
 }
 
 function truncateProduct(product: string): string {
-    if (product.length <= 40) return product
-    return `${product.substring(0, 40)}...`
+	if (product.length <= 40) return product
+	return `${product.substring(0, 40)}...`
 }
 
 function getSlaHint(sla: string): string {
-    if (sla.includes("immediately") || sla.includes("24h")) return "Patch immediately"
-    if (sla.includes("72h")) return "Patch within 72 hours"
-    if (sla.includes("7-14")) return "Patch within 7-14 days"
-    return "Patch within 30 days"
+	if (sla.includes("immediately") || sla.includes("24h")) return "Patch immediately"
+	if (sla.includes("72h")) return "Patch within 72 hours"
+	if (sla.includes("7-14")) return "Patch within 7-14 days"
+	return "Patch within 30 days"
 }
 </script>
 
 <style scoped lang="scss">
 .patch-tuesday-card {
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-left: 4px solid transparent;
-    background: var(--bg-secondary-color);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border-left: 4px solid transparent;
+	background: var(--bg-secondary-color);
 
-    &.priority-p0 {
-        border-left-color: #ef4444;
-    }
+	&.priority-p0 {
+		border-left-color: #ef4444;
+	}
 
-    &.priority-p1 {
-        border-left-color: #f97316;
-    }
+	&.priority-p1 {
+		border-left-color: #f97316;
+	}
 
-    &.priority-p2 {
-        border-left-color: #eab308;
-    }
+	&.priority-p2 {
+		border-left-color: #eab308;
+	}
 
-    &.priority-p3 {
-        border-left-color: #22c55e;
-    }
+	&.priority-p3 {
+		border-left-color: #22c55e;
+	}
 
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 8px;
 
-        .cve-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+		.cve-info {
+			display: flex;
+			align-items: center;
+			gap: 8px;
 
-            .cve-id {
-                font-weight: 600;
-                font-size: 0.95rem;
-                font-family: monospace;
-            }
-        }
+			.cve-id {
+				font-weight: 600;
+				font-size: 0.95rem;
+				font-family: monospace;
+			}
+		}
 
-        .badges {
-            display: flex;
-            gap: 4px;
-        }
-    }
+		.badges {
+			display: flex;
+			gap: 4px;
+		}
+	}
 
-    .card-title {
-        font-size: 0.875rem;
-        line-height: 1.4;
-        margin-bottom: 12px;
-        opacity: 0.9;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
+	.card-title {
+		font-size: 0.875rem;
+		line-height: 1.4;
+		margin-bottom: 12px;
+		opacity: 0.9;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 
-    .product-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+	.product-info {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
 
-        .product-name {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-    }
+		.product-name {
+			font-size: 0.8rem;
+			opacity: 0.7;
+		}
+	}
 
-    .scores-row {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 12px;
+	.scores-row {
+		display: flex;
+		gap: 16px;
+		margin-bottom: 12px;
 
-        .score-item {
-            display: flex;
-            flex-direction: column;
+		.score-item {
+			display: flex;
+			flex-direction: column;
 
-            .score-label {
-                font-size: 0.7rem;
-                text-transform: uppercase;
-                opacity: 0.6;
-            }
+			.score-label {
+				font-size: 0.7rem;
+				text-transform: uppercase;
+				opacity: 0.6;
+			}
 
-            .score-value {
-                font-weight: 600;
-                font-size: 0.9rem;
+			.score-value {
+				font-weight: 600;
+				font-size: 0.9rem;
 
-                &.critical {
-                    color: #ef4444;
-                }
-                &.high {
-                    color: #f97316;
-                }
-                &.medium {
-                    color: #eab308;
-                }
-                &.low {
-                    color: #22c55e;
-                }
-            }
-        }
-    }
+				&.critical {
+					color: #ef4444;
+				}
+				&.high {
+					color: #f97316;
+				}
+				&.medium {
+					color: #eab308;
+				}
+				&.low {
+					color: #22c55e;
+				}
+			}
+		}
+	}
 
-    .kb-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.8rem;
-        opacity: 0.7;
-        margin-bottom: 8px;
+	.kb-row {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.8rem;
+		opacity: 0.7;
+		margin-bottom: 8px;
 
-        .kb-more {
-            opacity: 0.6;
-        }
-    }
+		.kb-more {
+			opacity: 0.6;
+		}
+	}
 
-    .sla-hint {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.75rem;
-        opacity: 0.6;
-        padding-top: 8px;
-        border-top: 1px solid var(--border-color);
-    }
+	.sla-hint {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.75rem;
+		opacity: 0.6;
+		padding-top: 8px;
+		border-top: 1px solid var(--border-color);
+	}
 }
 </style>

@@ -22,33 +22,34 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import { NGi, NGrid, NStatistic } from "naive-ui"
 import { computed } from "vue"
 
 const props = defineProps<{
-    stats: {
-        totalConfigs: number
-        activeConfigs: number
-        totalReports: number
-        avgScore: number
-    }
+	stats: {
+		totalConfigs: number
+		activeConfigs: number
+		totalReports: number
+		avgScore: number
+	}
 }>()
 
 const scoreClass = computed(() => {
-    if (props.stats.avgScore >= 80) return "text-success"
-    if (props.stats.avgScore >= 60) return "text-warning"
-    return "text-error"
+	if (props.stats.avgScore >= 80) return "text-success"
+	if (props.stats.avgScore >= 60) return "text-warning"
+	return "text-error"
 })
 </script>
 
 <style scoped>
 .text-success {
-    color: var(--success-color);
+	color: var(--success-color);
 }
 .text-warning {
-    color: var(--warning-color);
+	color: var(--warning-color);
 }
 .text-error {
-    color: var(--error-color);
+	color: var(--error-color);
 }
 </style>

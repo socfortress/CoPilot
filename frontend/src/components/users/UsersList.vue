@@ -106,6 +106,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { User } from "@/types/user.d"
 import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
@@ -138,118 +139,118 @@ const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
 function getRoleTagType(roleName: string | null | undefined) {
-    switch (roleName?.toLowerCase()) {
-        case "admin":
-            return "error"
-        case "analyst":
-            return "warning"
-        case "scheduler":
-            return "info"
-        case "customer_user":
-            return "success"
-        default:
-            return "default"
-    }
+	switch (roleName?.toLowerCase()) {
+		case "admin":
+			return "error"
+		case "analyst":
+			return "warning"
+		case "scheduler":
+			return "info"
+		case "customer_user":
+			return "success"
+		default:
+			return "default"
+	}
 }
 
 const options = [
-    {
-        key: "AssignRole",
-        type: "render",
-        render: () =>
-            h(AssignRole, {
-                user: selectedUser.value || undefined,
-                onSuccess: getUsers
-            })
-    },
-    {
-        key: "AssignCustomer",
-        type: "render",
-        render: () =>
-            h(AssignCustomer, {
-                user: selectedUser.value || undefined,
-                onSuccess: getUsers
-            })
-    },
-    {
-        key: "AssignTags",
-        type: "render",
-        render: () =>
-            h(AssignTags, {
-                user: selectedUser.value || undefined,
-                onSuccess: getUsers
-            })
-    },
-    {
-        key: "ChangePassword",
-        type: "render",
-        render: () => h(ChangePassword, { user: selectedUser.value || undefined })
-    },
-    {
-        key: "DeleteUser",
-        type: "render",
-        render: () =>
-            h(DeleteUser, {
-                user: selectedUser.value || undefined,
-                onSuccess: getUsers,
-                onLoading: updateLoadingDelete
-            })
-    }
+	{
+		key: "AssignRole",
+		type: "render",
+		render: () =>
+			h(AssignRole, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers
+			})
+	},
+	{
+		key: "AssignCustomer",
+		type: "render",
+		render: () =>
+			h(AssignCustomer, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers
+			})
+	},
+	{
+		key: "AssignTags",
+		type: "render",
+		render: () =>
+			h(AssignTags, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers
+			})
+	},
+	{
+		key: "ChangePassword",
+		type: "render",
+		render: () => h(ChangePassword, { user: selectedUser.value || undefined })
+	},
+	{
+		key: "DeleteUser",
+		type: "render",
+		render: () =>
+			h(DeleteUser, {
+				user: selectedUser.value || undefined,
+				onSuccess: getUsers,
+				onLoading: updateLoadingDelete
+			})
+	}
 ]
 
 function updateLoadingDelete(value: boolean) {
-    loadingDelete.value = value
+	loadingDelete.value = value
 }
 
 function addUserSuccess() {
-    getUsers()
-    showForm.value = false
+	getUsers()
+	showForm.value = false
 }
 
 function getUsers() {
-    loadingUsers.value = true
+	loadingUsers.value = true
 
-    Api.users
-        .getUsers()
-        .then(res => {
-            if (res.data.success) {
-                usersList.value = res.data?.users || []
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            usersList.value = []
+	Api.users
+		.getUsers()
+		.then(res => {
+			if (res.data.success) {
+				usersList.value = res.data?.users || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			usersList.value = []
 
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingUsers.value = false
-        })
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingUsers.value = false
+		})
 }
 
 onBeforeMount(() => {
-    getUsers()
+	getUsers()
 })
 </script>
 
 <style lang="scss" scoped>
 .users-list {
-    border-radius: var(--border-radius);
-    overflow: hidden;
+	border-radius: var(--border-radius);
+	overflow: hidden;
 
-    tr:hover {
-        td {
-            background-color: rgba(var(--primary-color-rgb) / 0.05);
-        }
-    }
+	tr:hover {
+		td {
+			background-color: rgba(var(--primary-color-rgb) / 0.05);
+		}
+	}
 
-    .highlight {
-        td {
-            border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-            border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-            background-color: rgba(var(--primary-color-rgb) / 0.05);
-        }
-    }
+	.highlight {
+		td {
+			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
+			background-color: rgba(var(--primary-color-rgb) / 0.05);
+		}
+	}
 }
 </style>

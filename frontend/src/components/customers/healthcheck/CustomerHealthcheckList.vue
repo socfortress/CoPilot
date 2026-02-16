@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
@@ -103,17 +104,17 @@ const unitOptions = [
 
 const filters = computed({
 	get: () => props.filters,
-	set: (value) => emit("update:filters", value)
+	set: value => emit("update:filters", value)
 })
 
 const filterTime = computed({
 	get: () => props.filters.time,
-	set: (value) => emit("update:filters", { ...props.filters, time: value })
+	set: value => emit("update:filters", { ...props.filters, time: value })
 })
 
 const filterUnit = computed({
 	get: () => props.filters.unit,
-	set: (value) => emit("update:filters", { ...props.filters, unit: value })
+	set: value => emit("update:filters", { ...props.filters, unit: value })
 })
 
 function getList() {

@@ -114,13 +114,7 @@
 			<div v-if="item.remediation.kbs.length > 0" class="kb-list">
 				<strong>Related KB Articles:</strong>
 				<div class="kb-tags">
-					<n-tag
-						v-for="kb in item.remediation.kbs"
-						:key="kb"
-						size="small"
-						class="kb-tag"
-						@click="openKB(kb)"
-					>
+					<n-tag v-for="kb in item.remediation.kbs" :key="kb" size="small" class="kb-tag" @click="openKB(kb)">
 						<template #icon>
 							<Icon :name="ExternalLinkIcon" />
 						</template>
@@ -137,13 +131,7 @@
 		<div class="detail-section">
 			<h3 class="section-title">Sources</h3>
 			<div class="source-links">
-				<n-button
-					text
-					tag="a"
-					:href="item.source.msrc_cvrf_url"
-					target="_blank"
-					type="primary"
-				>
+				<n-button text tag="a" :href="item.source.msrc_cvrf_url" target="_blank" type="primary">
 					<template #icon>
 						<Icon :name="ExternalLinkIcon" />
 					</template>
@@ -174,186 +162,179 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
-import {
-    NAlert,
-    NButton,
-    NDescriptions,
-    NDescriptionsItem,
-    NDivider,
-    NEmpty,
-    NTag
-} from "naive-ui"
+import { NAlert, NButton, NDescriptions, NDescriptionsItem, NDivider, NEmpty, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { PriorityLevel } from "@/types/patchTuesday.d"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 
 defineProps<{
-    item: PatchTuesdayItem
+	item: PatchTuesdayItem
 }>()
 const AlertIcon = "carbon:warning"
 const ExternalLinkIcon = "carbon:launch"
 
 function getSeverityType(severity: string): "error" | "warning" | "info" | "default" {
-    const s = severity.toLowerCase()
-    if (s === "critical") return "error"
-    if (s === "important") return "warning"
-    if (s === "moderate") return "info"
-    return "default"
+	const s = severity.toLowerCase()
+	if (s === "critical") return "error"
+	if (s === "important") return "warning"
+	if (s === "moderate") return "info"
+	return "default"
 }
 
 function getCvssClass(score: number): string {
-    if (score >= 9.0) return "critical"
-    if (score >= 7.0) return "high"
-    if (score >= 4.0) return "medium"
-    return "low"
+	if (score >= 9.0) return "critical"
+	if (score >= 7.0) return "high"
+	if (score >= 4.0) return "medium"
+	return "low"
 }
 
 function getPriorityAlertType(priority: PriorityLevel | string): "error" | "warning" | "info" | "success" {
-    switch (priority) {
-        case PriorityLevel.P0:
-            return "error"
-        case PriorityLevel.P1:
-            return "warning"
-        case PriorityLevel.P2:
-            return "info"
-        case PriorityLevel.P3:
-            return "success"
-        default:
-            return "info"
-    }
+	switch (priority) {
+		case PriorityLevel.P0:
+			return "error"
+		case PriorityLevel.P1:
+			return "warning"
+		case PriorityLevel.P2:
+			return "info"
+		case PriorityLevel.P3:
+			return "success"
+		default:
+			return "info"
+	}
 }
 
 function formatDate(dateStr: string): string {
-    if (!dateStr) return "-"
-    return new Date(dateStr).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    })
+	if (!dateStr) return "-"
+	return new Date(dateStr).toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric"
+	})
 }
 
 function formatDateTime(dateStr: string): string {
-    if (!dateStr) return "-"
-    return new Date(dateStr).toLocaleString()
+	if (!dateStr) return "-"
+	return new Date(dateStr).toLocaleString()
 }
 
 function openKB(kb: string) {
-    window.open(`https://support.microsoft.com/help/${kb.replace("KB", "")}`, "_blank")
+	window.open(`https://support.microsoft.com/help/${kb.replace("KB", "")}`, "_blank")
 }
 </script>
 
 <style scoped lang="scss">
 .patch-tuesday-detail {
-    .detail-header {
-        .header-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
+	.detail-header {
+		.header-row {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 12px;
+		}
 
-        .detail-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            line-height: 1.4;
-        }
-    }
+		.detail-title {
+			font-size: 1.1rem;
+			font-weight: 600;
+			line-height: 1.4;
+		}
+	}
 
-    .detail-section {
-        .section-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-        }
-    }
+	.detail-section {
+		.section-title {
+			font-size: 0.9rem;
+			font-weight: 600;
+			margin-bottom: 12px;
+			display: flex;
+			align-items: center;
+		}
+	}
 
-    .scores-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
+	.scores-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 12px;
 
-        .score-card {
-            background: var(--bg-secondary-color);
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
+		.score-card {
+			background: var(--bg-secondary-color);
+			padding: 12px;
+			border-radius: 8px;
+			display: flex;
+			flex-direction: column;
 
-            .score-label {
-                font-size: 0.75rem;
-                opacity: 0.7;
-                margin-bottom: 4px;
-            }
+			.score-label {
+				font-size: 0.75rem;
+				opacity: 0.7;
+				margin-bottom: 4px;
+			}
 
-            .score-value {
-                font-size: 1.25rem;
-                font-weight: 700;
+			.score-value {
+				font-size: 1.25rem;
+				font-weight: 700;
 
-                &.critical {
-                    color: #ef4444;
-                }
-                &.high {
-                    color: #f97316;
-                }
-                &.medium {
-                    color: #eab308;
-                }
-                &.low {
-                    color: #22c55e;
-                }
-            }
+				&.critical {
+					color: #ef4444;
+				}
+				&.high {
+					color: #f97316;
+				}
+				&.medium {
+					color: #eab308;
+				}
+				&.low {
+					color: #22c55e;
+				}
+			}
 
-            .score-detail {
-                font-size: 0.7rem;
-                opacity: 0.6;
-                margin-top: 4px;
-            }
-        }
-    }
+			.score-detail {
+				font-size: 0.7rem;
+				opacity: 0.6;
+				margin-top: 4px;
+			}
+		}
+	}
 
-    .reasons-list {
-        ul {
-            margin: 8px 0 0 20px;
-            padding: 0;
+	.reasons-list {
+		ul {
+			margin: 8px 0 0 20px;
+			padding: 0;
 
-            li {
-                margin-bottom: 4px;
-                font-size: 0.875rem;
-            }
-        }
-    }
+			li {
+				margin-bottom: 4px;
+				font-size: 0.875rem;
+			}
+		}
+	}
 
-    .kb-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
+	.kb-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 8px;
 
-        .kb-tag {
-            cursor: pointer;
+		.kb-tag {
+			cursor: pointer;
 
-            &:hover {
-                opacity: 0.8;
-            }
-        }
-    }
+			&:hover {
+				opacity: 0.8;
+			}
+		}
+	}
 
-    .source-links {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
+	.source-links {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
 
-    .detail-footer {
-        margin-top: 24px;
-        padding-top: 12px;
-        border-top: 1px solid var(--border-color);
-        font-size: 0.75rem;
-        opacity: 0.6;
-        display: flex;
-        gap: 8px;
-    }
+	.detail-footer {
+		margin-top: 24px;
+		padding-top: 12px;
+		border-top: 1px solid var(--border-color);
+		font-size: 0.75rem;
+		opacity: 0.6;
+		display: flex;
+		gap: 8px;
+	}
 }
 </style>

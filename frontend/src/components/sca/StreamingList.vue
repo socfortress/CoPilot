@@ -23,20 +23,13 @@
 						</template>
 						Load SCA Data
 					</n-button>
-					<n-button
-						v-if="isStreaming"
-						type="error"
-						@click="stopStream"
-					>
+					<n-button v-if="isStreaming" type="error" @click="stopStream">
 						<template #icon>
 							<Icon :name="StopIcon" />
 						</template>
 						Stop
 					</n-button>
-					<n-button
-						v-if="streamComplete"
-						@click="startStream"
-					>
+					<n-button v-if="streamComplete" @click="startStream">
 						<template #icon>
 							<Icon :name="RefreshIcon" />
 						</template>
@@ -60,7 +53,8 @@
 							</code>
 						</span>
 						<span>
-							Results: <code>{{ results.length }}</code>
+							Results:
+							<code>{{ results.length }}</code>
 						</span>
 					</div>
 				</div>
@@ -74,9 +68,7 @@
 				<n-statistic label="Total Policies" :value="stats.total_policies" />
 				<n-statistic label="Average Score">
 					<template #default>
-						<span :class="getScoreClass(stats.average_score)">
-							{{ stats.average_score }}%
-						</span>
+						<span :class="getScoreClass(stats.average_score)">{{ stats.average_score }}%</span>
 					</template>
 				</n-statistic>
 				<n-statistic label="Checks" :value="stats.total_checks" />
@@ -141,9 +133,7 @@
 					class="py-12"
 				>
 					<template #extra>
-						<n-button type="primary" @click="startStream">
-							Load SCA Data
-						</n-button>
+						<n-button type="primary" @click="startStream">Load SCA Data</n-button>
 					</template>
 				</n-empty>
 
@@ -169,13 +159,9 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { DataTableColumns } from "naive-ui"
-import type {
-    AgentScaOverviewItem,
-    ScaOverviewQuery,
-    ScaStreamComplete,
-    ScaStreamProgress
-} from "@/types/sca.d"
+import type { AgentScaOverviewItem, ScaOverviewQuery, ScaStreamComplete, ScaStreamProgress } from "@/types/sca.d"
 import {
 	NAlert,
 	NButton,

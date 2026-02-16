@@ -1,19 +1,13 @@
 <template>
 	<div class="patch-tuesday-list">
 		<!-- Header -->
-		<div class="header flex items-center justify-between gap-4 mb-4">
+		<div class="header mb-4 flex items-center justify-between gap-4">
 			<div class="flex items-center gap-3">
 				<Icon :name="CalendarIcon" :size="26" class="text-primary-color" />
 				<h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
 			</div>
 			<div class="flex items-center gap-2">
-				<n-button
-					:loading="loading"
-					:disabled="loading"
-					type="primary"
-					secondary
-					@click="fetchData"
-				>
+				<n-button :loading="loading" :disabled="loading" type="primary" secondary @click="fetchData">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -54,13 +48,8 @@
 		</n-spin>
 
 		<!-- Pagination -->
-		<div v-if="filteredItems.length > pageSize" class="flex justify-center mt-4">
-			<n-pagination
-				v-model:page="currentPage"
-				:page-count="totalPages"
-				:page-size="pageSize"
-				show-quick-jumper
-			/>
+		<div v-if="filteredItems.length > pageSize" class="mt-4 flex justify-center">
+			<n-pagination v-model:page="currentPage" :page-count="totalPages" :page-size="pageSize" show-quick-jumper />
 		</div>
 
 		<!-- Detail Drawer -->
@@ -73,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PatchTuesdayFilters as FiltersType } from "./types"
 import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
@@ -100,138 +90,138 @@ const showDetail = ref(false)
 const selectedItem = ref<PatchTuesdayItem | null>(null)
 
 const filters = ref<FiltersType>({
-    cycle: "",
-    priority: null,
-    family: null,
-    severity: null,
-    searchQuery: "",
-    kevOnly: false
+	cycle: "",
+	priority: null,
+	family: null,
+	severity: null,
+	searchQuery: "",
+	kevOnly: false
 })
 
 // Computed
 const availableFamilies = computed(() => {
-    if (!summary.value?.by_family) return []
-    return Object.keys(summary.value.by_family).sort()
+	if (!summary.value?.by_family) return []
+	return Object.keys(summary.value.by_family).sort()
 })
 
 const filteredItems = computed(() => {
-    let result = [...items.value]
+	let result = [...items.value]
 
-    // Filter by priority
-    if (filters.value.priority) {
-        result = result.filter(item => item.prioritization.priority === filters.value.priority)
-    }
+	// Filter by priority
+	if (filters.value.priority) {
+		result = result.filter(item => item.prioritization.priority === filters.value.priority)
+	}
 
-    // Filter by family
-    if (filters.value.family) {
-        result = result.filter(item => item.affected.family === filters.value.family)
-    }
+	// Filter by family
+	if (filters.value.family) {
+		result = result.filter(item => item.affected.family === filters.value.family)
+	}
 
-    // Filter by severity
-    if (filters.value.severity) {
-        result = result.filter(item => item.severity?.toLowerCase() === filters.value.severity?.toLowerCase())
-    }
+	// Filter by severity
+	if (filters.value.severity) {
+		result = result.filter(item => item.severity?.toLowerCase() === filters.value.severity?.toLowerCase())
+	}
 
-    // Filter KEV only
-    if (filters.value.kevOnly) {
-        result = result.filter(item => item.kev.in_kev)
-    }
+	// Filter KEV only
+	if (filters.value.kevOnly) {
+		result = result.filter(item => item.kev.in_kev)
+	}
 
-    // Search filter
-    if (filters.value.searchQuery) {
-        const query = filters.value.searchQuery.toLowerCase()
-        result = result.filter(
-            item =>
-                item.cve.toLowerCase().includes(query) ||
-                item.title?.toLowerCase().includes(query) ||
-                item.affected.product.toLowerCase().includes(query)
-        )
-    }
+	// Search filter
+	if (filters.value.searchQuery) {
+		const query = filters.value.searchQuery.toLowerCase()
+		result = result.filter(
+			item =>
+				item.cve.toLowerCase().includes(query) ||
+				item.title?.toLowerCase().includes(query) ||
+				item.affected.product.toLowerCase().includes(query)
+		)
+	}
 
-    return result
+	return result
 })
 
 const totalPages = computed(() => Math.ceil(filteredItems.value.length / pageSize))
 
 const paginatedItems = computed(() => {
-    const start = (currentPage.value - 1) * pageSize
-    return filteredItems.value.slice(start, start + pageSize)
+	const start = (currentPage.value - 1) * pageSize
+	return filteredItems.value.slice(start, start + pageSize)
 })
 
 // Methods
 async function fetchCycles() {
-    try {
-        const response = await patchTuesdayApi.getCycles()
-        if (response.data.success) {
-            availableCycles.value = response.data.cycles
-            if (!filters.value.cycle && response.data.current_cycle) {
-                filters.value.cycle = response.data.current_cycle
-            }
-        }
-    } catch (error) {
-        console.error("Failed to fetch cycles:", error)
-    }
+	try {
+		const response = await patchTuesdayApi.getCycles()
+		if (response.data.success) {
+			availableCycles.value = response.data.cycles
+			if (!filters.value.cycle && response.data.current_cycle) {
+				filters.value.cycle = response.data.current_cycle
+			}
+		}
+	} catch (error) {
+		console.error("Failed to fetch cycles:", error)
+	}
 }
 
 async function fetchData() {
-    if (!filters.value.cycle) return
+	if (!filters.value.cycle) return
 
-    loading.value = true
-    try {
-        const response = await patchTuesdayApi.getPatchTuesday({
-            cycle: filters.value.cycle,
-            include_epss: true,
-            include_kev: true
-        })
+	loading.value = true
+	try {
+		const response = await patchTuesdayApi.getPatchTuesday({
+			cycle: filters.value.cycle,
+			include_epss: true,
+			include_kev: true
+		})
 
-        if (response.data.success) {
-            items.value = response.data.items
-            summary.value = response.data.summary
-        } else {
-            message.error(response.data.message || "Failed to fetch Patch Tuesday data")
-        }
-    } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-        message.error(`Error fetching data: ${errorMessage}`)
-    } finally {
-        loading.value = false
-    }
+		if (response.data.success) {
+			items.value = response.data.items
+			summary.value = response.data.summary
+		} else {
+			message.error(response.data.message || "Failed to fetch Patch Tuesday data")
+		}
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+		message.error(`Error fetching data: ${errorMessage}`)
+	} finally {
+		loading.value = false
+	}
 }
 
 function handleFiltersChange() {
-    currentPage.value = 1
-    if (filters.value.cycle) {
-        fetchData()
-    }
+	currentPage.value = 1
+	if (filters.value.cycle) {
+		fetchData()
+	}
 }
 
 function openItemDetail(item: PatchTuesdayItem) {
-    selectedItem.value = item
-    showDetail.value = true
+	selectedItem.value = item
+	showDetail.value = true
 }
 
 // Watch for cycle changes
 watch(
-    () => filters.value.cycle,
-    newCycle => {
-        if (newCycle) {
-            fetchData()
-        }
-    }
+	() => filters.value.cycle,
+	newCycle => {
+		if (newCycle) {
+			fetchData()
+		}
+	}
 )
 
 // Lifecycle
 onMounted(async () => {
-    await fetchCycles()
+	await fetchCycles()
 })
 </script>
 
 <style scoped lang="scss">
 .patch-tuesday-list {
-    .items-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-        gap: 16px;
-    }
+	.items-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+		gap: 16px;
+	}
 }
 </style>

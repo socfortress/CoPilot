@@ -31,7 +31,7 @@
 			<span class="ml-2 text-sm text-gray-500">Wait for snapshot to complete before returning</span>
 		</n-form-item>
 
-		<div class="flex justify-end gap-2 mt-4">
+		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="loading" @click="handleSubmit">Create Snapshot</n-button>
 		</div>
@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { CreateSnapshotRequest } from "@/types/snapshots.d"
 import { NButton, NForm, NFormItem, NInput, NSwitch, useMessage } from "naive-ui"
@@ -46,12 +47,12 @@ import { ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
-    repository: string | null
+	repository: string | null
 }>()
 
 const emit = defineEmits<{
-    (e: "success"): void
-    (e: "cancel"): void
+	(e: "success"): void
+	(e: "cancel"): void
 }>()
 
 const message = useMessage()
@@ -60,62 +61,62 @@ const loading = ref(false)
 const indicesInput = ref("")
 
 const formData = ref<Omit<CreateSnapshotRequest, "repository" | "indices">>({
-    snapshot: "",
-    ignore_unavailable: true,
-    include_global_state: false,
-    partial: false,
-    wait_for_completion: false,
-    skip_write_indices: true
+	snapshot: "",
+	ignore_unavailable: true,
+	include_global_state: false,
+	partial: false,
+	wait_for_completion: false,
+	skip_write_indices: true
 })
 
 const rules: FormRules = {
-    snapshot: {
-        required: true,
-        message: "Snapshot name is required",
-        trigger: "blur"
-    }
+	snapshot: {
+		required: true,
+		message: "Snapshot name is required",
+		trigger: "blur"
+	}
 }
 
 async function handleSubmit() {
-    if (!props.repository) {
-        message.error("Repository is required")
-        return
-    }
+	if (!props.repository) {
+		message.error("Repository is required")
+		return
+	}
 
-    try {
-        await formRef.value?.validate()
-    } catch {
-        return
-    }
+	try {
+		await formRef.value?.validate()
+	} catch {
+		return
+	}
 
-    loading.value = true
-    try {
-        const indices = indicesInput.value
-            .split(",")
-            .map(s => s.trim())
-            .filter(s => s.length > 0)
+	loading.value = true
+	try {
+		const indices = indicesInput.value
+			.split(",")
+			.map(s => s.trim())
+			.filter(s => s.length > 0)
 
-        const request: CreateSnapshotRequest = {
-            repository: props.repository,
-            snapshot: formData.value.snapshot,
-            indices: indices.length > 0 ? indices : undefined,
-            ignore_unavailable: formData.value.ignore_unavailable,
-            include_global_state: formData.value.include_global_state,
-            partial: formData.value.partial,
-            wait_for_completion: formData.value.wait_for_completion,
-            skip_write_indices: formData.value.skip_write_indices
-        }
+		const request: CreateSnapshotRequest = {
+			repository: props.repository,
+			snapshot: formData.value.snapshot,
+			indices: indices.length > 0 ? indices : undefined,
+			ignore_unavailable: formData.value.ignore_unavailable,
+			include_global_state: formData.value.include_global_state,
+			partial: formData.value.partial,
+			wait_for_completion: formData.value.wait_for_completion,
+			skip_write_indices: formData.value.skip_write_indices
+		}
 
-        const response = await Api.snapshots.createSnapshot(request)
-        if (response.data.success) {
-            emit("success")
-        } else {
-            message.error(response.data.message)
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to create snapshot")
-    } finally {
-        loading.value = false
-    }
+		const response = await Api.snapshots.createSnapshot(request)
+		if (response.data.success) {
+			emit("success")
+		} else {
+			message.error(response.data.message)
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to create snapshot")
+	} finally {
+		loading.value = false
+	}
 }
 </script>

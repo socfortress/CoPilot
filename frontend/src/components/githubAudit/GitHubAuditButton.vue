@@ -8,19 +8,20 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
-    size?: "tiny" | "small" | "medium" | "large"
-    type?: "default" | "primary" | "info" | "success" | "warning" | "error"
+	size?: "tiny" | "small" | "medium" | "large"
+	type?: "default" | "primary" | "info" | "success" | "warning" | "error"
 }>()
 
 const GitHubIcon = "carbon:logo-github"
 const router = useRouter()
 
 function goToGitHubAudit() {
-    router.push({ name: "GitHubAudit" })
+	router.push({ name: "GitHubAudit" })
 }
 </script>

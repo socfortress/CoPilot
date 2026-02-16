@@ -21,19 +21,11 @@
 		<n-divider>Filters (Optional)</n-divider>
 
 		<n-form-item label="Agent Name" path="agent_name">
-			<n-input
-				v-model:value="formValue.agent_name"
-				placeholder="Filter by specific agent"
-				clearable
-			/>
+			<n-input v-model:value="formValue.agent_name" placeholder="Filter by specific agent" clearable />
 		</n-form-item>
 
 		<n-form-item label="Policy ID" path="policy_id">
-			<n-input
-				v-model:value="formValue.policy_id"
-				placeholder="Filter by specific policy ID"
-				clearable
-			/>
+			<n-input v-model:value="formValue.policy_id" placeholder="Filter by specific policy ID" clearable />
 		</n-form-item>
 
 		<n-form-item label="Minimum Score" path="min_score">
@@ -71,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { SCAReportGenerateRequest } from "@/types/sca.d"
 import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace } from "naive-ui"
@@ -80,65 +73,65 @@ import Icon from "@/components/common/Icon.vue"
 defineProps<Props>()
 
 const emit = defineEmits<{
-    generate: [request: SCAReportGenerateRequest]
-    cancel: []
+	generate: [request: SCAReportGenerateRequest]
+	cancel: []
 }>()
 
 const GenerateIcon = "carbon:document-add"
 
 interface Props {
-    customers: Array<{ label: string; value: string }>
-    loading?: boolean
+	customers: Array<{ label: string; value: string }>
+	loading?: boolean
 }
 
 const formRef = ref<FormInst | null>(null)
 const formValue = ref<SCAReportGenerateRequest>({
-    customer_code: "",
-    report_name: undefined,
-    agent_name: undefined,
-    policy_id: undefined,
-    min_score: undefined,
-    max_score: undefined
+	customer_code: "",
+	report_name: undefined,
+	agent_name: undefined,
+	policy_id: undefined,
+	min_score: undefined,
+	max_score: undefined
 })
 
 const rules: FormRules = {
-    customer_code: [
-        {
-            required: true,
-            message: "Please select a customer",
-            trigger: ["blur", "change"]
-        }
-    ]
+	customer_code: [
+		{
+			required: true,
+			message: "Please select a customer",
+			trigger: ["blur", "change"]
+		}
+	]
 }
 
 async function handleGenerate() {
-    try {
-        await formRef.value?.validate()
+	try {
+		await formRef.value?.validate()
 
-        // Clean up empty optional fields
-        const request: SCAReportGenerateRequest = {
-            customer_code: formValue.value.customer_code
-        }
+		// Clean up empty optional fields
+		const request: SCAReportGenerateRequest = {
+			customer_code: formValue.value.customer_code
+		}
 
-        if (formValue.value.report_name) request.report_name = formValue.value.report_name
-        if (formValue.value.agent_name) request.agent_name = formValue.value.agent_name
-        if (formValue.value.policy_id) request.policy_id = formValue.value.policy_id
-        if (formValue.value.min_score !== undefined && formValue.value.min_score !== null) {
-            request.min_score = formValue.value.min_score
-        }
-        if (formValue.value.max_score !== undefined && formValue.value.max_score !== null) {
-            request.max_score = formValue.value.max_score
-        }
+		if (formValue.value.report_name) request.report_name = formValue.value.report_name
+		if (formValue.value.agent_name) request.agent_name = formValue.value.agent_name
+		if (formValue.value.policy_id) request.policy_id = formValue.value.policy_id
+		if (formValue.value.min_score !== undefined && formValue.value.min_score !== null) {
+			request.min_score = formValue.value.min_score
+		}
+		if (formValue.value.max_score !== undefined && formValue.value.max_score !== null) {
+			request.max_score = formValue.value.max_score
+		}
 
-        emit("generate", request)
-    } catch (error) {
-        console.error("Form validation failed:", error)
-    }
+		emit("generate", request)
+	} catch (error) {
+		console.error("Form validation failed:", error)
+	}
 }
 </script>
 
 <style scoped>
 .w-full {
-    width: 100%;
+	width: 100%;
 }
 </style>

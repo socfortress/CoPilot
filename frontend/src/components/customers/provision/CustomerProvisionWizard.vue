@@ -278,6 +278,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"
@@ -675,7 +676,10 @@ function generateRandomPassword(length: number = 20): string {
 	}
 
 	// Shuffle the password to randomize the guaranteed characters
-	return password.split('').sort(() => Math.random() - 0.5).join('')
+	return password
+		.split("")
+		.sort(() => Math.random() - 0.5)
+		.join("")
 }
 
 function formPreset(step: number) {

@@ -34,10 +34,19 @@
 					<n-divider />
 					<div class="text-sm text-gray-500">
 						<p class="mb-2"><strong>Skip Reasons:</strong></p>
-						<ul class="list-disc list-inside space-y-1">
-							<li><code>not_authorized</code> — Token/user missing permission</li>
-							<li><code>not_supported</code> — Plan/feature not available</li>
-							<li><code>error</code> — Transient/API error; retry or inspect details</li>
+						<ul class="list-inside list-disc space-y-1">
+							<li>
+								<code>not_authorized</code>
+								— Token/user missing permission
+							</li>
+							<li>
+								<code>not_supported</code>
+								— Plan/feature not available
+							</li>
+							<li>
+								<code>error</code>
+								— Transient/API error; retry or inspect details
+							</li>
 						</ul>
 					</div>
 				</n-card>
@@ -54,7 +63,9 @@
 								<n-list-item v-for="control in orgControls" :key="control.id">
 									<template #prefix>
 										<n-icon :color="control.critical ? '#e88080' : '#63e2b7'">
-											<Icon :name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'" />
+											<Icon
+												:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
+											/>
 										</n-icon>
 									</template>
 									<div>
@@ -70,7 +81,9 @@
 								<n-list-item v-for="control in repoControls" :key="control.id">
 									<template #prefix>
 										<n-icon :color="control.critical ? '#e88080' : '#63e2b7'">
-											<Icon :name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'" />
+											<Icon
+												:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
+											/>
 										</n-icon>
 									</template>
 									<div>
@@ -89,15 +102,17 @@
 						</template>
 
 						<n-alert type="info" class="mb-4">
-							This audit is intentionally <strong>read-only</strong>. No write or admin scopes are required.
+							This audit is intentionally
+							<strong>read-only</strong>
+							. No write or admin scopes are required.
 						</n-alert>
 
 						<n-tabs type="segment" animated>
 							<n-tab-pane name="fine-grained" tab="Fine-Grained PAT (Recommended)">
 								<div class="space-y-4">
 									<p class="text-sm">
-										Create a fine-grained PAT restricted to only the target organization and repos you intend to
-										audit.
+										Create a fine-grained PAT restricted to only the target organization and repos
+										you intend to audit.
 									</p>
 
 									<n-card size="small" title="Organization Permissions (READ)">
@@ -173,7 +188,9 @@
 										<span class="text-green-500">GET</span>
 										{{ endpoint.path }}
 									</div>
-									<div v-if="endpoint.note" class="text-xs text-gray-500 mt-1">{{ endpoint.note }}</div>
+									<div v-if="endpoint.note" class="mt-1 text-xs text-gray-500">
+										{{ endpoint.note }}
+									</div>
 								</n-list-item>
 							</n-list>
 						</n-card>
@@ -185,7 +202,9 @@
 										<span class="text-green-500">GET</span>
 										{{ endpoint.path }}
 									</div>
-									<div v-if="endpoint.note" class="text-xs text-gray-500 mt-1">{{ endpoint.note }}</div>
+									<div v-if="endpoint.note" class="mt-1 text-xs text-gray-500">
+										{{ endpoint.note }}
+									</div>
 								</n-list-item>
 							</n-list>
 						</n-card>
@@ -197,209 +216,210 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import {
-    NAlert,
-    NCard,
-    NCollapse,
-    NCollapseItem,
-    NDivider,
-    NDrawer,
-    NDrawerContent,
-    NIcon,
-    NList,
-    NListItem,
-    NTabPane,
-    NTabs,
-    NTag
+	NAlert,
+	NCard,
+	NCollapse,
+	NCollapseItem,
+	NDivider,
+	NDrawer,
+	NDrawerContent,
+	NIcon,
+	NList,
+	NListItem,
+	NTabPane,
+	NTabs,
+	NTag
 } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
-    show: boolean
+	show: boolean
 }>()
 
 const emit = defineEmits<{
-    (e: "update:show", value: boolean): void
+	(e: "update:show", value: boolean): void
 }>()
 
 const InfoIcon = "ion:information-circle-outline"
 
 const showDrawer = computed({
-    get: () => props.show,
-    set: (value) => emit("update:show", value)
+	get: () => props.show,
+	set: value => emit("update:show", value)
 })
 
 // Controls data
 const orgControls = [
-    {
-        id: "mfa",
-        name: "MFA Enforcement",
-        description: "Require two-factor authentication for all organization members",
-        critical: true
-    },
-    {
-        id: "org-owners",
-        name: "Org Owner Minimization",
-        description: "Limit the number of organization owners to reduce risk",
-        critical: false
-    },
-    {
-        id: "outside-collab",
-        name: "Outside Collaborator Monitoring",
-        description: "Track external collaborators with access to repositories",
-        critical: false
-    },
-    {
-        id: "saml-sso",
-        name: "SAML SSO Enforced",
-        description: "Enforce single sign-on for centralized authentication",
-        critical: true
-    },
-    {
-        id: "pat-expiry",
-        name: "PAT Expiration Enforced",
-        description: "Require personal access tokens to have expiration dates",
-        critical: false
-    },
-    {
-        id: "actions-policy",
-        name: "GitHub Actions Policy",
-        description: "Control allowed actions, default permissions, and fork PR approvals",
-        critical: false
-    },
-    {
-        id: "audit-log",
-        name: "Audit Log Monitoring",
-        description: "Monitor control-plane changes via audit log detection pack",
-        critical: false
-    }
+	{
+		id: "mfa",
+		name: "MFA Enforcement",
+		description: "Require two-factor authentication for all organization members",
+		critical: true
+	},
+	{
+		id: "org-owners",
+		name: "Org Owner Minimization",
+		description: "Limit the number of organization owners to reduce risk",
+		critical: false
+	},
+	{
+		id: "outside-collab",
+		name: "Outside Collaborator Monitoring",
+		description: "Track external collaborators with access to repositories",
+		critical: false
+	},
+	{
+		id: "saml-sso",
+		name: "SAML SSO Enforced",
+		description: "Enforce single sign-on for centralized authentication",
+		critical: true
+	},
+	{
+		id: "pat-expiry",
+		name: "PAT Expiration Enforced",
+		description: "Require personal access tokens to have expiration dates",
+		critical: false
+	},
+	{
+		id: "actions-policy",
+		name: "GitHub Actions Policy",
+		description: "Control allowed actions, default permissions, and fork PR approvals",
+		critical: false
+	},
+	{
+		id: "audit-log",
+		name: "Audit Log Monitoring",
+		description: "Monitor control-plane changes via audit log detection pack",
+		critical: false
+	}
 ]
 
 const repoControls = [
-    {
-        id: "visibility",
-        name: "Repository Visibility",
-        description: "Ensure appropriate public/private visibility settings",
-        critical: false
-    },
-    {
-        id: "branch-protection",
-        name: "Branch Protection",
-        description: "Enforce approvals, status checks, and prevent force pushes",
-        critical: true
-    },
-    {
-        id: "secret-scanning",
-        name: "Secret Scanning + Push Protection",
-        description: "Detect and block secrets in code before they're exposed",
-        critical: true
-    },
-    {
-        id: "dependabot",
-        name: "Dependabot Alerts",
-        description: "Monitor dependencies for known vulnerabilities",
-        critical: true
-    },
-    {
-        id: "code-scanning",
-        name: "Code Scanning",
-        description: "Identify security vulnerabilities in source code",
-        critical: false
-    },
-    {
-        id: "environments",
-        name: "Deployment Environments",
-        description: "Protect deployment environments with reviewers and rules",
-        critical: false
-    }
+	{
+		id: "visibility",
+		name: "Repository Visibility",
+		description: "Ensure appropriate public/private visibility settings",
+		critical: false
+	},
+	{
+		id: "branch-protection",
+		name: "Branch Protection",
+		description: "Enforce approvals, status checks, and prevent force pushes",
+		critical: true
+	},
+	{
+		id: "secret-scanning",
+		name: "Secret Scanning + Push Protection",
+		description: "Detect and block secrets in code before they're exposed",
+		critical: true
+	},
+	{
+		id: "dependabot",
+		name: "Dependabot Alerts",
+		description: "Monitor dependencies for known vulnerabilities",
+		critical: true
+	},
+	{
+		id: "code-scanning",
+		name: "Code Scanning",
+		description: "Identify security vulnerabilities in source code",
+		critical: false
+	},
+	{
+		id: "environments",
+		name: "Deployment Environments",
+		description: "Protect deployment environments with reviewers and rules",
+		critical: false
+	}
 ]
 
 // Fine-grained PAT permissions
 const fineGrainedOrgPerms = [
-    {
-        name: "Administration",
-        description: "Required for org policy, Actions settings, SSO indicator, PAT policy",
-        required: true
-    },
-    {
-        name: "Members",
-        description: "Required for outside collaborator visibility and membership endpoints",
-        required: true
-    },
-    {
-        name: "Audit Log",
-        description: "Required for audit-log detections; otherwise those checks will SKIP",
-        required: false
-    }
+	{
+		name: "Administration",
+		description: "Required for org policy, Actions settings, SSO indicator, PAT policy",
+		required: true
+	},
+	{
+		name: "Members",
+		description: "Required for outside collaborator visibility and membership endpoints",
+		required: true
+	},
+	{
+		name: "Audit Log",
+		description: "Required for audit-log detections; otherwise those checks will SKIP",
+		required: false
+	}
 ]
 
 const fineGrainedRepoPerms = [
-    {
-        name: "Administration",
-        description: "Required for branch protection, environments, and repo settings",
-        required: true
-    },
-    {
-        name: "Contents",
-        description: "Often required for workflow-related metadata visibility",
-        required: true
-    },
-    {
-        name: "Actions",
-        description: "Recommended for Actions-related repo metadata",
-        required: false
-    },
-    {
-        name: "Security events",
-        description: "Required for secret scanning, Dependabot alerts, code scanning status",
-        required: true
-    }
+	{
+		name: "Administration",
+		description: "Required for branch protection, environments, and repo settings",
+		required: true
+	},
+	{
+		name: "Contents",
+		description: "Often required for workflow-related metadata visibility",
+		required: true
+	},
+	{
+		name: "Actions",
+		description: "Recommended for Actions-related repo metadata",
+		required: false
+	},
+	{
+		name: "Security events",
+		description: "Required for secret scanning, Dependabot alerts, code scanning status",
+		required: true
+	}
 ]
 
 // Classic PAT scopes
 const classicScopes = [
-    {
-        name: "read:org",
-        description: "Needed for org membership and org settings",
-        required: true
-    },
-    {
-        name: "repo",
-        description: "Required to read branch protection and repo config on private repos",
-        required: true
-    }
+	{
+		name: "read:org",
+		description: "Needed for org membership and org settings",
+		required: true
+	},
+	{
+		name: "repo",
+		description: "Required to read branch protection and repo config on private repos",
+		required: true
+	}
 ]
 
 // API endpoints
 const orgEndpoints = [
-    { path: "/orgs/{org}", note: null },
-    { path: "/orgs/{org}/repos", note: null },
-    { path: "/orgs/{org}/actions/permissions", note: null },
-    { path: "/orgs/{org}/actions/permissions/workflow", note: null },
-    { path: "/orgs/{org}/actions/permissions/selected-actions", note: null },
-    { path: "/orgs/{org}/personal-access-tokens/policies", note: "May be plan/role gated" },
-    { path: "/orgs/{org}/audit-log", note: "Detections; plan/role gated" }
+	{ path: "/orgs/{org}", note: null },
+	{ path: "/orgs/{org}/repos", note: null },
+	{ path: "/orgs/{org}/actions/permissions", note: null },
+	{ path: "/orgs/{org}/actions/permissions/workflow", note: null },
+	{ path: "/orgs/{org}/actions/permissions/selected-actions", note: null },
+	{ path: "/orgs/{org}/personal-access-tokens/policies", note: "May be plan/role gated" },
+	{ path: "/orgs/{org}/audit-log", note: "Detections; plan/role gated" }
 ]
 
 const repoEndpoints = [
-    { path: "/repos/{org}/{repo}", note: "Includes security_and_analysis where available" },
-    { path: "/repos/{org}/{repo}/branches/{branch}/protection", note: null },
-    { path: "/repos/{org}/{repo}/environments", note: null }
+	{ path: "/repos/{org}/{repo}", note: "Includes security_and_analysis where available" },
+	{ path: "/repos/{org}/{repo}/branches/{branch}/protection", note: null },
+	{ path: "/repos/{org}/{repo}/environments", note: null }
 ]
 </script>
 
 <style scoped>
 .space-y-6 > * + * {
-    margin-top: 1.5rem;
+	margin-top: 1.5rem;
 }
 
 .space-y-4 > * + * {
-    margin-top: 1rem;
+	margin-top: 1rem;
 }
 
 .grid-cols-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
 }
 </style>
