@@ -1,3 +1,4 @@
+// TODO: refactor
 export interface AgentScaOverviewItem {
 	agent_id: string
 	agent_name: string
@@ -72,50 +73,50 @@ export interface ScaStatsResponse {
 }
 
 export interface SCAReport {
-    id: number
-    report_name: string
-    customer_code: string
-    file_name: string
-    file_size: number
-    generated_at: string
-    generated_by: number
-    total_policies: number
-    total_checks: number
-    passed_count: number
-    failed_count: number
-    invalid_count: number
-    filters_applied: Record<string, string | number | boolean>
-    status: "processing" | "completed" | "failed"
-    error_message?: string | null
-    download_url: string
+	id: number
+	report_name: string
+	customer_code: string
+	file_name: string
+	file_size: number
+	generated_at: string
+	generated_by: number
+	total_policies: number
+	total_checks: number
+	passed_count: number
+	failed_count: number
+	invalid_count: number
+	filters_applied: Record<string, string | number | boolean>
+	status: "processing" | "completed" | "failed"
+	error_message?: string | null
+	download_url: string
 }
 
 export interface SCAReportGenerateRequest {
-    customer_code: string
-    report_name?: string
-    agent_name?: string
-    policy_id?: string
-    min_score?: number
-    max_score?: number
+	customer_code: string
+	report_name?: string
+	agent_name?: string
+	policy_id?: string
+	min_score?: number
+	max_score?: number
 }
 
 export interface SCAReportGenerateResponse {
-    success: boolean
-    message: string
-    report?: SCAReport
-    error?: string
+	success: boolean
+	message: string
+	report?: SCAReport
+	error?: string
 }
 
 export interface SCAReportListResponse {
-    success: boolean
-    message: string
-    reports: SCAReport[]
-    total_count: number
+	success: boolean
+	message: string
+	reports: SCAReport[]
+	total_count: number
 }
 
 export interface SCAReportDeleteResponse {
-    success: boolean
-    message: string
+	success: boolean
+	message: string
 }
 
 export enum ScaComplianceLevel {
@@ -128,45 +129,45 @@ export enum ScaComplianceLevel {
 
 // Streaming event types
 export interface ScaStreamStartEvent {
-    total_agents: number
-    message: string
+	total_agents: number
+	message: string
 }
 
 export interface ScaStreamAgentResult {
-    agent_id: string
-    agent_name: string
-    customer_code: string | null
-    policy_count: number
-    policies: AgentScaOverviewItem[]
+	agent_id: string
+	agent_name: string
+	customer_code: string | null
+	policy_count: number
+	policies: AgentScaOverviewItem[]
 }
 
 export interface ScaStreamProgress {
-    processed: number
-    total: number
-    successful: number
-    failed: number
-    results_so_far: number
-    percent_complete: number
+	processed: number
+	total: number
+	successful: number
+	failed: number
+	results_so_far: number
+	percent_complete: number
 }
 
 export interface ScaStreamComplete {
-    total_results: number
-    total_agents: number
-    total_policies: number
-    average_score: number
-    total_checks: number
-    total_passes: number
-    total_fails: number
-    total_invalid: number
-    agents_processed: number
-    agents_successful: number
-    agents_failed: number
-    message: string
+	total_results: number
+	total_agents: number
+	total_policies: number
+	average_score: number
+	total_checks: number
+	total_passes: number
+	total_fails: number
+	total_invalid: number
+	agents_processed: number
+	agents_successful: number
+	agents_failed: number
+	message: string
 }
 
 export interface ScaStreamError {
-    error?: string
-    message: string
-    agent_id?: string
-    agent_name?: string
+	error?: string
+	message: string
+	agent_id?: string
+	agent_name?: string
 }
