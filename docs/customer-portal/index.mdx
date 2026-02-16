@@ -1,0 +1,108 @@
+---
+title: Customer Portal
+description: Optional customer-facing UI for MSSPs to share alerts/cases, collaborate with customers, and provide real-time visibility.
+---
+
+CoPilot’s **Customer Portal** is an **optional module** designed to bridge the gap between your internal SOC team (the CoPilot “admin” UI) and your external customers.
+
+It gives customers a clean, scoped interface to:
+
+- View **alerts** and **cases** that apply to *their* tenant
+- Collaborate via **comments** (two-way)
+- Track **status** updates (open/closed)
+- View **agents/endpoints** associated with their tenant
+- Share/receive **case files** (uploads)
+
+> Security note: treat the Customer Portal as an Internet-facing app **only** when it’s deployed behind a WAF / reverse proxy (and ideally a VPN). If you find security issues, please open a GitHub issue so we can address them.
+
+---
+
+## Architecture (high level)
+
+- **CoPilot Admin UI**: for internal SOC/admin work (full platform visibility)
+- **Customer Portal UI**: separate container/service with limited customer-facing functionality
+
+In Docker Compose, the Customer Portal runs as a **separate service** (separate container) and is typically bound to its own port (commonly `8443`).
+
+---
+
+## Enable the Customer Portal (Docker Compose)
+
+1) Edit your `docker-compose.yml` and uncomment/add the `copilot-customer-portal` service.
+
+Example:
+
+```yaml
+copilot-customer-portal:
+  image: ghcr.io/socfortress/copilot-customer-portal:latest
+  environment:
+    - SERVER_HOST=${SERVER_HOST:-localhost}
+  ports:
+    - "8443:443"
+  restart: always
+```
+
+2) Pull + start:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+3) Access:
+
+- `https://<your_instance_ip_or_hostname>:8443`
+
+> Recommendation: expose **only** the Customer Portal externally (not the admin UI), and front it with a WAF/reverse proxy.
+
+---
+
+## Customize branding (title + logo)
+
+In the **CoPilot Admin UI**, there is a **Customer Portal** section where you can:
+
+- Set the portal **title**
+- Upload/update the portal **logo**
+
+These changes are reflected in the customer-facing portal.
+
+---
+
+## Create Customer Portal users
+
+Customer users are created in the **CoPilot Admin UI**:
+
+1. Go to **Users**
+2. **Create user**
+3. Select role: `customer_user`
+4. Set an initial password (user can change after first login)
+
+### Assign a user to a customer (tenant)
+
+After creating the user, **assign them to one or more customers**. Their portal view will only show alerts/cases/agents for the customer(s) they’re assigned.
+
+---
+
+## Collaboration model (alerts + cases)
+
+### Comments (two-way)
+
+- SOC analysts can comment on an alert/case in the admin UI
+- Customers can reply from the Customer Portal
+- Both sides see the same comment thread
+
+### Status updates
+
+Customers can update alert status (for example, closing an alert after validating remediation). The SOC side will see that status change.
+
+### Case files
+
+Cases support file uploads, enabling you to share deliverables/evidence with the customer (and vice versa).
+
+---
+
+## Video walkthrough
+
+This page is based on the Customer Portal walkthrough video:
+
+- https://youtu.be/_bvFejcFwFM

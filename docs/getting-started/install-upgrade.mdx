@@ -1,0 +1,243 @@
+---
+title: Install / Upgrade
+description: Install SOCFortress CoPilot with Docker Compose, retrieve the initial admin password, and safely upgrade.
+---
+
+CoPilot is shipped as Docker images and is intended to be deployed via **Docker Compose**.
+
+> ❗ WARNING: CoPilot is **not** intended to be exposed directly to the public Internet. Deploy behind a VPN / private network or a properly secured reverse proxy.
+
+---
+
+## Prereqs
+
+- A Linux host (VM or bare metal recommended)
+- [Docker Engine](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+---
+
+## Install (Docker Compose)
+
+### 1) Get `docker-compose.yml`
+
+You have two common options:
+
+**Option A (recommended for most users): clone the repo**
+
+```bash
+git clone https://github.com/socfortress/CoPilot.git
+cd CoPilot
+```
+
+**Option B: download just the Compose file for a specific release**
+
+Replace `<VERSION>` with a release tag (example: `v0.1.5`).
+
+```bash
+wget https://raw.githubusercontent.com/socfortress/CoPilot/<VERSION>/docker-compose.yml
+```
+
+### 2) Create required data paths
+
+```bash
+mkdir -p data
+mkdir -p data/copilot-mcp
+```
+
+### 3) Create your `.env`
+
+Copy from the example and edit as needed:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+At minimum, make sure `SERVER_HOST` is correct for your environment.
+
+### 4) Start CoPilot
+
+```bash
+docker compose up -d
+```
+
+### 5) Retrieve the initial admin password
+
+The **admin password is only printed the first time** CoPilot starts.
+
+```bash
+docker logs "$(docker ps --filter ancestor=ghcr.io/socfortress/copilot-backend:latest --format "{{.ID}}")" 2>&1 | grep "Admin user password"
+```
+
+### 6) Access the UI
+
+CoPilot is available on:
+
+- `https://<your_instance_ip_or_hostname>` (HTTPS / 443)
+
+By default, an `admin` account is created.
+
+---
+
+## Helpful Docker daemon settings (DNS / logging / MTU)
+
+If you run into image pulls / name resolution issues, consider configuring Docker DNS and log rotation.
+
+Edit:
+
+```bash
+nano /etc/docker/daemon.json
+```
+
+Example:
+
+```json
+{
+  "dns": ["YOUR_DNS_SERVER"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+```
+
+If you need to set MTU:
+
+```json
+{
+  "dns": ["YOUR_DNS_SERVER"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "mtu": 1450
+}
+```
+
+Apply:
+
+```bash
+systemctl daemon-reload
+systemctl restart docker
+```
+
+---
+
+## TLS / SSL
+
+By default, CoPilot uses a **self-signed certificate** valid for 365 days from install.
+
+To use your own certificate:
+
+1) Generate/obtain a cert/key.
+
+```bash
+# Example self-signed cert
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+```
+
+2) Mount the certs into `copilot-frontend` and set `TLS_CERT_PATH` / `TLS_KEY_PATH`.
+
+```yaml
+copilot-frontend:
+  image: ghcr.io/socfortress/copilot-frontend:latest
+  volumes:
+    - PATH_TO_YOUR_CERTS:/etc/letsencrypt
+  environment:
+    - SERVER_HOST=${SERVER_HOST:-localhost}
+    - TLS_CERT_PATH=/etc/letsencrypt/live/${SERVER_HOST}/fullchain.pem
+    - TLS_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem
+  ports:
+    - "80:80"
+    - "443:443"
+```
+
+---
+
+## Customer Portal (Optional)
+
+CoPilot includes an optional **customer-facing portal** for end users to view cases, alerts, and agents.
+
+### Enable the Customer Portal
+
+In `docker-compose.yml`, the service is commented out by default.
+
+1) Edit the file:
+
+```bash
+nano docker-compose.yml
+```
+
+2) Uncomment:
+
+```yaml
+copilot-customer-portal:
+  image: ghcr.io/socfortress/copilot-customer-portal:latest
+  environment:
+    - SERVER_HOST=${SERVER_HOST:-localhost}
+  ports:
+    - "8443:443"
+  restart: always
+```
+
+3) Apply:
+
+```bash
+docker compose up -d
+```
+
+4) Access it:
+
+- `https://<your_instance_ip>:8443`
+
+### Customer Portal TLS
+
+Like the main frontend, it uses a self-signed cert by default. To use your own:
+
+```yaml
+copilot-customer-portal:
+  image: ghcr.io/socfortress/copilot-customer-portal:latest
+  volumes:
+    - PATH_TO_YOUR_CERTS:/etc/letsencrypt
+  environment:
+    - SERVER_HOST=${SERVER_HOST:-localhost}
+  ports:
+    - "8443:443"
+```
+
+### Creating Customer Portal Users
+
+Customer portal users are managed via the main CoPilot admin interface:
+
+1. Log in as an admin
+2. Navigate to **Users**
+3. Create a user with the `customer_user` role
+4. Assign the user to the correct customer organization
+
+---
+
+## Upgrade
+
+You’ll likely want to upgrade often as changes ship frequently.
+
+From your CoPilot directory:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+If you need a clean restart (rare):
+
+```bash
+# This stops containers but keeps named volumes / bind-mounted data intact.
+docker compose down
+
+docker compose pull
+docker compose up -d
+```
+
+> Tip: make sure your persistent `data/` directory is backed up before major upgrades.
