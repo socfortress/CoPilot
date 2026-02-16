@@ -30,6 +30,8 @@ SOCFortress CoPilot
 
 ## Getting started
 
+📚 **Documentation:** https://docs.socfortress.co
+
 CoPilot's true power comes from the ability to integrate with your existing security stack. We have built-in integrations with the following tools:
 
 - [Wazuh](https://wazuh.com/)
@@ -42,9 +44,11 @@ CoPilot's true power comes from the ability to integrate with your existing secu
 
 ### Install / Upgrade
 
-All install + upgrade instructions live in the docs (so the README doesn’t drift):
+All install + upgrade instructions live in the docs site (so the README doesn’t drift):
 
-- **Install / Upgrade docs:** [`docs/getting-started/install-upgrade.mdx`](docs/getting-started/install-upgrade.mdx)
+- **Docs home:** https://docs.socfortress.co
+- **Install / Upgrade:** https://docs.socfortress.co/getting-started/install-upgrade
+- (Source file) [`docs/getting-started/install-upgrade.mdx`](docs/getting-started/install-upgrade.mdx)
 
 Quick upgrade reminder (from your CoPilot directory):
 
