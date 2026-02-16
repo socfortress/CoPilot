@@ -203,7 +203,7 @@ function setFilter(newFilters: VulnerabilitiesListFilter[]) {
 		const filterIndex = filters.value.findIndex(o => o.type === newFilter.type)
 
 		if (filterIndex !== -1) {
-			if (newFilter.value) {
+			if (newFilter.value && filters.value[filterIndex]) {
 				filters.value[filterIndex].value = newFilter.value
 			} else {
 				delFilter(newFilter.type)

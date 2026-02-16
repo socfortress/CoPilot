@@ -183,7 +183,7 @@ function runCommand(command: string) {
 	if (command === "sync-agents") {
 		syncAgents()
 	} else if (_split(command, ":").length) {
-		syncVulnerabilities(_split(command, ":")[1])
+		syncVulnerabilities(_split(command, ":")[1] ?? "")
 	}
 }
 

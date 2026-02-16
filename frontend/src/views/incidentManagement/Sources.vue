@@ -73,6 +73,8 @@ function reloadExclusionRulesList() {
 
 useResizeObserver(page, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	showConfiguredSourcesListToolbar.value = width < 600

@@ -362,11 +362,13 @@ watchDebounced(
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	if (width < 600) {
 		compactMode.value = true
-		pageSize.value = pageSizes[0]
+		pageSize.value = pageSizes[0] ?? 50
 	} else {
 		compactMode.value = false
 	}

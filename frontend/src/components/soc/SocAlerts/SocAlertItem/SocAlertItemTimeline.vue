@@ -45,7 +45,7 @@ onBeforeMount(() => {
 			const item = alert.modification_history[key]
 			history.value.push({
 				timeString: formatDate(_toNumber(key) * 1000, false),
-				label: `${item.action} [${item.user}]`
+				label: `${item?.action ?? ""} [${item?.user ?? ""}]`
 			})
 		}
 	}

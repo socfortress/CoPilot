@@ -114,6 +114,8 @@ const { routeIndex, routeGraylogPipelines } = useNavigation()
 
 useResizeObserver(page, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	cardDirection.value = width > 500 ? "horizontal" : "vertical"
