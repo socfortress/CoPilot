@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+	<n-form :model="formData" :rules label-placement="left" label-width="160px">
 		<n-form-item label="Snapshot">
 			<n-input :value="snapshot?.snapshot" disabled />
 		</n-form-item>
@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 // TODO: refactor
-import type { FormInst, FormRules } from "naive-ui"
+import type { FormRules } from "naive-ui"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
@@ -77,7 +77,6 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
 const indicesInput = ref("")
 
