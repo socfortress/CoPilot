@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NPopconfirm, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
