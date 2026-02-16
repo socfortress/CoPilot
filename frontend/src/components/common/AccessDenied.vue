@@ -10,17 +10,13 @@
 				<n-space justify="center">
 					<n-button type="primary" @click="goBack">
 						<template #icon>
-							<n-icon>
-								<ArrowBackOutline />
-							</n-icon>
+							<Icon name="carbon:arrow-left" />
 						</template>
 						Go Back
 					</n-button>
 					<n-button @click="goHome">
 						<template #icon>
-							<n-icon>
-								<HomeOutline />
-							</n-icon>
+							<Icon name="carbon:home" />
 						</template>
 						Go to Dashboard
 					</n-button>
@@ -32,8 +28,8 @@
 
 <script setup lang="ts">
 // TODO: refactor
-import { ArrowBackOutline, HomeOutline } from "@vicons/ionicons5"
 import { useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 
 interface Props {
 	description?: string
