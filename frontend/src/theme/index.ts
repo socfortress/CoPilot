@@ -205,7 +205,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		const keys = expandPattern(pattern)
 
 		for (const key of keys) {
-			styleObject[`${key}-color`] = (state.colors[state.themeName] as Record<string, string>)[key]
+			styleObject[`${key}-color`] = (state.colors[state.themeName] as Record<string, string>)[key] ?? ""
 		}
 	}
 

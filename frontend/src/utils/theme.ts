@@ -1,4 +1,4 @@
-import type { ColorAction, ColorKey, ThemeColor } from "@/types/theme.d"
+import type { ColorAction, ColorKey, ColorType, ThemeColor } from "@/types/theme"
 import { colord } from "colord"
 import _get from "lodash/get"
 
@@ -63,7 +63,7 @@ export function getTypeValue(origin: object, val: string) {
 	return val
 }
 
-export function getThemeColors(colors: Record<string, string>) {
+export function getThemeColors(colors: Record<ColorType, string>) {
 	const colorActions: ColorAction[] = [
 		{ scene: "", handler: color => color },
 		{ scene: "Suppl", handler: color => exposure(color, 0.1) },
@@ -74,10 +74,10 @@ export function getThemeColors(colors: Record<string, string>) {
 	const themeColor: ThemeColor = {}
 
 	for (const colorName in colors) {
-		const colorValue = colors[colorName]
+		const colorValue = colors[colorName as ColorType]
 
 		colorActions.forEach(action => {
-			const colorKey: ColorKey = `${colorName}Color${action.scene}`
+			const colorKey: ColorKey = `${colorName as ColorType}Color${action.scene}`
 			themeColor[colorKey] = action.handler(colorValue)
 		})
 	}
@@ -101,7 +101,7 @@ export function expandPattern(input: string): string[] {
 
 	// Expands the first group found
 	const [fullMatch, options] = match
-	const variants = options.split("|") // Splits the options by "|"
+	const variants = options?.split("|") ?? [] // Splits the options by "|"
 
 	// Replaces the first group with each option and calls recursively
 	return variants.flatMap(option => expandPattern(input.replace(fullMatch, option)))
