@@ -4,8 +4,8 @@ import type {
 	AgentSca,
 	AgentVulnerabilities,
 	BulkDeleteAgentRequest,
-    BulkDeleteAgentsResponse,
-    BulkDeleteFilterRequest,
+	BulkDeleteAgentsResponse,
+	BulkDeleteFilterRequest,
 	OutdatedVelociraptorAgents,
 	OutdatedWazuhAgents,
 	ScaPolicyResult
@@ -19,6 +19,7 @@ export interface AgentPayload {
 
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
+// TODO: refactor
 export default {
 	getAgents(agentId?: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)
@@ -36,18 +37,18 @@ export default {
 	 * Bulk delete agents by their IDs
 	 * @param agentIds - Array of agent IDs to delete
 	 */
-    bulkDeleteAgents(agentIds: string[]) {
-        const payload: BulkDeleteAgentRequest = { agent_ids: agentIds }
-        return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
-    },
-    /**
-     * Bulk delete agents based on filter conditions
-     * At least one filter must be specified
-     * @param filters - Filter conditions (customer_code, status, disconnected_days)
-     */
-    bulkDeleteAgentsByFilter(filters: BulkDeleteFilterRequest) {
-        return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete/filter`, filters)
-    },
+	bulkDeleteAgents(agentIds: string[]) {
+		const payload: BulkDeleteAgentRequest = { agent_ids: agentIds }
+		return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
+	},
+	/**
+	 * Bulk delete agents based on filter conditions
+	 * At least one filter must be specified
+	 * @param filters - Filter conditions (customer_code, status, disconnected_days)
+	 */
+	bulkDeleteAgentsByFilter(filters: BulkDeleteFilterRequest) {
+		return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete/filter`, filters)
+	},
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
