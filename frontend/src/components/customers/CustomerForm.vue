@@ -3,11 +3,11 @@
 		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
-					<div v-for="(_, key) of form" :key="key" class="grow">
-						<n-form-item :label="fieldsMeta[key].label" :path="key" class="grow">
+					<div v-for="(val, key) of fieldsMeta" :key="key" class="grow">
+						<n-form-item :label="val.label" :path="key" class="grow">
 							<n-input
 								v-model:value.trim="form[key]"
-								:placeholder="fieldsMeta[key].placeholder"
+								:placeholder="val.placeholder"
 								clearable
 								:readonly="key === 'customer_code' && lockCode"
 								:disabled="key === 'customer_code' && lockCode"
@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"
