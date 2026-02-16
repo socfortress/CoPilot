@@ -117,6 +117,12 @@
         ]
       },
       {
+        "tab": "Customer Portal",
+        "pages": [
+          "customer-portal/index"
+        ]
+      },
+      {
         "tab": "Integrations",
         "groups": [
           {
