@@ -20,6 +20,7 @@
         "tab": "Get Started",
         "pages": [
           "getting-started/start-here",
+          "getting-started/install-upgrade",
           "getting-started/what-is-copilot",
           "getting-started/roles-and-mental-model",
           "getting-started/first-wins",
