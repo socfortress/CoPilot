@@ -19,11 +19,11 @@
 <script setup lang="ts">
 import { NForm, NFormItem, NInputNumber, NRadioButton, NRadioGroup } from "naive-ui"
 
-export interface SonicwallModel {
-    protocol: "tcp"
-    hot_data_retention: number
-    index_replicas: number
+export interface SonicWallModel {
+	protocol: "tcp"
+	hot_data_retention: number
+	index_replicas: number
 }
 
-const model = defineModel<SonicwallModel>("options", { required: true })
+const model = defineModel<SonicWallModel>("options", { required: true })
 </script>

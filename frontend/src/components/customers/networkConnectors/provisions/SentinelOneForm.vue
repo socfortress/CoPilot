@@ -20,9 +20,9 @@
 import { NForm, NFormItem, NInputNumber, NRadioButton, NRadioGroup } from "naive-ui"
 
 export interface SentinelOneModel {
-    protocol: "tcp"
-    hot_data_retention: number
-    index_replicas: number
+	protocol: string
+	hot_data_retention: number
+	index_replicas: number
 }
 
 const model = defineModel<SentinelOneModel>("options", { required: true })

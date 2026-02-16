@@ -172,7 +172,7 @@
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { FortinetModel } from "./provisions/FortinetForm.vue"
 import type { SentinelOneModel } from "./provisions/SentinelOneForm.vue"
-import type { SonicwallModel } from "./provisions/SonicwallForm.vue"
+import type { SonicWallModel } from "./provisions/SonicwallForm.vue"
 import type { FortinetProvision, SentinelOneProvision, SonicwallProvision } from "@/api/endpoints/networkConnectors"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
@@ -184,17 +184,17 @@ import SentinelOneForm from "./provisions/SentinelOneForm.vue"
 import SonicwallForm from "./provisions/SonicwallForm.vue"
 
 const { networkConnector, hideDeleteButton, size } = defineProps<{
-    networkConnector: CustomerNetworkConnector
-    hideDeleteButton?: boolean
-    size?: Size
+	networkConnector: CustomerNetworkConnector
+	hideDeleteButton?: boolean
+	size?: Size
 }>()
 
 const emit = defineEmits<{
-    (e: "startLoading"): void
-    (e: "stopLoading"): void
-    (e: "deployed"): void
-    (e: "decommissioned"): void
-    (e: "deleted"): void
+	(e: "startLoading"): void
+	(e: "stopLoading"): void
+	(e: "deployed"): void
+	(e: "decommissioned"): void
+	(e: "deleted"): void
 }>()
 
 const DeployIcon = "carbon:deploy"
@@ -209,12 +209,12 @@ const loadingSentinelOneProvision = ref(false)
 const loadingDelete = ref(false)
 const loadingDecommission = ref(false)
 const loading = computed(
-    () =>
-        loadingFortinetProvision.value ||
-        loadingSonicwallProvision.value ||
-        loadingSentinelOneProvision.value ||
-        loadingDecommission.value ||
-        loadingDelete.value
+	() =>
+		loadingFortinetProvision.value ||
+		loadingSonicwallProvision.value ||
+		loadingSentinelOneProvision.value ||
+		loadingDecommission.value ||
+		loadingDelete.value
 )
 
 const serviceName = computed(() => networkConnector.network_connector_service_name)
@@ -228,203 +228,203 @@ const showSonicwallForm = ref(false)
 const showSentinelOneForm = ref(false)
 
 const fortinetOptions = ref<FortinetModel>({
-    protocol: "tcp",
-    hot_data_retention: 1,
-    index_replicas: 0
+	protocol: "tcp",
+	hot_data_retention: 1,
+	index_replicas: 0
 })
 
-const sonicwallOptions = ref<SonicwallModel>({
-    protocol: "tcp",
-    hot_data_retention: 1,
-    index_replicas: 0
+const sonicwallOptions = ref<SonicWallModel>({
+	protocol: "tcp",
+	hot_data_retention: 1,
+	index_replicas: 0
 })
 
 const sentinelOneOptions = ref<SentinelOneModel>({
-    protocol: "tls",
-    hot_data_retention: 1,
-    index_replicas: 0
+	protocol: "tls",
+	hot_data_retention: 1,
+	index_replicas: 0
 })
 
 const isFortinetFormValid = computed(() => {
-    if (fortinetOptions.value.hot_data_retention === null) {
-        return false
-    }
-    if (fortinetOptions.value.index_replicas === null) {
-        return false
-    }
-    return true
+	if (fortinetOptions.value.hot_data_retention === null) {
+		return false
+	}
+	if (fortinetOptions.value.index_replicas === null) {
+		return false
+	}
+	return true
 })
 
 const isSonicwallFormValid = computed(() => {
-    if (sonicwallOptions.value.hot_data_retention === null) {
-        return false
-    }
-    if (sonicwallOptions.value.index_replicas === null) {
-        return false
-    }
-    return true
+	if (sonicwallOptions.value.hot_data_retention === null) {
+		return false
+	}
+	if (sonicwallOptions.value.index_replicas === null) {
+		return false
+	}
+	return true
 })
 
 const isSentinelOneFormValid = computed(() => {
-    if (sentinelOneOptions.value.hot_data_retention === null) {
-        return false
-    }
-    if (sentinelOneOptions.value.index_replicas === null) {
-        return false
-    }
-    return true
+	if (sentinelOneOptions.value.hot_data_retention === null) {
+		return false
+	}
+	if (sentinelOneOptions.value.index_replicas === null) {
+		return false
+	}
+	return true
 })
 
 watch(loading, val => {
-    if (val) {
-        emit("startLoading")
-    } else {
-        emit("stopLoading")
-    }
+	if (val) {
+		emit("startLoading")
+	} else {
+		emit("stopLoading")
+	}
 })
 
 function fortinetProvision() {
-    loadingFortinetProvision.value = true
+	loadingFortinetProvision.value = true
 
-    const options: FortinetProvision = {
-        tcp_enabled: fortinetOptions.value.protocol === "tcp",
-        udp_enabled: fortinetOptions.value.protocol === "udp",
-        hot_data_retention: fortinetOptions.value.hot_data_retention,
-        index_replicas: fortinetOptions.value.index_replicas
-    }
+	const options: FortinetProvision = {
+		tcp_enabled: fortinetOptions.value.protocol === "tcp",
+		udp_enabled: fortinetOptions.value.protocol === "udp",
+		hot_data_retention: fortinetOptions.value.hot_data_retention,
+		index_replicas: fortinetOptions.value.index_replicas
+	}
 
-    Api.networkConnectors
-        .fortinetProvision(customerCode.value, serviceName.value, options)
-        .then(res => {
-            if (res.data.success) {
-                emit("deployed")
-                showFortinetForm.value = false
-                message.success(res.data?.message || "Fortinet customer provisioned successfully.")
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingFortinetProvision.value = false
-        })
+	Api.networkConnectors
+		.fortinetProvision(customerCode.value, serviceName.value, options)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				showFortinetForm.value = false
+				message.success(res.data?.message || "Fortinet customer provisioned successfully.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingFortinetProvision.value = false
+		})
 }
 
 function sonicwallProvision() {
-    loadingSonicwallProvision.value = true
+	loadingSonicwallProvision.value = true
 
-    const options: SonicwallProvision = {
-        tcp_enabled: sonicwallOptions.value.protocol === "tcp",
-        hot_data_retention: sonicwallOptions.value.hot_data_retention,
-        index_replicas: sonicwallOptions.value.index_replicas
-    }
+	const options: SonicwallProvision = {
+		tcp_enabled: sonicwallOptions.value.protocol === "tcp",
+		hot_data_retention: sonicwallOptions.value.hot_data_retention,
+		index_replicas: sonicwallOptions.value.index_replicas
+	}
 
-    Api.networkConnectors
-        .sonicwallProvision(customerCode.value, serviceName.value, options)
-        .then(res => {
-            if (res.data.success) {
-                emit("deployed")
-                showSonicwallForm.value = false
-                message.success(res.data?.message || "SonicWall customer provisioned successfully.")
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingSonicwallProvision.value = false
-        })
+	Api.networkConnectors
+		.sonicwallProvision(customerCode.value, serviceName.value, options)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				showSonicwallForm.value = false
+				message.success(res.data?.message || "SonicWall customer provisioned successfully.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingSonicwallProvision.value = false
+		})
 }
 
 function sentinelOneProvision() {
-    loadingSentinelOneProvision.value = true
+	loadingSentinelOneProvision.value = true
 
-    const options: SentinelOneProvision = {
-        tls_enabled: sentinelOneOptions.value.protocol === "tls",
-        hot_data_retention: sentinelOneOptions.value.hot_data_retention,
-        index_replicas: sentinelOneOptions.value.index_replicas
-    }
+	const options: SentinelOneProvision = {
+		tls_enabled: sentinelOneOptions.value.protocol === "tls",
+		hot_data_retention: sentinelOneOptions.value.hot_data_retention,
+		index_replicas: sentinelOneOptions.value.index_replicas
+	}
 
-    Api.networkConnectors
-        .sentineloneProvision(customerCode.value, serviceName.value, options)
-        .then(res => {
-            if (res.data.success) {
-                emit("deployed")
-                showSentinelOneForm.value = false
-                message.success(res.data?.message || "SentinelOne customer provisioned successfully.")
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingSentinelOneProvision.value = false
-        })
+	Api.networkConnectors
+		.sentineloneProvision(customerCode.value, serviceName.value, options)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				showSentinelOneForm.value = false
+				message.success(res.data?.message || "SentinelOne customer provisioned successfully.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingSentinelOneProvision.value = false
+		})
 }
 
 function handleDelete() {
-    dialog.warning({
-        title: "Confirm",
-        content: () =>
-            h("div", {
-                innerHTML: `Are you sure you want to delete the Network Connector: <strong>${serviceName.value}</strong> ?`
-            }),
-        positiveText: "Yes I'm sure",
-        negativeText: "Cancel",
-        onPositiveClick: () => {
-            deleteNetworkConnector()
-        },
-        onNegativeClick: () => {
-            message.info("Delete canceled")
-        }
-    })
+	dialog.warning({
+		title: "Confirm",
+		content: () =>
+			h("div", {
+				innerHTML: `Are you sure you want to delete the Network Connector: <strong>${serviceName.value}</strong> ?`
+			}),
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			deleteNetworkConnector()
+		},
+		onNegativeClick: () => {
+			message.info("Delete canceled")
+		}
+	})
 }
 
 function deleteNetworkConnector() {
-    loadingDelete.value = true
+	loadingDelete.value = true
 
-    Api.networkConnectors
-        .deleteNetworkConnector(customerCode.value, serviceName.value)
-        .then(res => {
-            if (res.data.success) {
-                emit("deleted")
-                message.success(res.data?.message || "Customer Network Connector successfully deleted.")
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingDelete.value = false
-        })
+	Api.networkConnectors
+		.deleteNetworkConnector(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("deleted")
+				message.success(res.data?.message || "Customer Network Connector successfully deleted.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDelete.value = false
+		})
 }
 
 function decommissionNetworkConnector() {
-    loadingDecommission.value = true
+	loadingDecommission.value = true
 
-    Api.networkConnectors
-        .decommissionNetworkConnector(customerCode.value, serviceName.value)
-        .then(res => {
-            if (res.data.success) {
-                emit("decommissioned")
-                message.success(res.data?.message || "Customer Network Connector successfully decommissioned.")
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loadingDecommission.value = false
-        })
+	Api.networkConnectors
+		.decommissionNetworkConnector(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("decommissioned")
+				message.success(res.data?.message || "Customer Network Connector successfully decommissioned.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDecommission.value = false
+		})
 }
 </script>
