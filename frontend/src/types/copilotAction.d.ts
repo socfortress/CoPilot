@@ -40,6 +40,8 @@ export interface CopilotAction {
 	tags?: null | string[]
 }
 
+export type ScriptParameterType = "boolean" | "integer" | "string"
+
 export interface ScriptParameter {
 	name: string
 	type: ScriptParameterType
@@ -48,12 +50,6 @@ export interface ScriptParameter {
 	default?: string | number | boolean | null
 	enum?: string[] | null
 	arg_position?: string
-}
-
-export enum ScriptParameterType {
-	Boolean = "boolean",
-	Integer = "integer",
-	String = "string"
 }
 
 export interface CopilotActionInvokeResponse {
