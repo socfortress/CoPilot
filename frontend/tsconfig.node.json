@@ -7,7 +7,7 @@
 		"module": "ESNext",
 
 		"moduleResolution": "bundler",
-		"types": ["cypress", "node"],
+		"types": ["node"],
 		"allowImportingTsExtensions": true,
 
 		"strict": true,
