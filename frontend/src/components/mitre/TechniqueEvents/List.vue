@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { MitreEventDetails } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
@@ -137,6 +138,8 @@ function getList() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	if (width < 650) {

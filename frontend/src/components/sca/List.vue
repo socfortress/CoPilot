@@ -61,7 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types"
+// TODO: refactor
+import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca.d"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -190,6 +191,8 @@ watchDebounced(
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

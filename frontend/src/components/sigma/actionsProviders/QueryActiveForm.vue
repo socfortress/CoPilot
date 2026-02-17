@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { SigmaQuery } from "@/types/sigma.d"
 import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -75,7 +76,9 @@ function updateActive() {
 			.setQueryActive(query.value.rule_name, model.value.active)
 			.then(res => {
 				if (res.data.success) {
-					emit("updated", res.data.sigma_queries[0])
+					if (res.data.sigma_queries[0]) {
+						emit("updated", res.data.sigma_queries[0])
+					}
 					message.success(res.data?.message || "Sigma query updated successfully")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")

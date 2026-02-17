@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { RuleExtended } from "./RulesSmallList.vue"
 import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
 import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"
@@ -71,8 +72,8 @@ function sanitizeStage(stage: PipelineFullStage): PipelineFullStageExt {
 
 	for (const i in stage.rules) {
 		rules.push({
-			title: stage.rules[i],
-			id: stage.rule_ids[i]
+			title: stage.rules[i] ?? "",
+			id: stage.rule_ids[i] ?? ""
 		})
 	}
 

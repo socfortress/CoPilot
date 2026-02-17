@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { ECharts } from "echarts/core"
 import type { IndexStats } from "@/types/indices.d"
 import bytes from "bytes"
@@ -155,7 +156,9 @@ function getOptions() {
 					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
 					const points = params.labelLinePoints
 					// Update the end point.
-					points[2][0] = isLeft ? params.labelRect.x : params.labelRect.x + params.labelRect.width
+					if (points[2]) {
+						points[2][0] = isLeft ? params.labelRect.x : params.labelRect.x + params.labelRect.width
+					}
 					return {
 						labelLinePoints: points,
 						hideOverlap: false,

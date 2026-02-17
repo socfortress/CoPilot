@@ -66,7 +66,7 @@ const series = ref<{ name: string; data: [Date, number][] }[]>([
 	}
 ])
 
-const serieLength = computed<number>(() => series.value[0].data.length || 0)
+const serieLength = computed<number>(() => series.value[0]?.data.length ?? 0)
 
 function getOptions(): ApexOptions {
 	return {
@@ -123,13 +123,15 @@ const options = ref(getOptions())
 
 watch(value, val => {
 	if (serieLength.value > 100) {
-		series.value[0].data.shift()
+		series.value[0]?.data.shift()
 
 		if (options.value.chart?.animations?.enabled) {
 			options.value = getOptions()
 		}
 	}
-	series.value[0].data.push([new Date(), val])
+	if (series.value[0]) {
+		series.value[0].data.push([new Date(), val])
+	}
 })
 
 watch(isThemeDark, () => {

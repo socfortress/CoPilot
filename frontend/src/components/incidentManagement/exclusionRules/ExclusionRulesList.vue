@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -139,8 +140,8 @@ function getData() {
 
 	const query: Partial<ExclusionRulesQuery> = {
 		pagination: {
-			limit: pageSize.value,
-			skip: (currentPage.value - 1) * pageSize.value
+			limit: pageSize.value ?? 25,
+			skip: (currentPage.value - 1) * (pageSize.value ?? 25)
 		}
 	}
 
@@ -169,6 +170,8 @@ function getData() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

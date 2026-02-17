@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
@@ -170,6 +171,8 @@ function purge() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8
