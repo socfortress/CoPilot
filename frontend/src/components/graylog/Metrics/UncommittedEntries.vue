@@ -13,7 +13,12 @@
 			</div>
 		</div>
 		<div class="footer">
-			<n-button type="primary" ghost icon-placement="right" @click="gotoGraylogManagement('messages')">
+			<n-button
+				type="primary"
+				ghost
+				icon-placement="right"
+				@click="routeGraylogManagement('messages').navigate()"
+			>
 				<template #icon>
 					<Icon :name="LinkIcon" :size="14" />
 				</template>
@@ -29,7 +34,7 @@ import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import apexchart from "vue3-apexcharts"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
@@ -48,7 +53,7 @@ const DangerIcon = "majesticons:exclamation-line"
 
 const style = computed(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
-const { gotoGraylogManagement } = useGoto()
+const { routeGraylogManagement } = useNavigation()
 
 const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
@@ -61,7 +66,7 @@ const series = ref<{ name: string; data: [Date, number][] }[]>([
 	}
 ])
 
-const serieLength = computed<number>(() => series.value[0].data.length || 0)
+const serieLength = computed<number>(() => series.value[0]?.data.length ?? 0)
 
 function getOptions(): ApexOptions {
 	return {
@@ -118,13 +123,15 @@ const options = ref(getOptions())
 
 watch(value, val => {
 	if (serieLength.value > 100) {
-		series.value[0].data.shift()
+		series.value[0]?.data.shift()
 
 		if (options.value.chart?.animations?.enabled) {
 			options.value = getOptions()
 		}
 	}
-	series.value[0].data.push([new Date(), val])
+	if (series.value[0]) {
+		series.value[0].data.push([new Date(), val])
+	}
 })
 
 watch(isThemeDark, () => {

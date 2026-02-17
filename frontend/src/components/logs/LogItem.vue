@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Log } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import { computed } from "vue"
@@ -92,8 +93,8 @@ const username = computed(() => {
 })
 
 function formatDate(timestamp: string | number | Date): string {
-    // Parse as UTC (since backend stores in UTC without 'Z' suffix - maybe address later), then convert to local
-    return dayjs.utc(timestamp).local().format(dFormats.datetime)
+	// Parse as UTC (since backend stores in UTC without 'Z' suffix - maybe address later), then convert to local
+	return dayjs.utc(timestamp).local().format(dFormats.datetime)
 }
 </script>
 

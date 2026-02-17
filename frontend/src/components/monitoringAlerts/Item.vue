@@ -6,14 +6,18 @@
 		</template>
 		<template #mainExtra>
 			<div class="flex flex-wrap items-center gap-3">
-				<Badge type="active" class="cursor-pointer" @click.stop="gotoIndex(alert.alert_index)">
+				<Badge type="active" class="cursor-pointer" @click.stop="routeIndex(alert.alert_index).navigate()">
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
 					<template #label>Index / {{ alert.alert_index }}</template>
 				</Badge>
 
-				<Badge type="active" class="cursor-pointer" @click.stop="gotoCustomer({ code: alert.customer_code })">
+				<Badge
+					type="active"
+					class="cursor-pointer"
+					@click.stop="routeCustomer({ code: alert.customer_code }).navigate()"
+				>
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
@@ -50,7 +54,7 @@ import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import AlertActions from "./ItemActions.vue"
 
 const { alert, embedded } = defineProps<{
@@ -65,7 +69,7 @@ const emit = defineEmits<{
 
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer, gotoIndex } = useGoto()
+const { routeCustomer, routeIndex } = useNavigation()
 const loadingDelete = ref(false)
 const loadingInvoke = ref(false)
 const loading = computed(() => loadingDelete.value || loadingInvoke.value)

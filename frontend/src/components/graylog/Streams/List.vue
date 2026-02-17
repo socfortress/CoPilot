@@ -91,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
@@ -176,6 +177,8 @@ function getData() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 650 ? 5 : 8

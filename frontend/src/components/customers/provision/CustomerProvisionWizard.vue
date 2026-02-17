@@ -153,8 +153,10 @@
 								<n-form-item label="Deploy Wazuh Worker" path="provision_wazuh_worker">
 									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
 								</n-form-item>
-								<div class="mt-2 text-sm text-gray-500">
-									Multi-tenancy (SOCFortress Pro Services only): Deploys a dedicated worker used in SOCFortress-managed multi-tenant Wazuh environments. Leave off for single-tenant deployments.
+								<div class="text-secondary mt-2 text-sm">
+									Multi-tenancy (SOCFortress Pro Services only): Deploys a dedicated worker used in
+									SOCFortress-managed multi-tenant Wazuh environments. Leave off for single-tenant
+									deployments.
 								</div>
 							</n-card>
 							<n-card class="grow">
@@ -165,8 +167,10 @@
 										:disabled="!form.provision_wazuh_worker"
 									/>
 								</n-form-item>
-								<div class="mt-2 text-sm text-gray-500">
-									Multi-tenancy (SOCFortress Pro Services only): Deploys the load balancer used to route agent connections across multi-tenant Wazuh workers for high availability. Leave off for single-tenant deployments.
+								<div class="text-secondary mt-2 text-sm">
+									Multi-tenancy (SOCFortress Pro Services only): Deploys the load balancer used to
+									route agent connections across multi-tenant Wazuh workers for high availability.
+									Leave off for single-tenant deployments.
 								</div>
 							</n-card>
 						</div>
@@ -274,6 +278,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"
@@ -671,7 +676,10 @@ function generateRandomPassword(length: number = 20): string {
 	}
 
 	// Shuffle the password to randomize the guaranteed characters
-	return password.split('').sort(() => Math.random() - 0.5).join('')
+	return password
+		.split("")
+		.sort(() => Math.random() - 0.5)
+		.join("")
 }
 
 function formPreset(step: number) {

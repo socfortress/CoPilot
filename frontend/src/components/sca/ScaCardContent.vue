@@ -22,7 +22,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click.stop="gotoCustomer({ code: sca.customer_code })"
+								@click.stop="routeCustomer({ code: sca.customer_code }).navigate()"
 							>
 								#{{ sca.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -174,15 +174,15 @@ import _toNumber from "lodash/toNumber"
 import { NCard, NProgress, NStatistic, NTabPane, NTabs } from "naive-ui"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem }>()
 
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"

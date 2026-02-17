@@ -257,6 +257,8 @@ function purge() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

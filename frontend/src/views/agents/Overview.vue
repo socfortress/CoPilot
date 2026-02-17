@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<div class="agent-toolbar">
-			<div class="back-btn" @click="gotoAgent()">
+			<div class="back-btn" @click="routeAgent().navigate()">
 				<Icon :name="ArrowIcon" :size="16" />
 				<span>Agents list</span>
 			</div>
@@ -160,7 +160,7 @@ import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
 
 const VulnerabilitiesGrid = defineAsyncComponent(
@@ -186,7 +186,7 @@ const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
-const { gotoAgent } = useGoto()
+const { routeAgent } = useNavigation()
 const message = useMessage()
 const router = useRouter()
 const dialog = useDialog()
@@ -217,12 +217,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					gotoAgent()
+					routeAgent().navigate()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				gotoAgent()
+				routeAgent().navigate()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -281,7 +281,7 @@ function handleDelete() {
 				loadingAgent.value = true
 			},
 			cbSuccess: () => {
-				gotoAgent()
+				routeAgent().navigate()
 			},
 			cbAfter: () => {
 				loadingAgent.value = false

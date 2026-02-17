@@ -10,7 +10,7 @@
 					<slot name="icon"></slot>
 				</div>
 			</div>
-			<div class="card-content flex grow">
+			<div class="card-content divide-border grid grow grid-cols-[repeat(auto-fit,minmax(0,1fr))] divide-x">
 				<div
 					v-for="item of values"
 					:key="JSON.stringify(item)"
@@ -71,10 +71,6 @@ const ArrowRightIcon = "carbon:arrow-right"
 		.value-box {
 			text-align: center;
 			overflow: hidden;
-
-			&:not(:last-child) {
-				border-right: 1px solid var(--border-color);
-			}
 
 			.value {
 				font-family: var(--font-family-display);

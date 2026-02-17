@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MitreTacticDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
@@ -86,7 +87,9 @@ function getDetails(id: string) {
 		.getMitreTactics({ id })
 		.then(res => {
 			if (res.data.success) {
-				tacticDetails.value = res.data.results?.[0] || null
+				if (res.data.results?.[0]) {
+					tacticDetails.value = res.data.results[0]
+				}
 				if (tacticDetails.value) emit("loaded", tacticDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

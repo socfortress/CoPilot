@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
@@ -88,7 +89,7 @@ function getPipelines() {
 			if (res.data.success) {
 				pipelines.value = res.data.pipelines || []
 				if (pipelines.value.length && !selectedPipeline.value) {
-					selectedPipeline.value = pipelines.value[0].id
+					selectedPipeline.value = pipelines.value[0]?.id ?? null
 				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

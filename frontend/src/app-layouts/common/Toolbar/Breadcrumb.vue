@@ -18,27 +18,23 @@
 
 <script lang="ts" setup>
 import type { RouteLocationNormalizedLoaded } from "vue-router"
+import type { BreadcrumbItem } from "@/composables/useBreadcrumb"
 import _capitalize from "lodash/capitalize"
 import _compact from "lodash/compact"
 import _isEqual from "lodash/isEqual"
 import _split from "lodash/split"
 import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
-
-interface Page {
-	name: string
-	path: string
-	key: string
-}
+import { useBreadcrumb } from "@/composables/useBreadcrumb"
 
 const HomeIcon = "fluent:home-24-regular"
 const router = useRouter()
 const route = useRoute()
-const items = ref<Page[]>([])
+const { items, setItems } = useBreadcrumb()
 
-function goto(page: Partial<Page>) {
+function goto(page: Partial<BreadcrumbItem>) {
 	if (page.name && page.name !== route.name) {
 		router.push({ name: page.name })
 	}
@@ -48,7 +44,7 @@ function goto(page: Partial<Page>) {
 }
 
 function checkRoute(route: RouteLocationNormalizedLoaded) {
-	const newItems: Page[] = []
+	const newItems: BreadcrumbItem[] = []
 	let pathChunks = _compact(_split(route?.path || "", "/"))
 	if (!pathChunks.length) {
 		pathChunks = _compact(_split(route?.matched?.[0]?.aliasOf?.path || "", "/"))
@@ -68,11 +64,14 @@ function checkRoute(route: RouteLocationNormalizedLoaded) {
 	}
 
 	if (route.meta?.title && newItems.length) {
-		newItems[newItems.length - 1].name = route.meta.title
+		const lastItem = newItems[newItems.length - 1]
+		if (lastItem) {
+			lastItem.name = route.meta.title
+		}
 	}
 
 	if (!_isEqual(items.value, newItems)) {
-		items.value = newItems
+		setItems(newItems)
 	}
 }
 

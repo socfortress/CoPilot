@@ -23,7 +23,7 @@
 				{{ alert.severity?.severity_name || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hidden! @2xl:!flex">
+		<Badge type="splitted" color="primary" class="hidden! @2xl:flex!">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13" />
 			</template>
@@ -32,7 +32,7 @@
 				{{ alert.alert_source || "-" }}
 			</template>
 		</Badge>
-		<Badge type="splitted" color="primary" class="hidden! @2xl:!flex">
+		<Badge type="splitted" color="primary" class="hidden! @2xl:flex!">
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13" />
 			</template>
@@ -41,7 +41,7 @@
 				<template v-if="alert.customer?.customer_code && alert.customer.customer_code !== 'Customer Not Found'">
 					<code
 						class="text-primary cursor-pointer"
-						@click="gotoCustomer({ code: alert.customer.customer_code })"
+						@click="routeCustomer({ code: alert.customer.customer_code }).navigate()"
 					>
 						{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
 						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -90,7 +90,7 @@ import { NSpin, NTooltip } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import SocAssignUser from "./SocAssignUser.vue"
 
 const props = defineProps<{
@@ -111,7 +111,7 @@ const SourceIcon = "lucide:arrow-down-right-from-circle"
 const CustomerIcon = "carbon:user"
 const OwnerIcon = "carbon:user-military"
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 
 const ownerName = computed(() => alert.value?.owner?.user_login)
 </script>

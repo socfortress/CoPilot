@@ -6,7 +6,7 @@
 			:vertical="vertical"
 			hovered
 			class="h-full cursor-pointer"
-			@click="gotoSocAlerts()"
+			@click="routeSocAlerts().navigate()"
 		>
 			<template #icon>
 				<CardStatsIcon :icon-name="SOCIcon" boxed :box-size="40"></CardStatsIcon>
@@ -22,7 +22,7 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -30,7 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const SOCIcon = "carbon:security"
-const { gotoSocAlerts } = useGoto()
+const { routeSocAlerts } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const alerts = ref<SocAlert[]>([])

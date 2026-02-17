@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 import SnapshotList from "@/components/snapshots/SnapshotList.vue"
@@ -30,6 +31,6 @@ const activeTab = ref("repositories")
 
 <style scoped>
 .page-wrapper {
-    min-height: 100%;
+	min-height: 100%;
 }
 </style>

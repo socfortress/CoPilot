@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import _cloneDeep from "lodash/cloneDeep"
@@ -183,7 +184,7 @@ onBeforeMount(() => {
 
 	if (filterValue.value) {
 		if (filterType.value === "timeRange") {
-			filterTimeRange.value.unit = filterValue.value[filterValue.value?.length - 1]
+			filterTimeRange.value.unit = filterValue.value?.[filterValue.value?.length - 1] ?? "h"
 			filterTimeRange.value.time = _toSafeInteger(filterValue.value.slice(0, -1))
 		}
 		if (filterType.value === "eventType") {

@@ -122,8 +122,8 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
 import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils/format"
 import CommandItem from "./CommandItem.vue"
 
 const props = defineProps<{

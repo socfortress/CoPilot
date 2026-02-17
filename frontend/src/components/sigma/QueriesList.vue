@@ -163,6 +163,8 @@ const header = ref()
 const pageSlot = ref(8)
 
 const itemsPaginated = computed(() => {
+	if (!pageSize.value) return []
+
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
@@ -245,6 +247,8 @@ function getData() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

@@ -47,7 +47,7 @@ import { NButton, NCard, NTag } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { artifact, showActions = false } = defineProps<{
 	artifact: AgentArtifactData

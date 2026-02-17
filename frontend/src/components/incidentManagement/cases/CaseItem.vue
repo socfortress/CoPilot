@@ -138,7 +138,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: caseEntity.customer_code })"
+									@click.stop="routeCustomer({ code: caseEntity.customer_code }).navigate()"
 								>
 									#{{ caseEntity.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -232,9 +232,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import AlertItem from "../alerts/AlertItem.vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
@@ -265,7 +265,7 @@ const LinkIcon = "carbon:launch"
 const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

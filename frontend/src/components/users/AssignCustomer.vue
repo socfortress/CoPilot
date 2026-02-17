@@ -22,7 +22,7 @@
 				{{ user?.username }}
 			</div>
 
-			<n-form ref="formRef" :model="formModel">
+			<n-form :model="formModel">
 				<n-form-item label="Select Customers">
 					<n-select
 						v-model:value="formModel.customerCodes"
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst } from "naive-ui"
+// TODO: refactor
 import type { Customer } from "@/types/customers.d"
 import type { User } from "@/types/user.d"
 import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "naive-ui"
@@ -73,7 +73,6 @@ const message = useMessage()
 const showModal = ref(false)
 const loading = ref(false)
 const loadingCustomers = ref(false)
-const formRef = ref<FormInst>()
 const customers = ref<Customer[]>([])
 const currentAccess = ref<string[]>([])
 

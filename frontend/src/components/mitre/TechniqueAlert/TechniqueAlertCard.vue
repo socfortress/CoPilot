@@ -47,7 +47,7 @@ import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import TechniqueAlertOverview from "./TechniqueAlertOverview.vue"
 
 const { entity } = defineProps<{

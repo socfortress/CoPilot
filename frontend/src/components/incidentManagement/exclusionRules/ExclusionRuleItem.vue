@@ -39,7 +39,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer leading-none"
-								@click.stop="gotoCustomer({ code: entity.customer_code })"
+								@click.stop="routeCustomer({ code: entity.customer_code }).navigate()"
 							>
 								#{{ entity.customer_code }}
 								<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -121,9 +121,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
@@ -154,7 +154,7 @@ const loadingDelete = ref(false)
 const loading = computed(() => updatingStatus.value || loadingDelete.value)
 const editing = ref(false)
 const showDetails = ref(false)
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function openDetails() {

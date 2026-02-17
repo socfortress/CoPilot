@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormRules, FormValidationError } from "naive-ui"
 import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
@@ -143,7 +144,7 @@ function validateForm(e: MouseEvent) {
 			provisionsMonitoringAlert()
 		} else {
 			for (const err of errors) {
-				message.error(err[0].message || "Invalid fields")
+				message.error(err[0]?.message ?? "Invalid fields")
 			}
 		}
 	})

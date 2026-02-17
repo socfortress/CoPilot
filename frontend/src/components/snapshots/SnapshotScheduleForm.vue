@@ -6,9 +6,7 @@
 
 		<n-form-item label="Index Pattern" path="index_pattern">
 			<n-input v-model:value="formData.index_pattern" placeholder="e.g., wazuh_customer_*" />
-			<template #feedback>
-				Use wildcards (*) to match multiple indices. Example: wazuh_customer_*
-			</template>
+			<template #feedback>Use wildcards (*) to match multiple indices. Example: wazuh_customer_*</template>
 		</n-form-item>
 
 		<n-form-item label="Repository" path="repository">
@@ -54,7 +52,7 @@
 			</template>
 		</n-form-item>
 
-		<div class="flex justify-end gap-2 mt-4">
+		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="loading" @click="handleSubmit">
 				{{ isEditing ? "Update Schedule" : "Create Schedule" }}
@@ -64,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
@@ -71,12 +70,12 @@ import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
-    schedule?: SnapshotScheduleResponse | null
+	schedule?: SnapshotScheduleResponse | null
 }>()
 
 const emit = defineEmits<{
-    (e: "success"): void
-    (e: "cancel"): void
+	(e: "success"): void
+	(e: "cancel"): void
 }>()
 
 const message = useMessage()
@@ -88,103 +87,103 @@ const repositories = ref<SnapshotRepository[]>([])
 const isEditing = computed(() => !!props.schedule)
 
 const formData = ref<SnapshotScheduleCreate>({
-    name: "",
-    index_pattern: "",
-    repository: "",
-    enabled: true,
-    snapshot_prefix: "scheduled",
-    include_global_state: false,
-    skip_write_indices: true,
-    retention_days: null
+	name: "",
+	index_pattern: "",
+	repository: "",
+	enabled: true,
+	snapshot_prefix: "scheduled",
+	include_global_state: false,
+	skip_write_indices: true,
+	retention_days: null
 })
 
 const repositoryOptions = computed<SelectOption[]>(() =>
-    repositories.value.map(repo => ({
-        label: repo.name,
-        value: repo.name
-    }))
+	repositories.value.map(repo => ({
+		label: repo.name,
+		value: repo.name
+	}))
 )
 
 const rules: FormRules = {
-    name: {
-        required: true,
-        message: "Name is required",
-        trigger: "blur"
-    },
-    index_pattern: {
-        required: true,
-        message: "Index pattern is required",
-        trigger: "blur"
-    },
-    repository: {
-        required: true,
-        message: "Repository is required",
-        trigger: "change"
-    }
+	name: {
+		required: true,
+		message: "Name is required",
+		trigger: "blur"
+	},
+	index_pattern: {
+		required: true,
+		message: "Index pattern is required",
+		trigger: "blur"
+	},
+	repository: {
+		required: true,
+		message: "Repository is required",
+		trigger: "change"
+	}
 }
 
 watch(
-    () => props.schedule,
-    newSchedule => {
-        if (newSchedule) {
-            formData.value = {
-                name: newSchedule.name,
-                index_pattern: newSchedule.index_pattern,
-                repository: newSchedule.repository,
-                enabled: newSchedule.enabled,
-                snapshot_prefix: newSchedule.snapshot_prefix,
-                include_global_state: newSchedule.include_global_state,
-                skip_write_indices: newSchedule.skip_write_indices,
-                retention_days: newSchedule.retention_days
-            }
-        }
-    },
-    { immediate: true }
+	() => props.schedule,
+	newSchedule => {
+		if (newSchedule) {
+			formData.value = {
+				name: newSchedule.name,
+				index_pattern: newSchedule.index_pattern,
+				repository: newSchedule.repository,
+				enabled: newSchedule.enabled,
+				snapshot_prefix: newSchedule.snapshot_prefix,
+				include_global_state: newSchedule.include_global_state,
+				skip_write_indices: newSchedule.skip_write_indices,
+				retention_days: newSchedule.retention_days
+			}
+		}
+	},
+	{ immediate: true }
 )
 
 async function fetchRepositories() {
-    loadingRepositories.value = true
-    try {
-        const response = await Api.snapshots.getRepositories()
-        if (response.data.success) {
-            repositories.value = response.data.repositories
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to fetch repositories")
-    } finally {
-        loadingRepositories.value = false
-    }
+	loadingRepositories.value = true
+	try {
+		const response = await Api.snapshots.getRepositories()
+		if (response.data.success) {
+			repositories.value = response.data.repositories
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to fetch repositories")
+	} finally {
+		loadingRepositories.value = false
+	}
 }
 
 async function handleSubmit() {
-    try {
-        await formRef.value?.validate()
-    } catch {
-        return
-    }
+	try {
+		await formRef.value?.validate()
+	} catch {
+		return
+	}
 
-    loading.value = true
-    try {
-        let response
-        if (isEditing.value && props.schedule) {
-            response = await Api.snapshots.updateSchedule(props.schedule.id, formData.value)
-        } else {
-            response = await Api.snapshots.createSchedule(formData.value)
-        }
+	loading.value = true
+	try {
+		let response
+		if (isEditing.value && props.schedule) {
+			response = await Api.snapshots.updateSchedule(props.schedule.id, formData.value)
+		} else {
+			response = await Api.snapshots.createSchedule(formData.value)
+		}
 
-        if (response.data.success) {
-            emit("success")
-        } else {
-            message.error(response.data.message)
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to save schedule")
-    } finally {
-        loading.value = false
-    }
+		if (response.data.success) {
+			emit("success")
+		} else {
+			message.error(response.data.message)
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to save schedule")
+	} finally {
+		loading.value = false
+	}
 }
 
 onMounted(() => {
-    fetchRepositories()
+	fetchRepositories()
 })
 </script>

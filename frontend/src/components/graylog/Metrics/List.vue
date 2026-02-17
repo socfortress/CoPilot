@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"
@@ -75,7 +76,7 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 		}
 
 		const groupObj: Metrics = {
-			groupName: group[0].name,
+			groupName: group[0]?.name ?? "",
 			throughputMetrics: group
 		}
 		return groupObj

@@ -104,7 +104,7 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 export interface ChatBubble {
 	id: string

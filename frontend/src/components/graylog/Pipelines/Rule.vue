@@ -80,7 +80,7 @@ import { ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ rule: PipelineRule; embedded?: boolean; highlight: boolean | null | undefined }>()
 const { rule, highlight, embedded } = toRefs(props)

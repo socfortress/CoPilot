@@ -43,30 +43,21 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
-import {
-
-    NButton,
-    NDatePicker,
-    NForm,
-    NFormItem,
-    NInput,
-    NModal,
-    NSelect,
-    useMessage
-} from "naive-ui"
+import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
 import { computed, onMounted, reactive, ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
-    show: boolean
-    configId: number
+	show: boolean
+	configId: number
 }>()
 
 const emit = defineEmits<{
-    (e: "update:show", value: boolean): void
-    (e: "saved"): void
+	(e: "update:show", value: boolean): void
+	(e: "saved"): void
 }>()
 
 const message = useMessage()
@@ -76,64 +67,64 @@ const checkOptions = ref<{ label: string; value: string }[]>([])
 const expiresAtTimestamp = ref<number | null>(null)
 
 const showModal = computed({
-    get: () => props.show,
-    set: (value) => emit("update:show", value)
+	get: () => props.show,
+	set: value => emit("update:show", value)
 })
 
 const formData = reactive<GitHubAuditExclusionCreate>({
-    check_id: "",
-    resource_name: null,
-    reason: "",
-    approved_by: null,
-    expires_at: null,
-    created_by: "current_user" // TODO: Get from auth context
+	check_id: "",
+	resource_name: null,
+	reason: "",
+	approved_by: null,
+	expires_at: null,
+	created_by: "current_user" // TODO: Get from auth context
 })
 
 const rules: FormRules = {
-    check_id: { required: true, message: "Please select a check", trigger: "blur" },
-    reason: { required: true, message: "Please provide a reason", trigger: "blur" }
+	check_id: { required: true, message: "Please select a check", trigger: "blur" },
+	reason: { required: true, message: "Please provide a reason", trigger: "blur" }
 }
 
 async function handleSubmit() {
-    try {
-        await formRef.value?.validate()
-    } catch {
-        return
-    }
+	try {
+		await formRef.value?.validate()
+	} catch {
+		return
+	}
 
-    saving.value = true
-    try {
-        const data = {
-            ...formData,
-            expires_at: expiresAtTimestamp.value ? new Date(expiresAtTimestamp.value).toISOString() : null
-        }
-        await Api.githubAudit.createExclusion(props.configId, data)
-        message.success("Exclusion created successfully")
-        emit("saved")
-        showModal.value = false
+	saving.value = true
+	try {
+		const data = {
+			...formData,
+			expires_at: expiresAtTimestamp.value ? new Date(expiresAtTimestamp.value).toISOString() : null
+		}
+		await Api.githubAudit.createExclusion(props.configId, data)
+		message.success("Exclusion created successfully")
+		emit("saved")
+		showModal.value = false
 
-        // Reset form
-        formData.check_id = ""
-        formData.resource_name = null
-        formData.reason = ""
-        formData.approved_by = null
-        expiresAtTimestamp.value = null
-    } catch (error: any) {
-        message.error(error.response?.data?.detail || "Failed to create exclusion")
-    } finally {
-        saving.value = false
-    }
+		// Reset form
+		formData.check_id = ""
+		formData.resource_name = null
+		formData.reason = ""
+		formData.approved_by = null
+		expiresAtTimestamp.value = null
+	} catch (error: any) {
+		message.error(error.response?.data?.detail || "Failed to create exclusion")
+	} finally {
+		saving.value = false
+	}
 }
 
 onMounted(async () => {
-    try {
-        const response = await Api.githubAudit.getAvailableChecks()
-        checkOptions.value = response.data.checks.map((check) => ({
-            label: `${check.name} (${check.severity})`,
-            value: check.id
-        }))
-    } catch (error) {
-        console.error("Failed to load available checks:", error)
-    }
+	try {
+		const response = await Api.githubAudit.getAvailableChecks()
+		checkOptions.value = response.data.checks.map(check => ({
+			label: `${check.name} (${check.severity})`,
+			value: check.id
+		}))
+	} catch (error) {
+		console.error("Failed to load available checks:", error)
+	}
 })
 </script>

@@ -125,6 +125,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
@@ -262,6 +263,8 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 650 ? 5 : 8

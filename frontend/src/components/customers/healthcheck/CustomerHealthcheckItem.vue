@@ -54,7 +54,10 @@
 						<div class="flex flex-col gap-1">
 							<div class="box">
 								agent_id:
-								<code class="text-primary cursor-pointer" @click="gotoAgent(healthData.agent_id)">
+								<code
+									class="text-primary cursor-pointer"
+									@click="routeAgent(healthData.agent_id).navigate()"
+								>
 									{{ healthData.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
@@ -100,7 +103,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"
 import dayjs from "@/utils/dayjs"
@@ -117,7 +120,7 @@ const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
 const showDetails = ref(false)
-const { gotoAgent } = useGoto()
+const { routeAgent } = useNavigation()
 
 const agentVersion = computed(() => {
 	let agent = ""

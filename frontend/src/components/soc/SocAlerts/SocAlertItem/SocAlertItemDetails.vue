@@ -16,7 +16,10 @@
 					</template>
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-							<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: value.toString() })">
+							<code
+								class="text-primary cursor-pointer"
+								@click="routeCustomer({ code: value.toString() }).navigate()"
+							>
 								#{{ value }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -30,7 +33,12 @@
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
 			<div class="grid gap-2 px-7 pt-4">
-				<Badge type="active" style="max-width: 145px" class="cursor-pointer" @click="gotoSocUsers(ownerId)">
+				<Badge
+					type="active"
+					style="max-width: 145px"
+					class="cursor-pointer"
+					@click="routeSocUsers(ownerId).navigate()"
+				>
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>
@@ -96,7 +104,7 @@ import { SimpleJsonViewer } from "vue-sjv"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { alert } = defineProps<{
@@ -114,7 +122,7 @@ const SocAlertAssetsList = defineAsyncComponent(() => import("../SocAlertAssets/
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer, gotoSocUsers } = useGoto()
+const { routeCustomer, routeSocUsers } = useNavigation()
 
 const ownerName = computed(() => alert?.owner?.user_login)
 const ownerId = computed(() => alert?.owner?.id)

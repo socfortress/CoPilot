@@ -120,7 +120,7 @@
 							<code
 								v-if="caseData.customer_code"
 								class="text-primary cursor-pointer"
-								@click="gotoCustomer({ code: caseData.customer_code })"
+								@click="routeCustomer({ code: caseData.customer_code }).navigate()"
 							>
 								{{ caseData.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -150,9 +150,9 @@ import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
@@ -172,7 +172,7 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

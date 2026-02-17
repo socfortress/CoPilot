@@ -57,7 +57,7 @@
 									<template #headerExtra>
 										<code
 											class="text-primary cursor-pointer"
-											@click.stop="gotoAgent(selectedAgent.agent_id)"
+											@click.stop="routeAgent(selectedAgent.agent_id).navigate()"
 										>
 											{{ selectedAgent.agent_id }}
 											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -148,9 +148,10 @@ import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate, getOS, iconFromOs } from "@/utils"
+import { getOS, iconFromOs } from "@/utils"
+import { formatDate } from "@/utils/format"
 import AgentsList from "./AgentsList.vue"
 import ParametersList from "./ParametersList.vue"
 
@@ -182,7 +183,7 @@ const ArrowLeftIcon = "carbon:arrow-left"
 const AttackIcon = "mdi:target"
 const LinkIcon = "carbon:launch"
 
-const { gotoAgent } = useGoto()
+const { routeAgent } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const current = ref<number>(1)

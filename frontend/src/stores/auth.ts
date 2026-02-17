@@ -104,7 +104,7 @@ export const useAuthStore = defineStore("auth", {
 			return state.user?.role
 		},
 		userRoleName(state): string {
-			return AuthUserRole[(state.user?.role || 0) as number]
+			return AuthUserRole[(state.user?.role ?? 0) as number] ?? ""
 		},
 		userPic(): string {
 			const initial = getNameInitials(this.userName)

@@ -25,7 +25,7 @@
 						<template v-else>-</template>
 					</template>
 					<template v-else>
-						<ExpandableText :text="value.toString() ?? '-'" :max-length="100" />
+						<ExpandableText :text="value?.toString() ?? '-'" :max-length="100" />
 					</template>
 				</template>
 			</CardKV>

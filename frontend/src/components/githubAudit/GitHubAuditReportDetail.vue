@@ -27,16 +27,12 @@
 						</n-gi>
 						<n-gi>
 							<n-statistic label="Checks Passed">
-								<template #default>
-									{{ report.passed_checks }} / {{ report.total_checks }}
-								</template>
+								<template #default>{{ report.passed_checks }} / {{ report.total_checks }}</template>
 							</n-statistic>
 						</n-gi>
 						<n-gi>
 							<n-statistic label="Duration">
-								<template #default>
-									{{ report.audit_duration_seconds?.toFixed(1) || "N/A" }}s
-								</template>
+								<template #default>{{ report.audit_duration_seconds?.toFixed(1) || "N/A" }}s</template>
 							</n-statistic>
 						</n-gi>
 					</n-grid>
@@ -99,11 +95,7 @@
 				</n-card>
 
 				<!-- Organization Results -->
-				<n-card
-					v-if="report.full_report?.organization_results"
-					title="Organization Settings"
-					size="small"
-				>
+				<n-card v-if="report.full_report?.organization_results" title="Organization Settings" size="small">
 					<n-table :bordered="false" :single-line="false" size="small">
 						<thead>
 							<tr>
@@ -127,11 +119,7 @@
 				</n-card>
 
 				<!-- Repository Results -->
-				<n-card
-					v-if="report.full_report?.repository_results?.length"
-					title="Repository Results"
-					size="small"
-				>
+				<n-card v-if="report.full_report?.repository_results?.length" title="Repository Results" size="small">
 					<n-collapse>
 						<n-collapse-item
 							v-for="repo in report.full_report.repository_results"
@@ -193,23 +181,24 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { GitHubAuditReport } from "@/types/githubAudit.d"
 import {
-    NAlert,
-    NButton,
-    NCard,
-    NCollapse,
-    NCollapseItem,
-    NDrawer,
-    NDrawerContent,
-    NGi,
-    NGrid,
-    NPopconfirm,
-    NSpace,
-    NStatistic,
-    NTable,
-    NTag,
-    useMessage
+	NAlert,
+	NButton,
+	NCard,
+	NCollapse,
+	NCollapseItem,
+	NDrawer,
+	NDrawerContent,
+	NGi,
+	NGrid,
+	NPopconfirm,
+	NSpace,
+	NStatistic,
+	NTable,
+	NTag,
+	useMessage
 } from "naive-ui"
 import { computed } from "vue"
 import Api from "@/api"
@@ -217,150 +206,150 @@ import { AuditStatus, SeverityLevel } from "@/types/githubAudit.d"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
 
 const props = defineProps<{
-    show: boolean
-    report: GitHubAuditReport | null
+	show: boolean
+	report: GitHubAuditReport | null
 }>()
 
 const emit = defineEmits<{
-    (e: "update:show", value: boolean): void
-    (e: "deleted"): void
+	(e: "update:show", value: boolean): void
+	(e: "deleted"): void
 }>()
 
 const message = useMessage()
 
 const showDrawer = computed({
-    get: () => props.show,
-    set: (value) => emit("update:show", value)
+	get: () => props.show,
+	set: value => emit("update:show", value)
 })
 
 const statusType = computed(() => {
-    switch (props.report?.status) {
-        case "completed":
-            return "success"
-        case "running":
-            return "info"
-        case "failed":
-            return "error"
-        default:
-            return "default"
-    }
+	switch (props.report?.status) {
+		case "completed":
+			return "success"
+		case "running":
+			return "info"
+		case "failed":
+			return "error"
+		default:
+			return "default"
+	}
 })
 
 const scoreClass = computed(() => {
-    const score = props.report?.score ?? 0
-    if (score >= 80) return "text-success"
-    if (score >= 60) return "text-warning"
-    return "text-error"
+	const score = props.report?.score ?? 0
+	if (score >= 80) return "text-success"
+	if (score >= 60) return "text-warning"
+	return "text-error"
 })
 
 function getStatusType(status: AuditStatus | string) {
-    switch (status) {
-        case AuditStatus.PASS:
-        case "pass":
-            return "success"
-        case AuditStatus.FAIL:
-        case "fail":
-            return "error"
-        case AuditStatus.WARNING:
-        case "warning":
-            return "warning"
-        default:
-            return "default"
-    }
+	switch (status) {
+		case AuditStatus.PASS:
+		case "pass":
+			return "success"
+		case AuditStatus.FAIL:
+		case "fail":
+			return "error"
+		case AuditStatus.WARNING:
+		case "warning":
+			return "warning"
+		default:
+			return "default"
+	}
 }
 
 function getSeverityType(severity: SeverityLevel | string) {
-    switch (severity) {
-        case SeverityLevel.CRITICAL:
-        case "critical":
-            return "error"
-        case SeverityLevel.HIGH:
-        case "high":
-            return "warning"
-        case SeverityLevel.MEDIUM:
-        case "medium":
-            return "info"
-        default:
-            return "default"
-    }
+	switch (severity) {
+		case SeverityLevel.CRITICAL:
+		case "critical":
+			return "error"
+		case SeverityLevel.HIGH:
+		case "high":
+			return "warning"
+		case SeverityLevel.MEDIUM:
+		case "medium":
+			return "info"
+		default:
+			return "default"
+	}
 }
 
 async function deleteReport() {
-    if (!props.report) return
+	if (!props.report) return
 
-    try {
-        await Api.githubAudit.deleteReport(props.report.id)
-        message.success("Report deleted")
-        showDrawer.value = false
-        emit("deleted")
-    } catch (error: any) {
-        message.error("Failed to delete report")
-    }
+	try {
+		await Api.githubAudit.deleteReport(props.report.id)
+		message.success("Report deleted")
+		showDrawer.value = false
+		emit("deleted")
+	} catch {
+		message.error("Failed to delete report")
+	}
 }
 </script>
 
 <style scoped>
 .space-y-6 > * + * {
-    margin-top: 1.5rem;
+	margin-top: 1.5rem;
 }
 
 .finding-stat {
-    text-align: center;
-    padding: 16px;
-    border-radius: 8px;
+	text-align: center;
+	padding: 16px;
+	border-radius: 8px;
 }
 
 .finding-stat .number {
-    font-size: 2rem;
-    font-weight: bold;
+	font-size: 2rem;
+	font-weight: bold;
 }
 
 .finding-stat .label {
-    font-size: 0.875rem;
-    color: var(--text-color-3);
+	font-size: 0.875rem;
+	color: var(--text-color-3);
 }
 
 .finding-stat.critical {
-    background: rgba(208, 48, 80, 0.1);
+	background: rgba(208, 48, 80, 0.1);
 }
 
 .finding-stat.critical .number {
-    color: #d03050;
+	color: #d03050;
 }
 
 .finding-stat.high {
-    background: rgba(240, 160, 32, 0.1);
+	background: rgba(240, 160, 32, 0.1);
 }
 
 .finding-stat.high .number {
-    color: #f0a020;
+	color: #f0a020;
 }
 
 .finding-stat.medium {
-    background: rgba(32, 128, 240, 0.1);
+	background: rgba(32, 128, 240, 0.1);
 }
 
 .finding-stat.medium .number {
-    color: #2080f0;
+	color: #2080f0;
 }
 
 .finding-stat.low {
-    background: rgba(24, 160, 88, 0.1);
+	background: rgba(24, 160, 88, 0.1);
 }
 
 .finding-stat.low .number {
-    color: #18a058;
+	color: #18a058;
 }
 
 .text-success {
-    color: var(--success-color);
+	color: var(--success-color);
 }
 
 .text-warning {
-    color: var(--warning-color);
+	color: var(--warning-color);
 }
 
 .text-error {
-    color: var(--error-color);
+	color: var(--error-color);
 }
 </style>

@@ -16,7 +16,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoIndex(asset.index_name)"
+									@click.stop="routeIndex(asset.index_name).navigate()"
 								>
 									{{ asset.index_name }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -31,7 +31,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoAgent(asset.agent_id)"
+									@click.stop="routeAgent(asset.agent_id).navigate()"
 								>
 									{{ asset.agent_id }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -135,7 +135,12 @@
 						</div>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane v-if="isWazuhSource" name="Artifact Collection" tab="Artifact Collection" display-directive="show:lazy">
+				<n-tab-pane
+					v-if="isWazuhSource"
+					name="Artifact Collection"
+					tab="Artifact Collection"
+					display-directive="show:lazy"
+				>
 					<div class="p-7 pt-2">
 						<ArtifactsCollect
 							:hostname="asset.asset_name"
@@ -146,12 +151,22 @@
 						/>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane v-if="isWazuhSource" name="Alert Timeline" tab="Alert Timeline" display-directive="show:lazy">
+				<n-tab-pane
+					v-if="isWazuhSource"
+					name="Alert Timeline"
+					tab="Alert Timeline"
+					display-directive="show:lazy"
+				>
 					<div class="p-7 pt-2">
 						<AlertDetailTimeline :asset />
 					</div>
 				</n-tab-pane>
-				<n-tab-pane v-if="isWazuhSource" name="File Collection" tab="File Collection" display-directive="show:lazy">
+				<n-tab-pane
+					v-if="isWazuhSource"
+					name="File Collection"
+					tab="File Collection"
+					display-directive="show:lazy"
+				>
 					<div class="p-7 pt-2">
 						<FileCollectionForm v-if="asset.agent_id" :agent-id="asset.agent_id" />
 
@@ -178,7 +193,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: boolean; badge?: boolean }>()
 
@@ -187,27 +202,27 @@ const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTime
 // const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
 const AIWazuhExclusionRuleButton = defineAsyncComponent(
-    () => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
+	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
 )
 const AIVelociraptorArtifactRecommendationButton = defineAsyncComponent(
-    () => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
+	() => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
 )
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
-    () => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
+	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
 const AgentDataStoreTabCompact = defineAsyncComponent(
-    () => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
+	() => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
 )
 const FileCollectionForm = defineAsyncComponent(
-    () => import("@/components/agents/fileCollection/FileCollectionForm.vue")
+	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
 const ViewIcon = "iconoir:eye-solid"
 const LinkIcon = "carbon:launch"
-const { gotoAgent, gotoIndex } = useGoto()
+const { routeAgent, routeIndex } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
@@ -220,47 +235,47 @@ const licenseChecked = ref(false)
 const licenseResponse = ref(false)
 
 const isWazuhSource = computed(() => {
-    return alertContext.value?.source?.toLowerCase() === 'wazuh'
+	return alertContext.value?.source?.toLowerCase() === "wazuh"
 })
 
 watch(showDetails, val => {
-    if (val && !alertContext.value) {
-        getAlertContext(asset.alert_context_id)
-    }
+	if (val && !alertContext.value) {
+		getAlertContext(asset.alert_context_id)
+	}
 })
 
 function getAlertContext(alertContextId: number) {
-    loading.value = true
+	loading.value = true
 
-    Api.incidentManagement.alerts
-        .getAlertContext(alertContextId)
-        .then(res => {
-            if (res.data.success) {
-                alertContext.value = res.data?.alert_context || null
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
-        .finally(() => {
-            loading.value = false
-        })
+	Api.incidentManagement.alerts
+		.getAlertContext(alertContextId)
+		.then(res => {
+			if (res.data.success) {
+				alertContext.value = res.data?.alert_context || null
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 </script>
 
 <style lang="scss" scoped>
 .alert-assets-badge {
-    color: var(--primary-color);
-    line-height: 1;
-    cursor: pointer;
+	color: var(--primary-color);
+	line-height: 1;
+	cursor: pointer;
 
-    code {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 2px 5px;
-    }
+	code {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		padding: 2px 5px;
+	}
 }
 </style>

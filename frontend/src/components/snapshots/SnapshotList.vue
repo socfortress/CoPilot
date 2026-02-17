@@ -57,12 +57,13 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots.d"
-import { Icon } from "@iconify/vue"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, h, onMounted, ref } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import CreateSnapshotForm from "./CreateSnapshotForm.vue"
 import RestoreSnapshotForm from "./RestoreSnapshotForm.vue"
 
@@ -78,126 +79,126 @@ const showRestoreModal = ref(false)
 const selectedSnapshot = ref<SnapshotInfo | null>(null)
 
 const repositoryOptions = computed<SelectOption[]>(() =>
-    repositories.value.map(repo => ({
-        label: repo.name,
-        value: repo.name
-    }))
+	repositories.value.map(repo => ({
+		label: repo.name,
+		value: repo.name
+	}))
 )
 
 const columns: DataTableColumns<SnapshotInfo> = [
-    {
-        title: "Snapshot",
-        key: "snapshot",
-        sorter: "default"
-    },
-    {
-        title: "State",
-        key: "state",
-        render(row) {
-            const typeMap: Record<string, "success" | "warning" | "error" | "info"> = {
-                SUCCESS: "success",
-                IN_PROGRESS: "warning",
-                PARTIAL: "warning",
-                FAILED: "error"
-            }
-            return h(NTag, { type: typeMap[row.state] || "info", size: "small" }, () => row.state)
-        }
-    },
-    {
-        title: "Indices",
-        key: "indices",
-        render(row) {
-            return h("span", {}, `${row.indices.length} indices`)
-        }
-    },
-    {
-        title: "Start Time",
-        key: "start_time",
-        render(row) {
-            return row.start_time ? new Date(row.start_time).toLocaleString() : "-"
-        }
-    },
-    {
-        title: "End Time",
-        key: "end_time",
-        render(row) {
-            return row.end_time ? new Date(row.end_time).toLocaleString() : "-"
-        }
-    },
-    {
-        title: "Duration",
-        key: "duration_in_millis",
-        render(row) {
-            if (!row.duration_in_millis) return "-"
-            const seconds = Math.floor(row.duration_in_millis / 1000)
-            if (seconds < 60) return `${seconds}s`
-            const minutes = Math.floor(seconds / 60)
-            return `${minutes}m ${seconds % 60}s`
-        }
-    },
-    {
-        title: "Actions",
-        key: "actions",
-        render(row) {
-            return h(
-                NButton,
-                {
-                    size: "small",
-                    type: "primary",
-                    onClick: () => openRestoreModal(row)
-                },
-                () => "Restore"
-            )
-        }
-    }
+	{
+		title: "Snapshot",
+		key: "snapshot",
+		sorter: "default"
+	},
+	{
+		title: "State",
+		key: "state",
+		render(row) {
+			const typeMap: Record<string, "success" | "warning" | "error" | "info"> = {
+				SUCCESS: "success",
+				IN_PROGRESS: "warning",
+				PARTIAL: "warning",
+				FAILED: "error"
+			}
+			return h(NTag, { type: typeMap[row.state] || "info", size: "small" }, () => row.state)
+		}
+	},
+	{
+		title: "Indices",
+		key: "indices",
+		render(row) {
+			return h("span", {}, `${row.indices.length} indices`)
+		}
+	},
+	{
+		title: "Start Time",
+		key: "start_time",
+		render(row) {
+			return row.start_time ? new Date(row.start_time).toLocaleString() : "-"
+		}
+	},
+	{
+		title: "End Time",
+		key: "end_time",
+		render(row) {
+			return row.end_time ? new Date(row.end_time).toLocaleString() : "-"
+		}
+	},
+	{
+		title: "Duration",
+		key: "duration_in_millis",
+		render(row) {
+			if (!row.duration_in_millis) return "-"
+			const seconds = Math.floor(row.duration_in_millis / 1000)
+			if (seconds < 60) return `${seconds}s`
+			const minutes = Math.floor(seconds / 60)
+			return `${minutes}m ${seconds % 60}s`
+		}
+	},
+	{
+		title: "Actions",
+		key: "actions",
+		render(row) {
+			return h(
+				NButton,
+				{
+					size: "small",
+					type: "primary",
+					onClick: () => openRestoreModal(row)
+				},
+				() => "Restore"
+			)
+		}
+	}
 ]
 
 function openRestoreModal(snapshot: SnapshotInfo) {
-    selectedSnapshot.value = snapshot
-    showRestoreModal.value = true
+	selectedSnapshot.value = snapshot
+	showRestoreModal.value = true
 }
 
 async function fetchRepositories() {
-    try {
-        const response = await Api.snapshots.getRepositories()
-        if (response.data.success) {
-            repositories.value = response.data.repositories
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to fetch repositories")
-    }
+	try {
+		const response = await Api.snapshots.getRepositories()
+		if (response.data.success) {
+			repositories.value = response.data.repositories
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to fetch repositories")
+	}
 }
 
 async function fetchSnapshots() {
-    if (!selectedRepository.value) return
+	if (!selectedRepository.value) return
 
-    loading.value = true
-    try {
-        const response = await Api.snapshots.listSnapshots(selectedRepository.value)
-        if (response.data.success) {
-            snapshots.value = response.data.snapshots
-        } else {
-            message.error(response.data.message)
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to fetch snapshots")
-    } finally {
-        loading.value = false
-    }
+	loading.value = true
+	try {
+		const response = await Api.snapshots.listSnapshots(selectedRepository.value)
+		if (response.data.success) {
+			snapshots.value = response.data.snapshots
+		} else {
+			message.error(response.data.message)
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to fetch snapshots")
+	} finally {
+		loading.value = false
+	}
 }
 
 function onSnapshotCreated() {
-    showCreateModal.value = false
-    fetchSnapshots()
-    message.success("Snapshot creation initiated")
+	showCreateModal.value = false
+	fetchSnapshots()
+	message.success("Snapshot creation initiated")
 }
 
 function onSnapshotRestored() {
-    showRestoreModal.value = false
-    message.success("Snapshot restoration initiated")
+	showRestoreModal.value = false
+	message.success("Snapshot restoration initiated")
 }
 
 onMounted(() => {
-    fetchRepositories()
+	fetchRepositories()
 })
 </script>

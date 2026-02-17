@@ -80,7 +80,7 @@ import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const emit = defineEmits<{
 	(

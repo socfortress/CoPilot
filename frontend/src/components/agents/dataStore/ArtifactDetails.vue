@@ -17,7 +17,7 @@ import bytes from "bytes"
 import { NBadge, NDescriptions, NDescriptionsItem } from "naive-ui"
 import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { artifact } = defineProps<{ artifact: AgentArtifactData }>()
 

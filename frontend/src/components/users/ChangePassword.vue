@@ -172,7 +172,7 @@ function submit(e: Event) {
 				})
 		} else {
 			for (const err of errors) {
-				message.error(err[0].message || "Invalid fields")
+				message.error(err?.[0]?.message ?? "Invalid fields")
 			}
 		}
 	})

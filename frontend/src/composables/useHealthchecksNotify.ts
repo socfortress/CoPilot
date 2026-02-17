@@ -3,13 +3,13 @@ import _capitalize from "lodash/capitalize"
 import { computed, watch } from "vue"
 import { useHealthcheckStore } from "@/stores/healthcheck"
 import { IndexHealth } from "@/types/indices.d"
-import { useGoto } from "./useGoto"
+import { useNavigation } from "./useNavigation"
 import { useNotifications } from "./useNotifications"
 
 export function useHealthchecksNotify() {
 	return {
 		init: () => {
-			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useGoto()
+			const { routeHealthcheck, routeIndex, routeGraylogMetrics } = useNavigation()
 
 			const uncommittedJournalEntriesThreshold = useHealthcheckStore().uncommittedJournalEntriesThreshold
 			const uncommittedJournalEntries = computed(() => useHealthcheckStore().uncommittedJournalEntries)
@@ -30,7 +30,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							gotoGraylogMetrics()
+							routeGraylogMetrics().navigate()
 						},
 						actionTitle: "See Graylog Metrics"
 					}
@@ -56,7 +56,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							gotoIndex()
+							routeIndex().navigate()
 						},
 						actionTitle: "See Cluster"
 					}
@@ -85,7 +85,7 @@ export function useHealthchecksNotify() {
 								read: false,
 								date: new Date(),
 								action() {
-									gotoHealthcheck()
+									routeHealthcheck().navigate()
 								},
 								actionTitle: "See Healthcheck"
 							}

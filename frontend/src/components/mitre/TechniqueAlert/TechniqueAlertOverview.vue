@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
@@ -84,7 +85,9 @@ function getDetails(id: string) {
 		.getMitreTechniques({ external_id: id })
 		.then(res => {
 			if (res.data.success) {
-				techniqueDetails.value = res.data.results?.[0] || null
+				if (res.data.results?.[0]) {
+					techniqueDetails.value = res.data.results[0]
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

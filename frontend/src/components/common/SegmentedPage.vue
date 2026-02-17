@@ -1,6 +1,5 @@
 <template>
 	<n-split
-		ref="splitPane"
 		direction="horizontal"
 		:default-size="sanitizedDefaultSplit"
 		:min="0"
@@ -76,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { SetupContext } from "vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
@@ -135,7 +135,6 @@ const MenuIcon = "ph:list-light"
 const CloseIcon = "carbon:close"
 const SplitIcon = "carbon:draggable"
 
-const splitPane = ref()
 const sanitizedDefaultSplit = ref(defaultSplit)
 const splitDisabled = ref(false)
 

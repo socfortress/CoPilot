@@ -150,7 +150,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { PortainerStackStatus } from "@/types/portainer.d"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { stackId } = defineProps<{ stackId: number }>()

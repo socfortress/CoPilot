@@ -101,17 +101,23 @@ export const useThemeStore = defineStore("theme", {
 			if (document) {
 				const html = document.children[0] as HTMLElement
 				const body = document.getElementsByTagName("body")?.[0]
-				if (this.isRTL && body) {
-					body.classList.add("direction-rtl")
-					body.classList.remove("direction-ltr")
-				} else {
-					body.classList.remove("direction-rtl")
-					body.classList.add("direction-ltr")
+				if (body) {
+					if (this.isRTL) {
+						body.classList.add("direction-rtl")
+						body.classList.remove("direction-ltr")
+					} else {
+						body.classList.remove("direction-rtl")
+						body.classList.add("direction-ltr")
+					}
 				}
 				// html.dir = this.isRTL ? "rtl" : "ltr"
 				const { style: htmlStyle } = html
 				for (const key in this.style) {
-					htmlStyle.setProperty(`--${key}`, this.style[key])
+					const value = this.style[key]
+
+					if (!value) continue
+
+					htmlStyle.setProperty(`--${key}`, value)
 				}
 			}
 		},

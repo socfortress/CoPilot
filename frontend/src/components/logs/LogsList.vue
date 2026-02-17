@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Log, LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -260,6 +261,8 @@ function getUsers() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

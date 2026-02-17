@@ -162,7 +162,7 @@
 									<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
 										<code
 											class="text-primary cursor-pointer"
-											@click.stop="gotoCustomer({ code: value })"
+											@click.stop="routeCustomer({ code: value }).navigate()"
 										>
 											#{{ value }}
 											<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -223,7 +223,7 @@
 							</n-collapse-item>
 						</n-collapse>
 					</div>
-					<n-divider class="!my-2" />
+					<n-divider class="my-2!" />
 					<SocCaseNotesList v-if="baseInfo" v-model:requested="updateNotes" :case-id="baseInfo.case_id" />
 				</n-tab-pane>
 			</n-tabs>
@@ -255,7 +255,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { StateName } from "@/types/soc/case.d"
 import dayjs from "@/utils/dayjs"
@@ -284,7 +284,7 @@ const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
 const AddIcon = "carbon:add-alt"
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)

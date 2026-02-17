@@ -29,7 +29,10 @@
 					</div>
 					<div class="box">
 						index_name:
-						<code class="text-primary cursor-pointer" @click="gotoIndex(alertsEvent.index_name)">
+						<code
+							class="text-primary cursor-pointer"
+							@click="routeIndex(alertsEvent.index_name).navigate()"
+						>
 							{{ alertsEvent.index_name }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
@@ -82,9 +85,9 @@ import type { AlertsEventElement } from "@/types/graylog/alerts.d"
 import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { alertsEvent } = defineProps<{ alertsEvent: AlertsEventElement }>()
 
@@ -97,7 +100,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 
 const dFormats = useSettingsStore().dateFormat
-const { gotoIndex } = useGoto()
+const { routeIndex } = useNavigation()
 
 function formatDateTime(timestamp: string): string {
 	return formatDate(timestamp, dFormats.datetimesec).toString()

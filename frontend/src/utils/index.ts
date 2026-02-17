@@ -6,7 +6,6 @@ import { md5 } from "js-md5"
 import _trim from "lodash/trim"
 import { h } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {
@@ -97,17 +96,6 @@ export function delay(t: number) {
 
 export function hashMD5(text: number | string) {
 	return md5(text.toString())
-}
-
-export function formatDate(date: Date | string | number, format: string) {
-	let parsedDate = date
-	if (typeof date === "number" && date.toString().length >= 15) {
-		parsedDate = date / 1000
-	}
-	const datejs = dayjs(parsedDate)
-	if (!datejs.isValid()) return date
-
-	return datejs.format(format)
 }
 
 export function price(

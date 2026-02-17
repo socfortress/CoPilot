@@ -57,7 +57,7 @@
 						<template #value>
 							<code
 								class="text-primary cursor-pointer"
-								@click.stop="gotoCustomer({ code: sca.customer_code })"
+								@click.stop="routeCustomer({ code: sca.customer_code }).navigate()"
 							>
 								customer #{{ sca.customer_code }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -95,16 +95,16 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import ScaCardContent from "./ScaCardContent.vue"
 import ScaLevelBadge from "./ScaLevelBadge.vue"
 import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 const showDetails = ref(false)

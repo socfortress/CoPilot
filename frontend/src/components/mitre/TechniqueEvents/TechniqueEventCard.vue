@@ -43,7 +43,10 @@
 						<div class="flex flex-col gap-1">
 							<div class="box">
 								agent_id:
-								<code class="text-primary cursor-pointer" @click.stop="gotoAgent(alert.agent_id)">
+								<code
+									class="text-primary cursor-pointer"
+									@click.stop="routeAgent(alert.agent_id).navigate()"
+								>
 									{{ alert.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
@@ -60,7 +63,7 @@
 								agent_labels_customer:
 								<code
 									class="text-primary cursor-pointer"
-									@click.stop="gotoCustomer({ code: alert.agent_labels_customer })"
+									@click.stop="routeCustomer({ code: alert.agent_labels_customer }).navigate()"
 								>
 									{{ alert.agent_labels_customer }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -112,7 +115,10 @@
 							</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="text-primary cursor-pointer" @click.stop="gotoAgent(`${value}`)">
+									<code
+										class="text-primary cursor-pointer"
+										@click.stop="routeAgent(`${value}`).navigate()"
+									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -120,7 +126,9 @@
 								<template v-else-if="key === 'agent_labels_customer'">
 									<code
 										class="text-primary cursor-pointer"
-										@click.stop="gotoCustomer(value ? { code: value.toString() } : undefined)"
+										@click.stop="
+											routeCustomer(value ? { code: value.toString() } : undefined).navigate()
+										"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -238,9 +246,9 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	alert: MitreEventDetails
@@ -257,7 +265,7 @@ const TargetIcon = "zondicons:target"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer, gotoAgent } = useGoto()
+const { routeCustomer, routeAgent } = useNavigation()
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 

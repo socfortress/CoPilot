@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { IndexStats } from "@/types/indices.d"
 import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -62,7 +63,7 @@ const { indices } = toRefs(props)
 const list = ref(indices.value)
 const message = useMessage()
 const themeStore = useThemeStore()
-const gradientColor = computed(() => themeStore.style["bg-default-color-rgb"].split(" "))
+const gradientColor = computed(() => themeStore.style["bg-default-color-rgb"]?.split(" ") ?? [])
 const loading = ref(false)
 
 function getIndices() {

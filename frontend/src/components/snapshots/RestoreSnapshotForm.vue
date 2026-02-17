@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+	<n-form :model="formData" :rules label-placement="left" label-width="160px">
 		<n-form-item label="Snapshot">
 			<n-input :value="snapshot?.snapshot" disabled />
 		</n-form-item>
@@ -43,11 +43,15 @@
 		</n-form-item>
 
 		<n-alert type="warning" class="mb-4">
-			<strong>Note:</strong> If an index with the same name already exists, use the rename pattern to restore under
-			a different name. Example: Pattern <code>(.+)</code> with replacement <code>restored_$1</code>
+			<strong>Note:</strong>
+			If an index with the same name already exists, use the rename pattern to restore under a different name.
+			Example: Pattern
+			<code>(.+)</code>
+			with replacement
+			<code>restored_$1</code>
 		</n-alert>
 
-		<div class="flex justify-end gap-2 mt-4">
+		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="loading" @click="handleSubmit">Restore Snapshot</n-button>
 		</div>
@@ -55,73 +59,73 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormRules } from "naive-ui"
+// TODO: refactor
+import type { FormRules } from "naive-ui"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
-    repository: string | null
-    snapshot: SnapshotInfo | null
+	repository: string | null
+	snapshot: SnapshotInfo | null
 }>()
 
 const emit = defineEmits<{
-    (e: "success"): void
-    (e: "cancel"): void
+	(e: "success"): void
+	(e: "cancel"): void
 }>()
 
 const message = useMessage()
-const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
 const indicesInput = ref("")
 
 const formData = ref({
-    rename_pattern: "(.+)",
-    rename_replacement: "restored_$1",
-    include_global_state: false,
-    include_aliases: true,
-    ignore_unavailable: true,
-    partial: false
+	rename_pattern: "(.+)",
+	rename_replacement: "restored_$1",
+	include_global_state: false,
+	include_aliases: true,
+	ignore_unavailable: true,
+	partial: false
 })
 
 const rules: FormRules = {}
 
 async function handleSubmit() {
-    if (!props.repository || !props.snapshot) {
-        message.error("Repository and snapshot are required")
-        return
-    }
+	if (!props.repository || !props.snapshot) {
+		message.error("Repository and snapshot are required")
+		return
+	}
 
-    loading.value = true
-    try {
-        const indices = indicesInput.value
-            .split(",")
-            .map(s => s.trim())
-            .filter(s => s.length > 0)
+	loading.value = true
+	try {
+		const indices = indicesInput.value
+			.split(",")
+			.map(s => s.trim())
+			.filter(s => s.length > 0)
 
-        const request: RestoreSnapshotRequest = {
-            repository: props.repository,
-            snapshot: props.snapshot.snapshot,
-            indices: indices.length > 0 ? indices : undefined,
-            rename_pattern: formData.value.rename_pattern || undefined,
-            rename_replacement: formData.value.rename_replacement || undefined,
-            include_global_state: formData.value.include_global_state,
-            include_aliases: formData.value.include_aliases,
-            ignore_unavailable: formData.value.ignore_unavailable,
-            partial: formData.value.partial
-        }
+		const request: RestoreSnapshotRequest = {
+			repository: props.repository,
+			snapshot: props.snapshot.snapshot,
+			indices: indices.length > 0 ? indices : undefined,
+			rename_pattern: formData.value.rename_pattern || undefined,
+			rename_replacement: formData.value.rename_replacement || undefined,
+			include_global_state: formData.value.include_global_state,
+			include_aliases: formData.value.include_aliases,
+			ignore_unavailable: formData.value.ignore_unavailable,
+			partial: formData.value.partial
+		}
 
-        const response = await Api.snapshots.restoreSnapshot(request)
-        if (response.data.success) {
-            emit("success")
-        } else {
-            message.error(response.data.message)
-        }
-    } catch (error: any) {
-        message.error(error.message || "Failed to restore snapshot")
-    } finally {
-        loading.value = false
-    }
+		const response = await Api.snapshots.restoreSnapshot(request)
+		if (response.data.success) {
+			emit("success")
+		} else {
+			message.error(response.data.message)
+		}
+	} catch (error: any) {
+		message.error(error.message || "Failed to restore snapshot")
+	} finally {
+		loading.value = false
+	}
 }
 </script>

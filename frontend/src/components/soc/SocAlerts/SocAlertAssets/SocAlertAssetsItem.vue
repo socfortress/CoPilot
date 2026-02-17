@@ -49,7 +49,7 @@
 							{{ formatDate(asset.date_update) }}
 						</template>
 					</Badge>
-					<Badge type="active" class="cursor-pointer" @click.stop="gotoAgent(asset.asset_tags)">
+					<Badge type="active" class="cursor-pointer" @click.stop="routeAgent(asset.asset_tags).navigate()">
 						<template #iconRight>
 							<Icon :name="LinkIcon" :size="14" />
 						</template>
@@ -80,7 +80,7 @@
 									<code
 										v-if="value && value !== '-'"
 										class="text-primary cursor-pointer"
-										@click.stop="gotoAgent(value)"
+										@click.stop="routeAgent(value).navigate()"
 									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -149,7 +149,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { isUrlLike } from "@/utils"
 import dayjs from "@/utils/dayjs"
@@ -160,7 +160,7 @@ const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifac
 
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
-const { gotoAgent } = useGoto()
+const { routeAgent } = useNavigation()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat

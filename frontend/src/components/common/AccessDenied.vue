@@ -10,17 +10,13 @@
 				<n-space justify="center">
 					<n-button type="primary" @click="goBack">
 						<template #icon>
-							<n-icon>
-								<ArrowBackOutline />
-							</n-icon>
+							<Icon name="carbon:arrow-left" />
 						</template>
 						Go Back
 					</n-button>
 					<n-button @click="goHome">
 						<template #icon>
-							<n-icon>
-								<HomeOutline />
-							</n-icon>
+							<Icon name="carbon:home" />
 						</template>
 						Go to Dashboard
 					</n-button>
@@ -31,11 +27,12 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowBackOutline, HomeOutline } from '@vicons/ionicons5'
-import { useRouter } from 'vue-router'
+// TODO: refactor
+import { useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 
 interface Props {
-  description?: string
+	description?: string
 }
 
 defineProps<Props>()
@@ -43,19 +40,19 @@ defineProps<Props>()
 const router = useRouter()
 
 function goBack() {
-  router.back()
+	router.back()
 }
 
 function goHome() {
-  router.push('/')
+	router.push("/")
 }
 </script>
 
 <style scoped>
 .access-denied-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 60vh;
 }
 </style>

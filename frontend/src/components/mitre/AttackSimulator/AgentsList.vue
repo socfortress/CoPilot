@@ -16,7 +16,7 @@
 						{{ item.hostname }}
 					</template>
 					<template #headerExtra>
-						<code class="text-primary cursor-pointer" @click.stop="gotoAgent(item.agent_id)">
+						<code class="text-primary cursor-pointer" @click.stop="routeAgent(item.agent_id).navigate()">
 							{{ item.agent_id }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
@@ -49,7 +49,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { iconFromOs } from "@/utils"
 
 const { agentsList, filter } = defineProps<{
@@ -65,7 +65,7 @@ const selected = defineModel<Agent | null>("selected", { default: null })
 
 const LinkIcon = "carbon:launch"
 
-const { gotoAgent } = useGoto()
+const { routeAgent } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const list = ref<Agent[]>([])

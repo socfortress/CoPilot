@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loading">
 		<div class="flex min-h-28 flex-col gap-2">
-			<div v-if="sortedList.length" class="flex justify-end mb-2">
+			<div v-if="sortedList.length" class="mb-2 flex justify-end">
 				<n-button type="primary" @click="exportToCSV">
 					<template #icon>
 						<Icon :name="DownloadIcon" />
@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
@@ -59,7 +60,15 @@ function exportToCSV() {
 	}
 
 	// CSV headers
-	const headers = ["customer_code", "agent_id", "hostname", "ip_address", "os", "wazuh_last_seen", "velociraptor_last_seen"]
+	const headers = [
+		"customer_code",
+		"agent_id",
+		"hostname",
+		"ip_address",
+		"os",
+		"wazuh_last_seen",
+		"velociraptor_last_seen"
+	]
 
 	// Create CSV content
 	const csvContent = [

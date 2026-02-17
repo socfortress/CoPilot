@@ -6,7 +6,7 @@
 			</template>
 			<template #value>
 				<template v-if="item.key === 'customer_code' && item.val !== '-'">
-					<code class="text-primary cursor-pointer" @click="gotoCustomer({ code: item.val })">
+					<code class="text-primary cursor-pointer" @click="routeCustomer({ code: item.val }).navigate()">
 						{{ item.val }}
 						<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 					</code>
@@ -27,9 +27,9 @@ import type { Agent } from "@/types/agents.d"
 import { computed, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import AgentVelociraptorIdForm from "./AgentVelociraptorIdForm.vue"
 
 const props = defineProps<{
@@ -44,7 +44,7 @@ const { agent } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
 const dFormats = useSettingsStore().dateFormat
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 
 const propsSanitized = computed(() => {
 	const obj = []

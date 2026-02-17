@@ -82,15 +82,18 @@
 			<n-space :size="24">
 				<span class="info-item">
 					<Icon :name="CalendarIcon" class="mr-1" />
-					Patch Tuesday: <strong>{{ formatDate(summary.patch_tuesday_date) }}</strong>
+					Patch Tuesday:
+					<strong>{{ formatDate(summary.patch_tuesday_date) }}</strong>
 				</span>
 				<span class="info-item">
 					<Icon :name="DatabaseIcon" class="mr-1" />
-					Total Records: <strong>{{ summary.total_records }}</strong>
+					Total Records:
+					<strong>{{ summary.total_records }}</strong>
 				</span>
 				<span class="info-item">
 					<Icon :name="ClockIcon" class="mr-1" />
-					Generated: <strong>{{ formatDateTime(summary.generated_utc) }}</strong>
+					Generated:
+					<strong>{{ formatDateTime(summary.generated_utc) }}</strong>
 				</span>
 			</n-space>
 		</div>
@@ -98,13 +101,14 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import { NCard, NGrid, NGridItem, NSpace } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
-    summary: PatchTuesdaySummary | null
-    loading?: boolean
+	summary: PatchTuesdaySummary | null
+	loading?: boolean
 }>()
 const AlertIcon = "carbon:warning"
 const CalendarIcon = "carbon:calendar"
@@ -116,101 +120,101 @@ const ShieldIcon = "carbon:security"
 const UrgentIcon = "carbon:warning-hex"
 
 function formatDate(dateStr: string): string {
-    if (!dateStr) return "-"
-    return new Date(dateStr).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    })
+	if (!dateStr) return "-"
+	return new Date(dateStr).toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric"
+	})
 }
 
 function formatDateTime(dateStr: string): string {
-    if (!dateStr) return "-"
-    return new Date(dateStr).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    })
+	if (!dateStr) return "-"
+	return new Date(dateStr).toLocaleString("en-US", {
+		month: "short",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit"
+	})
 }
 </script>
 
 <style scoped lang="scss">
 .patch-tuesday-stats {
-    .stat-card {
-        border-radius: 8px;
-        background: var(--bg-secondary-color);
+	.stat-card {
+		border-radius: 8px;
+		background: var(--bg-secondary-color);
 
-        .stat-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+		.stat-content {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+		.stat-icon {
+			width: 48px;
+			height: 48px;
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 
-            &.total {
-                background: rgba(99, 102, 241, 0.15);
-                color: #6366f1;
-            }
+			&.total {
+				background: rgba(99, 102, 241, 0.15);
+				color: #6366f1;
+			}
 
-            &.p0 {
-                background: rgba(239, 68, 68, 0.15);
-                color: #ef4444;
-            }
+			&.p0 {
+				background: rgba(239, 68, 68, 0.15);
+				color: #ef4444;
+			}
 
-            &.p1 {
-                background: rgba(249, 115, 22, 0.15);
-                color: #f97316;
-            }
+			&.p1 {
+				background: rgba(249, 115, 22, 0.15);
+				color: #f97316;
+			}
 
-            &.p2 {
-                background: rgba(234, 179, 8, 0.15);
-                color: #eab308;
-            }
+			&.p2 {
+				background: rgba(234, 179, 8, 0.15);
+				color: #eab308;
+			}
 
-            &.p3 {
-                background: rgba(34, 197, 94, 0.15);
-                color: #22c55e;
-            }
-        }
+			&.p3 {
+				background: rgba(34, 197, 94, 0.15);
+				color: #22c55e;
+			}
+		}
 
-        .stat-info {
-            display: flex;
-            flex-direction: column;
+		.stat-info {
+			display: flex;
+			flex-direction: column;
 
-            .stat-value {
-                font-size: 1.5rem;
-                font-weight: 700;
-                line-height: 1.2;
-            }
+			.stat-value {
+				font-size: 1.5rem;
+				font-weight: 700;
+				line-height: 1.2;
+			}
 
-            .stat-label {
-                font-size: 0.75rem;
-                opacity: 0.7;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-        }
-    }
+			.stat-label {
+				font-size: 0.75rem;
+				opacity: 0.7;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+		}
+	}
 
-    .info-bar {
-        padding: 12px 16px;
-        background: var(--bg-secondary-color);
-        border-radius: 8px;
+	.info-bar {
+		padding: 12px 16px;
+		background: var(--bg-secondary-color);
+		border-radius: 8px;
 
-        .info-item {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.875rem;
-            opacity: 0.8;
-        }
-    }
+		.info-item {
+			display: inline-flex;
+			align-items: center;
+			font-size: 0.875rem;
+			opacity: 0.8;
+		}
+	}
 }
 </style>

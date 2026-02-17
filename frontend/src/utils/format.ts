@@ -1,20 +1,18 @@
-export function formatDate(dateString: string): string {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    }).format(date)
+import bytes from "bytes"
+import _toNumber from "lodash/toNumber"
+import dayjs from "@/utils/dayjs"
+
+export function formatBytes(val: string | number) {
+	return bytes(_toNumber(val))
 }
 
-export function formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 Bytes"
+export function formatDate(date: Date | string | number, format: string) {
+	let parsedDate = date
+	if (typeof date === "number" && date.toString().length >= 15) {
+		parsedDate = date / 1000
+	}
+	const datejs = dayjs(parsedDate)
+	if (!datejs.isValid()) return date
 
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${Math.round(bytes / k ** i * 100) / 100} ${sizes[i]}`
+	return datejs.format(format)
 }

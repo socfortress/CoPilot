@@ -13,7 +13,7 @@
 import type { QuarantineResult } from "@/types/artifacts.d"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { quarantine } = defineProps<{ quarantine: QuarantineResult }>()
 

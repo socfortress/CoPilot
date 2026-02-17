@@ -179,6 +179,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
@@ -410,6 +411,8 @@ function getCustomers() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 700 ? 5 : 8

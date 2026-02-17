@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MitreSoftwareDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
@@ -96,7 +97,9 @@ function getDetails(id: string) {
 		.getMitreSoftware({ id })
 		.then(res => {
 			if (res.data.success) {
-				softwareDetails.value = res.data.results?.[0] || null
+				if (res.data.results?.[0]) {
+					softwareDetails.value = res.data.results[0]
+				}
 				if (softwareDetails.value) emit("loaded", softwareDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

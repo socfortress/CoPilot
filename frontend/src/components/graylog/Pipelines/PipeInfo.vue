@@ -47,7 +47,7 @@ import type { Pipeline } from "@/types/graylog/pipelines.d"
 import { NInput, NTabPane, NTabs } from "naive-ui"
 import { toRefs } from "vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ pipeline?: Pipeline }>()
 const { pipeline } = toRefs(props)

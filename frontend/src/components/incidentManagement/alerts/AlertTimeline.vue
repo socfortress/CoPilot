@@ -9,7 +9,7 @@
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { alert } = defineProps<{ alert: Alert }>()
 

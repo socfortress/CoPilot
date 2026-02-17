@@ -139,6 +139,8 @@ function getUsers() {
 
 useResizeObserver(list, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	compactMode.value = width < 680

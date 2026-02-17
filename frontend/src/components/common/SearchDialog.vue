@@ -77,7 +77,7 @@ import { computed, onMounted, ref } from "vue"
 import Highlighter from "vue-highlight-words"
 import Icon from "@/components/common/Icon.vue"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { emitter } from "@/emitter"
@@ -116,7 +116,7 @@ const search = ref("")
 const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
-const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useGoto()
+const { routeCustomer, routeSocAlerts, routeAlerts, routeConnectors } = useNavigation()
 
 // TODO: review the groups and items
 const groups = ref<Groups>([
@@ -130,7 +130,7 @@ const groups = ref<Groups>([
 				title: "Add a Customer",
 				label: "Shortcut",
 				action() {
-					gotoCustomer({ action: "add-customer" })
+					routeCustomer({ action: "add-customer" }).navigate()
 					emitter.emit("action:add-customer")
 				}
 			},
@@ -141,7 +141,7 @@ const groups = ref<Groups>([
 				title: "Configure a connector",
 				label: "Shortcut",
 				action() {
-					gotoConnectors()
+					routeConnectors().navigate()
 				}
 			},
 			{
@@ -151,7 +151,7 @@ const groups = ref<Groups>([
 				title: "View Escalated Alerts",
 				label: "Shortcut",
 				action() {
-					gotoSocAlerts()
+					routeSocAlerts().navigate()
 				}
 			},
 			{
@@ -161,7 +161,7 @@ const groups = ref<Groups>([
 				title: "View Identified Alerts",
 				label: "Shortcut",
 				action() {
-					gotoAlerts()
+					routeAlerts().navigate()
 				}
 			}
 		]
@@ -239,24 +239,32 @@ function callAction(action: () => void) {
 	closeBox()
 }
 
-function nextItem() {
-	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
-	if (currentIndex === filteredFlattenItems.value.length - 1 || activeItem.value === null) {
-		activeItem.value = filteredFlattenItems.value[0].key
+function navigateItem(direction: "next" | "prev") {
+	const items = filteredFlattenItems.value
+	if (!items.length) return
+
+	const currentIndex = items.findIndex(item => item.key === activeItem.value)
+	const isAtEnd = currentIndex === items.length - 1
+	const isAtStart = currentIndex === 0
+	const nextItem = items[currentIndex + 1]
+	const prevItem = items[currentIndex - 1]
+	const firstItem = items[0]
+	const lastItem = items[items.length - 1]
+
+	if (direction === "next") {
+		activeItem.value = (activeItem.value === null || isAtEnd) && firstItem ? firstItem.key : (nextItem?.key ?? null)
 	} else {
-		activeItem.value = filteredFlattenItems.value[currentIndex + 1].key
+		activeItem.value = (activeItem.value === null || isAtStart) && lastItem ? lastItem.key : (prevItem?.key ?? null)
 	}
 	centerItem()
 }
 
+function nextItem() {
+	navigateItem("next")
+}
+
 function prevItem() {
-	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
-	if (currentIndex === 0 || activeItem.value === null) {
-		activeItem.value = filteredFlattenItems.value[filteredFlattenItems.value.length - 1].key
-	} else {
-		activeItem.value = filteredFlattenItems.value[currentIndex - 1].key
-	}
-	centerItem()
+	navigateItem("prev")
 }
 
 function performAction() {
@@ -283,15 +291,19 @@ onMounted(() => {
 
 	useSearchDialog().trigger(openBox)
 
-	whenever(ActiveCMD, () => {
-		openBox()
-	})
+	if (ActiveCMD) {
+		whenever(ActiveCMD, () => {
+			openBox()
+		})
+	}
 
-	whenever(Enter, () => {
-		if (showSearchBox.value) {
-			performAction()
-		}
-	})
+	if (Enter) {
+		whenever(Enter, () => {
+			if (showSearchBox.value) {
+				performAction()
+			}
+		})
+	}
 })
 </script>
 

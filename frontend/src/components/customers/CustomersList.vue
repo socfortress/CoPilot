@@ -8,12 +8,7 @@
 				</div>
 				<div class="flex items-center gap-2">
 					<span class="text-sm">Sort by:</span>
-					<n-select
-						v-model:value="sortOption"
-						:options="sortOptions"
-						style="width: 120px"
-						size="small"
-					/>
+					<n-select v-model:value="sortOption" :options="sortOptions" style="width: 120px" size="small" />
 				</div>
 			</div>
 			<div class="flex items-center gap-3">
@@ -42,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Customer } from "@/types/customers.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"

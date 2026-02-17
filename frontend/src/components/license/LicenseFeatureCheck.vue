@@ -14,7 +14,7 @@
 					need to enable this feature. You can manage your features from the License page.
 				</div>
 				<div class="flex justify-end">
-					<n-button @click="gotoLicense()">
+					<n-button @click="routeLicense().navigate()">
 						<template #icon>
 							<Icon :name="LicenseIcon" />
 						</template>
@@ -38,7 +38,7 @@
 				</div>
 				<template #footer>
 					<div class="flex justify-end">
-						<n-button @click="gotoLicense()">
+						<n-button @click="routeLicense().navigate()">
 							<template #icon>
 								<Icon :name="LicenseIcon" />
 							</template>
@@ -62,7 +62,7 @@
 			</div>
 			<template #footer>
 				<div class="flex justify-end">
-					<n-button @click="gotoLicense()">
+					<n-button @click="routeLicense().navigate()">
 						<template #icon>
 							<Icon :name="LicenseIcon" />
 						</template>
@@ -80,7 +80,7 @@ import { NButton, NCard, NModal, NTooltip } from "naive-ui"
 import { ref, watch, watchEffect } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const { feature, feedback, disabled, forceShowFeedback } = defineProps<{
 	feature: LicenseFeatures
@@ -99,7 +99,7 @@ const LockIcon = "carbon:locked"
 const LicenseIcon = "carbon:license"
 const AlertIcon = "mdi:alert-outline"
 const loading = ref(false)
-const { gotoLicense } = useGoto()
+const { routeLicense } = useNavigation()
 const showFeedback = ref(forceShowFeedback ?? false)
 const showModal = ref(false)
 

@@ -158,6 +158,7 @@
 </template>
 
 <script lang="ts" setup>
+// TODO: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { SelectBaseOption } from "naive-ui/es/select/src/interface"
 import type { RegisterPayload } from "@/types/auth.d"
@@ -411,7 +412,7 @@ function signUp(e: Event) {
 				})
 		} else {
 			for (const err of errors) {
-				message.error(err[0].message || "Invalid fields")
+				message.error(err[0]?.message ?? "Invalid fields")
 			}
 		}
 	})

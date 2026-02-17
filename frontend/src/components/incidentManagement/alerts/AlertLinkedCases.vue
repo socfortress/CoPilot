@@ -11,7 +11,7 @@
 				:case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }"
 				compact
 				embedded
-				@click="gotoIncidentManagementCases(linkedCase.id)"
+				@click="routeIncidentManagementCases(linkedCase.id).navigate()"
 			/>
 			<div class="flex items-center justify-end gap-3">
 				<n-button
@@ -37,7 +37,7 @@ import { NButton, NPopover, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{ alert: Alert }>()
 
@@ -53,7 +53,7 @@ const MenuIcon = "carbon:overflow-menu-horizontal"
 const loadingId = ref<number | false>(false)
 const alert = ref<Alert>(props.alert)
 const message = useMessage()
-const { gotoIncidentManagementCases } = useGoto()
+const { routeIncidentManagementCases } = useNavigation()
 const linkedCases = computed(() => alert.value?.linked_cases || [])
 
 function updateAlert(updatedAlert: Alert) {

@@ -1,6 +1,6 @@
 <template>
 	<div class="monitoring-alert-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+		<div class="header flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
@@ -88,7 +89,6 @@ const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
-const header = ref()
 const pageSlot = ref(8)
 
 const InfoIcon = "carbon:information"

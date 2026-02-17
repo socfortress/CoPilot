@@ -90,6 +90,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"
@@ -209,6 +210,8 @@ function getData() {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	pageSlot.value = width < 650 ? 5 : 8

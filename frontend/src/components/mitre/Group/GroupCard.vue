@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { MitreGroupDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
@@ -96,7 +97,9 @@ function getDetails(id: string) {
 		.getMitreGroups({ id })
 		.then(res => {
 			if (res.data.success) {
-				groupDetails.value = res.data.results?.[0] || null
+				if (res.data.results?.[0]) {
+					groupDetails.value = res.data.results[0]
+				}
 				if (groupDetails.value) emit("loaded", groupDetails.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

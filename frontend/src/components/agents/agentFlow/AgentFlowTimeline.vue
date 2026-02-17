@@ -15,7 +15,7 @@
 import type { FlowResult } from "@/types/flow.d"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const { flow } = defineProps<{ flow: FlowResult }>()
 

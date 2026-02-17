@@ -152,7 +152,7 @@
 							<div class="flex h-full items-center">
 								<code
 									class="text-primary cursor-pointer leading-none"
-									@click.stop="gotoCustomer({ code: alert.customer_code })"
+									@click.stop="routeCustomer({ code: alert.customer_code }).navigate()"
 								>
 									#{{ alert.customer_code }}
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -279,9 +279,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useGoto } from "@/composables/useGoto"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
@@ -321,7 +321,7 @@ const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"
 
-const { gotoCustomer } = useGoto()
+const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

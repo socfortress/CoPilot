@@ -108,7 +108,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/format"
 import References from "../common/References.vue"
 
 const { externalId, entity } = defineProps<{

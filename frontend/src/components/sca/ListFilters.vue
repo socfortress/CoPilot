@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
@@ -206,7 +207,7 @@ function setFilter(newFilters: ScaOverviewFilter[]) {
 		const filterIndex = filters.value.findIndex(o => o.type === newFilter.type)
 
 		if (filterIndex !== -1) {
-			if (newFilter.value) {
+			if (newFilter.value && filters.value[filterIndex]) {
 				filters.value[filterIndex].value = newFilter.value
 			} else {
 				delFilter(newFilter.type)

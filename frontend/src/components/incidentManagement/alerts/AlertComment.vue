@@ -83,7 +83,8 @@ import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate, getAvatar, getNameInitials } from "@/utils"
+import { getAvatar, getNameInitials } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 type Mode = "view" | "edit"
 
