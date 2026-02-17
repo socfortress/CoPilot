@@ -1664,7 +1664,7 @@
 			"pluginVersion": "10.0.2",
 			"targets": [
 				{
-					"bucketAggs": [],
+					"bucketAggs": [{"type": "date_histogram", "id": "1", "settings": {"interval": "auto"}}],
 					"datasource": {
 						"type": "elasticsearch",
 						"uid": "replace_datasource_uid"
