@@ -48,7 +48,7 @@ repos:
             name: Check project styling
 
     - repo: https://github.com/pre-commit/mirrors-eslint
-      rev: v9.11.0
+      rev: v10.0.0
       hooks:
           - id: eslint
             args: ["--config", "frontend/eslint.config.mjs"]
