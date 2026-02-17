@@ -266,6 +266,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -327,7 +328,7 @@ const fallbackAvatar = computed(() => {
 
 	if (customer.value.customer_name.includes(" ")) {
 		const chunks = customer.value.customer_name.split(" ")
-		text = (chunks[0][0] + chunks[1][0]).toUpperCase()
+		text = ((chunks[0]?.[0] ?? "") + (chunks[1]?.[0] ?? "")).toUpperCase()
 	}
 
 	const hash = hashMD5(customer.value.customer_code)

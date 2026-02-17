@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customerPortal"
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { CustomerPortalSettings } from "@/types/customerPortal"
@@ -95,12 +96,12 @@ function getLogoMeta(logo?: string | null): { base64: string | null; mime_type: 
 	}
 
 	const base64 = parts[1]
-	const mimeMatch = parts[0].match(/data:([^;]+);base64/)
+	const mimeMatch = parts[0]?.match(/data:([^;]+);base64/)
 	const mime_type = mimeMatch ? mimeMatch[1] : null
 
 	return {
-		base64,
-		mime_type
+		base64: base64 ?? null,
+		mime_type: mime_type ?? null
 	}
 }
 

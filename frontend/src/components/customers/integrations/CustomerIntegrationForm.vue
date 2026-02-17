@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { StepsProps } from "naive-ui"
 import type { NewIntegration } from "@/api/endpoints/integrations"
 import type { ServiceItemData } from "@/components/services/types"
@@ -131,7 +132,7 @@ watch(selectedIntegration, val => {
 		for (const ak of val.keys) {
 			authKeysForm.value.push({
 				key: ak.auth_key_name,
-				value: ak.auth_key_name === "API_TYPE" ? apiTypeOptions[0].value : "",
+				value: ak.auth_key_name === "API_TYPE" ? (apiTypeOptions[0]?.value ?? "") : "",
 				type: ak.auth_key_name === "API_TYPE" ? "selectType" : "string"
 			})
 		}

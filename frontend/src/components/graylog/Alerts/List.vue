@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
@@ -187,11 +188,13 @@ function getData(page: number, pageSize: number, timerange: number) {
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
+	if (!entry) return
+
 	const { width } = entry.contentRect
 
 	if (width < 650) {
 		compactMode.value = true
-		pageSize.value = pageSizes[0]
+		pageSize.value = pageSizes[0] ?? 25
 		pageSlot.value = 5
 	} else {
 		compactMode.value = false
