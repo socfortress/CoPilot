@@ -1562,7 +1562,7 @@
 			"pluginVersion": "9.0.0",
 			"targets": [
 				{
-					"bucketAggs": [],
+					"bucketAggs": [{"type": "date_histogram", "id": "1", "settings": {"interval": "auto"}}],
 					"datasource": {
 						"type": "elasticsearch",
 						"uid": "replace_datasource_uid"
