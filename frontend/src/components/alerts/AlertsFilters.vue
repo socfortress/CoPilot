@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { SelectOption } from "naive-ui"
 import type { VNodeChild } from "vue"
 import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"
@@ -143,10 +144,10 @@ watch(
 
 onBeforeMount(() => {
 	if (!filters.value.timerange) {
-		filters.value.timerange = timerangeOptions[3].value
+		filters.value.timerange = timerangeOptions[3]?.value ?? "1h"
 	}
 	if (!filters.value.maxAlerts) {
-		filters.value.maxAlerts = maxAlertsOptions[2].value
+		filters.value.maxAlerts = maxAlertsOptions[2]?.value ?? 10
 	}
 })
 </script>
