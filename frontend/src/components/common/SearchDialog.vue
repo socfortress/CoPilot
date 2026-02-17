@@ -239,24 +239,32 @@ function callAction(action: () => void) {
 	closeBox()
 }
 
-function nextItem() {
-	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
-	if (currentIndex === filteredFlattenItems.value.length - 1 || activeItem.value === null) {
-		activeItem.value = filteredFlattenItems.value[0].key
+function navigateItem(direction: "next" | "prev") {
+	const items = filteredFlattenItems.value
+	if (!items.length) return
+
+	const currentIndex = items.findIndex(item => item.key === activeItem.value)
+	const isAtEnd = currentIndex === items.length - 1
+	const isAtStart = currentIndex === 0
+	const nextItem = items[currentIndex + 1]
+	const prevItem = items[currentIndex - 1]
+	const firstItem = items[0]
+	const lastItem = items[items.length - 1]
+
+	if (direction === "next") {
+		activeItem.value = (activeItem.value === null || isAtEnd) && firstItem ? firstItem.key : (nextItem?.key ?? null)
 	} else {
-		activeItem.value = filteredFlattenItems.value[currentIndex + 1].key
+		activeItem.value = (activeItem.value === null || isAtStart) && lastItem ? lastItem.key : (prevItem?.key ?? null)
 	}
 	centerItem()
 }
 
+function nextItem() {
+	navigateItem("next")
+}
+
 function prevItem() {
-	const currentIndex = filteredFlattenItems.value.findIndex(item => item.key === activeItem.value)
-	if (currentIndex === 0 || activeItem.value === null) {
-		activeItem.value = filteredFlattenItems.value[filteredFlattenItems.value.length - 1].key
-	} else {
-		activeItem.value = filteredFlattenItems.value[currentIndex - 1].key
-	}
-	centerItem()
+	navigateItem("prev")
 }
 
 function performAction() {
@@ -283,15 +291,19 @@ onMounted(() => {
 
 	useSearchDialog().trigger(openBox)
 
-	whenever(ActiveCMD, () => {
-		openBox()
-	})
+	if (ActiveCMD) {
+		whenever(ActiveCMD, () => {
+			openBox()
+		})
+	}
 
-	whenever(Enter, () => {
-		if (showSearchBox.value) {
-			performAction()
-		}
-	})
+	if (Enter) {
+		whenever(Enter, () => {
+			if (showSearchBox.value) {
+				performAction()
+			}
+		})
+	}
 })
 </script>
 

@@ -295,7 +295,7 @@ async function onArtifactSelect(artifactName: string | null) {
 		if (res.data.success && res.data.artifacts?.length) {
 			const artifact = res.data.artifacts[0]
 
-			if (artifact.parameters?.length) {
+			if (artifact?.parameters?.length) {
 				selectedArtifactParameters.value = artifact.parameters
 
 				// Initialize parameter values with defaults (with escaped backslashes)

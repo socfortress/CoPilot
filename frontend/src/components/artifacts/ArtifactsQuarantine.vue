@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { QuarantineRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
@@ -225,7 +226,7 @@ onBeforeMount(() => {
 		artifactsList.value = artifacts.value
 	}
 
-	filters.value.action = actionsOptions.value[0].value as QuarantineRequest["action"]
+	filters.value.action = actionsOptions.value[0]?.value as QuarantineRequest["action"]
 
 	nextTick(() => {
 		if (!agentsList.value.length && !hostname?.value) {

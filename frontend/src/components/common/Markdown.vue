@@ -53,20 +53,22 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	md.renderer.rules.link_open = function (tokens: Token[], idx: number, options, env, self) {
 		const token = tokens[idx]
 
-		// Aggiungi target="_blank"
-		const targetIndex = token.attrIndex("target")
-		if (targetIndex < 0) {
-			token.attrPush(["target", "_blank"])
-		} else {
-			token.attrs![targetIndex][1] = "_blank"
-		}
+		if (token) {
+			// Aggiungi target="_blank"
+			const targetIndex = token.attrIndex("target")
+			if (targetIndex < 0) {
+				token.attrPush(["target", "_blank"])
+			} else if (token.attrs?.[targetIndex]?.[1]) {
+				token.attrs[targetIndex][1] = "_blank"
+			}
 
-		// Aggiungi rel="noopener noreferrer"
-		const relIndex = token.attrIndex("rel")
-		if (relIndex < 0) {
-			token.attrPush(["rel", "noopener noreferrer"])
-		} else {
-			token.attrs![relIndex][1] = "noopener noreferrer"
+			// Aggiungi rel="noopener noreferrer"
+			const relIndex = token.attrIndex("rel")
+			if (relIndex < 0) {
+				token.attrPush(["rel", "noopener noreferrer"])
+			} else if (token.attrs?.[relIndex]?.[1]) {
+				token.attrs[relIndex][1] = "noopener noreferrer"
+			}
 		}
 
 		return defaultRender(tokens, idx, options, env, self)

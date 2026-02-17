@@ -56,10 +56,10 @@ const sizeOptions = [
 	{ label: "20 Alert", value: 20 }
 ]
 
-const sizeDefault = useStorage<number>("alert-size-default", sizeOptions[2].value, localStorage)
+const sizeDefault = useStorage<number>("alert-size-default", sizeOptions[2]?.value ?? 10, localStorage)
 const timerangeDefault = useStorage<AlertsQueryTimeRange>(
 	"alert-timerange-default",
-	timerangeOptions[3].value,
+	timerangeOptions[3]?.value ?? "1h",
 	localStorage
 )
 

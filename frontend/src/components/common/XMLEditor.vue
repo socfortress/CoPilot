@@ -74,7 +74,7 @@ function convertXMLErrorsToDiagnostics(errors: XMLError[], text: string): Diagno
 		// Calculate position in text
 		let from = 0
 		for (let i = 0; i < error.line - 1; i++) {
-			from += lines[i].length + 1 // +1 for newline
+			from += (lines[i]?.length ?? 0) + 1 // +1 for newline
 		}
 		from += error.column - 1
 

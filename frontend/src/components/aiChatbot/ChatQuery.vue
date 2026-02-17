@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 import type { RemovableRef } from "@vueuse/core"
 import type { SelectOption } from "naive-ui"
 import type { VNode } from "vue"
@@ -157,7 +158,7 @@ function getList() {
 			if (res.data.success) {
 				servers.value = res.data?.servers || []
 				if (servers.value.length && !selectedServer.value) {
-					selectedServer.value = servers.value[0].value
+					selectedServer.value = servers.value[0]?.value ?? null
 				}
 				emit("server-loaded")
 			} else {
