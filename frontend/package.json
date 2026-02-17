@@ -134,6 +134,11 @@
 		"vue-tsc": "^3.2.4"
 	},
 	"pnpm": {
+		"peerDependencyRules": {
+			"allowedVersions": {
+				"eslint": "10"
+			}
+		},
 		"onlyBuiltDependencies": [
 			"@parcel/watcher",
 			"@tailwindcss/oxide",
