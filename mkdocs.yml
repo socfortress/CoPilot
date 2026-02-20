@@ -44,10 +44,12 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/socfortress/CoPilot
+    - icon: fontawesome/solid/globe
+      link: https://www.socfortress.co
     - icon: fontawesome/brands/youtube
       link: https://www.youtube.com/@taylorwalton_socfortress
     - icon: fontawesome/brands/medium
-      link: https://socfortress.medium.com/
+      link: https://medium.com/@socfortress
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/company/socfortressmdr/
 
