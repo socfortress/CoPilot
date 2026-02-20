@@ -1940,7 +1940,7 @@
 			"pluginVersion": "10.2.3",
 			"targets": [
 				{
-					"bucketAggs": [],
+					"bucketAggs": [{"type": "date_histogram", "id": "1", "settings": {"interval": "auto"}}],
 					"datasource": {
 						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
