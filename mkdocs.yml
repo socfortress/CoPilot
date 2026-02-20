@@ -73,6 +73,8 @@ extra_css:
 
 nav:
   - Home: index-mkdocs.md
+  - Getting Started:
+      - Supported Tool Versions: getting-started/supported-tool-versions.md
   - User Guide:
       - Overview: user/overview.md
       - Quickstart (Operators): user/operators-quickstart.md
