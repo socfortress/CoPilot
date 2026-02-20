@@ -71,8 +71,8 @@ The most important concept for operators/admins:
 
 That’s why CoPilot can support wildly different log types:
 
-- Wazuh endpoint events → asset might be `agent.name`
-- O365 events → asset might be `o365.recipients` or `user_id`
+- Wazuh endpoint events → asset might be `agent_name`
+- O365 events → asset might be `data_o365_recipients` or `user_id`
 
 You choose which fields are “headline context” for that Source, and those same fields become the default “automation payload” for Shuffle.
 
