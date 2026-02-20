@@ -243,6 +243,19 @@ export default function getItems(): MenuMixedOption[] {
 					key: "CopilotActions"
 				},
 				{
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "CopilotSearches"
+                                }
+                            },
+                            { default: () => "CoPilot Searches" }
+                        ),
+                    key: "CopilotSearches"
+                },
+				{
 					label: () =>
 						h(
 							RouterLink,
