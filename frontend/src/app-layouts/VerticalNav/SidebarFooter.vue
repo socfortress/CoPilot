@@ -16,6 +16,7 @@ const { collapsed = false } = defineProps<{
 }>()
 
 const ContactIcon = "ic:outline-alternate-email"
+const DocsIcon = "carbon:document"
 const LogoutIcon = "ion:log-out-outline"
 
 const menuOptions = ref([
@@ -24,9 +25,23 @@ const menuOptions = ref([
 			h(
 				"a",
 				{
+					href: "https://docs.socfortress.co/",
+					target: "_blank",
+					rel: "noopener noreferrer"
+				},
+				{ default: () => "Documentation" }
+			),
+		key: "documentation",
+		icon: renderIcon(DocsIcon)
+	},
+	{
+		label: () =>
+			h(
+				"a",
+				{
 					href: "https://www.socfortress.co/contact-us",
 					target: "_blank",
-					rel: "noopenner noreferrer"
+					rel: "noopener noreferrer"
 				},
 				{ default: () => "Contact SOCFortress" }
 			),
