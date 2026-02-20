@@ -49,6 +49,7 @@ from app.routers import darktrace
 from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import dfir_iris
+from app.routers import copilot_searches
 from app.routers import dnstwist
 from app.routers import duo
 from app.routers import github_audit
@@ -157,6 +158,7 @@ api_router.include_router(office365.router)
 api_router.include_router(copilot_action.router)
 api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)
+api_router.include_router(copilot_searches.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
