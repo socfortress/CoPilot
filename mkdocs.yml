@@ -89,6 +89,7 @@ nav:
               - Sources: user/ui/incident-sources.md
               - Alerts: user/ui/incident-alerts.md
               - Cases: user/ui/incident-cases.md
+              - Alerting → Shuffle (notifications): user/ui/alerting-shuffle.md
           - Alerts:
               - Alerts: user/ui/alerts.md
               - SIEM: user/ui/alerts-siem.md
