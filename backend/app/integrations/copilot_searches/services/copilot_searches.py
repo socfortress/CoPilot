@@ -1,18 +1,26 @@
 import asyncio
+import copy
+import json
+import re
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 import yaml
 from loguru import logger
 
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchRequest,
+    ExecuteSearchResponse,
     ParameterSchema,
     PlatformFilter,
     RuleDetail,
     RuleSeverity,
     RuleStatus,
     RuleSummary,
+    SearchHit,
+    SearchValidationError,
 )
 
 # =============================================================================
@@ -541,3 +549,215 @@ async def get_cache_health() -> dict:
         "cache_age_minutes": rules_cache.cache_age_minutes,
         "github_repo": GITHUB_REPO,
     }
+
+
+# =============================================================================
+# Search Execution Functions
+# =============================================================================
+
+
+def _substitute_parameters(obj: Any, parameters: dict[str, Any]) -> Any:
+    """
+    Recursively substitute ${PARAM_NAME} placeholders in a query object.
+
+    Args:
+        obj: The object to substitute parameters in (dict, list, or str)
+        parameters: Dictionary of parameter names to values
+
+    Returns:
+        The object with parameters substituted
+    """
+    if isinstance(obj, str):
+        # Find all ${PARAM_NAME} patterns and replace them
+        pattern = r"\$\{([^}]+)\}"
+
+        def replacer(match):
+            param_name = match.group(1)
+            if param_name in parameters:
+                value = parameters[param_name]
+                # If the entire string is just the placeholder, return the value directly
+                # This preserves types (int, bool, etc.)
+                if match.group(0) == obj:
+                    return value
+                # Otherwise, convert to string for embedding
+                return str(value)
+            # Return original if parameter not found
+            return match.group(0)
+
+        # Check if entire string is a single placeholder
+        full_match = re.fullmatch(pattern, obj)
+        if full_match:
+            param_name = full_match.group(1)
+            if param_name in parameters:
+                return parameters[param_name]
+
+        # Otherwise do string substitution
+        return re.sub(pattern, replacer, obj)
+
+    elif isinstance(obj, dict):
+        return {key: _substitute_parameters(value, parameters) for key, value in obj.items()}
+
+    elif isinstance(obj, list):
+        return [_substitute_parameters(item, parameters) for item in obj]
+
+    else:
+        return obj
+
+
+def _validate_parameters(
+    rule: dict,
+    provided_params: dict[str, Any],
+) -> tuple[dict[str, Any], list[SearchValidationError]]:
+    """
+    Validate and merge provided parameters with defaults.
+
+    Args:
+        rule: The rule definition
+        provided_params: Parameters provided by the user
+
+    Returns:
+        Tuple of (merged_params, validation_errors)
+    """
+    errors: list[SearchValidationError] = []
+    merged_params: dict[str, Any] = {}
+
+    rule_params = rule.get("parameters", {})
+
+    for param_name, param_def in rule_params.items():
+        is_required = param_def.get("required", False)
+        default_value = param_def.get("default")
+
+        if param_name in provided_params:
+            # User provided the parameter
+            merged_params[param_name] = provided_params[param_name]
+        elif default_value is not None:
+            # Use default value
+            merged_params[param_name] = default_value
+        elif is_required:
+            # Required parameter missing
+            errors.append(
+                SearchValidationError(
+                    parameter=param_name,
+                    message=f"Required parameter '{param_name}' is missing. {param_def.get('description', '')}",
+                ),
+            )
+
+    return merged_params, errors
+
+
+async def execute_rule_search(
+    request: ExecuteSearchRequest,
+) -> ExecuteSearchResponse:
+    """
+    Execute a search against the Wazuh indexer using a rule definition.
+
+    Args:
+        request: The search execution request
+
+    Returns:
+        ExecuteSearchResponse with search results
+
+    Raises:
+        ValueError: If the rule is not found or validation fails
+    """
+    await rules_cache.ensure_loaded()
+
+    # Get the rule
+    rule = rules_cache.get_rule_by_id(request.rule_id)
+    if rule is None:
+        raise ValueError(f"Rule with ID '{request.rule_id}' not found")
+
+    # Add INDEX_PATTERN to provided parameters
+    all_params = {**request.parameters, "INDEX_PATTERN": request.index_pattern}
+
+    # Validate parameters
+    merged_params, validation_errors = _validate_parameters(rule, all_params)
+
+    if validation_errors:
+        error_messages = [f"{e.parameter}: {e.message}" for e in validation_errors]
+        raise ValueError(f"Parameter validation failed: {'; '.join(error_messages)}")
+
+    # Get the search definition from the rule
+    search_def = rule.get("search", {})
+    if not search_def:
+        raise ValueError(f"Rule '{request.rule_id}' does not contain a search definition")
+
+    # Build the query with parameter substitution
+    query = search_def.get("query", {})
+    substituted_query = _substitute_parameters(copy.deepcopy(query), merged_params)
+
+    # Build the full search body
+    search_body: dict[str, Any] = {
+        "query": substituted_query,
+    }
+
+    # Add size (from request override, rule definition, or default)
+    if request.size is not None:
+        search_body["size"] = request.size
+    elif "size" in search_def:
+        search_body["size"] = search_def["size"]
+    else:
+        search_body["size"] = 100
+
+    # Add sort if defined
+    if "sort" in search_def:
+        search_body["sort"] = _substitute_parameters(
+            copy.deepcopy(search_def["sort"]),
+            merged_params,
+        )
+
+    # Add _source if defined
+    if "_source" in search_def:
+        search_body["_source"] = search_def["_source"]
+
+    logger.info(f"Executing search for rule '{request.rule_id}' on index '{request.index_pattern}'")
+    logger.debug(f"Search body: {json.dumps(search_body, indent=2)}")
+
+    # Create the async Elasticsearch client
+    es_client = await create_wazuh_indexer_client_async()
+
+    try:
+        # Execute the search
+        response = await es_client.search(
+            index=request.index_pattern,
+            body=search_body,
+        )
+
+        # Parse the response
+        hits_data = response.get("hits", {})
+        total_hits = hits_data.get("total", {})
+        if isinstance(total_hits, dict):
+            total_count = total_hits.get("value", 0)
+        else:
+            total_count = total_hits
+
+        hits = []
+        for hit in hits_data.get("hits", []):
+            hits.append(
+                SearchHit(
+                    index=hit.get("_index", ""),
+                    id=hit.get("_id", ""),
+                    score=hit.get("_score"),
+                    source=hit.get("_source", {}),
+                ),
+            )
+
+        return ExecuteSearchResponse(
+            success=True,
+            message="Search executed successfully",
+            rule_id=request.rule_id,
+            rule_name=rule.get("name", ""),
+            total_hits=total_count,
+            returned_hits=len(hits),
+            took_ms=response.get("took", 0),
+            hits=hits,
+            query_executed=search_body,
+        )
+
+    except Exception as e:
+        logger.error(f"Search execution failed: {e}")
+        raise ValueError(f"Search execution failed: {str(e)}")
+
+    finally:
+        # Close the client
+        await es_client.close()

@@ -115,3 +115,72 @@ class RuleDetailResponse(BaseModel):
     success: bool = True
     message: str = "Rule fetched successfully"
     rule: RuleDetail
+
+
+# =============================================================================
+# Search Execution Models
+# =============================================================================
+
+
+class ExecuteSearchRequest(BaseModel):
+    """Request model for executing a rule search."""
+    rule_id: str = Field(..., description="The ID of the rule to execute")
+    index_pattern: str = Field(
+        ...,
+        description="The index pattern to search (e.g., 'wazuh-alerts-*')",
+        example="wazuh-alerts-*",
+    )
+    parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Parameter values to substitute in the query",
+        example={
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab",
+            "START_TIME": "now-24h",
+            "END_TIME": "now",
+        },
+    )
+    size: Optional[int] = Field(
+        default=None,
+        description="Override the default result size from the rule",
+        ge=1,
+        le=10000,
+    )
+
+
+class SearchHit(BaseModel):
+    """A single search result hit."""
+    index: str = Field(..., description="The index the document was found in")
+    id: str = Field(..., description="The document ID")
+    score: Optional[float] = Field(None, description="The relevance score")
+    source: dict[str, Any] = Field(..., description="The document source")
+
+
+class ExecuteSearchResponse(BaseModel):
+    """Response model for search execution."""
+    success: bool = True
+    message: str = "Search executed successfully"
+    rule_id: str
+    rule_name: str
+    total_hits: int
+    returned_hits: int
+    took_ms: int
+    hits: list[SearchHit]
+    query_executed: dict = Field(
+        ...,
+        description="The actual query that was executed (for debugging)",
+    )
+
+
+class SearchValidationError(BaseModel):
+    """Validation error details."""
+    parameter: str
+    message: str
+
+
+class ExecuteSearchErrorResponse(BaseModel):
+    """Error response for search execution."""
+    success: bool = False
+    message: str
+    rule_id: Optional[str] = None
+    validation_errors: list[SearchValidationError] = []

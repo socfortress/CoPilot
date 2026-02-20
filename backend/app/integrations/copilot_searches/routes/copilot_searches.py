@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchRequest,
+    ExecuteSearchResponse,
     PlatformFilter,
     RefreshResponse,
     RuleDetailResponse,
@@ -12,6 +14,7 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     RuleStatus,
 )
 from app.integrations.copilot_searches.services.copilot_searches import (
+    execute_rule_search,
     get_cache_health,
     get_rule_by_id,
     get_rule_by_name,
@@ -233,4 +236,54 @@ async def refresh_rules():
         raise HTTPException(
             status_code=503,
             detail=f"Failed to refresh rules: {str(e)}",
+        )
+
+
+@copilot_searches_router.post(
+    "/execute",
+    response_model=ExecuteSearchResponse,
+    description="Execute a detection rule search against the Wazuh indexer",
+)
+async def execute_search(request: ExecuteSearchRequest):
+    """
+    Execute a detection rule search against the Wazuh indexer.
+
+    This endpoint takes a rule ID and parameters, substitutes the parameters
+    into the rule's search query, and executes it against the specified index.
+
+    **Required Parameters:**
+    - **rule_id**: The ID of the rule to execute
+    - **index_pattern**: The Elasticsearch index pattern to search
+
+    **Optional Parameters:**
+    - **parameters**: Dictionary of parameter values to substitute
+    - **size**: Override the default result size
+
+    **Example Request:**
+    ```json
+    {
+        "rule_id": "linux-auditd-add-user-001",
+        "index_pattern": "wazuh-alerts-*",
+        "parameters": {
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab",
+            "START_TIME": "now-24h",
+            "END_TIME": "now"
+        },
+        "size": 50
+    }
+    ```
+    """
+    try:
+        result = await execute_rule_search(request)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Search execution failed: {str(e)}",
         )
