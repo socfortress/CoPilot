@@ -73,13 +73,14 @@ extra_css:
 
 nav:
   - Home: index-mkdocs.md
+  - Getting Started:
+      - Supported Tool Versions: getting-started/supported-tool-versions.md
   - User Guide:
       - Overview: user/overview.md
       - Quickstart (Operators): user/operators-quickstart.md
       - Quickstart (Admins/Engineers): user/admins-quickstart.md
       - Customer Provisioning (Tenancy): user/customer-provisioning.md
       - Features by Area: user/features.md
-      - Supported Tool Versions: user/supported-tool-versions.md
       - CoPilot ↔ Shuffle Integration (Admin/Operator): user/shuffle-integration.md
       - Navigation Guide (UI): user/navigation.md
       - UI Guide (mirrors menu):
