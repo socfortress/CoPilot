@@ -16,6 +16,7 @@ const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
 const LogsIcon = "carbon:cloud-logging"
 const ContactIcon = "ic:outline-alternate-email"
+const DocsIcon = "carbon:document"
 const UsersIcon = "carbon:group-security"
 
 const router = useRouter()
@@ -49,9 +50,23 @@ const options = ref([
 			h(
 				"a",
 				{
+					href: "https://docs.socfortress.co/",
+					target: "_blank",
+					rel: "noopener noreferrer"
+				},
+				"Documentation"
+			),
+		key: "documentation",
+		icon: renderIcon(DocsIcon)
+	},
+	{
+		label: () =>
+			h(
+				"a",
+				{
 					href: "https://www.socfortress.co/contact-us",
 					target: "_blank",
-					rel: "noopenner noreferrer"
+					rel: "noopener noreferrer"
 				},
 				"Contact SOCFortress"
 			),
