@@ -11,6 +11,10 @@ export interface ParameterSchema {
     example?: string | number | boolean | null
 }
 
+export interface GraylogQuery {
+    query: string
+}
+
 export interface RuleSummary {
     id: string
     name: string
@@ -27,6 +31,7 @@ export interface RuleSummary {
     analytic_story: string[]
     cve: string[]
     file_path: string
+    has_graylog_query: boolean
 }
 
 export interface RuleDetail {
@@ -49,6 +54,7 @@ export interface RuleDetail {
     tags: RuleTags
     file_path: string
     raw_yaml: string
+    graylog: GraylogQuery | null
 }
 
 export interface RuleResponse {
@@ -102,6 +108,7 @@ export interface RuleStatsResponse {
     by_status: Record<string, number>
     by_severity: Record<string, number>
     by_mitre_tactic: Record<string, number>
+    rules_with_graylog: number
     last_refreshed: string | null
     cache_ttl_minutes: number
 }
@@ -153,6 +160,43 @@ export interface ExecuteSearchErrorResponse {
     validation_errors: SearchValidationError[]
 }
 
+// Graylog Query Types
+
+export interface ExecuteGraylogQueryRequest {
+    rule_id: string
+    parameters?: Record<string, string | number | boolean>
+}
+
+export interface GraylogQueryResponse {
+    success: boolean
+    message: string
+    rule_id: string
+    rule_name: string
+    graylog_query: string
+    original_query: string
+}
+
+// Graylog Alert Provisioning Types
+
+export interface ProvisionGraylogAlertRequest {
+    rule_id: string
+    search_within_seconds?: number
+    execute_every_seconds?: number
+    streams?: string[]
+    custom_title?: string
+    priority?: 1 | 2 | 3
+    event_limit?: number
+}
+
+export interface ProvisionGraylogAlertResponse {
+    success: boolean
+    message: string
+    rule_id: string
+    rule_name: string
+    alert_title: string
+    graylog_query: string
+}
+
 // Query Parameters
 
 export interface RuleListQuery {
@@ -161,6 +205,7 @@ export interface RuleListQuery {
     severity?: RuleSeverity
     mitre_id?: string
     search?: string
+    has_graylog?: boolean
     skip?: number
     limit?: number
 }

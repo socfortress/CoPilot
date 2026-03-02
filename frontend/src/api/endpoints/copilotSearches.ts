@@ -1,14 +1,16 @@
 import type {
+    ExecuteGraylogQueryRequest,
     ExecuteSearchRequest,
     ExecuteSearchResponse,
+    GraylogQueryResponse,
     PlatformFilter,
+    ProvisionGraylogAlertRequest,
+    ProvisionGraylogAlertResponse,
     RefreshResponse,
     RuleDetailResponse,
     RuleListQuery,
     RuleListResponse,
-    RuleSeverity,
-    RuleStatsResponse,
-    RuleStatus
+    RuleStatsResponse
 } from "@/types/copilotSearches.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
@@ -25,6 +27,7 @@ export default {
                 severity: query?.severity,
                 mitre_id: query?.mitre_id,
                 search: query?.search,
+                has_graylog: query?.has_graylog,
                 skip: query?.skip || 0,
                 limit: query?.limit || 100
             },
@@ -42,6 +45,7 @@ export default {
                 severity: query?.severity,
                 mitre_id: query?.mitre_id,
                 search: query?.search,
+                has_graylog: query?.has_graylog,
                 skip: query?.skip || 0,
                 limit: query?.limit || 100
             },
@@ -59,6 +63,7 @@ export default {
                 severity: query?.severity,
                 mitre_id: query?.mitre_id,
                 search: query?.search,
+                has_graylog: query?.has_graylog,
                 skip: query?.skip || 0,
                 limit: query?.limit || 100
             },
@@ -120,5 +125,22 @@ export default {
      */
     executeSearch(request: ExecuteSearchRequest) {
         return HttpClient.post<FlaskBaseResponse & ExecuteSearchResponse>(`/copilot_searches/execute`, request)
+    },
+
+    /**
+     * Generate a Graylog query from a rule with parameter substitution
+     */
+    generateGraylogQuery(request: ExecuteGraylogQueryRequest) {
+        return HttpClient.post<FlaskBaseResponse & GraylogQueryResponse>(`/copilot_searches/graylog`, request)
+    },
+
+    /**
+     * Provision a Graylog event definition from a CoPilot Search rule
+     */
+    provisionGraylogAlert(request: ProvisionGraylogAlertRequest) {
+        return HttpClient.post<FlaskBaseResponse & ProvisionGraylogAlertResponse>(
+            `/copilot_searches/provision/graylog`,
+            request
+        )
     }
 }
