@@ -3,8 +3,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteGraylogQueryRequest,
     ExecuteSearchRequest,
     ExecuteSearchResponse,
+    GraylogQueryResponse,
     PlatformFilter,
     RefreshResponse,
     RuleDetailResponse,
@@ -15,6 +17,7 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 )
 from app.integrations.copilot_searches.services.copilot_searches import (
     execute_rule_search,
+    generate_graylog_query,
     get_cache_health,
     get_rule_by_id,
     get_rule_by_name,
@@ -52,6 +55,10 @@ async def list_rules(
         None,
         description="Search in rule name and description",
     ),
+    has_graylog: Optional[bool] = Query(
+        None,
+        description="Filter for rules with Graylog queries",
+    ),
     skip: int = Query(0, ge=0, description="Number of rules to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum rules to return"),
 ):
@@ -64,6 +71,7 @@ async def list_rules(
     - **severity**: low, medium, high, critical
     - **mitre_id**: MITRE ATT&CK technique ID
     - **search**: Text search in name/description
+    - **has_graylog**: Filter for rules with Graylog queries
     """
     result = await get_rules_list(
         platform=platform,
@@ -71,6 +79,7 @@ async def list_rules(
         severity=severity,
         mitre_id=mitre_id,
         search=search,
+        has_graylog=has_graylog,
         skip=skip,
         limit=limit,
     )
@@ -88,6 +97,7 @@ async def list_linux_rules(
     severity: Optional[RuleSeverity] = Query(None),
     mitre_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    has_graylog: Optional[bool] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
 ):
@@ -98,6 +108,7 @@ async def list_linux_rules(
         severity=severity,
         mitre_id=mitre_id,
         search=search,
+        has_graylog=has_graylog,
         skip=skip,
         limit=limit,
     )
@@ -115,6 +126,7 @@ async def list_windows_rules(
     severity: Optional[RuleSeverity] = Query(None),
     mitre_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    has_graylog: Optional[bool] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
 ):
@@ -125,6 +137,7 @@ async def list_windows_rules(
         severity=severity,
         mitre_id=mitre_id,
         search=search,
+        has_graylog=has_graylog,
         skip=skip,
         limit=limit,
     )
@@ -153,7 +166,7 @@ async def get_rule_by_id_endpoint(rule_id: str):
     """
     Get full details of a specific rule by its ID.
 
-    Returns the complete rule including the search query and raw YAML.
+    Returns the complete rule including the search query, Graylog query, and raw YAML.
     """
     rule = await get_rule_by_id(rule_id)
 
@@ -286,4 +299,59 @@ async def execute_search(request: ExecuteSearchRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Search execution failed: {str(e)}",
+        )
+
+
+@copilot_searches_router.post(
+    "/graylog",
+    response_model=GraylogQueryResponse,
+    description="Generate a Graylog query from a rule with parameter substitution",
+)
+async def generate_graylog_query_endpoint(request: ExecuteGraylogQueryRequest):
+    """
+    Generate a Graylog query string from a rule with parameter substitution.
+
+    This endpoint takes a rule ID and parameters, substitutes the parameters
+    into the rule's Graylog query template, and returns the ready-to-use query.
+
+    **Required Parameters:**
+    - **rule_id**: The ID of the rule to use
+
+    **Optional Parameters:**
+    - **parameters**: Dictionary of parameter values to substitute
+
+    **Example Request:**
+    ```json
+    {
+        "rule_id": "linux-auditd-add-user-001",
+        "parameters": {
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab"
+        }
+    }
+    ```
+
+    **Example Response:**
+    ```json
+    {
+        "success": true,
+        "rule_id": "linux-auditd-add-user-001",
+        "rule_name": "Linux Auditd Add User",
+        "graylog_query": "(full_log:/.*useradd.*/ OR full_log:/.*adduser.*/) AND agent_name:my-server",
+        "original_query": "(full_log:/.*useradd.*/ OR full_log:/.*adduser.*/) AND agent_name:${AGENT_NAME}"
+    }
+    ```
+    """
+    try:
+        result = await generate_graylog_query(request)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Graylog query generation failed: {str(e)}",
         )

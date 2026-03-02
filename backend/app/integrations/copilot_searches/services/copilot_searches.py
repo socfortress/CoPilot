@@ -11,8 +11,11 @@ from loguru import logger
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteGraylogQueryRequest,
     ExecuteSearchRequest,
     ExecuteSearchResponse,
+    GraylogQuery,
+    GraylogQueryResponse,
     ParameterSchema,
     PlatformFilter,
     RuleDetail,
@@ -180,6 +183,7 @@ class RulesCache:
             rule_data["_file_path"] = file_path
             rule_data["_raw_yaml"] = raw_yaml
             rule_data["_platform"] = self._detect_platform(file_path, rule_data)
+            rule_data["_has_graylog"] = "graylog" in rule_data and bool(rule_data.get("graylog", {}).get("query"))
 
             return rule_data
 
@@ -248,6 +252,7 @@ class RulesCache:
         severity: Optional[RuleSeverity] = None,
         mitre_id: Optional[str] = None,
         search: Optional[str] = None,
+        has_graylog: Optional[bool] = None,
     ) -> list[dict]:
         """Filter rules based on criteria."""
         results = []
@@ -285,6 +290,12 @@ class RulesCache:
                 if search_lower not in name and search_lower not in description:
                     continue
 
+            # Graylog query filter
+            if has_graylog is not None:
+                rule_has_graylog = rule.get("_has_graylog", False)
+                if rule_has_graylog != has_graylog:
+                    continue
+
             results.append(rule)
 
         return results
@@ -297,6 +308,7 @@ class RulesCache:
             "by_status": {},
             "by_severity": {},
             "by_mitre_tactic": {},
+            "rules_with_graylog": 0,
         }
 
         for rule in self._rules.values():
@@ -320,6 +332,10 @@ class RulesCache:
                 stats["by_mitre_tactic"][base_technique] = (
                     stats["by_mitre_tactic"].get(base_technique, 0) + 1
                 )
+
+            # Count rules with Graylog queries
+            if rule.get("_has_graylog", False):
+                stats["rules_with_graylog"] += 1
 
         return stats
 
@@ -350,6 +366,7 @@ def rule_to_summary(rule: dict) -> RuleSummary:
         analytic_story=tags.get("analytic_story", []),
         cve=tags.get("cve", []),
         file_path=rule.get("_file_path", ""),
+        has_graylog_query=rule.get("_has_graylog", False),
     )
 
 
@@ -368,6 +385,12 @@ def rule_to_detail(rule: dict) -> RuleDetail:
                 example=param_data.get("example"),
             ),
         )
+
+    # Parse Graylog query if present
+    graylog = None
+    graylog_data = rule.get("graylog")
+    if graylog_data and isinstance(graylog_data, dict) and graylog_data.get("query"):
+        graylog = GraylogQuery(query=graylog_data.get("query", ""))
 
     return RuleDetail(
         id=rule.get("id", ""),
@@ -389,6 +412,7 @@ def rule_to_detail(rule: dict) -> RuleDetail:
         tags=rule.get("tags", {}),
         file_path=rule.get("_file_path", ""),
         raw_yaml=rule.get("_raw_yaml", ""),
+        graylog=graylog,
     )
 
 
@@ -410,6 +434,7 @@ async def get_rules_list(
     severity: Optional[RuleSeverity] = None,
     mitre_id: Optional[str] = None,
     search: Optional[str] = None,
+    has_graylog: Optional[bool] = None,
     skip: int = 0,
     limit: int = 100,
 ) -> dict:
@@ -422,6 +447,7 @@ async def get_rules_list(
         severity: Filter by severity level
         mitre_id: Filter by MITRE ATT&CK technique ID
         search: Text search in name/description
+        has_graylog: Filter for rules with Graylog queries
         skip: Number of rules to skip
         limit: Maximum rules to return
 
@@ -437,6 +463,7 @@ async def get_rules_list(
         severity=severity,
         mitre_id=mitre_id,
         search=search,
+        has_graylog=has_graylog,
     )
 
     # Sort by name
@@ -514,6 +541,7 @@ async def get_rules_stats() -> dict:
         "by_status": stats["by_status"],
         "by_severity": stats["by_severity"],
         "by_mitre_tactic": stats["by_mitre_tactic"],
+        "rules_with_graylog": stats["rules_with_graylog"],
         "last_refreshed": rules_cache.last_refresh,
         "cache_ttl_minutes": CACHE_TTL_MINUTES,
     }
@@ -761,3 +789,61 @@ async def execute_rule_search(
     finally:
         # Close the client
         await es_client.close()
+
+
+# =============================================================================
+# Graylog Query Functions
+# =============================================================================
+
+
+async def generate_graylog_query(
+    request: ExecuteGraylogQueryRequest,
+) -> GraylogQueryResponse:
+    """
+    Generate a Graylog query string from a rule with parameter substitution.
+
+    Args:
+        request: The Graylog query request
+
+    Returns:
+        GraylogQueryResponse with the substituted query
+
+    Raises:
+        ValueError: If the rule is not found or has no Graylog query
+    """
+    await rules_cache.ensure_loaded()
+
+    # Get the rule
+    rule = rules_cache.get_rule_by_id(request.rule_id)
+    if rule is None:
+        raise ValueError(f"Rule with ID '{request.rule_id}' not found")
+
+    # Check if rule has Graylog query
+    graylog_data = rule.get("graylog")
+    if not graylog_data or not isinstance(graylog_data, dict):
+        raise ValueError(f"Rule '{request.rule_id}' does not contain a Graylog query")
+
+    original_query = graylog_data.get("query", "")
+    if not original_query:
+        raise ValueError(f"Rule '{request.rule_id}' has an empty Graylog query")
+
+    # Validate parameters
+    merged_params, validation_errors = _validate_parameters(rule, request.parameters)
+
+    if validation_errors:
+        error_messages = [f"{e.parameter}: {e.message}" for e in validation_errors]
+        raise ValueError(f"Parameter validation failed: {'; '.join(error_messages)}")
+
+    # Substitute parameters in the Graylog query
+    substituted_query = _substitute_parameters(original_query, merged_params)
+
+    logger.info(f"Generated Graylog query for rule '{request.rule_id}'")
+
+    return GraylogQueryResponse(
+        success=True,
+        message="Graylog query generated successfully",
+        rule_id=request.rule_id,
+        rule_name=rule.get("name", ""),
+        graylog_query=substituted_query,
+        original_query=original_query,
+    )

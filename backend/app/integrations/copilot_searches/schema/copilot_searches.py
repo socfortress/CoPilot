@@ -37,6 +37,11 @@ class ParameterSchema(BaseModel):
     example: Optional[Any] = None
 
 
+class GraylogQuery(BaseModel):
+    """Graylog query definition."""
+    query: str = Field(..., description="The Graylog search query string")
+
+
 class RuleSummary(BaseModel):
     """Lightweight rule summary for list endpoints."""
     id: str
@@ -54,6 +59,7 @@ class RuleSummary(BaseModel):
     analytic_story: list[str] = []
     cve: list[str] = []
     file_path: str
+    has_graylog_query: bool = False
 
 
 class RuleDetail(BaseModel):
@@ -77,6 +83,7 @@ class RuleDetail(BaseModel):
     tags: dict
     file_path: str
     raw_yaml: str
+    graylog: Optional[GraylogQuery] = None
 
 
 class RuleListResponse(BaseModel):
@@ -96,6 +103,7 @@ class RuleStatsResponse(BaseModel):
     by_status: dict[str, int]
     by_severity: dict[str, int]
     by_mitre_tactic: dict[str, int]
+    rules_with_graylog: int
     last_refreshed: Optional[datetime]
     cache_ttl_minutes: int
     success: bool = True
@@ -184,3 +192,37 @@ class ExecuteSearchErrorResponse(BaseModel):
     message: str
     rule_id: Optional[str] = None
     validation_errors: list[SearchValidationError] = []
+
+
+# =============================================================================
+# Graylog Query Execution Models
+# =============================================================================
+
+
+class ExecuteGraylogQueryRequest(BaseModel):
+    """Request model for executing a Graylog query from a rule."""
+    rule_id: str = Field(..., description="The ID of the rule to execute")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Parameter values to substitute in the query",
+        example={
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab",
+        },
+    )
+
+
+class GraylogQueryResponse(BaseModel):
+    """Response model for Graylog query generation."""
+    success: bool = True
+    message: str = "Graylog query generated successfully"
+    rule_id: str
+    rule_name: str
+    graylog_query: str = Field(
+        ...,
+        description="The Graylog query string with parameters substituted",
+    )
+    original_query: str = Field(
+        ...,
+        description="The original query template from the rule",
+    )
