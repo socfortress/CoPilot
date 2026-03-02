@@ -18,6 +18,8 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     GraylogQueryResponse,
     ParameterSchema,
     PlatformFilter,
+    ProvisionGraylogAlertRequest,
+    ProvisionGraylogAlertResponse,
     RuleDetail,
     RuleSeverity,
     RuleStatus,
@@ -25,6 +27,14 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     SearchHit,
     SearchValidationError,
 )
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionConfig,
+    GraylogAlertProvisionFieldSpecItem,
+    GraylogAlertProvisionModel,
+    GraylogAlertProvisionNotificationSettings,
+    GraylogAlertProvisionProvider,
+)
+from app.integrations.monitoring_alert.services.provision import provision_alert_definition
 
 # =============================================================================
 # Configuration
@@ -414,6 +424,57 @@ def rule_to_detail(rule: dict) -> RuleDetail:
         raw_yaml=rule.get("_raw_yaml", ""),
         graylog=graylog,
     )
+
+
+def _convert_seconds_to_milliseconds(seconds: int) -> int:
+    """Convert seconds to milliseconds."""
+    return seconds * 1000
+
+
+def _get_alert_source_from_rule(rule: dict) -> str:
+    """
+    Determine the alert source based on rule metadata.
+
+    Args:
+        rule: The rule dictionary
+
+    Returns:
+        Alert source string (e.g., "WAZUH", "LINUX_AUDITD", etc.)
+    """
+    # Check data_source field
+    data_sources = rule.get("data_source", [])
+    if data_sources:
+        # Use first data source, normalized
+        source = data_sources[0].upper().replace(" ", "_").replace("-", "_")
+        return source
+
+    # Check platform
+    platform = rule.get("_platform", "unknown")
+    if platform == "linux":
+        return "LINUX"
+    if platform == "windows":
+        return "WINDOWS"
+
+    return "COPILOT_SEARCH"
+
+
+def _get_priority_from_severity(severity: str) -> int:
+    """
+    Map rule severity to Graylog priority.
+
+    Args:
+        severity: Rule severity (low, medium, high, critical)
+
+    Returns:
+        Graylog priority (1=Low, 2=Normal, 3=High)
+    """
+    severity_map = {
+        "low": 1,
+        "medium": 2,
+        "high": 3,
+        "critical": 3,
+    }
+    return severity_map.get(severity.lower(), 2)
 
 
 # =============================================================================
@@ -846,4 +907,151 @@ async def generate_graylog_query(
         rule_name=rule.get("name", ""),
         graylog_query=substituted_query,
         original_query=original_query,
+    )
+
+
+# =============================================================================
+# Graylog Alert Provisioning Functions
+# =============================================================================
+
+
+async def provision_graylog_alert_from_rule(
+    request: ProvisionGraylogAlertRequest,
+) -> ProvisionGraylogAlertResponse:
+    """
+    Provision a Graylog event definition from a CoPilot Search rule.
+
+    This takes a rule with a Graylog query and creates a Graylog event definition
+    that will alert when the query matches.
+
+    Args:
+        request: The provisioning request
+
+    Returns:
+        ProvisionGraylogAlertResponse with the result
+
+    Raises:
+        ValueError: If the rule is not found or has no Graylog query
+    """
+    await rules_cache.ensure_loaded()
+
+    # Get the rule
+    rule = rules_cache.get_rule_by_id(request.rule_id)
+    if rule is None:
+        raise ValueError(f"Rule with ID '{request.rule_id}' not found")
+
+    # Check if rule has Graylog query
+    graylog_data = rule.get("graylog")
+    if not graylog_data or not isinstance(graylog_data, dict):
+        raise ValueError(f"Rule '{request.rule_id}' does not contain a Graylog query")
+
+    graylog_query = graylog_data.get("query", "")
+    if not graylog_query:
+        raise ValueError(f"Rule '{request.rule_id}' has an empty Graylog query")
+
+    # Get rule metadata
+    rule_name = rule.get("name", request.rule_id)
+    rule_description = rule.get("description", "")
+    rule_severity = rule.get("response", {}).get("severity", "medium")
+    alert_source = _get_alert_source_from_rule(rule)
+
+    # Determine the alert title
+    alert_title = request.custom_title if request.custom_title else rule_name.upper().replace(" ", " - ")
+
+    # Determine priority from rule severity or request
+    priority = request.priority if request.priority != 2 else _get_priority_from_severity(rule_severity)
+
+    logger.info(f"Provisioning Graylog alert for rule '{request.rule_id}' with title '{alert_title}'")
+
+    # Build the Graylog event definition model
+    alert_model = GraylogAlertProvisionModel(
+        title=alert_title,
+        description=rule_description,
+        priority=priority,
+        config=GraylogAlertProvisionConfig(
+            type="aggregation-v1",
+            query=graylog_query,
+            query_parameters=[],
+            streams=request.streams,
+            group_by=[],
+            series=[],
+            conditions={
+                "expression": None,
+            },
+            search_within_ms=_convert_seconds_to_milliseconds(request.search_within_seconds),
+            execute_every_ms=_convert_seconds_to_milliseconds(request.execute_every_seconds),
+            event_limit=request.event_limit,
+        ),
+        field_spec={
+            "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="${source._id}",
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="${source.agent_labels_customer}",
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template=alert_source,
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="NONE",
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "RULE_ID": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template=request.rule_id,
+                        require_values=True,
+                    ),
+                ],
+            ),
+        },
+        key_spec=[],
+        notification_settings=GraylogAlertProvisionNotificationSettings(
+            grace_period_ms=0,
+            backlog_size=None,
+        ),
+        alert=True,
+    )
+
+    # Provision the alert definition
+    await provision_alert_definition(alert_model)
+
+    logger.info(f"Successfully provisioned Graylog alert '{alert_title}' for rule '{request.rule_id}'")
+
+    return ProvisionGraylogAlertResponse(
+        success=True,
+        message=f"Graylog alert '{alert_title}' provisioned successfully",
+        rule_id=request.rule_id,
+        rule_name=rule_name,
+        alert_title=alert_title,
+        graylog_query=graylog_query,
     )

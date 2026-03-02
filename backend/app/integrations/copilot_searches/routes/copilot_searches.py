@@ -2,12 +2,16 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.connectors.graylog.routes.events import get_all_event_definitions
+from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
     ExecuteSearchRequest,
     ExecuteSearchResponse,
     GraylogQueryResponse,
     PlatformFilter,
+    ProvisionGraylogAlertRequest,
+    ProvisionGraylogAlertResponse,
     RefreshResponse,
     RuleDetailResponse,
     RuleListResponse,
@@ -23,10 +27,46 @@ from app.integrations.copilot_searches.services.copilot_searches import (
     get_rule_by_name,
     get_rules_list,
     get_rules_stats,
+    provision_graylog_alert_from_rule,
     refresh_rules_cache,
 )
 
 copilot_searches_router = APIRouter()
+
+
+async def check_if_event_definition_exists(event_definition_title: str) -> bool:
+    """
+    Check if an event definition with the given title already exists in Graylog.
+
+    Args:
+        event_definition_title: The title to check
+
+    Returns:
+        True if the event definition already exists
+
+    Raises:
+        HTTPException: If failed to check or if already exists
+    """
+    event_definitions_response = await get_all_event_definitions()
+    if not event_definitions_response.success:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to collect event definitions from Graylog",
+        )
+
+    event_definitions_response = GraylogEventDefinitionsResponse(
+        **event_definitions_response.dict(),
+    )
+
+    existing_titles = [ed.title for ed in event_definitions_response.event_definitions]
+
+    if event_definition_title in existing_titles:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Event definition '{event_definition_title}' already exists in Graylog",
+        )
+
+    return False
 
 
 @copilot_searches_router.get(
@@ -354,4 +394,92 @@ async def generate_graylog_query_endpoint(request: ExecuteGraylogQueryRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Graylog query generation failed: {str(e)}",
+        )
+
+
+@copilot_searches_router.post(
+    "/provision/graylog",
+    response_model=ProvisionGraylogAlertResponse,
+    description="Provision a Graylog event definition from a CoPilot Search rule",
+)
+async def provision_graylog_alert(request: ProvisionGraylogAlertRequest):
+    """
+    Provision a Graylog event definition from a CoPilot Search rule.
+
+    This endpoint takes a rule ID with a Graylog query and creates a Graylog
+    event definition that will alert when the query matches. The alert will
+    include standard field specifications for integration with CoPilot's
+    incident management workflow.
+
+    **Required Parameters:**
+    - **rule_id**: The ID of the rule to provision (must have a Graylog query)
+
+    **Optional Parameters:**
+    - **search_within_seconds**: Time window to search (default: 300 = 5 minutes)
+    - **execute_every_seconds**: Execution interval (default: 300 = 5 minutes)
+    - **streams**: List of Graylog stream IDs to limit the search
+    - **custom_title**: Custom alert title (default: uses rule name)
+    - **priority**: Alert priority 1-3 (default: 2 or derived from rule severity)
+    - **event_limit**: Max events per execution (default: 1000)
+
+    **Example Request:**
+    ```json
+    {
+        "rule_id": "linux-auditd-ssh-config-keys-deletion-001",
+        "search_within_seconds": 300,
+        "execute_every_seconds": 300,
+        "custom_title": "SSH Key Deletion Alert",
+        "priority": 3
+    }
+    ```
+
+    **Example Response:**
+    ```json
+    {
+        "success": true,
+        "message": "Graylog alert 'SSH Key Deletion Alert' provisioned successfully",
+        "rule_id": "linux-auditd-ssh-config-keys-deletion-001",
+        "rule_name": "Linux Auditd SSH Config Keys Deletion",
+        "alert_title": "SSH Key Deletion Alert",
+        "graylog_query": "(full_log:/.*\\/etc\\/ssh\\/.*/ OR ...) AND ..."
+    }
+    ```
+    """
+    try:
+        # Get the rule to determine the alert title for duplicate check
+        rule = await get_rule_by_id(request.rule_id)
+        if rule is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Rule with ID '{request.rule_id}' not found",
+            )
+
+        # Check if rule has Graylog query
+        if rule.graylog is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Rule '{request.rule_id}' does not contain a Graylog query",
+            )
+
+        # Determine the alert title
+        alert_title = request.custom_title if request.custom_title else rule.name.upper().replace(" ", " - ")
+
+        # Check if event definition already exists
+        await check_if_event_definition_exists(alert_title)
+
+        # Provision the alert
+        result = await provision_graylog_alert_from_rule(request)
+        return result
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to provision Graylog alert: {str(e)}",
         )

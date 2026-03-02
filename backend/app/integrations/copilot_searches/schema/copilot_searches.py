@@ -226,3 +226,55 @@ class GraylogQueryResponse(BaseModel):
         ...,
         description="The original query template from the rule",
     )
+
+
+# =============================================================================
+# Graylog Alert Provisioning Models
+# =============================================================================
+
+
+class ProvisionGraylogAlertRequest(BaseModel):
+    """Request model for provisioning a Graylog alert from a CoPilot Search rule."""
+    rule_id: str = Field(..., description="The ID of the rule to provision as a Graylog alert")
+    search_within_seconds: int = Field(
+        default=300,
+        description="Time window to search within (in seconds). Default is 300 (5 minutes).",
+        ge=60,
+        le=86400,
+    )
+    execute_every_seconds: int = Field(
+        default=300,
+        description="How often to execute the search (in seconds). Default is 300 (5 minutes).",
+        ge=60,
+        le=86400,
+    )
+    streams: list[str] = Field(
+        default_factory=list,
+        description="Optional list of Graylog stream IDs to limit the search to",
+    )
+    custom_title: Optional[str] = Field(
+        default=None,
+        description="Optional custom title for the alert. If not provided, uses the rule name.",
+    )
+    priority: int = Field(
+        default=2,
+        description="Alert priority (1=Low, 2=Normal, 3=High)",
+        ge=1,
+        le=3,
+    )
+    event_limit: int = Field(
+        default=1000,
+        description="Maximum number of events to process per execution",
+        ge=1,
+        le=10000,
+    )
+
+
+class ProvisionGraylogAlertResponse(BaseModel):
+    """Response model for Graylog alert provisioning."""
+    success: bool = True
+    message: str
+    rule_id: str
+    rule_name: str
+    alert_title: str
+    graylog_query: str
