@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type @click="openDrawer">
+	<n-button :size :type @click="openModal">
 		<template #icon>
 			<Icon :name="PackIcon" />
 		</template>
@@ -34,16 +34,16 @@ defineProps<{
 const PackIcon = "mdi:package-variant"
 const showForm = ref(false)
 
-function openDrawer() {
+function openModal() {
 	showForm.value = true
 }
 
-function closeDrawer() {
+function closeModal() {
 	showForm.value = false
 }
 
 defineExpose({
-	openDrawer,
-	closeDrawer
+	openModal,
+	closeModal
 })
 </script>

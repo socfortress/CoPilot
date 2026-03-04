@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type :loading="loading" @click="showInvokeWizard = true">
+	<n-button :size :type :loading="loading" @click="openModal">
 		<template #icon>
 			<Icon :name="InvokeIcon" />
 		</template>
@@ -37,7 +37,20 @@ const showInvokeWizard = ref(false)
 const activeResponseWizardCTX = ref<{ reset: () => void } | null>(null)
 const loading = ref(false)
 
+function openModal() {
+	showInvokeWizard.value = true
+}
+
+function closeModal() {
+	showInvokeWizard.value = false
+}
+
 watch(showInvokeWizard, () => {
 	activeResponseWizardCTX.value?.reset()
+})
+
+defineExpose({
+	openModal,
+	closeModal
 })
 </script>
