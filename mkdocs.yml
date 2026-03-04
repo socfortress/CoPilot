@@ -123,6 +123,7 @@ nav:
               - Management: user/ui/graylog-management.md
               - Metrics: user/ui/graylog-metrics.md
               - Pipelines: user/ui/graylog-pipelines.md
+              - Threshold Alerts: user/ui/alerts-graylog-threshold.md
           - Connectors: user/ui/connectors.md
           - External Services:
               - External Services: user/ui/external-services.md
