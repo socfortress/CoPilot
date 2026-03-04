@@ -1,11 +1,10 @@
 <template>
-	<Badge :color="getSeverityColor(severity)">
+	<Badge :color="getSeverityColor(severity)" type="splitted">
 		<template #iconLeft>
 			<Icon :name="getSeverityIcon(severity)" :size="14" />
 		</template>
-		<template #value>
-			<span class="whitespace-nowrap">{{ severity }}</span>
-		</template>
+		<template #label>{{ severity }}</template>
+		<template #value>Severity</template>
 	</Badge>
 </template>
 

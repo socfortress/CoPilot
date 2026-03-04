@@ -1,10 +1,10 @@
 <template>
 	<Badge>
-		<template #iconLeft>
-			<PlatformIcon :platform :size="14" />
-		</template>
 		<template #value>
-			<span class="whitespace-nowrap">{{ platformName }}</span>
+			<div class="flex items-center gap-2">
+				<PlatformIcon :platform :size="14" />
+				<span class="whitespace-nowrap">{{ platformName }}</span>
+			</div>
 		</template>
 	</Badge>
 </template>
