@@ -1,56 +1,65 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<!-- Search Filters -->
-		<div class="flex flex-wrap items-center gap-2">
-			<n-select
-				v-model:value="selectedPlatform"
-				:options="platformOptions"
-				size="small"
-				placeholder="Platform"
-				class="max-w-30"
-				:consistent-menu-width="false"
-			/>
-
-			<n-input v-model:value="searchQuery" size="small" placeholder="Search rules..." class="max-w-60" clearable>
+		<div class="flex items-center gap-2">
+			<n-input v-model:value="searchQuery" size="small" placeholder="Search rules..." class="grow" clearable>
 				<template #prefix>
 					<Icon :name="SearchIcon" />
 				</template>
 			</n-input>
 
-			<n-button size="small" :loading="loadingRules" @click="loadRules">
-				<template #icon>
-					<Icon :name="RefreshIcon" />
-				</template>
-			</n-button>
+			<n-select
+				v-model:value="selectedPlatform"
+				:options="platformOptions"
+				size="small"
+				placeholder="All Platforms"
+				class="max-w-35"
+				clearable
+				:consistent-menu-width="false"
+			/>
 		</div>
 
-		<!-- Rules List -->
-		<n-spin :show="loadingRules">
-			<div v-if="filteredRules.length" class="flex max-h-60 flex-col gap-2 overflow-y-auto">
-				<n-card
-					v-for="rule in filteredRules"
-					:key="rule.id"
-					size="small"
-					hoverable
-					class="cursor-pointer"
-					:class="{ 'border-primary': selectedRule?.id === rule.id }"
-					@click="selectRule(rule)"
+		<n-card content-class="p-0!">
+			<!-- Rules List -->
+			<n-spin :show="loadingRules">
+				<n-scrollbar
+					v-if="filteredRules.length"
+					class="max-h-90 p-3!"
+					trigger="none"
+					:theme-overrides="{
+						railInsetVerticalRight: `4px 4px 4px auto`
+					}"
 				>
-					<div class="flex items-start justify-between gap-2">
-						<div class="flex flex-col gap-1">
-							<span class="font-medium">{{ rule.name }}</span>
-							<span class="line-clamp-2 text-xs opacity-70">{{ rule.description }}</span>
-						</div>
-						<div class="flex shrink-0 items-center gap-2">
-							<PlatformBadge :platform="rule.platform" />
-							<SeverityBadge :severity="rule.severity" />
-						</div>
+					<div class="flex flex-col gap-3">
+						<CardEntity
+							v-for="rule in filteredRules"
+							:key="rule.id"
+							size="small"
+							hoverable
+							embedded
+							clickable
+							:highlighted="selectedRule?.id === rule.id"
+							@click="selectRule(rule)"
+						>
+							<template #headerMain>
+								<PlatformBadge :platform="rule.platform" class="text-default" />
+							</template>
+							<template #headerExtra>
+								<SeverityBadge :severity="rule.severity" />
+							</template>
+							<template #mainExtra>
+								<div class="flex flex-col gap-1">
+									<span class="font-medium">{{ rule.name }}</span>
+									<span class="line-clamp-2 text-sm opacity-70">{{ rule.description }}</span>
+								</div>
+							</template>
+						</CardEntity>
 					</div>
-				</n-card>
-			</div>
+				</n-scrollbar>
 
-			<n-empty v-else-if="!loadingRules" description="No rules found" class="h-32" />
-		</n-spin>
+				<n-empty v-else-if="!loadingRules" description="No rules found" class="py-20" />
+			</n-spin>
+		</n-card>
 
 		<!-- Selected Rule Execution -->
 		<template v-if="selectedRule">
@@ -178,16 +187,18 @@ import {
 	NFormItem,
 	NInput,
 	NInputNumber,
+	NScrollbar,
 	NSelect,
 	NSpin,
 	NTag,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "./PlatformBadge.vue"
+import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
 const { asset } = defineProps<{
@@ -196,7 +207,6 @@ const { asset } = defineProps<{
 
 const message = useMessage()
 const SearchIcon = "carbon:search"
-const RefreshIcon = "carbon:refresh"
 const PlayIcon = "carbon:play"
 const CloseIcon = "carbon:close"
 
@@ -210,11 +220,10 @@ const ruleDetail = ref<RuleDetail | null>(null)
 const searchResults = ref<ExecuteSearchResponse | null>(null)
 
 // Filters
-const selectedPlatform = ref<PlatformFilter>("all")
+const selectedPlatform = ref<PlatformFilter | null>(null)
 const searchQuery = ref<string | null>(null)
 
 const platformOptions = [
-	{ label: "All", value: "all" },
 	{ label: "Linux", value: "linux" },
 	{ label: "Windows", value: "windows" }
 ]
@@ -234,7 +243,7 @@ const formValue = ref<{
 const filteredRules = computed(() => {
 	let result = rules.value
 
-	if (selectedPlatform.value !== "all") {
+	if (selectedPlatform.value) {
 		result = result.filter(r => r.platform === selectedPlatform.value)
 	}
 
@@ -266,6 +275,7 @@ const canExecute = computed(() => {
 // Methods
 async function loadRules() {
 	loadingRules.value = true
+
 	try {
 		const res = await Api.copilotSearches.getRules({ limit: 100 })
 		if (res.data.success) {
@@ -355,7 +365,7 @@ async function executeSearch() {
 }
 
 // Lifecycle
-onMounted(() => {
+onBeforeMount(() => {
 	loadRules()
 })
 

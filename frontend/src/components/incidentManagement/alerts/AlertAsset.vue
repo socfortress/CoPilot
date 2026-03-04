@@ -61,7 +61,7 @@
 					})()
 				"
 			/>
-			<n-spin :show="!licenseChecked" content-class="flex flex-wrap justify-end gap-3 p-6" :size="18">
+			<n-spin :show="!licenseChecked" content-class="flex flex-wrap gap-3 px-6 py-4" :size="18">
 				<AIVelociraptorArtifactRecommendationButton
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
