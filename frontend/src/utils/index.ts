@@ -45,13 +45,13 @@ export function renderIcon(icon: Component | string) {
 }
 
 export function iconFromOs(os: string): string {
-	switch (getOS(os)) {
-		case "Windows":
+	switch (getOS(os).toLowerCase()) {
+		case "windows":
 			return "mdi:microsoft"
-		case "MacOS":
+		case "macos":
 			return "mdi:apple"
-		case "Linux":
-		case "UNIX":
+		case "linux":
+		case "unix":
 			return "mdi:linux"
 		default:
 			return "mdi:help-box"

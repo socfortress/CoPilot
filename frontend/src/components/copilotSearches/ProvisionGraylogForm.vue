@@ -144,7 +144,7 @@ import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "./PlatformBadge.vue"
+import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
 const props = defineProps<{

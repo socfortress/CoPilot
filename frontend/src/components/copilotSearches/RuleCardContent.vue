@@ -241,7 +241,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "./PlatformBadge.vue"
+import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
