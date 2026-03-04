@@ -21,6 +21,7 @@
         "pages": [
           "getting-started/start-here",
           "getting-started/install-upgrade",
+          "getting-started/supported-tool-versions",
           "getting-started/what-is-copilot",
           "getting-started/roles-and-mental-model",
           "getting-started/first-wins",
@@ -97,7 +98,14 @@
             "group": "Alerting (Graylog \u2192 CoPilot)",
             "pages": [
               "user/ui/incident-sources",
-              "user/ui/graylog-management"
+              "user/ui/graylog-management",
+              "user/ui/alerts-graylog-threshold"
+            ]
+          },
+          {
+            "group": "Alerting (CoPilot \u2192 Shuffle)",
+            "pages": [
+              "user/ui/alerting-shuffle"
             ]
           },
           {
