@@ -3,11 +3,7 @@
 		<n-form v-if="rule" ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
 			<!-- Index Pattern -->
 			<n-form-item label="Index Pattern" path="index_pattern" required>
-				<n-input
-					v-model:value="formValue.index_pattern"
-					placeholder="e.g., wazuh-alerts-*"
-					clearable
-				/>
+				<n-input v-model:value="formValue.index_pattern" placeholder="e.g., wazuh-alerts-*" clearable />
 			</n-form-item>
 
 			<!-- Result Size -->
@@ -99,11 +95,7 @@
 			<n-collapse v-if="searchResults.hits.length" :default-expanded-names="['results']">
 				<n-collapse-item title="Results" name="results">
 					<div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-						<div
-							v-for="hit in searchResults.hits"
-							:key="hit.id"
-							class="bg-secondary-color rounded-lg p-3"
-						>
+						<div v-for="hit in searchResults.hits" :key="hit.id" class="bg-secondary-color rounded-lg p-3">
 							<div class="mb-2 flex items-center gap-2 text-xs opacity-60">
 								<span>Index: {{ hit.index }}</span>
 								<span>|</span>
