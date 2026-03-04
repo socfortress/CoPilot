@@ -73,7 +73,7 @@
 
 		<!-- Search Results -->
 		<n-collapse-transition :show="!!searchResults">
-			<n-card v-if="searchResults" title="Search Results" size="small">
+			<n-card v-if="searchResults" title="Search Results" size="small" content-class="flex flex-col gap-6">
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge color="primary" type="splitted">
 						<template #label>Total Hits</template>
@@ -89,19 +89,30 @@
 					</Badge>
 				</div>
 
-				<n-collapse v-if="searchResults.hits.length" :default-expanded-names="['results']">
+				<n-collapse v-if="searchResults.hits.length">
 					<n-collapse-item title="Results" name="results">
-						<n-scrollbar class="max-h-64" trigger="none">
+						<n-scrollbar
+							class="max-h-64"
+							trigger="none"
+							:theme-overrides="{
+								railInsetVerticalRight: `0px 0px 0px auto`
+							}"
+						>
 							<div class="flex flex-col gap-2">
 								<div
 									v-for="hit in searchResults.hits"
 									:key="hit.id"
 									class="bg-secondary-color rounded-lg p-3"
 								>
-									<div class="mb-2 flex items-center gap-2 text-xs opacity-60">
-										<span>Index: {{ hit.index }}</span>
-										<span>|</span>
-										<span>ID: {{ hit.id }}</span>
+									<div class="mb-2 flex flex-wrap gap-2">
+										<Badge type="splitted" size="small">
+											<template #label>Index</template>
+											<template #value>{{ hit.index }}</template>
+										</Badge>
+										<Badge type="splitted" size="small">
+											<template #label>ID</template>
+											<template #value>{{ hit.id }}</template>
+										</Badge>
 									</div>
 									<CodeSource :code="hit.source" lang="json" />
 								</div>
