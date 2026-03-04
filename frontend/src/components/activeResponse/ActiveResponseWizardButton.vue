@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type :loading="loading" @click="openModal">
+	<n-button :size :type :secondary :loading="loading" @click="openModal">
 		<template #icon>
 			<Icon :name="InvokeIcon" />
 		</template>
@@ -27,9 +27,10 @@ import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ActiveResponseWizard from "./ActiveResponseWizard.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const InvokeIcon = "solar:playback-speed-outline"

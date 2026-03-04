@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type @click="goToGitHubAudit">
+	<n-button :size :type :secondary @click="goToGitHubAudit">
 		<template #icon>
 			<Icon :name="GitHubIcon" />
 		</template>
@@ -16,6 +16,7 @@ import Icon from "@/components/common/Icon.vue"
 defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const GitHubIcon = "carbon:logo-github"

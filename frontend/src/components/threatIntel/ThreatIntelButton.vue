@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type @click="openDrawer">
+	<n-button :size :type :secondary @click="openDrawer">
 		<template #icon>
 			<Icon :name="ThreatIcon" />
 		</template>
@@ -38,9 +38,10 @@ import Icon from "@/components/common/Icon.vue"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
 import VirusTotalForm from "./VirusTotalForm.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const ThreatIcon = "mynaui:info-waves"

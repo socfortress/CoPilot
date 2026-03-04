@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type @click="openModal">
+	<n-button :size :type :secondary @click="openModal">
 		<template #icon>
 			<Icon :name="PackIcon" />
 		</template>
@@ -29,6 +29,7 @@ import StackProvisioningList from "./StackProvisioningList.vue"
 defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const PackIcon = "mdi:package-variant"

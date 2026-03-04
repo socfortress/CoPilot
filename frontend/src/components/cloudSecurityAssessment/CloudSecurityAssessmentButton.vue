@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type @click="gotoPage()">
+	<n-button :size :type :secondary @click="gotoPage()">
 		<template #icon>
 			<Icon :name="CloudIcon" />
 		</template>
@@ -16,6 +16,7 @@ import Icon from "@/components/common/Icon.vue"
 defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const CloudIcon = "carbon:cloud-data-ops"

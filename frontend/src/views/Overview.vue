@@ -7,17 +7,17 @@
 
 		<div class="section flex justify-end gap-3 @[70rem]:justify-between">
 			<div class="left-box hidden gap-3 @[70rem]:flex">
-				<StackProvisioningButton size="small" type="primary" />
-				<CloudSecurityAssessmentButton size="small" type="primary" />
-				<WebVulnerabilityAssessmentButton size="small" type="primary" />
-				<GitHubAuditButton size="small" type="primary" />
+				<StackProvisioningButton size="small" type="primary" secondary />
+				<CloudSecurityAssessmentButton size="small" type="primary" secondary />
+				<WebVulnerabilityAssessmentButton size="small" type="primary" secondary />
+				<GitHubAuditButton size="small" type="primary" secondary />
 			</div>
 			<div class="right-box hidden gap-3 @[70rem]:flex">
-				<ActiveResponseWizardButton size="small" type="primary" />
-				<ThreatIntelButton size="small" type="primary" />
+				<ActiveResponseWizardButton size="small" type="primary" secondary />
+				<ThreatIntelButton size="small" type="primary" secondary />
 			</div>
 			<div class="mobile-box block @[70rem]:hidden">
-				<n-button size="small" type="primary" @click="showQuickActions = true">
+				<n-button size="small" type="primary" secondary @click="showQuickActions = true">
 					<template #icon>
 						<Icon :name="QuickActionsIcon" />
 					</template>
