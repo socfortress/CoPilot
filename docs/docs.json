@@ -102,6 +102,12 @@
             ]
           },
           {
+            "group": "Alerting (CoPilot \u2192 Shuffle)",
+            "pages": [
+              "user/ui/alerting-shuffle"
+            ]
+          },
+          {
             "group": "Indices (Wazuh Indexer)",
             "pages": [
               "user/ui/indices-management",
