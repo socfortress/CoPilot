@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
+	<n-button :size :type @click="openDrawer">
 		<template #icon>
 			<Icon :name="ThreatIcon" />
 		</template>
@@ -48,8 +48,20 @@ const showThreatIntelDrawer = ref(false)
 const threatIntelCTX = ref<{ restore: () => void } | null>(null)
 const virusTotalCTX = ref<{ restore: () => void } | null>(null)
 
+function openDrawer() {
+	showThreatIntelDrawer.value = true
+}
+function closeDrawer() {
+	showThreatIntelDrawer.value = false
+}
+
 watch(showThreatIntelDrawer, () => {
 	threatIntelCTX.value?.restore()
 	virusTotalCTX.value?.restore()
+})
+
+defineExpose({
+	openDrawer,
+	closeDrawer
 })
 </script>

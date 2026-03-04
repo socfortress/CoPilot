@@ -4,7 +4,7 @@
 			v-if="networkConnector.deployed"
 			:loading="loadingDecommission"
 			type="error"
-			:size="size"
+			:size
 			secondary
 			@click.stop="decommissionNetworkConnector()"
 		>
@@ -18,7 +18,7 @@
 			v-if="isFortinet && !networkConnector.deployed"
 			:loading="loadingFortinetProvision"
 			type="success"
-			:size="size"
+			:size
 			secondary
 			@click.stop="showFortinetForm = true"
 		>
@@ -32,7 +32,7 @@
 			v-if="isSonicwall && !networkConnector.deployed"
 			:loading="loadingSonicwallProvision"
 			type="success"
-			:size="size"
+			:size
 			secondary
 			@click.stop="showSonicwallForm = true"
 		>
@@ -46,7 +46,7 @@
 			v-if="isSentinelOne && !networkConnector.deployed"
 			:loading="loadingSentinelOneProvision"
 			type="success"
-			:size="size"
+			:size
 			secondary
 			@click.stop="showSentinelOneForm = true"
 		>
@@ -56,14 +56,7 @@
 			Deploy
 		</n-button>
 
-		<n-button
-			v-if="!hideDeleteButton"
-			:size="size"
-			type="error"
-			ghost
-			:loading="loadingDelete"
-			@click.stop="handleDelete"
-		>
+		<n-button v-if="!hideDeleteButton" :size type="error" ghost :loading="loadingDelete" @click.stop="handleDelete">
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15" />
 			</template>

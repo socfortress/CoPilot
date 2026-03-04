@@ -3,7 +3,7 @@
 		<n-button
 			v-if="isCaseClosed"
 			:loading="loadingCaseReopen"
-			:size="size"
+			:size
 			type="warning"
 			secondary
 			@click.stop="reopenCase()"
@@ -13,13 +13,13 @@
 			</template>
 			Reopen
 		</n-button>
-		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size="size" @click.stop="closeCase()">
+		<n-button v-else :loading="loadingCaseClose" type="success" secondary :size @click.stop="closeCase()">
 			<template #icon>
 				<Icon :name="CloseIcon" />
 			</template>
 			Close
 		</n-button>
-		<n-button :loading="loadingCaseDelete" :size="size" type="error" secondary @click.stop="handleDelete()">
+		<n-button :loading="loadingCaseDelete" :size type="error" secondary @click.stop="handleDelete()">
 			<template #icon>
 				<Icon :name="DeleteIcon" />
 			</template>

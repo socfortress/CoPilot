@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="gotoPage()">
+	<n-button :size :type @click="gotoPage()">
 		<template #icon>
 			<Icon :name="CloudIcon" />
 		</template>
@@ -13,7 +13,7 @@ import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
 }>()

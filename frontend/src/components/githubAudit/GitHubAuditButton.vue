@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="goToGitHubAudit">
+	<n-button :size :type @click="goToGitHubAudit">
 		<template #icon>
 			<Icon :name="GitHubIcon" />
 		</template>
@@ -8,14 +8,14 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+import type { Size, Type } from "naive-ui/es/button/src/interface"
 import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
-	size?: "tiny" | "small" | "medium" | "large"
-	type?: "default" | "primary" | "info" | "success" | "warning" | "error"
+	size?: Size
+	type?: Type
 }>()
 
 const GitHubIcon = "carbon:logo-github"

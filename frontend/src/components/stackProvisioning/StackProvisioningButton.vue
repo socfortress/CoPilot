@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showForm = true">
+	<n-button :size :type @click="openDrawer">
 		<template #icon>
 			<Icon :name="PackIcon" />
 		</template>
@@ -26,11 +26,24 @@ import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import StackProvisioningList from "./StackProvisioningList.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
 }>()
 
 const PackIcon = "mdi:package-variant"
 const showForm = ref(false)
+
+function openDrawer() {
+	showForm.value = true
+}
+
+function closeDrawer() {
+	showForm.value = false
+}
+
+defineExpose({
+	openDrawer,
+	closeDrawer
+})
 </script>

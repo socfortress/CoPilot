@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" :loading="loading" @click="showInvokeWizard = true">
+	<n-button :size :type :loading="loading" @click="showInvokeWizard = true">
 		<template #icon>
 			<Icon :name="InvokeIcon" />
 		</template>
