@@ -86,6 +86,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Size } from "naive-ui/es/button/src/interface"
 import type { SocAlertField } from "./type.d"
 import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
@@ -97,7 +98,7 @@ import AlertWazuhRules from "./AlertWazuhRules.vue"
 
 const { alert, size, socAlertField } = defineProps<{
 	alert: Alert
-	size?: "tiny" | "small" | "medium" | "large"
+	size?: Size
 	socAlertField: SocAlertField
 }>()
 
