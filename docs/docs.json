@@ -98,7 +98,8 @@
             "group": "Alerting (Graylog \u2192 CoPilot)",
             "pages": [
               "user/ui/incident-sources",
-              "user/ui/graylog-management"
+              "user/ui/graylog-management",
+              "user/ui/alerts-graylog-threshold"
             ]
           },
           {
