@@ -1,116 +1,128 @@
 <template>
-	<div class="alerts-list">
-		<div ref="header" class="flex items-center justify-end gap-2">
-			<div class="info flex grow gap-2 lg:hidden!">
-				<n-popover overlap placement="left">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small" class="cursor-help!">
-								<template #icon>
-									<Icon :name="InfoIcon" />
-								</template>
-							</n-button>
+	<div class="alerts-list @container">
+		<div ref="header" class="flex items-center justify-between gap-2">
+			<div class="flex items-center gap-2">
+				<div class="flex grow gap-2 @6xl:hidden!">
+					<n-popover overlap placement="left">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-button size="small" class="cursor-help!">
+									<template #icon>
+										<Icon :name="InfoIcon" />
+									</template>
+								</n-button>
+							</div>
+						</template>
+						<div class="flex flex-col gap-2">
+							<div class="box">
+								Total :
+								<code>
+									<span v-if="totalFiltered === total">{{ total }}</span>
+									<span v-else>
+										<span>{{ totalFiltered }}</span>
+										<span class="opacity-50">/</span>
+										<span class="opacity-50">{{ total }}</span>
+									</span>
+								</code>
+							</div>
+							<div class="box text-error">
+								Open :
+								<code>{{ statusOpenTotal }}</code>
+							</div>
+							<div class="box text-warning">
+								In Progress :
+								<code>{{ statusInProgressTotal }}</code>
+							</div>
+							<div class="box text-success">
+								Close :
+								<code>{{ statusCloseTotal }}</code>
+							</div>
 						</div>
-					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Total :
-							<code>
+					</n-popover>
+				</div>
+				<div class="hidden grow items-center gap-1 text-sm @6xl:flex">
+					<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
+						<div class="flex items-center gap-2">
+							<span>Total</span>
+							<code class="py-1">
 								<span v-if="totalFiltered === total">{{ total }}</span>
-								<span v-else>
+								<span v-else class="flex gap-1">
 									<span>{{ totalFiltered }}</span>
 									<span class="opacity-50">/</span>
 									<span class="opacity-50">{{ total }}</span>
 								</span>
 							</code>
 						</div>
-						<div class="box text-error">
-							Open :
-							<code>{{ statusOpenTotal }}</code>
+					</n-button>
+					<span>/</span>
+					<n-button
+						quaternary
+						size="small"
+						@click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])"
+					>
+						<div class="flex items-center gap-2">
+							<span>Open</span>
+							<code class="text-error py-1">{{ statusOpenTotal }}</code>
 						</div>
-						<div class="box text-warning">
-							In Progress :
-							<code>{{ statusInProgressTotal }}</code>
+					</n-button>
+					<span>/</span>
+					<n-button
+						quaternary
+						size="small"
+						@click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
+					>
+						<div class="flex items-center gap-2">
+							<span>In Progress</span>
+							<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
 						</div>
-						<div class="box text-success">
-							Close :
-							<code>{{ statusCloseTotal }}</code>
+					</n-button>
+					<span>/</span>
+					<n-button
+						quaternary
+						size="small"
+						@click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])"
+					>
+						<div class="flex items-center gap-2">
+							<span>Close</span>
+							<code class="text-success py-1">{{ statusCloseTotal }}</code>
 						</div>
+					</n-button>
+				</div>
+				<n-button size="small" ghost type="error" @click="showDeleteByTitleModal = true">
+					<div class="flex items-center gap-2">
+						<Icon :name="TrashIcon" />
+						<span class="hidden @3xl:inline">Bulk Delete</span>
 					</div>
-				</n-popover>
+				</n-button>
 			</div>
-			<div class="info hidden grow items-center gap-1 text-sm lg:flex">
-				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
-					<div class="flex items-center gap-2">
-						<span>Total</span>
-						<code class="py-1">
-							<span v-if="totalFiltered === total">{{ total }}</span>
-							<span v-else class="flex gap-1">
-								<span>{{ totalFiltered }}</span>
-								<span class="opacity-50">/</span>
-								<span class="opacity-50">{{ total }}</span>
-							</span>
-						</code>
-					</div>
-				</n-button>
-				<span>/</span>
-				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])">
-					<div class="flex items-center gap-2">
-						<span>Open</span>
-						<code class="text-error py-1">{{ statusOpenTotal }}</code>
-					</div>
-				</n-button>
-				<span>/</span>
-				<n-button
-					quaternary
+
+			<div class="flex items-center justify-end gap-2 whitespace-nowrap">
+				<n-pagination
+					v-model:page="currentPage"
+					v-model:page-size="pageSize"
+					:page-slot="pageSlot"
+					:show-size-picker="showSizePicker"
+					:page-sizes="pageSizes"
+					:item-count="totalFiltered"
+					:simple="simpleMode"
+				/>
+				<n-select
+					v-model:value="sort"
 					size="small"
-					@click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
-				>
-					<div class="flex items-center gap-2">
-						<span>In Progress</span>
-						<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
-					</div>
-				</n-button>
-				<span>/</span>
-				<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])">
-					<div class="flex items-center gap-2">
-						<span>Close</span>
-						<code class="text-success py-1">{{ statusCloseTotal }}</code>
-					</div>
-				</n-button>
+					:options="sortOptions"
+					:show-checkmark="false"
+					class="max-w-20"
+					:disabled="loading"
+				/>
+
+				<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
+					<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+						<template #icon>
+							<Icon :name="FilterIcon" />
+						</template>
+					</n-button>
+				</n-badge>
 			</div>
-			<n-pagination
-				v-model:page="currentPage"
-				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
-				:item-count="totalFiltered"
-				:simple="simpleMode"
-			/>
-			<n-select
-				v-model:value="sort"
-				size="small"
-				:options="sortOptions"
-				:show-checkmark="false"
-				class="max-w-20"
-				:disabled="loading"
-			/>
-
-			<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
-				<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
-					<template #icon>
-						<Icon :name="FilterIcon" />
-					</template>
-				</n-button>
-			</n-badge>
-
-			<n-button size="small" secondary @click="showDeleteByTitleModal = true">
-				<template #icon>
-					<Icon :name="TrashIcon" />
-				</template>
-				<span class="hidden sm:inline">Bulk Delete</span>
-			</n-button>
 		</div>
 
 		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
