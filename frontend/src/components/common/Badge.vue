@@ -3,14 +3,14 @@
 		:is="!!href ? 'a' : 'div'"
 		class="badge"
 		:href
-		:class="[type, color, { 'cursor-help': hintCursor, cursor: pointCursor, fluid, bright }]"
+		:class="[type, color, { 'cursor-help': hintCursor, cursor: pointCursor, fluid, bright }, `badge-size-${size}`]"
 	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">
 			<slot name="iconLeft"></slot>
 			<slot name="label"></slot>
 			<slot name="iconRight"></slot>
 		</span>
-		<span v-if="$slots.value">
+		<span v-if="$slots.value" class="flex items-center gap-2">
 			<slot name="value"></slot>
 		</span>
 	</component>
@@ -20,7 +20,7 @@
 export type BadgeColor = "danger" | "warning" | "success" | "primary"
 
 // TODO: refactor
-const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
+const { type, hintCursor, pointCursor, color, href, fluid, size } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean
 	pointCursor?: boolean
@@ -28,6 +28,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	bright?: boolean
 	color?: BadgeColor
 	href?: string
+	size?: "small" | "medium"
 }>()
 </script>
 
@@ -175,6 +176,11 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 				}
 			}
 		}
+	}
+
+	&.badge-size-small {
+		font-size: 12px;
+		height: 20px;
 	}
 }
 </style>

@@ -36,7 +36,6 @@ export default antfu(
 		}
 	},
 	{
-		// Applica vue/block-order solo ai file .vue
 		files: ["**/*.vue"],
 		rules: {
 			"vue/block-order": [

@@ -4,7 +4,7 @@
 			hoverable
 			clickable
 			:embedded
-			class="h-full"
+			class="@container h-full"
 			main-box-class="grow"
 			card-entity-wrapper-class="h-full"
 			header-box-class="flex-nowrap! items-start"
@@ -12,51 +12,54 @@
 		>
 			<template #headerMain>{{ rule.name }}</template>
 			<template #headerExtra>
-				<div class="flex items-center gap-2">
+				<div class="text-default flex items-center gap-2">
 					<n-tooltip v-if="rule.has_graylog_query">
 						<template #trigger>
-							<Icon :name="GraylogIcon" :size="16" class="text-primary-color" />
+							<Icon :name="GraylogIcon" :size="16" />
 						</template>
 						Has Graylog Query
 					</n-tooltip>
-					<PlatformBadge :platform="rule.platform" />
 				</div>
 			</template>
 			<template #default>
-				<div class="line-clamp-3 text-sm">
-					{{ rule.description }}
-				</div>
-			</template>
-			<template #footerMain>
-				<div class="flex flex-wrap items-center gap-2">
-					<SeverityBadge :severity="rule.severity" />
-
-					<Badge v-if="rule.status" :color="getStatusColor(rule.status)">
-						<template #value>{{ rule.status }}</template>
-					</Badge>
-
-					<Badge v-if="rule.type" type="splitted">
-						<template #label>type</template>
-						<template #value>{{ rule.type }}</template>
-					</Badge>
-
-					<div v-if="rule.mitre_attack_id?.length" class="flex items-center gap-1">
-						<Badge
-							v-for="mitre of rule.mitre_attack_id.slice(0, 2)"
-							:key="mitre"
-							size="small"
-							color="primary"
-						>
-							<template #value>{{ mitre }}</template>
+				<div class="flex flex-col gap-2">
+					<div class="line-clamp-3 text-sm">
+						{{ rule.description }}
+					</div>
+					<div class="flex flex-wrap items-center gap-2">
+						<Badge v-if="rule.status" :color="getStatusColor(rule.status)" size="small">
+							<template #value>{{ rule.status }}</template>
 						</Badge>
-						<Badge v-if="rule.mitre_attack_id.length > 2" size="small">
-							<template #value>+{{ rule.mitre_attack_id.length - 2 }}</template>
+
+						<Badge v-if="rule.type" type="splitted" size="small">
+							<template #label>type</template>
+							<template #value>{{ rule.type }}</template>
 						</Badge>
+
+						<div v-if="rule.mitre_attack_id?.length" class="flex items-center gap-1">
+							<Badge
+								v-for="mitre of rule.mitre_attack_id.slice(0, 2)"
+								:key="mitre"
+								size="small"
+								color="primary"
+							>
+								<template #value>{{ mitre }}</template>
+							</Badge>
+							<Badge v-if="rule.mitre_attack_id.length > 2" size="small">
+								<template #value>+{{ rule.mitre_attack_id.length - 2 }}</template>
+							</Badge>
+						</div>
 					</div>
 				</div>
 			</template>
+			<template #mainExtra>
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<SeverityBadge :severity="rule.severity" />
+					<PlatformBadge :platform="rule.platform" />
+				</div>
+			</template>
 			<template #footerExtra>
-				<div class="flex items-center gap-2">
+				<div class="flex w-full items-center justify-end gap-2">
 					<n-tooltip v-if="rule.has_graylog_query">
 						<template #trigger>
 							<n-button size="small" secondary @click.stop="showProvisionModal = true">
