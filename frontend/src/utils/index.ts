@@ -1,11 +1,13 @@
 import type { Component } from "vue"
-import type { OsTypesFull } from "@/types/common.d"
+import type { OsTypesFull, SafeAny } from "@/types/common.d"
 import process from "node:process"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
+import isDateObject from "lodash/isDate"
 import _trim from "lodash/trim"
 import { h } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import dayjs from "./dayjs"
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {
@@ -138,4 +140,33 @@ export function getAvatar(params: { seed: string; text?: string; size?: number; 
 	const format: "png" | "svg" = params.text ? "svg" : params.format || "svg"
 
 	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`
+}
+
+export function isDate(val?: SafeAny): boolean {
+	if (val === undefined || val === null || val === "") return false
+
+	if (isDateObject(val)) return true
+
+	const strVal = String(val)
+
+	// Check for numeric timestamps (seconds, ms or µs)
+	// We enforce a minimum length of 10 digits to avoid false positives like "188" or "2"
+	if (/^\d{10,}$/.test(strVal)) {
+		const num = Number.parseInt(strVal)
+		// Handle ms (13 digits) or µs (16+ digits) by normalizing to ms
+		const date = strVal.length >= 13 ? dayjs(num / 10 ** (strVal.length - 13)) : dayjs(num * 1000)
+		return date.isValid()
+	}
+
+	// For ISO strings and other complex formats, we use a hybrid approach
+	// 1. Check for ISO-like strings (containing T and possibly Z or +/- offset)
+	if (strVal.includes("T")) {
+		// dayjs() parser is quite robust for ISO 8601 even without explicit format
+		return dayjs(strVal).isValid()
+	}
+
+	// 2. Strict parsing for regional formats
+	const regionalFormats = ["DD/MM/YYYY", "MM/DD/YYYY", "DD-MM-YYYY", "MM-DD-YYYY", "YYYY-MM-DD", "YYYY-DD-MM"]
+
+	return dayjs(strVal, regionalFormats, true).isValid()
 }
