@@ -21,7 +21,7 @@
 
 		<n-card content-class="p-0!">
 			<!-- Rules List -->
-			<n-spin :show="loadingRules">
+			<n-spin :show="loadingRules" class="min-h-50">
 				<n-scrollbar
 					v-if="filteredRules.length"
 					class="max-h-90 p-3!"

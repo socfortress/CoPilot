@@ -39,7 +39,7 @@
 				<n-popover v-if="showMobileMenu" overlap placement="left" display-directive="show">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-pointer">
+							<n-button size="small">
 								<template #icon>
 									<Icon :name="MenuIcon" />
 								</template>

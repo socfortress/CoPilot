@@ -1,5 +1,5 @@
 <template>
-	<Badge :color="getSeverityColor(severity)" type="splitted">
+	<Badge :color="getSeverityColor(severity)" type="splitted" bright>
 		<template #iconLeft>
 			<Icon :name="getSeverityIcon(severity)" :size="14" />
 		</template>

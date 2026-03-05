@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<n-alert type="info">
 			CoPilot Searches provides pre-built detection queries for threat hunting in your Wazuh indexer. See
 			<a href="https://github.com/socfortress/CoPilot-Search-Queries" target="_blank">
@@ -33,50 +33,76 @@
 						</div>
 					</n-popover>
 
-					<n-select
-						v-model:value="selectedPlatform"
-						:options="platformOptions"
-						size="small"
-						placeholder="Platform"
-						class="max-w-30"
-						:consistent-menu-width="false"
-					/>
-
-					<n-select
-						v-model:value="selectedSeverity"
-						:options="severityOptions"
-						clearable
-						size="small"
-						placeholder="Severity"
-						class="max-w-30"
-						:consistent-menu-width="false"
-					/>
-
-					<n-select
-						v-model:value="selectedStatus"
-						:options="statusOptions"
-						clearable
-						size="small"
-						placeholder="Status"
-						class="max-w-30"
-						:consistent-menu-width="false"
-					/>
-
-					<n-checkbox v-model:checked="hasGraylogFilter" size="small">
-						<span class="text-xs">Graylog Only</span>
-					</n-checkbox>
-
 					<n-input
 						v-model:value="searchQuery"
 						size="small"
 						placeholder="Search rules..."
-						class="max-w-120!"
+						class="max-w-120"
 						clearable
 					>
 						<template #prefix>
 							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
+
+					<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
+									<n-button size="small" @click="showFilters = true">
+										<template #icon>
+											<Icon :name="FilterIcon" />
+										</template>
+									</n-button>
+								</n-badge>
+							</div>
+						</template>
+						<div class="divide-border flex w-50 flex-col gap-0 divide-y">
+							<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
+								<n-select
+									v-model:value="selectedPlatform"
+									:options="platformOptions"
+									size="small"
+									placeholder="Platform"
+									class="w-full"
+									clearable
+									:consistent-menu-width="false"
+								/>
+
+								<n-select
+									v-model:value="selectedSeverity"
+									:options="severityOptions"
+									clearable
+									size="small"
+									placeholder="Severity"
+									class="w-full"
+									:consistent-menu-width="false"
+								/>
+
+								<n-select
+									v-model:value="selectedStatus"
+									:options="statusOptions"
+									clearable
+									size="small"
+									placeholder="Status"
+									class="w-full"
+									:consistent-menu-width="false"
+								/>
+
+								<n-checkbox v-model:checked="hasGraylogFilter" size="small">
+									<span class="text-xs">Graylog Only</span>
+								</n-checkbox>
+							</div>
+							<div class="flex justify-between gap-2 px-3 pt-2">
+								<div class="flex justify-start gap-2">
+									<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
+								</div>
+								<div class="flex justify-end gap-2">
+									<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
+								</div>
+							</div>
+						</div>
+					</n-popover>
 				</div>
 
 				<n-button size="small" :loading="refreshing" @click="handleRefresh">
@@ -96,7 +122,10 @@
 
 			<n-spin :show="loading">
 				<div class="my-3">
-					<div v-if="list.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					<div
+						v-if="list.length"
+						class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3 @6xl:grid-cols-4"
+					>
 						<RuleCard v-for="rule of list" :key="rule.id" :rule="rule" />
 					</div>
 
@@ -123,8 +152,20 @@
 import type { PlatformFilter, RuleListQuery, RuleSeverity, RuleStatus, RuleSummary } from "@/types/copilotSearches.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { NAlert, NButton, NCheckbox, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
-import { ref } from "vue"
+import {
+	NAlert,
+	NBadge,
+	NButton,
+	NCheckbox,
+	NEmpty,
+	NInput,
+	NPagination,
+	NPopover,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import RuleCard from "./RuleCard.vue"
@@ -140,18 +181,23 @@ const pagination = ref({
 	filtered: 0
 })
 
-const selectedPlatform = ref<PlatformFilter>("all")
+const selectedPlatform = ref<PlatformFilter | null>(null)
 const selectedSeverity = ref<RuleSeverity | null>(null)
 const selectedStatus = ref<RuleStatus | null>(null)
 const searchQuery = ref<string | null>(null)
 const hasGraylogFilter = ref(false)
+const showFilters = ref(false)
+
+const filtered = computed<boolean>(() => {
+	return !!selectedPlatform.value || !!selectedSeverity.value || !!selectedStatus.value || !!hasGraylogFilter.value
+})
 
 const InfoIcon = "carbon:information"
+const FilterIcon = "carbon:filter-edit"
 const SearchIcon = "carbon:search"
-const RefreshIcon = "carbon:refresh"
+const RefreshIcon = "carbon:renew"
 
 const platformOptions = [
-	{ label: "All Platforms", value: "all" },
 	{ label: "Linux", value: "linux" },
 	{ label: "Windows", value: "windows" }
 ]
@@ -170,6 +216,14 @@ const statusOptions = [
 ]
 
 let abortController: AbortController | null = null
+
+function resetFilters() {
+	selectedPlatform.value = null
+	selectedSeverity.value = null
+	selectedStatus.value = null
+	hasGraylogFilter.value = false
+	showFilters.value = false
+}
 
 function getList() {
 	abortController?.abort()
