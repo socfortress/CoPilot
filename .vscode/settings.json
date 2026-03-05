@@ -102,5 +102,7 @@
 		"trigger-class",
 		"tab-class",
 		"content-class"
-	]
+	],
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
 }
