@@ -2,12 +2,12 @@
 	<ServicesList
 		v-model:selected="selected"
 		type="network-connector"
-		:embedded="embedded"
-		:hide-totals="hideTotals"
-		:selectable="selectable"
-		:disabled-ids-list="disabledIdsList"
-		:loading="loading"
-		:list="list"
+		:embedded
+		:hide-totals
+		:selectable
+		:disabled-ids-list
+		:loading
+		:list
 	/>
 </template>
 

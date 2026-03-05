@@ -25,7 +25,7 @@
 					class="flex-1"
 					@update:value="loadReports"
 				/>
-				<n-button :loading="loading" @click="loadReports">
+				<n-button :loading @click="loadReports">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -36,13 +36,7 @@
 
 		<!-- Reports Table -->
 		<n-card>
-			<n-data-table
-				:columns="columns"
-				:data="reports"
-				:loading="loading"
-				:pagination="pagination"
-				:row-key="(row: SCAReport) => row.id"
-			/>
+			<n-data-table :columns :data="reports" :loading :pagination :row-key="(row: SCAReport) => row.id" />
 		</n-card>
 
 		<!-- Generate Report Modal -->
@@ -54,7 +48,7 @@
 			:closable="true"
 		>
 			<GenerateReportForm
-				:customers="customers"
+				:customers
 				:loading="generating"
 				@generate="handleGenerateReport"
 				@cancel="showGenerateModal = false"

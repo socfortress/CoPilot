@@ -54,9 +54,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
 			/>
@@ -84,7 +84,7 @@
 			<n-pagination
 				v-if="list.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>

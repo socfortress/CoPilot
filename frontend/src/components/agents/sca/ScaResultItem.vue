@@ -66,7 +66,7 @@
 			:bordered="false"
 			segmented
 		>
-			<ScaResultItemDetails :data="data" />
+			<ScaResultItemDetails :data />
 		</n-modal>
 	</div>
 </template>

@@ -55,7 +55,7 @@
 				v-model:page="page"
 				v-model:page-size="pageSize"
 				v-model:sort="sort"
-				:page-sizes="pageSizes"
+				:page-sizes
 				:show-page-sizes="!compactMode"
 				:show-sort="!smallDeviceMode"
 			/>

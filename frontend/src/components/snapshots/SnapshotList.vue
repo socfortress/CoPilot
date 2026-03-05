@@ -22,7 +22,7 @@
 		<n-spin :show="loading">
 			<n-card>
 				<n-data-table
-					:columns="columns"
+					:columns
 					:data="snapshots"
 					:bordered="false"
 					:single-line="false"

@@ -140,9 +140,9 @@
 				<!-- Results Table -->
 				<n-data-table
 					v-else
-					:columns="columns"
+					:columns
 					:data="paginatedResults"
-					:pagination="pagination"
+					:pagination
 					:loading="isConnecting"
 					:row-key="(row: AgentScaOverviewItem) => `${row.agent_id}-${row.policy_id}`"
 					striped

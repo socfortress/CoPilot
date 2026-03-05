@@ -3,7 +3,7 @@
 		<CardStats
 			title="SOC Alerts"
 			:value="total"
-			:vertical="vertical"
+			:vertical
 			hovered
 			class="h-full cursor-pointer"
 			@click="routeSocAlerts().navigate()"

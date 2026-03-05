@@ -43,14 +43,7 @@
 			segmented
 		>
 			<div class="flex h-full w-full items-center justify-center">
-				<SocCaseItem
-					v-if="caseId"
-					:case-id="caseId"
-					embedded
-					hide-soc-alert-link
-					hide-soc-case-action
-					class="w-full"
-				/>
+				<SocCaseItem v-if="caseId" :case-id embedded hide-soc-alert-link hide-soc-case-action class="w-full" />
 			</div>
 		</n-modal>
 	</div>

@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="customer-provisioning-default-settings-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-3">
 				<div>
 					<n-form-item label="Name" path="case_name">

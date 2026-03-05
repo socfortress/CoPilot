@@ -14,7 +14,7 @@
 						:key="item.id"
 						:type
 						:data="item"
-						:embedded="embedded"
+						:embedded
 						:selectable="isSelectable(item)"
 						:disabled="isDisabled(item)"
 						:checked="selected?.id === item.id"

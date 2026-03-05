@@ -49,7 +49,7 @@
 							size="small"
 							type="primary"
 							secondary
-							:loading="loading"
+							:loading
 							:disabled="!areFiltersValid"
 							@click="getData()"
 						>
@@ -65,7 +65,7 @@
 					<QuarantineItem
 						v-for="quarantine of quarantineList"
 						:key="quarantine.Result + quarantine.Time"
-						:quarantine="quarantine"
+						:quarantine
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>

@@ -13,7 +13,7 @@
 					<ConnectorItem
 						v-for="connector of connectorsList"
 						:key="connector.id"
-						:connector="connector"
+						:connector
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						@verified="getConnectors()"
 						@updated="getConnectors()"

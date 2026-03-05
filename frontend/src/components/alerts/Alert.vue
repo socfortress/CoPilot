@@ -130,7 +130,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="alert._id" name="Agent" tab="Agent" display-directive="show">
 					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of agentProperties" :key="key">
+						<CardKV v-for="(value, key) of agentProperties" :key>
 							<template #key>
 								{{ key }}
 							</template>

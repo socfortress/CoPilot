@@ -22,8 +22,8 @@
 									<SubscriptionCard
 										v-for="subscription of activeSubscriptions"
 										:key="subscription.id"
-										:subscription="subscription"
-										:license-data="licenseData"
+										:subscription
+										:license-data
 										embedded
 										show-delete-on-dialog
 										@deleted="load()"

@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="submitting" class="flex min-h-48 grow flex-col" content-class="flex grow flex-col gap-4">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-3">
 				<div>
 					<n-form-item label="Description" path="ioc_description">

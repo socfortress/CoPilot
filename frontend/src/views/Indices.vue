@@ -1,11 +1,11 @@
 <template>
 	<div class="page">
 		<div class="section">
-			<IndicesMarquee :indices="indices" @click="setIndex" />
+			<IndicesMarquee :indices @click="setIndex" />
 		</div>
 
 		<div class="section">
-			<Details v-model="currentIndex" :indices="indices" />
+			<Details v-model="currentIndex" :indices />
 		</div>
 
 		<div class="section">
@@ -14,7 +14,7 @@
 					<ClusterHealth class="stretchy" />
 				</div>
 				<div class="col basis-1/2">
-					<UnhealthyIndices :indices="indices" class="stretchy" @click="setIndex" />
+					<UnhealthyIndices :indices class="stretchy" @click="setIndex" />
 				</div>
 			</div>
 		</div>
@@ -29,7 +29,7 @@
 					<NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
 				</div>
 				<div class="col basis-3/5 overflow-hidden">
-					<TopIndices :indices="indices" style="border-radius: 0" :bordered="false" />
+					<TopIndices :indices style="border-radius: 0" :bordered="false" />
 				</div>
 			</div>
 		</n-card>

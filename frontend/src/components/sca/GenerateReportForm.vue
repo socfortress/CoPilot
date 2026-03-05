@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formValue" :rules="rules" label-placement="top">
+	<n-form ref="formRef" :model="formValue" :rules label-placement="top">
 		<n-form-item label="Customer" path="customer_code">
 			<n-select
 				v-model:value="formValue.customer_code"
@@ -52,7 +52,7 @@
 
 		<n-space justify="end" class="mt-4">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleGenerate">
+			<n-button type="primary" :loading @click="handleGenerate">
 				<template #icon>
 					<Icon :name="GenerateIcon" />
 				</template>

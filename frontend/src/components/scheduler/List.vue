@@ -3,7 +3,7 @@
 		<n-spin :show="loading" class="min-h-48">
 			<div class="min-h-52">
 				<template v-if="jobs.length">
-					<JobCard v-for="job of jobs" :key="job.id" :job="job" class="mb-2" />
+					<JobCard v-for="job of jobs" :key="job.id" :job class="mb-2" />
 				</template>
 				<template v-else>
 					<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />

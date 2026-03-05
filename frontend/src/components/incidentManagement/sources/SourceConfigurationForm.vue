@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="creation-report-form">
-		<n-form ref="formRef" :model="form" :rules="rules">
+		<n-form ref="formRef" :model="form" :rules>
 			<div class="flex flex-col gap-8">
 				<div class="flex flex-col gap-2">
 					<n-form-item v-if="showIndexNameField" label="Index name" path="index_name">

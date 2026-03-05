@@ -37,9 +37,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
 			/>
@@ -89,7 +89,7 @@
 					<SocCaseItem
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
-						:case-data="caseData"
+						:case-data
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="getData()"
 					/>
@@ -103,7 +103,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>

@@ -55,7 +55,7 @@
 				<n-grid v-else :cols="2" :x-gap="16" :y-gap="16">
 					<n-gi v-for="config in configs" :key="config.id">
 						<GitHubAuditCard
-							:config="config"
+							:config
 							@click="openDetail(config)"
 							@edit="openEditForm"
 							@audit-complete="loadConfigs"

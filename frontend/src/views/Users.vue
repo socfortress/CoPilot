@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<UsersList :highlight="highlight" />
+		<UsersList :highlight />
 	</div>
 </template>
 

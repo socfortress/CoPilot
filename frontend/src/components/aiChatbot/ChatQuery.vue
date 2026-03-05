@@ -25,7 +25,7 @@
 						<n-select
 							v-model:value="selectedServer"
 							:options="serverOptions"
-							:render-option="renderOption"
+							:render-option
 							size="tiny"
 							:consistent-menu-width="false"
 							class="w-auto!"

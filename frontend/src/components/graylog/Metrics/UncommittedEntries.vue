@@ -6,7 +6,7 @@
 					<Icon v-if="isWarning" :name="DangerIcon" />
 					<span>Uncommitted Journal Entries</span>
 				</div>
-				<apexchart height="70" :options="options" :series="series"></apexchart>
+				<apexchart height="70" :options :series></apexchart>
 			</div>
 			<div class="value flex flex-col justify-center" :class="{ warning: isWarning }">
 				<span>{{ value }}</span>

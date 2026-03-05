@@ -1,5 +1,5 @@
 <template>
-	<n-form :model="model" label-placement="left" label-width="auto">
+	<n-form :model label-placement="left" label-width="auto">
 		<n-form-item label="Protocol" required>
 			<n-radio-group v-model:value="model.protocol">
 				<n-radio-button value="tcp">TCP</n-radio-button>

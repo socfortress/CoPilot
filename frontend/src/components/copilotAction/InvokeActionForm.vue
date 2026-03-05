@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
+	<n-form ref="formRef" :model="formValue" :rules label-placement="left" label-width="auto">
 		<!-- Technology Info Alert -->
 		<n-alert v-if="action?.technology" type="info" class="mb-4" size="small">
 			<template #header>
@@ -102,7 +102,7 @@
 
 		<div class="flex justify-end gap-2">
 			<n-button @click="emit('close')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" :disabled="!isFormValid" @click="handleInvoke">
+			<n-button type="primary" :loading :disabled="!isFormValid" @click="handleInvoke">
 				<template #icon>
 					<Icon :name="PlayIcon" />
 				</template>

@@ -23,7 +23,7 @@
 			>
 				<!-- Read-only View (when not editing) -->
 				<div class="grid-auto-fit-200 grid gap-2">
-					<CardKV v-for="(value, key) of integrationData" :key="key">
+					<CardKV v-for="(value, key) of integrationData" :key>
 						<template #key>
 							{{ getMetaFieldLabel(`${key}`) }}
 						</template>

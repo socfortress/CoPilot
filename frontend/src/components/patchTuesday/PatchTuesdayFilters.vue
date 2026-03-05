@@ -7,7 +7,7 @@
 				<n-select
 					:value="filters.cycle"
 					:options="cycleOptions"
-					:loading="loading"
+					:loading
 					placeholder="Select cycle"
 					style="min-width: 140px"
 					@update:value="updateFilter('cycle', $event)"

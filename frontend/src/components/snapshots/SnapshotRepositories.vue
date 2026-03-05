@@ -14,7 +14,7 @@
 
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Snapshot Repositories</h2>
-			<n-button type="primary" :loading="loading" @click="fetchRepositories">
+			<n-button type="primary" :loading @click="fetchRepositories">
 				<template #icon>
 					<Icon :name="RefreshIcon" :size="16" />
 				</template>
@@ -24,13 +24,7 @@
 
 		<n-spin :show="loading">
 			<n-card>
-				<n-data-table
-					:columns="columns"
-					:data="repositories"
-					:bordered="false"
-					:single-line="false"
-					size="small"
-				/>
+				<n-data-table :columns :data="repositories" :bordered="false" :single-line="false" size="small" />
 			</n-card>
 		</n-spin>
 

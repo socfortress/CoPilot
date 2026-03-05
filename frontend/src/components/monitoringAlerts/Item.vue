@@ -35,7 +35,7 @@
 		<template #footerExtra>
 			<AlertActions
 				class="flex flex-wrap gap-3"
-				:alert="alert"
+				:alert
 				size="small"
 				@deleted="emit('deleted')"
 				@invoked="emit('invoked')"

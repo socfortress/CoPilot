@@ -85,7 +85,7 @@
 						size="small"
 						type="primary"
 						secondary
-						:loading="loading"
+						:loading
 						:disabled="!areFiltersValid"
 						@click="getData()"
 					>
@@ -100,7 +100,7 @@
 					<CommandItem
 						v-for="command of commandList"
 						:key="command.Stdout"
-						:command="command"
+						:command
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>

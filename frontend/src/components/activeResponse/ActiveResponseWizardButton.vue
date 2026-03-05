@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type :secondary :loading="loading" @click="openModal">
+	<n-button :size :type :secondary :loading @click="openModal">
 		<template #icon>
 			<Icon :name="InvokeIcon" />
 		</template>

@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+	<n-form ref="formRef" :model="formData" :rules label-placement="left" label-width="160px">
 		<n-form-item label="Name" path="name">
 			<n-input v-model:value="formData.name" placeholder="Enter a friendly name for this schedule" />
 		</n-form-item>
@@ -54,7 +54,7 @@
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">
+			<n-button type="primary" :loading @click="handleSubmit">
 				{{ isEditing ? "Update Schedule" : "Create Schedule" }}
 			</n-button>
 		</div>

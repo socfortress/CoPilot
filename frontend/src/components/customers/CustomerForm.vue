@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" class="customer-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
-					<div v-for="(val, key) of fieldsMeta" :key="key" class="grow">
+					<div v-for="(val, key) of fieldsMeta" :key class="grow">
 						<n-form-item :label="val.label" :path="key" class="grow">
 							<n-input
 								v-model:value.trim="form[key]"
@@ -21,9 +21,7 @@
 					</div>
 					<div class="flex gap-4">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
-							Submit
-						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading @click="validate()">Submit</n-button>
 					</div>
 				</div>
 			</div>

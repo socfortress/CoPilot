@@ -49,7 +49,7 @@
 					</n-button>
 					<n-button
 						v-if="stream.is_editable && !stream.disabled"
-						:loading="loading"
+						:loading
 						type="warning"
 						secondary
 						size="small"
@@ -62,7 +62,7 @@
 					</n-button>
 					<n-button
 						v-if="stream.is_editable && stream.disabled"
-						:loading="loading"
+						:loading
 						type="success"
 						secondary
 						size="small"

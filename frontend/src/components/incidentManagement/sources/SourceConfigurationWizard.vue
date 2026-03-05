@@ -4,7 +4,7 @@
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
-						<n-steps :current="current" size="small" :status="currentStatus">
+						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Source" />
 							<n-step title="Configuration" />
 						</n-steps>

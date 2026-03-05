@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="rules-list">
 		<n-scrollbar ref="scrollContent">
 			<div class="list flex min-h-52 flex-col gap-2">
-				<Rule v-for="rule of rules" :key="rule.id" :rule="rule" :highlight="highlight === rule.id" embedded />
+				<Rule v-for="rule of rules" :key="rule.id" :rule :highlight="highlight === rule.id" embedded />
 			</div>
 		</n-scrollbar>
 	</n-spin>

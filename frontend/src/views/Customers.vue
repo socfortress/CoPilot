@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<CustomersList
-			:highlight="highlight"
+			:highlight
 			:reload
 			@loaded="
 				(() => {

@@ -139,7 +139,7 @@
 								<n-button
 									type="success"
 									size="large"
-									:loading="loading"
+									:loading
 									:disabled="!accountStepValid || !detailsStepValid"
 									@click="signUp"
 								>

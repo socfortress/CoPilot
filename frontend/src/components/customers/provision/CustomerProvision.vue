@@ -2,11 +2,7 @@
 	<div class="customer-provision">
 		<transition name="form-fade" mode="out-in">
 			<div v-if="editing">
-				<CustomerProvisionWizard
-					:customer-name="customerNameSanitized"
-					:customer-code="customerCode"
-					@submitted="submitted"
-				>
+				<CustomerProvisionWizard :customer-name="customerNameSanitized" :customer-code @submitted="submitted">
 					<template #additionalActions>
 						<n-button @click="editing = false">Close</n-button>
 					</template>
@@ -31,7 +27,7 @@
 				</div>
 
 				<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-					<CardKV v-for="(value, key) of customerMeta" :key="key">
+					<CardKV v-for="(value, key) of customerMeta" :key>
 						<template #key>
 							{{ key }}
 						</template>

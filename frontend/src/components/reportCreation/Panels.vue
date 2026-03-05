@@ -124,13 +124,13 @@
 					</n-button>
 
 					<div v-if="panelsReady" class="flex items-center gap-2">
-						<n-button type="success" :loading="loading" @click="print()">
+						<n-button type="success" :loading @click="print()">
 							<template #icon>
 								<Icon :name="PrintIcon" />
 							</template>
 							Print Report
 						</n-button>
-						<n-button type="success" :loading="loading" @click="openSettings()">
+						<n-button type="success" :loading @click="openSettings()">
 							<template #icon>
 								<Icon :name="SettingsIcon" />
 							</template>

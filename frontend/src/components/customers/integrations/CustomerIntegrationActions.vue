@@ -1,6 +1,6 @@
 <template>
 	<div class="contents">
-		<n-button v-if="isDeployEnabled" :loading="loading" type="success" :size secondary @click.stop="provision()">
+		<n-button v-if="isDeployEnabled" :loading type="success" :size secondary @click.stop="provision()">
 			<template #icon>
 				<Icon :name="DeployIcon" />
 			</template>

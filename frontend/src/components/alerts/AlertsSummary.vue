@@ -31,7 +31,7 @@
 			<div class="alert-list" :class="{ expand: showAllAlerts }">
 				<n-scrollbar class="list-scroll" trigger="none">
 					<div class="flex flex-col gap-2">
-						<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert="alert" embedded />
+						<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert embedded />
 					</div>
 				</n-scrollbar>
 

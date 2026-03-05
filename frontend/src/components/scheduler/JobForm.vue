@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="job-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-1">
 				<n-form-item label="Time interval (minutes)" path="time_interval" class="grow">
 					<n-input-number

@@ -126,7 +126,7 @@
 						v-if="list.length"
 						class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3 @6xl:grid-cols-4"
 					>
-						<RuleCard v-for="rule of list" :key="rule.id" :rule="rule" />
+						<RuleCard v-for="rule of list" :key="rule.id" :rule />
 					</div>
 
 					<template v-else>

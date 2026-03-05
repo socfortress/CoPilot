@@ -222,11 +222,7 @@
 			display-directive="show"
 			segmented
 		>
-			<ProvisionGraylogForm
-				:rule-id="ruleId"
-				@success="showProvisionModal = false"
-				@close="showProvisionModal = false"
-			/>
+			<ProvisionGraylogForm :rule-id @success="showProvisionModal = false" @close="showProvisionModal = false" />
 		</n-modal>
 	</n-spin>
 </template>

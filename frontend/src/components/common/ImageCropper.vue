@@ -1,6 +1,6 @@
 <template>
 	<div class="image-cropper">
-		<slot :open-cropper="openCropper" />
+		<slot :open-cropper />
 
 		<n-modal v-model:show="showCropper">
 			<n-card class="image-cropper-modal flex flex-col" content-class="p-5!">
@@ -17,9 +17,9 @@
 							ref="cropper"
 							class="cropper aspect-square"
 							:src="img"
-							:stencil-size="stencilSize"
-							:stencil-props="stencilProps"
-							:resize-image="resizeImage"
+							:stencil-size
+							:stencil-props
+							:resize-image
 							image-restriction="stencil"
 							:stencil-component="stencil"
 						/>

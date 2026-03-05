@@ -132,7 +132,7 @@
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
-						<ActiveResponseAgent v-if="agent" :agent="agent" embedded />
+						<ActiveResponseAgent v-if="agent" :agent embedded />
 					</n-tab-pane>
 					<n-tab-pane name="file-collection" tab="File Collection" display-directive="show:lazy">
 						<div class="section">
@@ -141,7 +141,7 @@
 					</n-tab-pane>
 					<n-tab-pane name="data-store" tab="Data Store" display-directive="show:lazy">
 						<div class="section">
-							<AgentDataStoreTab v-if="agent" :agent="agent" />
+							<AgentDataStoreTab v-if="agent" :agent />
 						</div>
 					</n-tab-pane>
 				</n-tabs>

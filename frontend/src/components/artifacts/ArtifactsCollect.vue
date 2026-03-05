@@ -74,7 +74,7 @@
 						size="small"
 						type="primary"
 						secondary
-						:loading="loading"
+						:loading
 						:disabled="!areFiltersValid"
 						@click="getData()"
 					>
@@ -176,7 +176,7 @@
 						v-for="collect of collectList"
 						:key="`${collect.___id}`"
 						embedded
-						:collect="collect"
+						:collect
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>

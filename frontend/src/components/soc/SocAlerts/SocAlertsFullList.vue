@@ -10,7 +10,7 @@
 		>
 			<template #1>
 				<SocAlertsBookmarks
-					:users-list="usersList"
+					:users-list
 					@bookmark="reloadAlerts()"
 					@deleted="itemDeleted($event)"
 					@loaded="bookmarksList = $event"
@@ -19,9 +19,9 @@
 			</template>
 			<template #2>
 				<SocAlertsList
-					:highlight="highlight"
-					:bookmarks-list="bookmarksList"
-					:users-list="usersList"
+					:highlight
+					:bookmarks-list
+					:users-list
 					@bookmark="reloadBookmarks()"
 					@deleted="reloadBookmarks()"
 					@mounted="socAlertsCTX = $event"
@@ -38,9 +38,9 @@
 
 		<template v-else>
 			<SocAlertsList
-				:highlight="highlight"
-				:bookmarks-list="bookmarksList"
-				:users-list="usersList"
+				:highlight
+				:bookmarks-list
+				:users-list
 				@bookmark="reloadBookmarks()"
 				@deleted="reloadBookmarks()"
 				@mounted="socAlertsCTX = $event"
@@ -64,7 +64,7 @@
 			>
 				<n-drawer-content title="Alerts list" closable :native-scrollbar="false">
 					<SocAlertsBookmarks
-						:users-list="usersList"
+						:users-list
 						@bookmark="reloadAlerts()"
 						@deleted="itemDeleted($event)"
 						@loaded="bookmarksList = $event"

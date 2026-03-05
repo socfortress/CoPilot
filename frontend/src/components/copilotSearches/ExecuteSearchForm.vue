@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loadingRule">
-		<n-form v-if="rule" ref="formRef" :model="formValue" :rules="rules" label-placement="left" label-width="auto">
+		<n-form v-if="rule" ref="formRef" :model="formValue" :rules label-placement="left" label-width="auto">
 			<!-- Index Pattern -->
 			<n-form-item label="Index Pattern" path="index_pattern" required>
 				<n-input v-model:value="formValue.index_pattern" placeholder="e.g., wazuh-alerts-*" clearable />

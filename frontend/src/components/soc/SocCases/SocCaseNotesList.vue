@@ -5,7 +5,7 @@
 		</div>
 		<n-spin :show="loadingNotes" class="min-h-28">
 			<div v-if="notesList?.length" class="flex flex-col gap-2 p-7 pt-3" style="container-type: inline-size">
-				<SocCaseNote v-for="note of notesList" :key="note.note_id" :note="note" />
+				<SocCaseNote v-for="note of notesList" :key="note.note_id" :note />
 			</div>
 			<template v-else>
 				<n-empty v-if="!loadingNotes" description="No items found" class="h-48 justify-center" />

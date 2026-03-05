@@ -21,7 +21,7 @@
 					/>
 				</template>
 			</n-input>
-			<n-button type="primary" ghost :loading="loading" size="small" @click="updateAgent()">
+			<n-button type="primary" ghost :loading size="small" @click="updateAgent()">
 				<span v-if="!loading">Save</span>
 			</n-button>
 		</n-input-group>

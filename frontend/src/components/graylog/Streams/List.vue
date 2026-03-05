@@ -27,9 +27,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
 			/>
@@ -72,7 +72,7 @@
 		</div>
 		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="itemsPaginated.length">
-				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
+				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream />
 			</template>
 			<template v-else>
 				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
@@ -82,7 +82,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>

@@ -18,8 +18,8 @@
 			segmented
 		>
 			<ActiveResponseInvokeForm
-				:active-response="activeResponse"
-				:agent-id="agentId"
+				:active-response
+				:agent-id
 				@mounted="activeResponseInvokeFormCTX = $event"
 				@submitted="close()"
 				@start-loading="loadingInvoke = true"

@@ -7,9 +7,9 @@
 					:syncing="loadingSync"
 					:agents-length="agents.length"
 					:agents-filtered-length="agentsFiltered.length"
-					:agents-critical="agentsCritical"
-					:agents-online="agentsOnline"
-					:selection-mode="selectionMode"
+					:agents-critical
+					:agents-online
+					:selection-mode
 					:selected-count="selectedAgents.length"
 					@run="runCommand($event)"
 					@click="routeAgent($event.agent_id).navigate()"
@@ -50,12 +50,7 @@
 				</n-spin>
 
 				<div class="pagination-wrapper">
-					<n-pagination
-						v-model:page="page"
-						:page-size="pageSize"
-						:page-slot="5"
-						:item-count="agentsFiltered.length"
-					/>
+					<n-pagination v-model:page="page" :page-size :page-slot="5" :item-count="agentsFiltered.length" />
 				</div>
 			</div>
 		</div>
@@ -63,7 +58,7 @@
 		<!-- Bulk Delete Modal -->
 		<BulkDeleteModal
 			v-model:show="showBulkDeleteModal"
-			:selected-agents="selectedAgents"
+			:selected-agents
 			:customers="uniqueCustomers"
 			@remove-selection="removeFromSelection"
 			@deleted="onBulkDeleteComplete"

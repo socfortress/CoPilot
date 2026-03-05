@@ -46,7 +46,7 @@
 				<CaseDataStoreItem
 					v-for="dataStoreFile of dataStore"
 					:key="dataStoreFile.id"
-					:data-store-file="dataStoreFile"
+					:data-store-file
 					embedded
 					@deleted="deleteDataStoreFile(dataStoreFile)"
 				/>

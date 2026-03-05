@@ -13,7 +13,7 @@
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">
-						<SocCaseNoteTimeline :note="note" />
+						<SocCaseNoteTimeline :note />
 					</div>
 				</n-popover>
 			</template>
@@ -59,7 +59,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of properties" :key="key">
+						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
 							</template>
@@ -86,7 +86,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
 					<div class="p-7 pt-4">
-						<SocCaseNoteTimeline :note="note" />
+						<SocCaseNoteTimeline :note />
 					</div>
 				</n-tab-pane>
 			</n-tabs>

@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+	<n-form ref="formRef" :model="formData" :rules label-placement="left" label-width="160px">
 		<n-form-item label="Snapshot Name" path="snapshot">
 			<n-input v-model:value="formData.snapshot" placeholder="Enter snapshot name" />
 		</n-form-item>
@@ -33,7 +33,7 @@
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">Create Snapshot</n-button>
+			<n-button type="primary" :loading @click="handleSubmit">Create Snapshot</n-button>
 		</div>
 	</n-form>
 </template>

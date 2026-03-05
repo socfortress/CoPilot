@@ -6,8 +6,8 @@
 					<ActiveResponseItem
 						v-for="activeResponse of activeResponseList"
 						:key="activeResponse.name"
-						:active-response="activeResponse"
-						:embedded="embedded"
+						:active-response
+						:embedded
 						:agent-id="agent.agent_id"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>

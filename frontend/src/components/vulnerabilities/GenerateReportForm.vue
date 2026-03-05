@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+	<n-form ref="formRef" :model="formData" :rules label-placement="top">
 		<n-form-item label="Report Name" path="report_name">
 			<n-input v-model:value="formData.report_name" placeholder="Leave empty for auto-generated name" clearable />
 		</n-form-item>
@@ -45,7 +45,7 @@
 
 		<div class="mt-6 flex justify-end gap-3">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">Generate Report</n-button>
+			<n-button type="primary" :loading @click="handleSubmit">Generate Report</n-button>
 		</div>
 	</n-form>
 </template>

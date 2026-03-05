@@ -22,7 +22,7 @@
 			</template>
 
 			<template v-if="!hideActions" #footerExtra>
-				<ActiveResponseActions :agent-id="agentId" :active-response="activeResponse" size="small" />
+				<ActiveResponseActions :agent-id :active-response size="small" />
 			</template>
 		</CardEntity>
 
@@ -34,7 +34,7 @@
 			:bordered="false"
 			segmented
 		>
-			<ActiveResponseDetails :active-response="activeResponse" />
+			<ActiveResponseDetails :active-response />
 		</n-modal>
 	</div>
 </template>

@@ -154,7 +154,7 @@
 							</div>
 						</div>
 						<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-							<CardKV v-for="(value, key) of properties" :key="key">
+							<CardKV v-for="(value, key) of properties" :key>
 								<template #key>
 									{{ key }}
 								</template>

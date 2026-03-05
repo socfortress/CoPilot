@@ -155,7 +155,7 @@
 					</n-tab-pane>
 					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
 						<CustomerProvision
-							:customer-meta="customerMeta"
+							:customer-meta
 							:customer-code="customer.customer_code"
 							:customer-name="customer.customer_name"
 							@delete="customerMeta = null"

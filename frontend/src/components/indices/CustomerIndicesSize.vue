@@ -1,5 +1,5 @@
 <template>
-	<n-card title="Storage per Customer" :bordered="bordered">
+	<n-card title="Storage per Customer" :bordered>
 		<n-spin :show="loading">
 			<div v-if="customerSizes && customerSizes.length > 0" class="customer-list">
 				<div v-for="customer in customerSizes" :key="customer.customer" class="customer-item">

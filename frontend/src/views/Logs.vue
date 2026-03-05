@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<LogsList :user-id="userId" />
+		<LogsList :user-id />
 	</div>
 </template>
 

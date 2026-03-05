@@ -2,7 +2,7 @@
 	<component
 		:is="!!href ? 'a' : 'div'"
 		class="badge"
-		:href="href"
+		:href
 		:class="[type, color, { 'cursor-help': hintCursor, cursor: pointCursor, fluid, bright }]"
 	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">

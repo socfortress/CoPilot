@@ -1,6 +1,6 @@
 <template>
 	<n-modal v-model:show="showModal" preset="dialog" title="Add Exclusion" style="width: 500px">
-		<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+		<n-form ref="formRef" :model="formData" :rules label-placement="top">
 			<n-form-item label="Check to Exclude" path="check_id">
 				<n-select
 					v-model:value="formData.check_id"

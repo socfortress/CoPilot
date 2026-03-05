@@ -53,7 +53,7 @@
 			</template>
 		</Badge>
 
-		<SocAssignUser v-slot="{ loading }" :alert="alert" :users="users" @updated="emit('updated', $event)">
+		<SocAssignUser v-slot="{ loading }" :alert :users @updated="emit('updated', $event)">
 			<Badge type="active" class="cursor-pointer">
 				<template #iconLeft>
 					<n-spin :size="16" :show="loading">

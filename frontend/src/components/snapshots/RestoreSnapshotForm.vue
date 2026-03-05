@@ -53,7 +53,7 @@
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">Restore Snapshot</n-button>
+			<n-button type="primary" :loading @click="handleSubmit">Restore Snapshot</n-button>
 		</div>
 	</n-form>
 </template>

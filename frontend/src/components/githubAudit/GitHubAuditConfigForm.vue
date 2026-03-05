@@ -1,7 +1,7 @@
 <template>
 	<n-drawer v-model:show="showDrawer" :width="600" placement="right">
 		<n-drawer-content :title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'" closable>
-			<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+			<n-form ref="formRef" :model="formData" :rules label-placement="top">
 				<n-divider title-placement="left">Basic Settings</n-divider>
 
 				<n-form-item label="Customer" path="customer_code">

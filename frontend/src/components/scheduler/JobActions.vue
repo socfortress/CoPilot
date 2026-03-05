@@ -39,7 +39,7 @@
 		:bordered="false"
 		segmented
 	>
-		<JobForm :job="job" @updated="update($event)" />
+		<JobForm :job @updated="update($event)" />
 	</n-modal>
 </template>
 

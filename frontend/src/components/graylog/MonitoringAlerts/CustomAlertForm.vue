@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4">
 					<n-form-item label="Priority" path="alert_priority" class="w-28">

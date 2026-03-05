@@ -1,7 +1,7 @@
 <template>
 	<div class="customer-info">
 		<div v-if="editing" class="p-7 pt-4">
-			<CustomerForm :customer="customer" :lock-code="true" @submitted="submitted">
+			<CustomerForm :customer :lock-code="true" @submitted="submitted">
 				<template #additionalActions>
 					<n-button @click="editing = false">Close</n-button>
 				</template>
@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-				<CardKV v-for="(value, key) of customer" :key="key">
+				<CardKV v-for="(value, key) of customer" :key>
 					<template #key>
 						{{ key }}
 					</template>

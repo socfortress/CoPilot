@@ -3,7 +3,7 @@
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Scheduled Snapshots</h2>
 			<div class="flex items-center gap-2">
-				<n-button :loading="loading" @click="fetchSchedules">
+				<n-button :loading @click="fetchSchedules">
 					<template #icon>
 						<Icon :name="RefreshIcon" :size="16" />
 					</template>
@@ -21,7 +21,7 @@
 		<n-spin :show="loading">
 			<n-card>
 				<n-data-table
-					:columns="columns"
+					:columns
 					:data="schedules"
 					:bordered="false"
 					:single-line="false"

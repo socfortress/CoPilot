@@ -8,7 +8,7 @@
 		scrollable
 		to="body"
 	>
-		<slot :loading="loading" />
+		<slot :loading />
 	</n-popselect>
 </template>
 

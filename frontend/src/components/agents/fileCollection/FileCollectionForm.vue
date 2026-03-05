@@ -31,7 +31,7 @@
 				<div class="flex items-center gap-3">
 					<n-button
 						type="primary"
-						:loading="loading"
+						:loading
 						:disabled="!formData.file_path || !formData.root_disk"
 						@click="handleSubmit"
 					>

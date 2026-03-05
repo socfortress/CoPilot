@@ -45,7 +45,7 @@
 
 			<div class="flex justify-end gap-3">
 				<n-button @click="showModal = false">Cancel</n-button>
-				<n-button type="primary" :loading="loading" @click="handleAssignCustomers">Assign Customers</n-button>
+				<n-button type="primary" :loading @click="handleAssignCustomers">Assign Customers</n-button>
 			</div>
 		</div>
 	</n-modal>

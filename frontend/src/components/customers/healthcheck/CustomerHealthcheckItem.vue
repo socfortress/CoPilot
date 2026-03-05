@@ -82,7 +82,7 @@
 			segmented
 		>
 			<div class="grid-auto-fit-200 grid gap-2 px-7 py-6">
-				<CardKV v-for="(value, key) of healthData" :key="key">
+				<CardKV v-for="(value, key) of healthData" :key>
 					<template #key>
 						{{ key }}
 					</template>

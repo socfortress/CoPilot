@@ -23,7 +23,7 @@
 					style="max-width: 150px"
 				/>
 
-				<n-button type="primary" secondary size="small" :loading="loading" @click="getArtifacts()">
+				<n-button type="primary" secondary size="small" :loading @click="getArtifacts()">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -72,7 +72,7 @@
 					<div v-if="artifactsFiltered.length > pageSize" class="mt-3 flex justify-end">
 						<n-pagination
 							v-model:page="page"
-							:page-size="pageSize"
+							:page-size
 							:page-slot="5"
 							:item-count="artifactsFiltered.length"
 							size="small"

@@ -100,14 +100,14 @@
 							<GitHubAuditReportCard
 								v-for="report in reports"
 								:key="report.id"
-								:report="report"
+								:report
 								@click="openReportDetail"
 							/>
 
 							<n-pagination
 								v-if="totalReports > pageSize"
 								v-model:page="currentPage"
-								:page-size="pageSize"
+								:page-size
 								:item-count="totalReports"
 								@update:page="loadReports"
 							/>

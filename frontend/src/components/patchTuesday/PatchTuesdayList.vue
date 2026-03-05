@@ -7,7 +7,7 @@
 				<h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
 			</div>
 			<div class="flex items-center gap-2">
-				<n-button :loading="loading" :disabled="loading" type="primary" secondary @click="fetchData">
+				<n-button :loading :disabled="loading" type="primary" secondary @click="fetchData">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -17,14 +17,14 @@
 		</div>
 
 		<!-- Stats Cards -->
-		<PatchTuesdayStats :summary="summary" :loading="loading" class="mb-4" />
+		<PatchTuesdayStats :summary :loading class="mb-4" />
 
 		<!-- Filters -->
 		<PatchTuesdayFilters
 			v-model:filters="filters"
 			:cycles="availableCycles"
 			:families="availableFamilies"
-			:loading="loading"
+			:loading
 			class="mb-4"
 			@update:filters="handleFiltersChange"
 		/>
@@ -35,7 +35,7 @@
 				<PatchTuesdayCard
 					v-for="item in paginatedItems"
 					:key="`${item.cve}-${item.affected.product}`"
-					:item="item"
+					:item
 					@click="openItemDetail(item)"
 				/>
 			</div>
@@ -49,7 +49,7 @@
 
 		<!-- Pagination -->
 		<div v-if="filteredItems.length > pageSize" class="mt-4 flex justify-center">
-			<n-pagination v-model:page="currentPage" :page-count="totalPages" :page-size="pageSize" show-quick-jumper />
+			<n-pagination v-model:page="currentPage" :page-count="totalPages" :page-size show-quick-jumper />
 		</div>
 
 		<!-- Detail Drawer -->
