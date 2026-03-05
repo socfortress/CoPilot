@@ -1604,7 +1604,10 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
     return cases_out
 
 
-async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
+async def list_cases_by_status(status: str, db: AsyncSession, page: int = 1, page_size: int = 25, order: str = "desc") -> List[CaseOut]:
+    offset = (page - 1) * page_size
+    order_by = asc(Case.id) if order == "asc" else desc(Case.id)
+
     result = await db.execute(
         select(Case)
         .where(Case.case_status == status)
@@ -1615,7 +1618,10 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
             selectinload(Case.comments),
-        ),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
     )
     cases = result.scalars().all()
     cases_out = []
@@ -2483,11 +2489,65 @@ async def list_alerts_for_user(
     return alerts_out
 
 
+async def case_total_for_user(user: User, session: AsyncSession) -> int:
+    """Get total cases count with customer filtering"""
+    base_query = select(func.count(Case.id))
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    if "*" not in accessible_customers:
+        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
+
+    result = await session.execute(base_query)
+    return result.scalar_one()
+
+
+async def cases_open_for_user(user: User, session: AsyncSession) -> int:
+    """Get open cases count with customer filtering"""
+    base_query = select(func.count(Case.id)).where(Case.case_status == "OPEN")
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    if "*" not in accessible_customers:
+        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
+
+    result = await session.execute(base_query)
+    return result.scalar_one()
+
+
+async def cases_in_progress_for_user(user: User, session: AsyncSession) -> int:
+    """Get in-progress cases count with customer filtering"""
+    base_query = select(func.count(Case.id)).where(Case.case_status == "IN_PROGRESS")
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    if "*" not in accessible_customers:
+        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
+
+    result = await session.execute(base_query)
+    return result.scalar_one()
+
+
+async def cases_closed_for_user(user: User, session: AsyncSession) -> int:
+    """Get closed cases count with customer filtering"""
+    base_query = select(func.count(Case.id)).where(Case.case_status == "CLOSED")
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    if "*" not in accessible_customers:
+        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
+
+    result = await session.execute(base_query)
+    return result.scalar_one()
+
+
 async def list_cases_for_user(
     user: User,
     session: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
 ) -> List[CaseOut]:
-    """List cases filtered by user's customer access"""
+    """List cases filtered by user's customer access with pagination"""
+
+    offset = (page - 1) * page_size
+    order_by = asc(Case.id) if order == "asc" else desc(Case.id)
 
     base_query = select(Case).options(
         selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
@@ -2501,7 +2561,10 @@ async def list_cases_for_user(
     # Apply customer filtering
     filtered_query = await customer_access_handler.filter_query_by_customer_access(user, session, base_query, Case.customer_code)
 
-    result = await session.execute(filtered_query)
+    # Apply ordering and pagination
+    final_query = filtered_query.order_by(order_by).offset(offset).limit(page_size)
+
+    result = await session.execute(final_query)
     cases = result.scalars().all()
 
     # Convert to CaseOut objects (using same logic as list_cases)

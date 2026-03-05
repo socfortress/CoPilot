@@ -564,22 +564,38 @@ async def build_alert_payload(
     # Resolve the actual asset name from the payload using multiple possible fields
     asset_name_value = await resolve_asset_name_from_payload(field_names.asset_name, alert_payload)
 
-    # Validate that the required fields exist in the alert_payload
-    for field_name in [field_names.timefield_name, field_names.alert_title_name]:
-        if field_name not in alert_payload:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Field name {field_name} not found in alert payload",
-            )
+    # Validate alert_title_name exists
+    if field_names.alert_title_name not in alert_payload:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Field name {field_names.alert_title_name} not found in alert payload",
+        )
+
+    # Resolve timefield with fallback to 'timestamp'
+    timefield_value = None
+    if field_names.timefield_name in alert_payload:
+        timefield_value = alert_payload[field_names.timefield_name]
+    elif "timestamp" in alert_payload:
+        logger.warning(
+            f"Configured time field '{field_names.timefield_name}' not found in alert payload. "
+            f"Falling back to 'timestamp' field.",
+        )
+        timefield_value = alert_payload["timestamp"]
+    else:
+        logger.warning(
+            f"Neither configured time field '{field_names.timefield_name}' nor 'timestamp' found in alert payload. "
+            f"Using current UTC time as fallback.",
+        )
+        timefield_value = datetime.utcnow().isoformat()
 
     # Clean the alert title to remove BOM and normalize encoding
-    raw_alert_title = alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None
+    raw_alert_title = alert_payload.get(field_names.alert_title_name)
     cleaned_alert_title = clean_alert_title(raw_alert_title) if raw_alert_title else None
 
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=asset_name_value,
-        timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
+        timefield_payload=timefield_value,
         alert_title_payload=cleaned_alert_title,
         ioc_payload=await build_ioc_payload(alert_payload, field_names),
         source=syslog_type,

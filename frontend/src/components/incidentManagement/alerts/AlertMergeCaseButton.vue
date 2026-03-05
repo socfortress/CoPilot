@@ -107,23 +107,23 @@ function toggleSelectedCase(caseEntity: Case) {
 }
 
 function getCasesList() {
-	loadingCases.value = true
+    loadingCases.value = true
 
-	Api.incidentManagement.cases
-		.getCasesList()
-		.then(res => {
-			if (res.data.success) {
-				linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingCases.value = false
-		})
+    Api.incidentManagement.cases
+        .getCasesList(undefined, { page: 1, pageSize: 9999 })
+        .then(res => {
+            if (res.data.success) {
+                linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
+            } else {
+                message.warning(res.data?.message || "An error occurred. Please try again later.")
+            }
+        })
+        .catch(err => {
+            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+        })
+        .finally(() => {
+            loadingCases.value = false
+        })
 }
 
 function linkCase() {
