@@ -3,58 +3,8 @@
 		<div v-if="rule" class="flex flex-col gap-4 pb-1">
 			<!-- Basic Information -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<CardKV>
-					<template #key>Information</template>
-					<template #value>
-						<div class="flex flex-col gap-2 py-0.5">
-							<div class="flex flex-wrap gap-2">
-								<strong>Author:</strong>
-								<span>{{ rule.author }}</span>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Version:</strong>
-								<span>{{ rule.version }}</span>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Date:</strong>
-								<span>{{ rule.date }}</span>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Status:</strong>
-								<Badge :color="getStatusColor(rule.status)" size="small">
-									<template #value>{{ rule.status }}</template>
-								</Badge>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Type:</strong>
-								<span>{{ rule.type }}</span>
-							</div>
-						</div>
-					</template>
-				</CardKV>
-				<CardKV>
-					<template #key>Risk Assessment</template>
-					<template #value>
-						<div class="flex flex-col gap-2 py-0.5">
-							<div class="flex flex-wrap items-center gap-2">
-								<strong>Severity:</strong>
-								<SeverityBadge :severity="rule.response.severity" />
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Risk Score:</strong>
-								<span>{{ rule.response.risk_score }}</span>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Platform:</strong>
-								<PlatformBadge :platform="rule.tags.asset_type" />
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<strong>Security Domain:</strong>
-								<span>{{ rule.tags.security_domain }}</span>
-							</div>
-						</div>
-					</template>
-				</CardKV>
+				<PropsList :list="infoFields" embedded title="Information" />
+				<PropsList :list="riskAssessmentFields" embedded title="Risk Assessment" />
 			</div>
 
 			<!-- Description -->
@@ -66,23 +16,21 @@
 			<!-- Graylog Query -->
 			<CardKV v-if="rule.graylog?.query">
 				<template #key>
-					<div class="flex items-center gap-2">
-						<Icon :name="GraylogIcon" :size="16" />
-						<span>Graylog Query</span>
+					<div class="flex items-center justify-between gap-2">
+						<div class="flex items-center gap-2">
+							<Icon :name="GraylogIcon" :size="14" />
+							<span>Graylog Query</span>
+						</div>
+						<n-button size="tiny" type="primary" secondary @click="showProvisionModal = true">
+							<template #icon>
+								<Icon :name="ProvisionIcon" />
+							</template>
+							Provision Graylog Alert
+						</n-button>
 					</div>
 				</template>
 				<template #value>
-					<div class="flex flex-col gap-3">
-						<n-code :code="rule.graylog.query" language="lucene" word-wrap />
-						<div class="flex justify-end">
-							<n-button size="small" type="primary" @click="showProvisionModal = true">
-								<template #icon>
-									<Icon :name="ProvisionIcon" />
-								</template>
-								Provision Graylog Alert
-							</n-button>
-						</div>
-					</div>
+					<CodeSource :code="rule.graylog.query" lang="sql" />
 				</template>
 			</CardKV>
 
@@ -230,14 +178,17 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleDetail } from "@/types/copilotSearches.d"
+import _pick from "lodash/pick"
 import { NButton, NCode, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import PropsList from "@/components/common/PropsList.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
@@ -253,18 +204,13 @@ const message = useMessage()
 const GraylogIcon = "carbon:notification"
 const ProvisionIcon = "carbon:add-alt"
 
-function getStatusColor(status: string): BadgeColor | undefined {
-	switch (status.toLowerCase()) {
-		case "production":
-			return "success"
-		case "experimental":
-			return "warning"
-		case "deprecated":
-			return "danger"
-		default:
-			return undefined
-	}
-}
+const infoFields = computed(() => _pick(rule.value, ["author", "version", "date", "status", "type"]))
+const riskAssessmentFields = computed(() => ({
+	severity: rule.value?.response.severity,
+	risk_score: rule.value?.response.risk_score,
+	platform: rule.value?.tags.asset_type,
+	security_domain: rule.value?.tags.security_domain
+}))
 
 async function loadRule() {
 	loading.value = true
