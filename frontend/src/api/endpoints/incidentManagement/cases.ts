@@ -1,22 +1,29 @@
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
-	Case,
-	CaseComment,
-	CaseDataStore,
-	CasePayload,
-	CaseReportTemplateDataStore,
-	CaseStatus
+    Case,
+    CaseComment,
+    CaseDataStore,
+    CasePayload,
+    CaseReportTemplateDataStore,
+    CasesListResponse,
+    CaseStatus
 } from "@/types/incidentManagement/cases.d"
 import { HttpClient } from "../../httpClient"
 
 export type CasesFilter =
-	| { status: CaseStatus }
-	| { assignedTo: string }
-	| { hostname: string }
-	| { customerCode: string }
+    | { status: CaseStatus }
+    | { assignedTo: string }
+    | { hostname: string }
+    | { customerCode: string }
 
 export type CasesFilterTypes = KeysOfUnion<CasesFilter>
+
+export interface CasesPaginationParams {
+    page?: number
+    pageSize?: number
+    order?: "asc" | "desc"
+}
 
 export interface CaseReportPayload {
 	case_id: number
@@ -29,24 +36,35 @@ export type CaseCommentPayload = Omit<CaseComment, "id">
 export type CaseCommentUpdatePayload = Omit<CaseComment, "id"> & { comment_id: number }
 
 export default {
-	getCasesList(filters?: Partial<UnionToIntersection<CasesFilter>>) {
-		let url = `/incidents/db_operations/cases`
+    getCasesList(filters?: Partial<UnionToIntersection<CasesFilter>>, pagination?: CasesPaginationParams) {
+        let url = `/incidents/db_operations/cases`
 
-		if (filters?.status) {
-			url = `/incidents/db_operations/case/status/${filters.status}`
-		}
-		if (filters?.assignedTo) {
-			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
-		}
-		if (filters?.customerCode) {
-			url = `/incidents/db_operations/case/customer/${filters.customerCode}`
-		}
-		if (filters?.hostname) {
-			url = `/agents/${filters.hostname}/cases`
-		}
+        if (filters?.status) {
+            url = `/incidents/db_operations/case/status/${filters.status}`
+        }
+        if (filters?.assignedTo) {
+            url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+        }
+        if (filters?.customerCode) {
+            url = `/incidents/db_operations/case/customer/${filters.customerCode}`
+        }
+        if (filters?.hostname) {
+            url = `/agents/${filters.hostname}/cases`
+        }
 
-		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(url)
-	},
+        const params: Record<string, number | string> = {}
+        if (pagination?.page !== undefined) {
+            params.page = pagination.page
+        }
+        if (pagination?.pageSize !== undefined) {
+            params.page_size = pagination.pageSize
+        }
+        if (pagination?.order !== undefined) {
+            params.order = pagination.order
+        }
+
+        return HttpClient.get<CasesListResponse>(url, { params })
+    },
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},
