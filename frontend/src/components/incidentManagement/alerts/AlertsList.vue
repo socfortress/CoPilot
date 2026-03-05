@@ -506,18 +506,18 @@ function getAvailableUsers() {
 }
 
 function getCases() {
-    Api.incidentManagement.cases
-        .getCasesList(undefined, { page: 1, pageSize: 9999 })
-        .then(res => {
-            if (res.data.success) {
-                linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
-            } else {
-                message.warning(res.data?.message || "An error occurred. Please try again later.")
-            }
-        })
-        .catch(err => {
-            message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-        })
+	Api.incidentManagement.cases
+		.getCasesList(undefined, { page: 1, pageSize: 9999 })
+		.then(res => {
+			if (res.data.success) {
+				linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
 }
 
 function deleteAlerts() {
