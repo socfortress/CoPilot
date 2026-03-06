@@ -304,7 +304,8 @@ const topPoliciesByScore = computed(() => {
 	})
 
 	// Convert to array and sort by score
-	return policyMap.values().toSorted((a: PolicyAggregate, b: PolicyAggregate) => b.score - a.score).slice(0, 5)
+	// eslint-disable-next-line e18e/prefer-array-to-sorted
+	return [...policyMap.values()].sort((a: PolicyAggregate, b: PolicyAggregate) => b.score - a.score).slice(0, 5)
 })
 
 function getPercentage(count: number): number {
