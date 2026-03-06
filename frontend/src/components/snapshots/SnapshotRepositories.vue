@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<n-alert type="info" :show-icon="true">
+		<n-alert type="info" show-icon>
 			<template #header>Repository Registration Required</template>
 			Snapshot repositories must be manually registered in your Wazuh Indexer cluster.
 			<n-a
@@ -14,7 +14,7 @@
 
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Snapshot Repositories</h2>
-			<n-button type="primary" :loading="loading" @click="fetchRepositories">
+			<n-button type="primary" :loading @click="fetchRepositories">
 				<template #icon>
 					<Icon :name="RefreshIcon" :size="16" />
 				</template>
@@ -24,13 +24,7 @@
 
 		<n-spin :show="loading">
 			<n-card>
-				<n-data-table
-					:columns="columns"
-					:data="repositories"
-					:bordered="false"
-					:single-line="false"
-					size="small"
-				/>
+				<n-data-table :columns :data="repositories" :bordered="false" :single-line="false" size="small" />
 			</n-card>
 		</n-spin>
 
@@ -39,11 +33,11 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotRepository } from "@/types/snapshots.d"
 import { NA, NAlert, NButton, NCard, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
-import { h, onMounted, ref } from "vue"
+import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -89,7 +83,7 @@ async function fetchRepositories() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchRepositories()
 })
 </script>

@@ -19,7 +19,7 @@ export interface AgentPayload {
 
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	getAgents(agentId?: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)

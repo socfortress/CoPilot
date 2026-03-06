@@ -216,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import {
 	NAlert,
 	NCard,

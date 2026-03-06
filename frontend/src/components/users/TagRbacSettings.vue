@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import {
 	NAlert,
@@ -136,7 +136,7 @@ import {
 	NSwitch,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 interface TagAccessSettings {
@@ -261,7 +261,7 @@ watch(
 	}
 )
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	await loadSettings()
 	// Pre-load tags if default_tag is already selected
 	if (settings.untagged_alert_behavior === "default_tag") {

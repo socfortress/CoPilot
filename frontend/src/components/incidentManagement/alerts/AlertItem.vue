@@ -12,7 +12,7 @@
 			<template v-if="alert" #headerMain>
 				<div class="flex items-center gap-4">
 					<div v-if="selectable">
-						<n-checkbox :checked="checked" @click.stop="emit('check', !checked)" />
+						<n-checkbox :checked @click.stop="emit('check', !checked)" />
 					</div>
 					<div
 						class="flex cursor-pointer items-center gap-2"

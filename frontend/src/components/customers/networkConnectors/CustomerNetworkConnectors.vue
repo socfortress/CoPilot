@@ -3,8 +3,8 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm">
 				<CustomerNetworkConnectorForm
-					:customer-code="customerCode"
-					:customer-name="customerName"
+					:customer-code
+					:customer-name
 					:disabled-ids-list="disabledIds"
 					@submitted="refreshList()"
 					@close="closeForm()"
@@ -26,7 +26,7 @@
 							<CustomerNetworkConnectorItem
 								v-for="networkConnector of list"
 								:key="networkConnector.id"
-								:network-connector="networkConnector"
+								:network-connector
 								embedded
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@deployed="refreshList()"

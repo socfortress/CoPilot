@@ -2,7 +2,7 @@
 	<div class="page">
 		<div class="header flex flex-wrap items-center justify-between gap-4">
 			<div class="info flex items-center gap-3">
-				<n-button size="small" type="primary" secondary :loading="loading" @click="getData()">
+				<n-button size="small" type="primary" secondary :loading @click="getData()">
 					<template #icon>
 						<Icon :name="UpdatedIcon" :size="15" />
 					</template>
@@ -33,7 +33,7 @@
 		</div>
 
 		<div>
-			<MetricsList :throughput-metrics="throughputMetrics" />
+			<MetricsList :throughput-metrics />
 		</div>
 	</div>
 </template>

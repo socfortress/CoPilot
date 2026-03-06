@@ -124,13 +124,13 @@
 					</n-button>
 
 					<div v-if="panelsReady" class="flex items-center gap-2">
-						<n-button type="success" :loading="loading" @click="print()">
+						<n-button type="success" :loading @click="print()">
 							<template #icon>
 								<Icon :name="PrintIcon" />
 							</template>
 							Print Report
 						</n-button>
-						<n-button type="success" :loading="loading" @click="openSettings()">
+						<n-button type="success" :loading @click="openSettings()">
 							<template #icon>
 								<Icon :name="SettingsIcon" />
 							</template>
@@ -302,7 +302,7 @@ function openSettings() {
 
 function addRow() {
 	rows.value.push({
-		id: new Date().getTime(),
+		id: Date.now(),
 		height: 1,
 		panels: []
 	})
@@ -349,6 +349,9 @@ function setOrg(org: Org) {
 	}
 }
 
+const NUMBER_REGEX = /\d+/
+const LETTER_REGEX = /[a-z]/i
+
 function print() {
 	if (!timerange.value) {
 		return
@@ -356,8 +359,8 @@ function print() {
 
 	loadingPrint.value = true
 
-	const timeValue = Number.parseInt(timerange.value.match(/\d+/)?.[0] || "1")
-	const timeUnit = (timerange.value.match(/[a-z]/i)?.[0] || "h").toLocaleLowerCase()
+	const timeValue = Number.parseInt(timerange.value.match(NUMBER_REGEX)?.[0] || "1")
+	const timeUnit = (timerange.value.match(LETTER_REGEX)?.[0] || "h").toLocaleLowerCase()
 	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${
 		timeValue > 1 ? "s" : ""
 	}`

@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 import SnapshotList from "@/components/snapshots/SnapshotList.vue"

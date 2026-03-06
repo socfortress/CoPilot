@@ -17,7 +17,7 @@
 						</div>
 					</template>
 					<div class="flex flex-col px-1 py-2">
-						<AgentFlowTimeline :flow="flow" />
+						<AgentFlowTimeline :flow />
 					</div>
 				</n-popover>
 			</template>
@@ -110,7 +110,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
 					<div class="p-7 pt-4">
-						<AgentFlowTimeline :flow="flow" />
+						<AgentFlowTimeline :flow />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Logs" tab="Logs" display-directive="show:lazy">
@@ -139,7 +139,7 @@
 							<AgentFlowQueryStat
 								v-for="stat of flow.query_stats"
 								:key="stat.first_active + stat.last_active"
-								:stat="stat"
+								:stat
 								embedded
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 							/>
@@ -159,7 +159,7 @@
 				<n-tab-pane name="Collect" tab="Collect" display-directive="show:lazy">
 					<n-scrollbar class="max-h-106" trigger="none">
 						<div class="px-7">
-							<AgentFlowCollectList :flow="flow" />
+							<AgentFlowCollectList :flow />
 						</div>
 					</n-scrollbar>
 				</n-tab-pane>

@@ -1,4 +1,4 @@
-// TODO: refactor
+// TODO-FE: refactor
 export interface Agent {
 	id?: number
 	agent_id: string

@@ -4,7 +4,7 @@
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
 					<div class="p-7 pt-4">
-						<n-steps :current="current" size="small" :status="currentStatus">
+						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Operative System" />
 							<n-step title="Active Response" />
 							<n-step title="Submission" />
@@ -42,7 +42,7 @@
 										<ActiveResponseItem
 											v-for="activeResponse of activeResponseFiltered"
 											:key="activeResponse.name"
-											:active-response="activeResponse"
+											:active-response
 											embedded
 											clickable
 											hide-actions

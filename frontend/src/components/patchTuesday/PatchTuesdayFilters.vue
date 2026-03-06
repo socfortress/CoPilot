@@ -7,7 +7,7 @@
 				<n-select
 					:value="filters.cycle"
 					:options="cycleOptions"
-					:loading="loading"
+					:loading
 					placeholder="Select cycle"
 					style="min-width: 140px"
 					@update:value="updateFilter('cycle', $event)"
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { PatchTuesdayFilters } from "./types"
 import { NButton, NCard, NInput, NSelect, NSwitch, NTooltip } from "naive-ui"
 import { computed } from "vue"

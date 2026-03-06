@@ -64,7 +64,7 @@ function checkRoute(route: RouteLocationNormalizedLoaded) {
 	}
 
 	if (route.meta?.title && newItems.length) {
-		const lastItem = newItems[newItems.length - 1]
+		const lastItem = newItems.at(-1)
 		if (lastItem) {
 			lastItem.name = route.meta.title
 		}

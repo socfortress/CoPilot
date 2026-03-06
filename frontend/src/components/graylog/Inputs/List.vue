@@ -40,7 +40,7 @@
 						v-for="input of itemsFiltered"
 						:key="input.id"
 						embedded
-						:input="input"
+						:input
 						@updated="getData('running')"
 					/>
 				</template>

@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showForm = true">
+	<n-button :size :type :secondary @click="openModal">
 		<template #icon>
 			<Icon :name="PackIcon" />
 		</template>
@@ -26,11 +26,25 @@ import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import StackProvisioningList from "./StackProvisioningList.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const PackIcon = "mdi:package-variant"
 const showForm = ref(false)
+
+function openModal() {
+	showForm.value = true
+}
+
+function closeModal() {
+	showForm.value = false
+}
+
+defineExpose({
+	openModal,
+	closeModal
+})
 </script>

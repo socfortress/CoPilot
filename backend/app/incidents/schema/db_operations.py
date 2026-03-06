@@ -483,6 +483,10 @@ class CaseOut(BaseModel):
 
 class CaseOutResponse(BaseModel):
     cases: List[CaseOut]
+    total: Optional[int] = None
+    open: Optional[int] = None
+    in_progress: Optional[int] = None
+    closed: Optional[int] = None
     success: bool
     message: str
 

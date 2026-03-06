@@ -1,5 +1,5 @@
 <template>
-	<n-card title="Storage per Customer" :bordered="bordered">
+	<n-card title="Storage per Customer" :bordered>
 		<n-spin :show="loading">
 			<div v-if="customerSizes && customerSizes.length > 0" class="customer-list">
 				<div v-for="customer in customerSizes" :key="customer.customer" class="customer-item">
@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-// TODO: refactor
+// TODO-FE: refactor
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

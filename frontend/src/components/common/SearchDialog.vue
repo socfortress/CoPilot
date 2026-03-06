@@ -36,7 +36,7 @@
 										<Highlighter
 											highlight-class-name="highlight"
 											:search-words="keywords"
-											:auto-escape="true"
+											auto-escape
 											:text-to-highlight="item.title"
 										/>
 									</div>
@@ -118,7 +118,7 @@ const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
 const { routeCustomer, routeSocAlerts, routeAlerts, routeConnectors } = useNavigation()
 
-// TODO: review the groups and items
+// TODO-FE: review the groups and items
 const groups = ref<Groups>([
 	{
 		name: "Applications",
@@ -249,7 +249,7 @@ function navigateItem(direction: "next" | "prev") {
 	const nextItem = items[currentIndex + 1]
 	const prevItem = items[currentIndex - 1]
 	const firstItem = items[0]
-	const lastItem = items[items.length - 1]
+	const lastItem = items.at(-1)
 
 	if (direction === "next") {
 		activeItem.value = (activeItem.value === null || isAtEnd) && firstItem ? firstItem.key : (nextItem?.key ?? null)

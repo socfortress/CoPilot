@@ -31,7 +31,7 @@
 				<div class="flex items-center gap-3">
 					<n-button
 						type="primary"
-						:loading="loading"
+						:loading
 						:disabled="!formData.file_path || !formData.root_disk"
 						@click="handleSubmit"
 					>
@@ -205,7 +205,7 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .file-collection-form {
 	max-width: 600px;

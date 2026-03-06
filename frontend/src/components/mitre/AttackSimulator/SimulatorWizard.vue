@@ -3,7 +3,7 @@
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="px-7 pt-4 pb-2">
-					<n-steps :current="current" size="small" :status="currentStatus">
+					<n-steps :current size="small" :status="currentStatus">
 						<n-step title="Attack" />
 						<n-step title="Endpoint agent" />
 						<n-step title="Simulate" />

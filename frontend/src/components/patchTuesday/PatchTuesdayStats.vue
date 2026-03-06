@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import { NCard, NGrid, NGridItem, NSpace } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

@@ -1,13 +1,6 @@
 <template>
 	<div class="pagination-indeterminate flex items-center gap-2">
-		<n-input-number
-			v-model:value="page"
-			size="small"
-			:min="1"
-			button-placement="both"
-			class="page"
-			:disabled="disabled"
-		>
+		<n-input-number v-model:value="page" size="small" :min="1" button-placement="both" class="page" :disabled>
 			<template #minus-icon>
 				<Icon :name="ArrowBackIcon" />
 			</template>
@@ -22,7 +15,7 @@
 			:options="pageSizesOptions"
 			:show-checkmark="false"
 			class="page-sizes"
-			:disabled="disabled"
+			:disabled
 		/>
 		<n-select
 			v-if="showSort"
@@ -31,7 +24,7 @@
 			:options="sortOptions"
 			:show-checkmark="false"
 			class="sort"
-			:disabled="disabled"
+			:disabled
 		/>
 	</div>
 </template>

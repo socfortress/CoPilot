@@ -8,7 +8,7 @@
 		:disabled="!enableResize || splitDisabled"
 		class="wrapper flex grow"
 		:class="[{ 'sidebar-open': sidebarOpen }, `sidebar-position-${sidebarPosition}`]"
-		:pane1-style="pane1Style"
+		:pane1-style
 	>
 		<template #[tplNameSide]>
 			<div v-if="sidebarAvailable" ref="sidebar" class="sidebar flex flex-col">
@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { SetupContext } from "vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"

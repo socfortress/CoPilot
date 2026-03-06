@@ -23,9 +23,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="totalArtifacts"
 				:simple="simpleMode"
 			/>
@@ -103,7 +103,7 @@
 					<ArtifactItem
 						v-for="artifact of itemsPaginated"
 						:key="artifact.name"
-						:artifact="artifact"
+						:artifact
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
@@ -116,7 +116,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="totalArtifacts"
 				:page-slot="6"
 			/>
@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"

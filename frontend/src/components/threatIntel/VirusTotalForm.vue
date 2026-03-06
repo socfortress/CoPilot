@@ -126,7 +126,7 @@
 								<div class="divide-border flex flex-col gap-2 divide-y">
 									<div
 										v-for="(val, key) of analysisResponse.attributes.stats"
-										:key="key"
+										:key
 										class="flex items-end justify-between gap-4"
 									>
 										<div>{{ key }}</div>
@@ -168,7 +168,7 @@
 										<div class="divide-border bg-default flex flex-col gap-1 divide-y">
 											<div
 												v-for="(val, key) of resultVal"
-												:key="key"
+												:key
 												class="flex items-end justify-between gap-4 px-2 py-0.5"
 											>
 												<div>{{ key }}</div>
@@ -183,7 +183,7 @@
 								<div class="divide-border flex flex-col gap-2 divide-y">
 									<div
 										v-for="(val, key) of analysisResponse.links"
-										:key="key"
+										:key
 										class="flex items-end justify-between"
 									>
 										<a

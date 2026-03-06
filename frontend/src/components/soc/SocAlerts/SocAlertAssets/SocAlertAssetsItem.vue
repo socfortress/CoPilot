@@ -71,7 +71,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of properties" :key="key">
+						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
 							</template>
@@ -96,7 +96,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Type" tab="Type" display-directive="show">
 					<div v-if="assetType" class="grid-auto-fit-250 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of assetType" :key="key">
+						<CardKV v-for="(value, key) of assetType" :key>
 							<template #key>
 								{{ key }}
 							</template>
@@ -164,6 +164,7 @@ const { routeAgent } = useNavigation()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat
+const ASSET_NEWLINE_REGEX = /\n/g
 
 const excerpt = computed(() => {
 	const text = asset.asset_description
@@ -175,7 +176,7 @@ const excerpt = computed(() => {
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/g, "<br>") || "Empty"
+	return text.replace(ASSET_NEWLINE_REGEX, "<br>") || "Empty"
 })
 
 const properties = computed(() => {

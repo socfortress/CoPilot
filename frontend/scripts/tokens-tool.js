@@ -10,6 +10,7 @@ const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-famili
 const TYPO_KEYS = ["typo"]
 const COLOR_KEYS = ["color"]
 const COLOR_OPACITY_LIST = [] // [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90]
+const COLOR_SUFFIX_REGEX = /-\d{3}$/
 const TOKENS_MAP = [
 	{
 		token: "colors",
@@ -133,9 +134,8 @@ async function importTokens(tokensPath) {
 
 		for (const k in group) {
 			for (const sk of COLOR_KEYS) {
-				const regex = /-\d{3}$/
 				// exclude opacity variants
-				if (k.includes(sk) && !regex.test(k)) {
+				if (k.includes(sk) && !COLOR_SUFFIX_REGEX.test(k)) {
 					const skParsed = tokenNameSanitize(_.camelCase(sk), "type")
 					const name = _.camelCase(k.replace(`${sk}-`, ""))
 					let value = group[k].value

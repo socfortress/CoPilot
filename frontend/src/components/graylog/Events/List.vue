@@ -31,12 +31,7 @@
 		</div>
 		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="itemsPaginated.length">
-				<EventItem
-					v-for="event of itemsPaginated"
-					:key="event.id"
-					:event="event"
-					:highlight="event.id === highlight"
-				/>
+				<EventItem v-for="event of itemsPaginated" :key="event.id" :event :highlight="event.id === highlight" />
 			</template>
 			<template v-else>
 				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />
@@ -69,7 +64,7 @@ const total = ref(0)
 const loading = ref(false)
 const events = ref<EventDefinition[]>([])
 const priorities = computed<SelectMixedOption[]>(() =>
-	[...new Set(events.value.map(o => o.priority))].map(o => ({
+	Array.from(new Set(events.value.map(o => o.priority)), o => ({
 		label: `Priority ${o.toString()}`,
 		value: o
 	}))

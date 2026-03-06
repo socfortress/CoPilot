@@ -1,5 +1,5 @@
 <template>
-	<n-popselect v-model:value="currentLocale" :options="list" :render-label="renderLabel">
+	<n-popselect v-model:value="currentLocale" :options="list" :render-label>
 		<Icon :size="19" :name="MultiLanguageIcon" />
 	</n-popselect>
 </template>

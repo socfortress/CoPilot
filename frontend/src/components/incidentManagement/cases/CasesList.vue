@@ -29,17 +29,13 @@
 							Close :
 							<code>{{ statusCloseTotal }}</code>
 						</div>
-						<div class="box text-secondary">
-							N/D :
-							<code>{{ statusUndefinedTotal }}</code>
-						</div>
 					</div>
 				</n-popover>
 
 				<n-popover v-if="showMobileMenu" overlap placement="left" display-directive="show">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
-							<n-button size="small" class="!cursor-pointer">
+							<n-button size="small">
 								<template #icon>
 									<Icon :name="MenuIcon" />
 								</template>
@@ -64,11 +60,19 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
+			/>
+			<n-select
+				v-model:value="sort"
+				size="small"
+				:options="sortOptions"
+				:show-checkmark="false"
+				class="max-w-20"
+				:disabled="loading"
 			/>
 			<n-popover v-if="!hideFilters" :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
 				<template #trigger>
@@ -150,7 +154,7 @@
 			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="casesList.length">
 					<CaseItem
-						v-for="item of itemsPaginated"
+						v-for="item of casesList"
 						:key="item.id"
 						:case-data="item"
 						:highlight="highlight === item.id.toString()"
@@ -168,9 +172,9 @@
 		</n-spin>
 		<div class="footer flex justify-end">
 			<n-pagination
-				v-if="itemsPaginated.length > 3"
+				v-if="casesList.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>
@@ -179,13 +183,12 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
-import _orderBy from "lodash/orderBy"
 import {
 	NBadge,
 	NButton,
@@ -220,7 +223,6 @@ const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
 const customersList = ref<Customer[]>([])
 
-const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const caseCreationButtonShowIcon = ref(false)
@@ -228,37 +230,23 @@ const caseExportButtonShowIcon = ref(false)
 const showMobileMenu = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
+const pageSize = ref(pageSizes[1])
 const header = ref()
 const pageSlot = ref(8)
+const sort = ref<"asc" | "desc">("desc")
+const sortOptions = [
+	{ label: "Desc", value: "desc" },
+	{ label: "Asc", value: "asc" }
+]
 
-const itemsPaginated = computed(() => {
-	const from = (currentPage.value - 1) * pageSize.value
-	const to = currentPage.value * pageSize.value
-
-	const list = _orderBy(casesList.value, ["id"], ["desc"])
-
-	return list.slice(from, to)
-})
+const total = ref(0)
+const statusOpenTotal = ref(0)
+const statusInProgressTotal = ref(0)
+const statusCloseTotal = ref(0)
 
 const FilterIcon = "carbon:filter-edit"
 const MenuIcon = "carbon:overflow-menu-horizontal"
 const InfoIcon = "carbon:information"
-
-const total = computed<number>(() => {
-	return casesList.value.length || 0
-})
-const statusOpenTotal = computed<number>(() => {
-	return casesList.value.filter(o => o.case_status === "OPEN").length || 0
-})
-const statusInProgressTotal = computed<number>(() => {
-	return casesList.value.filter(o => o.case_status === "IN_PROGRESS").length || 0
-})
-const statusCloseTotal = computed<number>(() => {
-	return casesList.value.filter(o => o.case_status === "CLOSED").length || 0
-})
-const statusUndefinedTotal = computed<number>(() => {
-	return casesList.value.filter(o => o.case_status === null).length || 0
-})
 
 const filters = ref<Partial<CasesListFilter>>({})
 const lastFilters = ref<Partial<CasesListFilter>>({})
@@ -288,8 +276,14 @@ const customersOptions = computed(() =>
 const highlightedItemFound = ref(!highlight.value)
 const highlightedItemOpened = ref(!highlight.value)
 
+watch([currentPage, sort], () => {
+	getData()
+})
+
 watch(pageSize, () => {
-	if (currentPage.value !== 1) {
+	if (currentPage.value === 1) {
+		getData()
+	} else {
 		currentPage.value = 1
 	}
 })
@@ -310,14 +304,12 @@ watch(
 )
 
 watch(
-	itemsPaginated,
+	casesList,
 	() => {
-		const totalPages = Math.ceil(casesList.value.length / pageSize.value)
-
 		if (
-			itemsPaginated.value.length &&
-			!itemsPaginated.value.find(o => o.id.toString() === highlight.value) &&
-			currentPage.value < totalPages &&
+			casesList.value.length &&
+			!casesList.value.some(o => o.id.toString() === highlight.value) &&
+			currentPage.value < Math.ceil(total.value / pageSize.value) &&
 			!highlightedItemFound.value
 		) {
 			nextTick(() => {
@@ -325,7 +317,7 @@ watch(
 			})
 		}
 
-		if (itemsPaginated.value.find(o => o.id.toString() === highlight.value)) {
+		if (casesList.value.some(o => o.id.toString() === highlight.value)) {
 			highlightedItemFound.value = true
 		}
 	},
@@ -361,10 +353,18 @@ function getData() {
 	}
 
 	Api.incidentManagement.cases
-		.getCasesList(query)
+		.getCasesList(query, {
+			page: currentPage.value,
+			pageSize: pageSize.value,
+			order: sort.value
+		})
 		.then(res => {
 			if (res.data.success) {
 				casesList.value = res.data?.cases || []
+				total.value = res.data.total || 0
+				statusOpenTotal.value = res.data.open || 0
+				statusInProgressTotal.value = res.data.in_progress || 0
+				statusCloseTotal.value = res.data.closed || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

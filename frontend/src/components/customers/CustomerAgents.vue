@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
@@ -41,6 +41,7 @@ const props = defineProps<{
 const { customer } = toRefs(props)
 
 const DownloadIcon = "carbon:download"
+const QUOTE_ESCAPE_REGEX = /"/g
 
 const loading = ref(false)
 const router = useRouter()
@@ -48,7 +49,7 @@ const message = useMessage()
 const list = ref<Agent[] | []>([])
 
 const sortedList = computed(() => {
-	return [...list.value].sort((a, b) => {
+	return list.value.toSorted((a, b) => {
 		return a.hostname.toLowerCase().localeCompare(b.hostname.toLowerCase())
 	})
 })
@@ -77,9 +78,9 @@ function exportToCSV() {
 			return [
 				agent.customer_code || "",
 				agent.agent_id,
-				`"${agent.hostname.replace(/"/g, '""')}"`, // Escape quotes in hostname
+				`"${agent.hostname.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in hostname
 				agent.ip_address,
-				`"${agent.os.replace(/"/g, '""')}"`, // Escape quotes in OS
+				`"${agent.os.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in OS
 				agent.wazuh_last_seen,
 				agent.velociraptor_last_seen || ""
 			].join(",")

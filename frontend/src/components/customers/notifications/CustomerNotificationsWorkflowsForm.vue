@@ -2,7 +2,7 @@
 	<div class="customer-notifications-workflows-form flex grow flex-col justify-between">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
-				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules>
 					<n-form-item label="Enabled" path="enabled">
 						<n-switch v-model:value="form.enabled" />
 					</n-form-item>
@@ -22,7 +22,7 @@
 			</div>
 			<div class="flex gap-3">
 				<n-button secondary :disabled="loading" @click="reset()">Reset</n-button>
-				<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">Submit</n-button>
+				<n-button type="primary" :disabled="!isValid" :loading @click="validate()">Submit</n-button>
 			</div>
 		</div>
 	</div>

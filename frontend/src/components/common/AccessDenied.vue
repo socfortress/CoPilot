@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 

@@ -1,7 +1,7 @@
 <template>
 	<n-tabs v-if="alert" type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
-			<SocAlertItemContext :alert="alert" class="p-7 pt-4" />
+			<SocAlertItemContext :alert class="p-7 pt-4" />
 		</n-tab-pane>
 		<n-tab-pane name="Note" tab="Note" display-directive="show:lazy">
 			<div class="p-7 pt-4">
@@ -10,7 +10,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
 			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-				<CardKV v-for="(value, key) of alert.customer" :key="key">
+				<CardKV v-for="(value, key) of alert.customer" :key>
 					<template #key>
 						{{ key }}
 					</template>
@@ -49,12 +49,7 @@
 				<CardKV>
 					<template #key>user_login</template>
 					<template #value>
-						<SocAssignUser
-							v-slot="{ loading }"
-							:alert="alert"
-							:users="users"
-							@updated="emit('updated', $event)"
-						>
+						<SocAssignUser v-slot="{ loading }" :alert :users @updated="emit('updated', $event)">
 							<div class="text-primary flex cursor-pointer items-center gap-2">
 								<n-spin :size="16" :show="loading">
 									<Icon :name="EditIcon" :size="16" />
@@ -81,7 +76,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="History" tab="History" display-directive="show:lazy">
 			<div class="p-7 pt-4">
-				<SocAlertItemTimeline :alert="alert" />
+				<SocAlertItemTimeline :alert />
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">

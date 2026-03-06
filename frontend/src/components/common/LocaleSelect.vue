@@ -1,6 +1,6 @@
 <template>
 	<div class="max-w-60">
-		<n-select v-model:value="currentLocale" :options="list" :render-label="renderLabel" />
+		<n-select v-model:value="currentLocale" :options="list" :render-label />
 	</div>
 </template>
 

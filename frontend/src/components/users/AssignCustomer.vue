@@ -45,14 +45,14 @@
 
 			<div class="flex justify-end gap-3">
 				<n-button @click="showModal = false">Cancel</n-button>
-				<n-button type="primary" :loading="loading" @click="handleAssignCustomers">Assign Customers</n-button>
+				<n-button type="primary" :loading @click="handleAssignCustomers">Assign Customers</n-button>
 			</div>
 		</div>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import type { User } from "@/types/user.d"
 import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "naive-ui"

@@ -12,7 +12,7 @@
 				</div>
 			</div>
 			<div v-if="assetsList?.length" class="flex flex-col gap-2 p-7">
-				<SocCaseAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
+				<SocCaseAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset />
 			</div>
 			<template v-else>
 				<n-empty v-if="!loadingAssets" description="No items found" class="h-48 justify-center" />

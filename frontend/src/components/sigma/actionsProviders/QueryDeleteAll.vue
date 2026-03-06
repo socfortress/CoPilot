@@ -29,17 +29,17 @@ const emit = defineEmits<{
 const loading = defineModel<boolean | undefined>("loading", { default: false })
 
 const show = ref(false)
-const lastShow = ref(new Date().getTime())
+const lastShow = ref(Date.now())
 const message = useMessage()
 
 function togglePopup() {
-	if (new Date().getTime() - lastShow.value > 500) {
+	if (Date.now() - lastShow.value > 500) {
 		show.value = !show.value
 	}
 }
 
 function closePopup() {
-	lastShow.value = new Date().getTime()
+	lastShow.value = Date.now()
 	show.value = false
 }
 

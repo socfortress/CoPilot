@@ -11,7 +11,7 @@ import { HttpClient } from "../httpClient"
 
 const BASE_PATH = "/patch-tuesday"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	/**
 	 * Get full Patch Tuesday data for a specific cycle

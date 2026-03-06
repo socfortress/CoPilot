@@ -41,11 +41,11 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user.d"
 import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -78,8 +78,8 @@ const tagOptions = computed(() =>
 
 const hasChanges = computed(() => {
 	if (selectedTagIds.value.length !== originalTagIds.value.length) return true
-	const sorted1 = [...selectedTagIds.value].sort()
-	const sorted2 = [...originalTagIds.value].sort()
+	const sorted1 = selectedTagIds.value.toSorted()
+	const sorted2 = originalTagIds.value.toSorted()
 	return sorted1.some((val, idx) => val !== sorted2[idx])
 })
 
@@ -178,7 +178,7 @@ watch(
 	}
 )
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	await loadSettings()
 	if (tagRbacEnabled.value) {
 		await loadAvailableTags()

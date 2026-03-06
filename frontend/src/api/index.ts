@@ -8,6 +8,7 @@ import cloudSecurityAssessment from "./endpoints/cloudSecurityAssessment"
 import connectors from "./endpoints/connectors"
 import copilotAction from "./endpoints/copilotAction"
 import copilotMCP from "./endpoints/copilotMCP"
+import copilotSearches from "./endpoints/copilotSearches"
 import customerPortal from "./endpoints/customerPortal"
 import customers from "./endpoints/customers"
 import flow from "./endpoints/flow"
@@ -65,6 +66,7 @@ export default {
 	githubAudit,
 	scheduler,
 	networkConnectors,
+	copilotSearches,
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,

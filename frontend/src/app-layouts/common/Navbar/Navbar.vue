@@ -18,6 +18,12 @@
 			@update:expanded-keys="handleUpdateExpandedKeys"
 		/>
 	</nav>
+
+	<div class="hidden">
+		<StackProvisioningButton ref="stackProvisioningButton" />
+		<ActiveResponseWizardButton ref="activeResponseWizardButton" />
+		<ThreatIntelButton ref="threatIntelButton" />
+	</div>
 </template>
 
 <script lang="ts" setup>
@@ -26,9 +32,13 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import type { RouteRecordNormalized } from "vue-router"
 import _uniq from "lodash/uniq"
 import { NMenu } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
+import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
+import ThreatIntelButton from "@/components/threatIntel/ThreatIntelButton.vue"
 import { useThemeStore } from "@/stores/theme"
+
 import getItems from "./items"
 
 const { collapsed = false } = defineProps<{
@@ -42,10 +52,32 @@ const menu = ref<MenuInst | null>(null)
 const expandedKeys = ref<string[] | undefined>(undefined)
 
 const themeStore = useThemeStore()
-
 const menuOptions = computed<MenuMixedOption[]>(() => getItems())
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
+
+const stackProvisioningButton = ref<InstanceType<typeof StackProvisioningButton> | null>(null)
+const threatIntelButton = ref<InstanceType<typeof ThreatIntelButton> | null>(null)
+const activeResponseWizardButton = ref<InstanceType<typeof ActiveResponseWizardButton> | null>(null)
+
+watch(selectedKey, val => {
+	handleMenuSelect(val)
+})
+
+function handleMenuSelect(key: string | null) {
+	switch (key) {
+		case "Tools-ThreatIntel":
+			threatIntelButton.value?.openDrawer()
+			break
+		case "Tools-StackProvisioning":
+			stackProvisioningButton.value?.openModal()
+			break
+		case "Tools-ActiveResponse":
+			activeResponseWizardButton.value?.openModal()
+			break
+	}
+	selectedKey.value = key
+}
 
 function setMenuKey(matched: RouteRecordNormalized[]) {
 	for (const match of matched) {
@@ -72,7 +104,6 @@ onBeforeMount(() => {
 	})
 })
 
-// handler to simulate the accordion behavior in a specific submenu
 function handleUpdateExpandedKeys(value: string[]) {
 	const submenu = "components"
 

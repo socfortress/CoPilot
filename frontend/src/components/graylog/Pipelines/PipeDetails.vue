@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { RuleExtended } from "./RulesSmallList.vue"
 import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
 import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"

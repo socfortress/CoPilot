@@ -265,20 +265,19 @@ const stats = computed((): Record<LevelKey, number> => {
 })
 
 // Calculate top policies by compliance score
+interface PolicyAggregate {
+	policy_id: string
+	policy_name: string
+	score: number
+	agentCount: number
+	total_checks: number
+	pass: number
+	fail: number
+}
+
 const topPoliciesByScore = computed(() => {
 	// Group policies and calculate averages
-	const policyMap = new Map<
-		string,
-		{
-			policy_id: string
-			policy_name: string
-			score: number
-			agentCount: number
-			total_checks: number
-			pass: number
-			fail: number
-		}
-	>()
+	const policyMap = new Map<string, PolicyAggregate>()
 
 	list.value.forEach(item => {
 		const key = item.policy_id
@@ -305,9 +304,8 @@ const topPoliciesByScore = computed(() => {
 	})
 
 	// Convert to array and sort by score
-	return Array.from(policyMap.values())
-		.sort((a, b) => b.score - a.score)
-		.slice(0, 5)
+	// eslint-disable-next-line e18e/prefer-array-to-sorted
+	return [...policyMap.values()].sort((a: PolicyAggregate, b: PolicyAggregate) => b.score - a.score).slice(0, 5)
 })
 
 function getPercentage(count: number): number {

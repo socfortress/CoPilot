@@ -42,10 +42,10 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { VersionCheckResponse } from "@/types/version.d"
 import { NAlert, NButton, NCollapseTransition, NDivider } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
@@ -104,7 +104,7 @@ async function checkVersion() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	checkVersion()
 })
 </script>

@@ -15,7 +15,7 @@
 	>
 		<n-drawer-content title="Change Password" closable :native-scrollbar="false">
 			<n-spin :show="loading">
-				<n-form ref="formRef" :model="model" :rules="rules">
+				<n-form ref="formRef" :model :rules>
 					<div class="flex flex-col gap-3">
 						<n-form-item label="Username" required>
 							<n-input :value="username" disabled readonly />

@@ -23,7 +23,7 @@
 					style="max-width: 150px"
 				/>
 
-				<n-button type="primary" secondary size="small" :loading="loading" @click="getArtifacts()">
+				<n-button type="primary" secondary size="small" :loading @click="getArtifacts()">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -72,7 +72,7 @@
 					<div v-if="artifactsFiltered.length > pageSize" class="mt-3 flex justify-end">
 						<n-pagination
 							v-model:page="page"
-							:page-size="pageSize"
+							:page-size
 							:page-slot="5"
 							:item-count="artifactsFiltered.length"
 							size="small"
@@ -112,7 +112,7 @@ import {
 	useDialog,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCardCompact from "./ArtifactCardCompact.vue"
@@ -229,13 +229,13 @@ function showArtifactDetails(artifact: AgentArtifactData) {
 	showDetailsModal.value = true
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	getArtifacts()
 })
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .agent-data-store-tab-compact {
 	.filters-bar {

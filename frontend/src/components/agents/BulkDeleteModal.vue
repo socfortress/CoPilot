@@ -110,7 +110,7 @@
 		<template #footer>
 			<n-space justify="end">
 				<n-button @click="closeModal">Cancel</n-button>
-				<n-button type="error" :loading="loading" :disabled="!canDelete" @click="confirmDelete">
+				<n-button type="error" :loading :disabled="!canDelete" @click="confirmDelete">
 					<template #icon>
 						<n-icon><Icon :name="DeleteIcon" /></n-icon>
 					</template>
@@ -143,13 +143,13 @@
 		</template>
 		<template #action>
 			<n-button @click="showConfirmDialog = false">Cancel</n-button>
-			<n-button type="error" :loading="loading" @click="executeDelete">Confirm Delete</n-button>
+			<n-button type="error" :loading @click="executeDelete">Confirm Delete</n-button>
 		</template>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents.d"
 import {
 	NAlert,

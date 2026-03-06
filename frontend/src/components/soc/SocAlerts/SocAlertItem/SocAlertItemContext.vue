@@ -7,7 +7,7 @@
 		</n-input>
 
 		<div class="grid-auto-fit-200 grid gap-2">
-			<CardKV v-for="{ value, key } of contextFiltered" :key="key">
+			<CardKV v-for="{ value, key } of contextFiltered" :key>
 				<template #key>
 					{{ key }}
 				</template>

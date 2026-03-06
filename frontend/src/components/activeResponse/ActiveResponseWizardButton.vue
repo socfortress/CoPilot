@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" :loading="loading" @click="showInvokeWizard = true">
+	<n-button :size :type :secondary :loading @click="openModal">
 		<template #icon>
 			<Icon :name="InvokeIcon" />
 		</template>
@@ -27,9 +27,10 @@ import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ActiveResponseWizard from "./ActiveResponseWizard.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const InvokeIcon = "solar:playback-speed-outline"
@@ -37,7 +38,20 @@ const showInvokeWizard = ref(false)
 const activeResponseWizardCTX = ref<{ reset: () => void } | null>(null)
 const loading = ref(false)
 
+function openModal() {
+	showInvokeWizard.value = true
+}
+
+function closeModal() {
+	showInvokeWizard.value = false
+}
+
 watch(showInvokeWizard, () => {
 	activeResponseWizardCTX.value?.reset()
+})
+
+defineExpose({
+	openModal,
+	closeModal
 })
 </script>

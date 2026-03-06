@@ -25,7 +25,7 @@
 					class="flex-1"
 					@update:value="loadReports"
 				/>
-				<n-button :loading="loading" @click="loadReports">
+				<n-button :loading @click="loadReports">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -36,13 +36,7 @@
 
 		<!-- Reports Table -->
 		<n-card>
-			<n-data-table
-				:columns="columns"
-				:data="reports"
-				:loading="loading"
-				:pagination="pagination"
-				:row-key="(row: SCAReport) => row.id"
-			/>
+			<n-data-table :columns :data="reports" :loading :pagination :row-key="(row: SCAReport) => row.id" />
 		</n-card>
 
 		<!-- Generate Report Modal -->
@@ -51,10 +45,10 @@
 			preset="card"
 			title="Generate SCA Report"
 			style="width: 600px; max-width: 90vw"
-			:closable="true"
+			closable
 		>
 			<GenerateReportForm
-				:customers="customers"
+				:customers
 				:loading="generating"
 				@generate="handleGenerateReport"
 				@cancel="showGenerateModal = false"
@@ -78,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
 import { NButton, NCard, NDataTable, NModal, NSelect, NSpace, NTag, NTooltip, useMessage } from "naive-ui"
-import { computed, h, onMounted, ref } from "vue"
+import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -325,7 +319,7 @@ async function confirmDelete() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadReports()
 	loadCustomers()
 })

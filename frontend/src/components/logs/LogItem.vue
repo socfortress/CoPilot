@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Log } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import { computed } from "vue"

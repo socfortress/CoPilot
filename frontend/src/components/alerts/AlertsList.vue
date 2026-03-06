@@ -48,7 +48,7 @@
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
-						:alerts-summary="alertsSummary"
+						:alerts-summary
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
@@ -66,7 +66,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
-				<AlertsStats :filters="filters" @mounted="alertsStatsCTX = $event" />
+				<AlertsStats :filters @mounted="alertsStatsCTX = $event" />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -79,7 +79,7 @@
 			:class="{ 'opacity-0': loadingFilters }"
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
-				<AlertsFilters :filters="filters" @search="startSearch(true)">
+				<AlertsFilters :filters @search="startSearch(true)">
 					<div v-if="!isFilterPreselected" class="mb-6">
 						<n-select
 							v-model:value="filterType"

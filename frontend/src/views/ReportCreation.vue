@@ -10,14 +10,7 @@
 			@panels="panels = $event"
 		/>
 
-		<ReportPanels
-			v-if="licenseResponse"
-			:timerange="timerange"
-			:org="org"
-			:dashboard="dashboard"
-			:panels="panels"
-			class="animate-fade"
-		/>
+		<ReportPanels v-if="licenseResponse" :timerange :org :dashboard :panels class="animate-fade" />
 
 		<div v-if="licenseResponse" class="over-layer mobile-layer">
 			<n-alert>

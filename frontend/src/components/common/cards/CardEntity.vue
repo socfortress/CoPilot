@@ -17,7 +17,7 @@
 		>
 			<div class="card-entity-wrapper flex flex-col" :class="cardEntityWrapperClass">
 				<div class="main-box flex flex-col" :class="mainBoxClass">
-					<div v-if="$slots.header" class="header-box">
+					<div v-if="$slots.header" class="header-box" :class="headerBoxClass">
 						<slot name="header" />
 					</div>
 
@@ -43,13 +43,14 @@
 					<slot name="mainExtra" />
 				</div>
 
-				<div v-if="$slots.footer" class="footer-box">
+				<div v-if="$slots.footer" class="footer-box" :class="footerBoxClass">
 					<slot name="footer" />
 				</div>
 
 				<div
 					v-if="!$slots.footer && ($slots.footerMain || $slots.footerExtra)"
 					class="footer-box flex flex-wrap items-start justify-between"
+					:class="footerBoxClass"
 				>
 					<div>
 						<slot name="footerMain" />
@@ -79,7 +80,8 @@ const {
 	mainBoxClass,
 	headerBoxClass,
 	cardEntityClass,
-	cardEntityWrapperClass
+	cardEntityWrapperClass,
+	footerBoxClass
 } = defineProps<{
 	size?: "medium" | "small" | "large"
 	status?: "success" | "warning" | "error"
@@ -94,6 +96,7 @@ const {
 	headerBoxClass?: string
 	cardEntityClass?: string
 	cardEntityWrapperClass?: string
+	footerBoxClass?: string
 }>()
 </script>
 

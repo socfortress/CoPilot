@@ -1,5 +1,5 @@
 <template>
-	<n-card size="small" :bordered="true" hoverable class="artifact-card-compact">
+	<n-card size="small" bordered hoverable class="artifact-card-compact">
 		<div class="flex items-start justify-between gap-3">
 			<div class="min-w-0 flex-1">
 				<div class="mb-1 flex items-center gap-2">
@@ -83,7 +83,7 @@ const statusType = computed<TagProps["type"]>(() => {
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .artifact-card-compact {
 	transition: all 0.2s var(--bezier-ease);

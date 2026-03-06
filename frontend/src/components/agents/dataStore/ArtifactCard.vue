@@ -74,7 +74,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
-// TODO: join ArtifactCard + ArtifactCardCompact
+// TODO-FE: join ArtifactCard + ArtifactCardCompact
 
 const {
 	artifact,
@@ -118,7 +118,7 @@ const statusType = computed<BadgeProps["type"]>(() => {
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .artifact-card {
 	border-radius: var(--border-radius);

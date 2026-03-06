@@ -22,7 +22,7 @@
 					</div>
 				</n-scrollbar>
 
-				<n-form ref="formRef" :label-width="80" :model="form" :rules="rules" class="form-container mt-4">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules class="form-container mt-4">
 					<Transition :name="`slide-form-${slideFormDirection}`">
 						<div v-if="current === 1" class="flex flex-col gap-3 px-7">
 							<div class="flex flex-wrap gap-3">
@@ -268,9 +268,7 @@
 						</template>
 						Next
 					</n-button>
-					<n-button v-if="isSubmitEnabled" type="primary" :loading="loading" @click="validate(submit)">
-						Submit
-					</n-button>
+					<n-button v-if="isSubmitEnabled" type="primary" :loading @click="validate(submit)">Submit</n-button>
 				</div>
 			</div>
 		</div>
@@ -278,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"

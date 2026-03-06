@@ -50,6 +50,9 @@ export const codeThemes = {
 	dark: THEME_DARK
 }
 
+const LEADING_WHITESPACE_REGEX = /^\s+/
+const TAB_CHAR_REGEX = /\t/g
+
 export function resetIndent(el: HTMLElement) {
 	if (el) {
 		let lines: string[] = el.innerHTML?.split("\n")
@@ -59,12 +62,12 @@ export function resetIndent(el: HTMLElement) {
 				lines.shift()
 			}
 
-			const matches = /^\s+/.exec(lines[0] ?? "") ?? null
+			const matches = LEADING_WHITESPACE_REGEX.exec(lines[0] ?? "") ?? null
 			const indentation = matches !== null ? (matches[0] ?? "") : ""
 			if (indentation) {
 				lines = lines.map(line => {
 					line = line.replace(indentation, "")
-					return line.replace(/\t/g, "    ")
+					return line.replace(TAB_CHAR_REGEX, "    ")
 				})
 
 				el.innerHTML = lines.join("\n").trim()

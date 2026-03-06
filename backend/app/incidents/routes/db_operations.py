@@ -147,6 +147,10 @@ from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
 from app.incidents.services.db_operations import case_alert_unlink
+from app.incidents.services.db_operations import case_total_for_user
+from app.incidents.services.db_operations import cases_closed_for_user
+from app.incidents.services.db_operations import cases_in_progress_for_user
+from app.incidents.services.db_operations import cases_open_for_user
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_ioc
@@ -1307,12 +1311,32 @@ async def list_alerts_multiple_filters_endpoint(
 
 
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
-async def list_cases_endpoint(current_user: User = Depends(AuthHandler().get_current_user), db: AsyncSession = Depends(get_db)):
-    """List cases with automatic customer filtering"""
+async def list_cases_endpoint(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List cases with automatic customer filtering and pagination"""
     logger.info(f"Listing cases for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    cases = await list_cases_for_user(current_user, db)
-    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
+    cases = await list_cases_for_user(current_user, db, page, page_size, order)
+
+    total = await case_total_for_user(current_user, db)
+    open_cases = await cases_open_for_user(current_user, db)
+    in_progress = await cases_in_progress_for_user(current_user, db)
+    closed = await cases_closed_for_user(current_user, db)
+
+    return CaseOutResponse(
+        cases=cases,
+        total=total,
+        open=open_cases,
+        in_progress=in_progress,
+        closed=closed,
+        success=True,
+        message="Cases retrieved successfully",
+    )
 
 
 @incidents_db_operations_router.put("/case/status", response_model=CaseOutResponse)
@@ -1525,10 +1549,13 @@ async def delete_case_endpoint(
 @incidents_db_operations_router.get("/case/status/{status}", response_model=CaseOutResponse)
 async def list_cases_by_status_endpoint(
     status: AlertStatus,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", regex="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """List cases by status with customer access filtering"""
+    """List cases by status with customer access filtering and pagination"""
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
 
@@ -1539,14 +1566,26 @@ async def list_cases_by_status_endpoint(
 
     if "*" in accessible_customers:
         # Admin/analyst - no filtering needed
-        cases = await list_cases_by_status(status.value, db)
+        cases = await list_cases_by_status(status.value, db, page=page, page_size=page_size, order=order)
     else:
-        # Customer user - we need to filter, but there's no direct function for this
-        # We'll need to get all cases for the user and then filter by status
-        all_user_cases = await list_cases_for_user(current_user, db)
+        # Customer user - get paginated cases and filter by status
+        all_user_cases = await list_cases_for_user(current_user, db, page, page_size, order)
         cases = [case for case in all_user_cases if case.case_status == status.value]
 
-    return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")
+    total = await case_total_for_user(current_user, db)
+    open_cases = await cases_open_for_user(current_user, db)
+    in_progress = await cases_in_progress_for_user(current_user, db)
+    closed = await cases_closed_for_user(current_user, db)
+
+    return CaseOutResponse(
+        cases=cases,
+        total=total,
+        open=open_cases,
+        in_progress=in_progress,
+        closed=closed,
+        success=True,
+        message="Cases retrieved successfully",
+    )
 
 
 @incidents_db_operations_router.get("/case/assigned-to/{assigned_to}", response_model=CaseOutResponse)

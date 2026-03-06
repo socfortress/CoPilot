@@ -47,11 +47,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm
-					:reset-on-submit="true"
-					@mounted="customerFormCTX = $event"
-					@submitted="emit('submitted')"
-				/>
+				<CustomerForm reset-on-submit @mounted="customerFormCTX = $event" @submitted="emit('submitted')" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

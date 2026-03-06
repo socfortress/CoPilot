@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" class="customer-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
-					<div v-for="(val, key) of fieldsMeta" :key="key" class="grow">
+					<div v-for="(val, key) of fieldsMeta" :key class="grow">
 						<n-form-item :label="val.label" :path="key" class="grow">
 							<n-input
 								v-model:value.trim="form[key]"
@@ -21,9 +21,7 @@
 					</div>
 					<div class="flex gap-4">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
-							Submit
-						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading @click="validate()">Submit</n-button>
 					</div>
 				</div>
 			</div>
@@ -32,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"
@@ -66,6 +64,8 @@ const message = useMessage()
 const form = ref<Customer>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
+const CUSTOMER_CODE_REGEX = /^[a-z]+$/
+
 const rules: FormRules = {
 	customer_code: {
 		required: true,
@@ -74,7 +74,7 @@ const rules: FormRules = {
 		validator: (_rule: FormItemRule, value: string) => {
 			if (value !== value.toLowerCase()) {
 				return new Error("Code must be all lowercase")
-			} else if (!/^[a-z]+$/.test(value)) {
+			} else if (!CUSTOMER_CODE_REGEX.test(value)) {
 				return new Error("Code must not contain spaces or special characters")
 			} else {
 				return true

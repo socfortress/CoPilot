@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" label-width="160px">
+	<n-form ref="formRef" :model="formData" :rules label-placement="left" label-width="160px">
 		<n-form-item label="Name" path="name">
 			<n-input v-model:value="formData.name" placeholder="Enter a friendly name for this schedule" />
 		</n-form-item>
@@ -54,7 +54,7 @@
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">
+			<n-button type="primary" :loading @click="handleSubmit">
 				{{ isEditing ? "Update Schedule" : "Create Schedule" }}
 			</n-button>
 		</div>
@@ -62,11 +62,11 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
@@ -183,7 +183,7 @@ async function handleSubmit() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchRepositories()
 })
 </script>

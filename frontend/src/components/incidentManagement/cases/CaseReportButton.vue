@@ -16,7 +16,7 @@
 		segmented
 	>
 		<n-spin :show="exporting" class="creation-report-form">
-			<n-form ref="formRef" :model="form" :rules="rules">
+			<n-form ref="formRef" :model="form" :rules>
 				<div class="flex flex-col gap-2">
 					<n-form-item label="Template" path="template_name">
 						<CaseReportTemplateSelect v-model:value="form.template_name" />

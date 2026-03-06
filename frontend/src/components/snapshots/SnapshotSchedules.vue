@@ -3,7 +3,7 @@
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Scheduled Snapshots</h2>
 			<div class="flex items-center gap-2">
-				<n-button :loading="loading" @click="fetchSchedules">
+				<n-button :loading @click="fetchSchedules">
 					<template #icon>
 						<Icon :name="RefreshIcon" :size="16" />
 					</template>
@@ -21,7 +21,7 @@
 		<n-spin :show="loading">
 			<n-card>
 				<n-data-table
-					:columns="columns"
+					:columns
 					:data="schedules"
 					:bordered="false"
 					:single-line="false"
@@ -50,11 +50,11 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NPopconfirm, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
-import { h, onMounted, ref } from "vue"
+import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
@@ -223,7 +223,7 @@ function onScheduleUpdated() {
 	message.success("Schedule updated successfully")
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchSchedules()
 })
 </script>

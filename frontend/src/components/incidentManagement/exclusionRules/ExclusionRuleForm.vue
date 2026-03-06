@@ -94,9 +94,7 @@
 					</div>
 					<div class="flex gap-4">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
-							Submit
-						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading @click="validate()">Submit</n-button>
 					</div>
 				</div>
 			</div>
@@ -257,7 +255,7 @@ function getDefaultModel(entity?: Partial<ExclusionRule>): Model {
 		title: entity?.title || "",
 		field_matches: entity?.field_matches
 			? Object.entries(entity.field_matches).map(o => ({ key: o[0], value: o[1], id: o[0] }))
-			: [{ id: `${new Date().getTime()}`, key: null, value: null }],
+			: [{ id: `${Date.now()}`, key: null, value: null }],
 		customer_code: entity?.customer_code || undefined,
 		enabled: entity?.enabled || false
 	}
@@ -272,7 +270,7 @@ function reset(force?: boolean) {
 
 function addField() {
 	model.value.field_matches.push({
-		id: `${new Date().getTime()}`,
+		id: `${Date.now()}`,
 		key: null,
 		value: null
 	})

@@ -9,8 +9,8 @@
 						type="line"
 						:percentage="progress.percent_complete"
 						:status="streamError ? 'error' : streamComplete ? 'success' : 'default'"
-						:show-indicator="true"
-						class="flex-grow"
+						show-indicator
+						class="grow"
 					/>
 					<n-button
 						v-if="!isStreaming && !streamComplete"
@@ -140,9 +140,9 @@
 				<!-- Results Table -->
 				<n-data-table
 					v-else
-					:columns="columns"
+					:columns
 					:data="paginatedResults"
-					:pagination="pagination"
+					:pagination
 					:loading="isConnecting"
 					:row-key="(row: AgentScaOverviewItem) => `${row.agent_id}-${row.policy_id}`"
 					striped
@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { AgentScaOverviewItem, ScaOverviewQuery, ScaStreamComplete, ScaStreamProgress } from "@/types/sca.d"
 import {

@@ -1,6 +1,6 @@
 import type { PatchTuesdayItem, PatchTuesdaySummary, PriorityLevel } from "@/types/patchTuesday.d"
 
-// TODO: refactor
+// TODO-FE: refactor
 export interface PatchTuesdayFilters {
 	cycle: string
 	priority: PriorityLevel | null

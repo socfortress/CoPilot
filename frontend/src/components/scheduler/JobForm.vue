@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="job-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-1">
 				<n-form-item label="Time interval (minutes)" path="time_interval" class="grow">
 					<n-input-number
@@ -73,11 +73,13 @@ const isValid = computed(() => {
 	return valid
 })
 
+const INTEGER_STRING_REGEX = /^\d*$/
+
 function validatorNumber(fieldName: string, defaultMessage?: string) {
 	return (_rule: FormItemRule, value: string) => {
 		if (!value) {
 			return new Error(defaultMessage || `${fieldName} is required`)
-		} else if (!/^\d*$/.test(value)) {
+		} else if (!INTEGER_STRING_REGEX.test(value)) {
 			return new Error(`${fieldName} should be an integer`)
 		} else if (Number(value) < 1) {
 			return new Error(`${fieldName} should be above 1`)

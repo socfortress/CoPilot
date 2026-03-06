@@ -25,6 +25,16 @@ export type CaseStatus = AlertStatus
 
 export type CasePayload = Omit<Case, "id" | "alerts">
 
+export interface CasesListResponse {
+	cases: Case[]
+	total: number | null
+	open: number | null
+	in_progress: number | null
+	closed: number | null
+	success: boolean
+	message: string
+}
+
 export interface CaseDataStore {
 	id: number
 	case_id: number

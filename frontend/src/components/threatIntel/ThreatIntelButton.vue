@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
+	<n-button :size :type :secondary @click="openDrawer">
 		<template #icon>
 			<Icon :name="ThreatIcon" />
 		</template>
@@ -38,9 +38,10 @@ import Icon from "@/components/common/Icon.vue"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
 import VirusTotalForm from "./VirusTotalForm.vue"
 
-const { type, size } = defineProps<{
+defineProps<{
 	size?: Size
 	type?: Type
+	secondary?: boolean
 }>()
 
 const ThreatIcon = "mynaui:info-waves"
@@ -48,8 +49,20 @@ const showThreatIntelDrawer = ref(false)
 const threatIntelCTX = ref<{ restore: () => void } | null>(null)
 const virusTotalCTX = ref<{ restore: () => void } | null>(null)
 
+function openDrawer() {
+	showThreatIntelDrawer.value = true
+}
+function closeDrawer() {
+	showThreatIntelDrawer.value = false
+}
+
 watch(showThreatIntelDrawer, () => {
 	threatIntelCTX.value?.restore()
 	virusTotalCTX.value?.restore()
+})
+
+defineExpose({
+	openDrawer,
+	closeDrawer
 })
 </script>

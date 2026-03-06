@@ -52,8 +52,10 @@ import dayjs from "@/utils/dayjs"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()
 
+const NEWLINE_REGEX = /\r?\n/g
+
 const formattedMessage = computed(() => {
-	return alert.message.replace(/\r?\n/g, " <span class='mx-1'>•</span> ")
+	return alert.message.replace(NEWLINE_REGEX, " <span class='mx-1'>•</span> ")
 })
 
 const statusType = computed(() => {

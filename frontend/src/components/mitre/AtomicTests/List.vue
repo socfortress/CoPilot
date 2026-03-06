@@ -34,9 +34,9 @@
 					v-model:page="currentPage"
 					v-model:page-size="pageSize"
 					:item-count="total"
-					:page-slot="pageSlot"
-					:show-size-picker="showSizePicker"
-					:page-sizes="pageSizes"
+					:page-slot
+					:show-size-picker
+					:page-sizes
 					:simple="simpleMode"
 				/>
 			</div>
@@ -55,7 +55,7 @@
 				<n-pagination
 					v-if="list.length > 3"
 					v-model:page="currentPage"
-					:page-size="pageSize"
+					:page-size
 					:item-count="total"
 					:page-slot="6"
 				/>
@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
 import type { MitreAtomicTest } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"

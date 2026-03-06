@@ -20,7 +20,7 @@
 					</div>
 				</n-popover>
 			</div>
-			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
+			<n-pagination v-model:page="currentPage" :page-size :item-count="total" :page-slot="5" />
 		</div>
 		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="messages.length">
@@ -34,7 +34,7 @@
 			<n-pagination
 				v-if="messages.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>

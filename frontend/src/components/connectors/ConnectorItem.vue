@@ -87,7 +87,7 @@
 			<n-card style="width: 90vw; max-width: 500px">
 				<ConfigForm
 					v-if="showConfigDialog"
-					:connector="connector"
+					:connector
 					@loading="loadingConfiguration = $event"
 					@close="closeConfigDialog"
 				/>

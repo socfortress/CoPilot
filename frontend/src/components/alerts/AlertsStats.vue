@@ -10,7 +10,7 @@
 							<AlertsStatsItem
 								v-for="summary of countByHost"
 								:key="summary.agent_name"
-								:summary="summary"
+								:summary
 								class="mb-2"
 							/>
 						</template>
@@ -30,12 +30,7 @@
 
 					<div class="list">
 						<template v-if="countByRule.length">
-							<AlertsStatsItem
-								v-for="summary of countByRule"
-								:key="summary.rule"
-								:summary="summary"
-								class="mb-2"
-							/>
+							<AlertsStatsItem v-for="summary of countByRule" :key="summary.rule" :summary class="mb-2" />
 						</template>
 						<template v-else>
 							<n-empty
@@ -56,7 +51,7 @@
 							<AlertsStatsItem
 								v-for="summary of countByRuleHost"
 								:key="summary.agent_name + summary.rule"
-								:summary="summary"
+								:summary
 								class="mb-2"
 							/>
 						</template>

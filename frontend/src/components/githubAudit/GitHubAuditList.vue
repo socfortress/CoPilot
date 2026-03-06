@@ -63,7 +63,7 @@
 				<n-grid v-else :cols="2" :x-gap="16" :y-gap="16">
 					<n-gi v-for="config in configs" :key="config.id">
 						<GitHubAuditCard
-							:config="config"
+							:config
 							@click="openDetail(config)"
 							@edit="openEditForm"
 							@audit-complete="loadConfigs"
@@ -93,10 +93,10 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
-import { onMounted, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
@@ -199,7 +199,7 @@ function onConfigSaved() {
 	loadConfigs()
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadCustomers()
 	loadConfigs()
 })

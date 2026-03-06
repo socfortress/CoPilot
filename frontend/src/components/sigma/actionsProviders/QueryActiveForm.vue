@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { SigmaQuery } from "@/types/sigma.d"
 import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -40,7 +40,7 @@ const { query } = toRefs(props)
 const loading = defineModel<boolean | undefined>("loading", { default: false })
 
 const show = ref(false)
-const lastShow = ref(new Date().getTime())
+const lastShow = ref(Date.now())
 const message = useMessage()
 const model = ref<{ active: boolean }>({ active: false })
 const active = ref<boolean>(false)
@@ -53,13 +53,13 @@ watch(show, val => {
 })
 
 function togglePopup() {
-	if (new Date().getTime() - lastShow.value > 500) {
+	if (Date.now() - lastShow.value > 500) {
 		show.value = !show.value
 	}
 }
 
 function closePopup() {
-	lastShow.value = new Date().getTime()
+	lastShow.value = Date.now()
 	show.value = false
 }
 

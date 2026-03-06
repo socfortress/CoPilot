@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="rules">
+	<n-form ref="formRef" :model="form" :rules>
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Configuration file" path="file">
 				<n-upload v-model:file-list="fileList" :max="1" accept="application/json, .json, .JSON">

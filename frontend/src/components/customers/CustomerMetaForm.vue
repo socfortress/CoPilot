@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" class="customer-meta-form">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
-					<div v-for="(_, key) of form" :key="key" class="grow">
+					<div v-for="(_, key) of form" :key class="grow">
 						<n-form-item :label="fieldsMeta[key]?.label ?? ''" :path="key" class="grow">
 							<n-input
 								v-model:value.trim="form[key]"
@@ -20,9 +20,7 @@
 					</div>
 					<div class="flex gap-4">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" :loading="loading" @click="validate()">
-							Submit
-						</n-button>
+						<n-button type="primary" :disabled="!isValid" :loading @click="validate()">Submit</n-button>
 					</div>
 				</div>
 			</div>
@@ -31,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { CustomerMeta } from "@/types/customers.d"
 import _get from "lodash/get"

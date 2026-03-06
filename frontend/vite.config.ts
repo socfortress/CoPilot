@@ -29,7 +29,9 @@ export default defineConfig(({ mode }) => {
 				}
 			}),
 			vueJsx(),
-			VueDevTools(),
+			VueDevTools({
+				launchEditor: "cursor"
+			}),
 			svgLoader()
 			// uncomment to enable analyzer after build
 			// analyzer()

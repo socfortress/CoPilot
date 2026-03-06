@@ -42,7 +42,7 @@
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
-						:alerts-summary="alertsSummary"
+						:alerts-summary
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>

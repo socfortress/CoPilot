@@ -47,7 +47,7 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="p-0!"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(825px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
 			:bordered="false"
 			:title="assetNameTruncated"
 			segmented
@@ -61,7 +61,7 @@
 					})()
 				"
 			/>
-			<n-spin :show="!licenseChecked" content-class="flex flex-wrap justify-end gap-3 p-6" :size="18">
+			<n-spin :show="!licenseChecked" content-class="flex flex-wrap gap-3 px-6 py-4" :size="18">
 				<AIVelociraptorArtifactRecommendationButton
 					:index-id="asset.index_id"
 					:index-name="asset.index_name"
@@ -137,6 +137,16 @@
 				</n-tab-pane>
 				<n-tab-pane
 					v-if="isWazuhSource"
+					name="CoPilot Searches"
+					tab="CoPilot Searches"
+					display-directive="show:lazy"
+				>
+					<div class="p-7 pt-4">
+						<AlertAssetSearches :asset />
+					</div>
+				</n-tab-pane>
+				<n-tab-pane
+					v-if="isWazuhSource"
 					name="Artifact Collection"
 					tab="Artifact Collection"
 					display-directive="show:lazy"
@@ -199,7 +209,7 @@ const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: b
 
 const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
 const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
-// const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
+const AlertAssetSearches = defineAsyncComponent(() => import("@/components/copilotSearches/AlertAssetSearches.vue"))
 const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
 const AIWazuhExclusionRuleButton = defineAsyncComponent(
 	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")

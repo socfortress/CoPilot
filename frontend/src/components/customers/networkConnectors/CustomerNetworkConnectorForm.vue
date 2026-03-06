@@ -3,7 +3,7 @@
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="px-7 pt-4 pb-2">
-					<n-steps :current="current" size="small" :status="currentStatus">
+					<n-steps :current size="small" :status="currentStatus">
 						<n-step title="Choose Network Connector" />
 						<n-step title="Set Auth Keys">
 							<template #icon>
@@ -24,7 +24,7 @@
 							embedded
 							hide-totals
 							selectable
-							:disabled-ids-list="disabledIdsList"
+							:disabled-ids-list
 							class="px-7"
 						/>
 					</n-scrollbar>
@@ -65,13 +65,7 @@
 					</template>
 					Next
 				</n-button>
-				<n-button
-					v-if="isSubmitEnabled"
-					type="primary"
-					:disabled="!isSubmitValid"
-					:loading="loading"
-					@click="submit()"
-				>
+				<n-button v-if="isSubmitEnabled" type="primary" :disabled="!isSubmitValid" :loading @click="submit()">
 					Submit
 				</n-button>
 			</div>
@@ -80,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { StepsProps } from "naive-ui"
 import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
 import type { ServiceItemData } from "@/components/services/types"

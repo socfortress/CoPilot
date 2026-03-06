@@ -22,20 +22,20 @@
 				{{ user?.username }}
 			</div>
 
-			<n-form ref="formRef" :model="formModel" :rules="rules">
+			<n-form ref="formRef" :model="formModel" :rules>
 				<n-form-item path="role" label="Select Role">
 					<n-select
 						v-model:value="formModel.role"
 						:options="roleOptions"
 						placeholder="Choose a role"
-						:loading="loading"
+						:loading
 					/>
 				</n-form-item>
 			</n-form>
 
 			<div class="flex justify-end gap-3">
 				<n-button @click="showModal = false">Cancel</n-button>
-				<n-button type="primary" :loading="loading" :disabled="!formModel.role" @click="handleAssignRole">
+				<n-button type="primary" :loading :disabled="!formModel.role" @click="handleAssignRole">
 					Assign Role
 				</n-button>
 			</div>

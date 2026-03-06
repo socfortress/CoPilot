@@ -1,10 +1,10 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-placement="top">
+	<n-form ref="formRef" :model="form" :rules label-width="120px" label-placement="top">
 		<n-form-item label="File" path="connector_file">
 			<n-upload
 				class="file-upload-wrap"
 				:max="1"
-				:show-file-list="true"
+				show-file-list
 				accept=".yaml, .YAML, .yml, .YML"
 				@change="handleChange"
 				@remove="handleChange"

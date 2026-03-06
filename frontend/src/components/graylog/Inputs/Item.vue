@@ -45,13 +45,13 @@
 						</template>
 						Details
 					</n-button>
-					<n-button v-if="isRunning" :loading="loading" type="warning" size="small" secondary @click="stop()">
+					<n-button v-if="isRunning" :loading type="warning" size="small" secondary @click="stop()">
 						<template #icon>
 							<Icon :name="StopIcon" />
 						</template>
 						Stop input
 					</n-button>
-					<n-button v-else :loading="loading" type="success" secondary size="small" @click="start()">
+					<n-button v-else :loading type="success" secondary size="small" @click="start()">
 						<template #icon>
 							<Icon :name="StartIcon" />
 						</template>

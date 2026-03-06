@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import { NTag } from "naive-ui"
 import { computed } from "vue"
 import { PriorityLevel } from "@/types/patchTuesday.d"

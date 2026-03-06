@@ -37,7 +37,7 @@
 		</template>
 		<template #footerExtra>
 			<div class="flex flex-row flex-wrap gap-3">
-				<JobActions :job="job" size="small" />
+				<JobActions :job size="small" />
 			</div>
 		</template>
 	</CardEntity>

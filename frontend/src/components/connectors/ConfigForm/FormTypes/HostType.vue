@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-placement="top">
+	<n-form ref="formRef" :model="form" :rules label-width="120px" label-placement="top">
 		<n-form-item label="Connector URL" path="connector_url">
 			<n-input v-model:value="form.connector_url" required type="text" />
 		</n-form-item>

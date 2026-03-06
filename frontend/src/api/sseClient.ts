@@ -2,6 +2,8 @@ import { fetchEventSource } from "@microsoft/fetch-event-source"
 import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "./httpClient"
 
+const TRAILING_SLASH_REGEX = /\/$/
+
 /** Converte Record<string, string | number> in query string, escludendo undefined/null */
 function paramsToQueryString(params?: Record<string, string | number | undefined>): string {
 	if (!params || Object.keys(params).length === 0) {
@@ -42,7 +44,7 @@ export async function createSSEStream(options: SSEClientOptions): Promise<void> 
 	const baseURL = options.baseURL ?? HttpClient.defaults.baseURL ?? "/api"
 	const authStore = useAuthStore()
 
-	const base = (baseURL ?? "").replace(/\/$/, "")
+	const base = (baseURL ?? "").replace(TRAILING_SLASH_REGEX, "")
 	const cleanPath = path.startsWith("/") ? path : `/${path}`
 	const queryString = paramsToQueryString(params)
 	const url = `${base}${cleanPath}${queryString}`

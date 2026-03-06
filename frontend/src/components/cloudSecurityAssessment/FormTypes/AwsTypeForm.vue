@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="rules">
+	<n-form ref="formRef" :model="form" :rules>
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Access Key ID" path="access_key_id">
 				<n-input

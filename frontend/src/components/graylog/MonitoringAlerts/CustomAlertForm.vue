@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
+		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4">
 					<n-form-item label="Priority" path="alert_priority" class="w-28">
@@ -320,11 +320,13 @@ const isValid = computed(() => {
 	return valid
 })
 
+const INTEGER_STRING_REGEX = /^\d*$/
+
 function validatorNumber(fieldName: string, defaultMessage?: string) {
 	return (_rule: FormItemRule, value: string) => {
 		if (!value) {
 			return new Error(defaultMessage || `${fieldName} is required`)
-		} else if (!/^\d*$/.test(value)) {
+		} else if (!INTEGER_STRING_REGEX.test(value)) {
 			return new Error(`${fieldName} should be an integer`)
 		} else if (Number(value) < 1) {
 			return new Error(`${fieldName} should be above 1`)
@@ -356,7 +358,7 @@ function addCustomFiled() {
 	form.value.custom_fields.push({
 		name: "",
 		value: "",
-		key: new Date().getTime()
+		key: Date.now()
 	})
 }
 

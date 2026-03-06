@@ -53,13 +53,13 @@
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="loading" @click="handleSubmit">Restore Snapshot</n-button>
+			<n-button type="primary" :loading @click="handleSubmit">Restore Snapshot</n-button>
 		</div>
 	</n-form>
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormRules } from "naive-ui"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"

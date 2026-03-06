@@ -1,6 +1,6 @@
 <template>
 	<div class="contents">
-		<n-button v-if="existCase" type="success" secondary :size="size" @click.stop="openSocCase()">
+		<n-button v-if="existCase" type="success" secondary :size @click.stop="openSocCase()">
 			<template #icon>
 				<Icon :name="ViewIcon" />
 			</template>
@@ -11,7 +11,7 @@
 			:loading="loadingCaseCreation"
 			type="warning"
 			secondary
-			:size="size"
+			:size
 			@click.stop="createCase()"
 		>
 			<template #icon>
@@ -22,7 +22,7 @@
 		<n-button
 			v-if="alertId"
 			:loading="loadingAlertDelete"
-			:size="size"
+			:size
 			type="error"
 			secondary
 			@click.stop="handleDelete()"
@@ -43,14 +43,7 @@
 			segmented
 		>
 			<div class="flex h-full w-full items-center justify-center">
-				<SocCaseItem
-					v-if="caseId"
-					:case-id="caseId"
-					embedded
-					hide-soc-alert-link
-					hide-soc-case-action
-					class="w-full"
-				/>
+				<SocCaseItem v-if="caseId" :case-id embedded hide-soc-alert-link hide-soc-case-action class="w-full" />
 			</div>
 		</n-modal>
 	</div>

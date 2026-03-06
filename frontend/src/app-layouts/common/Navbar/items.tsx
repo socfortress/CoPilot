@@ -19,8 +19,9 @@ const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
+const ToolsIcon = "carbon:tool-box"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default function getItems(): MenuMixedOption[] {
 	return [
 		{
@@ -241,6 +242,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "CoPilot Actions" }
 						),
 					key: "CopilotActions"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "CopilotSearches"
+								}
+							},
+							{ default: () => "CoPilot Searches" }
+						),
+					key: "CopilotSearches"
 				},
 				{
 					label: () =>
@@ -479,6 +493,64 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Singul App Auth" }
 						),
 					key: "ExternalServices-SingulAppAuth"
+				}
+			]
+		},
+		{
+			label: "Tools",
+			key: "Tools",
+			icon: renderIcon(ToolsIcon),
+			children: [
+				{
+					label: "Stack Provisioning",
+					key: "Tools-StackProvisioning"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "CloudSecurityAssessment"
+								}
+							},
+							{ default: () => "Cloud Security Assessment" }
+						),
+					key: "CloudSecurityAssessment"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "WebVulnerabilityAssessment"
+								}
+							},
+							{ default: () => "Web Vulnerability Assessment" }
+						),
+					key: "WebVulnerabilityAssessment"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "GitHubAudit"
+								}
+							},
+							{ default: () => "GitHub Audit" }
+						),
+					key: "GitHubAudit"
+				},
+				{
+					label: "Active Response",
+					key: "Tools-ActiveResponse"
+				},
+				{
+					label: "Threat Intel",
+					key: "Tools-ThreatIntel"
 				}
 			]
 		},

@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import { NGi, NGrid, NStatistic } from "naive-ui"
 import { computed } from "vue"
 

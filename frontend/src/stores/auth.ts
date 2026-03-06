@@ -19,7 +19,7 @@ export const useAuthStore = defineStore("auth", {
 			email: "",
 			role: AuthUserRole.Unknown
 		} as AuthUser,
-		tokenDebounceTime: _toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) as number // seconds
+		tokenDebounceTime: _toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) // seconds
 	}),
 	actions: {
 		setLogged(token: string) {

@@ -46,9 +46,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
 			/>
@@ -102,7 +102,7 @@
 					<QueryItem
 						v-for="query of itemsPaginated"
 						:key="query.id"
-						:query="query"
+						:query
 						class="item-appear item-appear-bottom item-appear-005"
 						@deleted="deleteQueryItem"
 						@updated="updateQueryItem"
@@ -118,7 +118,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>

@@ -9,7 +9,7 @@
 			</div>
 		</template>
 		<div class="flex flex-col px-1 py-2">
-			<SocAlertItemTimeline :alert="alert" />
+			<SocAlertItemTimeline :alert />
 		</div>
 	</n-popover>
 </template>

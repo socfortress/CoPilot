@@ -64,7 +64,7 @@
 			:bordered="false"
 			segmented
 		>
-			<ActionCardContent :action="action" />
+			<ActionCardContent :action />
 		</n-modal>
 
 		<!-- Invoke Action Modal -->
@@ -84,7 +84,7 @@
 					<span class="px-1 text-base">{{ action.copilot_action_name }}</span>
 				</div>
 			</template>
-			<InvokeActionForm :action="action" @success="handleInvokeSuccess" @close="showInvokeModal = false" />
+			<InvokeActionForm :action @success="handleInvokeSuccess" @close="showInvokeModal = false" />
 		</n-modal>
 	</div>
 </template>

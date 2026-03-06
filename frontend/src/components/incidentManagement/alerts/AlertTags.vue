@@ -6,14 +6,7 @@
 
 		<n-dynamic-tags size="small" :value="[]" @create="newAlertTag">
 			<template #trigger="{ activate, disabled }">
-				<n-button
-					size="tiny"
-					type="primary"
-					dashed
-					:loading="creatingTag"
-					:disabled="disabled"
-					@click="activate()"
-				>
+				<n-button size="tiny" type="primary" dashed :loading="creatingTag" :disabled @click="activate()">
 					<template #icon>
 						<Icon :name="AddIcon" />
 					</template>

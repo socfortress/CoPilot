@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { SigmaQuery, SigmaTimeInterval, SigmaTimeIntervalUnit } from "@/types/sigma.d"
 import { NButton, NInputGroup, NInputNumber, NPopover, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -61,7 +61,7 @@ const { query } = toRefs(props)
 const loading = defineModel<boolean | undefined>("loading", { default: false })
 
 const show = ref(false)
-const lastShow = ref(new Date().getTime())
+const lastShow = ref(Date.now())
 const message = useMessage()
 const model = ref<{ time: number; unit: SigmaTimeIntervalUnit }>({ time: 1, unit: "m" })
 const unitOptions = [
@@ -85,22 +85,25 @@ watch(show, val => {
 })
 
 function togglePopup() {
-	if (new Date().getTime() - lastShow.value > 500) {
+	if (Date.now() - lastShow.value > 500) {
 		show.value = !show.value
 	}
 }
 
 function closePopup() {
-	lastShow.value = new Date().getTime()
+	lastShow.value = Date.now()
 	show.value = false
 }
+
+const NUMBER_REGEX = /\d+/
+const LETTER_REGEX = /[a-z]/i
 
 function setModel() {
 	if (query.value.time_interval) {
 		timeUnit.value = (
-			query.value.time_interval.match(/[a-z]/i)?.[0] || "m"
+			query.value.time_interval.match(LETTER_REGEX)?.[0] || "m"
 		).toLocaleLowerCase() as SigmaTimeIntervalUnit
-		timeValue.value = Number.parseInt(query.value.time_interval.match(/\d+/)?.[0] || "1")
+		timeValue.value = Number.parseInt(query.value.time_interval.match(NUMBER_REGEX)?.[0] || "1")
 
 		model.value.unit = timeUnit.value
 		model.value.time = timeValue.value

@@ -74,7 +74,7 @@
 						size="small"
 						type="primary"
 						secondary
-						:loading="loading"
+						:loading
 						:disabled="!areFiltersValid"
 						@click="getData()"
 					>
@@ -176,7 +176,7 @@
 						v-for="collect of collectList"
 						:key="`${collect.___id}`"
 						embedded
-						:collect="collect"
+						:collect
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
@@ -189,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts.d"
@@ -269,12 +269,14 @@ const artifactsOptions = computed(() => {
 	return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
 
+const WINDOWS_PATH_BACKSLASH_REGEX = /\\/g
+
 // Function to escape backslashes in Windows paths
 function escapeBackslashes(value: string): string {
 	// Only escape if it looks like a Windows path (contains backslashes)
 	if (value && typeof value === "string" && value.includes("\\")) {
 		// Replace single backslashes with double backslashes
-		return value.replace(/\\/g, "\\\\")
+		return value.replace(WINDOWS_PATH_BACKSLASH_REGEX, "\\\\")
 	}
 	return value
 }

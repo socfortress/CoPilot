@@ -35,9 +35,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="itemsFiltered.length"
 				:simple="simpleMode"
 			/>
@@ -78,7 +78,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="itemsFiltered.length"
 				:page-slot="6"
 				:simple="simpleMode"
@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

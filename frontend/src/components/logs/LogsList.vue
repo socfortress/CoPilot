@@ -38,9 +38,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
-				:page-slot="pageSlot"
-				:show-size-picker="showSizePicker"
-				:page-sizes="pageSizes"
+				:page-slot
+				:show-size-picker
+				:page-sizes
 				:item-count="total"
 				:simple="simpleMode"
 			/>
@@ -61,7 +61,7 @@
 					v-model:value="filterValue"
 					v-model:filtered="filtered"
 					:users="usersList"
-					:loading-users="loadingUsers"
+					:loading-users
 					@submit="getData()"
 					@close="showFilters = false"
 				/>
@@ -73,7 +73,7 @@
 					<LogItem
 						v-for="log of itemsPaginated"
 						:key="log.id"
-						:log="log"
+						:log
 						:users="usersList"
 						class="item-appear item-appear-bottom item-appear-005"
 					/>
@@ -87,7 +87,7 @@
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				:page-size
 				:item-count="total"
 				:page-slot="6"
 			/>
@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Log, LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
 import { useResizeObserver } from "@vueuse/core"

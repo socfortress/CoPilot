@@ -1,6 +1,6 @@
 <template>
 	<n-modal v-model:show="showModal" preset="dialog" title="Add Exclusion" style="width: 500px">
-		<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+		<n-form ref="formRef" :model="formData" :rules label-placement="top">
 			<n-form-item label="Check to Exclude" path="check_id">
 				<n-select
 					v-model:value="formData.check_id"
@@ -43,11 +43,11 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
-import { computed, onMounted, reactive, ref } from "vue"
+import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
@@ -77,7 +77,7 @@ const formData = reactive<GitHubAuditExclusionCreate>({
 	reason: "",
 	approved_by: null,
 	expires_at: null,
-	created_by: "current_user" // TODO: Get from auth context
+	created_by: "current_user" // TODO-FE: Get from auth context
 })
 
 const rules: FormRules = {
@@ -116,7 +116,7 @@ async function handleSubmit() {
 	}
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	try {
 		const response = await Api.githubAudit.getAvailableChecks()
 		checkOptions.value = response.data.checks.map(check => ({

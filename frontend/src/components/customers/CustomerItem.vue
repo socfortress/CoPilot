@@ -155,7 +155,7 @@
 					</n-tab-pane>
 					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
 						<CustomerProvision
-							:customer-meta="customerMeta"
+							:customer-meta
 							:customer-code="customer.customer_code"
 							:customer-name="customer.customer_name"
 							@delete="customerMeta = null"
@@ -266,7 +266,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"

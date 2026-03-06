@@ -8,10 +8,8 @@ import { useAuthStore } from "./auth"
 
 export const useHealthcheckStore = defineStore("healthcheck", {
 	state: () => ({
-		uncommittedJournalEntriesThreshold: _toNumber(
-			import.meta.env.VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
-		) as number,
-		healthchecksInterval: (_toNumber(import.meta.env.VITE_HEALTHCHECKS_INTERVAL) * 1000) as number,
+		uncommittedJournalEntriesThreshold: _toNumber(import.meta.env.VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD),
+		healthchecksInterval: _toNumber(import.meta.env.VITE_HEALTHCHECKS_INTERVAL) * 1000,
 		getDataTimer: null as NodeJS.Timeout | null,
 		uncommittedJournalEntries: 0 as number | null,
 		clusterName: "" as string | null,

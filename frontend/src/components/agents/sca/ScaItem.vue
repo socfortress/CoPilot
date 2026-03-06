@@ -29,7 +29,7 @@
 				</n-card>
 			</div>
 			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
-				<CardKV v-for="(value, key) of properties" :key="key">
+				<CardKV v-for="(value, key) of properties" :key>
 					<template #key>
 						{{ key }}
 					</template>
@@ -72,7 +72,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show:lazy">
 			<div class="p-7 pt-4">
-				<ScaResults :sca="sca" :agent />
+				<ScaResults :sca :agent />
 			</div>
 		</n-tab-pane>
 	</n-tabs>

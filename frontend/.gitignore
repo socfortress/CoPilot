@@ -13,6 +13,7 @@ coverage
 
 cypress/videos/
 cypress/screenshots/
+report/
 
 src/unplugin.components.d.ts
 cypress/screenshots/

@@ -54,13 +54,7 @@
 				</template>
 				<template #value>
 					<div class="flex flex-wrap gap-2">
-						<Badge
-							v-for="(value, key) of license.customer"
-							:key="key"
-							type="splitted"
-							color="primary"
-							fluid
-						>
+						<Badge v-for="(value, key) of license.customer" :key type="splitted" color="primary" fluid>
 							<template #label>
 								{{ sanitizeKey(key) }}
 							</template>

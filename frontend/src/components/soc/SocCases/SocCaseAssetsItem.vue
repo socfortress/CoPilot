@@ -66,7 +66,7 @@
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
-						<CardKV v-for="(value, key) of properties" :key="key">
+						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
 							</template>
@@ -96,11 +96,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Link" tab="Link" display-directive="show:lazy">
 					<div v-if="asset.link?.length" class="flex flex-col gap-2 px-4">
-						<SocCaseAssetLink
-							v-for="link of asset.link"
-							:key="`${link.case_id}-${link.asset_id}`"
-							:link="link"
-						/>
+						<SocCaseAssetLink v-for="link of asset.link" :key="`${link.case_id}-${link.asset_id}`" :link />
 					</div>
 					<template v-else>
 						<n-empty description="No items found" class="h-48 justify-center" />
@@ -139,10 +135,12 @@ const excerpt = computed(() => {
 	return truncated + (truncated !== text ? "..." : "")
 })
 
+const NEWLINE_REGEX = /\n/g
+
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/g, "<br>") || "Empty"
+	return text.replace(NEWLINE_REGEX, "<br>") || "Empty"
 })
 
 const tags = computed<{ key: string; value?: string }[]>(() => {

@@ -1,0 +1,302 @@
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
+
+class PlatformFilter(str, Enum):
+    """Supported platform filters."""
+
+    ALL = "all"
+    LINUX = "linux"
+    WINDOWS = "windows"
+
+
+class RuleStatus(str, Enum):
+    """Rule status types."""
+
+    PRODUCTION = "production"
+    EXPERIMENTAL = "experimental"
+    DEPRECATED = "deprecated"
+
+
+class RuleSeverity(str, Enum):
+    """Rule severity levels."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class ParameterSchema(BaseModel):
+    """Parameter definition schema."""
+
+    name: str
+    description: str
+    type: str
+    required: bool = False
+    default: Optional[Any] = None
+    example: Optional[Any] = None
+
+
+class GraylogQuery(BaseModel):
+    """Graylog query definition."""
+
+    query: str = Field(..., description="The Graylog search query string")
+
+
+class RuleSummary(BaseModel):
+    """Lightweight rule summary for list endpoints."""
+
+    id: str
+    name: str
+    version: int
+    status: str
+    type: str
+    description: str
+    author: str
+    date: str
+    severity: str
+    risk_score: int
+    platform: str
+    mitre_attack_id: list[str] = []
+    analytic_story: list[str] = []
+    cve: list[str] = []
+    file_path: str
+    has_graylog_query: bool = False
+
+
+class RuleDetail(BaseModel):
+    """Full rule details including search query."""
+
+    id: str
+    name: str
+    version: int
+    schema_version: str
+    status: str
+    type: str
+    description: str
+    author: str
+    date: str
+    data_source: list[str]
+    search: dict
+    parameters: list[ParameterSchema]
+    how_to_implement: str
+    known_false_positives: str
+    references: list[str]
+    response: dict
+    tags: dict
+    file_path: str
+    raw_yaml: str
+    graylog: Optional[GraylogQuery] = None
+
+
+class RuleListResponse(BaseModel):
+    """Response model for rule listing."""
+
+    total: int
+    filtered: int
+    platform: str
+    rules: list[RuleSummary]
+    success: bool = True
+    message: str = "Rules fetched successfully"
+
+
+class RuleStatsResponse(BaseModel):
+    """Statistics about loaded rules."""
+
+    total_rules: int
+    by_platform: dict[str, int]
+    by_status: dict[str, int]
+    by_severity: dict[str, int]
+    by_mitre_tactic: dict[str, int]
+    rules_with_graylog: int
+    last_refreshed: Optional[datetime]
+    cache_ttl_minutes: int
+    success: bool = True
+    message: str = "Statistics fetched successfully"
+
+
+class RefreshResponse(BaseModel):
+    """Response model for cache refresh."""
+
+    success: bool
+    message: str
+    rules_loaded: int
+    timestamp: datetime
+
+
+class RuleDetailResponse(BaseModel):
+    """Response model for single rule detail."""
+
+    success: bool = True
+    message: str = "Rule fetched successfully"
+    rule: RuleDetail
+
+
+# =============================================================================
+# Search Execution Models
+# =============================================================================
+
+
+class ExecuteSearchRequest(BaseModel):
+    """Request model for executing a rule search."""
+
+    rule_id: str = Field(..., description="The ID of the rule to execute")
+    index_pattern: str = Field(
+        ...,
+        description="The index pattern to search (e.g., 'wazuh-alerts-*')",
+        example="wazuh-alerts-*",
+    )
+    parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Parameter values to substitute in the query",
+        example={
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab",
+            "START_TIME": "now-24h",
+            "END_TIME": "now",
+        },
+    )
+    size: Optional[int] = Field(
+        default=None,
+        description="Override the default result size from the rule",
+        ge=1,
+        le=10000,
+    )
+
+
+class SearchHit(BaseModel):
+    """A single search result hit."""
+
+    index: str = Field(..., description="The index the document was found in")
+    id: str = Field(..., description="The document ID")
+    score: Optional[float] = Field(None, description="The relevance score")
+    source: dict[str, Any] = Field(..., description="The document source")
+
+
+class ExecuteSearchResponse(BaseModel):
+    """Response model for search execution."""
+
+    success: bool = True
+    message: str = "Search executed successfully"
+    rule_id: str
+    rule_name: str
+    total_hits: int
+    returned_hits: int
+    took_ms: int
+    hits: list[SearchHit]
+    query_executed: dict = Field(
+        ...,
+        description="The actual query that was executed (for debugging)",
+    )
+
+
+class SearchValidationError(BaseModel):
+    """Validation error details."""
+
+    parameter: str
+    message: str
+
+
+class ExecuteSearchErrorResponse(BaseModel):
+    """Error response for search execution."""
+
+    success: bool = False
+    message: str
+    rule_id: Optional[str] = None
+    validation_errors: list[SearchValidationError] = []
+
+
+# =============================================================================
+# Graylog Query Execution Models
+# =============================================================================
+
+
+class ExecuteGraylogQueryRequest(BaseModel):
+    """Request model for executing a Graylog query from a rule."""
+
+    rule_id: str = Field(..., description="The ID of the rule to execute")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Parameter values to substitute in the query",
+        example={
+            "AGENT_NAME": "my-server",
+            "CUSTOMER_CODE": "lab",
+        },
+    )
+
+
+class GraylogQueryResponse(BaseModel):
+    """Response model for Graylog query generation."""
+
+    success: bool = True
+    message: str = "Graylog query generated successfully"
+    rule_id: str
+    rule_name: str
+    graylog_query: str = Field(
+        ...,
+        description="The Graylog query string with parameters substituted",
+    )
+    original_query: str = Field(
+        ...,
+        description="The original query template from the rule",
+    )
+
+
+# =============================================================================
+# Graylog Alert Provisioning Models
+# =============================================================================
+
+
+class ProvisionGraylogAlertRequest(BaseModel):
+    """Request model for provisioning a Graylog alert from a CoPilot Search rule."""
+
+    rule_id: str = Field(..., description="The ID of the rule to provision as a Graylog alert")
+    search_within_seconds: int = Field(
+        default=300,
+        description="Time window to search within (in seconds). Default is 300 (5 minutes).",
+        ge=60,
+        le=86400,
+    )
+    execute_every_seconds: int = Field(
+        default=300,
+        description="How often to execute the search (in seconds). Default is 300 (5 minutes).",
+        ge=60,
+        le=86400,
+    )
+    streams: list[str] = Field(
+        default_factory=list,
+        description="Optional list of Graylog stream IDs to limit the search to",
+    )
+    custom_title: Optional[str] = Field(
+        default=None,
+        description="Optional custom title for the alert. If not provided, uses the rule name.",
+    )
+    priority: int = Field(
+        default=2,
+        description="Alert priority (1=Low, 2=Normal, 3=High)",
+        ge=1,
+        le=3,
+    )
+    event_limit: int = Field(
+        default=1000,
+        description="Maximum number of events to process per execution",
+        ge=1,
+        le=10000,
+    )
+
+
+class ProvisionGraylogAlertResponse(BaseModel):
+    """Response model for Graylog alert provisioning."""
+
+    success: bool = True
+    message: str
+    rule_id: str
+    rule_name: str
+    alert_title: str
+    graylog_query: str

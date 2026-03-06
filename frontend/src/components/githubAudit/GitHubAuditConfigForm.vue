@@ -1,7 +1,7 @@
 <template>
 	<n-drawer v-model:show="showDrawer" :width="600" placement="right">
 		<n-drawer-content :title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'" closable>
-			<n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
+			<n-form ref="formRef" :model="formData" :rules label-placement="top">
 				<n-divider title-placement="left">Basic Settings</n-divider>
 
 				<n-form-item label="Customer" path="customer_code">
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 import {
@@ -163,7 +163,7 @@ import {
 	NText,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
@@ -283,7 +283,7 @@ async function handleSubmit() {
 	}
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {

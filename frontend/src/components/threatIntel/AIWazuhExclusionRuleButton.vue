@@ -46,7 +46,7 @@
 				class="flex flex-col gap-7 p-7"
 			>
 				<div v-if="analysisResponse?.wazuh_exclusion_rule">
-					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
+					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" decode />
 				</div>
 				<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
 					<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />
@@ -93,6 +93,7 @@ const licenseChecking = ref(false)
 const licenseChecked = ref(forceLicenseResponse !== undefined)
 const licenseResponse = ref(forceLicenseResponse ?? false)
 const disabledLicenseCheck = ref(forceLicenseResponse !== undefined)
+const WAZUH_RULE_BACKSLASH_REGEX = /\\\\/g
 
 function openResponse() {
 	showModal.value = true
@@ -109,7 +110,7 @@ function analysis() {
 
 				if (res.data.wazuh_exclusion_rule) {
 					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
-						/\\\\/g,
+						WAZUH_RULE_BACKSLASH_REGEX,
 						"\\\\\\\\"
 					)
 				}

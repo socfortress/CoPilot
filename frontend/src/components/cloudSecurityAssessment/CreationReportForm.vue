@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="creation-report-form">
-		<n-form ref="baseFormRef" :model="baseForm" :rules="rules">
+		<n-form ref="baseFormRef" :model="baseForm" :rules>
 			<div class="flex flex-col gap-2">
 				<div class="flex items-start gap-4">
 					<n-form-item label="Type" path="report_type" class="w-32">

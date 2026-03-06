@@ -1,5 +1,5 @@
 <template>
-	<n-button :size type="primary" :loading="loading" @click="showForm = true">
+	<n-button :size type="primary" :loading @click="showForm = true">
 		<template v-if="showIcon" #icon>
 			<Icon :name="NewCaseIcon" :size="14" />
 		</template>

@@ -3,8 +3,8 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm">
 				<CustomerIntegrationForm
-					:customer-code="customerCode"
-					:customer-name="customerName"
+					:customer-code
+					:customer-name
 					:disabled-ids-list="disabledIds"
 					@submitted="refreshList()"
 					@close="closeForm()"
@@ -26,7 +26,7 @@
 							<CustomerIntegrationItem
 								v-for="integration of list"
 								:key="integration.id"
-								:integration="integration"
+								:integration
 								embedded
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@deployed="refreshList()"

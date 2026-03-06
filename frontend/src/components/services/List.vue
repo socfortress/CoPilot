@@ -12,9 +12,9 @@
 					<ServiceItem
 						v-for="item of list"
 						:key="item.id"
-						:type="type"
+						:type
 						:data="item"
-						:embedded="embedded"
+						:embedded
 						:selectable="isSelectable(item)"
 						:disabled="isDisabled(item)"
 						:checked="selected?.id === item.id"

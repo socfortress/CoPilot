@@ -10,7 +10,7 @@
 					<n-form-item label="Time Format" path="hours24" class="basis-1/3">
 						<n-radio-group v-model:value="formValue.hours24" name="radiogroup">
 							<div class="flex flex-wrap gap-3">
-								<n-radio :value="true" :label="`24 Hours [ ${h24} ]`" />
+								<n-radio value :label="`24 Hours [ ${h24} ]`" />
 								<n-radio :value="false" :label="`12 Hours [ ${h12} ]`" />
 							</div>
 						</n-radio-group>

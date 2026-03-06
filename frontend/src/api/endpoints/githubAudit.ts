@@ -19,7 +19,7 @@ import { HttpClient } from "../httpClient"
 
 const BASE_PATH = "/github-audit"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	// ==================== Configuration Endpoints ====================
 

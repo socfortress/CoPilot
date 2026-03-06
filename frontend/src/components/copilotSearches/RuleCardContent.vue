@@ -1,0 +1,243 @@
+<template>
+	<n-spin :show="loading">
+		<div v-if="rule" class="flex flex-col gap-4 pb-1">
+			<!-- Basic Information -->
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<PropsList :list="infoFields" embedded title="Information" />
+				<PropsList :list="riskAssessmentFields" embedded title="Risk Assessment" />
+			</div>
+
+			<!-- Description -->
+			<CardKV>
+				<template #key>Description</template>
+				<template #value>{{ rule.description }}</template>
+			</CardKV>
+
+			<!-- Graylog Query -->
+			<CardKV v-if="rule.graylog?.query">
+				<template #key>
+					<div class="flex items-center justify-between gap-2">
+						<div class="flex items-center gap-2">
+							<Icon :name="GraylogIcon" :size="14" />
+							<span>Graylog Query</span>
+						</div>
+						<n-button size="tiny" type="primary" secondary @click="showProvisionModal = true">
+							<template #icon>
+								<Icon :name="ProvisionIcon" />
+							</template>
+							Provision Graylog Alert
+						</n-button>
+					</div>
+				</template>
+				<template #value>
+					<CodeSource :code="rule.graylog.query" lang="sql" />
+				</template>
+			</CardKV>
+
+			<!-- MITRE ATT&CK -->
+			<CardKV v-if="rule.tags.mitre_attack_id?.length">
+				<template #key>MITRE ATT&CK Techniques</template>
+				<template #value>
+					<div class="flex flex-wrap gap-2">
+						<Badge v-for="mitre of rule.tags.mitre_attack_id" :key="mitre" color="primary">
+							<template #value>{{ mitre }}</template>
+						</Badge>
+					</div>
+				</template>
+			</CardKV>
+
+			<!-- Data Sources -->
+			<CardKV v-if="rule.data_source?.length">
+				<template #key>Data Sources</template>
+				<template #value>
+					<div class="flex flex-wrap gap-2">
+						<Badge v-for="source of rule.data_source" :key="source">
+							<template #value>{{ source }}</template>
+						</Badge>
+					</div>
+				</template>
+			</CardKV>
+
+			<!-- Parameters -->
+			<CardKV v-if="rule.parameters?.length">
+				<template #key>Parameters</template>
+				<template #value>
+					<div class="grid grid-cols-1 gap-3 py-1 lg:grid-cols-2">
+						<CardEntity
+							v-for="param in rule.parameters"
+							:key="param.name"
+							embedded
+							size="small"
+							class="h-full"
+							main-box-class="grow"
+							card-entity-wrapper-class="h-full"
+						>
+							<template #headerMain>
+								<div class="text-default flex items-center gap-4">
+									<div class="text-sm font-semibold">{{ param.name }}</div>
+									<Badge :color="param.required ? 'danger' : 'success'" type="splitted">
+										<template #value>
+											<span class="text-xs">{{ param.required ? "Required" : "Optional" }}</span>
+										</template>
+									</Badge>
+								</div>
+							</template>
+							<template #headerExtra>
+								<Badge>
+									<template #value>
+										<span class="text-xs">{{ param.type }}</span>
+									</template>
+								</Badge>
+							</template>
+
+							<template v-if="param.description" #default>
+								<p class="text-xs">{{ param.description }}</p>
+							</template>
+
+							<template #footer>
+								<div class="flex flex-col gap-1">
+									<div
+										v-if="param.default !== null && param.default !== undefined"
+										class="text-xs opacity-60"
+									>
+										<span class="font-medium">Default:</span>
+										<code class="code-block ml-1 rounded px-1 py-0.5 text-xs">
+											{{ param.default }}
+										</code>
+									</div>
+									<div
+										v-if="param.example !== null && param.example !== undefined"
+										class="text-xs opacity-60"
+									>
+										<span class="font-medium">Example:</span>
+										<code class="code-block ml-1 rounded px-1 py-0.5 text-xs">
+											{{ param.example }}
+										</code>
+									</div>
+								</div>
+							</template>
+						</CardEntity>
+					</div>
+				</template>
+			</CardKV>
+
+			<!-- How to Implement -->
+			<CardKV v-if="rule.how_to_implement">
+				<template #key>How to Implement</template>
+				<template #value>{{ rule.how_to_implement }}</template>
+			</CardKV>
+
+			<!-- Known False Positives -->
+			<CardKV v-if="rule.known_false_positives">
+				<template #key>Known False Positives</template>
+				<template #value>{{ rule.known_false_positives }}</template>
+			</CardKV>
+
+			<!-- References -->
+			<CardKV v-if="rule.references?.length">
+				<template #key>References</template>
+				<template #value>
+					<div class="flex flex-col gap-1">
+						<a
+							v-for="item of rule.references"
+							:key="item"
+							:href="item"
+							target="_blank"
+							rel="noopener"
+							class="text-primary-color text-sm hover:underline"
+						>
+							{{ item }}
+						</a>
+					</div>
+				</template>
+			</CardKV>
+
+			<!-- Analytic Stories -->
+			<div v-if="rule.tags.analytic_story?.length" class="flex flex-wrap gap-2">
+				<code v-for="story of rule.tags.analytic_story" :key="story">#{{ story }}</code>
+			</div>
+		</div>
+
+		<n-empty v-else-if="!loading" description="Failed to load rule details" />
+
+		<!-- Provision Graylog Alert Modal -->
+		<n-modal
+			v-model:show="showProvisionModal"
+			preset="card"
+			:style="{ maxWidth: 'min(550px, 90vw)' }"
+			title="Provision Graylog Alert"
+			:bordered="false"
+			display-directive="show"
+			segmented
+		>
+			<ProvisionGraylogForm
+				v-if="rule"
+				:rule-data="rule"
+				@success="showProvisionModal = false"
+				@close="showProvisionModal = false"
+			/>
+		</n-modal>
+	</n-spin>
+</template>
+
+<script setup lang="ts">
+import type { RuleDetail } from "@/types/copilotSearches.d"
+import _pick from "lodash/pick"
+import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
+import Icon from "@/components/common/Icon.vue"
+import PropsList from "@/components/common/PropsList.vue"
+import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
+
+const props = defineProps<{
+	ruleId?: string
+	ruleData?: RuleDetail
+}>()
+
+const loading = ref(false)
+const rule = ref<RuleDetail | null>(null)
+const showProvisionModal = ref(false)
+const message = useMessage()
+
+const GraylogIcon = "carbon:notification"
+const ProvisionIcon = "carbon:add-alt"
+
+const infoFields = computed(() => _pick(rule.value, ["author", "version", "date", "status", "type"]))
+const riskAssessmentFields = computed(() => ({
+	severity: rule.value?.response.severity,
+	risk_score: rule.value?.response.risk_score,
+	platform: rule.value?.tags.asset_type,
+	security_domain: rule.value?.tags.security_domain
+}))
+
+async function loadRule(ruleId: string) {
+	loading.value = true
+	try {
+		const res = await Api.copilotSearches.getRuleById(ruleId)
+		if (res.data.success) {
+			rule.value = res.data.rule
+		} else {
+			message.error(res.data?.message || "Failed to load rule details")
+		}
+	} catch (err: any) {
+		message.error(err.response?.data?.message || "Failed to load rule details")
+	} finally {
+		loading.value = false
+	}
+}
+
+onBeforeMount(() => {
+	if (props.ruleData) {
+		rule.value = props.ruleData
+	} else if (props.ruleId) {
+		loadRule(props.ruleId)
+	} else {
+		message.error("No rule data or rule ID provided")
+	}
+})
+</script>

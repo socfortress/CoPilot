@@ -40,6 +40,7 @@ from app.routers import cato
 from app.routers import connectors
 from app.routers import copilot_action
 from app.routers import copilot_mcp
+from app.routers import copilot_searches
 from app.routers import cortex
 from app.routers import crowdstrike
 from app.routers import customer_portal
@@ -157,6 +158,7 @@ api_router.include_router(office365.router)
 api_router.include_router(copilot_action.router)
 api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)
+api_router.include_router(copilot_searches.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)

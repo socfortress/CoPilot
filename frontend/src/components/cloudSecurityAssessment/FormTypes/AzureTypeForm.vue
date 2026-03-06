@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="rules">
+	<n-form ref="formRef" :model="form" :rules>
 		<div class="flex flex-col gap-2">
 			<n-form-item label="Username" path="username">
 				<n-input v-model:value.trim="form.username" placeholder="Please insert Username" clearable />

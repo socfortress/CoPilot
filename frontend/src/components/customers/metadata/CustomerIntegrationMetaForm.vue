@@ -32,7 +32,7 @@
 
 					<n-button v-if="showResetButton" @click="reset()">Reset</n-button>
 				</div>
-				<n-button type="primary" :loading="loading" @click="save()">
+				<n-button type="primary" :loading @click="save()">
 					<template #icon>
 						<Icon :name="SaveIcon" />
 					</template>

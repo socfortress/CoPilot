@@ -11,7 +11,7 @@
 					<SubscriptionCard
 						v-for="subscription of availableSubscriptions"
 						:key="subscription.id"
-						:subscription="subscription"
+						:subscription
 						selectable
 						embedded
 						class="item-appear item-appear-bottom item-appear-005 cursor-pointer"
@@ -34,7 +34,7 @@
 				<SubscriptionCard :subscription="selectedSubscription" embedded hide-details />
 				<div class="checkout-form item-appear item-appear-bottom item-appear-005 mt-8">
 					<n-spin :show="loadingLicense || loadingSession">
-						<n-form :label-width="80" :model="checkoutForm" :rules="rules">
+						<n-form :label-width="80" :model="checkoutForm" :rules>
 							<div class="flex flex-col gap-1">
 								<n-form-item label="Company Name" path="company_name">
 									<n-input
