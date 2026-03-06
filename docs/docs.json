@@ -116,6 +116,12 @@
             ]
           },
           {
+            "group": "Access Control",
+            "pages": [
+              "user/ui/tag-access"
+            ]
+          },
+          {
             "group": "Health (InfluxDB)",
             "pages": [
               "user/ui/healthcheck"
