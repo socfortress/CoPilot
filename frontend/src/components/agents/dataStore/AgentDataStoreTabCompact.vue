@@ -112,7 +112,7 @@ import {
 	useDialog,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCardCompact from "./ArtifactCardCompact.vue"

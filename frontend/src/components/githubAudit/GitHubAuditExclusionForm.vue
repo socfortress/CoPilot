@@ -47,7 +47,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, reactive, ref } from "vue"
+import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{

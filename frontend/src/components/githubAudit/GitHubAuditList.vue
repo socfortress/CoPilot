@@ -96,7 +96,7 @@
 // TODO: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, onMounted, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import GitHubAuditCard from "./GitHubAuditCard.vue"

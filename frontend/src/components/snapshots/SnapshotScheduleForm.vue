@@ -66,7 +66,7 @@
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{

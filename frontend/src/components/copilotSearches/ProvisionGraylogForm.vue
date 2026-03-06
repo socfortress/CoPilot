@@ -137,7 +137,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"

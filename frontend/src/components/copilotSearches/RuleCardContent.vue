@@ -184,7 +184,7 @@
 import type { RuleDetail } from "@/types/copilotSearches.d"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

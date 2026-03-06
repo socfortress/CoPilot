@@ -136,7 +136,7 @@ import {
 	NSwitch,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 interface TagAccessSettings {

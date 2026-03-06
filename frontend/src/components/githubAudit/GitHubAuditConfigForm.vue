@@ -163,7 +163,7 @@ import {
 	NText,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
