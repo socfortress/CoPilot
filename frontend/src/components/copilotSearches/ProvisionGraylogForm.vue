@@ -15,7 +15,7 @@
 			<CardKV v-if="rule.graylog?.query">
 				<template #key>Graylog Query</template>
 				<template #value>
-					<n-code :code="rule.graylog.query" language="lucene" word-wrap />
+					<CodeSource :code="rule.graylog.query" lang="sql" />
 				</template>
 			</CardKV>
 
@@ -129,7 +129,6 @@ import type { ProvisionGraylogAlertRequest, RuleDetail } from "@/types/copilotSe
 import {
 	NAlert,
 	NButton,
-	NCode,
 	NDynamicTags,
 	NEmpty,
 	NForm,
@@ -143,6 +142,7 @@ import {
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import SeverityBadge from "./SeverityBadge.vue"

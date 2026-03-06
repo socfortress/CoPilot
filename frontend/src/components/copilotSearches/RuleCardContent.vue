@@ -176,10 +176,9 @@
 </template>
 
 <script setup lang="ts">
-import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleDetail } from "@/types/copilotSearches.d"
 import _pick from "lodash/pick"
-import { NButton, NCode, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -187,10 +186,8 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import PropsList from "@/components/common/PropsList.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
-import SeverityBadge from "./SeverityBadge.vue"
 
 const { ruleId } = defineProps<{
 	ruleId: string
