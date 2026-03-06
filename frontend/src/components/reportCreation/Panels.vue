@@ -349,6 +349,9 @@ function setOrg(org: Org) {
 	}
 }
 
+const NUMBER_REGEX = /\d+/
+const LETTER_REGEX = /[a-z]/i
+
 function print() {
 	if (!timerange.value) {
 		return
@@ -356,8 +359,8 @@ function print() {
 
 	loadingPrint.value = true
 
-	const timeValue = Number.parseInt(timerange.value.match(/\d+/)?.[0] || "1")
-	const timeUnit = (timerange.value.match(/[a-z]/i)?.[0] || "h").toLocaleLowerCase()
+	const timeValue = Number.parseInt(timerange.value.match(NUMBER_REGEX)?.[0] || "1")
+	const timeUnit = (timerange.value.match(LETTER_REGEX)?.[0] || "h").toLocaleLowerCase()
 	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${
 		timeValue > 1 ? "s" : ""
 	}`

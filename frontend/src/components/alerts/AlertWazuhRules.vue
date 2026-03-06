@@ -33,7 +33,9 @@ const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSo
 
 const { data } = toRefs(props)
 
-const wazuh_rule = computed(() => data.value.wazuh_rule.replace(/\\\\/g, "\\\\\\\\"))
+const WAZUH_RULE_BACKSLASH_REGEX = /\\\\/g
+
+const wazuh_rule = computed(() => data.value.wazuh_rule.replace(WAZUH_RULE_BACKSLASH_REGEX, "\\\\\\\\"))
 </script>
 
 <style lang="scss" scoped>

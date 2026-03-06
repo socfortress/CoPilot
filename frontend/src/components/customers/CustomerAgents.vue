@@ -71,15 +71,17 @@ function exportToCSV() {
 	]
 
 	// Create CSV content
+	const QUOTE_ESCAPE_REGEX = /"/g
+
 	const csvContent = [
 		headers.join(","),
 		...sortedList.value.map(agent => {
 			return [
 				agent.customer_code || "",
 				agent.agent_id,
-				`"${agent.hostname.replace(/"/g, '""')}"`, // Escape quotes in hostname
+				`"${agent.hostname.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in hostname
 				agent.ip_address,
-				`"${agent.os.replace(/"/g, '""')}"`, // Escape quotes in OS
+				`"${agent.os.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in OS
 				agent.wazuh_last_seen,
 				agent.velociraptor_last_seen || ""
 			].join(",")

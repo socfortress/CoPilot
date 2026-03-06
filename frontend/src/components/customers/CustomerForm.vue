@@ -64,6 +64,8 @@ const message = useMessage()
 const form = ref<Customer>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
+const CUSTOMER_CODE_REGEX = /^[a-z]+$/
+
 const rules: FormRules = {
 	customer_code: {
 		required: true,
@@ -72,7 +74,7 @@ const rules: FormRules = {
 		validator: (_rule: FormItemRule, value: string) => {
 			if (value !== value.toLowerCase()) {
 				return new Error("Code must be all lowercase")
-			} else if (!/^[a-z]+$/.test(value)) {
+			} else if (!CUSTOMER_CODE_REGEX.test(value)) {
 				return new Error("Code must not contain spaces or special characters")
 			} else {
 				return true

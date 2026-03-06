@@ -108,8 +108,9 @@ function analysis() {
 				analysisResponse.value = res.data
 
 				if (res.data.wazuh_exclusion_rule) {
+					const WAZUH_RULE_BACKSLASH_REGEX = /\\\\/g
 					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
-						/\\\\/g,
+						WAZUH_RULE_BACKSLASH_REGEX,
 						"\\\\\\\\"
 					)
 				}

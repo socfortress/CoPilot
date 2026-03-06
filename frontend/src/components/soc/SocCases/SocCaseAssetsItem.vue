@@ -135,10 +135,12 @@ const excerpt = computed(() => {
 	return truncated + (truncated !== text ? "..." : "")
 })
 
+const NEWLINE_REGEX = /\n/g
+
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/g, "<br>") || "Empty"
+	return text.replace(NEWLINE_REGEX, "<br>") || "Empty"
 })
 
 const tags = computed<{ key: string; value?: string }[]>(() => {

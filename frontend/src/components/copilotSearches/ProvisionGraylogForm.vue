@@ -213,9 +213,11 @@ const priorityOptions = [
 	{ label: "High (3)", value: 3 }
 ]
 
+const SPACE_REGEX = / /g
+
 const defaultTitle = computed(() => {
 	if (!rule.value) return ""
-	return rule.value.name.toUpperCase().replace(/ /g, " - ")
+	return rule.value.name.toUpperCase().replace(SPACE_REGEX, " - ")
 })
 
 function formatDuration(seconds: number): string {

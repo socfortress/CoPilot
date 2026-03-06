@@ -269,12 +269,14 @@ const artifactsOptions = computed(() => {
 	return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
 
+const WINDOWS_PATH_BACKSLASH_REGEX = /\\/g
+
 // Function to escape backslashes in Windows paths
 function escapeBackslashes(value: string): string {
 	// Only escape if it looks like a Windows path (contains backslashes)
 	if (value && typeof value === "string" && value.includes("\\")) {
 		// Replace single backslashes with double backslashes
-		return value.replace(/\\/g, "\\\\")
+		return value.replace(WINDOWS_PATH_BACKSLASH_REGEX, "\\\\")
 	}
 	return value
 }

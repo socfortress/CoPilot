@@ -67,8 +67,10 @@ const propsOrder = ref<Array<keyof ClusterHealth>>([
 	"unassigned_shards"
 ])
 
+const UNDERSCORE_REGEX = /_/g
+
 function sanitizeLabel(label: string) {
-	return label.replace(/_/g, " ")
+	return label.replace(UNDERSCORE_REGEX, " ")
 }
 
 function getClusterHealth() {

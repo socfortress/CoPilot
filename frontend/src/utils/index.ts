@@ -142,6 +142,8 @@ export function getAvatar(params: { seed: string; text?: string; size?: number; 
 	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`
 }
 
+const NUMERIC_TIMESTAMP_REGEX = /^\d{10,}$/
+
 export function isDate(val?: SafeAny): boolean {
 	if (val === undefined || val === null || val === "") return false
 
@@ -151,7 +153,7 @@ export function isDate(val?: SafeAny): boolean {
 
 	// Check for numeric timestamps (seconds, ms or µs)
 	// We enforce a minimum length of 10 digits to avoid false positives like "188" or "2"
-	if (/^\d{10,}$/.test(strVal)) {
+	if (NUMERIC_TIMESTAMP_REGEX.test(strVal)) {
 		const num = Number.parseInt(strVal)
 		// Handle ms (13 digits) or µs (16+ digits) by normalizing to ms
 		const date = strVal.length >= 13 ? dayjs(num / 10 ** (strVal.length - 13)) : dayjs(num * 1000)

@@ -175,7 +175,9 @@ const excerpt = computed(() => {
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	return text.replace(/\n/g, "<br>") || "Empty"
+	const NEWLINE_REGEX = /\n/g
+
+	return text.replace(NEWLINE_REGEX, "<br>") || "Empty"
 })
 
 const properties = computed(() => {

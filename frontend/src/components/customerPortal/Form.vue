@@ -85,6 +85,8 @@ function getDefaultModel(entity?: CustomerPortalSettings): SettingsModel {
 	}
 }
 
+const DATA_URL_MIME_REGEX = /data:([^;]+);base64/
+
 function getLogoMeta(logo?: string | null): { base64: string | null; mime_type: string | null } {
 	// Parse data URL format: data:image/png;base64,iVBORw0KG...
 	const parts = _split(logo, ",")
@@ -96,7 +98,7 @@ function getLogoMeta(logo?: string | null): { base64: string | null; mime_type: 
 	}
 
 	const base64 = parts[1]
-	const mimeMatch = parts[0]?.match(/data:([^;]+);base64/)
+	const mimeMatch = parts[0]?.match(DATA_URL_MIME_REGEX)
 	const mime_type = mimeMatch ? mimeMatch[1] : null
 
 	return {

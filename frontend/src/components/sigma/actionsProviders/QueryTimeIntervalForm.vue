@@ -95,12 +95,15 @@ function closePopup() {
 	show.value = false
 }
 
+const NUMBER_REGEX = /\d+/
+const LETTER_REGEX = /[a-z]/i
+
 function setModel() {
 	if (query.value.time_interval) {
 		timeUnit.value = (
-			query.value.time_interval.match(/[a-z]/i)?.[0] || "m"
+			query.value.time_interval.match(LETTER_REGEX)?.[0] || "m"
 		).toLocaleLowerCase() as SigmaTimeIntervalUnit
-		timeValue.value = Number.parseInt(query.value.time_interval.match(/\d+/)?.[0] || "1")
+		timeValue.value = Number.parseInt(query.value.time_interval.match(NUMBER_REGEX)?.[0] || "1")
 
 		model.value.unit = timeUnit.value
 		model.value.time = timeValue.value
