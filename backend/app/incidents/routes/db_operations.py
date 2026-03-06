@@ -100,10 +100,6 @@ from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
 # from app.incidents.services.db_operations import alerts_in_progress_multiple_filters
 # from app.incidents.services.db_operations import alerts_closed_multiple_filters
-from app.incidents.services.db_operations import case_total_for_user
-from app.incidents.services.db_operations import cases_closed_for_user
-from app.incidents.services.db_operations import cases_in_progress_for_user
-from app.incidents.services.db_operations import cases_open_for_user
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
@@ -151,6 +147,10 @@ from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
 from app.incidents.services.db_operations import case_alert_unlink
+from app.incidents.services.db_operations import case_total_for_user
+from app.incidents.services.db_operations import cases_closed_for_user
+from app.incidents.services.db_operations import cases_in_progress_for_user
+from app.incidents.services.db_operations import cases_open_for_user
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_ioc

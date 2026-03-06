@@ -1,33 +1,50 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Query
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
-    ExecuteSearchRequest,
-    ExecuteSearchResponse,
-    GraylogQueryResponse,
-    PlatformFilter,
-    ProvisionGraylogAlertRequest,
-    ProvisionGraylogAlertResponse,
-    RefreshResponse,
-    RuleDetailResponse,
-    RuleListResponse,
-    RuleSeverity,
-    RuleStatsResponse,
-    RuleStatus,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    GraylogQueryResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ProvisionGraylogAlertRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ProvisionGraylogAlertResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
+from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
+from app.integrations.copilot_searches.schema.copilot_searches import RuleListResponse
+from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
+from app.integrations.copilot_searches.schema.copilot_searches import RuleStatsResponse
+from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
 from app.integrations.copilot_searches.services.copilot_searches import (
     execute_rule_search,
+)
+from app.integrations.copilot_searches.services.copilot_searches import (
     generate_graylog_query,
-    get_cache_health,
-    get_rule_by_id,
-    get_rule_by_name,
-    get_rules_list,
-    get_rules_stats,
+)
+from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_id
+from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_name
+from app.integrations.copilot_searches.services.copilot_searches import get_rules_list
+from app.integrations.copilot_searches.services.copilot_searches import get_rules_stats
+from app.integrations.copilot_searches.services.copilot_searches import (
     provision_graylog_alert_from_rule,
+)
+from app.integrations.copilot_searches.services.copilot_searches import (
     refresh_rules_cache,
 )
 

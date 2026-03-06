@@ -2,39 +2,65 @@ import asyncio
 import copy
 import json
 import re
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Optional
 
 import httpx
 import yaml
 from loguru import logger
 
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteSearchRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteSearchResponse,
-    GraylogQuery,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import GraylogQuery
+from app.integrations.copilot_searches.schema.copilot_searches import (
     GraylogQueryResponse,
-    ParameterSchema,
-    PlatformFilter,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import ParameterSchema
+from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertResponse,
-    RuleDetail,
-    RuleSeverity,
-    RuleStatus,
-    RuleSummary,
-    SearchHit,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import RuleDetail
+from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
+from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
+from app.integrations.copilot_searches.schema.copilot_searches import RuleSummary
+from app.integrations.copilot_searches.schema.copilot_searches import SearchHit
+from app.integrations.copilot_searches.schema.copilot_searches import (
     SearchValidationError,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionFieldSpecItem,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotificationSettings,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionProvider,
 )
-from app.integrations.monitoring_alert.services.provision import provision_alert_definition
+from app.integrations.monitoring_alert.services.provision import (
+    provision_alert_definition,
+)
 
 # =============================================================================
 # Configuration
@@ -52,6 +78,7 @@ CACHE_TTL_MINUTES = 30
 # =============================================================================
 # Rules Cache
 # =============================================================================
+
 
 class RulesCache:
     """
@@ -133,10 +160,7 @@ class RulesCache:
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Get the directory tree for detections
-            tree_url = (
-                f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}"
-                f"?recursive=1"
-            )
+            tree_url = f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}" f"?recursive=1"
 
             response = await client.get(tree_url)
             response.raise_for_status()
@@ -147,18 +171,13 @@ class RulesCache:
             yaml_files = [
                 item
                 for item in tree_data.get("tree", [])
-                if item["path"].startswith("detections/")
-                and item["path"].endswith(".yaml")
-                and item["type"] == "blob"
+                if item["path"].startswith("detections/") and item["path"].endswith(".yaml") and item["type"] == "blob"
             ]
 
             logger.info(f"Found {len(yaml_files)} YAML files in repository")
 
             # Fetch each YAML file
-            tasks = [
-                self._fetch_yaml_file(client, file_info["path"])
-                for file_info in yaml_files
-            ]
+            tasks = [self._fetch_yaml_file(client, file_info["path"]) for file_info in yaml_files]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -339,9 +358,7 @@ class RulesCache:
             for mitre_id in mitre_ids:
                 # Extract base technique (e.g., T1136 from T1136.001)
                 base_technique = mitre_id.split(".")[0] if "." in mitre_id else mitre_id
-                stats["by_mitre_tactic"][base_technique] = (
-                    stats["by_mitre_tactic"].get(base_technique, 0) + 1
-                )
+                stats["by_mitre_tactic"][base_technique] = stats["by_mitre_tactic"].get(base_technique, 0) + 1
 
             # Count rules with Graylog queries
             if rule.get("_has_graylog", False):

@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-from app.integrations.copilot_searches.routes.copilot_searches import copilot_searches_router
+from app.integrations.copilot_searches.routes.copilot_searches import (
+    copilot_searches_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()

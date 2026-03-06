@@ -577,8 +577,7 @@ async def build_alert_payload(
         timefield_value = alert_payload[field_names.timefield_name]
     elif "timestamp" in alert_payload:
         logger.warning(
-            f"Configured time field '{field_names.timefield_name}' not found in alert payload. "
-            f"Falling back to 'timestamp' field.",
+            f"Configured time field '{field_names.timefield_name}' not found in alert payload. " f"Falling back to 'timestamp' field.",
         )
         timefield_value = alert_payload["timestamp"]
     else:

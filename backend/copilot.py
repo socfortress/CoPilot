@@ -40,6 +40,7 @@ from app.routers import cato
 from app.routers import connectors
 from app.routers import copilot_action
 from app.routers import copilot_mcp
+from app.routers import copilot_searches
 from app.routers import cortex
 from app.routers import crowdstrike
 from app.routers import customer_portal
@@ -49,7 +50,6 @@ from app.routers import darktrace
 from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import dfir_iris
-from app.routers import copilot_searches
 from app.routers import dnstwist
 from app.routers import duo
 from app.routers import github_audit

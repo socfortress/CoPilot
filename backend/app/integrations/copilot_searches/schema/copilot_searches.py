@@ -1,12 +1,15 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class PlatformFilter(str, Enum):
     """Supported platform filters."""
+
     ALL = "all"
     LINUX = "linux"
     WINDOWS = "windows"
@@ -14,6 +17,7 @@ class PlatformFilter(str, Enum):
 
 class RuleStatus(str, Enum):
     """Rule status types."""
+
     PRODUCTION = "production"
     EXPERIMENTAL = "experimental"
     DEPRECATED = "deprecated"
@@ -21,6 +25,7 @@ class RuleStatus(str, Enum):
 
 class RuleSeverity(str, Enum):
     """Rule severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -29,6 +34,7 @@ class RuleSeverity(str, Enum):
 
 class ParameterSchema(BaseModel):
     """Parameter definition schema."""
+
     name: str
     description: str
     type: str
@@ -39,11 +45,13 @@ class ParameterSchema(BaseModel):
 
 class GraylogQuery(BaseModel):
     """Graylog query definition."""
+
     query: str = Field(..., description="The Graylog search query string")
 
 
 class RuleSummary(BaseModel):
     """Lightweight rule summary for list endpoints."""
+
     id: str
     name: str
     version: int
@@ -64,6 +72,7 @@ class RuleSummary(BaseModel):
 
 class RuleDetail(BaseModel):
     """Full rule details including search query."""
+
     id: str
     name: str
     version: int
@@ -88,6 +97,7 @@ class RuleDetail(BaseModel):
 
 class RuleListResponse(BaseModel):
     """Response model for rule listing."""
+
     total: int
     filtered: int
     platform: str
@@ -98,6 +108,7 @@ class RuleListResponse(BaseModel):
 
 class RuleStatsResponse(BaseModel):
     """Statistics about loaded rules."""
+
     total_rules: int
     by_platform: dict[str, int]
     by_status: dict[str, int]
@@ -112,6 +123,7 @@ class RuleStatsResponse(BaseModel):
 
 class RefreshResponse(BaseModel):
     """Response model for cache refresh."""
+
     success: bool
     message: str
     rules_loaded: int
@@ -120,6 +132,7 @@ class RefreshResponse(BaseModel):
 
 class RuleDetailResponse(BaseModel):
     """Response model for single rule detail."""
+
     success: bool = True
     message: str = "Rule fetched successfully"
     rule: RuleDetail
@@ -132,6 +145,7 @@ class RuleDetailResponse(BaseModel):
 
 class ExecuteSearchRequest(BaseModel):
     """Request model for executing a rule search."""
+
     rule_id: str = Field(..., description="The ID of the rule to execute")
     index_pattern: str = Field(
         ...,
@@ -158,6 +172,7 @@ class ExecuteSearchRequest(BaseModel):
 
 class SearchHit(BaseModel):
     """A single search result hit."""
+
     index: str = Field(..., description="The index the document was found in")
     id: str = Field(..., description="The document ID")
     score: Optional[float] = Field(None, description="The relevance score")
@@ -166,6 +181,7 @@ class SearchHit(BaseModel):
 
 class ExecuteSearchResponse(BaseModel):
     """Response model for search execution."""
+
     success: bool = True
     message: str = "Search executed successfully"
     rule_id: str
@@ -182,12 +198,14 @@ class ExecuteSearchResponse(BaseModel):
 
 class SearchValidationError(BaseModel):
     """Validation error details."""
+
     parameter: str
     message: str
 
 
 class ExecuteSearchErrorResponse(BaseModel):
     """Error response for search execution."""
+
     success: bool = False
     message: str
     rule_id: Optional[str] = None
@@ -201,6 +219,7 @@ class ExecuteSearchErrorResponse(BaseModel):
 
 class ExecuteGraylogQueryRequest(BaseModel):
     """Request model for executing a Graylog query from a rule."""
+
     rule_id: str = Field(..., description="The ID of the rule to execute")
     parameters: dict[str, Any] = Field(
         default_factory=dict,
@@ -214,6 +233,7 @@ class ExecuteGraylogQueryRequest(BaseModel):
 
 class GraylogQueryResponse(BaseModel):
     """Response model for Graylog query generation."""
+
     success: bool = True
     message: str = "Graylog query generated successfully"
     rule_id: str
@@ -235,6 +255,7 @@ class GraylogQueryResponse(BaseModel):
 
 class ProvisionGraylogAlertRequest(BaseModel):
     """Request model for provisioning a Graylog alert from a CoPilot Search rule."""
+
     rule_id: str = Field(..., description="The ID of the rule to provision as a Graylog alert")
     search_within_seconds: int = Field(
         default=300,
@@ -272,6 +293,7 @@ class ProvisionGraylogAlertRequest(BaseModel):
 
 class ProvisionGraylogAlertResponse(BaseModel):
     """Response model for Graylog alert provisioning."""
+
     success: bool = True
     message: str
     rule_id: str
