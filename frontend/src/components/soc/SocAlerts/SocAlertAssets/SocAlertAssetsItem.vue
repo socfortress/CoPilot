@@ -164,6 +164,7 @@ const { routeAgent } = useNavigation()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat
+const ASSET_NEWLINE_REGEX = /\n/g
 
 const excerpt = computed(() => {
 	const text = asset.asset_description
@@ -175,9 +176,7 @@ const excerpt = computed(() => {
 const descriptionFull = computed(() => {
 	const text = asset.asset_description
 
-	const NEWLINE_REGEX = /\n/g
-
-	return text.replace(NEWLINE_REGEX, "<br>") || "Empty"
+	return text.replace(ASSET_NEWLINE_REGEX, "<br>") || "Empty"
 })
 
 const properties = computed(() => {

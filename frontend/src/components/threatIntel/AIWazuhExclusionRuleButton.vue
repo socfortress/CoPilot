@@ -93,6 +93,7 @@ const licenseChecking = ref(false)
 const licenseChecked = ref(forceLicenseResponse !== undefined)
 const licenseResponse = ref(forceLicenseResponse ?? false)
 const disabledLicenseCheck = ref(forceLicenseResponse !== undefined)
+const WAZUH_RULE_BACKSLASH_REGEX = /\\\\/g
 
 function openResponse() {
 	showModal.value = true
@@ -108,7 +109,6 @@ function analysis() {
 				analysisResponse.value = res.data
 
 				if (res.data.wazuh_exclusion_rule) {
-					const WAZUH_RULE_BACKSLASH_REGEX = /\\\\/g
 					analysisResponse.value.wazuh_exclusion_rule = res.data.wazuh_exclusion_rule.replace(
 						WAZUH_RULE_BACKSLASH_REGEX,
 						"\\\\\\\\"

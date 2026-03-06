@@ -41,6 +41,7 @@ const props = defineProps<{
 const { customer } = toRefs(props)
 
 const DownloadIcon = "carbon:download"
+const QUOTE_ESCAPE_REGEX = /"/g
 
 const loading = ref(false)
 const router = useRouter()
@@ -71,8 +72,6 @@ function exportToCSV() {
 	]
 
 	// Create CSV content
-	const QUOTE_ESCAPE_REGEX = /"/g
-
 	const csvContent = [
 		headers.join(","),
 		...sortedList.value.map(agent => {

@@ -12,16 +12,16 @@
 		</div>
 		<div
 			v-for="item of list"
-			:key="item[labelKey as keyof typeof item]"
+			:key="item?.[labelKey as keyof typeof item] ?? ''"
 			class="flex items-center justify-between gap-4"
 		>
 			<div class="basis-2/3 truncate font-mono">
-				{{ item[labelKey as keyof typeof item] }}
+				{{ item?.[labelKey as keyof typeof item] ?? "" }}
 			</div>
 			<div class="grow">
 				<n-progress
 					type="line"
-					:percentage="parseInt(item[percentageKey as keyof typeof item], 10)"
+					:percentage="parseInt(String(item?.[percentageKey as keyof typeof item] ?? 0), 10)"
 					indicator-placement="inside"
 					:indicator-text-color="style['bg-default-color']"
 					:color="style['fg-default-color']"

@@ -33,9 +33,10 @@ export function isMobile() {
 	return detectMobile
 }
 
+const URL_PATTERN = /^https?:\/\//i
+
 export function isUrlLike(text: string) {
-	const urlPattern = /^https?:\/\//i
-	return urlPattern.test(text)
+	return URL_PATTERN.test(text)
 }
 
 export function renderIcon(icon: Component | string) {
