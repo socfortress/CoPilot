@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

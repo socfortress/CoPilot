@@ -276,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"

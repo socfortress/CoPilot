@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } from "naive-ui"

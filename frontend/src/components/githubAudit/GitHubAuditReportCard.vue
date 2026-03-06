@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { GitHubAuditReportSummary } from "@/types/githubAudit.d"
 import { NCard, NTag } from "naive-ui"
 import { computed } from "vue"

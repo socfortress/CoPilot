@@ -1,117 +1,125 @@
 <template>
 	<n-spin :show="loadingRule">
-		<n-form v-if="rule" ref="formRef" :model="formValue" :rules label-placement="left" label-width="auto">
-			<!-- Index Pattern -->
-			<n-form-item label="Index Pattern" path="index_pattern" required>
-				<n-input v-model:value="formValue.index_pattern" placeholder="e.g., wazuh-alerts-*" clearable />
-			</n-form-item>
+		<div v-if="rule" class="flex flex-col gap-8">
+			<div class="flex flex-col gap-2">
+				<div class="flex items-center gap-2">
+					<PlatformBadge :platform="rule.tags?.asset_type || 'unknown'" />
+					<SeverityBadge :severity="rule.response?.severity || 'medium'" />
+				</div>
+				<h3 class="font-semibold">{{ rule.name }}</h3>
+				<p class="text-sm opacity-70">{{ rule.description }}</p>
+			</div>
 
-			<!-- Result Size -->
-			<n-form-item label="Result Size" path="size">
-				<n-input-number
-					v-model:value="formValue.size"
-					:min="1"
-					:max="10000"
-					placeholder="Number of results"
-					class="w-full"
-				/>
-			</n-form-item>
+			<n-form ref="formRef" :model="formValue" :rules label-placement="left" label-width="auto">
+				<!-- Index Pattern -->
+				<n-form-item label="Index Pattern" path="index_pattern" required>
+					<n-input v-model:value="formValue.index_pattern" placeholder="e.g., wazuh-alerts-*" clearable />
+				</n-form-item>
 
-			<!-- Parameters Section -->
-			<div v-if="rule.parameters?.length" class="mb-4">
-				<n-divider>Search Parameters</n-divider>
-				<div v-for="param in rule.parameters" :key="param.name" class="mb-3">
-					<n-form-item :label="param.name" :path="`parameters.${param.name}`" :required="param.required">
-						<template #label>
-							<div class="flex items-center gap-2">
-								<span>{{ param.name }}</span>
-								<n-tag v-if="param.type" size="tiny" :bordered="false">
-									{{ param.type }}
-								</n-tag>
+				<!-- Result Size -->
+				<n-form-item label="Result Size" path="size">
+					<n-input-number
+						v-model:value="formValue.size"
+						:min="1"
+						:max="10000"
+						placeholder="Number of results"
+						class="w-full"
+					/>
+				</n-form-item>
+
+				<!-- Parameters Section -->
+				<div v-if="rule.parameters?.length">
+					<n-divider>Search Parameters</n-divider>
+
+					<n-form-item
+						v-for="param in rule.parameters"
+						:key="param.name"
+						:label="param.name"
+						:required="param.required"
+					>
+						<div class="flex w-full flex-col gap-2">
+							<n-input-number
+								v-if="['integer', 'int', 'long', 'number', 'numeric'].includes(param.type)"
+								v-model:value="formValue.parameters[param.name] as number"
+								class="w-full"
+								:placeholder="param.default?.toString()"
+								clearable
+								:disabled="executing"
+							/>
+							<n-switch
+								v-if="['boolean', 'bool'].includes(param.type)"
+								v-model:value="formValue.parameters[param.name] as boolean"
+								:disabled="executing"
+							/>
+							<n-input
+								v-else
+								v-model:value="formValue.parameters[param.name] as string"
+								:placeholder="param.example?.toString() || param.default?.toString()"
+								clearable
+								:disabled="executing"
+							/>
+							<div v-if="param.description" class="text-secondary text-xs">
+								{{ param.description }}
 							</div>
-						</template>
-
-						<!-- DateTime Parameter -->
-						<n-input
-							v-if="param.type === 'datetime'"
-							v-model:value="formValue.parameters[param.name] as string"
-							:placeholder="param.example?.toString() || param.default?.toString() || 'e.g., now-24h'"
-							clearable
-						/>
-
-						<!-- Integer Parameter -->
-						<n-input-number
-							v-else-if="param.type === 'integer'"
-							v-model:value="formValue.parameters[param.name] as number"
-							:placeholder="param.default?.toString() || 'Enter value...'"
-							class="w-full"
-						/>
-
-						<!-- String Parameter -->
-						<n-input
-							v-else
-							v-model:value="formValue.parameters[param.name] as string"
-							:placeholder="param.example?.toString() || param.default?.toString() || 'Enter value...'"
-							clearable
-						/>
-
-						<template v-if="param.description" #feedback>
-							<span class="text-xs text-gray-500">{{ param.description }}</span>
-						</template>
+						</div>
 					</n-form-item>
 				</div>
-			</div>
 
-			<div class="flex justify-end gap-2">
-				<n-button @click="emit('close')">Cancel</n-button>
-				<n-button type="primary" :loading="executing" :disabled="!isFormValid" @click="handleExecute">
-					<template #icon>
-						<Icon :name="PlayIcon" />
-					</template>
-					Execute Search
-				</n-button>
-			</div>
-		</n-form>
+				<div class="flex justify-end gap-2">
+					<n-button @click="emit('close')">Cancel</n-button>
+					<n-button type="primary" :loading="executing" :disabled="!isFormValid" @click="handleExecute">
+						<template #icon>
+							<Icon :name="PlayIcon" />
+						</template>
+						Execute Search
+					</n-button>
+				</div>
+			</n-form>
 
-		<!-- Search Results -->
-		<div v-if="searchResults" class="mt-4">
-			<n-divider>Search Results</n-divider>
+			<!-- Search Results -->
+			<div v-if="searchResults">
+				<n-divider>Search Results</n-divider>
 
-			<div class="mb-4 flex flex-wrap items-center gap-4">
-				<Badge color="primary" type="splitted">
-					<template #label>Total Hits</template>
-					<template #value>{{ searchResults.total_hits }}</template>
-				</Badge>
-				<Badge type="splitted">
-					<template #label>Returned</template>
-					<template #value>{{ searchResults.returned_hits }}</template>
-				</Badge>
-				<Badge type="splitted">
-					<template #label>Time</template>
-					<template #value>{{ searchResults.took_ms }}ms</template>
-				</Badge>
-			</div>
+				<div class="flex flex-wrap items-center gap-4">
+					<Badge color="primary" type="splitted">
+						<template #label>Total Hits</template>
+						<template #value>{{ searchResults.total_hits }}</template>
+					</Badge>
+					<Badge type="splitted">
+						<template #label>Returned</template>
+						<template #value>{{ searchResults.returned_hits }}</template>
+					</Badge>
+					<Badge type="splitted">
+						<template #label>Time</template>
+						<template #value>{{ searchResults.took_ms }}ms</template>
+					</Badge>
+				</div>
 
-			<n-collapse v-if="searchResults.hits.length" :default-expanded-names="['results']">
-				<n-collapse-item title="Results" name="results">
-					<div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-						<div v-for="hit in searchResults.hits" :key="hit.id" class="bg-secondary-color rounded-lg p-3">
-							<div class="mb-2 flex items-center gap-2 text-xs opacity-60">
-								<span>Index: {{ hit.index }}</span>
-								<span>|</span>
-								<span>ID: {{ hit.id }}</span>
+				<n-collapse v-if="searchResults.hits.length" :default-expanded-names="['results']">
+					<n-collapse-item title="Results" name="results">
+						<div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
+							<div
+								v-for="hit in searchResults.hits"
+								:key="hit.id"
+								class="bg-secondary-color rounded-lg p-3"
+							>
+								<div class="mb-2 flex items-center gap-2 text-xs opacity-60">
+									<span>Index: {{ hit.index }}</span>
+									<span>|</span>
+									<span>ID: {{ hit.id }}</span>
+								</div>
+								<n-code :code="JSON.stringify(hit.source, null, 2)" language="json" />
 							</div>
-							<n-code :code="JSON.stringify(hit.source, null, 2)" language="json" />
 						</div>
-					</div>
-				</n-collapse-item>
+					</n-collapse-item>
 
-				<n-collapse-item title="Query Executed" name="query">
-					<n-code :code="JSON.stringify(searchResults.query_executed, null, 2)" language="json" />
-				</n-collapse-item>
-			</n-collapse>
+					<n-collapse-item title="Query Executed" name="query">
+						<n-code :code="JSON.stringify(searchResults.query_executed, null, 2)" language="json" />
+					</n-collapse-item>
+				</n-collapse>
 
-			<n-empty v-else description="No results found" class="py-8" />
+				<n-empty v-else description="No results found" class="py-8" />
+			</div>
 		</div>
 	</n-spin>
 </template>
@@ -131,13 +139,15 @@ import {
 	NInput,
 	NInputNumber,
 	NSpin,
-	NTag,
+	NSwitch,
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import SeverityBadge from "./SeverityBadge.vue"
 
 const { ruleId } = defineProps<{
 	ruleId: string

@@ -158,7 +158,7 @@
 </template>
 
 <script lang="ts" setup>
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { SelectBaseOption } from "naive-ui/es/select/src/interface"
 import type { RegisterPayload } from "@/types/auth.d"

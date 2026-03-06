@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { useResizeObserver } from "@vueuse/core"

@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
 import { NCard, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

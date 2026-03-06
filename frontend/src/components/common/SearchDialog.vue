@@ -118,7 +118,7 @@ const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
 const { routeCustomer, routeSocAlerts, routeAlerts, routeConnectors } = useNavigation()
 
-// TODO: review the groups and items
+// TODO-FE: review the groups and items
 const groups = ref<Groups>([
 	{
 		name: "Applications",

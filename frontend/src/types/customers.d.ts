@@ -13,7 +13,7 @@ export interface Customer {
 	postal_code: string
 	country: string
 	customer_type: string
-	// TODO: consider removing it (logo_file)
+	// TODO-FE: consider removing it (logo_file)
 	logo_file: string
 	is_provisioned?: boolean
 }

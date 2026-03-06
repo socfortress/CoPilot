@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

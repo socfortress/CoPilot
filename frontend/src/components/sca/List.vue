@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca.d"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"

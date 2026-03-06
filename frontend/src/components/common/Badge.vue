@@ -19,7 +19,7 @@
 <script setup lang="ts">
 export type BadgeColor = "danger" | "warning" | "success" | "primary"
 
-// TODO: refactor
+// TODO-FE: refactor
 const { type, hintCursor, pointCursor, color, href, fluid, size } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean

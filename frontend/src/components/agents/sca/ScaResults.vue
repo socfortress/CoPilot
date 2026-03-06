@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

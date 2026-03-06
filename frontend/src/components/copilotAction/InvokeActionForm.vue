@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { Agent } from "@/types/agents.d"
 import type { CopilotAction } from "@/types/copilotAction.d"

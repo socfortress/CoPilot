@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import {
 	NAlert,

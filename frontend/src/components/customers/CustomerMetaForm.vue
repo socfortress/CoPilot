@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { CustomerMeta } from "@/types/customers.d"
 import _get from "lodash/get"

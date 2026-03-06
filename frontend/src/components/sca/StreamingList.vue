@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { AgentScaOverviewItem, ScaOverviewQuery, ScaStreamComplete, ScaStreamProgress } from "@/types/sca.d"
 import {

@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"

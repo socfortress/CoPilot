@@ -235,7 +235,7 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .agent-data-store-tab-compact {
 	.filters-bar {

@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormRules, FormValidationError } from "naive-ui"
 import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"

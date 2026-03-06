@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"

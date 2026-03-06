@@ -13,7 +13,7 @@ import type {
 } from "@/types/snapshots.d"
 import { HttpClient } from "../httpClient"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	// Repository endpoints
 	getRepositories() {

@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { SetupContext } from "vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"

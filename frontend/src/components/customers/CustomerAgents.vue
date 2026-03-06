@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"

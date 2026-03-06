@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
 import { NAlert, NButton, NDescriptions, NDescriptionsItem, NDivider, NEmpty, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

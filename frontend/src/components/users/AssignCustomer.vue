@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import type { User } from "@/types/user.d"
 import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "naive-ui"

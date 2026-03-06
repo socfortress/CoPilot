@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-// TODO: refactor
+// TODO-FE: refactor
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

@@ -83,7 +83,7 @@ const statusType = computed<TagProps["type"]>(() => {
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .artifact-card-compact {
 	transition: all 0.2s var(--bezier-ease);

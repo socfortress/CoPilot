@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { StepsProps } from "naive-ui"
 import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
 import type { ServiceItemData } from "@/components/services/types"

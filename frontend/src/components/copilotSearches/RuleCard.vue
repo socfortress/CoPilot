@@ -10,9 +10,34 @@
 			header-box-class="flex-nowrap! items-start"
 			@click.stop="showDetails = true"
 		>
-			<template #headerMain>{{ rule.name }}</template>
+			<template #headerMain>
+				<div class="flex flex-wrap items-center gap-2">
+					<Badge v-if="rule.status" :color="getStatusColor(rule.status)" size="small">
+						<template #value>{{ rule.status }}</template>
+					</Badge>
+
+					<Badge v-if="rule.type" type="splitted" size="small">
+						<template #label>type</template>
+						<template #value>{{ rule.type }}</template>
+					</Badge>
+
+					<div v-if="rule.mitre_attack_id?.length" class="flex items-center gap-1">
+						<Badge
+							v-for="mitre of rule.mitre_attack_id.slice(0, 2)"
+							:key="mitre"
+							size="small"
+							color="primary"
+						>
+							<template #value>{{ mitre }}</template>
+						</Badge>
+						<Badge v-if="rule.mitre_attack_id.length > 2" size="small">
+							<template #value>+{{ rule.mitre_attack_id.length - 2 }}</template>
+						</Badge>
+					</div>
+				</div>
+			</template>
 			<template #headerExtra>
-				<div class="text-default flex items-center gap-2">
+				<div class="text-default pt-.5 flex h-full items-center gap-2">
 					<n-tooltip v-if="rule.has_graylog_query">
 						<template #trigger>
 							<Icon :name="GraylogIcon" :size="16" />
@@ -23,33 +48,10 @@
 			</template>
 			<template #default>
 				<div class="flex flex-col gap-2">
-					<div class="line-clamp-3 text-sm">
+					<div>{{ rule.name }}</div>
+					<p class="line-clamp-3 text-sm">
 						{{ rule.description }}
-					</div>
-					<div class="flex flex-wrap items-center gap-2">
-						<Badge v-if="rule.status" :color="getStatusColor(rule.status)" size="small">
-							<template #value>{{ rule.status }}</template>
-						</Badge>
-
-						<Badge v-if="rule.type" type="splitted" size="small">
-							<template #label>type</template>
-							<template #value>{{ rule.type }}</template>
-						</Badge>
-
-						<div v-if="rule.mitre_attack_id?.length" class="flex items-center gap-1">
-							<Badge
-								v-for="mitre of rule.mitre_attack_id.slice(0, 2)"
-								:key="mitre"
-								size="small"
-								color="primary"
-							>
-								<template #value>{{ mitre }}</template>
-							</Badge>
-							<Badge v-if="rule.mitre_attack_id.length > 2" size="small">
-								<template #value>+{{ rule.mitre_attack_id.length - 2 }}</template>
-							</Badge>
-						</div>
-					</div>
+					</p>
 				</div>
 			</template>
 			<template #mainExtra>
@@ -85,7 +87,7 @@
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`Detection Rule: ${rule.name}`"
+			title="Detection Rule"
 			:bordered="false"
 			segmented
 		>
@@ -96,20 +98,12 @@
 		<n-modal
 			v-model:show="showExecuteModal"
 			preset="card"
-			:style="{ maxWidth: 'min(700px, 90vw)' }"
+			:style="{ maxWidth: 'min(550px, 90vw)' }"
+			title="Execute Search"
 			:bordered="false"
 			display-directive="show"
 			segmented
 		>
-			<template #header>
-				<div class="flex flex-col gap-2">
-					<div class="flex gap-2">
-						<PlatformBadge :platform="rule.platform" />
-						<SeverityBadge :severity="rule.severity" />
-					</div>
-					<span class="px-1 text-base">{{ rule.name }}</span>
-				</div>
-			</template>
 			<ExecuteSearchForm :rule-id="rule.id" @success="handleExecuteSuccess" @close="showExecuteModal = false" />
 		</n-modal>
 

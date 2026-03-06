@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"

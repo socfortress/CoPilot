@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

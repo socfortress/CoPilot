@@ -8,7 +8,7 @@ import type {
 } from "@/types/vulnerabilities.d"
 import { HttpClient } from "../httpClient"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	/**
 	 * Search vulnerabilities directly from Wazuh indexer with filtering and pagination

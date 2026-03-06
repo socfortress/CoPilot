@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { CustomerMeta } from "@/types/customers.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"

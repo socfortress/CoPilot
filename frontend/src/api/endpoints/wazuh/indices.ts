@@ -2,7 +2,7 @@ import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { ClusterHealth, IndexAllocation, IndexShard, IndexStats } from "@/types/indices.d"
 import { HttpClient } from "../../httpClient"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default {
 	getAllocation() {
 		return HttpClient.get<FlaskBaseResponse & { node_allocation: IndexAllocation[] }>("/wazuh_indexer/allocation")

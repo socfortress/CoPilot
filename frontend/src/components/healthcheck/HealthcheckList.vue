@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"

@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { MitreEventDetails } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"

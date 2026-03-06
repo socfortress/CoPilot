@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots.d"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"

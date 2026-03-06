@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents.d"
 import {
 	NAlert,

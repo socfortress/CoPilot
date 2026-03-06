@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormRules } from "naive-ui"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"

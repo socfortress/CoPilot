@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { GitHubAuditReport } from "@/types/githubAudit.d"
 import {
 	NAlert,

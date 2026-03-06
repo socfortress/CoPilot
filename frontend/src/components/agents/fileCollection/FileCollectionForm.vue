@@ -205,7 +205,7 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .file-collection-form {
 	max-width: 600px;

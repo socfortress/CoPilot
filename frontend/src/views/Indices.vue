@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-// TODO: refactor
+// TODO-FE: refactor
 import type { IndexStats } from "@/types/indices.d"
 import { NCard, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"

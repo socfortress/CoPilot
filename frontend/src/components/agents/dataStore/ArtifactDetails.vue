@@ -137,7 +137,7 @@ const visibleFields = computed(() => fields.value.filter(field => field.conditio
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 .artifact-details {
 	:deep() {
 		code {

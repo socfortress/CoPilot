@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities.d"
 import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch } from "naive-ui"

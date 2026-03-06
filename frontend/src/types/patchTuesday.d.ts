@@ -1,4 +1,4 @@
-// TODO: refactor
+// TODO-FE: refactor
 export interface CVSSInfo {
 	base: number | null
 	vector: string | null

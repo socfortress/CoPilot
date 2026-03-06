@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"

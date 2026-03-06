@@ -21,7 +21,7 @@ const SchedulerIcon = "material-symbols:autoplay"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
 const ToolsIcon = "carbon:tool-box"
 
-// TODO: refactor
+// TODO-FE: refactor
 export default function getItems(): MenuMixedOption[] {
 	return [
 		{

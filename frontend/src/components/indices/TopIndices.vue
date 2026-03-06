@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ECharts } from "echarts/core"
 import type { IndexStats } from "@/types/indices.d"
 import bytes from "bytes"

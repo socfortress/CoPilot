@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
 import type { MitreAtomicTest } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"

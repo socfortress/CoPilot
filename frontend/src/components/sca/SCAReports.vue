@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"

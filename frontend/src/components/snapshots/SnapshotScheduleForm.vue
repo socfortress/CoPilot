@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"

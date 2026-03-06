@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
@@ -77,7 +77,7 @@ const formData = reactive<GitHubAuditExclusionCreate>({
 	reason: "",
 	approved_by: null,
 	expires_at: null,
-	created_by: "current_user" // TODO: Get from auth context
+	created_by: "current_user" // TODO-FE: Get from auth context
 })
 
 const rules: FormRules = {

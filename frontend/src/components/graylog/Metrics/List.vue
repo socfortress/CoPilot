@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"

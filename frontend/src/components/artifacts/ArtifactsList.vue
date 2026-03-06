@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"

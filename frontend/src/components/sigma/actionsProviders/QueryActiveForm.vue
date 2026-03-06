@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { SigmaQuery } from "@/types/sigma.d"
 import { NButton, NPopover, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"

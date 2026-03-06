@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
 import { NButton, NCheckbox, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

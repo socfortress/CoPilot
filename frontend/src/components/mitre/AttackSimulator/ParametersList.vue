@@ -76,7 +76,7 @@ async function getList() {
 		list.value = _uniq(fullList, "name")
 		emit("loaded", list.value)
 	} catch (err: any) {
-		// TODO: remove any
+		// TODO-FE: remove any
 		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 	} finally {
 		loading.value = false

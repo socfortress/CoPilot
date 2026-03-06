@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 import {

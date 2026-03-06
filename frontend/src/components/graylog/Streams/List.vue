@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

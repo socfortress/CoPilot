@@ -114,7 +114,7 @@ import Icon from "@/components/common/Icon.vue"
 import ArtifactCard from "./ArtifactCard.vue"
 import ArtifactDetails from "./ArtifactDetails.vue"
 
-// TODO: join AgentDataStoreTab + AgentDataStoreTabCompact
+// TODO-FE: join AgentDataStoreTab + AgentDataStoreTabCompact
 
 const props = defineProps<{
 	agent: Agent
@@ -235,7 +235,7 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-// TODO: remove style
+// TODO-FE: remove style
 
 .agent-data-store-tab {
 	.filters-section {

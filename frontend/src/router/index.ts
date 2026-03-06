@@ -6,7 +6,7 @@ import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
 import OverviewPage from "@/views/Overview.vue"
 
-// TODO: refactor
+// TODO-FE: refactor
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [

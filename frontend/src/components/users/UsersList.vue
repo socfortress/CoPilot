@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: refactor
+// TODO-FE: refactor
 import type { User } from "@/types/user.d"
 import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
