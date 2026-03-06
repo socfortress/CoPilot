@@ -45,7 +45,7 @@
 			preset="card"
 			title="Generate SCA Report"
 			style="width: 600px; max-width: 90vw"
-			:closable="true"
+			closable
 		>
 			<GenerateReportForm
 				:customers

@@ -1,5 +1,5 @@
 <template>
-	<n-card size="small" :bordered="true" hoverable class="artifact-card-compact">
+	<n-card size="small" bordered hoverable class="artifact-card-compact">
 		<div class="flex items-start justify-between gap-3">
 			<div class="min-w-0 flex-1">
 				<div class="mb-1 flex items-center gap-2">

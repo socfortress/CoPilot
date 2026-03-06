@@ -75,7 +75,7 @@
 					display-directive="show"
 				>
 					<div class="p-7 pt-4">
-						<CodeSource :code="analysisResponse.base64_decoded" :decode="true" />
+						<CodeSource :code="analysisResponse.base64_decoded" decode />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane

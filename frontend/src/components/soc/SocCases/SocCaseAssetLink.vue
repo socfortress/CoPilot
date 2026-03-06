@@ -45,7 +45,7 @@
 							<SocCaseItem
 								v-if="socCase"
 								:case-data="socCase"
-								:embedded="true"
+								embedded
 								class="-mt-4 py-2"
 								@deleted="getSocCase(link.case_id)"
 							/>

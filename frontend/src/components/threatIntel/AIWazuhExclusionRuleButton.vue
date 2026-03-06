@@ -46,7 +46,7 @@
 				class="flex flex-col gap-7 p-7"
 			>
 				<div v-if="analysisResponse?.wazuh_exclusion_rule">
-					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" :decode="true" />
+					<CodeSource :code="analysisResponse.wazuh_exclusion_rule" decode />
 				</div>
 				<div v-if="analysisResponse?.wazuh_exclusion_rule_justification">
 					<Markdown :source="analysisResponse.wazuh_exclusion_rule_justification" />

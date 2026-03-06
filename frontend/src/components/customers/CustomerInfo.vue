@@ -1,7 +1,7 @@
 <template>
 	<div class="customer-info">
 		<div v-if="editing" class="p-7 pt-4">
-			<CustomerForm :customer :lock-code="true" @submitted="submitted">
+			<CustomerForm :customer lock-code @submitted="submitted">
 				<template #additionalActions>
 					<n-button @click="editing = false">Close</n-button>
 				</template>

@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<n-alert type="info" :show-icon="true">
+		<n-alert type="info" show-icon>
 			<template #header>Repository Registration Required</template>
 			Snapshot repositories must be manually registered in your Wazuh Indexer cluster.
 			<n-a

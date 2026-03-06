@@ -36,7 +36,7 @@
 										<Highlighter
 											highlight-class-name="highlight"
 											:search-words="keywords"
-											:auto-escape="true"
+											auto-escape
 											:text-to-highlight="item.title"
 										/>
 									</div>

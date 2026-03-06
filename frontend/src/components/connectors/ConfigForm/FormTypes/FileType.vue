@@ -4,7 +4,7 @@
 			<n-upload
 				class="file-upload-wrap"
 				:max="1"
-				:show-file-list="true"
+				show-file-list
 				accept=".yaml, .YAML, .yml, .YML"
 				@change="handleChange"
 				@remove="handleChange"

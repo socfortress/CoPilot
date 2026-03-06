@@ -17,7 +17,7 @@
 						:key="alert.alert_id"
 						:alert-data="alert"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
-						:is-bookmark="true"
+						is-bookmark
 						:users="usersList"
 						@bookmark="bookmark()"
 						@deleted="itemDeleted(alert.alert_id)"

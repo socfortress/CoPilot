@@ -52,6 +52,7 @@ export default antfu(
 			"vue/comma-dangle": "off",
 			"vue/quote-props": "off",
 			"vue/one-component-per-file": "off",
+			"vue/prefer-true-attribute-shorthand": "error",
 			"vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }]
 		}
 	}

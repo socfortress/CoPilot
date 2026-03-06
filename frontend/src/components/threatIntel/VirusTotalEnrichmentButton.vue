@@ -113,7 +113,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Details" tab="Details" display-directive="show">
 					<div class="p-7 pt-4">
-						<CodeSource :code="properties" :decode="true" />
+						<CodeSource :code="properties" decode />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane
@@ -433,7 +433,7 @@
 							<template #value>
 								<CodeSource
 									:code="virusTotalDataResponse.attributes.last_https_certificate.public_key"
-									:decode="true"
+									decode
 								/>
 							</template>
 						</CardKV>

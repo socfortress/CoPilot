@@ -9,8 +9,8 @@
 						type="line"
 						:percentage="progress.percent_complete"
 						:status="streamError ? 'error' : streamComplete ? 'success' : 'default'"
-						:show-indicator="true"
-						class="flex-grow"
+						show-indicator
+						class="grow"
 					/>
 					<n-button
 						v-if="!isStreaming && !streamComplete"
