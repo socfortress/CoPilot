@@ -92,8 +92,10 @@ export function getThemeColors(colors: Record<ColorType, string>) {
  * @returns An array of expanded strings, e.g.
  *          ["brand-seablue-10", "brand-seablue-20", ..., "brand-green-50"]
  */
+const PARENTHESIS_GROUP_REGEX = /\(([^)]+)\)/
+
 export function expandPattern(input: string): string[] {
-	const match = input.match(/\(([^)]+)\)/)
+	const match = input.match(PARENTHESIS_GROUP_REGEX)
 	if (!match) {
 		// If there are no more parentheses, returns the input as an array
 		return [input]
