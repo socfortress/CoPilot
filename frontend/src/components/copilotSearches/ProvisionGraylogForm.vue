@@ -2,14 +2,7 @@
 	<n-spin :show="loadingRule">
 		<div v-if="rule" class="flex flex-col gap-8">
 			<!-- Rule Info -->
-			<div class="flex flex-col gap-2">
-				<div class="flex items-center gap-2">
-					<PlatformBadge :platform="rule.tags?.asset_type || 'unknown'" />
-					<SeverityBadge :severity="rule.response?.severity || 'medium'" />
-				</div>
-				<h3 class="font-semibold">{{ rule.name }}</h3>
-				<p class="text-sm opacity-70">{{ rule.description }}</p>
-			</div>
+			<RuleHeader :rule-detail="rule" />
 
 			<!-- Graylog Query Preview -->
 			<div v-if="rule.graylog?.query" class="flex flex-col gap-2">
@@ -141,8 +134,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "@/components/common/PlatformBadge.vue"
-import SeverityBadge from "./SeverityBadge.vue"
+import RuleHeader from "./RuleHeader.vue"
 
 const props = defineProps<{
 	ruleId?: string
