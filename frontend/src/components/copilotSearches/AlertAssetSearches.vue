@@ -67,10 +67,10 @@
 			:title="selectedRule?.name"
 			segmented
 			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(550px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
 			@close="selectedRule = null"
 		>
-			<AlertAssetRuleForm v-if="selectedRule" :selected-rule :asset />
+			<ExecuteSearchForm v-if="selectedRule" :rule-summary="selectedRule" :asset />
 		</n-modal>
 	</div>
 </template>
@@ -84,7 +84,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
-import AlertAssetRuleForm from "./AlertAssetRuleForm.vue"
+import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
 const { asset } = defineProps<{

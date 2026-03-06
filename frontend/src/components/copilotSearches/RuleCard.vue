@@ -86,7 +86,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(750px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			title="Detection Rule"
 			:bordered="false"
 			segmented
@@ -104,14 +104,19 @@
 			display-directive="show"
 			segmented
 		>
-			<ExecuteSearchForm :rule-id="rule.id" @success="handleExecuteSuccess" @close="showExecuteModal = false" />
+			<ExecuteSearchForm
+				:rule-id="rule.id"
+				show-header
+				@success="handleExecuteSuccess"
+				@close="showExecuteModal = false"
+			/>
 		</n-modal>
 
 		<!-- Provision Graylog Alert Modal -->
 		<n-modal
 			v-model:show="showProvisionModal"
 			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)' }"
+			:style="{ maxWidth: 'min(550px, 90vw)' }"
 			title="Provision Graylog Alert"
 			:bordered="false"
 			display-directive="show"

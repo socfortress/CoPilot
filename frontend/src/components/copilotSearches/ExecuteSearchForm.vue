@@ -1,19 +1,24 @@
 <template>
 	<n-spin :show="loadingRule">
 		<div v-if="rule" class="flex flex-col gap-8">
-			<div class="flex flex-col gap-2">
-				<div class="flex items-center gap-2">
-					<PlatformBadge :platform="rule.tags?.asset_type || 'unknown'" />
-					<SeverityBadge :severity="rule.response?.severity || 'medium'" />
-				</div>
-				<h3 class="font-semibold">{{ rule.name }}</h3>
-				<p class="text-sm opacity-70">{{ rule.description }}</p>
-			</div>
+			<RuleHeader v-if="showHeader" :rule-detail="rule" />
 
-			<n-form ref="formRef" :model="formValue" :rules label-placement="left" label-width="auto">
+			<n-form
+				ref="formRef"
+				:model="formValue"
+				:rules
+				label-placement="left"
+				label-width="auto"
+				:disabled="executing"
+			>
 				<!-- Index Pattern -->
 				<n-form-item label="Index Pattern" path="index_pattern" required>
-					<n-input v-model:value="formValue.index_pattern" placeholder="e.g., wazuh-alerts-*" clearable />
+					<n-input
+						v-model:value="formValue.index_pattern"
+						placeholder="e.g., wazuh-alerts-*"
+						clearable
+						:disabled="executing"
+					/>
 				</n-form-item>
 
 				<!-- Result Size -->
@@ -24,6 +29,8 @@
 						:max="10000"
 						placeholder="Number of results"
 						class="w-full"
+						clearable
+						:disabled="executing"
 					/>
 				</n-form-item>
 
@@ -44,19 +51,16 @@
 								class="w-full"
 								:placeholder="param.default?.toString()"
 								clearable
-								:disabled="executing"
 							/>
 							<n-switch
 								v-if="['boolean', 'bool'].includes(param.type)"
 								v-model:value="formValue.parameters[param.name] as boolean"
-								:disabled="executing"
 							/>
 							<n-input
 								v-else
 								v-model:value="formValue.parameters[param.name] as string"
 								:placeholder="param.example?.toString() || param.default?.toString()"
 								clearable
-								:disabled="executing"
 							/>
 							<div v-if="param.description" class="text-secondary text-xs">
 								{{ param.description }}
@@ -65,9 +69,13 @@
 					</n-form-item>
 				</div>
 
-				<div class="flex justify-end gap-2">
-					<n-button @click="emit('close')">Cancel</n-button>
-					<n-button type="primary" :loading="executing" :disabled="!isFormValid" @click="handleExecute">
+				<div class="flex items-center justify-between">
+					<div class="flex flex-wrap gap-2">
+						<Badge v-for="mitre of ruleSummary?.mitre_attack_id?.slice(0, 3)" :key="mitre" size="small">
+							<template #value>{{ mitre }}</template>
+						</Badge>
+					</div>
+					<n-button type="primary" :loading="executing" :disabled="!isFormValid" @click="executeSearch">
 						<template #icon>
 							<Icon :name="PlayIcon" />
 						</template>
@@ -77,67 +85,82 @@
 			</n-form>
 
 			<!-- Search Results -->
-			<div v-if="searchResults">
-				<n-divider>Search Results</n-divider>
+			<n-collapse-transition :show="!!searchResults">
+				<n-card v-if="searchResults" title="Search Results" size="small" content-class="flex flex-col gap-6">
+					<div class="flex flex-wrap items-center gap-3">
+						<Badge color="primary" type="splitted">
+							<template #label>Total Hits</template>
+							<template #value>{{ searchResults.total_hits }}</template>
+						</Badge>
+						<Badge type="splitted">
+							<template #label>Returned</template>
+							<template #value>{{ searchResults.returned_hits }}</template>
+						</Badge>
+						<Badge type="splitted">
+							<template #label>Time</template>
+							<template #value>{{ searchResults.took_ms }}ms</template>
+						</Badge>
+					</div>
 
-				<div class="flex flex-wrap items-center gap-4">
-					<Badge color="primary" type="splitted">
-						<template #label>Total Hits</template>
-						<template #value>{{ searchResults.total_hits }}</template>
-					</Badge>
-					<Badge type="splitted">
-						<template #label>Returned</template>
-						<template #value>{{ searchResults.returned_hits }}</template>
-					</Badge>
-					<Badge type="splitted">
-						<template #label>Time</template>
-						<template #value>{{ searchResults.took_ms }}ms</template>
-					</Badge>
-				</div>
-
-				<n-collapse v-if="searchResults.hits.length" :default-expanded-names="['results']">
-					<n-collapse-item title="Results" name="results">
-						<div class="flex max-h-96 flex-col gap-2 overflow-y-auto">
-							<div
-								v-for="hit in searchResults.hits"
-								:key="hit.id"
-								class="bg-secondary-color rounded-lg p-3"
+					<n-collapse v-if="searchResults.hits.length">
+						<n-collapse-item title="Results" name="results">
+							<n-scrollbar
+								class="max-h-64"
+								trigger="none"
+								:theme-overrides="{
+									railInsetVerticalRight: `0px 0px 0px auto`
+								}"
 							>
-								<div class="mb-2 flex items-center gap-2 text-xs opacity-60">
-									<span>Index: {{ hit.index }}</span>
-									<span>|</span>
-									<span>ID: {{ hit.id }}</span>
+								<div class="flex flex-col gap-2">
+									<div
+										v-for="hit in searchResults.hits"
+										:key="hit.id"
+										class="bg-secondary-color rounded-lg p-3"
+									>
+										<div class="mb-2 flex flex-wrap gap-2">
+											<Badge type="splitted" size="small">
+												<template #label>Index</template>
+												<template #value>{{ hit.index }}</template>
+											</Badge>
+											<Badge type="splitted" size="small">
+												<template #label>ID</template>
+												<template #value>{{ hit.id }}</template>
+											</Badge>
+										</div>
+										<CodeSource :code="hit.source" lang="json" />
+									</div>
 								</div>
-								<n-code :code="JSON.stringify(hit.source, null, 2)" language="json" />
-							</div>
-						</div>
-					</n-collapse-item>
+							</n-scrollbar>
+						</n-collapse-item>
 
-					<n-collapse-item title="Query Executed" name="query">
-						<n-code :code="JSON.stringify(searchResults.query_executed, null, 2)" language="json" />
-					</n-collapse-item>
-				</n-collapse>
-
-				<n-empty v-else description="No results found" class="py-8" />
-			</div>
+						<n-collapse-item title="Query Executed" name="query">
+							<CodeSource :code="searchResults.query_executed" lang="json" />
+						</n-collapse-item>
+					</n-collapse>
+				</n-card>
+				<n-empty v-else description="No results found" class="py-4" />
+			</n-collapse-transition>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { ExecuteSearchResponse, RuleDetail } from "@/types/copilotSearches.d"
+import type { ExecuteSearchResponse, RuleDetail, RuleSummary } from "@/types/copilotSearches.d"
+import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import {
 	NButton,
-	NCode,
+	NCard,
 	NCollapse,
 	NCollapseItem,
+	NCollapseTransition,
 	NDivider,
 	NEmpty,
 	NForm,
 	NFormItem,
 	NInput,
 	NInputNumber,
+	NScrollbar,
 	NSpin,
 	NSwitch,
 	useMessage
@@ -145,18 +168,19 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "@/components/common/PlatformBadge.vue"
-import SeverityBadge from "./SeverityBadge.vue"
+import RuleHeader from "./RuleHeader.vue"
 
-const { ruleId } = defineProps<{
-	ruleId: string
+const props = defineProps<{
+	ruleId?: string
+	ruleSummary?: RuleSummary
+	ruleDetail?: RuleDetail
+	asset?: AlertAsset
+	showHeader?: boolean
 }>()
 
-const emit = defineEmits<{
-	(e: "success"): void
-	(e: "close"): void
-}>()
+const PlayIcon = "carbon:play"
 
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
@@ -164,14 +188,13 @@ const loadingRule = ref(false)
 const executing = ref(false)
 const rule = ref<RuleDetail | null>(null)
 const searchResults = ref<ExecuteSearchResponse | null>(null)
-const PlayIcon = "carbon:play"
 
 const formValue = ref<{
 	index_pattern: string
 	size: number
 	parameters: Record<string, string | number | boolean>
 }>({
-	index_pattern: "wazuh-alerts-*",
+	index_pattern: props.asset?.index_name || "wazuh-alerts-*",
 	size: 20,
 	parameters: {}
 })
@@ -186,6 +209,7 @@ const rules: FormRules = {
 
 const isFormValid = computed(() => {
 	if (!formValue.value.index_pattern) return false
+	if (!rule.value) return false
 
 	// Check required parameters
 	if (rule.value?.parameters?.length) {
@@ -202,26 +226,31 @@ const isFormValid = computed(() => {
 	return true
 })
 
-async function loadRule() {
+function prefillParameters() {
+	// Initialize parameters with defaults
+	if (rule.value?.parameters?.length) {
+		rule.value.parameters.forEach(param => {
+			if (param.default !== undefined && param.default !== null) {
+				formValue.value.parameters[param.name] = param.default
+			}
+		})
+	}
+
+	// Set default size from rule if available
+	if (rule.value?.search?.size) {
+		formValue.value.size = rule.value.search.size as number
+	}
+}
+
+async function loadRule(ruleId: string) {
 	loadingRule.value = true
+
 	try {
 		const res = await Api.copilotSearches.getRuleById(ruleId)
 		if (res.data.success) {
 			rule.value = res.data.rule
 
-			// Initialize parameters with defaults
-			if (rule.value.parameters?.length) {
-				rule.value.parameters.forEach(param => {
-					if (param.default !== undefined && param.default !== null) {
-						formValue.value.parameters[param.name] = param.default
-					}
-				})
-			}
-
-			// Set default size from rule if available
-			if (rule.value.search?.size) {
-				formValue.value.size = rule.value.search.size as number
-			}
+			prefillParameters()
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
@@ -232,7 +261,7 @@ async function loadRule() {
 	}
 }
 
-async function handleExecute() {
+async function executeSearch() {
 	if (!formRef.value || !rule.value) return
 
 	try {
@@ -246,7 +275,7 @@ async function handleExecute() {
 
 	try {
 		const res = await Api.copilotSearches.executeSearch({
-			rule_id: ruleId,
+			rule_id: rule.value.id,
 			index_pattern: formValue.value.index_pattern,
 			parameters: formValue.value.parameters,
 			size: formValue.value.size
@@ -266,6 +295,15 @@ async function handleExecute() {
 }
 
 onBeforeMount(() => {
-	loadRule()
+	if (props.ruleDetail) {
+		rule.value = props.ruleDetail
+		prefillParameters()
+	} else if (props.ruleSummary) {
+		loadRule(props.ruleSummary?.id)
+	} else if (props.ruleId) {
+		loadRule(props.ruleId)
+	} else {
+		message.error("No rule data or rule ID provided")
+	}
 })
 </script>
