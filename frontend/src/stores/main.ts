@@ -3,12 +3,12 @@ import { acceptHMRUpdate, defineStore } from "pinia"
 
 export const useMainStore = defineStore("main", {
 	state: () => ({
-		forceRefresh: new Date().getTime(),
+		forceRefresh: Date.now(),
 		loadingBar: null as LoadingBarInst | null
 	}),
 	actions: {
 		softReload() {
-			this.forceRefresh = new Date().getTime()
+			this.forceRefresh = Date.now()
 			this.loadingBar?.start()
 			setTimeout(() => {
 				this.loadingBar?.finish()

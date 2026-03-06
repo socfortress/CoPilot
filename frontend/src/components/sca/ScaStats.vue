@@ -305,9 +305,7 @@ const topPoliciesByScore = computed(() => {
 	})
 
 	// Convert to array and sort by score
-	return Array.from(policyMap.values())
-		.sort((a, b) => b.score - a.score)
-		.slice(0, 5)
+	return policyMap.values().toSorted((a, b) => b.score - a.score).slice(0, 5)
 })
 
 function getPercentage(count: number): number {

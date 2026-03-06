@@ -132,13 +132,13 @@ const areAllTacticsSelected = computed(() => {
 const hasNoCountAlerts = computed(() => !!techniquesList.value.filter(o => !o.count).length)
 
 function isTacticSelected(id: string) {
-	return !!selectedTactics.value.find(o => o === id)
+	return selectedTactics.value.includes(id)
 }
 
 function toggleTacticSelect(id: string) {
 	const index = selectedTactics.value.findIndex(o => o === id)
 
-	if (selectedTactics.value.find(o => o === id)) {
+	if (selectedTactics.value.includes(id)) {
 		selectedTactics.value.splice(index, 1)
 	} else {
 		selectedTactics.value.push(id)

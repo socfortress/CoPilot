@@ -64,7 +64,7 @@ const total = ref(0)
 const loading = ref(false)
 const events = ref<EventDefinition[]>([])
 const priorities = computed<SelectMixedOption[]>(() =>
-	[...new Set(events.value.map(o => o.priority))].map(o => ({
+	Array.from(new Set(events.value.map(o => o.priority)), o => ({
 		label: `Priority ${o.toString()}`,
 		value: o
 	}))

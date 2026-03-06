@@ -36,7 +36,7 @@ export function useBreadcrumb() {
 	 */
 	function updateLastCrumbName(name: string) {
 		if (breadcrumbItems.value.length > 0) {
-			const lastItem = breadcrumbItems.value[breadcrumbItems.value.length - 1]
+			const lastItem = breadcrumbItems.value.at(-1)
 			if (!lastItem) return
 
 			breadcrumbItems.value[breadcrumbItems.value.length - 1] = {

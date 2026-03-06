@@ -75,7 +75,7 @@ function getExampleQuestions(server: string) {
 }
 
 function upsertExampleQuestions(server: string, questions: ExampleQuestion[]) {
-	if (!exampleQuestions.value.find(o => o.server === server)) {
+	if (!exampleQuestions.value.some(o => o.server === server)) {
 		exampleQuestions.value.push({
 			server,
 			questions

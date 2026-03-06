@@ -302,7 +302,7 @@ function openSettings() {
 
 function addRow() {
 	rows.value.push({
-		id: new Date().getTime(),
+		id: Date.now(),
 		height: 1,
 		panels: []
 	})

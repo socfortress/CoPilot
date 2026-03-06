@@ -48,7 +48,7 @@ const message = useMessage()
 const list = ref<Agent[] | []>([])
 
 const sortedList = computed(() => {
-	return [...list.value].sort((a, b) => {
+	return list.value.toSorted((a, b) => {
 		return a.hostname.toLowerCase().localeCompare(b.hostname.toLowerCase())
 	})
 })

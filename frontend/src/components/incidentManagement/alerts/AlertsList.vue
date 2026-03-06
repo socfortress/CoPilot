@@ -378,7 +378,7 @@ watch(
 	() => {
 		if (
 			alertsList.value.length &&
-			!alertsList.value.find(o => o.id.toString() === highlight) &&
+			!alertsList.value.some(o => o.id.toString() === highlight) &&
 			currentPage.value < totalFiltered.value &&
 			!highlightedItemFound.value
 		) {
@@ -387,7 +387,7 @@ watch(
 			})
 		}
 
-		if (alertsList.value.find(o => o.id.toString() === highlight)) {
+		if (alertsList.value.some(o => o.id.toString() === highlight)) {
 			highlightedItemFound.value = true
 		}
 	},
@@ -411,13 +411,13 @@ function updateAlert(updatedAlert: Alert) {
 }
 
 function isChecked(alert: Alert) {
-	return !!checkedAlerts.value.find(o => o.id === alert.id)
+	return checkedAlerts.value.some(o => o.id === alert.id)
 }
 
 function toggleCheck(alert: Alert) {
 	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
 
-	if (checkedAlerts.value.find(o => o.id === alert.id)) {
+	if (checkedAlerts.value.some(o => o.id === alert.id)) {
 		checkedAlerts.value.splice(alertIndex, 1)
 	} else {
 		checkedAlerts.value.push(alert)
@@ -439,7 +439,7 @@ function setALlChecked() {
 function removeChecked(alert: Alert) {
 	const alertIndex = checkedAlerts.value.findIndex(o => o.id === alert.id)
 
-	if (checkedAlerts.value.find(o => o.id === alert.id)) {
+	if (checkedAlerts.value.some(o => o.id === alert.id)) {
 		checkedAlerts.value.splice(alertIndex, 1)
 	}
 }

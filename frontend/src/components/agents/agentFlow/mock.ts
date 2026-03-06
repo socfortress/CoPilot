@@ -105,7 +105,7 @@ export const collect_result: CollectResult[] = [
 	{
 		___id: "2345678",
 		uno: 1,
-		due: new Date().getTime(),
+		due: Date.now(),
 		tre: "tre"
 	}
 ]

@@ -17,15 +17,15 @@ export const useCaseReportTemplateStore = defineStore("caseReportTemplate", {
 		},
 		setTemplatesList(templatesList: string[]) {
 			this.templatesList = templatesList
-			this.checkedAt = new Date().getTime()
+			this.checkedAt = Date.now()
 		},
 		addTemplate(templateName: string) {
 			this.templatesList.push(templateName)
-			this.checkedAt = new Date().getTime()
+			this.checkedAt = Date.now()
 		},
 		removeTemplate(templateName: string) {
 			this.templatesList = this.templatesList.filter(o => o !== templateName)
-			this.checkedAt = new Date().getTime()
+			this.checkedAt = Date.now()
 		},
 		setLoading(value: boolean) {
 			this.loading = value

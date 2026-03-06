@@ -132,7 +132,7 @@ const agentsOnline = computed(() => {
 // Get unique customer codes for filter dropdown
 const uniqueCustomers = computed(() => {
 	const codes = new Set(agents.value.map(a => a.customer_code).filter(Boolean))
-	return Array.from(codes) as string[]
+	return [...codes] as string[]
 })
 
 // Selection helpers

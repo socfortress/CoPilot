@@ -356,7 +356,7 @@ function addCustomFiled() {
 	form.value.custom_fields.push({
 		name: "",
 		value: "",
-		key: new Date().getTime()
+		key: Date.now()
 	})
 }
 

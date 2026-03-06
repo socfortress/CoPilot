@@ -308,7 +308,7 @@ watch(
 	() => {
 		if (
 			casesList.value.length &&
-			!casesList.value.find(o => o.id.toString() === highlight.value) &&
+			!casesList.value.some(o => o.id.toString() === highlight.value) &&
 			currentPage.value < Math.ceil(total.value / pageSize.value) &&
 			!highlightedItemFound.value
 		) {
@@ -317,7 +317,7 @@ watch(
 			})
 		}
 
-		if (casesList.value.find(o => o.id.toString() === highlight.value)) {
+		if (casesList.value.some(o => o.id.toString() === highlight.value)) {
 			highlightedItemFound.value = true
 		}
 	},

@@ -78,8 +78,8 @@ const tagOptions = computed(() =>
 
 const hasChanges = computed(() => {
 	if (selectedTagIds.value.length !== originalTagIds.value.length) return true
-	const sorted1 = [...selectedTagIds.value].sort()
-	const sorted2 = [...originalTagIds.value].sort()
+	const sorted1 = selectedTagIds.value.toSorted()
+	const sorted2 = originalTagIds.value.toSorted()
 	return sorted1.some((val, idx) => val !== sorted2[idx])
 })
 
