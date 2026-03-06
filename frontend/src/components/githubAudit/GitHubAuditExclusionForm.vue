@@ -47,7 +47,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
-import { computed, onMounted, reactive, ref } from "vue"
+import { computed, onBeforeMount, onMounted, reactive, ref } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
@@ -116,7 +116,7 @@ async function handleSubmit() {
 	}
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	try {
 		const response = await Api.githubAudit.getAvailableChecks()
 		checkOptions.value = response.data.checks.map(check => ({

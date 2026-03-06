@@ -66,7 +66,7 @@
 import type { PatchTuesdayFilters as FiltersType } from "./types"
 import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import patchTuesdayApi from "@/api/endpoints/patchTuesday"
 import Icon from "@/components/common/Icon.vue"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
@@ -211,7 +211,7 @@ watch(
 )
 
 // Lifecycle
-onMounted(async () => {
+onBeforeMount(async () => {
 	await fetchCycles()
 })
 </script>

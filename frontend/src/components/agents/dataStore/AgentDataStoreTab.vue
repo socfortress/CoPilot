@@ -108,7 +108,7 @@ import {
 	useDialog,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactCard from "./ArtifactCard.vue"
@@ -229,7 +229,7 @@ function showArtifactDetails(artifact: AgentArtifactData) {
 	showDetailsModal.value = true
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	getArtifacts()
 })
 </script>

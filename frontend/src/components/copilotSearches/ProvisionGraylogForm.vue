@@ -1,23 +1,21 @@
 <template>
 	<n-spin :show="loadingRule">
-		<div v-if="rule" class="flex flex-col gap-4">
+		<div v-if="rule" class="flex flex-col gap-8">
 			<!-- Rule Info -->
-			<div class="bg-secondary-color rounded-lg p-4">
-				<div class="mb-2 flex items-center gap-2">
+			<div class="flex flex-col gap-2">
+				<div class="flex items-center gap-2">
 					<PlatformBadge :platform="rule.tags?.asset_type || 'unknown'" />
 					<SeverityBadge :severity="rule.response?.severity || 'medium'" />
 				</div>
-				<h3 class="mb-1 font-semibold">{{ rule.name }}</h3>
+				<h3 class="font-semibold">{{ rule.name }}</h3>
 				<p class="text-sm opacity-70">{{ rule.description }}</p>
 			</div>
 
 			<!-- Graylog Query Preview -->
-			<CardKV v-if="rule.graylog?.query">
-				<template #key>Graylog Query</template>
-				<template #value>
-					<CodeSource :code="rule.graylog.query" lang="sql" />
-				</template>
-			</CardKV>
+			<div v-if="rule.graylog?.query" class="flex flex-col gap-2">
+				<div class="text-sm font-semibold">Graylog Query</div>
+				<CodeSource :code="rule.graylog.query" lang="sql" />
+			</div>
 
 			<!-- No Graylog Query Warning -->
 			<n-alert v-else type="warning" title="No Graylog Query">
@@ -33,51 +31,52 @@
 				:rules="formRules"
 				label-placement="left"
 				label-width="auto"
+				:disabled="provisioning"
 			>
 				<!-- Custom Title -->
 				<n-form-item label="Alert Title" path="custom_title">
-					<n-input v-model:value="formValue.custom_title" :placeholder="defaultTitle" clearable />
-					<template #feedback>
-						<span class="text-xs opacity-60">
+					<div class="flex w-full flex-col gap-2">
+						<n-input v-model:value="formValue.custom_title" :placeholder="defaultTitle" clearable />
+						<div class="text-secondary text-xs">
 							Leave empty to use the default title: "{{ defaultTitle }}"
-						</span>
-					</template>
+						</div>
+					</div>
 				</n-form-item>
 
 				<!-- Search Within -->
 				<n-form-item label="Search Window" path="search_within_seconds">
-					<n-input-number
-						v-model:value="formValue.search_within_seconds"
-						:min="60"
-						:max="86400"
-						:step="60"
-						class="w-full"
-					>
-						<template #suffix>seconds</template>
-					</n-input-number>
-					<template #feedback>
-						<span class="text-xs opacity-60">
+					<div class="flex w-full flex-col gap-2">
+						<n-input-number
+							v-model:value="formValue.search_within_seconds"
+							:min="60"
+							:max="86400"
+							:step="60"
+							class="w-full"
+						>
+							<template #suffix>seconds</template>
+						</n-input-number>
+						<div class="text-secondary text-xs">
 							Time window to search within ({{ formatDuration(formValue.search_within_seconds) }})
-						</span>
-					</template>
+						</div>
+					</div>
 				</n-form-item>
 
 				<!-- Execute Every -->
 				<n-form-item label="Execute Every" path="execute_every_seconds">
-					<n-input-number
-						v-model:value="formValue.execute_every_seconds"
-						:min="60"
-						:max="86400"
-						:step="60"
-						class="w-full"
-					>
-						<template #suffix>seconds</template>
-					</n-input-number>
-					<template #feedback>
-						<span class="text-xs opacity-60">
+					<div class="flex w-full flex-col gap-2">
+						<n-input-number
+							v-model:value="formValue.execute_every_seconds"
+							:min="60"
+							:max="86400"
+							:step="60"
+							class="w-full"
+						>
+							<template #suffix>seconds</template>
+						</n-input-number>
+						<div class="text-secondary text-xs">
 							How often to run the search ({{ formatDuration(formValue.execute_every_seconds) }})
-						</span>
-					</template>
+						</div>
+					</div>
 				</n-form-item>
 
 				<!-- Priority -->
@@ -87,24 +86,23 @@
 
 				<!-- Event Limit -->
 				<n-form-item label="Event Limit" path="event_limit">
-					<n-input-number v-model:value="formValue.event_limit" :min="1" :max="10000" class="w-full" />
-					<template #feedback>
-						<span class="text-xs opacity-60">Maximum number of events to process per execution</span>
-					</template>
+					<div class="flex w-full flex-col gap-2">
+						<n-input-number v-model:value="formValue.event_limit" :min="1" :max="10000" class="w-full" />
+						<div class="text-secondary text-xs">Maximum number of events to process per execution</div>
+					</div>
 				</n-form-item>
 
 				<!-- Streams (Optional) -->
 				<n-form-item label="Streams" path="streams">
-					<n-dynamic-tags v-model:value="formValue.streams" />
-					<template #feedback>
-						<span class="text-xs opacity-60">Optional: Limit search to specific Graylog stream IDs</span>
-					</template>
+					<div class="flex w-full flex-col gap-2">
+						<n-dynamic-tags v-model:value="formValue.streams" />
+						<div class="text-secondary text-xs">Optional: Limit search to specific Graylog stream IDs</div>
+					</div>
 				</n-form-item>
 			</n-form>
 
 			<!-- Actions -->
 			<div class="flex justify-end gap-2">
-				<n-button @click="emit('close')">Cancel</n-button>
 				<n-button
 					type="primary"
 					:loading="provisioning"
@@ -139,16 +137,16 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
-import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
 const props = defineProps<{
-	ruleId: string
+	ruleId?: string
+	ruleData?: RuleDetail
 }>()
 
 const emit = defineEmits<{
@@ -241,17 +239,21 @@ function getPriorityFromSeverity(severity: string): 1 | 2 | 3 {
 	}
 }
 
-async function loadRule() {
+function prefillForm() {
+	if (rule.value?.response?.severity) {
+		formValue.value.priority = getPriorityFromSeverity(rule.value.response.severity)
+	}
+}
+
+async function loadRule(ruleId: string) {
 	loadingRule.value = true
 	try {
-		const res = await Api.copilotSearches.getRuleById(props.ruleId)
+		const res = await Api.copilotSearches.getRuleById(ruleId)
 		if (res.data.success) {
 			rule.value = res.data.rule
 
 			// Set default priority based on rule severity
-			if (rule.value.response?.severity) {
-				formValue.value.priority = getPriorityFromSeverity(rule.value.response.severity)
-			}
+			prefillForm()
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
@@ -275,7 +277,7 @@ async function handleProvision() {
 
 	try {
 		const request: ProvisionGraylogAlertRequest = {
-			rule_id: props.ruleId,
+			rule_id: props.ruleId || rule.value?.id || "",
 			search_within_seconds: formValue.value.search_within_seconds,
 			execute_every_seconds: formValue.value.execute_every_seconds,
 			priority: formValue.value.priority,
@@ -305,7 +307,14 @@ async function handleProvision() {
 	}
 }
 
-onMounted(() => {
-	loadRule()
+onBeforeMount(() => {
+	if (props.ruleData) {
+		rule.value = props.ruleData
+		prefillForm()
+	} else if (props.ruleId) {
+		loadRule(props.ruleId)
+	} else {
+		message.error("No rule data or rule ID provided")
+	}
 })
 </script>

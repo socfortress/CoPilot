@@ -45,7 +45,7 @@
 import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user.d"
 import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -178,7 +178,7 @@ watch(
 	}
 )
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	await loadSettings()
 	if (tagRbacEnabled.value) {
 		await loadAvailableTags()

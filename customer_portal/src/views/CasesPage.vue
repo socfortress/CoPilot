@@ -884,7 +884,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, computed, onBeforeMount } from "vue"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import CasesAPI, { type Case, type CasesResponse } from "@/api/cases"
 import CaseDataStoreAPI, { type CaseDataStoreFile } from "@/api/caseDataStore"
@@ -1132,7 +1132,7 @@ const formatDate = (dateString: string) => {
 }
 
 // Lifecycle
-onMounted(() => {
+onBeforeMount(() => {
 	loadCases()
 })
 </script>

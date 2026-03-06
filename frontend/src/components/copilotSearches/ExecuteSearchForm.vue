@@ -134,7 +134,7 @@ import {
 	NTag,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -255,7 +255,7 @@ async function handleExecute() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadRule()
 })
 </script>

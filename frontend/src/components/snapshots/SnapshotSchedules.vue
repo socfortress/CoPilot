@@ -54,7 +54,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NPopconfirm, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
-import { h, onMounted, ref } from "vue"
+import { h, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
@@ -223,7 +223,7 @@ function onScheduleUpdated() {
 	message.success("Schedule updated successfully")
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchSchedules()
 })
 </script>

@@ -640,7 +640,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, onBeforeMount } from "vue"
 import { useRouter } from "vue-router"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import AgentsAPI, { type Agent } from "@/api/agents"
@@ -882,7 +882,7 @@ const logout = () => {
 	router.push("/login")
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadAgents()
 })
 </script>

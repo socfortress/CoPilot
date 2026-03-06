@@ -164,13 +164,18 @@
 		<n-modal
 			v-model:show="showProvisionModal"
 			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)' }"
+			:style="{ maxWidth: 'min(550px, 90vw)' }"
 			title="Provision Graylog Alert"
 			:bordered="false"
 			display-directive="show"
 			segmented
 		>
-			<ProvisionGraylogForm :rule-id @success="showProvisionModal = false" @close="showProvisionModal = false" />
+			<ProvisionGraylogForm
+				v-if="rule"
+				:rule-data="rule"
+				@success="showProvisionModal = false"
+				@close="showProvisionModal = false"
+			/>
 		</n-modal>
 	</n-spin>
 </template>
@@ -179,7 +184,7 @@
 import type { RuleDetail } from "@/types/copilotSearches.d"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -189,8 +194,9 @@ import Icon from "@/components/common/Icon.vue"
 import PropsList from "@/components/common/PropsList.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 
-const { ruleId } = defineProps<{
-	ruleId: string
+const props = defineProps<{
+	ruleId?: string
+	ruleData?: RuleDetail
 }>()
 
 const loading = ref(false)
@@ -209,7 +215,7 @@ const riskAssessmentFields = computed(() => ({
 	security_domain: rule.value?.tags.security_domain
 }))
 
-async function loadRule() {
+async function loadRule(ruleId: string) {
 	loading.value = true
 	try {
 		const res = await Api.copilotSearches.getRuleById(ruleId)
@@ -225,7 +231,13 @@ async function loadRule() {
 	}
 }
 
-onMounted(() => {
-	loadRule()
+onBeforeMount(() => {
+	if (props.ruleData) {
+		rule.value = props.ruleData
+	} else if (props.ruleId) {
+		loadRule(props.ruleId)
+	} else {
+		message.error("No rule data or rule ID provided")
+	}
 })
 </script>

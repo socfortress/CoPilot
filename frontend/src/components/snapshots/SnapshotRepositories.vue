@@ -37,7 +37,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { SnapshotRepository } from "@/types/snapshots.d"
 import { NA, NAlert, NButton, NCard, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
-import { h, onMounted, ref } from "vue"
+import { h, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -83,7 +83,7 @@ async function fetchRepositories() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchRepositories()
 })
 </script>

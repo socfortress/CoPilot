@@ -669,7 +669,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, computed, onBeforeMount } from "vue"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import AlertsAPI, { type Alert, type AlertsResponse } from "@/api/alerts"
 
@@ -840,7 +840,7 @@ const nextPage = () => {
 }
 
 // Lifecycle
-onMounted(() => {
+onBeforeMount(() => {
 	loadAlerts()
 })
 </script>

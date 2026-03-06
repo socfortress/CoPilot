@@ -61,7 +61,7 @@
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots.d"
 import { NButton, NCard, NDataTable, NEmpty, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
-import { computed, h, onMounted, ref } from "vue"
+import { computed, h, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import CreateSnapshotForm from "./CreateSnapshotForm.vue"
@@ -198,7 +198,7 @@ function onSnapshotRestored() {
 	message.success("Snapshot restoration initiated")
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchRepositories()
 })
 </script>

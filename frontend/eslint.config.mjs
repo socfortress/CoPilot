@@ -12,6 +12,7 @@ export default antfu(
 			quotes: "double"
 		},
 		rules: {
+			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"antfu/if-newline": "off",
 			"style/operator-linebreak": "off",
 			"style/arrow-parens": "off",

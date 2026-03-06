@@ -77,7 +77,7 @@ import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
 import { NButton, NCard, NDataTable, NModal, NSelect, NSpace, NTag, NTooltip, useMessage } from "naive-ui"
-import { computed, h, onMounted, ref } from "vue"
+import { computed, h, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -319,7 +319,7 @@ async function confirmDelete() {
 	}
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	loadReports()
 	loadCustomers()
 })

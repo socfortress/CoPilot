@@ -163,7 +163,7 @@ import {
 	NText,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeMount, onMounted, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
 const props = defineProps<{
@@ -283,7 +283,7 @@ async function handleSubmit() {
 	}
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {

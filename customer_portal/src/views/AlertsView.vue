@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, computed, onBeforeMount } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { httpClient } from "@/utils/httpClient"
@@ -247,7 +247,7 @@ const logout = () => {
 	router.push("/login")
 }
 
-onMounted(() => {
+onBeforeMount(() => {
 	fetchAlerts()
 })
 </script>
