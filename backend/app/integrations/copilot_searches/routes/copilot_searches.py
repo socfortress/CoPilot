@@ -94,7 +94,7 @@ async def check_if_event_definition_exists(event_definition_title: str) -> bool:
 async def list_rules(
     platform: PlatformFilter = Query(
         PlatformFilter.ALL,
-        description="Filter by platform (linux, windows, all)",
+        description="Filter by platform (linux, windows, powershell, all)",
     ),
     status: Optional[RuleStatus] = Query(
         None,
@@ -123,7 +123,7 @@ async def list_rules(
     List all detection rules with optional filtering.
 
     Supports filtering by:
-    - **platform**: linux, windows, or all
+    - **platform**: linux, windows, powershell, cve or all
     - **status**: production, experimental, deprecated
     - **severity**: low, medium, high, critical
     - **mitre_id**: MITRE ATT&CK technique ID
@@ -198,6 +198,67 @@ async def list_windows_rules(
         skip=skip,
         limit=limit,
     )
+
+    return RuleListResponse(**result)
+
+
+@copilot_searches_router.get(
+    "/powershell",
+    response_model=RuleListResponse,
+    description="List all PowerShell detection rules",
+)
+async def list_powershell_rules(
+    status: Optional[RuleStatus] = Query(None),
+    severity: Optional[RuleSeverity] = Query(None),
+    mitre_id: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    has_graylog: Optional[bool] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """List all PowerShell detection rules."""
+    result = await get_rules_list(
+        platform=PlatformFilter.POWERSHELL,
+        status=status,
+        severity=severity,
+        mitre_id=mitre_id,
+        search=search,
+        has_graylog=has_graylog,
+        skip=skip,
+        limit=limit,
+    )
+
+    return RuleListResponse(**result)
+
+
+@copilot_searches_router.get(
+    "/cve",
+    response_model=RuleListResponse,
+    description="List all detection rules that have CVE tags",
+)
+async def list_cve_rules(
+    status: Optional[RuleStatus] = Query(None),
+    severity: Optional[RuleSeverity] = Query(None),
+    mitre_id: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    has_graylog: Optional[bool] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """List all detection rules that have CVE tags."""
+    result = await get_rules_list(
+        status=status,
+        severity=severity,
+        mitre_id=mitre_id,
+        search=search,
+        has_graylog=has_graylog,
+        skip=skip,
+        limit=limit,
+    )
+
+    # Filter to only rules with CVE tags
+    result["rules"] = [r for r in result["rules"] if r.cve]
+    result["filtered"] = len(result["rules"])
 
     return RuleListResponse(**result)
 

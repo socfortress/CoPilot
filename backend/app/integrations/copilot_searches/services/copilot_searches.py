@@ -229,6 +229,10 @@ class RulesCache:
             return "linux"
         if "/windows/" in path_lower:
             return "windows"
+        if "/powershell/" in path_lower:
+            return "powershell"
+        if "/cve/" in path_lower:
+            return "cve"
 
         # Check tags
         asset_type = rule_data.get("tags", {}).get("asset_type", "").lower()
@@ -239,9 +243,13 @@ class RulesCache:
 
         # Check rule name
         name_lower = rule_data.get("name", "").lower()
+        if "powershell" in name_lower:
+            return "powershell"
+        if "cve" in name_lower:
+            return "cve"
         if "linux" in name_lower:
             return "linux"
-        if "windows" in name_lower or "powershell" in name_lower:
+        if "windows" in name_lower:
             return "windows"
 
         return "unknown"
@@ -520,7 +528,7 @@ async def get_rules_list(
     Get filtered list of detection rules.
 
     Args:
-        platform: Filter by platform (linux, windows, all)
+        platform: Filter by platform (linux, windows, powershell, all)
         status: Filter by rule status
         severity: Filter by severity level
         mitre_id: Filter by MITRE ATT&CK technique ID

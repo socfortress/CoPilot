@@ -199,7 +199,9 @@ const RefreshIcon = "carbon:renew"
 
 const platformOptions = [
 	{ label: "Linux", value: "linux" },
-	{ label: "Windows", value: "windows" }
+	{ label: "Windows", value: "windows" },
+	{ label: "PowerShell", value: "powershell" },
+	{ label: "CVE", value: "cve" }
 ]
 
 const severityOptions = [
