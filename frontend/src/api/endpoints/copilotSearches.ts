@@ -72,6 +72,42 @@ export default {
 	},
 
 	/**
+	 * List all PowerShell detection rules
+	 */
+	getPowershellRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/powershell`, {
+			params: {
+				status: query?.status,
+				severity: query?.severity,
+				mitre_id: query?.mitre_id,
+				search: query?.search,
+				has_graylog: query?.has_graylog,
+				skip: query?.skip || 0,
+				limit: query?.limit || 100
+			},
+			signal
+		})
+	},
+
+	/**
+	 * List all detection rules that have CVE tags
+	 */
+	getCveRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/cve`, {
+			params: {
+				status: query?.status,
+				severity: query?.severity,
+				mitre_id: query?.mitre_id,
+				search: query?.search,
+				has_graylog: query?.has_graylog,
+				skip: query?.skip || 0,
+				limit: query?.limit || 100
+			},
+			signal
+		})
+	},
+
+	/**
 	 * Get statistics about loaded detection rules
 	 */
 	getStats(signal?: AbortSignal) {

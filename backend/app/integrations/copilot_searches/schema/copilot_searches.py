@@ -13,6 +13,8 @@ class PlatformFilter(str, Enum):
     ALL = "all"
     LINUX = "linux"
     WINDOWS = "windows"
+    POWERSHELL = "powershell"
+    CVE = "cve"
 
 
 class RuleStatus(str, Enum):
