@@ -1,0 +1,157 @@
+---
+title: CoPilot Searches (threat hunting)
+description: Pre-built detection queries for proactive threat hunting across your Wazuh Indexer data — filterable by platform, severity, MITRE ATT&CK technique, and CVE.
+---
+
+CoPilot Searches is a library of ready-to-run detection queries designed for threat hunting in your Wazuh Indexer. Instead of writing queries from scratch, you browse a curated catalog, pick a rule, fill in a few parameters, and execute — all without leaving CoPilot.
+
+The detection rules are maintained in a public GitHub repository:
+- https://github.com/socfortress/CoPilot-Search-Queries
+
+CoPilot automatically fetches and caches the latest rules from this repository so your catalog stays up to date.
+
+---
+
+## What it is
+
+A searchable, filterable catalog of detection rules that you can:
+
+- **Browse** by platform (Linux, Windows, PowerShell), severity, status, or MITRE ATT&CK technique
+- **Filter by CVE** to find rules that detect exploitation of specific vulnerabilities
+- **Search** by keyword across rule names and descriptions
+- **Execute** directly against your Wazuh Indexer to hunt for matching activity
+- **Generate Graylog queries** for rules that include a Graylog query template
+- **Provision as Graylog alerts** to turn any rule into a recurring, automated alert
+
+Each rule includes:
+- A description of what the rule detects
+- The MITRE ATT&CK mapping
+- Required parameters (customer code, agent name, time range, etc.)
+- The underlying search query
+- Severity and risk score
+- References and known false positives
+
+---
+
+## Why this is a power feature
+
+Threat hunting is most effective once your core stack is stable — alerts are flowing, agents are reporting, and your indexer contains meaningful data. CoPilot Searches builds on that foundation by giving operators a structured way to proactively look for threats rather than waiting for alerts to fire.
+
+It's especially valuable when:
+- you want to investigate a specific CVE across your fleet
+- you need to validate whether a MITRE technique is visible in your environment
+- you're responding to a new threat advisory and want to check historical data
+- you want to turn a hunt into a recurring Graylog alert
+
+---
+
+## Where it lives in the UI
+
+**Menu path:** Agents → CoPilot Searches
+
+The page shows the full rule catalog with:
+- A **search bar** for free-text search across rule names and descriptions
+- A **filter panel** with dropdowns for Platform, Severity, Status, and a Graylog-only toggle
+- **Rule cards** showing the name, description, severity badge, platform, MITRE mappings, and CVE tags
+
+Clicking a rule card opens the full detail view where you can review the query and execute it.
+
+---
+
+## Operator workflows
+
+### Hunt for a specific threat
+
+1. Navigate to **Agents → CoPilot Searches**
+2. Use the search bar or filters to find a relevant rule (e.g., search for "brute force" or filter by MITRE technique T1110)
+3. Click the rule to open its details
+4. Fill in the required parameters:
+   - **Index pattern** (e.g., `wazuh-alerts-*`)
+   - **Customer code** and/or **agent name** to scope the search
+   - **Time range** (start/end)
+5. Click **Execute** to run the query against your Wazuh Indexer
+6. Review the results — each hit links back to the original indexed event
+
+### Find rules related to a CVE
+
+1. Open the filter panel and select **CVE** from the Platform dropdown
+2. The list narrows to rules that detect exploitation of specific CVEs
+3. Each CVE rule card shows the associated CVE IDs (e.g., CVE-2024-1234)
+4. Click a rule and execute it to check whether any matching activity exists in your environment
+
+### Filter by platform
+
+Use the Platform filter to narrow rules to:
+- **Linux** — rules targeting Linux-specific telemetry (auditd, syslog, etc.)
+- **Windows** — rules targeting Windows event logs, Sysmon, etc.
+- **PowerShell** — rules focused on PowerShell script block logging, command-line activity, etc.
+
+### Generate a Graylog query
+
+Some rules include a pre-built Graylog query template. These are marked with a Graylog indicator in the rule list.
+
+1. Filter for Graylog-compatible rules using the **Graylog Only** checkbox
+2. Open a rule and use the **Graylog query** section to generate a query with your parameters substituted
+3. Copy the query into Graylog search, or provision it as an alert directly from CoPilot
+
+### Provision a Graylog alert from a rule
+
+Turn any Graylog-compatible rule into a recurring alert:
+
+1. Open a rule that has a Graylog query
+2. Click **Provision Graylog Alert**
+3. Configure:
+   - **Search window** — how far back each execution looks (default: 5 minutes)
+   - **Execution interval** — how often the alert runs (default: 5 minutes)
+   - **Priority** — Low, Normal, or High
+   - **Streams** — optionally limit to specific Graylog streams
+4. Submit — CoPilot creates the Graylog event definition for you
+
+Once provisioned, the alert runs automatically in Graylog and routes matches into your normal incident pipeline.
+
+---
+
+## Rule details
+
+When you open a rule, you'll see:
+
+| Field | Description |
+|-------|-------------|
+| **Name** | Human-readable rule name |
+| **Status** | `production`, `experimental`, or `deprecated` |
+| **Severity** | `low`, `medium`, `high`, or `critical` |
+| **Risk score** | Numeric risk score (0–100) |
+| **Platform** | Linux, Windows, or PowerShell |
+| **MITRE ATT&CK** | Mapped technique IDs (e.g., T1136.001) |
+| **CVE** | Associated CVE IDs, if any |
+| **Description** | What the rule detects and why it matters |
+| **How to implement** | Any prerequisites or data source requirements |
+| **Known false positives** | When this rule might fire on benign activity |
+| **References** | Links to related advisories or documentation |
+
+---
+
+## Setup checklist
+
+CoPilot Searches works out of the box with no additional configuration:
+
+- [x] CoPilot is running (the rules are fetched automatically from GitHub)
+- [x] Your Wazuh Indexer is connected (required to execute searches)
+- [ ] Optionally, Graylog is connected (required for Graylog query generation and alert provisioning)
+
+The rule catalog refreshes automatically every 30 minutes. You can also manually refresh from the UI to pull the latest rules immediately.
+
+---
+
+## Safety / guardrails
+
+- Searches run **read-only queries** against your Wazuh Indexer — they do not modify any data.
+- Graylog alert provisioning creates event definitions in Graylog. Review the query and parameters before provisioning.
+- Rules are community-maintained. Treat results as indicators for investigation, not definitive verdicts — always validate before acting.
+- Scope searches to specific customers/agents when possible to reduce noise and execution time.
+
+---
+
+## Related resources
+
+- Rule repository: https://github.com/socfortress/CoPilot-Search-Queries
