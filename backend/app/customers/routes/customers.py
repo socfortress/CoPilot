@@ -348,7 +348,7 @@ async def update_customer(
         )
 
     # Update model instance with input data
-    for key, value in customer.dict().items():
+    for key, value in customer.dict(exclude={"is_provisioned"}).items():
         setattr(existing_customer, key, value)
 
     await session.commit()  # Commit changes asynchronously
