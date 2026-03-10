@@ -1309,3 +1309,122 @@ async def fetch_sca_policy_content(policy_id: str) -> ScaPolicyContentResponse:
     except Exception as e:
         logger.error(f"Error fetching SCA policy content for {policy_id}: {e}")
         raise HTTPException(status_code=502, detail=f"Failed to fetch SCA policy content: {e}")
+
+
+async def list_sca_package_registry() -> "ScaPackageRegistryResponse":
+    """
+    Return every entry in the SCA package registry so callers can see
+    which application packages are tracked for SCA applicability.
+    """
+    from app.agents.sca.models.sca_package_registry import SCA_PACKAGE_REGISTRY
+    from app.agents.sca.schema.sca import ScaPackageRegistryItem
+    from app.agents.sca.schema.sca import ScaPackageRegistryResponse
+
+    entries = [
+        ScaPackageRegistryItem(
+            key=key,
+            display_name=entry.display_name,
+            sca_application=entry.sca_application,
+            package_patterns=list(entry.package_patterns),
+        )
+        for key, entry in SCA_PACKAGE_REGISTRY.items()
+    ]
+
+    return ScaPackageRegistryResponse(
+        entries=entries,
+        total=len(entries),
+        success=True,
+        message=f"Found {len(entries)} tracked SCA package categories",
+    )
+
+
+async def detect_agents_for_sca_package(registry_key: str) -> "ScaPackageAgentsResponse":
+    """
+    Given a registry key (e.g. ``apache``, ``mysql``), search the Wazuh
+    Indexer for agents that have any of the associated packages installed,
+    then cross-reference with available SCA policies for that application.
+    """
+    from app.agents.sca.models.sca_package_registry import SCA_PACKAGE_REGISTRY
+    from app.agents.sca.schema.sca import AgentPackageMatch
+    from app.agents.sca.schema.sca import ScaPackageAgentsResponse
+
+    entry = SCA_PACKAGE_REGISTRY.get(registry_key)
+    if entry is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Registry key '{registry_key}' not found. "
+                f"Valid keys: {', '.join(SCA_PACKAGE_REGISTRY.keys())}"
+            ),
+        )
+
+    # Build an OR query across all package patterns for this application
+    should_clauses = [
+        {"wildcard": {"package.name": {"value": f"*{pattern}*", "case_insensitive": True}}}
+        for pattern in entry.package_patterns
+    ]
+
+    query = {"query": {"bool": {"should": should_clauses, "minimum_should_match": 1}}}
+
+    from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+
+    try:
+        response = await es_client.search(
+            index="wazuh-states-inventory-packages-*",
+            body=query,
+            size=10000,
+        )
+
+        hits = response.get("hits", {}).get("hits", [])
+
+        # De-duplicate by (agent_id, package_name) to avoid repeated entries
+        seen = set()
+        matches: list[AgentPackageMatch] = []
+        for hit in hits:
+            src = hit.get("_source", {})
+            agent = src.get("agent", {})
+            pkg = src.get("package", {})
+            key = (agent.get("id"), pkg.get("name"))
+            if key in seen:
+                continue
+            seen.add(key)
+            matches.append(
+                AgentPackageMatch(
+                    agent_id=agent.get("id"),
+                    agent_name=agent.get("name"),
+                    package_name=pkg.get("name"),
+                    package_version=pkg.get("version"),
+                    package_architecture=pkg.get("architecture"),
+                ),
+            )
+    except Exception as e:
+        logger.error(f"Error detecting agents for SCA package '{registry_key}': {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to search packages in Wazuh Indexer: {e}",
+        )
+    finally:
+        await es_client.close()
+
+    # Fetch applicable SCA policies for this application
+    applicable_policies = []
+    try:
+        index_resp = await fetch_sca_policies_index()
+        applicable_policies = [
+            p for p in index_resp.policies if p.application == entry.sca_application
+        ]
+    except Exception as e:
+        logger.warning(f"Could not fetch SCA policies index for cross-reference: {e}")
+
+    return ScaPackageAgentsResponse(
+        registry_key=registry_key,
+        display_name=entry.display_name,
+        sca_application=entry.sca_application,
+        matched_agents=matches,
+        total=len(matches),
+        applicable_policies=applicable_policies,
+        success=True,
+        message=f"Found {len(matches)} agent-package combinations for '{entry.display_name}'",
+    )
