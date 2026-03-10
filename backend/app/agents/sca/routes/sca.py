@@ -16,11 +16,15 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
+from app.agents.sca.schema.sca import ScaPoliciesIndexResponse
+from app.agents.sca.schema.sca import ScaPolicyContentResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
 from app.agents.sca.schema.sca import ScaStatsResponse
 from app.agents.sca.services.sca import delete_sca_report
+from app.agents.sca.services.sca import fetch_sca_policies_index
+from app.agents.sca.services.sca import fetch_sca_policy_content
 from app.agents.sca.services.sca import generate_sca_csv_report
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
@@ -566,3 +570,48 @@ async def delete_report(
     except Exception as e:
         logger.error(f"Error in delete report endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
+
+
+@sca_router.get(
+    "/policies",
+    response_model=ScaPoliciesIndexResponse,
+    description="List all available SCA policies from the CoPilot-SCA repository",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_available_sca_policies() -> ScaPoliciesIndexResponse:
+    """
+    List all available SCA (Security Configuration Assessment) policies from the
+    public CoPilot-SCA GitHub repository.
+
+    This endpoint fetches the repository index and returns metadata for every
+    policy that can be deployed, including its name, description, target
+    application, platform, and CIS benchmark version.
+
+    **Use Cases:**
+    - Browse available CIS benchmark policies
+    - Discover policies for a specific application or platform
+    - Review available policy versions before deployment
+    """
+    return await fetch_sca_policies_index()
+
+
+@sca_router.get(
+    "/policies/{policy_id}",
+    response_model=ScaPolicyContentResponse,
+    description="Fetch the YAML content of a specific SCA policy",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_sca_policy_content(policy_id: str) -> ScaPolicyContentResponse:
+    """
+    Fetch the raw YAML content of a single SCA policy from the public
+    CoPilot-SCA GitHub repository.
+
+    The ``policy_id`` must match one of the identifiers returned by the
+    ``/policies`` listing endpoint (e.g. ``cis_apache_24_rpm``).
+
+    **Use Cases:**
+    - Preview the full YAML of a policy before deploying it
+    - Review the checks included in a specific CIS benchmark
+    - Download policy content for offline analysis
+    """
+    return await fetch_sca_policy_content(policy_id)

@@ -131,3 +131,39 @@ class SCAReportGenerateResponse(BaseModel):
     message: str
     report: Optional[SCAReportResponse] = None
     error: Optional[str] = None
+
+
+# ── Available SCA Policies (from CoPilot-SCA GitHub repo) ──
+
+
+class ScaPolicyItem(BaseModel):
+    """A single SCA policy entry from the CoPilot-SCA index"""
+
+    id: str
+    name: str
+    description: str
+    file: str
+    application: str
+    app_version: str
+    platform: str
+    cis_version: str
+
+
+class ScaPoliciesIndexResponse(BaseModel):
+    """Response for listing all available SCA policies from the public repo"""
+
+    version: str
+    last_updated: str
+    policies: List[ScaPolicyItem]
+    success: bool
+    message: str
+
+
+class ScaPolicyContentResponse(BaseModel):
+    """Response for fetching the raw YAML content of a single SCA policy"""
+
+    policy_id: str
+    file_path: str
+    content: str
+    success: bool
+    message: str
