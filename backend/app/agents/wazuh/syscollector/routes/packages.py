@@ -11,7 +11,9 @@ from sqlalchemy import select as sa_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.wazuh.syscollector.schema.packages import AgentPackagesResponse
+from app.agents.wazuh.syscollector.schema.packages import IndexerPackagesResponse
 from app.agents.wazuh.syscollector.services.packages import collect_agent_packages
+from app.agents.wazuh.syscollector.services.packages import search_packages_in_indexer
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
@@ -19,6 +21,47 @@ from app.db.universal_models import Agents
 from app.middleware.customer_access import customer_access_handler
 
 packages_router = APIRouter()
+
+
+@packages_router.get(
+    "/search/packages",
+    response_model=IndexerPackagesResponse,
+    description="Search installed packages across all agents via the Wazuh Indexer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def search_packages(
+    package_name: Optional[str] = Query(None, description="Filter by package name (wildcard match)"),
+    agent_name: Optional[str] = Query(None, description="Filter by agent name (wildcard match)"),
+    agent_id: Optional[str] = Query(None, description="Filter by agent ID (exact match)"),
+    architecture: Optional[str] = Query(None, description="Filter by architecture (e.g. amd64, x86_64)"),
+    package_type: Optional[str] = Query(None, description="Filter by package type (e.g. deb, rpm)"),
+    vendor: Optional[str] = Query(None, description="Filter by vendor (wildcard match)"),
+    package_version: Optional[str] = Query(None, description="Filter by package version (wildcard match)"),
+    size: int = Query(500, ge=1, le=10000, description="Maximum number of results to return"),
+) -> IndexerPackagesResponse:
+    """
+    Search the Wazuh Indexer for package inventory data across all agents.
+
+    Unlike the per-agent endpoint that queries the Wazuh Manager API, this
+    endpoint queries the ``wazuh-states-inventory-packages-*`` index in the
+    Wazuh Indexer (OpenSearch), allowing you to search for packages across
+    every agent without specifying an agent ID.
+
+    **Use Cases:**
+    - Find all agents that have a specific package installed
+    - Search for outdated versions of a package across the fleet
+    - Inventory packages by type, architecture, or vendor
+    """
+    return await search_packages_in_indexer(
+        package_name=package_name,
+        agent_name=agent_name,
+        agent_id=agent_id,
+        architecture=architecture,
+        package_type=package_type,
+        vendor=vendor,
+        package_version=package_version,
+        size=size,
+    )
 
 
 @packages_router.get(
