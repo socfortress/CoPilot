@@ -554,22 +554,19 @@ async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str
 
 
 async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) -> List[Dict]:
-    """
-    Processes the hits from the Graylog alert search response.
-
-    Args:
-        es_client: The Elasticsearch client.
-        hits (List[Dict]): The hits from the search response.
-
-    Returns:
-        List[Dict]: A list of detailed alerts.
-    """
     alerts_dict = defaultdict(lambda: {"total_alerts": 0, "alerts": []})
 
     tasks = []
     for hit in hits:
-        origin_context = hit["_source"]["origin_context"]
-        index_name, index_id = await get_original_alert_id(origin_context)
+        origin_context = hit.get("_source", {}).get("origin_context")
+        if not origin_context:
+            logger.warning(f"Skipping alert hit with missing or null origin_context: {hit.get('_id', 'unknown')}")
+            continue
+        try:
+            index_name, index_id = await get_original_alert_id(origin_context)
+        except Exception as e:
+            logger.warning(f"Skipping alert hit due to error parsing origin_context '{origin_context}': {e}")
+            continue
         logger.info(f"Fetching alert details for index {index_name} and id {index_id}")
         task = get_single_alert_details(es_client, index_name, index_id)
         tasks.append(task)
