@@ -9,6 +9,28 @@
 			<template #value>{{ policy.description }}</template>
 		</CardKV>
 
+		<!-- Deployment Instructions -->
+		<CardKV>
+			<template #key>
+				<div class="flex items-center gap-2">
+					<Icon :name="DeployIcon" :size="14" />
+					<span>Deployment Instructions</span>
+				</div>
+			</template>
+			<template #value>
+				<div class="flex flex-col gap-2 text-sm">
+					<p>
+						Deploy this policy to a Wazuh agent by downloading the
+						<code>.yml</code>
+						file to
+						<code>/var/ossec/ruleset/sca/</code>
+						, setting the correct ownership, and restarting the agent:
+					</p>
+					<CodeSource :code="deploymentCommands" lang="bash" />
+				</div>
+			</template>
+		</CardKV>
+
 		<!-- Agent Detection -->
 		<CardKV>
 			<template #key>
@@ -171,6 +193,9 @@ const AgentsIcon = "carbon:devices"
 const SearchIcon = "carbon:search"
 const CodeIcon = "carbon:code"
 const DownloadIcon = "carbon:download"
+const DeployIcon = "carbon:deploy"
+
+const fileName = computed(() => props.policy.file.split("/").pop())
 
 const infoFields = computed(() => ({
 	id: props.policy.id,
@@ -179,6 +204,22 @@ const infoFields = computed(() => ({
 	platform: props.policy.platform,
 	cis_version: props.policy.cis_version
 }))
+
+const deploymentCommands = computed(() =>
+	[
+		`# Download the SCA policy`,
+		`wget https://raw.githubusercontent.com/socfortress/CoPilot-SCA/main/${props.policy.file} -O /var/ossec/ruleset/sca/${fileName.value}`,
+		``,
+		`# Set correct ownership`,
+		`chown root:wazuh /var/ossec/ruleset/sca/${fileName.value}`,
+		``,
+		`# Restart the Wazuh agent`,
+		`systemctl restart wazuh-agent`,
+		``,
+		`# Verify the policy is loaded`,
+		`tail -f /var/ossec/logs/ossec.log`
+	].join("\n")
+)
 
 function getRegistryKey(application: string): string | null {
 	const app = application.toLowerCase()

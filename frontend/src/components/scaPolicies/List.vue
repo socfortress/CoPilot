@@ -1,11 +1,20 @@
 <template>
 	<div class="@container flex flex-col gap-4">
 		<n-alert type="info">
-			SCA Policies provides CIS benchmark policies for Security Configuration Assessment. See
-			<a href="https://github.com/socfortress/CoPilot-SCA" target="_blank">
-				https://github.com/socfortress/CoPilot-SCA
+			SCA Policies provides CIS benchmark policies for Security Configuration Assessment using
+			<a
+				href="https://documentation.wazuh.com/current/user-manual/capabilities/sec-config-assessment/index.html"
+				target="_blank"
+			>
+				Wazuh Security Configuration Assessment (SCA)
 			</a>
-			for details.
+			. Deploy policy
+			<code>.yml</code>
+			files to your endpoints under
+			<code>/var/ossec/ruleset/sca/</code>
+			, set ownership, and restart the Wazuh agent. See
+			<a href="https://github.com/socfortress/CoPilot-SCA" target="_blank">CoPilot-SCA</a>
+			for available policies.
 		</n-alert>
 
 		<div class="flex flex-col">
