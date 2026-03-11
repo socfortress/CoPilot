@@ -29,9 +29,9 @@ from app.agents.sca.services.sca import detect_agents_for_sca_package
 from app.agents.sca.services.sca import fetch_sca_policies_index
 from app.agents.sca.services.sca import fetch_sca_policy_content
 from app.agents.sca.services.sca import generate_sca_csv_report
-from app.agents.sca.services.sca import list_sca_package_registry
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
+from app.agents.sca.services.sca import list_sca_package_registry
 from app.agents.sca.services.sca import list_sca_reports
 from app.agents.sca.services.sca import search_sca_overview
 from app.agents.sca.services.sca import stream_sca_for_all_agents

@@ -82,7 +82,7 @@ async def get_agent_packages(
     architecture: Optional[str] = Query(None, description="Filter by architecture"),
     format: Optional[str] = Query(None, alias="format", description="Filter by package format (e.g. deb, rpm)"),
     version: Optional[str] = Query(None, description="Filter by package version"),
-    q: Optional[str] = Query(None, description="Advanced query filter (e.g. q=\"name=openssl\")"),
+    q: Optional[str] = Query(None, description='Advanced query filter (e.g. q="name=openssl")'),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentPackagesResponse:
@@ -98,7 +98,10 @@ async def get_agent_packages(
     # Verify the user has access to this agent's customer
     base_query = sa_select(Agents).filter(Agents.agent_id == agent_id)
     filtered_query = await customer_access_handler.filter_query_by_customer_access(
-        current_user, session, base_query, Agents.customer_code,
+        current_user,
+        session,
+        base_query,
+        Agents.customer_code,
     )
     result = await session.execute(filtered_query)
     agent = result.scalars().first()

@@ -12,7 +12,9 @@ from app.agents.wazuh.syscollector.schema.packages import IndexerPackageDetail
 from app.agents.wazuh.syscollector.schema.packages import IndexerPackageItem
 from app.agents.wazuh.syscollector.schema.packages import IndexerPackagesResponse
 from app.agents.wazuh.syscollector.schema.packages import PackageItem
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 PACKAGES_INDEX_PATTERN = "wazuh-states-inventory-packages-*"
@@ -151,9 +153,7 @@ async def search_packages_in_indexer(
     if package_version is not None:
         must_clauses.append({"wildcard": {"package.version": {"value": f"*{package_version}*", "case_insensitive": True}}})
 
-    query: Dict[str, Any] = (
-        {"query": {"bool": {"must": must_clauses}}} if must_clauses else {"query": {"match_all": {}}}
-    )
+    query: Dict[str, Any] = {"query": {"bool": {"must": must_clauses}}} if must_clauses else {"query": {"match_all": {}}}
 
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
