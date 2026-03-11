@@ -16,12 +16,20 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
+from app.agents.sca.schema.sca import ScaPackageAgentsResponse
+from app.agents.sca.schema.sca import ScaPackageRegistryResponse
+from app.agents.sca.schema.sca import ScaPoliciesIndexResponse
+from app.agents.sca.schema.sca import ScaPolicyContentResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
 from app.agents.sca.schema.sca import ScaStatsResponse
 from app.agents.sca.services.sca import delete_sca_report
+from app.agents.sca.services.sca import detect_agents_for_sca_package
+from app.agents.sca.services.sca import fetch_sca_policies_index
+from app.agents.sca.services.sca import fetch_sca_policy_content
 from app.agents.sca.services.sca import generate_sca_csv_report
+from app.agents.sca.services.sca import list_sca_package_registry
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
 from app.agents.sca.services.sca import list_sca_reports
@@ -566,3 +574,89 @@ async def delete_report(
     except Exception as e:
         logger.error(f"Error in delete report endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
+
+
+@sca_router.get(
+    "/policies",
+    response_model=ScaPoliciesIndexResponse,
+    description="List all available SCA policies from the CoPilot-SCA repository",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_available_sca_policies() -> ScaPoliciesIndexResponse:
+    """
+    List all available SCA (Security Configuration Assessment) policies from the
+    public CoPilot-SCA GitHub repository.
+
+    This endpoint fetches the repository index and returns metadata for every
+    policy that can be deployed, including its name, description, target
+    application, platform, and CIS benchmark version.
+
+    **Use Cases:**
+    - Browse available CIS benchmark policies
+    - Discover policies for a specific application or platform
+    - Review available policy versions before deployment
+    """
+    return await fetch_sca_policies_index()
+
+
+@sca_router.get(
+    "/policies/{policy_id}",
+    response_model=ScaPolicyContentResponse,
+    description="Fetch the YAML content of a specific SCA policy",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_sca_policy_content(policy_id: str) -> ScaPolicyContentResponse:
+    """
+    Fetch the raw YAML content of a single SCA policy from the public
+    CoPilot-SCA GitHub repository.
+
+    The ``policy_id`` must match one of the identifiers returned by the
+    ``/policies`` listing endpoint (e.g. ``cis_apache_24_rpm``).
+
+    **Use Cases:**
+    - Preview the full YAML of a policy before deploying it
+    - Review the checks included in a specific CIS benchmark
+    - Download policy content for offline analysis
+    """
+    return await fetch_sca_policy_content(policy_id)
+
+
+@sca_router.get(
+    "/packages/registry",
+    response_model=ScaPackageRegistryResponse,
+    description="List all tracked SCA-relevant package categories",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_sca_package_registry() -> ScaPackageRegistryResponse:
+    """
+    Return every entry in the SCA package registry.
+
+    Each entry maps an application category (e.g. ``apache``, ``mysql``) to
+    the package name patterns that indicate the software is installed on an
+    agent.  Use the ``key`` value with the ``/packages/registry/{key}/agents``
+    endpoint to discover which agents have that software.
+    """
+    return await list_sca_package_registry()
+
+
+@sca_router.get(
+    "/packages/registry/{registry_key}/agents",
+    response_model=ScaPackageAgentsResponse,
+    description="Detect agents running a tracked SCA-relevant package",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agents_for_sca_package(registry_key: str) -> ScaPackageAgentsResponse:
+    """
+    Given a registry key (e.g. ``apache``, ``nginx``, ``mysql``), search the
+    Wazuh Indexer for agents that have any matching packages installed.
+
+    The response also includes the list of SCA policies from the CoPilot-SCA
+    repository that are applicable to that application, making it easy to see
+    which benchmarks can be deployed to the discovered agents.
+
+    **Use Cases:**
+    - Identify all agents running Apache to deploy the CIS Apache benchmark
+    - Find agents with MySQL/MariaDB for targeted SCA policy deployment
+    - Audit which agents would benefit from a specific SCA policy
+    """
+    return await detect_agents_for_sca_package(registry_key)

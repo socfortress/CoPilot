@@ -283,17 +283,36 @@ export default function getItems(): MenuMixedOption[] {
 					key: "PatchTuesday"
 				},
 				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ScaOverview"
-								}
-							},
-							{ default: () => "SCA Overview" }
-						),
-					key: "ScaOverview"
+					label: "Security Configuration Assessment",
+					key: "SCA",
+					children: [
+						{
+							label: () =>
+								h(
+									RouterLink,
+									{
+										to: {
+											name: "ScaOverview"
+										}
+									},
+									{ default: () => "SCA Overview" }
+								),
+							key: "ScaOverview"
+						},
+						{
+							label: () =>
+								h(
+									RouterLink,
+									{
+										to: {
+											name: "ScaPolicies"
+										}
+									},
+									{ default: () => "SCA Policies" }
+								),
+							key: "ScaPolicies"
+						}
+					]
 				}
 			]
 		},

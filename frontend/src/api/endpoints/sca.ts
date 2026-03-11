@@ -5,7 +5,11 @@ import type {
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
-	ScaStatsResponse
+	ScaStatsResponse,
+	ScaPoliciesIndexResponse,
+	ScaPolicyContentResponse,
+	ScaPackageRegistryResponse,
+	ScaPackageAgentsResponse
 } from "@/types/sca.d"
 import { HttpClient } from "../httpClient"
 import { createSSEStream } from "../sseClient"
@@ -110,5 +114,33 @@ export default {
 	 */
 	deleteReport(reportId: number) {
 		return HttpClient.delete<SCAReportDeleteResponse>(`/sca/reports/${reportId}`)
+	},
+
+	/**
+	 * List all available SCA policies from the CoPilot-SCA repository
+	 */
+	getPolicies() {
+		return HttpClient.get<ScaPoliciesIndexResponse>(`/sca/policies`)
+	},
+
+	/**
+	 * Fetch the YAML content of a specific SCA policy
+	 */
+	getPolicyContent(policyId: string) {
+		return HttpClient.get<ScaPolicyContentResponse>(`/sca/policies/${policyId}`)
+	},
+
+	/**
+	 * List all tracked SCA-relevant package categories
+	 */
+	getPackageRegistry() {
+		return HttpClient.get<ScaPackageRegistryResponse>(`/sca/packages/registry`)
+	},
+
+	/**
+	 * Detect agents running a tracked SCA-relevant package
+	 */
+	getAgentsForPackage(registryKey: string) {
+		return HttpClient.get<ScaPackageAgentsResponse>(`/sca/packages/registry/${registryKey}/agents`)
 	}
 }

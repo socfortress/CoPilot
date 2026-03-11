@@ -171,3 +171,67 @@ export interface ScaStreamError {
 	agent_id?: string
 	agent_name?: string
 }
+
+// ── SCA Policies (from CoPilot-SCA GitHub repo) ──
+
+export interface ScaPolicyItem {
+	id: string
+	name: string
+	description: string
+	file: string
+	application: string
+	app_version: string
+	platform: string
+	cis_version: string
+}
+
+export interface ScaPoliciesIndexResponse {
+	version: string
+	last_updated: string
+	policies: ScaPolicyItem[]
+	success: boolean
+	message: string
+}
+
+export interface ScaPolicyContentResponse {
+	policy_id: string
+	file_path: string
+	content: string
+	success: boolean
+	message: string
+}
+
+// ── SCA Package Registry & Agent Detection ──
+
+export interface ScaPackageRegistryItem {
+	key: string
+	display_name: string
+	sca_application: string
+	package_patterns: string[]
+}
+
+export interface ScaPackageRegistryResponse {
+	entries: ScaPackageRegistryItem[]
+	total: number
+	success: boolean
+	message: string
+}
+
+export interface AgentPackageMatch {
+	agent_id: string | null
+	agent_name: string | null
+	package_name: string | null
+	package_version: string | null
+	package_architecture: string | null
+}
+
+export interface ScaPackageAgentsResponse {
+	registry_key: string
+	display_name: string
+	sca_application: string
+	matched_agents: AgentPackageMatch[]
+	total: number
+	applicable_policies: ScaPolicyItem[]
+	success: boolean
+	message: string
+}

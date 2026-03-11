@@ -131,3 +131,83 @@ class SCAReportGenerateResponse(BaseModel):
     message: str
     report: Optional[SCAReportResponse] = None
     error: Optional[str] = None
+
+
+# ── Available SCA Policies (from CoPilot-SCA GitHub repo) ──
+
+
+class ScaPolicyItem(BaseModel):
+    """A single SCA policy entry from the CoPilot-SCA index"""
+
+    id: str
+    name: str
+    description: str
+    file: str
+    application: str
+    app_version: str
+    platform: str
+    cis_version: str
+
+
+class ScaPoliciesIndexResponse(BaseModel):
+    """Response for listing all available SCA policies from the public repo"""
+
+    version: str
+    last_updated: str
+    policies: List[ScaPolicyItem]
+    success: bool
+    message: str
+
+
+class ScaPolicyContentResponse(BaseModel):
+    """Response for fetching the raw YAML content of a single SCA policy"""
+
+    policy_id: str
+    file_path: str
+    content: str
+    success: bool
+    message: str
+
+
+# ── SCA Package Registry & Agent Detection ──
+
+
+class ScaPackageRegistryItem(BaseModel):
+    """A single entry from the SCA package registry."""
+
+    key: str
+    display_name: str
+    sca_application: str
+    package_patterns: List[str]
+
+
+class ScaPackageRegistryResponse(BaseModel):
+    """Response listing all tracked SCA-relevant packages."""
+
+    entries: List[ScaPackageRegistryItem]
+    total: int
+    success: bool
+    message: str
+
+
+class AgentPackageMatch(BaseModel):
+    """An agent that was found running a tracked SCA package."""
+
+    agent_id: Optional[str] = None
+    agent_name: Optional[str] = None
+    package_name: Optional[str] = None
+    package_version: Optional[str] = None
+    package_architecture: Optional[str] = None
+
+
+class ScaPackageAgentsResponse(BaseModel):
+    """Response listing agents that have a particular SCA-relevant package installed."""
+
+    registry_key: str
+    display_name: str
+    sca_application: str
+    matched_agents: List[AgentPackageMatch] = []
+    total: int = 0
+    applicable_policies: List[ScaPolicyItem] = []
+    success: bool
+    message: str
