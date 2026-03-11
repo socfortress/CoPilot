@@ -1386,10 +1386,10 @@ async def detect_agents_for_sca_package(registry_key: str) -> "ScaPackageAgentsR
             src = hit.get("_source", {})
             agent = src.get("agent", {})
             pkg = src.get("package", {})
-            key = (agent.get("id"), pkg.get("name"))
-            if key in seen:
+            agent_id = agent.get("id")
+            if agent_id in seen:
                 continue
-            seen.add(key)
+            seen.add(agent_id)
             matches.append(
                 AgentPackageMatch(
                     agent_id=agent.get("id"),
