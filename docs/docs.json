@@ -186,7 +186,8 @@
               "power-features/ai-analyst",
               "power-features/atomic-red-team",
               "power-features/report-creation",
-              "power-features/copilot-searches"
+              "power-features/copilot-searches",
+              "power-features/sca-policies"
             ]
           }
         ]

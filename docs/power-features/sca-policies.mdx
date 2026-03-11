@@ -1,0 +1,179 @@
+---
+title: SCA Policies (CIS benchmarks)
+description: Browse, preview, and deploy CIS benchmark policies for Wazuh Security Configuration Assessment — with automatic agent detection to see which endpoints need each policy.
+---
+
+SCA Policies is a catalog of CIS benchmark policy files maintained in the public [CoPilot-SCA](https://github.com/socfortress/CoPilot-SCA) GitHub repository. It lets you browse available policies, detect which agents are running the relevant software, and get ready-to-run deployment commands — all from within CoPilot.
+
+These policies extend the [Wazuh Security Configuration Assessment (SCA)](https://documentation.wazuh.com/current/user-manual/capabilities/sec-config-assessment/index.html) capability. Once deployed to an agent, Wazuh evaluates the endpoint against the CIS benchmark and reports pass/fail results in the [SCA Overview](/user/ui/agents-sca-overview).
+
+---
+
+## What it is
+
+A searchable catalog of SCA policy `.yml` files that you can:
+
+- **Browse** by platform (Linux, Windows), application (Apache, NGINX, MySQL, etc.), and CIS version
+- **Search** by keyword across policy names, descriptions, and application names
+- **Preview** the full YAML content before deploying
+- **Detect agents** — discover which of your endpoints have the relevant software installed
+- **Deploy** with copy-paste-ready shell commands
+
+Each policy card shows:
+- The CIS benchmark version
+- Target platform and application
+- Application version
+- A description of what the benchmark covers
+
+---
+
+## Why this is a power feature
+
+CIS benchmarks are most valuable once your agents are reporting and you have visibility into what software is running across your fleet. SCA Policies builds on top of the SCA Overview by helping you answer two questions:
+
+1. **Which policies should I deploy?** — Browse the catalog and filter by the applications you care about.
+2. **Which agents need this policy?** — Use the built-in agent detection to find endpoints running the target software (e.g., Apache, MySQL, NGINX).
+
+It closes the loop between "we have a benchmark" and "we know where to apply it."
+
+---
+
+## Where it lives in the UI
+
+**Menu path:** Agents → Security Configuration Assessment → SCA Policies
+
+The page shows the full policy catalog with:
+- A **search bar** for free-text search across policy names, descriptions, and applications
+- A **filter panel** with dropdowns for Platform and Application (dynamically populated from available policies)
+- **Policy cards** showing the CIS version, platform badge, application version, policy name, and description
+
+Clicking a policy card opens the detail view.
+
+---
+
+## Operator workflows
+
+### Browse available policies
+
+1. Navigate to **Agents → Security Configuration Assessment → SCA Policies**
+2. The catalog loads automatically from the [CoPilot-SCA](https://github.com/socfortress/CoPilot-SCA) repository
+3. Use the search bar to find policies by name or application (e.g., "apache", "mysql")
+4. Use the filter panel to narrow by platform or application
+
+### Detect agents running a specific application
+
+1. Click a policy card to open the detail view
+2. In the **Agents with [application]** section, click **Detect Agents**
+3. CoPilot queries the Wazuh Indexer for installed packages matching the application
+4. Results show each agent with the package name, version, and architecture
+5. Use this to identify which endpoints should receive the policy
+
+### Preview the policy YAML
+
+1. In the policy detail view, find the **Policy YAML** section
+2. Click **Load YAML** to fetch the full policy content from GitHub
+3. Review the checks, requirements, and conditions before deploying
+
+### Deploy a policy to an agent
+
+1. In the policy detail view, find the **Deployment Instructions** section
+2. The section provides ready-to-run commands tailored to the selected policy
+3. SSH into the target agent and run the commands:
+
+```bash
+# Download the SCA policy
+wget https://raw.githubusercontent.com/socfortress/CoPilot-SCA/main/policies/<app>/<policy_file>.yml \
+  -O /var/ossec/ruleset/sca/<policy_file>.yml
+
+# Set correct ownership
+chown root:wazuh /var/ossec/ruleset/sca/<policy_file>.yml
+
+# Restart the Wazuh agent
+systemctl restart wazuh-agent
+
+# Verify the policy is loaded
+tail -f /var/ossec/logs/ossec.log
+```
+
+4. After the agent restarts, Wazuh will automatically pick up the new policy and begin scanning
+5. Results will appear in the [SCA Overview](/user/ui/agents-sca-overview) within a few minutes
+
+### End-to-end example: deploying a MySQL benchmark
+
+1. Open **SCA Policies** and search for "mysql"
+2. Click the **CIS Oracle MySQL Community Server 5.6 - Debian** card
+3. Click **Detect Agents** — CoPilot finds agent `piHole` (ID 088) with `mariadb-server` installed
+4. Review the **Deployment Instructions** — the commands are pre-filled with the correct filename
+5. SSH into the agent and run:
+
+```bash
+wget https://raw.githubusercontent.com/socfortress/CoPilot-SCA/main/policies/mysql/cis_mysql_community_deb.yml \
+  -O /var/ossec/ruleset/sca/cis_mysql_community_deb.yml
+
+chown root:wazuh /var/ossec/ruleset/sca/cis_mysql_community_deb.yml
+
+systemctl restart wazuh-agent
+```
+
+6. Verify in logs: `tail -f /var/ossec/logs/ossec.log` — look for SCA scan messages
+7. Check **SCA Overview** to see the compliance score for the new policy
+
+---
+
+## Policy detail view
+
+When you open a policy, you'll see:
+
+| Section | Description |
+|---------|-------------|
+| **Policy Information** | ID, application, app version, platform, CIS version |
+| **Description** | What the CIS benchmark covers |
+| **Deployment Instructions** | Copy-paste shell commands to deploy the `.yml` file to an agent |
+| **Agents with [application]** | Detect which agents have the relevant software installed |
+| **Applicable SCA Policies** | Other policies in the catalog for the same application |
+| **Policy YAML** | Full YAML content preview (loaded on demand) |
+
+---
+
+## Supported applications
+
+The following application categories are tracked for automatic agent detection:
+
+| Application | Package patterns searched | Example policy |
+|-------------|--------------------------|----------------|
+| **Apache** | `apache2`, `httpd`, `apache2-bin`, `apache2-utils` | CIS Apache HTTP Server 2.4 |
+| **NGINX** | `nginx`, `nginx-common`, `nginx-core`, `nginx-full` | CIS NGINX |
+| **IIS** | `iis`, `w3svc` | CIS Microsoft IIS |
+| **MySQL / MariaDB** | `mysql-server`, `mysql-community-server`, `mariadb-server`, `mariadb-common` | CIS Oracle MySQL Community Server 5.6 |
+| **PostgreSQL** | `postgresql`, `postgresql-common`, `postgresql-client` | CIS PostgreSQL |
+| **SQL Server** | `mssql-server`, `mssql-tools` | CIS Microsoft SQL Server |
+
+New applications can be added to the package registry as additional SCA policies are created.
+
+---
+
+## Setup checklist
+
+SCA Policies works out of the box with no additional configuration:
+
+- [x] CoPilot is running (policies are fetched from GitHub automatically)
+- [x] Wazuh Indexer is connected (required for agent detection)
+- [ ] SSH access to agents (required for deploying `.yml` files)
+
+---
+
+## Important notes
+
+- **File location:** SCA policy `.yml` files must be placed in `/var/ossec/ruleset/sca/` on the agent.
+- **Ownership:** Files must be owned by `root:wazuh` — use `chown root:wazuh <filename>` after downloading.
+- **Agent restart:** The Wazuh agent must be restarted (`systemctl restart wazuh-agent`) to pick up new policies.
+- **Verification:** Check `/var/ossec/logs/ossec.log` for SCA scan messages after deploying a new policy.
+- **Results:** Once deployed, SCA scan results appear in the [SCA Overview](/user/ui/agents-sca-overview) page.
+
+---
+
+## Related resources
+
+- Policy repository: https://github.com/socfortress/CoPilot-SCA
+- Wazuh SCA documentation: https://documentation.wazuh.com/current/user-manual/capabilities/sec-config-assessment/index.html
+- [SCA Overview (compliance results)](/user/ui/agents-sca-overview)
