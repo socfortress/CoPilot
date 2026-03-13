@@ -363,18 +363,37 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Healthcheck"
-						}
-					},
-					{ default: () => "Healthcheck" }
-				),
-			key: "Healthcheck",
-			icon: renderIcon(HealthcheckIcon)
+			label: "Healthcheck",
+			key: "HealthcheckMenu",
+			icon: renderIcon(HealthcheckIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Healthcheck"
+								}
+							},
+							{ default: () => "Healthcheck Alerts" }
+						),
+					key: "Healthcheck"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Metrics"
+								}
+							},
+							{ default: () => "Metrics Overview" }
+						),
+					key: "Metrics"
+				}
+			]
 		},
 		{
 			label: "Indices",
