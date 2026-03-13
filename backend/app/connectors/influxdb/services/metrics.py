@@ -10,7 +10,6 @@ from app.connectors.influxdb.utils.universal import create_influxdb_client
 from app.connectors.influxdb.utils.universal import get_influxdb_organization
 from app.connectors.utils import get_connector_info_from_db
 
-
 RANGE_WINDOWS = {
     "1": "1m",
     "3": "2m",
@@ -35,8 +34,7 @@ async def _get_influxdb_bucket(session: AsyncSession) -> str:
     parts = attributes["connector_extra_data"].split(",")
     if len(parts) < 2:
         raise ValueError(
-            "InfluxDB connector_extra_data must contain 'ORG,BUCKET' "
-            f"(got: {attributes['connector_extra_data']})",
+            "Invalid connector_extra_data format for InfluxDB. Expected 'ORG,BUCKET'.",
         )
     return parts[1].strip()
 
@@ -119,19 +117,11 @@ async def get_hosts(session: AsyncSession) -> HostsResponse:
 
     influxdb_client = await create_influxdb_client("InfluxDB")
     try:
-        flux = (
-            f'import "influxdata/influxdb/schema"\n'
-            f'schema.tagValues(bucket: "{bucket}", tag: "host")'
-        )
+        flux = f'import "influxdata/influxdb/schema"\n' f'schema.tagValues(bucket: "{bucket}", tag: "host")'
         query_api = influxdb_client.query_api()
         result = await query_api.query(flux, org=org)
         hosts = sorted(
-            {
-                record.get_value()
-                for table in result
-                for record in table.records
-                if record.get_value()
-            },
+            {record.get_value() for table in result for record in table.records if record.get_value()},
         )
         return HostsResponse(success=True, message="Successfully retrieved hosts", hosts=hosts)
     except Exception as e:
@@ -157,54 +147,47 @@ async def get_summary(host: str, range_h: str, session: AsyncSession) -> Metrics
     win = _window(range_h)
 
     queries = {
-        "uptime": f'''from(bucket: "{bucket}") |> {rng}
+        "uptime": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "system")
   |> filter(fn: (r) => r["_field"] == "uptime")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "total_mem": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "total_mem": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "mem")
   |> filter(fn: (r) => r["_field"] == "total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "cpus": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "cpus": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "system")
   |> filter(fn: (r) => r["_field"] == "n_cpus")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "total_processes": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "total_processes": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "processes")
   |> filter(fn: (r) => r["_field"] == "total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "cpu_idle": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "cpu_idle": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "cpu")
   |> filter(fn: (r) => r["_field"] == "usage_idle")
   |> filter(fn: (r) => r["cpu"] == "cpu-total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "logged_on_users": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "logged_on_users": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "system")
   |> filter(fn: (r) => r["_field"] == "n_users")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "swap_free": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "swap_free": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "swap")
   |> filter(fn: (r) => r["_field"] == "free")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "load": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "load": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "system")
   |> filter(fn: (r) => r["_field"] == "load1" or r["_field"] == "load5" or r["_field"] == "load15")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     try:
@@ -233,38 +216,37 @@ async def get_cpu_metrics(host: str, range_h: str, session: AsyncSession) -> Met
     win = _window(range_h)
 
     queries = {
-        "cpu_usage_system": f'''from(bucket: "{bucket}") |> {rng}
+        "cpu_usage_system": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "cpu")
   |> filter(fn: (r) => r["_field"] == "usage_system")
   |> filter(fn: (r) => r["cpu"] == "cpu-total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "cpu_usage_user": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "cpu_usage_user": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "cpu")
   |> filter(fn: (r) => r["_field"] == "usage_user")
   |> filter(fn: (r) => r["cpu"] == "cpu-total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "cpu_iowait": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "cpu_iowait": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "cpu")
   |> filter(fn: (r) => r["_field"] == "usage_iowait")
   |> filter(fn: (r) => r["cpu"] == "cpu-total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "cpu_softirq": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "cpu_softirq": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "cpu")
   |> filter(fn: (r) => r["_field"] == "usage_softirq")
   |> filter(fn: (r) => r["cpu"] == "cpu-total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     try:
         data = await _run_queries(
-            influxdb_client, org, queries,
+            influxdb_client,
+            org,
+            queries,
             ts_keys=set(queries.keys()),
         )
         return MetricsResponse(success=True, message="Successfully retrieved CPU metrics", data=data)
@@ -291,23 +273,21 @@ async def get_memory_metrics(host: str, range_h: str, session: AsyncSession) -> 
     win = _window(range_h)
 
     queries = {
-        "mem_used": f'''from(bucket: "{bucket}") |> {rng}
+        "mem_used": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "mem")
   |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "swap_total": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "swap_total": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "swap")
   |> filter(fn: (r) => r["_field"] == "total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "swap_free": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "swap_free": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "swap")
   |> filter(fn: (r) => r["_field"] == "free")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
+  |> last()""",
     }
 
     try:
@@ -336,24 +316,25 @@ async def get_kernel_metrics(host: str, range_h: str, session: AsyncSession) -> 
     win = _window(range_h)
 
     queries = {
-        "interrupts": f'''from(bucket: "{bucket}") |> {rng}
+        "interrupts": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "kernel")
   |> filter(fn: (r) => r["_field"] == "interrupts")
   |> filter(fn: (r) => r["host"] == "{host}")
   |> derivative(unit: 1s, nonNegative: true)
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "processes_forked": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "processes_forked": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "kernel")
   |> filter(fn: (r) => r["_field"] == "processes_forked")
   |> filter(fn: (r) => r["host"] == "{host}")
   |> derivative(unit: 1s, nonNegative: true)
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     try:
         data = await _run_queries(
-            influxdb_client, org, queries,
+            influxdb_client,
+            org,
+            queries,
             ts_keys=set(queries.keys()),
         )
         return MetricsResponse(success=True, message="Successfully retrieved kernel metrics", data=data)
@@ -380,30 +361,27 @@ async def get_disk_metrics(host: str, range_h: str, session: AsyncSession) -> Me
     win = _window(range_h)
 
     queries = {
-        "disk_total": f'''from(bucket: "{bucket}") |> {rng}
+        "disk_total": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "disk")
   |> filter(fn: (r) => r["_field"] == "total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "disk_usage": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "disk_usage": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "disk")
   |> filter(fn: (r) => r["_field"] == "used_percent")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "disk_io": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "disk_io": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "diskio")
   |> filter(fn: (r) => r["_field"] == "read_bytes" or r["_field"] == "write_bytes")
   |> filter(fn: (r) => r["host"] == "{host}")
   |> derivative(unit: 1s, nonNegative: true)
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "inodes": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "inodes": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "disk")
   |> filter(fn: (r) => r["_field"] == "inodes_used" or r["_field"] == "inodes_total")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     try:
@@ -455,20 +433,22 @@ async def get_process_metrics(host: str, range_h: str, session: AsyncSession) ->
     win = _window(range_h)
 
     queries = {
-        "status": f'''from(bucket: "{bucket}") |> {rng}
+        "status": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "processes")
   |> filter(fn: (r) => r["_field"] == "running" or r["_field"] == "sleeping" or r["_field"] == "zombies" or r["_field"] == "stopped" or r["_field"] == "blocked")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     # Stat values
     for field in ("running", "sleeping", "unknown", "zombies"):
-        queries[field] = f'''from(bucket: "{bucket}") |> {rng}
+        queries[
+            field
+        ] = f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "processes")
   |> filter(fn: (r) => r["_field"] == "{field}")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()'''
+  |> last()"""
 
     try:
         data = await _run_queries(influxdb_client, org, queries, ts_keys={"status"})
@@ -496,24 +476,22 @@ async def get_network_metrics(host: str, range_h: str, session: AsyncSession) ->
     win = _window(range_h)
 
     queries = {
-        "traffic": f'''from(bucket: "{bucket}") |> {rng}
+        "traffic": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "net")
   |> filter(fn: (r) => r["_field"] == "bytes_recv" or r["_field"] == "bytes_sent")
   |> filter(fn: (r) => r["host"] == "{host}")
   |> derivative(unit: 1s, nonNegative: true)
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
-
-        "tcp_established": f'''from(bucket: "{bucket}") |> {rng}
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
+        "tcp_established": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "netstat")
   |> filter(fn: (r) => r["_field"] == "tcp_established")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> last()''',
-
-        "interface_errors": f'''from(bucket: "{bucket}") |> {rng}
+  |> last()""",
+        "interface_errors": f"""from(bucket: "{bucket}") |> {rng}
   |> filter(fn: (r) => r["_measurement"] == "net")
   |> filter(fn: (r) => r["_field"] == "err_in" or r["_field"] == "err_out")
   |> filter(fn: (r) => r["host"] == "{host}")
-  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)''',
+  |> aggregateWindow(every: {win}, fn: mean, createEmpty: false)""",
     }
 
     try:
