@@ -500,3 +500,40 @@ class SCAReport(SQLModel, table=True):
 
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
+
+class EventSources(SQLModel, table=True):
+    __tablename__ = "event_sources"
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        foreign_key="customers.customer_code",
+        max_length=50,
+        index=True,
+        nullable=False,
+    )
+    name: str = Field(max_length=255, nullable=False)
+    index_pattern: str = Field(max_length=1024, nullable=False)
+    event_type: str = Field(max_length=50, nullable=False)  # EDR, EPP, Cloud Integration, Network Security
+    time_field: str = Field(max_length=255, nullable=False, default="timestamp")
+    enabled: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    customer: Optional["Customers"] = Relationship()
+
+    class Config:
+        # Enforce event_type values at the application level
+        pass
+
+    def update_from_model(self, source_data):
+        if hasattr(source_data, "name"):
+            self.name = source_data.name
+        if hasattr(source_data, "index_pattern"):
+            self.index_pattern = source_data.index_pattern
+        if hasattr(source_data, "event_type"):
+            self.event_type = source_data.event_type
+        if hasattr(source_data, "time_field"):
+            self.time_field = source_data.time_field
+        if hasattr(source_data, "enabled"):
+            self.enabled = source_data.enabled
+        self.updated_at = datetime.utcnow()
