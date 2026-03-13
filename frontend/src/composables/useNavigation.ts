@@ -47,6 +47,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "Healthcheck" })
 	}
 
+	function routeMetrics() {
+		return routerConstructor({ name: "Metrics" })
+	}
+
 	function routeGraylogMetrics() {
 		return routerConstructor({ name: "Graylog-Metrics" })
 	}
@@ -91,6 +95,7 @@ export function useNavigation() {
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
+		routeMetrics,
 		routeGraylogMetrics,
 		routeGraylogManagement,
 		routeSocAlerts,

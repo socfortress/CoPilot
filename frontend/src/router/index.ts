@@ -259,9 +259,25 @@ const router = createRouter({
 		},
 		{
 			path: "/healthcheck",
-			name: "Healthcheck",
-			component: () => import("@/views/Healthcheck.vue"),
-			meta: { title: "Healthcheck", auth: true, roles: RouteRole.All }
+			redirect: "/healthcheck/alerts",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "alerts",
+					name: "Healthcheck",
+					component: () => import("@/views/Healthcheck.vue"),
+					meta: { title: "Healthcheck Alerts" }
+				},
+				{
+					path: "metrics",
+					name: "Metrics",
+					component: () => import("@/views/Metrics.vue"),
+					meta: { title: "Metrics Overview" }
+				}
+			]
 		},
 		{
 			path: "/customers",
