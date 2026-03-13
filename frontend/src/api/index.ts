@@ -19,6 +19,7 @@ import incidentManagement from "./endpoints/incidentManagement"
 import integrations from "./endpoints/integrations"
 import license from "./endpoints/license"
 import logs from "./endpoints/logs"
+import metrics from "./endpoints/metrics"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
 import patchTuesday from "./endpoints/patchTuesday"
@@ -56,6 +57,7 @@ export default {
 	askSocfortress,
 	customers,
 	logs,
+	metrics,
 	flow,
 	integrations,
 	monitoringAlerts,

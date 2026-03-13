@@ -264,6 +264,12 @@ const router = createRouter({
 			meta: { title: "Healthcheck", auth: true, roles: RouteRole.All }
 		},
 		{
+			path: "/metrics",
+			name: "Metrics",
+			component: () => import("@/views/Metrics.vue"),
+			meta: { title: "Metrics", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/customers",
 			name: "Customers",
 			component: () => import("@/views/Customers.vue"),
