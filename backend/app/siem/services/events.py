@@ -8,6 +8,8 @@ from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.db.universal_models import EventSources
 from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
+from app.siem.schema.events import FieldMapping
+from app.siem.schema.events import FieldMappingsResponse
 
 
 async def get_event_source_by_customer_and_name(
@@ -55,6 +57,7 @@ async def query_events(
         time_field=event_source.time_field,
         timerange=params.timerange,
         page_size=params.page_size,
+        query=params.query,
     )
 
 
@@ -63,12 +66,20 @@ async def _initial_search(
     time_field: str,
     timerange: str,
     page_size: int,
+    query: str = None,
 ) -> EventsQueryResponse:
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
         query_builder = AlertsQueryBuilder()
         query_builder.add_time_range(timerange=timerange, timestamp_field=time_field)
         query_builder.add_sort(time_field, order="desc")
+
+        # Add Lucene query_string if provided
+        if query:
+            query_builder.query["query"]["bool"]["must"].append(
+                {"query_string": {"query": query, "default_operator": "AND"}},
+            )
+
         query = query_builder.build()
 
         response = await es_client.search(
@@ -144,3 +155,56 @@ async def _clear_scroll(es_client, scroll_id: str) -> None:
         await es_client.clear_scroll(scroll_id=scroll_id)
     except Exception as e:
         logger.warning(f"Failed to clear scroll context: {e}")
+
+
+async def get_field_mappings(
+    customer_code: str,
+    source_name: str,
+    db: AsyncSession,
+) -> FieldMappingsResponse:
+    """Retrieve index field name mappings for a customer's event source."""
+    event_source = await get_event_source_by_customer_and_name(customer_code, source_name, db)
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    try:
+        mapping_response = await es_client.indices.get_mapping(index=event_source.index_pattern)
+
+        # Flatten nested mappings into dot-notation field list
+        fields = []
+        for index_name in mapping_response:
+            properties = mapping_response[index_name].get("mappings", {}).get("properties", {})
+            _flatten_properties(properties, "", fields)
+            break  # All indices matching pattern share the same mapping
+
+        # Deduplicate and sort
+        seen = set()
+        unique_fields = []
+        for f in fields:
+            if f.field not in seen:
+                seen.add(f.field)
+                unique_fields.append(f)
+        unique_fields.sort(key=lambda x: x.field)
+
+        return FieldMappingsResponse(
+            fields=unique_fields,
+            total=len(unique_fields),
+            index_pattern=event_source.index_pattern,
+            success=True,
+            message=f"Retrieved {len(unique_fields)} field mappings",
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving field mappings: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving field mappings: {e}")
+    finally:
+        await es_client.close()
+
+
+def _flatten_properties(properties: dict, prefix: str, fields: list) -> None:
+    """Recursively flatten OpenSearch mapping properties into FieldMapping objects."""
+    for field_name, field_info in properties.items():
+        full_name = f"{prefix}{field_name}" if not prefix else f"{prefix}_{field_name}"
+        field_type = field_info.get("type")
+        if field_type:
+            fields.append(FieldMapping(field=full_name, type=field_type))
+        # Recurse into nested properties
+        if "properties" in field_info:
+            _flatten_properties(field_info["properties"], full_name, fields)
