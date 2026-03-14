@@ -1,5 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { EventSource } from "@/types/eventSources.d"
+import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import { HttpClient } from "../httpClient"
 
 export interface EventSourceCreatePayload {
@@ -36,5 +37,24 @@ export default {
 	},
 	deleteEventSource(eventSourceId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/siem/event_sources/${eventSourceId}`)
+	},
+	queryEvents(
+		customerCode: string,
+		sourceName: string,
+		params: { timerange?: string; page_size?: number; scroll_id?: string; query?: string }
+	) {
+		return HttpClient.get<
+			FlaskBaseResponse & {
+				events: EventSearchResult[]
+				total: number
+				scroll_id: string | null
+				page_size: number
+			}
+		>(`/siem/events/${customerCode}/${sourceName}`, { params })
+	},
+	getFieldMappings(customerCode: string, sourceName: string) {
+		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
+			`/siem/events/${customerCode}/${sourceName}/fields`
+		)
 	}
 }
