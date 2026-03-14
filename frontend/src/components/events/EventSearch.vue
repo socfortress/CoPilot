@@ -132,10 +132,13 @@ import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
 import type { Customer } from "@/types/customers.d"
 import { NButton, NCard, NDataTable, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { computed, h, nextTick, onBeforeMount, ref } from "vue"
+import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import EventDetailDrawer from "./EventDetailDrawer.vue"
+
+const route = useRoute()
 
 const SearchIcon = "carbon:search"
 const CodeIcon = "carbon:code"
@@ -153,7 +156,7 @@ const customersOptions = computed(() =>
 
 function getCustomers() {
 	loadingCustomers.value = true
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -463,8 +466,55 @@ function excludeFilterFromDetail(field: string, value: string) {
 }
 
 // -- Lifecycle --
+function applyRouteParams() {
+	const qp = route.query
+	if (qp.customer_code) {
+		const code = String(qp.customer_code)
+		selectedCustomerCode.value = code
+
+		if (qp.query) {
+			query.value = String(qp.query)
+		}
+
+		// Load event sources then auto-select source_name if provided
+		loadingEventSources.value = true
+		Api.siem
+			.getEventSources(code)
+			.then(res => {
+				if (res.data.success) {
+					eventSourcesList.value = res.data?.event_sources || []
+
+					const targetSource = qp.source_name ? String(qp.source_name) : null
+					if (targetSource) {
+						// Try exact match first
+						const match = eventSourcesList.value.find(s => s.name === targetSource && s.enabled)
+						if (match) {
+							selectedSourceName.value = match.name
+						}
+					} else {
+						// Default to first EDR source if no source_name specified
+						const edr = eventSourcesList.value.find(s => s.event_type === "EDR" && s.enabled)
+						if (edr) {
+							selectedSourceName.value = edr.name
+						}
+					}
+
+					if (selectedSourceName.value) {
+						loadFieldMappings()
+						nextTick(() => searchEvents())
+					}
+				}
+			})
+			.finally(() => {
+				loadingEventSources.value = false
+			})
+	}
+}
+
 onBeforeMount(() => {
-	getCustomers()
+	getCustomers().then(() => {
+		applyRouteParams()
+	})
 })
 </script>
 
