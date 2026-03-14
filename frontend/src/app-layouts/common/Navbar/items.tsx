@@ -101,22 +101,8 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "EventSearch"
-						}
-					},
-					{ default: () => "Event Search" }
-				),
-			key: "EventSearch",
-			icon: renderIcon(EventSearchIcon)
-		},
-		{
-			label: "Alerts",
-			key: "Alerts",
+			label: "SIEM",
+			key: "SIEM",
 			icon: renderIcon(AlertsIcon),
 			children: [
 				{
@@ -128,9 +114,22 @@ export default function getItems(): MenuMixedOption[] {
 									name: "Alerts-SIEM"
 								}
 							},
-							{ default: () => "SIEM" }
+							{ default: () => "Alerts" }
 						),
 					key: "Alerts-SIEM"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "EventSearch"
+								}
+							},
+							{ default: () => "Event Search" }
+						),
+					key: "EventSearch"
 				},
 				{
 					label: () =>
