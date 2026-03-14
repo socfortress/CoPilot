@@ -185,6 +185,9 @@
 					>
 						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
 					</n-tab-pane>
+					<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy">
+						<CustomerEventSources :customer-code="customer.customer_code" />
+					</n-tab-pane>
 
 					<template #suffix>
 						<div
@@ -297,6 +300,7 @@ const CustomerNetworkConnectors = defineAsyncComponent(
 const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
+const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
 const { customer, highlight, hideCardActions } = toRefs(props)

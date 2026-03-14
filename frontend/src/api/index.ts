@@ -27,6 +27,7 @@ import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
 import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
+import siem from "./endpoints/siem"
 import shuffle from "./endpoints/shuffle"
 import sigma from "./endpoints/sigma"
 import snapshots from "./endpoints/snapshots"
@@ -77,6 +78,7 @@ export default {
 	sysmonConfig,
 	vulnerabilities,
 	sca,
+	siem,
 	wazuh,
 	patchTuesday,
 	portainer,
