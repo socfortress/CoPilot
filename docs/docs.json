@@ -46,6 +46,13 @@
             ]
           },
           {
+            "group": "SIEM",
+            "pages": [
+              "user/ui/siem-event-search",
+              "user/ui/alerts-siem"
+            ]
+          },
+          {
             "group": "Agents",
             "pages": [
               "user/ui/agents",
@@ -113,6 +120,14 @@
             "pages": [
               "user/ui/indices-management",
               "user/ui/indices-snapshots"
+            ]
+          },
+          {
+            "group": "SIEM Configuration",
+            "pages": [
+              "user/ui/siem-event-sources"
+            ]
+          },
             ]
           },
           {
