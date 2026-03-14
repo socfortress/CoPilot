@@ -8,7 +8,11 @@
 			</n-form-item>
 
 			<n-form-item label="Index Pattern" required>
-				<n-input v-model:value="form.index_pattern" placeholder="e.g. wazuh-alerts-*" clearable />
+				<n-input
+					v-model:value="form.index_pattern"
+					:placeholder="`e.g. wazuh-${props.customerCode}_*`"
+					clearable
+				/>
 			</n-form-item>
 
 			<n-form-item label="Event Type" required>
