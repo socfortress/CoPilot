@@ -7,7 +7,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
 from app.utils import Logger
 
-EXCLUDED_PATHS = ["/auth/token", "/auth/register"]
+EXCLUDED_PATHS = ["/auth/token", "/auth/register", "/auth/refresh", "/influxdb/alerts?days=1&status=active&exclude_ok=true"]
 INTERNAL_SERVER_ERROR = 500
 
 
