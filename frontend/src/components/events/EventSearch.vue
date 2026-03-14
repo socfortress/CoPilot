@@ -1,5 +1,12 @@
 <template>
 	<div class="flex flex-col gap-4">
+		<!-- No Event Sources Warning -->
+		<n-alert v-if="showNoSourcesWarning" title="No Event Sources Configured" type="warning" closable>
+			An Event Source needs to be defined for this customer before events can be searched. Go to the customer's
+			<strong>Event Sources</strong>
+			tab to configure one.
+		</n-alert>
+
 		<!-- Filters Bar -->
 		<n-card size="small">
 			<div class="flex flex-col gap-3">
@@ -131,7 +138,7 @@ import type { DataTableColumns } from "naive-ui"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
 import type { Customer } from "@/types/customers.d"
-import { NButton, NCard, NDataTable, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NCard, NDataTable, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
@@ -180,6 +187,10 @@ const selectedSourceName = ref<string | null>(null)
 
 const eventSourceOptions = computed(() =>
 	eventSourcesList.value.filter(s => s.enabled).map(s => ({ label: `${s.name} (${s.event_type})`, value: s.name }))
+)
+
+const showNoSourcesWarning = computed(
+	() => selectedCustomerCode.value && !loadingEventSources.value && eventSourcesList.value.length === 0
 )
 
 function getEventSources(customerCode: string) {
