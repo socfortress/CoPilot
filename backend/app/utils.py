@@ -63,6 +63,7 @@ class ErrorType(str, Enum):
     NONE_NOT_ALLOWED = "value_error.none.not_allowed"
     MISSING = "value_error.missing"
     GENERAL = "value_error"
+    INVALID_ENUM = "type_error.enum"
     # Add other types as needed
 
 
@@ -94,6 +95,7 @@ class ValidationErrorItem(BaseModel):
             ErrorType.NONE_NOT_ALLOWED: "None is not an allowed value.",
             ErrorType.MISSING: "Missing data for required field.",
             ErrorType.GENERAL: "Invalid value.",
+            ErrorType.INVALID_ENUM: "Value is not a valid enumeration member.",
         }
 
         return error_messages.get(error_type, value)

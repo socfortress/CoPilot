@@ -501,6 +501,7 @@ class SCAReport(SQLModel, table=True):
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
 
+
 class EventSources(SQLModel, table=True):
     __tablename__ = "event_sources"
 

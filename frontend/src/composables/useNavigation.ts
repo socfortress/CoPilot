@@ -89,6 +89,14 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
 
+	function routeEventSearch(params?: { customer_code?: string; source_name?: string; query?: string }) {
+		const routeQuery: Record<string, string> = {}
+		if (params?.customer_code) routeQuery.customer_code = params.customer_code
+		if (params?.source_name) routeQuery.source_name = params.source_name
+		if (params?.query) routeQuery.query = params.query
+		return routerConstructor({ name: "EventSearch", query: routeQuery })
+	}
+
 	return {
 		routeCustomer,
 		routeAgent,
@@ -104,6 +112,7 @@ export function useNavigation() {
 		routeAlerts,
 		routeConnectors,
 		routeIncidentManagementAlerts,
-		routeIncidentManagementCases
+		routeIncidentManagementCases,
+		routeEventSearch
 	}
 }

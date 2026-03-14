@@ -33,6 +33,15 @@
 						<Icon :name="ViewIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
+				<div v-else-if="key === 'alert_linked'">
+					<div class="flex items-center gap-2">
+						<span>{{ value }}</span>
+						<code class="text-primary cursor-pointer" @click.stop="openEventSearch()">
+							View in Event Search
+							<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+						</code>
+					</div>
+				</div>
 				<div v-else>
 					{{ value === "" ? "-" : (value ?? "-") }}
 				</div>
@@ -102,7 +111,7 @@ const { asset } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
 const ViewIcon = "iconoir:eye-solid"
-const { routeAgent, routeIndex, routeCustomer } = useNavigation()
+const { routeAgent, routeIndex, routeCustomer, routeEventSearch } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showAlertDetails = ref(false)
@@ -168,5 +177,13 @@ function openAlertDetails() {
 
 function closeAlertDetails() {
 	showAlertDetails.value = false
+}
+
+function openEventSearch() {
+	const url = routeEventSearch({
+		customer_code: asset.value.customer_code,
+		query: `alert_id:"${asset.value.alert_linked}"`
+	}).fullUrl()
+	window.open(url, "_blank")
 }
 </script>

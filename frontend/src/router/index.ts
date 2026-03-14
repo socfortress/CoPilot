@@ -182,6 +182,12 @@ const router = createRouter({
 			]
 		},
 		{
+			path: "/event-search",
+			name: "EventSearch",
+			component: () => import("@/views/EventSearch.vue"),
+			meta: { title: "Event Search", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/artifacts",
 			name: "Artifacts",
 			component: () => import("@/views/Artifacts.vue"),

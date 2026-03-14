@@ -94,8 +94,10 @@ nav:
           - Alerts:
               - Alerts: user/ui/alerts.md
               - SIEM: user/ui/alerts-siem.md
+              - Event Search: user/ui/siem-event-search.md
               - MITRE ATT&CK: user/ui/alerts-mitre.md
               - Atomic Red Team: user/ui/alerts-atomic-red-team.md
+              - Event Sources (Admin): user/ui/siem-event-sources.md
           - Artifacts: user/ui/artifacts.md
           - Customers: user/ui/customers.md
           - Agents:
