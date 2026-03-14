@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.db.universal_models import EventSources
-from app.siem.schema.alerts import AlertsQueryParams
-from app.siem.schema.alerts import AlertsQueryResponse
+from app.siem.schema.events import EventsQueryParams
+from app.siem.schema.events import EventsQueryResponse
 
 
 async def get_event_source_by_customer_and_name(
@@ -35,13 +35,13 @@ async def get_event_source_by_customer_and_name(
     return event_source
 
 
-async def query_alerts(
+async def query_events(
     customer_code: str,
     source_name: str,
-    params: AlertsQueryParams,
+    params: EventsQueryParams,
     db: AsyncSession,
-) -> AlertsQueryResponse:
-    logger.info(f"Querying alerts for customer {customer_code}, source {source_name}")
+) -> EventsQueryResponse:
+    logger.info(f"Querying events for customer {customer_code}, source {source_name}")
 
     # If a scroll_id is provided, continue scrolling
     if params.scroll_id:
@@ -63,7 +63,7 @@ async def _initial_search(
     time_field: str,
     timerange: str,
     page_size: int,
-) -> AlertsQueryResponse:
+) -> EventsQueryResponse:
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
         query_builder = AlertsQueryBuilder()
@@ -88,22 +88,22 @@ async def _initial_search(
                 await _clear_scroll(es_client, scroll_id)
                 scroll_id = None
 
-        return AlertsQueryResponse(
-            alerts=[hit["_source"] for hit in hits],
+        return EventsQueryResponse(
+            events=[hit["_source"] for hit in hits],
             total=total,
             scroll_id=scroll_id,
             page_size=page_size,
             success=True,
-            message=f"Retrieved {len(hits)} of {total} alerts",
+            message=f"Retrieved {len(hits)} of {total} events",
         )
     except Exception as e:
-        logger.error(f"Error querying alerts: {e}")
-        raise HTTPException(status_code=500, detail=f"Error querying alerts: {e}")
+        logger.error(f"Error querying events: {e}")
+        raise HTTPException(status_code=500, detail=f"Error querying events: {e}")
     finally:
         await es_client.close()
 
 
-async def _scroll_next_page(scroll_id: str) -> AlertsQueryResponse:
+async def _scroll_next_page(scroll_id: str) -> EventsQueryResponse:
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
         response = await es_client.scroll(scroll_id=scroll_id, scroll="5m")
@@ -115,8 +115,8 @@ async def _scroll_next_page(scroll_id: str) -> AlertsQueryResponse:
         if not hits:
             if new_scroll_id:
                 await _clear_scroll(es_client, new_scroll_id)
-            return AlertsQueryResponse(
-                alerts=[],
+            return EventsQueryResponse(
+                events=[],
                 total=total,
                 scroll_id=None,
                 page_size=0,
@@ -124,17 +124,17 @@ async def _scroll_next_page(scroll_id: str) -> AlertsQueryResponse:
                 message="No more results",
             )
 
-        return AlertsQueryResponse(
-            alerts=[hit["_source"] for hit in hits],
+        return EventsQueryResponse(
+            events=[hit["_source"] for hit in hits],
             total=total,
             scroll_id=new_scroll_id,
             page_size=len(hits),
             success=True,
-            message=f"Retrieved {len(hits)} of {total} alerts",
+            message=f"Retrieved {len(hits)} of {total} events",
         )
     except Exception as e:
-        logger.error(f"Error scrolling alerts: {e}")
-        raise HTTPException(status_code=500, detail=f"Error scrolling alerts: {e}")
+        logger.error(f"Error scrolling events: {e}")
+        raise HTTPException(status_code=500, detail=f"Error scrolling events: {e}")
     finally:
         await es_client.close()
 
