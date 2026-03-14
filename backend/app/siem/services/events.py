@@ -3,8 +3,10 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.db.universal_models import EventSources
 from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
