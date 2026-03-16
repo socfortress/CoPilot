@@ -2,13 +2,16 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
 from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
 from app.siem.schema.events import FieldMappingsResponse
@@ -22,7 +25,7 @@ siem_events_router = APIRouter()
     "/{customer_code}/{source_name}",
     response_model=EventsQueryResponse,
     description="Query events from a customer's event source with scroll-based pagination and optional Lucene query",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def query_events_endpoint(
     customer_code: str,
@@ -31,9 +34,14 @@ async def query_events_endpoint(
     page_size: int = Query(50, ge=1, le=1000, description="Number of results per page"),
     scroll_id: Optional[str] = Query(None, description="Scroll ID for fetching the next page"),
     query: Optional[str] = Query(None, description="Lucene query string (e.g. 'agent_name:piHole AND agent_id:088')"),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventsQueryResponse:
     logger.info(f"Querying events for customer {customer_code}, source {source_name}")
+
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+
     params = EventsQueryParams(
         timerange=timerange,
         page_size=page_size,
@@ -47,12 +55,17 @@ async def query_events_endpoint(
     "/{customer_code}/{source_name}/fields",
     response_model=FieldMappingsResponse,
     description="Get index field name mappings for a customer's event source to assist with building queries",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_field_mappings_endpoint(
     customer_code: str,
     source_name: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> FieldMappingsResponse:
     logger.info(f"Getting field mappings for customer {customer_code}, source {source_name}")
+
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+
     return await get_field_mappings(customer_code, source_name, db)

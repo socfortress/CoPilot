@@ -5,6 +5,7 @@ import AlertsPage from "@/views/AlertsPage.vue"
 import CasesPage from "@/views/CasesPage.vue"
 import CaseDetailsView from "@/views/CaseDetailsView.vue"
 import AgentsPage from "@/views/AgentsPage.vue"
+import EventSearchPage from "@/views/EventSearchPage.vue"
 
 const NotFound = {
 	template: `
@@ -59,6 +60,12 @@ const routes = [
 		path: "/agents",
 		name: "Agents",
 		component: AgentsPage,
+		meta: { requiresAuth: true }
+	},
+	{
+		path: "/event-search",
+		name: "EventSearch",
+		component: EventSearchPage,
 		meta: { requiresAuth: true }
 	},
 	{

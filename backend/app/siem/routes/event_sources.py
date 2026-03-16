@@ -6,9 +6,11 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
+from app.middleware.customer_access import customer_access_handler
 from app.siem.schema.event_sources import EventSourceCreate
 from app.siem.schema.event_sources import EventSourceDeleteResponse
 from app.siem.schema.event_sources import EventSourceOperationResponse
@@ -38,13 +40,16 @@ async def verify_customer_exists(customer_code: str, db: AsyncSession) -> None:
     "/{customer_code}",
     response_model=EventSourcesListResponse,
     description="Get all event sources for a customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_event_sources_endpoint(
     customer_code: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventSourcesListResponse:
     logger.info(f"Getting event sources for customer {customer_code}")
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
     await verify_customer_exists(customer_code, db)
     event_sources = await get_event_sources_by_customer(customer_code, db)
     return EventSourcesListResponse(
