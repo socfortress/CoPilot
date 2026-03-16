@@ -9,8 +9,8 @@ from sqlalchemy.future import select
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.middleware.customer_access import customer_access_handler
 from app.db.universal_models import Customers
+from app.middleware.customer_access import customer_access_handler
 from app.siem.schema.event_sources import EventSourceCreate
 from app.siem.schema.event_sources import EventSourceDeleteResponse
 from app.siem.schema.event_sources import EventSourceOperationResponse
