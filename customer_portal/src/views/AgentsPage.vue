@@ -40,6 +40,12 @@
 							>
 								Agents
 							</router-link>
+							<router-link
+								to="/event-search"
+								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+							>
+								Event Search
+							</router-link>
 						</nav>
 					</div>
 					<div class="flex items-center space-x-4">
