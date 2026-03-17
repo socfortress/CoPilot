@@ -1,0 +1,11 @@
+{
+  "id": "wazuh_edr",
+  "title": "Wazuh - EDR",
+  "description": "Endpoint Detection & Response dashboards for Wazuh-monitored Windows endpoints. Covers process execution, network connections, DNS queries, file operations, registry activity, driver/image loads, and threat detections powered by Sysmon telemetry.",
+  "vendor": "Wazuh",
+  "product": "EDR / Sysmon",
+  "event_type": "EDR",
+  "tags": ["wazuh", "edr", "sysmon", "windows", "endpoint", "detection"],
+  "color": "#38bdf8",
+  "icon": "cpu"
+}
