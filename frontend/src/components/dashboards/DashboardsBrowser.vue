@@ -135,6 +135,7 @@ import type { EventSource } from "@/types/eventSources.d"
 import type { Customer } from "@/types/customers.d"
 import { NAlert, NButton, NCard, NDataTable, NEmpty, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
+import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import DashboardCategoryCard from "./DashboardCategoryCard.vue"
@@ -144,6 +145,7 @@ const DashboardIcon = "carbon:dashboard"
 
 const message = useMessage()
 const dialog = useDialog()
+const router = useRouter()
 
 // ── Customer selection ──────────────────────────────────────────
 const loadingCustomers = ref(false)
@@ -387,44 +389,59 @@ const enabledColumns: DataTableColumns<EnabledDashboard> = [
 	{
 		title: "",
 		key: "actions",
-		width: 80,
+		width: 160,
 		render(row) {
-			return h(
-				NButton,
-				{
-					size: "small",
-					type: "error",
-					quaternary: true,
-					onClick: () => {
-						dialog.warning({
-							title: "Disable Dashboard",
-							content: `Are you sure you want to disable "${row.display_name}"?`,
-							positiveText: "Disable",
-							negativeText: "Cancel",
-							onPositiveClick: () => {
-								Api.siem
-									.disableDashboard(row.id)
-									.then(res => {
-										if (res.data.success) {
-											message.success("Dashboard disabled successfully")
-											getEnabledDashboards(selectedCustomerCode.value!)
-										} else {
-											message.warning(
-												res.data?.message || "An error occurred. Please try again later."
+			return h("div", { class: "flex gap-2" }, [
+				h(
+					NButton,
+					{
+						size: "small",
+						type: "primary",
+						quaternary: true,
+						onClick: () => {
+							router.push(`/dashboards/view/${row.id}`)
+						}
+					},
+					{ default: () => "View" }
+				),
+				h(
+					NButton,
+					{
+						size: "small",
+						type: "error",
+						quaternary: true,
+						onClick: () => {
+							dialog.warning({
+								title: "Disable Dashboard",
+								content: `Are you sure you want to disable "${row.display_name}"?`,
+								positiveText: "Disable",
+								negativeText: "Cancel",
+								onPositiveClick: () => {
+									Api.siem
+										.disableDashboard(row.id)
+										.then(res => {
+											if (res.data.success) {
+												message.success("Dashboard disabled successfully")
+												getEnabledDashboards(selectedCustomerCode.value!)
+											} else {
+												message.warning(
+													res.data?.message || "An error occurred. Please try again later."
+												)
+											}
+										})
+										.catch(err => {
+											message.error(
+												err.response?.data?.message ||
+													"An error occurred. Please try again later."
 											)
-										}
-									})
-									.catch(err => {
-										message.error(
-											err.response?.data?.message || "An error occurred. Please try again later."
-										)
-									})
-							}
-						})
-					}
-				},
-				{ default: () => "Disable" }
-			)
+										})
+								}
+							})
+						}
+					},
+					{ default: () => "Disable" }
+				)
+			])
 		}
 	}
 ]

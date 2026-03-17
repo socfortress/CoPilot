@@ -194,6 +194,12 @@ const router = createRouter({
 			meta: { title: "Dashboards", auth: true, roles: RouteRole.All }
 		},
 		{
+			path: "/dashboards/view/:id",
+			name: "DashboardView",
+			component: () => import("@/views/DashboardView.vue"),
+			meta: { title: "Dashboard", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/artifacts",
 			name: "Artifacts",
 			component: () => import("@/views/Artifacts.vue"),

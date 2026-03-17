@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -92,5 +94,30 @@ class EnabledDashboardOperationResponse(BaseModel):
 
 
 class DisableDashboardResponse(BaseModel):
+    success: bool
+    message: str
+
+
+# ── Panel data (for rendering dashboards) ────────────────────────
+
+
+class PanelDataRequest(BaseModel):
+    dashboard_id: int
+    timerange: str = Field("24h", description="Time range (e.g. '1h', '6h', '24h', '7d', '30d')")
+
+
+class PanelResult(BaseModel):
+    type: str
+    value: Optional[int] = None  # stat panels
+    labels: Optional[List[str]] = None  # chart panels
+    data: Optional[List[Any]] = None  # chart panels
+    error: Optional[str] = None
+
+
+class PanelDataResponse(BaseModel):
+    panels: Dict[str, PanelResult]
+    template: DashboardTemplate
+    dashboard_id: int
+    accent_color: str = "#38bdf8"
     success: bool
     message: str

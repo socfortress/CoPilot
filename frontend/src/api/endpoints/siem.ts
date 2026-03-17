@@ -5,7 +5,8 @@ import type {
 	DashboardCategory,
 	DashboardCategoryWithTemplates,
 	EnabledDashboard,
-	EnableDashboardPayload
+	EnableDashboardPayload,
+	PanelDataResponse
 } from "@/types/dashboards.d"
 import { HttpClient } from "../httpClient"
 
@@ -86,5 +87,11 @@ export default {
 	},
 	disableDashboard(dashboardId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/siem/dashboards/disable/${dashboardId}`)
+	},
+	getPanelData(dashboardId: number, timerange: string) {
+		return HttpClient.post<PanelDataResponse>(`/siem/dashboards/panel-data`, {
+			dashboard_id: dashboardId,
+			timerange
+		})
 	}
 }

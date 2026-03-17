@@ -49,3 +49,20 @@ export interface EnableDashboardPayload {
 	template_id: string
 	display_name: string
 }
+
+export interface PanelResult {
+	type: string
+	value: number | null
+	labels: string[]
+	data: number[]
+	error: string | null
+}
+
+export interface PanelDataResponse {
+	panels: Record<string, PanelResult>
+	template: DashboardTemplate
+	dashboard_id: number
+	accent_color: string
+	success: boolean
+	message: string
+}

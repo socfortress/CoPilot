@@ -18,10 +18,13 @@ from app.siem.schema.dashboards import EnableDashboardRequest
 from app.siem.schema.dashboards import EnabledDashboardOperationResponse
 from app.siem.schema.dashboards import EnabledDashboardResponse
 from app.siem.schema.dashboards import EnabledDashboardsListResponse
+from app.siem.schema.dashboards import PanelDataRequest
+from app.siem.schema.dashboards import PanelDataResponse
 from app.siem.services.dashboards import disable_dashboard
 from app.siem.services.dashboards import enable_dashboard
 from app.siem.services.dashboards import get_category_detail
 from app.siem.services.dashboards import get_enabled_dashboards
+from app.siem.services.dashboards import get_panel_data
 from app.siem.services.dashboards import list_categories
 
 dashboards_router = APIRouter()
@@ -134,4 +137,29 @@ async def disable_dashboard_endpoint(
     return DisableDashboardResponse(
         success=True,
         message="Dashboard disabled successfully",
+    )
+
+
+# ── Panel data (execute queries and return chart-ready data) ─────
+
+
+@dashboards_router.post(
+    "/panel-data",
+    response_model=PanelDataResponse,
+    description="Execute all panel queries for an enabled dashboard and return chart-ready data",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def panel_data_endpoint(
+    request: PanelDataRequest,
+    db: AsyncSession = Depends(get_db),
+) -> PanelDataResponse:
+    logger.info(f"Fetching panel data for dashboard {request.dashboard_id} (timerange={request.timerange})")
+    data = await get_panel_data(request.dashboard_id, request.timerange, db)
+    return PanelDataResponse(
+        panels=data["results"],
+        template=data["template"],
+        dashboard_id=request.dashboard_id,
+        accent_color=data["accent_color"],
+        success=True,
+        message="Panel data retrieved successfully",
     )
