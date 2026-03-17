@@ -1,6 +1,12 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { EventSource } from "@/types/eventSources.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
+import type {
+	DashboardCategory,
+	DashboardCategoryWithTemplates,
+	EnabledDashboard,
+	EnableDashboardPayload
+} from "@/types/dashboards.d"
 import { HttpClient } from "../httpClient"
 
 export interface EventSourceCreatePayload {
@@ -56,5 +62,29 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
 			`/siem/events/${customerCode}/${sourceName}/fields`
 		)
+	},
+
+	// ── Dashboards ──────────────────────────────────────────────
+	getDashboardCategories() {
+		return HttpClient.get<FlaskBaseResponse & { categories: DashboardCategory[] }>(`/siem/dashboards/templates`)
+	},
+	getDashboardCategory(categoryId: string) {
+		return HttpClient.get<FlaskBaseResponse & { category: DashboardCategoryWithTemplates }>(
+			`/siem/dashboards/templates/${categoryId}`
+		)
+	},
+	getEnabledDashboards(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { enabled_dashboards: EnabledDashboard[] }>(
+			`/siem/dashboards/enabled/${customerCode}`
+		)
+	},
+	enableDashboard(payload: EnableDashboardPayload) {
+		return HttpClient.post<FlaskBaseResponse & { enabled_dashboard: EnabledDashboard }>(
+			`/siem/dashboards/enable`,
+			payload
+		)
+	},
+	disableDashboard(dashboardId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/siem/dashboards/disable/${dashboardId}`)
 	}
 }

@@ -137,6 +137,19 @@ export default function getItems(): MenuMixedOption[] {
 							RouterLink,
 							{
 								to: {
+									name: "Dashboards"
+								}
+							},
+							{ default: () => "Dashboards" }
+						),
+					key: "Dashboards"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
 									name: "Alerts-Mitre"
 								}
 							},
