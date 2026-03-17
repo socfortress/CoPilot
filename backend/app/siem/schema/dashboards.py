@@ -118,6 +118,8 @@ class PanelDataResponse(BaseModel):
     panels: Dict[str, PanelResult]
     template: DashboardTemplate
     dashboard_id: int
+    customer_code: str
+    source_name: str
     accent_color: str = "#38bdf8"
     success: bool
     message: str

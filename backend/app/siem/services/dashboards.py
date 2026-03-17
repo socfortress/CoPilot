@@ -284,4 +284,6 @@ async def get_panel_data(
         "results": results,
         "template": template,
         "accent_color": accent_color,
+        "customer_code": dashboard.customer_code,
+        "source_name": event_source.name,
     }

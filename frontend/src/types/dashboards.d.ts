@@ -62,6 +62,8 @@ export interface PanelDataResponse {
 	panels: Record<string, PanelResult>
 	template: DashboardTemplate
 	dashboard_id: number
+	customer_code: string
+	source_name: string
 	accent_color: string
 	success: boolean
 	message: string

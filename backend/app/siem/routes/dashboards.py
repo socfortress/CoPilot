@@ -159,6 +159,8 @@ async def panel_data_endpoint(
         panels=data["results"],
         template=data["template"],
         dashboard_id=request.dashboard_id,
+        customer_code=data["customer_code"],
+        source_name=data["source_name"],
         accent_color=data["accent_color"],
         success=True,
         message="Panel data retrieved successfully",

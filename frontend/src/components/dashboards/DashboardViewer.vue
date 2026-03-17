@@ -43,7 +43,12 @@
 					:style="{ gridColumn: `span ${panel.w}` }"
 				>
 					<!-- Stat Panel -->
-					<n-card v-if="panel.type === 'stat'" size="small" class="h-full">
+					<n-card
+						v-if="panel.type === 'stat'"
+						size="small"
+						class="h-full cursor-pointer transition-shadow hover:shadow-md"
+						@click="openEventSearch(panel.lucene || '*')"
+					>
 						<div class="flex h-full flex-col items-center justify-center py-4">
 							<span class="text-xs tracking-wide uppercase opacity-60">{{ panel.title }}</span>
 							<span class="stat-value" :style="{ color: accentColor }">
@@ -115,6 +120,8 @@ const COLORS = [
 const accentColor = ref("#38bdf8")
 const dashboardTitle = ref("")
 const dashboardDescription = ref("")
+const customerCode = ref("")
+const sourceName = ref("")
 const panels = ref<DashboardPanel[]>([])
 const panelResults = ref<Record<string, PanelResult>>({})
 const loading = ref(false)
@@ -158,6 +165,8 @@ async function fetchPanelData() {
 			dashboardDescription.value = tpl.description
 			panels.value = tpl.panels
 			accentColor.value = res.data.accent_color || "#38bdf8"
+			customerCode.value = res.data.customer_code
+			sourceName.value = res.data.source_name
 			panelResults.value = res.data.panels
 			await nextTick()
 			renderAllCharts()
@@ -171,6 +180,24 @@ async function fetchPanelData() {
 	} finally {
 		loading.value = false
 	}
+}
+
+function openEventSearch(luceneQuery: string) {
+	const routeData = router.resolve({
+		path: "/event-search",
+		query: {
+			customer_code: customerCode.value,
+			source_name: sourceName.value,
+			query: luceneQuery
+		}
+	})
+	window.open(routeData.href, "_blank")
+}
+
+function buildDrilldownQuery(panel: DashboardPanel, clickedValue: string): string {
+	const baseLucene = panel.lucene && panel.lucene !== "*" ? `(${panel.lucene})` : ""
+	const fieldFilter = panel.field ? `${panel.field}:"${clickedValue}"` : ""
+	return [baseLucene, fieldFilter].filter(Boolean).join(" AND ")
 }
 
 function getHistogramOptions(_panel: DashboardPanel, result: PanelResult) {
@@ -286,6 +313,13 @@ function renderChart(panel: DashboardPanel) {
 	if (!chart) {
 		chart = echartsInit(dom)
 		chartInstances.value.set(panel.id, chart)
+
+		// Click handler for drill-down to Event Search
+		chart.on("click", (params: { name?: string; seriesType?: string }) => {
+			if (!params.name) return
+			const query = buildDrilldownQuery(panel, params.name)
+			if (query) openEventSearch(query)
+		})
 
 		const observer = new ResizeObserver(() => chart?.resize())
 		observer.observe(dom)
