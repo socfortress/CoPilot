@@ -152,6 +152,10 @@ const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 const selectedCustomerCode = ref<string | null>(null)
 
+// ── Enabled dashboards ─────────────────────────────────────────
+const loadingEnabled = ref(false)
+const enabledDashboards = ref<EnabledDashboard[]>([])
+
 const customersOptions = computed(() =>
 	customersList.value.map(c => ({ label: `#${c.customer_code} - ${c.customer_name}`, value: c.customer_code }))
 )
@@ -212,6 +216,7 @@ function getEventSources(customerCode: string) {
 
 function onCustomerChange(code: string) {
 	enabledDashboards.value = []
+
 	if (code) {
 		getEventSources(code)
 		getEnabledDashboards(code)
@@ -272,12 +277,9 @@ function selectCategory(categoryId: string) {
 		})
 }
 
-// ── Enabled dashboards ─────────────────────────────────────────
-const loadingEnabled = ref(false)
-const enabledDashboards = ref<EnabledDashboard[]>([])
-
 function getEnabledDashboards(customerCode: string) {
 	loadingEnabled.value = true
+
 	Api.siem
 		.getEnabledDashboards(customerCode)
 		.then(res => {

@@ -60,7 +60,6 @@
 				<!-- Query Bar with Autocomplete -->
 				<div class="relative">
 					<n-input
-						ref="queryInputRef"
 						v-model:value="query"
 						placeholder="Lucene query (e.g. agent_name:server01 AND rule_level:>=10)"
 						clearable
@@ -81,8 +80,8 @@
 						<div
 							v-for="(suggestion, index) in filteredSuggestions"
 							:key="suggestion.field"
-							class="suggestion-item flex cursor-pointer items-center justify-between px-3 py-1.5 text-sm hover:bg-[var(--hover-005-color)]"
-							:class="{ 'bg-[var(--hover-005-color)]': index === activeSuggestionIndex }"
+							class="suggestion-item hover:bg-hover-005 flex cursor-pointer items-center justify-between px-3 py-1.5 text-sm"
+							:class="{ 'bg-hover-005': index === activeSuggestionIndex }"
 							@mousedown.prevent="applySuggestion(suggestion.field)"
 						>
 							<span class="font-mono">{{ suggestion.field }}</span>
@@ -149,6 +148,7 @@ const route = useRoute()
 
 const SearchIcon = "carbon:search"
 const CodeIcon = "carbon:code"
+const FIELD_TOKEN_REGEX = /(?:^|[\s(])([a-z_][\w.]*)$/i
 
 const message = useMessage()
 
@@ -192,6 +192,9 @@ const eventSourceOptions = computed(() =>
 const showNoSourcesWarning = computed(
 	() => selectedCustomerCode.value && !loadingEventSources.value && eventSourcesList.value.length === 0
 )
+
+// -- Field mappings / autocomplete --
+const fieldMappings = ref<FieldMapping[]>([])
 
 function getEventSources(customerCode: string) {
 	loadingEventSources.value = true
@@ -252,8 +255,6 @@ const pageSizeOptions = [
 
 const query = ref("")
 
-// -- Field mappings / autocomplete --
-const fieldMappings = ref<FieldMapping[]>([])
 const showSuggestions = ref(false)
 const activeSuggestionIndex = ref(0)
 
@@ -277,7 +278,7 @@ const currentFieldToken = computed(() => {
 	const cursorPos = query.value.length
 	const before = query.value.substring(0, cursorPos)
 	// Match the last word being typed (field name token before a colon or standalone)
-	const match = before.match(/(?:^|[\s(])([a-z_][\w.]*)$/i)
+	const match = before.match(FIELD_TOKEN_REGEX)
 	return match ? match[1] : ""
 })
 

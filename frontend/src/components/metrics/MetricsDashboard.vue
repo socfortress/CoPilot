@@ -24,14 +24,7 @@
 					@update:value="refresh"
 				/>
 			</div>
-			<n-button
-				size="small"
-				type="primary"
-				secondary
-				:loading
-				:disabled="!selectedHost"
-				@click="refresh"
-			>
+			<n-button size="small" type="primary" secondary :loading :disabled="!selectedHost" @click="refresh">
 				<template #icon>
 					<Icon :name="RefreshIcon" :size="15" />
 				</template>
@@ -48,7 +41,7 @@
 		</n-card>
 
 		<!-- Loading -->
-		<n-spin v-else-if="loading && !loaded" class="flex min-h-80 items-center justify-center" :show="true" />
+		<n-spin v-else-if="loading && !loaded" class="flex min-h-80 items-center justify-center" show />
 
 		<!-- Dashboard -->
 		<div v-else-if="loaded">
@@ -112,7 +105,7 @@
 						:series="memory.mem_used || {}"
 						:height="280"
 						y-axis-name="bytes"
-						:format-bytes="true"
+						format-bytes
 					/>
 				</n-card>
 			</section>
@@ -149,7 +142,7 @@
 							title="Disk I/O (bytes/s)"
 							:series="disks.disk_io || {}"
 							y-axis-name="B/s"
-							:format-bytes="true"
+							format-bytes
 						/>
 					</n-card>
 				</div>
@@ -182,7 +175,7 @@
 							:series="network.traffic || {}"
 							:height="280"
 							y-axis-name="B/s"
-							:format-bytes="true"
+							format-bytes
 						/>
 					</n-card>
 					<n-card>
