@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -64,7 +64,7 @@ import CustomerForm from "./CustomerForm.vue"
 const { customersCount, disabled, size } = defineProps<{
 	customersCount?: number
 	disabled?: boolean
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

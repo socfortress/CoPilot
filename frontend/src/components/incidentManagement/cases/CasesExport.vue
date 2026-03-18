@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Ref } from "vue"
 import type { Customer } from "@/types/customers.d"
@@ -23,7 +23,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
-const { size, showIcon } = defineProps<{ size?: Size; showIcon?: boolean }>()
+const { size, showIcon } = defineProps<{ size?: ButtonSize; showIcon?: boolean }>()
 
 const DownloadIcon = "carbon:cloud-download"
 const loadingCustomersList = ref(false)

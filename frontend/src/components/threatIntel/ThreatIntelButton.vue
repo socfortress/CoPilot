@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, ButtonType } from "naive-ui"
 import { NButton, NCollapse, NCollapseItem, NDrawer, NDrawerContent } from "naive-ui"
 import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -39,8 +39,8 @@ import ThreatIntelForm from "./ThreatIntelForm.vue"
 import VirusTotalForm from "./VirusTotalForm.vue"
 
 defineProps<{
-	size?: Size
-	type?: Type
+	size?: ButtonSize
+	type?: ButtonType
 	secondary?: boolean
 }>()
 

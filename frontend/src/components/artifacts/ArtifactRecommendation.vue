@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { Recommendation } from "@/types/artifacts.d"
 import type { OsTypesFull } from "@/types/common.d"
 import _uniqBy from "lodash/uniqBy"
@@ -87,7 +87,7 @@ interface RecommendationStore {
 
 const { context, size } = defineProps<{
 	context: string | object
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const AiIcon = "mage:stars-c"

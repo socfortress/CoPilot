@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { Ref } from "vue"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
@@ -65,7 +65,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import CaseItem from "../cases/CaseItem.vue"
 
-const { alerts, size } = defineProps<{ alerts: Alert[]; size?: Size }>()
+const { alerts, size } = defineProps<{ alerts: Alert[]; size?: ButtonSize }>()
 
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void

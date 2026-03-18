@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threatIntel.d"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { ref, watchEffect } from "vue"
@@ -89,7 +89,7 @@ const {
 	agentId: string
 	alertId: number
 	forceLicenseResponse?: boolean
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const LockIcon = "carbon:locked"

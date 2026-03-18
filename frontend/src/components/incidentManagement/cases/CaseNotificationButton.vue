@@ -17,14 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import { NButton, NTooltip, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
 const { size, caseId, notificationInvokedNumber } = defineProps<{
-	size?: Size
+	size?: ButtonSize
 	caseId: number
 	notificationInvokedNumber: number
 }>()
