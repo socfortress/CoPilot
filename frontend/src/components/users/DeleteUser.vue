@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, ButtonType } from "naive-ui"
 import type { User } from "@/types/user"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
@@ -21,8 +21,8 @@ const {
 	user
 } = defineProps<{
 	user?: User
-	size?: Size
-	type?: Type
+	size?: ButtonSize
+	type?: ButtonType
 }>()
 
 const emit = defineEmits<{

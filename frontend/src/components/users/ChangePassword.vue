@@ -53,8 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, ButtonType, FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { User } from "@/types/user"
 import { NButton, NDrawer, NDrawerContent, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import PasswordValidator from "password-validator"
@@ -70,8 +69,8 @@ interface ModelType {
 
 const { type, size, user } = defineProps<{
 	user?: User
-	size?: Size
-	type?: Type
+	size?: ButtonSize
+	type?: ButtonType
 }>()
 
 const showFormDrawer = ref(false)

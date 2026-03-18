@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { FortinetModel } from "./provisions/FortinetForm.vue"
 import type { SentinelOneModel } from "./provisions/SentinelOneForm.vue"
 import type { SonicWallModel } from "./provisions/SonicwallForm.vue"
@@ -179,7 +179,7 @@ import SonicwallForm from "./provisions/SonicwallForm.vue"
 const { networkConnector, hideDeleteButton, size } = defineProps<{
 	networkConnector: CustomerNetworkConnector
 	hideDeleteButton?: boolean
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

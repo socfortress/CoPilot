@@ -532,7 +532,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { VirusTotalData } from "@/types/threatIntel.d"
 import _pick from "lodash/pick"
@@ -545,7 +545,7 @@ import { formatDate } from "@/utils/format"
 
 const { iocValue, size } = defineProps<{
 	iocValue: string
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const Badge = defineAsyncComponent(() => import("@/components/common/Badge.vue"))
