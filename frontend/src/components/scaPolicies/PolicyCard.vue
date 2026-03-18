@@ -48,7 +48,7 @@
 			:bordered="false"
 			segmented
 		>
-			<PolicyCardContent :policy="policy" />
+			<PolicyCardContent :policy />
 		</n-modal>
 	</div>
 </template>

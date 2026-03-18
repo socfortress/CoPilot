@@ -1,5 +1,5 @@
 <template>
-	<div ref="chartEl" :style="{ height: height + 'px' }"></div>
+	<div ref="chartEl" :style="{ height: `${height}px` }"></div>
 </template>
 
 <script setup lang="ts">
@@ -11,20 +11,6 @@ import { init as echartsInit, use as echartsUse } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed, onBeforeUnmount, onMounted, ref, toRefs, watch } from "vue"
 import { useThemeStore } from "@/stores/theme"
-
-echartsUse([
-	TitleComponent,
-	TooltipComponent,
-	LegendComponent,
-	GridComponent,
-	DataZoomComponent,
-	LineChart,
-	BarChart,
-	GaugeChart,
-	CanvasRenderer
-])
-
-const COLORS = ["#38bdf8", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#f97316", "#06b6d4", "#ec4899"]
 
 const props = withDefaults(
 	defineProps<{
@@ -40,6 +26,20 @@ const props = withDefaults(
 		formatBytes: false
 	}
 )
+
+echartsUse([
+	TitleComponent,
+	TooltipComponent,
+	LegendComponent,
+	GridComponent,
+	DataZoomComponent,
+	LineChart,
+	BarChart,
+	GaugeChart,
+	CanvasRenderer
+])
+
+const COLORS = ["#38bdf8", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#f97316", "#06b6d4", "#ec4899"]
 
 const { title, series, height, yAxisName, formatBytes } = toRefs(props)
 

@@ -125,6 +125,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { Customer } from "@/types/customers.d"
 import type {
 	DashboardCategory,
 	DashboardCategoryWithTemplates,
@@ -132,7 +133,6 @@ import type {
 	EnabledDashboard
 } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
-import type { Customer } from "@/types/customers.d"
 import { NAlert, NButton, NCard, NDataTable, NEmpty, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"

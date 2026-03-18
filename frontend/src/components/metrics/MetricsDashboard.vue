@@ -28,7 +28,7 @@
 				size="small"
 				type="primary"
 				secondary
-				:loading="loading"
+				:loading
 				:disabled="!selectedHost"
 				@click="refresh"
 			>

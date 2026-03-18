@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<DashboardViewer :dashboard-id="dashboardId" />
+		<DashboardViewer :dashboard-id />
 	</div>
 </template>
 

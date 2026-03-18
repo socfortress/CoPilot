@@ -24,7 +24,7 @@
 					>
 						{{ preset.label }}
 					</n-button>
-					<n-button size="small" :loading="loading" @click="fetchPanelData">
+					<n-button size="small" :loading @click="fetchPanelData">
 						<template #icon>
 							<Icon :name="RefreshIcon" :size="16" />
 						</template>
@@ -87,18 +87,17 @@ import { CanvasRenderer } from "echarts/renderers"
 import { NButton, NCard, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
-import { useThemeStore } from "@/stores/theme"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-
-const ArrowBackIcon = "carbon:arrow-left"
-const RefreshIcon = "carbon:renew"
-
-echartsUse([TooltipComponent, LegendComponent, GridComponent, PieChart, BarChart, LineChart, CanvasRenderer])
+import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{
 	dashboardId: number
 }>()
+const ArrowBackIcon = "carbon:arrow-left"
+const RefreshIcon = "carbon:renew"
+
+echartsUse([TooltipComponent, LegendComponent, GridComponent, PieChart, BarChart, LineChart, CanvasRenderer])
 
 const router = useRouter()
 const message = useMessage()
@@ -139,7 +138,7 @@ const timePresets = [
 const hasData = computed(() => Object.keys(panelResults.value).length > 0)
 
 const chartInstances = ref<Map<string, ECharts>>(new Map())
-let resizeObservers: ResizeObserver[] = []
+const resizeObservers: ResizeObserver[] = []
 
 function formatStatValue(value: number | null | undefined): string {
 	if (value == null) return "—"
@@ -215,12 +214,12 @@ function getHistogramOptions(_panel: DashboardPanel, result: PanelResult) {
 				fontSize: 10,
 				rotate: result.labels.length > 20 ? 45 : 0
 			},
-			axisLine: { lineStyle: { color: style.value["fg-default-color"] + "33" } }
+			axisLine: { lineStyle: { color: `${style.value["fg-default-color"]}33` } }
 		},
 		yAxis: {
 			type: "value",
 			axisLabel: { color: style.value["fg-default-color"], fontSize: 10 },
-			splitLine: { lineStyle: { color: style.value["fg-default-color"] + "1a" } }
+			splitLine: { lineStyle: { color: `${style.value["fg-default-color"]}1a` } }
 		},
 		series: [
 			{
@@ -279,7 +278,7 @@ function getBarHOptions(_panel: DashboardPanel, result: PanelResult) {
 		xAxis: {
 			type: "value",
 			axisLabel: { color: style.value["fg-default-color"], fontSize: 10 },
-			splitLine: { lineStyle: { color: style.value["fg-default-color"] + "1a" } }
+			splitLine: { lineStyle: { color: `${style.value["fg-default-color"]}1a` } }
 		},
 		yAxis: {
 			type: "category",
@@ -290,7 +289,7 @@ function getBarHOptions(_panel: DashboardPanel, result: PanelResult) {
 				width: 180,
 				overflow: "truncate"
 			},
-			axisLine: { lineStyle: { color: style.value["fg-default-color"] + "33" } }
+			axisLine: { lineStyle: { color: `${style.value["fg-default-color"]}33` } }
 		},
 		series: [
 			{

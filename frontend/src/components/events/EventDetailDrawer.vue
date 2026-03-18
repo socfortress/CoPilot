@@ -5,7 +5,7 @@
 				<div class="flex flex-col gap-1">
 					<div
 						v-for="[key, value] in sortedFields"
-						:key="key"
+						:key
 						class="field-row flex items-start gap-2 rounded px-2 py-1.5 hover:bg-[var(--hover-005-color)]"
 					>
 						<span class="min-w-36 shrink-0 font-mono text-xs font-semibold opacity-70">{{ key }}</span>
@@ -46,19 +46,17 @@ import { NButton, NDrawer, NDrawerContent, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
-const FilterAddIcon = "carbon:filter"
-const FilterRemoveIcon = "carbon:filter-remove"
-
-const show = defineModel<boolean>("show", { default: false })
-
 const props = defineProps<{
 	event: EventSearchResult | null
 }>()
-
 defineEmits<{
 	"filter-add": [field: string, value: string]
 	"filter-exclude": [field: string, value: string]
 }>()
+const FilterAddIcon = "carbon:filter"
+const FilterRemoveIcon = "carbon:filter-remove"
+
+const show = defineModel<boolean>("show", { default: false })
 
 const sortedFields = computed(() => {
 	if (!props.event) return []

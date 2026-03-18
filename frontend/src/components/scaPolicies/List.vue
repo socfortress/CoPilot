@@ -119,7 +119,7 @@
 				<n-pagination
 					v-if="filteredPolicies.length > pageSize"
 					v-model:page="currentPage"
-					:page-size="pageSize"
+					:page-size
 					:item-count="filteredPolicies.length"
 					:page-slot="6"
 				/>
@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import type { ScaPolicyItem } from "@/types/sca.d"
-import { NBadge, NAlert, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { NAlert, NBadge, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

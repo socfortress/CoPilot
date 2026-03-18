@@ -304,7 +304,7 @@ const topPoliciesByScore = computed(() => {
 	})
 
 	// Convert to array and sort by score
-	// eslint-disable-next-line e18e/prefer-array-to-sorted
+
 	return [...policyMap.values()].sort((a: PolicyAggregate, b: PolicyAggregate) => b.score - a.score).slice(0, 5)
 })
 

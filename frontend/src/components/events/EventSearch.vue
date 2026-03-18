@@ -102,13 +102,13 @@
 					</span>
 				</div>
 				<n-data-table
-					:columns="columns"
+					:columns
 					:data="events"
 					:bordered="false"
 					:single-line="false"
 					size="small"
 					:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
-					:row-props="rowProps"
+					:row-props
 					max-height="calc(100vh - 360px)"
 					virtual-scroll
 				/>
@@ -135,9 +135,9 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { Customer } from "@/types/customers.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
-import type { Customer } from "@/types/customers.d"
 import { NAlert, NButton, NCard, NDataTable, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
@@ -277,7 +277,7 @@ const currentFieldToken = computed(() => {
 	const cursorPos = query.value.length
 	const before = query.value.substring(0, cursorPos)
 	// Match the last word being typed (field name token before a colon or standalone)
-	const match = before.match(/(?:^|[\s(])([a-zA-Z_][\w.]*)$/)
+	const match = before.match(/(?:^|[\s(])([a-z_][\w.]*)$/i)
 	return match ? match[1] : ""
 })
 
@@ -296,7 +296,7 @@ function applySuggestion(fieldName: string) {
 	const token = currentFieldToken.value
 	if (token) {
 		const lastIndex = query.value.lastIndexOf(token)
-		query.value = query.value.substring(0, lastIndex) + fieldName + ":"
+		query.value = `${query.value.substring(0, lastIndex) + fieldName}:`
 	}
 	showSuggestions.value = false
 }
