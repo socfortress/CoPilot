@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import { NButton, NModal, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
@@ -60,7 +60,7 @@ import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 const { alertId, caseId, size } = defineProps<{
 	alertId?: string | number | null
 	caseId?: string | number | null
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

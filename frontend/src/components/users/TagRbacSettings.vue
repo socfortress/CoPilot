@@ -46,12 +46,12 @@
 					:options="tagOptions"
 					:loading="loadingTags"
 				/>
-				<template #help>
+				<template #feedback>
 					<span class="text-xs opacity-70">Users with access to this tag will also see untagged alerts</span>
 				</template>
 			</n-form-item>
 
-			<n-divider v-if="settings.enabled" class="!my-2" />
+			<n-divider v-if="settings.enabled" class="my-2!" />
 
 			<n-alert v-if="settings.enabled" type="info" title="How Tag RBAC Works">
 				<div class="info-content">
