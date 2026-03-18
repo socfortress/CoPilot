@@ -46,6 +46,12 @@
 							>
 								Event Search
 							</router-link>
+							<router-link
+								to="/dashboards"
+								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+							>
+								Dashboards
+							</router-link>
 						</nav>
 					</div>
 					<div class="flex items-center space-x-4">
@@ -465,11 +471,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount } from "vue"
-import { useRouter } from "vue-router"
+import { useRouter, useRoute } from "vue-router"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import { SiemAPI, type EventSource, type EventSearchResult, type FieldMapping } from "@/api/siem"
 
 const router = useRouter()
+const route = useRoute()
 const portalSettingsStore = usePortalSettingsStore()
 
 const showLogo = ref(true)
@@ -709,8 +716,36 @@ function levelClass(level: number | undefined): string {
 }
 
 // -- Lifecycle --
-onBeforeMount(() => {
-	loadCustomerCodes()
+async function applyRouteParams() {
+	const qCustomer = route.query.customer_code as string | undefined
+	const qSource = route.query.source_name as string | undefined
+	const qQuery = route.query.query as string | undefined
+
+	if (!qCustomer) return
+
+	selectedCustomerCode.value = qCustomer
+	await loadEventSources(qCustomer)
+
+	if (qSource) {
+		const match = enabledSources.value.find(s => s.name === qSource)
+		if (match) {
+			selectedSourceName.value = match.name
+			loadFieldMappings()
+		}
+	}
+
+	if (qQuery) {
+		query.value = qQuery
+	}
+
+	if (selectedCustomerCode.value && selectedSourceName.value) {
+		searchEvents()
+	}
+}
+
+onBeforeMount(async () => {
+	await loadCustomerCodes()
+	applyRouteParams()
 })
 </script>
 
