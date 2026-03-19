@@ -218,27 +218,43 @@ async def save_threshold_metadata(
 
 
 async def retrieve_threshold_alert_timeline(
-    alert_id: int,
+    alert_id: Optional[int],
+    index_name: str,
+    index_id: str,
     session: AsyncSession,
 ) -> Optional[List[Dict[str, Any]]]:
     """
     Retrieve the timeline for a threshold alert using stored metadata.
 
-    Queries OpenSearch using the stored replay_query, group_by_fields, and timerange
-    from the ThresholdAlertMetadata table.
+    Looks up ThresholdAlertMetadata by alert_id first, then falls back to
+    resolved_index_name + resolved_index_id (which the frontend always provides).
 
     Args:
-        alert_id: The CoPilot alert ID.
+        alert_id: The CoPilot alert ID (may be None if not provided by the caller).
+        index_name: The OpenSearch index name from the asset.
+        index_id: The OpenSearch document ID from the asset.
         session: Database session.
 
     Returns:
         List of OpenSearch hit dicts if this is a threshold alert, or None if no
-        threshold metadata exists for this alert_id (meaning it's not a threshold alert).
+        threshold metadata exists (meaning it's not a threshold alert).
     """
-    result = await session.execute(
-        select(ThresholdAlertMetadata).where(ThresholdAlertMetadata.alert_id == alert_id),
-    )
-    metadata = result.scalars().first()
+    metadata = None
+
+    if alert_id is not None:
+        result = await session.execute(
+            select(ThresholdAlertMetadata).where(ThresholdAlertMetadata.alert_id == alert_id),
+        )
+        metadata = result.scalars().first()
+
+    if metadata is None:
+        result = await session.execute(
+            select(ThresholdAlertMetadata).where(
+                ThresholdAlertMetadata.resolved_index_name == index_name,
+                ThresholdAlertMetadata.resolved_index_id == index_id,
+            ),
+        )
+        metadata = result.scalars().first()
 
     if metadata is None:
         return None

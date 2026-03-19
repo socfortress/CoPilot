@@ -1250,11 +1250,15 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
         List[Dict[str, Any]]: The alert timeline.
     """
     # Check if this is a threshold alert and retrieve its timeline if so
-    if alert.alert_id is not None:
-        threshold_timeline = await retrieve_threshold_alert_timeline(alert.alert_id, session)
-        if threshold_timeline is not None:
-            logger.info(f"Retrieved threshold alert timeline for alert ID {alert.alert_id} with {len(threshold_timeline)} events")
-            return threshold_timeline
+    threshold_timeline = await retrieve_threshold_alert_timeline(
+        alert_id=alert.alert_id,
+        index_name=alert.index_name,
+        index_id=alert.index_id,
+        session=session,
+    )
+    if threshold_timeline is not None:
+        logger.info(f"Retrieved threshold alert timeline with {len(threshold_timeline)} events")
+        return threshold_timeline
 
     alert_details = await get_alert_details(alert)
     if alert_details._source.process_id is not None:
