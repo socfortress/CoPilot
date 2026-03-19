@@ -59,11 +59,12 @@
 						v-for="tpl in selectedCategory.templates"
 						:key="tpl.id"
 						:template="tpl"
-						:is-enabled="isTemplateEnabled(selectedCategoryId ?? '', tpl.id)"
-						:can-enable="!!selectedCustomerCode && !!selectedEventSourceId"
+						:selected-customer-code
+						:selected-event-source-id
+						:selected-category-id
+						:enabled-dashboards
 						disabled-tooltip-text="Select an event source first"
-						@enable="onEnableTemplate"
-						@disable="onDisableTemplate"
+						@refresh-enabled-dashboards="emit('refreshEnabledDashboards')"
 					/>
 				</div>
 				<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
@@ -76,11 +77,10 @@
 import type {
 	DashboardCategory,
 	DashboardCategoryWithTemplates,
-	DashboardTemplate,
 	EnabledDashboard
 } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
-import { NCard, NEmpty, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
+import { NCard, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -100,7 +100,6 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const dialog = useDialog()
 
 const loadingCategories = ref(false)
 const categories = ref<DashboardCategory[]>([])
@@ -162,75 +161,6 @@ function selectCategory(categoryId: string) {
 		.finally(() => {
 			loadingTemplates.value = false
 		})
-}
-
-function isTemplateEnabled(libraryCard: string, templateId: string): boolean {
-	return props.enabledDashboards.some(
-		d =>
-			d.library_card === libraryCard &&
-			d.template_id === templateId &&
-			d.event_source_id === selectedEventSourceId.value
-	)
-}
-
-function onEnableTemplate(template: DashboardTemplate) {
-	if (!props.selectedCustomerCode || !selectedEventSourceId.value || !selectedCategoryId.value) {
-		message.warning("Please select a customer and event source first")
-		return
-	}
-
-	Api.siem
-		.enableDashboard({
-			customer_code: props.selectedCustomerCode,
-			event_source_id: selectedEventSourceId.value,
-			library_card: selectedCategoryId.value,
-			template_id: template.id,
-			display_name: template.title
-		})
-		.then(res => {
-			if (res.data.success) {
-				message.success(res.data?.message || "Dashboard enabled successfully")
-				emit("refreshEnabledDashboards")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-}
-
-function onDisableTemplate(template: DashboardTemplate) {
-	const match = props.enabledDashboards.find(
-		d =>
-			d.library_card === selectedCategoryId.value &&
-			d.template_id === template.id &&
-			d.event_source_id === selectedEventSourceId.value
-	)
-
-	if (!match) return
-
-	dialog.warning({
-		title: "Disable Dashboard",
-		content: `Are you sure you want to disable "${template.title}"?`,
-		positiveText: "Disable",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			Api.siem
-				.disableDashboard(match.id)
-				.then(res => {
-					if (res.data.success) {
-						message.success(res.data?.message || "Dashboard disabled successfully")
-						emit("refreshEnabledDashboards")
-					} else {
-						message.warning(res.data?.message || "An error occurred. Please try again later.")
-					}
-				})
-				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				})
-		}
-	})
 }
 
 watch(
