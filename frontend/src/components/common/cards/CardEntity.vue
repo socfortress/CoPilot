@@ -15,8 +15,8 @@
 			content-class="h-full grow"
 			class="flex h-full flex-col"
 		>
-			<div class="card-entity-wrapper flex flex-col" :class="cardEntityWrapperClass">
-				<div class="main-box flex flex-col" :class="mainBoxClass">
+			<div class="card-entity-wrapper flex h-full flex-col" :class="cardEntityWrapperClass">
+				<div class="main-box flex h-full flex-col" :class="mainBoxClass">
 					<div v-if="$slots.header" class="header-box" :class="headerBoxClass">
 						<slot name="header" />
 					</div>
