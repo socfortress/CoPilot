@@ -10,7 +10,6 @@
 				:loading="loadingCustomers"
 				:consistent-menu-width="false"
 				clearable
-				@update:value="onCustomerChange"
 			/>
 		</n-form-item>
 
@@ -49,91 +48,20 @@
 			</n-scrollbar>
 		</n-card>
 
-		<!-- Categories -->
-		<n-card size="small">
-			<template #header>Dashboard Categories</template>
-			<template #header-extra>
-				<span class="text-secondary text-sm">{{ categories.length }} available</span>
-			</template>
-
-			<n-spin :show="loadingCategories">
-				<div v-if="categories.length" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-					<DashboardCategoryCard
-						v-for="cat in categories"
-						:key="cat.id"
-						:category="cat"
-						:selected="selectedCategoryId === cat.id"
-						@select="selectCategory(cat.id)"
-					/>
-				</div>
-				<n-empty v-else-if="!loadingCategories" description="No dashboard categories found" />
-			</n-spin>
-
-			<!-- Templates for selected category -->
-			<div v-if="selectedCategory" class="border-border @container mt-4 flex flex-col gap-4 border-t pt-4">
-				<div class="flex items-center justify-between gap-2">
-					<div class="flex grow items-center justify-between">
-						<div class="flex items-center gap-2">
-							<div
-								class="flex h-full items-center justify-center"
-								:style="{ color: selectedCategory.color }"
-							>
-								<Icon :name="getDashboardIcon(selectedCategory.icon)" :size="19" />
-							</div>
-							<span>{{ selectedCategory.title }}</span>
-						</div>
-						<span class="text-sm font-normal opacity-60">
-							{{ selectedCategory.templates.length }} template{{
-								selectedCategory.templates.length !== 1 ? "s" : ""
-							}}
-						</span>
-					</div>
-
-					<n-select
-						v-model:value="selectedEventSourceId"
-						:options="eventSourceOptions"
-						placeholder="Select Event Source"
-						filterable
-						:loading="loadingEventSources"
-						:disabled="!selectedCustomerCode"
-						clearable
-						:consistent-menu-width="false"
-						class="w-48!"
-					/>
-				</div>
-
-				<n-spin :show="loadingTemplates">
-					<div
-						v-if="selectedCategory.templates.length"
-						class="grid grid-cols-1 gap-3 @md:grid-cols-2 @xl:grid-cols-3"
-					>
-						<DashboardTemplateCard
-							v-for="tpl in selectedCategory.templates"
-							:key="tpl.id"
-							:template="tpl"
-							:is-enabled="isTemplateEnabled(selectedCategoryId!, tpl.id)"
-							:can-enable="!!selectedCustomerCode && !!selectedEventSourceId"
-							disabled-tooltip-text="Select an event source first"
-							@enable="onEnableTemplate"
-							@disable="onDisableTemplate"
-						/>
-					</div>
-					<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
-				</n-spin>
-			</div>
-		</n-card>
+		<DashboardCategoriesSection
+			:selected-customer-code
+			:event-sources-list
+			:loading-event-sources
+			:enabled-dashboards
+			@refresh-enabled-dashboards="refreshEnabledDashboards"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
-import type {
-	DashboardCategory,
-	DashboardCategoryWithTemplates,
-	DashboardTemplate,
-	EnabledDashboard
-} from "@/types/dashboards.d"
+import type { EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
 import {
 	NAlert,
@@ -148,13 +76,10 @@ import {
 	useDialog,
 	useMessage
 } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import DashboardCategoryCard from "./DashboardCategoryCard.vue"
-import DashboardTemplateCard from "./DashboardTemplateCard.vue"
-import { getDashboardIcon } from "./utils"
+import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 
 const message = useMessage()
 const dialog = useDialog()
@@ -196,11 +121,6 @@ function getCustomers() {
 // ── Event Source selection ───────────────────────────────────────
 const loadingEventSources = ref(false)
 const eventSourcesList = ref<EventSource[]>([])
-const selectedEventSourceId = ref<number | null>(null)
-
-const eventSourceOptions = computed(() =>
-	eventSourcesList.value.filter(s => s.enabled).map(s => ({ label: `${s.name} (${s.event_type})`, value: s.id }))
-)
 
 const showNoSourcesWarning = computed(
 	() => selectedCustomerCode.value && !loadingEventSources.value && !eventSourcesList.value.length
@@ -209,7 +129,6 @@ const showNoSourcesWarning = computed(
 function getEventSources(customerCode: string) {
 	loadingEventSources.value = true
 	eventSourcesList.value = []
-	selectedEventSourceId.value = null
 
 	Api.siem
 		.getEventSources(customerCode)
@@ -225,69 +144,6 @@ function getEventSources(customerCode: string) {
 		})
 		.finally(() => {
 			loadingEventSources.value = false
-		})
-}
-
-function onCustomerChange(code: string) {
-	enabledDashboards.value = []
-
-	if (code) {
-		getEventSources(code)
-		getEnabledDashboards(code)
-	}
-}
-
-// ── Dashboard categories ────────────────────────────────────────
-const loadingCategories = ref(false)
-const categories = ref<DashboardCategory[]>([])
-
-function getCategories() {
-	loadingCategories.value = true
-	Api.siem
-		.getDashboardCategories()
-		.then(res => {
-			if (res.data.success) {
-				categories.value = res.data?.categories || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingCategories.value = false
-		})
-}
-
-// ── Category detail (templates) ─────────────────────────────────
-const selectedCategoryId = ref<string | null>(null)
-const selectedCategory = ref<DashboardCategoryWithTemplates | null>(null)
-const loadingTemplates = ref(false)
-
-function selectCategory(categoryId: string) {
-	if (selectedCategoryId.value === categoryId) {
-		selectedCategoryId.value = null
-		selectedCategory.value = null
-		return
-	}
-	selectedCategoryId.value = categoryId
-	loadingTemplates.value = true
-
-	Api.siem
-		.getDashboardCategory(categoryId)
-		.then(res => {
-			if (res.data.success) {
-				selectedCategory.value = res.data.category
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingTemplates.value = false
 		})
 }
 
@@ -311,77 +167,10 @@ function getEnabledDashboards(customerCode: string) {
 		})
 }
 
-function isTemplateEnabled(libraryCard: string, templateId: string): boolean {
-	return enabledDashboards.value.some(
-		d =>
-			d.library_card === libraryCard &&
-			d.template_id === templateId &&
-			d.event_source_id === selectedEventSourceId.value
-	)
-}
-
-// ── Enable / Disable actions ────────────────────────────────────
-function onEnableTemplate(template: DashboardTemplate) {
-	if (!selectedCustomerCode.value || !selectedEventSourceId.value || !selectedCategoryId.value) {
-		message.warning("Please select a customer and event source first")
-		return
+function refreshEnabledDashboards() {
+	if (selectedCustomerCode.value) {
+		getEnabledDashboards(selectedCustomerCode.value)
 	}
-
-	Api.siem
-		.enableDashboard({
-			customer_code: selectedCustomerCode.value,
-			event_source_id: selectedEventSourceId.value,
-			library_card: selectedCategoryId.value,
-			template_id: template.id,
-			display_name: template.title
-		})
-		.then(res => {
-			if (res.data.success) {
-				message.success("Dashboard enabled successfully")
-				if (selectedCustomerCode.value) {
-					getEnabledDashboards(selectedCustomerCode.value)
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-}
-
-function onDisableTemplate(template: DashboardTemplate) {
-	const match = enabledDashboards.value.find(
-		d =>
-			d.library_card === selectedCategoryId.value &&
-			d.template_id === template.id &&
-			d.event_source_id === selectedEventSourceId.value
-	)
-	if (!match) return
-
-	dialog.warning({
-		title: "Disable Dashboard",
-		content: `Are you sure you want to disable "${template.title}"?`,
-		positiveText: "Disable",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			Api.siem
-				.disableDashboard(match.id)
-				.then(res => {
-					if (res.data.success) {
-						message.success("Dashboard disabled successfully")
-						if (selectedCustomerCode.value) {
-							getEnabledDashboards(selectedCustomerCode.value)
-						}
-					} else {
-						message.warning(res.data?.message || "An error occurred. Please try again later.")
-					}
-				})
-				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				})
-		}
-	})
 }
 
 // ── Enabled dashboards table ────────────────────────────────────
@@ -469,9 +258,17 @@ const enabledColumns: DataTableColumns<EnabledDashboard> = [
 	}
 ]
 
-// ── Lifecycle ───────────────────────────────────────────────────
+watch(selectedCustomerCode, code => {
+	enabledDashboards.value = []
+	eventSourcesList.value = []
+
+	if (code) {
+		getEventSources(code)
+		getEnabledDashboards(code)
+	}
+})
+
 onBeforeMount(() => {
 	getCustomers()
-	getCategories()
 })
 </script>
