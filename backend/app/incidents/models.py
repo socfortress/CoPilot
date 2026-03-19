@@ -257,6 +257,34 @@ class VeloSigmaExclusion(SQLModel, table=True):
     enabled: bool = Field(default=True, description="Whether this exclusion is active")
 
 
+class ThresholdAlertMetadata(SQLModel, table=True):
+    """Metadata for threshold alerts to enable event resolution and timeline retrieval."""
+
+    __tablename__ = "incident_management_threshold_alert_metadata"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    alert_id: int = Field(foreign_key="incident_management_alert.id", nullable=False, unique=True)
+    event_definition_id: str = Field(max_length=255, nullable=False, description="Graylog event definition ID")
+    replay_query: str = Field(sa_column=Text, nullable=False, description="Lucene query from Graylog replay_info")
+    timerange_start: datetime = Field(nullable=False, description="Start of the threshold evaluation window")
+    timerange_end: datetime = Field(nullable=False, description="End of the threshold evaluation window")
+    group_by_fields: Optional[Dict] = Field(
+        sa_column=Column(JSON),
+        nullable=True,
+        description="Group-by field key/value pairs from the threshold event",
+    )
+    source_streams: Optional[List] = Field(
+        sa_column=Column(JSON),
+        nullable=True,
+        description="Graylog source stream IDs",
+    )
+    source: str = Field(max_length=50, nullable=False, description="SOURCE field value (e.g. wazuh)")
+    resolved_index_name: str = Field(max_length=255, nullable=False, description="OpenSearch index of the resolved event")
+    resolved_index_id: str = Field(max_length=255, nullable=False, description="OpenSearch document ID of the resolved event")
+
+    alert: Alert = Relationship()
+
+
 class TagAccessSettings(SQLModel, table=True):
     """Global settings for tag-based access control."""
 
