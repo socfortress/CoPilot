@@ -156,8 +156,6 @@ import DashboardCategoryCard from "./DashboardCategoryCard.vue"
 import DashboardTemplateCard from "./DashboardTemplateCard.vue"
 import { getDashboardIcon } from "./utils"
 
-const DashboardIcon = "carbon:dashboard"
-
 const message = useMessage()
 const dialog = useDialog()
 const router = useRouter()
