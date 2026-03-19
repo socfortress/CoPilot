@@ -45,6 +45,7 @@
 					:loading="loadingEventSources"
 					:disabled="!selectedCustomerCode"
 					clearable
+					size="small"
 					:consistent-menu-width="false"
 					class="w-48!"
 				/>
@@ -74,11 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-	DashboardCategory,
-	DashboardCategoryWithTemplates,
-	EnabledDashboard
-} from "@/types/dashboards.d"
+import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
 import { NCard, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

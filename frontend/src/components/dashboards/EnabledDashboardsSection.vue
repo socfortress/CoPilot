@@ -1,10 +1,8 @@
 <template>
 	<n-card v-if="visible" size="small">
-		<template #header>
-			<div class="flex items-center justify-between">
-				<span>Enabled Dashboards</span>
-				<span class="text-sm font-normal opacity-60">{{ enabledDashboards.length }} enabled</span>
-			</div>
+		<template #header>Enabled Dashboards</template>
+		<template #header-extra>
+			<span class="text-secondary text-sm">{{ enabledDashboards.length }} enabled</span>
 		</template>
 
 		<n-scrollbar x-scrollable class="max-w-full">
