@@ -77,7 +77,9 @@
 			<template #header>
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						<Icon :name="DashboardIcon" :size="18" :style="{ color: selectedCategory.color }" />
+						<div class="flex h-full items-center justify-center" :style="{ color: selectedCategory.color }">
+							<Icon :name="getDashboardIcon(selectedCategory.icon)" :size="19" />
+						</div>
 						<span>{{ selectedCategory.title }}</span>
 					</div>
 					<span class="text-sm font-normal opacity-60">
@@ -152,6 +154,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import DashboardCategoryCard from "./DashboardCategoryCard.vue"
 import DashboardTemplateCard from "./DashboardTemplateCard.vue"
+import { getDashboardIcon } from "./utils"
 
 const DashboardIcon = "carbon:dashboard"
 

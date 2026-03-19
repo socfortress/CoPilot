@@ -1,18 +1,26 @@
 <template>
-	<CardEntity hoverable clickable :class="{ highlighted: selected }" @click="$emit('select')">
+	<CardEntity hoverable clickable size="small" :class="{ highlighted: selected }" @click="$emit('select')">
 		<template #headerMain>
 			<div class="flex items-center gap-2">
-				<Icon :name="iconName" :size="20" :style="{ color: category.color }" />
-				<span class="font-bold">{{ category.title }}</span>
+				<div class="flex h-full items-center justify-center" :style="{ color: category.color }">
+					<Icon :name="getDashboardIcon(category.icon)" :size="16" />
+				</div>
+				{{ category.title }}
+			</div>
+		</template>
+		<template #default>
+			<div class="flex flex-col gap-2">
+				<p class="text-xs">
+					{{ category.description }}
+				</p>
+				<div v-if="category.tags.length" class="text-tertiary flex flex-wrap gap-2 text-xs">
+					<span v-for="tag in category.tags" :key="tag">#{{ tag }}</span>
+				</div>
 			</div>
 		</template>
 
-		<div class="px-4 py-2 text-sm opacity-80">
-			{{ category.description }}
-		</div>
-
 		<template #footerMain>
-			<div class="flex flex-wrap gap-1">
+			<div class="flex flex-wrap gap-2">
 				<Badge type="splitted">
 					<template #label>Vendor</template>
 					<template #value>{{ category.vendor }}</template>
@@ -21,14 +29,6 @@
 					<template #label>Type</template>
 					<template #value>{{ category.event_type }}</template>
 				</Badge>
-			</div>
-		</template>
-
-		<template #footerExtra>
-			<div class="flex flex-wrap gap-1">
-				<n-tag v-for="tag in category.tags.slice(0, 4)" :key="tag" size="tiny" :bordered="false">
-					{{ tag }}
-				</n-tag>
 			</div>
 		</template>
 	</CardEntity>
@@ -40,6 +40,7 @@ import { NTag } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getDashboardIcon } from "./utils"
 
 defineProps<{
 	category: DashboardCategory
@@ -49,6 +50,4 @@ defineProps<{
 defineEmits<{
 	select: []
 }>()
-
-const iconName = "carbon:dashboard"
 </script>
