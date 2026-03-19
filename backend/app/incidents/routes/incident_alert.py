@@ -33,6 +33,7 @@ from app.incidents.services.alert_collection import get_alerts_not_created_in_co
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
+from app.incidents.services.incident_alert import add_alert_to_document
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
@@ -367,6 +368,13 @@ async def invoke_alert_threshold_graylog_route(
         session=session,
         threshold_alert=True,
     )
+
+    # Add the CoPilot alert_id to the resolved OpenSearch document
+    if resolved_index_name != "not_applicable" and resolved_index_id != "not_applicable":
+        await add_alert_to_document(
+            CreateAlertRequest(index_name=resolved_index_name, alert_id=resolved_index_id),
+            alert_id,
+        )
 
     # Save threshold metadata for later timeline retrieval
     try:
