@@ -51,11 +51,9 @@
 
 		<!-- Categories -->
 		<n-card size="small">
-			<template #header>
-				<div class="flex items-center justify-between">
-					<span>Dashboard Categories</span>
-					<span class="text-sm font-normal opacity-60">{{ categories.length }} available</span>
-				</div>
+			<template #header>Dashboard Categories</template>
+			<template #header-extra>
+				<span class="text-secondary text-sm">{{ categories.length }} available</span>
 			</template>
 
 			<n-spin :show="loadingCategories">
@@ -70,57 +68,59 @@
 				</div>
 				<n-empty v-else-if="!loadingCategories" description="No dashboard categories found" />
 			</n-spin>
-		</n-card>
 
-		<!-- Templates for selected category -->
-		<n-card v-if="selectedCategory" size="small">
-			<template #header>
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<div class="flex h-full items-center justify-center" :style="{ color: selectedCategory.color }">
-							<Icon :name="getDashboardIcon(selectedCategory.icon)" :size="19" />
+			<!-- Templates for selected category -->
+			<div v-if="selectedCategory" class="border-border @container mt-4 flex flex-col gap-4 border-t pt-4">
+				<div class="flex items-center justify-between gap-2">
+					<div class="flex grow items-center justify-between">
+						<div class="flex items-center gap-2">
+							<div
+								class="flex h-full items-center justify-center"
+								:style="{ color: selectedCategory.color }"
+							>
+								<Icon :name="getDashboardIcon(selectedCategory.icon)" :size="19" />
+							</div>
+							<span>{{ selectedCategory.title }}</span>
 						</div>
-						<span>{{ selectedCategory.title }}</span>
+						<span class="text-sm font-normal opacity-60">
+							{{ selectedCategory.templates.length }} template{{
+								selectedCategory.templates.length !== 1 ? "s" : ""
+							}}
+						</span>
 					</div>
-					<span class="text-sm font-normal opacity-60">
-						{{ selectedCategory.templates.length }} template{{
-							selectedCategory.templates.length !== 1 ? "s" : ""
-						}}
-					</span>
-				</div>
-			</template>
-			<template #header-extra>
-				<n-select
-					v-model:value="selectedEventSourceId"
-					:options="eventSourceOptions"
-					placeholder="Select Event Source"
-					filterable
-					:loading="loadingEventSources"
-					:disabled="!selectedCustomerCode"
-					clearable
-					:consistent-menu-width="false"
-					class="w-48!"
-				/>
-			</template>
 
-			<n-spin :show="loadingTemplates">
-				<div
-					v-if="selectedCategory.templates.length"
-					class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-				>
-					<DashboardTemplateCard
-						v-for="tpl in selectedCategory.templates"
-						:key="tpl.id"
-						:template="tpl"
-						:is-enabled="isTemplateEnabled(selectedCategoryId!, tpl.id)"
-						:can-enable="!!selectedCustomerCode && !!selectedEventSourceId"
-						disabled-tooltip-text="Select an event source first"
-						@enable="onEnableTemplate"
-						@disable="onDisableTemplate"
+					<n-select
+						v-model:value="selectedEventSourceId"
+						:options="eventSourceOptions"
+						placeholder="Select Event Source"
+						filterable
+						:loading="loadingEventSources"
+						:disabled="!selectedCustomerCode"
+						clearable
+						:consistent-menu-width="false"
+						class="w-48!"
 					/>
 				</div>
-				<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
-			</n-spin>
+
+				<n-spin :show="loadingTemplates">
+					<div
+						v-if="selectedCategory.templates.length"
+						class="grid grid-cols-1 gap-3 @md:grid-cols-2 @xl:grid-cols-3"
+					>
+						<DashboardTemplateCard
+							v-for="tpl in selectedCategory.templates"
+							:key="tpl.id"
+							:template="tpl"
+							:is-enabled="isTemplateEnabled(selectedCategoryId!, tpl.id)"
+							:can-enable="!!selectedCustomerCode && !!selectedEventSourceId"
+							disabled-tooltip-text="Select an event source first"
+							@enable="onEnableTemplate"
+							@disable="onDisableTemplate"
+						/>
+					</div>
+					<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
+				</n-spin>
+			</div>
 		</n-card>
 	</div>
 </template>
