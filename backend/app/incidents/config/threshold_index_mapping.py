@@ -14,7 +14,7 @@ from loguru import logger
 
 # Maps SOURCE field value (case-insensitive lookup) to (index_pattern, time_field)
 SOURCE_TO_INDEX_CONFIG: Dict[str, Tuple[str, str]] = {
-    "wazuh": ("threat-wazuh-*", "timestamp"),
+    "wazuh": ("wazuh-*", "timestamp"),
     "office365": ("office365-*", "timestamp"),
 }
 
