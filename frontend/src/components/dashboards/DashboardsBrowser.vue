@@ -20,33 +20,13 @@
 			tab to configure one.
 		</n-alert>
 
-		<!-- Enabled Dashboards for customer -->
-		<n-card v-if="selectedCustomerCode && !showNoSourcesWarning" size="small">
-			<template #header>
-				<div class="flex items-center justify-between">
-					<span>Enabled Dashboards</span>
-					<span class="text-sm font-normal opacity-60">{{ enabledDashboards.length }} enabled</span>
-				</div>
-			</template>
-
-			<n-scrollbar x-scrollable class="max-w-full">
-				<n-spin :show="loadingEnabled">
-					<n-data-table
-						v-if="enabledDashboards.length"
-						:columns="enabledColumns"
-						:data="enabledDashboards"
-						:bordered="false"
-						:single-line="false"
-						size="small"
-					/>
-					<n-empty
-						v-else-if="!loadingEnabled"
-						description="No dashboards enabled for this customer yet"
-						class="h-32 justify-center"
-					/>
-				</n-spin>
-			</n-scrollbar>
-		</n-card>
+		<EnabledDashboardsSection
+			ref="enabledDashboardsSectionRef"
+			v-model:enabled-dashboards="enabledDashboards"
+			:customer-code="selectedCustomerCode"
+			:visible="!!selectedCustomerCode && !showNoSourcesWarning"
+			:event-sources-list
+		/>
 
 		<DashboardCategoriesSection
 			:selected-customer-code
@@ -59,40 +39,27 @@
 </template>
 
 <script setup lang="ts">
-import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import type { EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
-import {
-	NAlert,
-	NButton,
-	NCard,
-	NDataTable,
-	NEmpty,
-	NFormItem,
-	NScrollbar,
-	NSelect,
-	NSpin,
-	useDialog,
-	useMessage
-} from "naive-ui"
-import { computed, h, onBeforeMount, ref, watch } from "vue"
-import { useRouter } from "vue-router"
+import { NAlert, NFormItem, NSelect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
+import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
 const message = useMessage()
-const dialog = useDialog()
-const router = useRouter()
 
 // ── Customer selection ──────────────────────────────────────────
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 const selectedCustomerCode = ref<string | null>(null)
 
-// ── Enabled dashboards ─────────────────────────────────────────
-const loadingEnabled = ref(false)
+// ── Enabled dashboards (lista aggiornata da EnabledDashboardsSection via v-model) ──
 const enabledDashboards = ref<EnabledDashboard[]>([])
+const enabledDashboardsSectionRef = useTemplateRef<InstanceType<typeof EnabledDashboardsSection>>(
+	"enabledDashboardsSectionRef"
+)
 
 const customersOptions = computed(() =>
 	customersList.value.map(c => ({ label: `#${c.customer_code} - ${c.customer_name}`, value: c.customer_code }))
@@ -147,124 +114,15 @@ function getEventSources(customerCode: string) {
 		})
 }
 
-function getEnabledDashboards(customerCode: string) {
-	loadingEnabled.value = true
-
-	Api.siem
-		.getEnabledDashboards(customerCode)
-		.then(res => {
-			if (res.data.success) {
-				enabledDashboards.value = res.data?.enabled_dashboards || []
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingEnabled.value = false
-		})
-}
-
 function refreshEnabledDashboards() {
-	if (selectedCustomerCode.value) {
-		getEnabledDashboards(selectedCustomerCode.value)
-	}
+	enabledDashboardsSectionRef.value?.refreshEnabledDashboards()
 }
-
-// ── Enabled dashboards table ────────────────────────────────────
-const enabledColumns: DataTableColumns<EnabledDashboard> = [
-	{ title: "Display Name", key: "display_name", minWidth: 180 },
-	{ title: "Category", key: "library_card", width: 150 },
-	{ title: "Template", key: "template_id", width: 180 },
-	{
-		title: "Event Source",
-		key: "event_source_id",
-		width: 180,
-		render(row) {
-			const source = eventSourcesList.value.find(s => s.id === row.event_source_id)
-			return source ? `${source.name} (${source.event_type})` : `#${row.event_source_id}`
-		}
-	},
-	{
-		title: "Created",
-		key: "created_at",
-		width: 180,
-		render(row) {
-			return new Date(row.created_at).toLocaleString()
-		}
-	},
-	{
-		title: "",
-		key: "actions",
-		width: 160,
-		render(row) {
-			return h("div", { class: "flex gap-2" }, [
-				h(
-					NButton,
-					{
-						size: "small",
-						type: "primary",
-						quaternary: true,
-						onClick: () => {
-							// TODO-FE: use route by name instead of hardcoding the path
-							router.push(`/dashboards/view/${row.id}`)
-						}
-					},
-					{ default: () => "View" }
-				),
-				h(
-					NButton,
-					{
-						size: "small",
-						type: "error",
-						quaternary: true,
-						onClick: () => {
-							dialog.warning({
-								title: "Disable Dashboard",
-								content: `Are you sure you want to disable "${row.display_name}"?`,
-								positiveText: "Disable",
-								negativeText: "Cancel",
-								onPositiveClick: () => {
-									Api.siem
-										.disableDashboard(row.id)
-										.then(res => {
-											if (res.data.success) {
-												message.success("Dashboard disabled successfully")
-												if (selectedCustomerCode.value) {
-													getEnabledDashboards(selectedCustomerCode.value)
-												}
-											} else {
-												message.warning(
-													res.data?.message || "An error occurred. Please try again later."
-												)
-											}
-										})
-										.catch(err => {
-											message.error(
-												err.response?.data?.message ||
-													"An error occurred. Please try again later."
-											)
-										})
-								}
-							})
-						}
-					},
-					{ default: () => "Disable" }
-				)
-			])
-		}
-	}
-]
 
 watch(selectedCustomerCode, code => {
-	enabledDashboards.value = []
 	eventSourcesList.value = []
 
 	if (code) {
 		getEventSources(code)
-		getEnabledDashboards(code)
 	}
 })
 
