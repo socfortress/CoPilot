@@ -14,6 +14,7 @@ export default antfu(
 		rules: {
 			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"antfu/if-newline": "off",
+			"@typescript-eslint/no-non-null-assertion": "error",
 			"style/operator-linebreak": "off",
 			"style/arrow-parens": "off",
 			"style/brace-style": "off",
