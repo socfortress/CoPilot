@@ -1,41 +1,53 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<!-- Filters Bar -->
-		<n-card size="small">
-			<div class="flex flex-wrap items-end gap-3">
-				<div class="flex flex-col gap-1">
-					<span class="text-xs opacity-60">Customer</span>
-					<n-select
-						v-model:value="selectedCustomerCode"
-						:options="customersOptions"
-						placeholder="Select Customer"
-						filterable
-						:loading="loadingCustomers"
-						style="width: 260px"
-						@update:value="onCustomerChange"
-					/>
-				</div>
-				<div class="flex flex-col gap-1">
-					<span class="text-xs opacity-60">Event Source</span>
-					<n-select
-						v-model:value="selectedEventSourceId"
-						:options="eventSourceOptions"
-						placeholder="Select Source"
-						filterable
-						:loading="loadingEventSources"
-						:disabled="!selectedCustomerCode"
-						style="width: 260px"
-					/>
-				</div>
-			</div>
-		</n-card>
+		<n-form-item label="Customer" :show-feedback="false">
+			<n-select
+				v-model:value="selectedCustomerCode"
+				:options="customersOptions"
+				placeholder="Select Customer"
+				filterable
+				:loading="loadingCustomers"
+				:consistent-menu-width="false"
+				clearable
+				@update:value="onCustomerChange"
+			/>
+		</n-form-item>
 
 		<!-- No Event Sources Warning -->
-		<n-alert v-if="showNoSourcesWarning" title="No Event Sources Configured" type="warning" closable>
+		<n-alert v-if="showNoSourcesWarning" title="No Event Sources Configured" type="warning">
 			An Event Source needs to be defined for this customer before dashboards can be enabled. Go to the customer's
 			<strong>Event Sources</strong>
 			tab to configure one.
 		</n-alert>
+
+		<!-- Enabled Dashboards for customer -->
+		<n-card v-if="selectedCustomerCode && !showNoSourcesWarning" size="small">
+			<template #header>
+				<div class="flex items-center justify-between">
+					<span>Enabled Dashboards</span>
+					<span class="text-sm font-normal opacity-60">{{ enabledDashboards.length }} enabled</span>
+				</div>
+			</template>
+
+			<n-scrollbar x-scrollable class="max-w-full">
+				<n-spin :show="loadingEnabled">
+					<n-data-table
+						v-if="enabledDashboards.length"
+						:columns="enabledColumns"
+						:data="enabledDashboards"
+						:bordered="false"
+						:single-line="false"
+						size="small"
+					/>
+					<n-empty
+						v-else-if="!loadingEnabled"
+						description="No dashboards enabled for this customer yet"
+						class="h-32 justify-center"
+					/>
+				</n-spin>
+			</n-scrollbar>
+		</n-card>
 
 		<!-- Categories -->
 		<n-card size="small">
@@ -66,7 +78,7 @@
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<Icon :name="DashboardIcon" :size="18" :style="{ color: selectedCategory.color }" />
-						<span>{{ selectedCategory.title }} — Templates</span>
+						<span>{{ selectedCategory.title }}</span>
 					</div>
 					<span class="text-sm font-normal opacity-60">
 						{{ selectedCategory.templates.length }} template{{
@@ -74,6 +86,19 @@
 						}}
 					</span>
 				</div>
+			</template>
+			<template #header-extra>
+				<n-select
+					v-model:value="selectedEventSourceId"
+					:options="eventSourceOptions"
+					placeholder="Select Event Source"
+					filterable
+					:loading="loadingEventSources"
+					:disabled="!selectedCustomerCode"
+					clearable
+					:consistent-menu-width="false"
+					class="w-48!"
+				/>
 			</template>
 
 			<n-spin :show="loadingTemplates">
@@ -87,37 +112,12 @@
 						:template="tpl"
 						:is-enabled="isTemplateEnabled(selectedCategoryId!, tpl.id)"
 						:can-enable="!!selectedCustomerCode && !!selectedEventSourceId"
+						disabled-tooltip-text="Select an event source first"
 						@enable="onEnableTemplate"
 						@disable="onDisableTemplate"
 					/>
 				</div>
 				<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
-			</n-spin>
-		</n-card>
-
-		<!-- Enabled Dashboards for customer -->
-		<n-card v-if="selectedCustomerCode" size="small">
-			<template #header>
-				<div class="flex items-center justify-between">
-					<span>Enabled Dashboards</span>
-					<span class="text-sm font-normal opacity-60">{{ enabledDashboards.length }} enabled</span>
-				</div>
-			</template>
-
-			<n-spin :show="loadingEnabled">
-				<n-data-table
-					v-if="enabledDashboards.length"
-					:columns="enabledColumns"
-					:data="enabledDashboards"
-					:bordered="false"
-					:single-line="false"
-					size="small"
-				/>
-				<n-empty
-					v-else-if="!loadingEnabled"
-					description="No dashboards enabled for this customer yet"
-					class="h-32 justify-center"
-				/>
 			</n-spin>
 		</n-card>
 	</div>
@@ -133,7 +133,19 @@ import type {
 	EnabledDashboard
 } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
-import { NAlert, NButton, NCard, NDataTable, NEmpty, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
+import {
+	NAlert,
+	NButton,
+	NCard,
+	NDataTable,
+	NEmpty,
+	NFormItem,
+	NScrollbar,
+	NSelect,
+	NSpin,
+	useDialog,
+	useMessage
+} from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -162,6 +174,7 @@ const customersOptions = computed(() =>
 
 function getCustomers() {
 	loadingCustomers.value = true
+
 	Api.customers
 		.getCustomers()
 		.then(res => {
@@ -189,7 +202,7 @@ const eventSourceOptions = computed(() =>
 )
 
 const showNoSourcesWarning = computed(
-	() => selectedCustomerCode.value && !loadingEventSources.value && eventSourcesList.value.length === 0
+	() => selectedCustomerCode.value && !loadingEventSources.value && !eventSourcesList.value.length
 )
 
 function getEventSources(customerCode: string) {
@@ -324,7 +337,9 @@ function onEnableTemplate(template: DashboardTemplate) {
 		.then(res => {
 			if (res.data.success) {
 				message.success("Dashboard enabled successfully")
-				getEnabledDashboards(selectedCustomerCode.value!)
+				if (selectedCustomerCode.value) {
+					getEnabledDashboards(selectedCustomerCode.value)
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -354,7 +369,9 @@ function onDisableTemplate(template: DashboardTemplate) {
 				.then(res => {
 					if (res.data.success) {
 						message.success("Dashboard disabled successfully")
-						getEnabledDashboards(selectedCustomerCode.value!)
+						if (selectedCustomerCode.value) {
+							getEnabledDashboards(selectedCustomerCode.value)
+						}
 					} else {
 						message.warning(res.data?.message || "An error occurred. Please try again later.")
 					}
@@ -401,6 +418,7 @@ const enabledColumns: DataTableColumns<EnabledDashboard> = [
 						type: "primary",
 						quaternary: true,
 						onClick: () => {
+							// TODO-FE: use route by name instead of hardcoding the path
 							router.push(`/dashboards/view/${row.id}`)
 						}
 					},
@@ -424,7 +442,9 @@ const enabledColumns: DataTableColumns<EnabledDashboard> = [
 										.then(res => {
 											if (res.data.success) {
 												message.success("Dashboard disabled successfully")
-												getEnabledDashboards(selectedCustomerCode.value!)
+												if (selectedCustomerCode.value) {
+													getEnabledDashboards(selectedCustomerCode.value)
+												}
 											} else {
 												message.warning(
 													res.data?.message || "An error occurred. Please try again later."
