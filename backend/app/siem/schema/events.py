@@ -12,6 +12,8 @@ class EventsQueryParams(BaseModel):
     page_size: int = Field(50, ge=1, le=1000, description="Number of results per page")
     scroll_id: Optional[str] = Field(None, description="Scroll ID for fetching the next page")
     query: Optional[str] = Field(None, description="Lucene query string (e.g. 'agent_name:piHole AND agent_id:088')")
+    time_from: Optional[str] = Field(None, description="Absolute start time in ISO format (e.g. '2025-01-01T00:00:00Z'). Overrides timerange.")
+    time_to: Optional[str] = Field(None, description="Absolute end time in ISO format (e.g. '2025-01-31T23:59:59Z'). Overrides timerange.")
 
 
 class EventsQueryResponse(BaseModel):

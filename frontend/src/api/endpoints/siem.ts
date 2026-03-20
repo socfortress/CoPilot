@@ -48,7 +48,14 @@ export default {
 	queryEvents(
 		customerCode: string,
 		sourceName: string,
-		params: { timerange?: string; page_size?: number; scroll_id?: string; query?: string }
+		params: {
+			timerange?: string
+			page_size?: number
+			scroll_id?: string
+			query?: string
+			time_from?: string
+			time_to?: string
+		}
 	) {
 		return HttpClient.get<
 			FlaskBaseResponse & {

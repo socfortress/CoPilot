@@ -337,6 +337,31 @@ class AlertsQueryBuilder:
         self.query["query"]["bool"]["must"].append(range_query)
         return self
 
+    def add_absolute_time_range(self, time_from: str, time_to: str, timestamp_field: str):
+        """
+        Adds an absolute time range filter using ISO-formatted start/end times.
+
+        Args:
+            time_from (str): Start time in ISO format (e.g. '2025-01-01T00:00:00Z').
+            time_to (str): End time in ISO format (e.g. '2025-01-31T23:59:59Z').
+            timestamp_field (str): The name of the timestamp field in the index.
+
+        Returns:
+            self: The updated instance of the class.
+        """
+        range_query = {
+            "range": {
+                timestamp_field: {
+                    "gte": time_from,
+                    "lte": time_to,
+                },
+            },
+        }
+        if timestamp_field == "timestamp":
+            range_query["range"][timestamp_field]["format"] = "strict_date_optional_time"
+        self.query["query"]["bool"]["must"].append(range_query)
+        return self
+
     def add_matches(self, matches: Iterable[Tuple[str, str]]):
         """
         Adds matches to the query.

@@ -82,7 +82,14 @@ export class SiemAPI {
 	static async queryEvents(
 		customerCode: string,
 		sourceName: string,
-		params: { timerange?: string; page_size?: number; scroll_id?: string; query?: string }
+		params: {
+			timerange?: string
+			page_size?: number
+			scroll_id?: string
+			query?: string
+			time_from?: string
+			time_to?: string
+		}
 	): Promise<{
 		success: boolean
 		message: string
