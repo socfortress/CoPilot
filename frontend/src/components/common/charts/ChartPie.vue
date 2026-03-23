@@ -40,11 +40,12 @@ const chartSeries = computed<number[]>(() => {
 const chartOptions = computed<ApexOptions>(() => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
+	const ff = style["font-family"]
 
 	return {
 		chart: {
 			type: "donut",
-			fontFamily: style["font-family"],
+			fontFamily: ff,
 			toolbar: { show: false },
 			animations: { enabled: true },
 			events: {
@@ -57,8 +58,17 @@ const chartOptions = computed<ApexOptions>(() => {
 		},
 		labels: [...props.labels],
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
+		states: {
+			active: {
+				allowMultipleDataPointsSelection: false,
+				filter: {
+					type: "none"
+				}
+			}
+		},
 		plotOptions: {
 			pie: {
+				expandOnClick: false,
 				donut: {
 					size: "55%",
 					labels: {
@@ -78,7 +88,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			show: true,
 			position: "right",
 			fontSize: "11px",
-			fontFamily: style["font-family"],
+			fontFamily: ff,
 			labels: { colors: fg },
 			itemMargin: { vertical: 6, horizontal: 4 },
 			markers: {
@@ -103,7 +113,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			style: {
 				color: fg,
 				fontSize: "16px",
-				fontFamily: style["font-family"]
+				fontFamily: ff
 			}
 		}
 	}

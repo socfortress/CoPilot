@@ -42,11 +42,13 @@ const chartSeries = computed(() => [
 const chartOptions = computed<ApexOptions>(() => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
+	const bc = style["border-color"]
+	const ff = style["font-family"]
 
 	return {
 		chart: {
 			type: "bar",
-			fontFamily: style["font-family"],
+			fontFamily: ff,
 			toolbar: { show: false },
 			animations: { enabled: true },
 			events: {
@@ -58,34 +60,53 @@ const chartOptions = computed<ApexOptions>(() => {
 			}
 		},
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
-		plotOptions: {
-			bar: {
-				horizontal: true,
-				distributed: true,
-				borderRadius: 2,
-				borderRadiusApplication: "end",
-				barHeight: "60%"
+		states: {
+			active: {
+				allowMultipleDataPointsSelection: false,
+				filter: {
+					type: "none"
+				}
 			}
 		},
-		dataLabels: { enabled: false },
+		plotOptions: {
+			bar: {
+				expandOnClick: false,
+				horizontal: true,
+				distributed: true,
+				borderRadius: 4,
+				barHeight: "60%",
+				dataLabels: {
+					position: "top"
+				}
+			}
+		},
+		dataLabels: {
+			enabled: true,
+			textAnchor: "start",
+			offsetX: 5,
+			style: {
+				fontSize: "12px",
+				colors: ["#fff"]
+			}
+		},
 		stroke: { show: false },
 		xaxis: {
 			categories: [...props.labels],
 			labels: {
 				style: { colors: fg, fontSize: "10px" }
 			},
-			axisBorder: { color: `${fg}33` },
+			axisBorder: { show: false },
 			axisTicks: { show: false }
 		},
 		yaxis: {
 			labels: {
-				style: { colors: fg, fontSize: "10px" },
-				maxWidth: 180,
+				style: { colors: fg, fontSize: "11px" },
+				maxWidth: 200,
 				trim: true
 			}
 		},
 		grid: {
-			borderColor: `${fg}1a`,
+			borderColor: bc,
 			strokeDashArray: 0,
 			xaxis: { lines: { show: true } },
 			yaxis: { lines: { show: false } }
@@ -103,7 +124,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			style: {
 				color: fg,
 				fontSize: "16px",
-				fontFamily: style["font-family"]
+				fontFamily: ff
 			}
 		}
 	}
