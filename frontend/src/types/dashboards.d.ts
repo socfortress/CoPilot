@@ -1,7 +1,9 @@
+export type DashboardPanelType = "stat" | "pie" | "bar_h" | "histogram"
+
 export interface DashboardPanel {
 	id: string
 	title: string
-	type: string
+	type: DashboardPanelType
 	w: number
 	h: number
 	lucene: string

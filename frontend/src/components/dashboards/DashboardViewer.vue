@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import type { Component } from "vue"
 import type { ApiError } from "@/types/common"
-import type { DashboardPanel, PanelResult } from "@/types/dashboards.d"
+import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/dashboards.d"
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
@@ -100,7 +100,8 @@ interface DashboardPanelEntry {
 	data: PanelResult | undefined
 }
 
-const chartByType: Record<string, Component> = {
+const chartByType: Record<DashboardPanelType, Component | undefined> = {
+	stat: undefined,
 	pie: ChartPie,
 	bar_h: ChartBar,
 	histogram: ChartColumn
