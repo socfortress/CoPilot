@@ -15,3 +15,23 @@ export function getDashboardIcon(icon: string) {
 			return "carbon:dashboard"
 	}
 }
+
+/** Span responsive (12 col): full width sotto `@lg`, poi `w` colonne. */
+export const PANEL_COL_SPAN_BY_WIDTH: Record<number, string> = {
+	1: "col-span-12 @lg:col-span-1",
+	2: "col-span-12 @lg:col-span-2",
+	3: "col-span-12 @lg:col-span-6 @5xl:col-span-3",
+	4: "col-span-12 @3xl:col-span-4",
+	5: "col-span-12 @lg:col-span-5",
+	6: "col-span-12 @2xl:col-span-6",
+	7: "col-span-12 @lg:col-span-7",
+	8: "col-span-12 @lg:col-span-8",
+	9: "col-span-12 @lg:col-span-9",
+	10: "col-span-12 @lg:col-span-10",
+	11: "col-span-12 @lg:col-span-11",
+	12: "col-span-12 @lg:col-span-12"
+}
+
+export function panelColSpanClass(w: number): string {
+	return PANEL_COL_SPAN_BY_WIDTH[w] ?? "col-span-12 @lg:col-span-12"
+}

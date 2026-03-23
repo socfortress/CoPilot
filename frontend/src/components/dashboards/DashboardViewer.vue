@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-8">
+	<div class="@container flex flex-col gap-8">
 		<!-- Header Bar -->
 		<div class="flex flex-wrap items-end justify-between gap-6">
 			<div class="flex gap-3">
@@ -32,9 +32,9 @@
 			<CardLink
 				v-for="item in panels"
 				:key="item.panel.id"
-				:style="{ gridColumn: `span ${item.panel.w}` }"
 				:title="item.panel.title"
 				class="h-full"
+				:class="[panelColSpanClass(item.panel.w)]"
 				:clickable="['stat'].includes(item.panel.type)"
 				@click="['stat'].includes(item.panel.type) ? openEventSearch(item.panel.lucene || '*') : undefined"
 			>
@@ -85,6 +85,7 @@ import ChartHistogram from "@/components/common/charts/ChartHistogram.vue"
 import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatCompactNumber } from "@/utils"
+import { panelColSpanClass } from "./utils"
 
 const { dashboardId } = defineProps<{
 	dashboardId: number
