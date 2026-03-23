@@ -56,6 +56,7 @@
 					v-if="item.data && chartByType[item.panel.type]"
 					:labels="item.data.labels"
 					:data="item.data.data"
+					:monochrome="item.panel.type === 'histogram'"
 					:height="`${item.panel.h}px`"
 					@item-click="onChartItemClick(item.panel, $event.name)"
 				/>
@@ -81,7 +82,7 @@ import { useRouter } from "vue-router"
 import Api from "@/api"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartBar from "@/components/common/charts/ChartBar.vue"
-import ChartHistogram from "@/components/common/charts/ChartHistogram.vue"
+import ChartColumn from "@/components/common/charts/ChartColumn.vue"
 import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatCompactNumber } from "@/utils"
@@ -102,7 +103,7 @@ interface DashboardPanelEntry {
 const chartByType: Record<string, Component> = {
 	pie: ChartPie,
 	bar_h: ChartBar,
-	histogram: ChartHistogram
+	histogram: ChartColumn
 }
 
 const router = useRouter()

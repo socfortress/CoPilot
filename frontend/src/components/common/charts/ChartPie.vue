@@ -17,6 +17,7 @@ const props = withDefaults(
 		labels?: string[]
 		data?: number[]
 		height?: string
+		monochrome?: boolean
 	}>(),
 	{
 		labels: () => [],
@@ -56,7 +57,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			}
 		},
 		labels: [...props.labels],
-		colors: DASHBOARD_CHART_COLORS,
+		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		plotOptions: {
 			pie: {
 				donut: {

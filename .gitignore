@@ -67,3 +67,7 @@ frontend/cypress/downloads/
 frontend/tsconfig.app.tsbuildinfo
 frontend/tsconfig.node.tsbuildinfo
 frontend/tsconfig.vitest.tsbuildinfo
+
+AGENTS.md
+
+.cursor/hooks/state/continual-learning-index.json

@@ -42,6 +42,7 @@ const chartSeries = computed(() => [
 const chartOptions = computed<ApexOptions>(() => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
+	const rotate = props.labels.length > 20 ? -45 : 0
 
 	return {
 		chart: {
@@ -60,11 +61,11 @@ const chartOptions = computed<ApexOptions>(() => {
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		plotOptions: {
 			bar: {
-				horizontal: true,
+				horizontal: false,
 				distributed: true,
 				borderRadius: 2,
 				borderRadiusApplication: "end",
-				barHeight: "60%"
+				columnWidth: "60%"
 			}
 		},
 		dataLabels: { enabled: false },
@@ -72,23 +73,25 @@ const chartOptions = computed<ApexOptions>(() => {
 		xaxis: {
 			categories: [...props.labels],
 			labels: {
-				style: { colors: fg, fontSize: "10px" }
+				style: { colors: fg, fontSize: "10px" },
+				rotate,
+				rotateAlways: rotate !== 0,
+				hideOverlappingLabels: true,
+				trim: true
 			},
 			axisBorder: { color: `${fg}33` },
 			axisTicks: { show: false }
 		},
 		yaxis: {
 			labels: {
-				style: { colors: fg, fontSize: "10px" },
-				maxWidth: 180,
-				trim: true
+				style: { colors: fg, fontSize: "10px" }
 			}
 		},
 		grid: {
 			borderColor: `${fg}1a`,
 			strokeDashArray: 0,
-			xaxis: { lines: { show: true } },
-			yaxis: { lines: { show: false } }
+			xaxis: { lines: { show: false } },
+			yaxis: { lines: { show: true } }
 		},
 		legend: { show: false },
 		tooltip: {
