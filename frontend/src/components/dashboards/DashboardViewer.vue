@@ -16,12 +16,7 @@
 			</div>
 			<div class="flex grow items-center justify-end gap-2">
 				<n-radio-group v-model:value="selectedTimerange" size="small">
-					<n-radio-button
-						v-for="preset in timePresets"
-						:key="preset.value"
-						:value="preset.value"
-						:label="preset.label"
-					/>
+					<n-radio-button v-for="preset in timePresets" :key="preset" :value="preset" :label="preset" />
 				</n-radio-group>
 
 				<n-button size="small" :loading @click="fetchPanelData">
@@ -69,17 +64,19 @@
 					{{ item.data.error }}
 				</span>
 			</CardLink>
-
-			<n-empty v-if="!loading && !hasData && errorMsg" :description="errorMsg" />
 		</n-spin>
+
+		<n-empty v-if="!loading && !hasData && errorMsg" :description="errorMsg" />
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { Component } from "vue"
+import type { ApiError } from "@/types/common"
 import type { DashboardPanel, PanelResult } from "@/types/dashboards.d"
+import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import CardLink from "@/components/common/cards/CardLink.vue"
@@ -89,9 +86,10 @@ import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatCompactNumber } from "@/utils"
 
-const props = defineProps<{
+const { dashboardId } = defineProps<{
 	dashboardId: number
 }>()
+
 const ArrowBackIcon = "carbon:arrow-left"
 const RefreshIcon = "carbon:renew"
 
@@ -110,6 +108,8 @@ const router = useRouter()
 const InfoIcon = "carbon:information"
 const message = useMessage()
 
+const timePresets = ["1h", "6h", "24h", "7d", "30d"]
+
 const dashboardTitle = ref("")
 const dashboardDescription = ref("")
 const customerCode = ref("")
@@ -117,42 +117,48 @@ const sourceName = ref("")
 const panels = ref<DashboardPanelEntry[]>([])
 const loading = ref(false)
 const errorMsg = ref("")
-const selectedTimerange = ref("24h")
-
-const timePresets = [
-	{ label: "1h", value: "1h" },
-	{ label: "6h", value: "6h" },
-	{ label: "24h", value: "24h" },
-	{ label: "7d", value: "7d" },
-	{ label: "30d", value: "30d" }
-]
+const selectedTimerange = ref(timePresets[2])
 
 const hasData = computed(() => panels.value.some(row => row.data != null))
 
+let abortController = new AbortController()
+
 async function fetchPanelData() {
+	if (abortController) {
+		abortController.abort()
+	}
+
+	abortController = new AbortController()
+
 	loading.value = true
 	errorMsg.value = ""
+
 	try {
-		const res = await Api.siem.getPanelData(props.dashboardId, selectedTimerange.value)
+		const res = await Api.siem.getPanelData(dashboardId, selectedTimerange.value, abortController.signal)
+
 		if (res.data.success) {
-			const tpl = res.data.template
-			dashboardTitle.value = tpl.title
-			dashboardDescription.value = tpl.description
-			panels.value = tpl.panels.map(p => ({
+			dashboardTitle.value = res.data.template.title
+			dashboardDescription.value = res.data.template.description
+
+			panels.value = res.data.template.panels.map(p => ({
 				panel: p,
 				data: res.data.panels[p.id]
 			}))
+
 			customerCode.value = res.data.customer_code
 			sourceName.value = res.data.source_name
 		} else {
 			errorMsg.value = res.data.message || "Failed to fetch panel data"
 			message.error(errorMsg.value)
 		}
-	} catch {
-		errorMsg.value = "Failed to fetch panel data"
-		message.error(errorMsg.value)
-	} finally {
+
 		loading.value = false
+	} catch (error) {
+		if (!axios.isCancel(error)) {
+			loading.value = false
+			errorMsg.value = (error as ApiError).response?.data?.message || "Failed to fetch panel data"
+			message.error(errorMsg.value)
+		}
 	}
 }
 
@@ -183,19 +189,11 @@ function onChartItemClick(panel: DashboardPanel, name: string) {
 	if (query) openEventSearch(query)
 }
 
-async function loadTemplate() {
-	try {
-		await fetchPanelData()
-	} catch {
-		errorMsg.value = "Failed to load dashboard"
-	}
-}
-
-watch(selectedTimerange, () => {
-	fetchPanelData()
-})
-
-onMounted(() => {
-	loadTemplate()
-})
+watch(
+	selectedTimerange,
+	() => {
+		fetchPanelData()
+	},
+	{ immediate: true }
+)
 </script>
