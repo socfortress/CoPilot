@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="flex flex-col gap-8">
 		<!-- Header Bar -->
 		<div class="flex flex-wrap items-end justify-between gap-6">
 			<div class="flex gap-3">
@@ -34,39 +34,41 @@
 
 		<!-- Panels Grid -->
 		<n-spin :show="loading" content-class="grid grid-cols-12 gap-4">
-			<div v-for="item in panels" :key="item.panel.id" :style="{ gridColumn: `span ${item.panel.w}` }">
-				<!-- Stat Panel -->
-				<CardLink
-					v-if="item.panel.type === 'stat'"
-					:title="item.panel.title"
-					clickable
-					class="h-full"
-					@click="openEventSearch(item.panel.lucene || '*')"
-				>
-					<div class="font-mono text-2xl font-semibold">
-						{{ formatCompactNumber(item.data?.value) }}
-					</div>
-					<span v-if="item.data?.error" class="text-error text-xs">
-						{{ item.data.error }}
-					</span>
-				</CardLink>
+			<CardLink
+				v-for="item in panels"
+				:key="item.panel.id"
+				:style="{ gridColumn: `span ${item.panel.w}` }"
+				:title="item.panel.title"
+				class="h-full"
+				:clickable="['stat'].includes(item.panel.type)"
+				@click="['stat'].includes(item.panel.type) ? openEventSearch(item.panel.lucene || '*') : undefined"
+			>
+				<template v-if="['pie', 'bar_h'].includes(item.panel.type)" #header-extra>
+					<n-tooltip class="py1! px2!">
+						<template #trigger>
+							<Icon :name="InfoIcon" :size="16" class="text-secondary cursor-help" />
+						</template>
+						<div class="text-sm">Click on a segment to go to the event search page.</div>
+					</n-tooltip>
+				</template>
 
-				<!-- Chart Panel -->
-				<CardLink v-else :title="item.panel.title" class="h-full">
-					<component
-						:is="chartByType[item.panel.type]"
-						v-if="item.data && chartByType[item.panel.type]"
-						:labels="item.data.labels"
-						:data="item.data.data"
-						:height="item.panel.h"
-						:accent-color
-						@item-click="onChartItemClick(item.panel, $event.name)"
-					/>
-					<span v-if="item.data?.error" class="text-error text-xs">
-						{{ item.data.error }}
-					</span>
-				</CardLink>
-			</div>
+				<div v-if="item.panel.type === 'stat'" class="font-mono text-2xl font-semibold">
+					{{ formatCompactNumber(item.data?.value) }}
+				</div>
+
+				<component
+					:is="chartByType[item.panel.type]"
+					v-if="item.data && chartByType[item.panel.type]"
+					:labels="item.data.labels"
+					:data="item.data.data"
+					:height="`${item.panel.h}px`"
+					@item-click="onChartItemClick(item.panel, $event.name)"
+				/>
+
+				<span v-if="item.data?.error" class="text-error text-xs">
+					{{ item.data.error }}
+				</span>
+			</CardLink>
 
 			<n-empty v-if="!loading && !hasData && errorMsg" :description="errorMsg" />
 		</n-spin>
@@ -76,7 +78,7 @@
 <script setup lang="ts">
 import type { Component } from "vue"
 import type { DashboardPanel, PanelResult } from "@/types/dashboards.d"
-import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -105,23 +107,9 @@ const chartByType: Record<string, Component> = {
 }
 
 const router = useRouter()
+const InfoIcon = "carbon:information"
 const message = useMessage()
 
-const COLORS = [
-	"#ffffff",
-	"#38bdf8",
-	"#818cf8",
-	"#34d399",
-	"#fbbf24",
-	"#f87171",
-	"#a78bfa",
-	"#fb923c",
-	"#2dd4bf",
-	"#e879f9",
-	"#94a3b8"
-]
-
-const accentColor = ref(COLORS[0])
 const dashboardTitle = ref("")
 const dashboardDescription = ref("")
 const customerCode = ref("")
@@ -154,7 +142,6 @@ async function fetchPanelData() {
 				panel: p,
 				data: res.data.panels[p.id]
 			}))
-			accentColor.value = res.data.accent_color || COLORS[0]
 			customerCode.value = res.data.customer_code
 			sourceName.value = res.data.source_name
 		} else {

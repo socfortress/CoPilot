@@ -1,5 +1,5 @@
 <template>
-	<div ref="containerRef" class="chart-root" :style="{ height: `${height}px`, width: '100%' }" />
+	<div ref="containerRef" class="chart-root" :style="{ height, width: '100%' }" />
 </template>
 
 <script setup lang="ts">
@@ -14,12 +14,12 @@ const props = withDefaults(
 	defineProps<{
 		labels?: string[]
 		data?: number[]
-		height: number
-		accentColor?: string
+		height?: string
 	}>(),
 	{
 		labels: () => [],
-		data: () => []
+		data: () => [],
+		height: "100%"
 	}
 )
 

@@ -1,5 +1,5 @@
 <template>
-	<div ref="containerRef" class="chart-root" :style="{ height: `${height}px`, width: '100%' }" />
+	<div ref="containerRef" class="chart-root" :style="{ height, width: '100%' }" />
 </template>
 
 <script setup lang="ts">
@@ -7,18 +7,19 @@ import type { ECharts } from "echarts/core"
 import { init as echartsInit } from "echarts/core"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useThemeStore } from "@/stores/theme"
+import { DASHBOARD_CHART_COLORS } from "./chartColors"
 import "./echartsRegister"
 
 const props = withDefaults(
 	defineProps<{
 		labels?: string[]
 		data?: number[]
-		height: number
-		accentColor: string
+		height?: string
 	}>(),
 	{
 		labels: () => [],
-		data: () => []
+		data: () => [],
+		height: "100%"
 	}
 )
 
@@ -59,7 +60,8 @@ function buildOption() {
 			{
 				type: "bar",
 				data: props.data,
-				itemStyle: { color: props.accentColor, borderRadius: [2, 2, 0, 0] }
+				color: DASHBOARD_CHART_COLORS,
+				itemStyle: { borderRadius: [2, 2, 0, 0] }
 			}
 		]
 	}
@@ -82,7 +84,7 @@ onMounted(() => {
 })
 
 watch(
-	() => [props.labels, props.data, props.accentColor, themeStore.style] as const,
+	() => [props.labels, props.data, themeStore.style] as const,
 	() => render(),
 	{ deep: true }
 )
