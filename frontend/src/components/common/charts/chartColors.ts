@@ -1,13 +1,17 @@
 /** Palette shared by dashboard charts (pie segments, etc.). */
 export const DASHBOARD_CHART_COLORS = [
-	"#38bdf8",
-	"#818cf8",
-	"#34d399",
-	"#fbbf24",
-	"#f87171",
-	"#a78bfa",
-	"#fb923c",
-	"#2dd4bf",
-	"#e879f9",
-	"#94a3b8"
+	"#8a3ffc",
+	"#33b1ff",
+	"#007d79",
+	"#ff7eb6",
+	"#fa4d56",
+	"#fff1f1",
+	"#6fdc8c",
+	"#4589ff",
+	"#d12771",
+	"#d2a106",
+	"#08bdba",
+	"#bae6ff",
+	"#ba4e00",
+	"#d4bbff"
 ]
