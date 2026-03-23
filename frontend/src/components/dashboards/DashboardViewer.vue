@@ -168,8 +168,7 @@ async function fetchPanelData() {
 
 function openEventSearch(luceneQuery: string) {
 	const routeData = router.resolve({
-		// TODO-FE: use router by name
-		path: "/event-search",
+		name: "EventSearch",
 		query: {
 			customer_code: customerCode.value,
 			source_name: sourceName.value,

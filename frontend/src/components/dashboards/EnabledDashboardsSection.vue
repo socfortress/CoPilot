@@ -127,8 +127,7 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 						type: "primary",
 						quaternary: true,
 						onClick: () => {
-							// TODO-FE: use route by name instead of hardcoding the path
-							router.push(`/dashboards/view/${row.id}`)
+							router.push({ name: "DashboardView", params: { id: String(row.id) } })
 						}
 					},
 					{ default: () => "View" }

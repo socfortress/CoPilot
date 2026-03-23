@@ -71,3 +71,5 @@ frontend/tsconfig.vitest.tsbuildinfo
 AGENTS.md
 
 .cursor/hooks/state/continual-learning-index.json
+
+.cursor/hooks/state/continual-learning.json
