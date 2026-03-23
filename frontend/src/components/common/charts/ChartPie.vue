@@ -1,14 +1,16 @@
 <template>
-	<div ref="containerRef" class="chart-root" :style="{ height, width: '100%' }" />
+	<div :style="{ height, width: '100%' }">
+		<apexchart width="100%" :height :options="chartOptions" :series="chartSeries" />
+	</div>
 </template>
 
 <script setup lang="ts">
-import type { ECharts } from "echarts/core"
-import { init as echartsInit } from "echarts/core"
-import { onBeforeUnmount, onMounted, ref, watch } from "vue"
+import type { ApexOptions } from "apexcharts"
+import { computed } from "vue"
+import apexchart from "vue3-apexcharts"
 import { useThemeStore } from "@/stores/theme"
 import { DASHBOARD_CHART_COLORS } from "./chartColors"
-import "./echartsRegister"
+import "@/assets/scss/overrides/apexchart-override.scss"
 
 const props = withDefaults(
 	defineProps<{
@@ -27,75 +29,71 @@ const emit = defineEmits<{
 	itemClick: [item: { name: string }]
 }>()
 
-const containerRef = ref<HTMLElement | null>(null)
 const themeStore = useThemeStore()
-let chart: ECharts | null = null
-let resizeObserver: ResizeObserver | null = null
 
-function buildOption() {
-	const style = themeStore.style
-	const pieData = props.labels.map((label, i) => ({
-		value: props.data[i],
-		name: label
-	}))
-	return {
-		tooltip: {
-			trigger: "item",
-			formatter: "{b}: <strong>{c}</strong> ({d}%)"
-		},
-		legend: {
-			type: "scroll",
-			orient: "vertical",
-			right: 10,
-			top: 20,
-			bottom: 20,
-			textStyle: { color: style["fg-default-color"], fontSize: 11 }
-		},
-		series: [
-			{
-				type: "pie",
-				radius: ["40%", "70%"],
-				center: ["35%", "50%"],
-				avoidLabelOverlap: true,
-				itemStyle: {
-					borderColor: style["bg-default-color"],
-					borderWidth: 2,
-					borderRadius: 4
-				},
-				label: { show: false },
-				color: DASHBOARD_CHART_COLORS,
-				data: pieData
-			}
-		]
-	}
-}
-
-function render() {
-	if (!chart || !containerRef.value) return
-	chart.setOption(buildOption(), true)
-}
-
-onMounted(() => {
-	if (!containerRef.value) return
-	chart = echartsInit(containerRef.value)
-	chart.on("click", (params: { name?: string }) => {
-		if (params.name) emit("itemClick", { name: params.name })
-	})
-	render()
-	resizeObserver = new ResizeObserver(() => chart?.resize())
-	resizeObserver.observe(containerRef.value)
+const chartSeries = computed<number[]>(() => {
+	if (!props.labels.length) return []
+	return props.labels.map((_, i) => Number(props.data[i] ?? 0))
 })
 
-watch(
-	() => [props.labels, props.data, themeStore.style] as const,
-	() => render(),
-	{ deep: true }
-)
+const chartOptions = computed<ApexOptions>(() => {
+	const style = themeStore.style
+	const bg = style["bg-default-color"]
+	const fg = style["fg-default-color"]
 
-onBeforeUnmount(() => {
-	resizeObserver?.disconnect()
-	resizeObserver = null
-	chart?.dispose()
-	chart = null
+	return {
+		chart: {
+			type: "donut",
+			fontFamily: style["font-family"],
+			toolbar: { show: false },
+			animations: { enabled: true },
+			events: {
+				dataPointSelection(_event, _chartContext, config) {
+					const idx = config.dataPointIndex
+					const name = props.labels[idx]
+					if (name) emit("itemClick", { name })
+				}
+			}
+		},
+		labels: [...props.labels],
+		colors: DASHBOARD_CHART_COLORS,
+		plotOptions: {
+			pie: {
+				donut: {
+					size: "55%",
+					labels: { show: false }
+				},
+				expandOnClick: false
+			}
+		},
+		dataLabels: { enabled: false },
+		stroke: {
+			width: 2,
+			colors: [bg]
+		},
+		legend: {
+			show: true,
+			position: "right",
+			fontSize: "11px",
+			fontFamily: style["font-family"],
+			labels: { colors: fg },
+			itemMargin: { vertical: 4 }
+		},
+		tooltip: {
+			theme: themeStore.isThemeDark ? "dark" : "light",
+			y: {
+				formatter: (val: number) => String(val)
+			}
+		},
+		noData: {
+			text: "No data",
+			align: "center",
+			style: {
+				color: fg,
+				fontSize: "16px",
+				fontFamily: style["font-family"]
+			}
+		}
+	}
 })
 </script>
