@@ -20,7 +20,6 @@
 						v-for="preset in timePresets"
 						:key="preset.value"
 						:value="preset.value"
-						size="small"
 						:label="preset.label"
 					/>
 				</n-radio-group>
@@ -34,7 +33,7 @@
 		</div>
 
 		<!-- Panels Grid -->
-		<n-spin :show="loading && !hasData">
+		<n-spin :show="loading">
 			<div v-if="hasData || !loading" class="panel-grid">
 				<div
 					v-for="panel in panels"
@@ -105,6 +104,7 @@ const message = useMessage()
 const style = computed(() => useThemeStore().style)
 
 const COLORS = [
+	"#ffffff",
 	"#38bdf8",
 	"#818cf8",
 	"#34d399",
@@ -117,7 +117,7 @@ const COLORS = [
 	"#94a3b8"
 ]
 
-const accentColor = ref("#38bdf8")
+const accentColor = ref(COLORS[0])
 const dashboardTitle = ref("")
 const dashboardDescription = ref("")
 const customerCode = ref("")
@@ -152,7 +152,7 @@ async function fetchPanelData() {
 			dashboardTitle.value = tpl.title
 			dashboardDescription.value = tpl.description
 			panels.value = tpl.panels
-			accentColor.value = res.data.accent_color || "#38bdf8"
+			accentColor.value = res.data.accent_color || COLORS[0]
 			customerCode.value = res.data.customer_code
 			sourceName.value = res.data.source_name
 			panelResults.value = res.data.panels
@@ -172,6 +172,7 @@ async function fetchPanelData() {
 
 function openEventSearch(luceneQuery: string) {
 	const routeData = router.resolve({
+		// TODO-FE: use router by name
 		path: "/event-search",
 		query: {
 			customer_code: customerCode.value,
