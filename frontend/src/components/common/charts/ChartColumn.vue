@@ -8,7 +8,9 @@
 import type { ApexOptions } from "apexcharts"
 import { computed } from "vue"
 import apexchart from "vue3-apexcharts"
+import { useSettingsStore } from "@/stores/settings"
 import { useThemeStore } from "@/stores/theme"
+import dayjs from "@/utils/dayjs"
 import { DASHBOARD_CHART_COLORS } from "./chartColors"
 import "@/assets/scss/overrides/apexchart-override.scss"
 
@@ -18,6 +20,7 @@ const props = withDefaults(
 		data?: number[]
 		height?: string
 		monochrome?: boolean
+		labelsDatetime?: boolean
 	}>(),
 	{
 		labels: () => [],
@@ -31,6 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const themeStore = useThemeStore()
+const dFormats = useSettingsStore().dateFormat
 
 const chartSeries = computed(() => [
 	{
@@ -42,12 +46,13 @@ const chartSeries = computed(() => [
 const chartOptions = computed<ApexOptions>(() => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
-	const rotate = props.labels.length > 20 ? -45 : 0
+	const bc = style["border-color"]
+	const ff = style["font-family"]
 
 	return {
 		chart: {
 			type: "bar",
-			fontFamily: style["font-family"],
+			fontFamily: ff,
 			toolbar: { show: false },
 			animations: { enabled: true },
 			events: {
@@ -61,6 +66,7 @@ const chartOptions = computed<ApexOptions>(() => {
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		plotOptions: {
 			bar: {
+				expandOnClick: false,
 				horizontal: false,
 				distributed: true,
 				borderRadius: 2,
@@ -68,18 +74,30 @@ const chartOptions = computed<ApexOptions>(() => {
 				columnWidth: "60%"
 			}
 		},
+		states: {
+			active: {
+				allowMultipleDataPointsSelection: false,
+				filter: {
+					type: "none"
+				}
+			}
+		},
 		dataLabels: { enabled: false },
 		stroke: { show: false },
 		xaxis: {
-			categories: [...props.labels],
+			categories: Array.from(props.labels, label => {
+				return props.labelsDatetime
+					? [dayjs(label).format(dFormats.date), dayjs(label).format(dFormats.time)]
+					: label
+			}),
 			labels: {
 				style: { colors: fg, fontSize: "10px" },
-				rotate,
-				rotateAlways: rotate !== 0,
+				rotate: -90,
+				rotateAlways: true,
 				hideOverlappingLabels: true,
-				trim: true
+				trim: false
 			},
-			axisBorder: { color: `${fg}33` },
+			axisBorder: { show: false },
 			axisTicks: { show: false }
 		},
 		yaxis: {
@@ -88,7 +106,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			}
 		},
 		grid: {
-			borderColor: `${fg}1a`,
+			borderColor: bc,
 			strokeDashArray: 0,
 			xaxis: { lines: { show: false } },
 			yaxis: { lines: { show: true } }
@@ -106,7 +124,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			style: {
 				color: fg,
 				fontSize: "16px",
-				fontFamily: style["font-family"]
+				fontFamily: ff
 			}
 		}
 	}
