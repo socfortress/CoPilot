@@ -39,7 +39,6 @@ const chartSeries = computed<number[]>(() => {
 
 const chartOptions = computed<ApexOptions>(() => {
 	const style = themeStore.style
-	const bg = style["bg-default-color"]
 	const fg = style["fg-default-color"]
 
 	return {
@@ -62,15 +61,18 @@ const chartOptions = computed<ApexOptions>(() => {
 			pie: {
 				donut: {
 					size: "55%",
-					labels: { show: false }
-				},
-				expandOnClick: false
+					labels: {
+						show: true,
+						value: { color: fg }
+					}
+				}
 			}
 		},
-		dataLabels: { enabled: false },
+		dataLabels: {
+			enabled: true
+		},
 		stroke: {
-			width: 2,
-			colors: [bg]
+			show: false
 		},
 		legend: {
 			show: true,
@@ -78,13 +80,22 @@ const chartOptions = computed<ApexOptions>(() => {
 			fontSize: "11px",
 			fontFamily: style["font-family"],
 			labels: { colors: fg },
-			itemMargin: { vertical: 4 }
+			itemMargin: { vertical: 6, horizontal: 4 },
+			markers: {
+				size: 7,
+				strokeWidth: 0,
+				offsetX: -5
+			},
+			formatter: (seriesName, opts) => {
+				const series = opts.w.globals.series as number[]
+				const value = series[opts.seriesIndex] ?? 0
+				const total = series.reduce((sum, v) => sum + v, 0)
+				const pct = total > 0 ? (value / total) * 100 : 0
+				return `${seriesName} - ${value} (${pct.toFixed(1)}%)`
+			}
 		},
 		tooltip: {
-			theme: themeStore.isThemeDark ? "dark" : "light",
-			y: {
-				formatter: (val: number) => String(val)
-			}
+			theme: themeStore.isThemeDark ? "dark" : "light"
 		},
 		noData: {
 			text: "No data",
