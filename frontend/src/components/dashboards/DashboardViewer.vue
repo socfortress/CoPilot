@@ -1,37 +1,37 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<!-- Header Bar -->
-		<n-card size="small">
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<div class="flex items-center gap-3">
-					<n-button quaternary size="small" @click="router.push('/dashboards')">
-						<template #icon>
-							<Icon :name="ArrowBackIcon" :size="18" />
-						</template>
-					</n-button>
-					<div class="flex flex-col">
-						<span class="text-lg font-semibold">{{ dashboardTitle }}</span>
-						<span class="text-xs opacity-60">{{ dashboardDescription }}</span>
-					</div>
-				</div>
-				<div class="flex items-center gap-2">
-					<n-button
-						v-for="preset in timePresets"
-						:key="preset.value"
-						:type="selectedTimerange === preset.value ? 'primary' : 'default'"
-						size="small"
-						@click="selectTimerange(preset.value)"
-					>
-						{{ preset.label }}
-					</n-button>
-					<n-button size="small" :loading @click="fetchPanelData">
-						<template #icon>
-							<Icon :name="RefreshIcon" :size="16" />
-						</template>
-					</n-button>
+		<div class="flex flex-wrap items-end justify-between gap-6">
+			<div class="flex gap-3">
+				<!-- TODO-FE: use router by name -->
+				<n-button quaternary size="small" @click="router.push('/dashboards')">
+					<template #icon>
+						<Icon :name="ArrowBackIcon" :size="22" />
+					</template>
+				</n-button>
+				<div class="flex flex-col">
+					<span class="text-lg font-semibold">{{ dashboardTitle }}</span>
+					<span class="text-xs opacity-60">{{ dashboardDescription }}</span>
 				</div>
 			</div>
-		</n-card>
+			<div class="flex grow items-center justify-end gap-2">
+				<n-radio-group v-model:value="selectedTimerange" size="small">
+					<n-radio-button
+						v-for="preset in timePresets"
+						:key="preset.value"
+						:value="preset.value"
+						size="small"
+						:label="preset.label"
+					/>
+				</n-radio-group>
+
+				<n-button size="small" :loading @click="fetchPanelData">
+					<template #icon>
+						<Icon :name="RefreshIcon" :size="16" />
+					</template>
+				</n-button>
+			</div>
+		</div>
 
 		<!-- Panels Grid -->
 		<n-spin :show="loading && !hasData">
@@ -52,7 +52,7 @@
 						<div class="flex h-full flex-col items-center justify-center py-4">
 							<span class="text-xs tracking-wide uppercase opacity-60">{{ panel.title }}</span>
 							<span class="stat-value" :style="{ color: accentColor }">
-								{{ formatStatValue(panelResults[panel.id]?.value) }}
+								{{ formatCompactNumber(panelResults[panel.id]?.value) }}
 							</span>
 							<span v-if="panelResults[panel.id]?.error" class="text-xs text-red-400">
 								{{ panelResults[panel.id].error }}
@@ -84,12 +84,13 @@ import { BarChart, LineChart, PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
 import { init as echartsInit, use as echartsUse } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
-import { NButton, NCard, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NCard, NEmpty, NRadioButton, NRadioGroup, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
+import { formatCompactNumber } from "@/utils"
 
 const props = defineProps<{
 	dashboardId: number
@@ -139,18 +140,6 @@ const hasData = computed(() => Object.keys(panelResults.value).length > 0)
 
 const chartInstances = ref<Map<string, ECharts>>(new Map())
 const resizeObservers: ResizeObserver[] = []
-
-function formatStatValue(value: number | null | undefined): string {
-	if (value == null) return "—"
-	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-	return value.toLocaleString()
-}
-
-function selectTimerange(value: string) {
-	selectedTimerange.value = value
-	fetchPanelData()
-}
 
 async function fetchPanelData() {
 	loading.value = true
@@ -351,6 +340,10 @@ async function loadTemplate() {
 		errorMsg.value = "Failed to load dashboard"
 	}
 }
+
+watch(selectedTimerange, () => {
+	fetchPanelData()
+})
 
 watch(style, () => {
 	renderAllCharts()

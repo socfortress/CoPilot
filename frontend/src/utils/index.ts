@@ -173,3 +173,10 @@ export function isDate(val?: SafeAny): boolean {
 
 	return dayjs(strVal, regionalFormats, true).isValid()
 }
+
+export function formatCompactNumber(value: number | null | undefined): string {
+	if (value == null) return "—"
+	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+	return value.toLocaleString()
+}
