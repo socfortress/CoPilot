@@ -59,6 +59,19 @@ const chartOptions = computed<ApexOptions>(() => {
 				}
 			}
 		},
+		responsive: [
+			{
+				breakpoint: 1080,
+				options: {
+					yaxis: {
+						labels: {
+							style: { colors: fg, fontSize: "10px" },
+							maxWidth: 100
+						}
+					}
+				}
+			}
+		],
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		states: {
 			active: {

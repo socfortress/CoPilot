@@ -63,23 +63,35 @@ const chartOptions = computed<ApexOptions>(() => {
 				}
 			}
 		},
-		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
-		plotOptions: {
-			bar: {
-				expandOnClick: false,
-				horizontal: false,
-				distributed: true,
-				borderRadius: 2,
-				borderRadiusApplication: "end",
-				columnWidth: "60%"
+		responsive: [
+			{
+				breakpoint: 1200,
+				options: {
+					xaxis: {
+						labels: {
+							show: false
+						}
+					}
+				}
 			}
-		},
+		],
+		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		states: {
 			active: {
 				allowMultipleDataPointsSelection: false,
 				filter: {
 					type: "none"
 				}
+			}
+		},
+		plotOptions: {
+			bar: {
+				expandOnClick: false,
+				horizontal: false,
+				distributed: true,
+				borderRadius: 4,
+				borderRadiusApplication: "end",
+				columnWidth: "60%"
 			}
 		},
 		dataLabels: { enabled: false },
@@ -91,8 +103,8 @@ const chartOptions = computed<ApexOptions>(() => {
 					: label
 			}),
 			labels: {
-				style: { colors: fg, fontSize: "10px" },
-				rotate: -90,
+				style: { colors: fg, fontSize: "9px" },
+				rotate: -65,
 				rotateAlways: true,
 				hideOverlappingLabels: true,
 				trim: false
