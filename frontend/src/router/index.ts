@@ -457,6 +457,18 @@ const router = createRouter({
 				skipPin: true
 			}
 		},
+		{
+			path: "/sso-callback",
+			name: "SSOCallback",
+			component: AuthPage,
+			props: { formType: "signin" as FormType },
+			meta: {
+				title: "SSO Login",
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				checkAuth: true,
+				skipPin: true
+			}
+		},
 		/*
 		{
 			path: "/register",
