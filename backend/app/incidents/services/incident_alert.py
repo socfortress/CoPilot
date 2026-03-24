@@ -144,6 +144,7 @@ def clean_alert_title(title: str) -> str:
 
     return title
 
+
 async def update_alert_creation_time(
     alert_id: int,
     timefield_payload: Optional[str],
@@ -163,6 +164,7 @@ async def update_alert_creation_time(
     session.add(alert_obj)
     await session.commit()
     logger.info(f"Updated alert_creation_time for alert ID {alert_id} to {alert_obj.alert_creation_time}")
+
 
 async def get_single_alert_details(
     alert_details: CreateAlertRequest,
