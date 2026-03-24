@@ -145,6 +145,27 @@ def clean_alert_title(title: str) -> str:
     return title
 
 
+async def update_alert_creation_time(
+    alert_id: int,
+    timefield_payload: Optional[str],
+    session: AsyncSession,
+) -> None:
+    """Update an existing alert's creation time to the latest trigger time."""
+    alert_obj = await session.get(Alert, alert_id)
+    if not alert_obj:
+        return
+    if timefield_payload:
+        try:
+            alert_obj.alert_creation_time = datetime.fromisoformat(timefield_payload)
+        except (ValueError, TypeError):
+            alert_obj.alert_creation_time = datetime.utcnow()
+    else:
+        alert_obj.alert_creation_time = datetime.utcnow()
+    session.add(alert_obj)
+    await session.commit()
+    logger.info(f"Updated alert_creation_time for alert ID {alert_id} to {alert_obj.alert_creation_time}")
+
+
 async def get_single_alert_details(
     alert_details: CreateAlertRequest,
 ) -> GenericAlertModel:
@@ -801,6 +822,9 @@ async def create_alert_full(
                 f"Found existing open alert ID {existing_alert_id} for Velociraptor Sigma alert with title {alert_payload.alert_title_payload}",
             )
 
+            # Update the alert_creation_time to the latest trigger time
+            await update_alert_creation_time(existing_alert_id, alert_payload.timefield_payload, session)
+
             # Check if the asset already exists for this alert (to determine if we should skip notifications)
             asset_already_exists = False
             if alert_payload.asset_payload:
@@ -1219,6 +1243,8 @@ async def create_alert(
         logger.info(
             f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}",
         )
+        # Update the alert_creation_time to the latest trigger time
+        await update_alert_creation_time(existing_alert, alert_payload.timefield_payload, session)
         await add_alert_to_document(
             CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id),
             existing_alert,
