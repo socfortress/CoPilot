@@ -540,11 +540,15 @@ class EventSources(SQLModel, table=True):
             self.enabled = source_data.enabled
         self.updated_at = datetime.utcnow()
 
+
 class EnabledDashboards(SQLModel, table=True):
     __tablename__ = "enabled_dashboards"
     __table_args__ = (
         UniqueConstraint(
-            "customer_code", "event_source_id", "library_card", "template_id",
+            "customer_code",
+            "event_source_id",
+            "library_card",
+            "template_id",
             name="uq_enabled_dashboard",
         ),
     )

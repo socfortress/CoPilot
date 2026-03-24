@@ -290,8 +290,7 @@ async def retrieve_threshold_alert_timeline(
         }
 
         logger.info(
-            f"Fetching threshold alert timeline for alert ID {alert_id} "
-            f"in index '{index_pattern}' with query: {metadata.replay_query}",
+            f"Fetching threshold alert timeline for alert ID {alert_id} " f"in index '{index_pattern}' with query: {metadata.replay_query}",
         )
 
         response = await es_client.search(index=index_pattern, body=query, size=50)

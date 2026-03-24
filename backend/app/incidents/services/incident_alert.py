@@ -41,10 +41,10 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
 from app.integrations.routes import get_customer_by_auth_key
 

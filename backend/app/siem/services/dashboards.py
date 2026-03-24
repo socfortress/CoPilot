@@ -10,7 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client_async,
+)
 from app.db.universal_models import EnabledDashboards
 from app.db.universal_models import EventSources
 from app.siem.schema.dashboards import DashboardCategory
@@ -75,8 +77,7 @@ async def enable_dashboard(
     db: AsyncSession,
 ) -> EnabledDashboards:
     logger.info(
-        f"Enabling dashboard {request.library_card}/{request.template_id} "
-        f"for customer {request.customer_code}",
+        f"Enabling dashboard {request.library_card}/{request.template_id} " f"for customer {request.customer_code}",
     )
 
     # Verify the category and template exist on disk

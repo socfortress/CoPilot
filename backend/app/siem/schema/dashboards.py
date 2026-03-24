@@ -7,7 +7,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 
-
 # ── Template browsing (read from disk) ───────────────────────────
 
 
