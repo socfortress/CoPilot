@@ -60,6 +60,8 @@ async def query_events(
         timerange=params.timerange,
         page_size=params.page_size,
         query=params.query,
+        time_from=params.time_from,
+        time_to=params.time_to,
     )
 
 
@@ -69,11 +71,16 @@ async def _initial_search(
     timerange: str,
     page_size: int,
     query: str = None,
+    time_from: str = None,
+    time_to: str = None,
 ) -> EventsQueryResponse:
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
         query_builder = AlertsQueryBuilder()
-        query_builder.add_time_range(timerange=timerange, timestamp_field=time_field)
+        if time_from and time_to:
+            query_builder.add_absolute_time_range(time_from=time_from, time_to=time_to, timestamp_field=time_field)
+        else:
+            query_builder.add_time_range(timerange=timerange, timestamp_field=time_field)
         query_builder.add_sort(time_field, order="desc")
 
         # Add Lucene query_string if provided

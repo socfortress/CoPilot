@@ -20,7 +20,7 @@ const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
 const ToolsIcon = "carbon:tool-box"
-const EventSearchIcon = "carbon:search-locate"
+// const EventSearchIcon = "carbon:search-locate"
 
 // TODO-FE: refactor
 export default function getItems(): MenuMixedOption[] {
@@ -130,6 +130,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Event Search" }
 						),
 					key: "EventSearch"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Dashboards"
+								}
+							},
+							{ default: () => "Dashboards" }
+						),
+					key: "Dashboards"
 				},
 				{
 					label: () =>

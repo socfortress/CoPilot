@@ -1,5 +1,5 @@
 <template>
-	<div ref="gaugeEl" :style="{ height: height + 'px' }"></div>
+	<div ref="gaugeEl" :style="{ height: `${height}px` }"></div>
 </template>
 
 <script setup lang="ts">
@@ -10,8 +10,6 @@ import { init as echartsInit, use as echartsUse } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed, onBeforeUnmount, onMounted, ref, toRefs, watch } from "vue"
 import { useThemeStore } from "@/stores/theme"
-
-echartsUse([TooltipComponent, GridComponent, GaugeChart, CanvasRenderer])
 
 const props = withDefaults(
 	defineProps<{
@@ -24,6 +22,8 @@ const props = withDefaults(
 		height: 220
 	}
 )
+
+echartsUse([TooltipComponent, GridComponent, GaugeChart, CanvasRenderer])
 
 const { value, title, height } = toRefs(props)
 

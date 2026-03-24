@@ -17,6 +17,7 @@
 	--color-info: var(--info-color);
 	--color-border: var(--border-color);
 	--color-hover: var(--hover-color);
+	--color-hover-005: var(--hover-005-color);
 
 	--color-extra-1: var(--extra1-color);
 	--color-extra-2: var(--extra2-color);

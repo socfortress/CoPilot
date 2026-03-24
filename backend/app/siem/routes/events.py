@@ -34,6 +34,8 @@ async def query_events_endpoint(
     page_size: int = Query(50, ge=1, le=1000, description="Number of results per page"),
     scroll_id: Optional[str] = Query(None, description="Scroll ID for fetching the next page"),
     query: Optional[str] = Query(None, description="Lucene query string (e.g. 'agent_name:piHole AND agent_id:088')"),
+    time_from: Optional[str] = Query(None, description="Absolute start time in ISO format. Overrides timerange."),
+    time_to: Optional[str] = Query(None, description="Absolute end time in ISO format. Overrides timerange."),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventsQueryResponse:
@@ -47,6 +49,8 @@ async def query_events_endpoint(
         page_size=page_size,
         scroll_id=scroll_id,
         query=query,
+        time_from=time_from,
+        time_to=time_to,
     )
     return await query_events(customer_code, source_name, params, db)
 

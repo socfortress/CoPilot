@@ -41,6 +41,7 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
@@ -1237,6 +1238,10 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
     """
     Retrieve the alert timeline for the given alert.
 
+    For threshold alerts (identified by having a ThresholdAlertMetadata record),
+    the timeline is built from the stored replay query and group_by_fields.
+    For standard alerts, the timeline is built from the process_id and agent_name.
+
     Args:
         alert (CreateAlertRequestRoute): The alert details.
         session (AsyncSession): The database session.
@@ -1244,6 +1249,17 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
     Returns:
         List[Dict[str, Any]]: The alert timeline.
     """
+    # Check if this is a threshold alert and retrieve its timeline if so
+    threshold_timeline = await retrieve_threshold_alert_timeline(
+        alert_id=alert.alert_id,
+        index_name=alert.index_name,
+        index_id=alert.index_id,
+        session=session,
+    )
+    if threshold_timeline is not None:
+        logger.info(f"Retrieved threshold alert timeline with {len(threshold_timeline)} events")
+        return threshold_timeline
+
     alert_details = await get_alert_details(alert)
     if alert_details._source.process_id is not None:
         alert_timestamp = alert_details._source.timestamp

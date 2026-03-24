@@ -48,6 +48,7 @@ from app.incidents.models import FieldName
 from app.incidents.models import IoC
 from app.incidents.models import IoCFieldName
 from app.incidents.models import Notification
+from app.incidents.models import ThresholdAlertMetadata
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
@@ -2701,6 +2702,7 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     await delete_assets(alert_id, db)
     await delete_tags(alert_id, db)
     await delete_iocs(alert_id, db)
+    await db.execute(delete(ThresholdAlertMetadata).where(ThresholdAlertMetadata.alert_id == alert_id))
 
     await db.execute(delete(Alert).where(Alert.id == alert.id))
 

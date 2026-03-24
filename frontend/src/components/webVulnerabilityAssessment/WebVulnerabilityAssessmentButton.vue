@@ -8,14 +8,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, ButtonType } from "naive-ui"
 import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
-	size?: Size
-	type?: Type
+	size?: ButtonSize
+	type?: ButtonType
 	secondary?: boolean
 }>()
 

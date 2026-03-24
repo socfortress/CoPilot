@@ -4,7 +4,7 @@
 			<div v-if="showForm">
 				<CustomerEventSourceForm
 					:customer-code
-					:editing-source="editingSource"
+					:editing-source
 					@submitted="refreshList()"
 					@close="closeForm()"
 				/>

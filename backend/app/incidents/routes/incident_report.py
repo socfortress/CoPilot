@@ -1,13 +1,16 @@
+import calendar
 import csv
 from datetime import datetime
 from io import StringIO
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,29 +66,52 @@ FIELDNAMES = [
 
 
 # Helper Functions
-async def fetch_cases_with_related_data(session: AsyncSession) -> List[Case]:
+def _build_month_range(year: int, month: int) -> tuple[datetime, datetime]:
+    """Return (start, end) datetimes for a given year/month."""
+    last_day = calendar.monthrange(year, month)[1]
+    start = datetime(year, month, 1)
+    end = datetime(year, month, last_day, 23, 59, 59)
+    return start, end
+
+
+async def fetch_cases_with_related_data(
+    session: AsyncSession,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+) -> List[Case]:
     """Fetch cases with related alerts, assets, tags, and comments."""
-    result = await session.execute(
-        select(Case).options(
-            selectinload(Case.alerts)
-            .selectinload(CaseAlertLink.alert)
-            .options(selectinload(Alert.assets), selectinload(Alert.tags).selectinload(AlertToTag.tag), selectinload(Alert.comments)),
-        ),
+    query = select(Case).options(
+        selectinload(Case.alerts)
+        .selectinload(CaseAlertLink.alert)
+        .options(selectinload(Alert.assets), selectinload(Alert.tags).selectinload(AlertToTag.tag), selectinload(Alert.comments)),
     )
+    if year and month:
+        start, end = _build_month_range(year, month)
+        query = query.where(Case.case_creation_time >= start, Case.case_creation_time <= end)
+    result = await session.execute(query)
     return result.scalars().all()
 
 
-async def fetch_cases_by_customer(session: AsyncSession, customer_code: str) -> List[Case]:
+async def fetch_cases_by_customer(
+    session: AsyncSession,
+    customer_code: str,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+) -> List[Case]:
     """Fetch cases for a specific customer with related data."""
-    result = await session.execute(
+    query = (
         select(Case)
         .where(Case.customer_code == customer_code)
         .options(
             selectinload(Case.alerts)
             .selectinload(CaseAlertLink.alert)
             .options(selectinload(Alert.assets), selectinload(Alert.tags).selectinload(AlertToTag.tag), selectinload(Alert.comments)),
-        ),
+        )
     )
+    if year and month:
+        start, end = _build_month_range(year, month)
+        query = query.where(Case.case_creation_time >= start, Case.case_creation_time <= end)
+    result = await session.execute(query)
     return result.scalars().all()
 
 
@@ -151,15 +177,20 @@ def generate_csv_content(rows: List[Dict[str, Any]]) -> StringIO:
 # Route Handler
 @incidents_report_router.post(
     "/generate-report-csv",
-    description="Generate a report for all cases.",
+    description="Generate a report for all cases. Optionally filter by year and month.",
 )
 async def get_cases_export_all_route(
+    year: Optional[int] = Query(None, description="Filter by year (e.g. 2026)", ge=2000, le=2100),
+    month: Optional[int] = Query(None, description="Filter by month (1-12)", ge=1, le=12),
     session: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
-    cases = await fetch_cases_with_related_data(session)
+    if (year is None) != (month is None):
+        raise HTTPException(status_code=400, detail="Both year and month must be provided together")
+    cases = await fetch_cases_with_related_data(session, year=year, month=month)
     rows = [serialize_case_alert_to_row(case, alert_link.alert) for case in cases for alert_link in case.alerts]
     csv_stream = generate_csv_content(rows)
-    filename = f"cases_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    month_suffix = f"_{year}-{month:02d}" if year and month else ""
+    filename = f"cases_export{month_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
@@ -167,17 +198,22 @@ async def get_cases_export_all_route(
 
 @incidents_report_router.post(
     "/generate-report-csv/{customer_code}",
-    description="Generate a report for a customer",
+    description="Generate a report for a customer. Optionally filter by year and month.",
 )
 async def get_cases_export_customer_route(
     customer_code: str,
+    year: Optional[int] = Query(None, description="Filter by year (e.g. 2026)", ge=2000, le=2100),
+    month: Optional[int] = Query(None, description="Filter by month (1-12)", ge=1, le=12),
     session: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
+    if (year is None) != (month is None):
+        raise HTTPException(status_code=400, detail="Both year and month must be provided together")
     await get_customer(customer_code=customer_code, session=session)
-    cases = await fetch_cases_by_customer(session, customer_code)
+    cases = await fetch_cases_by_customer(session, customer_code, year=year, month=month)
     rows = [serialize_case_alert_to_row(case, alert_link.alert) for case in cases for alert_link in case.alerts]
     csv_stream = generate_csv_content(rows)
-    filename = f"cases_export_{customer_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    month_suffix = f"_{year}-{month:02d}" if year and month else ""
+    filename = f"cases_export_{customer_code}{month_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response = StreamingResponse(csv_stream, media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response

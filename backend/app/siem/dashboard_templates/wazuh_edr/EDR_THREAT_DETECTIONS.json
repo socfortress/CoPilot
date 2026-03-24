@@ -1,0 +1,99 @@
+{
+  "id": "EDR_THREAT_DETECTIONS",
+  "title": "Wazuh EDR - Threat Detections",
+  "description": "High and critical Wazuh rule detections (rule.level ≥ 12) across all EDR event sources. Covers suspicious process access (Event ID 10), elevated rule triggers, most affected agents, and involved users — the primary triage dashboard for EDR alerts.",
+  "panels": [
+    {
+      "id": "high_severity",
+      "title": "High Severity (≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "rule_level:>11"
+    },
+    {
+      "id": "critical",
+      "title": "Critical (≥ 15)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "rule_level:>14"
+    },
+    {
+      "id": "process_access",
+      "title": "Process Access Events (EID 10)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:10"
+    },
+    {
+      "id": "threats_over_time",
+      "title": "Threat Detections Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "rule_level:>11"
+    },
+    {
+      "id": "by_rule_level",
+      "title": "By Rule Level",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "rule_level:>11",
+      "field": "rule_level",
+      "size": 10
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "rule_level:>11",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "by_sysmon_type",
+      "title": "By Sysmon Event Type",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "rule_level:>11 AND data_win_system_eventID:*",
+      "field": "data_win_system_eventID",
+      "size": 15
+    },
+    {
+      "id": "top_rules",
+      "title": "Top Rules Triggered",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "rule_level:>11",
+      "field": "rule_description",
+      "size": 10
+    },
+    {
+      "id": "top_agents",
+      "title": "Most Affected Agents",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "rule_level:>11",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users Involved",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "rule_level:>11",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    }
+  ]
+}

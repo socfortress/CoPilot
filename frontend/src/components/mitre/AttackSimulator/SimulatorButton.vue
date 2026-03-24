@@ -21,13 +21,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import SimulatorWizard from "./SimulatorWizard.vue"
 
-const { size, techniqueId, osList } = defineProps<{ size?: Size; techniqueId: string; osList: string[] }>()
+const { size, techniqueId, osList } = defineProps<{ size?: ButtonSize; techniqueId: string; osList: string[] }>()
 
 const AttackIcon = "mdi:target"
 const showForm = ref(false)

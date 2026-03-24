@@ -33,10 +33,14 @@ from app.incidents.services.alert_collection import get_alerts_not_created_in_co
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
+from app.incidents.services.incident_alert import add_alert_to_document
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
 from app.incidents.services.incident_alert import get_single_alert_details
 from app.incidents.services.incident_alert import retrieve_alert_timeline
+from app.incidents.services.threshold_alert import resolve_threshold_asset
+from app.incidents.services.threshold_alert import resolve_threshold_event
+from app.incidents.services.threshold_alert import save_threshold_metadata
 from app.incidents.services.velo_sigma import VeloSigmaExclusionService
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
 
@@ -330,20 +334,66 @@ async def invoke_alert_threshold_graylog_route(
     """
     logger.info("Invoking alert threshold Graylog...")
     logger.info(f"Timestamp: {request.event.timestamp}")
+
+    # Resolve the underlying event from OpenSearch using the replay_info and group_by_fields
+    resolved_index_name, resolved_index_id = await resolve_threshold_event(
+        replay_query=request.event.replay_info.query,
+        timerange_start=request.event.replay_info.timerange_start,
+        timerange_end=request.event.replay_info.timerange_end,
+        group_by_fields=request.event.group_by_fields,
+        source=request.event.fields.SOURCE,
+    )
+    logger.info(f"Resolved threshold event: index={resolved_index_name}, id={resolved_index_id}")
+
+    # Resolve asset name from the actual event document in OpenSearch
+    asset_name = await resolve_threshold_asset(
+        index_name=resolved_index_name,
+        index_id=resolved_index_id,
+        source=request.event.fields.SOURCE,
+        session=session,
+    )
+    logger.info(f"Resolved threshold asset: {asset_name}")
+
     alert_id = await create_alert_full(
         alert_payload=CreatedAlertPayload(
             alert_context_payload=request.event.fields.dict(),
-            asset_payload=request.event.fields.ASSET_NAME,
+            asset_payload=asset_name,
             timefield_payload=str(request.event.timestamp),
             alert_title_payload=request.event.message,
             source=request.event.fields.SOURCE,
-            index_name="not_applicable",
-            index_id="not_applicable",
+            index_name=resolved_index_name,
+            index_id=resolved_index_id,
         ),
         customer_code=request.event.fields.CUSTOMER_CODE,
         session=session,
         threshold_alert=True,
     )
+
+    # Add the CoPilot alert_id to the resolved OpenSearch document
+    if resolved_index_name != "not_applicable" and resolved_index_id != "not_applicable":
+        await add_alert_to_document(
+            CreateAlertRequest(index_name=resolved_index_name, alert_id=resolved_index_id),
+            alert_id,
+        )
+
+    # Save threshold metadata for later timeline retrieval
+    try:
+        await save_threshold_metadata(
+            alert_id=alert_id,
+            event_definition_id=request.event.event_definition_id,
+            replay_query=request.event.replay_info.query,
+            timerange_start=request.event.replay_info.timerange_start,
+            timerange_end=request.event.replay_info.timerange_end,
+            group_by_fields=request.event.group_by_fields,
+            source_streams=request.event.source_streams,
+            source=request.event.fields.SOURCE,
+            resolved_index_name=resolved_index_name,
+            resolved_index_id=resolved_index_id,
+            session=session,
+        )
+    except Exception as e:
+        logger.error(f"Failed to save threshold metadata for alert {alert_id}: {e}")
+
     return CreateAlertResponse(success=True, message="Alert threshold Graylog invoked successfully", alert_id=alert_id)
 
 

@@ -20,15 +20,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Size, Type } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, ButtonType } from "naive-ui"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import StackProvisioningList from "./StackProvisioningList.vue"
 
 defineProps<{
-	size?: Size
-	type?: Type
+	size?: ButtonSize
+	type?: ButtonType
 	secondary?: boolean
 }>()
 

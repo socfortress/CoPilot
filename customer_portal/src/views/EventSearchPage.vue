@@ -46,6 +46,12 @@
 							>
 								Event Search
 							</router-link>
+							<router-link
+								to="/dashboards"
+								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+							>
+								Dashboards
+							</router-link>
 						</nav>
 					</div>
 					<div class="flex items-center space-x-4">
@@ -124,6 +130,7 @@
 								<option value="7d">Last 7 days</option>
 								<option value="14d">Last 14 days</option>
 								<option value="30d">Last 30 days</option>
+								<option value="custom">Custom range</option>
 							</select>
 						</div>
 
@@ -142,6 +149,28 @@
 								<option :value="100">100</option>
 								<option :value="250">250</option>
 							</select>
+						</div>
+					</div>
+
+					<!-- Custom Date Range -->
+					<div v-if="timerange === 'custom'" class="col-span-full grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div>
+							<label for="time-from" class="block text-sm font-medium text-gray-700">From</label>
+							<input
+								id="time-from"
+								v-model="customTimeFrom"
+								type="datetime-local"
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							/>
+						</div>
+						<div>
+							<label for="time-to" class="block text-sm font-medium text-gray-700">To</label>
+							<input
+								id="time-to"
+								v-model="customTimeTo"
+								type="datetime-local"
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+							/>
 						</div>
 					</div>
 
@@ -465,11 +494,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount } from "vue"
-import { useRouter } from "vue-router"
+import { useRouter, useRoute } from "vue-router"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import { SiemAPI, type EventSource, type EventSearchResult, type FieldMapping } from "@/api/siem"
 
 const router = useRouter()
+const route = useRoute()
 const portalSettingsStore = usePortalSettingsStore()
 
 const showLogo = ref(true)
@@ -550,6 +580,8 @@ function onSourceChange() {
 const timerange = ref("24h")
 const pageSize = ref(50)
 const query = ref("")
+const customTimeFrom = ref("")
+const customTimeTo = ref("")
 
 // -- Field mappings / autocomplete --
 const fieldMappings = ref<FieldMapping[]>([])
@@ -623,11 +655,19 @@ async function searchEvents() {
 	resetResults()
 
 	try {
-		const response = await SiemAPI.queryEvents(selectedCustomerCode.value, selectedSourceName.value, {
-			timerange: timerange.value,
-			page_size: pageSize.value,
-			query: query.value || undefined
-		})
+		const params: { timerange?: string; page_size: number; query?: string; time_from?: string; time_to?: string } =
+			{
+				page_size: pageSize.value,
+				query: query.value || undefined
+			}
+		if (timerange.value === "custom" && customTimeFrom.value && customTimeTo.value) {
+			params.time_from = new Date(customTimeFrom.value).toISOString()
+			params.time_to = new Date(customTimeTo.value).toISOString()
+		} else {
+			params.timerange = timerange.value === "custom" ? "24h" : timerange.value
+		}
+
+		const response = await SiemAPI.queryEvents(selectedCustomerCode.value, selectedSourceName.value, params)
 		events.value = response.events
 		totalEvents.value = response.total
 		scrollId.value = response.scroll_id
@@ -709,8 +749,36 @@ function levelClass(level: number | undefined): string {
 }
 
 // -- Lifecycle --
-onBeforeMount(() => {
-	loadCustomerCodes()
+async function applyRouteParams() {
+	const qCustomer = route.query.customer_code as string | undefined
+	const qSource = route.query.source_name as string | undefined
+	const qQuery = route.query.query as string | undefined
+
+	if (!qCustomer) return
+
+	selectedCustomerCode.value = qCustomer
+	await loadEventSources(qCustomer)
+
+	if (qSource) {
+		const match = enabledSources.value.find(s => s.name === qSource)
+		if (match) {
+			selectedSourceName.value = match.name
+			loadFieldMappings()
+		}
+	}
+
+	if (qQuery) {
+		query.value = qQuery
+	}
+
+	if (selectedCustomerCode.value && selectedSourceName.value) {
+		searchEvents()
+	}
+}
+
+onBeforeMount(async () => {
+	await loadCustomerCodes()
+	applyRouteParams()
 })
 </script>
 

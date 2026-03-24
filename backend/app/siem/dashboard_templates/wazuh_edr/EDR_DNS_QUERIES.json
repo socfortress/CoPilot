@@ -1,0 +1,89 @@
+{
+  "id": "EDR_DNS_QUERIES",
+  "title": "Wazuh EDR - DNS Queries",
+  "description": "Sysmon Event ID 22 (DNS Query). Tracks DNS lookups made by endpoints: top queried domains, requesting processes, query result status codes, and active users — useful for detecting C2 beaconing and DNS tunnelling.",
+  "panels": [
+    {
+      "id": "total_dns",
+      "title": "DNS Query Events (EID 22)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:22"
+    },
+    {
+      "id": "high_severity_dns",
+      "title": "High Severity DNS Alerts",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:22 AND rule_level:>11"
+    },
+    {
+      "id": "active_agents",
+      "title": "Active Agents",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:22"
+    },
+    {
+      "id": "dns_over_time",
+      "title": "DNS Queries Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:22"
+    },
+    {
+      "id": "by_query_status",
+      "title": "By Query Result Status",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:22",
+      "field": "data_win_eventdata_queryStatus",
+      "size": 8
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:22",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "by_user",
+      "title": "By User",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:22",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    },
+    {
+      "id": "top_query_names",
+      "title": "Top Queried Domains",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:22",
+      "field": "data_win_eventdata_queryName",
+      "size": 15
+    },
+    {
+      "id": "top_requesting_processes",
+      "title": "Top Requesting Processes",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:22",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    }
+  ]
+}

@@ -166,9 +166,9 @@
 </template>
 
 <script setup lang="ts">
-import type { ScaPolicyItem, ScaPackageAgentsResponse } from "@/types/sca.d"
-import { computed, ref } from "vue"
+import type { ScaPackageAgentsResponse, ScaPolicyItem } from "@/types/sca.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

@@ -52,8 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize, FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { CaseReportPayload } from "@/api/endpoints/incidentManagement/cases"
 import type { DeepNullable } from "@/types/common"
 import { saveAs } from "file-saver"
@@ -76,7 +75,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import CaseReportTemplateSelect from "./CaseReportTemplateSelect.vue"
 
-const { size, caseId } = defineProps<{ size?: Size; caseId: number }>()
+const { size, caseId } = defineProps<{ size?: ButtonSize; caseId: number }>()
 
 const ReportIcon = "carbon:report-data"
 const dFormats = useSettingsStore().dateFormat

@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
@@ -25,7 +25,7 @@ import Icon from "@/components/common/Icon.vue"
 
 const { alert, size } = defineProps<{
 	alert: MonitoringAlert
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

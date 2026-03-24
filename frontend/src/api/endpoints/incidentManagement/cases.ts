@@ -119,15 +119,18 @@ export default {
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
-	exportCases(customerCode?: string) {
+	exportCases(customerCode?: string, year?: number, month?: number) {
 		let url = `/incidents/report/generate-report-csv`
 
 		if (customerCode) {
 			url = `/incidents/report/generate-report-csv/${customerCode}`
 		}
 
-		return HttpClient.post<Blob>(url, {
-			responseType: "blob"
+		return HttpClient.post<Blob>(url, null, {
+			responseType: "blob",
+			params: {
+				...(year !== undefined && month !== undefined ? { year, month } : {})
+			}
 		})
 	},
 	getCaseDataStoreFiles(caseId: number) {

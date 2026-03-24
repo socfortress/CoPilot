@@ -1,0 +1,79 @@
+{
+  "id": "EDR_PROCESS_ACTIVITY",
+  "title": "Wazuh EDR - Process Activity",
+  "description": "Sysmon Event ID 1 (Process Create), 5 (Process Terminated), and 25 (Process Tampering). Covers executed binaries, command-line arguments, parent process chains, and the users initiating execution.",
+  "panels": [
+    {
+      "id": "process_create",
+      "title": "Process Create (EID 1)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:1"
+    },
+    {
+      "id": "process_terminate",
+      "title": "Process Terminate (EID 5)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:5"
+    },
+    {
+      "id": "process_tamper",
+      "title": "Process Tampering (EID 25)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:25"
+    },
+    {
+      "id": "process_over_time",
+      "title": "Process Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:1 OR data_win_system_eventID:5 OR data_win_system_eventID:25"
+    },
+    {
+      "id": "top_images",
+      "title": "Top Executed Images",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:1",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    },
+    {
+      "id": "top_parent_images",
+      "title": "Top Parent Images",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:1",
+      "field": "data_win_eventdata_parentImage",
+      "size": 10
+    },
+    {
+      "id": "top_cmdlines",
+      "title": "Top Command Lines",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:1",
+      "field": "data_win_eventdata_commandLine",
+      "size": 10
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:1",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    }
+  ]
+}

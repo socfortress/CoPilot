@@ -1,6 +1,13 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type {
+	DashboardCategory,
+	DashboardCategoryWithTemplates,
+	EnableDashboardPayload,
+	EnabledDashboard,
+	PanelDataResponse
+} from "@/types/dashboards.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
+import type { EventSource } from "@/types/eventSources.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 export interface EventSourceCreatePayload {
@@ -41,7 +48,14 @@ export default {
 	queryEvents(
 		customerCode: string,
 		sourceName: string,
-		params: { timerange?: string; page_size?: number; scroll_id?: string; query?: string }
+		params: {
+			timerange?: string
+			page_size?: number
+			scroll_id?: string
+			query?: string
+			time_from?: string
+			time_to?: string
+		}
 	) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
@@ -55,6 +69,40 @@ export default {
 	getFieldMappings(customerCode: string, sourceName: string) {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
 			`/siem/events/${customerCode}/${sourceName}/fields`
+		)
+	},
+
+	// ── Dashboards ──────────────────────────────────────────────
+	getDashboardCategories() {
+		return HttpClient.get<FlaskBaseResponse & { categories: DashboardCategory[] }>(`/siem/dashboards/templates`)
+	},
+	getDashboardCategory(categoryId: string) {
+		return HttpClient.get<FlaskBaseResponse & { category: DashboardCategoryWithTemplates }>(
+			`/siem/dashboards/templates/${categoryId}`
+		)
+	},
+	getEnabledDashboards(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { enabled_dashboards: EnabledDashboard[] }>(
+			`/siem/dashboards/enabled/${customerCode}`
+		)
+	},
+	enableDashboard(payload: EnableDashboardPayload) {
+		return HttpClient.post<FlaskBaseResponse & { enabled_dashboard: EnabledDashboard }>(
+			`/siem/dashboards/enable`,
+			payload
+		)
+	},
+	disableDashboard(dashboardId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/siem/dashboards/disable/${dashboardId}`)
+	},
+	getPanelData(dashboardId: number, timerange: string, signal?: AbortSignal) {
+		return HttpClient.post<PanelDataResponse>(
+			`/siem/dashboards/panel-data`,
+			{
+				dashboard_id: dashboardId,
+				timerange
+			},
+			signal ? { signal } : {}
 		)
 	}
 }

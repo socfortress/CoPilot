@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, watch } from "vue"
@@ -44,7 +44,7 @@ import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 const { activeResponse, size, agentId } = defineProps<{
 	activeResponse: SupportedActiveResponse
 	agentId?: string | number
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

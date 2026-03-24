@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler.d"
 import { NButton, NModal, useMessage } from "naive-ui"
@@ -53,7 +53,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import JobForm from "./JobForm.vue"
 
-const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
+const props = defineProps<{ job: Job; size?: ButtonSize; inline?: boolean }>()
 const { job, size } = toRefs(props)
 
 const StartIcon = "material-symbols:autoplay"

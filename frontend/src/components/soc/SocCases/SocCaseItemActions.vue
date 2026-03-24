@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
@@ -39,7 +39,7 @@ import { StateName } from "@/types/soc/case.d"
 
 const { caseData, size } = defineProps<{
 	caseData: SocCase | SocCaseExt | null
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

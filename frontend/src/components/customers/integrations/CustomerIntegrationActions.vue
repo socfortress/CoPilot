@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { ApiCommonResponse } from "@/types/common.d"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
@@ -29,7 +29,7 @@ import { handleDeleteIntegration } from "./utils"
 const { integration, hideDeleteButton, size } = defineProps<{
 	integration: CustomerIntegration
 	hideDeleteButton?: boolean
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{

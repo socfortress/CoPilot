@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import type { AiAnalysisResponse } from "@/types/threatIntel.d"
 import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref, watchEffect } from "vue"
@@ -113,7 +113,7 @@ const {
 	indexId: string
 	alertId: number
 	forceLicenseResponse?: boolean
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))

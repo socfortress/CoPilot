@@ -21,6 +21,53 @@ export interface FieldMapping {
 	type: string
 }
 
+export interface DashboardPanel {
+	id: string
+	title: string
+	type: string
+	w: number
+	h: number
+	lucene: string
+	field?: string
+	size?: number
+}
+
+export interface DashboardTemplate {
+	id: string
+	title: string
+	description: string
+	panels: DashboardPanel[]
+}
+
+export interface EnabledDashboard {
+	id: number
+	customer_code: string
+	event_source_id: number
+	library_card: string
+	template_id: string
+	display_name: string
+	created_at: string
+}
+
+export interface PanelResult {
+	type: string
+	value: number | null
+	labels: string[]
+	data: number[]
+	error: string | null
+}
+
+export interface PanelDataResponse {
+	panels: Record<string, PanelResult>
+	template: DashboardTemplate
+	dashboard_id: number
+	customer_code: string
+	source_name: string
+	accent_color: string
+	success: boolean
+	message: string
+}
+
 export class SiemAPI {
 	static async getCustomerCodes(): Promise<{ success: boolean; customer_codes: string[] }> {
 		return (await httpClient.get("/auth/me/customers")).data
@@ -35,7 +82,14 @@ export class SiemAPI {
 	static async queryEvents(
 		customerCode: string,
 		sourceName: string,
-		params: { timerange?: string; page_size?: number; scroll_id?: string; query?: string }
+		params: {
+			timerange?: string
+			page_size?: number
+			scroll_id?: string
+			query?: string
+			time_from?: string
+			time_to?: string
+		}
 	): Promise<{
 		success: boolean
 		message: string
@@ -58,5 +112,15 @@ export class SiemAPI {
 		index_pattern: string
 	}> {
 		return (await httpClient.get(`/siem/events/${customerCode}/${sourceName}/fields`)).data
+	}
+
+	static async getEnabledDashboards(
+		customerCode: string
+	): Promise<{ success: boolean; enabled_dashboards: EnabledDashboard[] }> {
+		return (await httpClient.get(`/siem/dashboards/enabled/${customerCode}`)).data
+	}
+
+	static async getPanelData(dashboardId: number, timerange: string): Promise<PanelDataResponse> {
+		return (await httpClient.post(`/siem/dashboards/panel-data`, { dashboard_id: dashboardId, timerange })).data
 	}
 }

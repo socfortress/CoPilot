@@ -1,15 +1,15 @@
 import type {
 	ScaOverviewQuery,
 	ScaOverviewResponse,
+	ScaPackageAgentsResponse,
+	ScaPackageRegistryResponse,
+	ScaPoliciesIndexResponse,
+	ScaPolicyContentResponse,
 	SCAReportDeleteResponse,
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
-	ScaStatsResponse,
-	ScaPoliciesIndexResponse,
-	ScaPolicyContentResponse,
-	ScaPackageRegistryResponse,
-	ScaPackageAgentsResponse
+	ScaStatsResponse
 } from "@/types/sca.d"
 import { HttpClient } from "../httpClient"
 import { createSSEStream } from "../sseClient"

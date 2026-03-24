@@ -6,6 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import LargeBinary
 from sqlalchemy import Text
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -538,3 +539,33 @@ class EventSources(SQLModel, table=True):
         if hasattr(source_data, "enabled"):
             self.enabled = source_data.enabled
         self.updated_at = datetime.utcnow()
+
+
+class EnabledDashboards(SQLModel, table=True):
+    __tablename__ = "enabled_dashboards"
+    __table_args__ = (
+        UniqueConstraint(
+            "customer_code",
+            "event_source_id",
+            "library_card",
+            "template_id",
+            name="uq_enabled_dashboard",
+        ),
+    )
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        foreign_key="customers.customer_code",
+        max_length=50,
+        index=True,
+        nullable=False,
+    )
+    event_source_id: int = Field(foreign_key="event_sources.id", nullable=False, index=True)
+    library_card: str = Field(max_length=255, nullable=False)
+    template_id: str = Field(max_length=255, nullable=False)
+    display_name: str = Field(max_length=255, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Relationships
+    customer: Optional["Customers"] = Relationship()
+    event_source: Optional["EventSources"] = Relationship()

@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Size } from "naive-ui/es/button/src/interface"
+import type { ButtonSize } from "naive-ui"
 import { NButton, NModal } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -31,7 +31,7 @@ import Icon from "@/components/common/Icon.vue"
 const { integrationName, customerCode, size } = defineProps<{
 	integrationName: string
 	customerCode: string
-	size?: Size
+	size?: ButtonSize
 }>()
 
 const CustomerIntegrationMetaDetails = defineAsyncComponent(

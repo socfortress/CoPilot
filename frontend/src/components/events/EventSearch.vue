@@ -40,6 +40,15 @@
 						<span class="text-xs opacity-60">Time Range</span>
 						<n-select v-model:value="timerange" :options="timerangeOptions" style="width: 140px" />
 					</div>
+					<div v-if="timerange === 'custom'" class="flex flex-col gap-1">
+						<span class="text-xs opacity-60">Custom Range</span>
+						<n-date-picker
+							v-model:value="customDateRange"
+							type="datetimerange"
+							clearable
+							style="width: 380px"
+						/>
+					</div>
 					<div class="flex flex-col gap-1">
 						<span class="text-xs opacity-60">Page Size</span>
 						<n-select v-model:value="pageSize" :options="pageSizeOptions" style="width: 110px" />
@@ -60,7 +69,6 @@
 				<!-- Query Bar with Autocomplete -->
 				<div class="relative">
 					<n-input
-						ref="queryInputRef"
 						v-model:value="query"
 						placeholder="Lucene query (e.g. agent_name:server01 AND rule_level:>=10)"
 						clearable
@@ -81,8 +89,8 @@
 						<div
 							v-for="(suggestion, index) in filteredSuggestions"
 							:key="suggestion.field"
-							class="suggestion-item flex cursor-pointer items-center justify-between px-3 py-1.5 text-sm hover:bg-[var(--hover-005-color)]"
-							:class="{ 'bg-[var(--hover-005-color)]': index === activeSuggestionIndex }"
+							class="suggestion-item hover:bg-hover-005 flex cursor-pointer items-center justify-between px-3 py-1.5 text-sm"
+							:class="{ 'bg-hover-005': index === activeSuggestionIndex }"
 							@mousedown.prevent="applySuggestion(suggestion.field)"
 						>
 							<span class="font-mono">{{ suggestion.field }}</span>
@@ -102,13 +110,13 @@
 					</span>
 				</div>
 				<n-data-table
-					:columns="columns"
+					:columns
 					:data="events"
 					:bordered="false"
 					:single-line="false"
 					size="small"
 					:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
-					:row-props="rowProps"
+					:row-props
 					max-height="calc(100vh - 360px)"
 					virtual-scroll
 				/>
@@ -135,10 +143,10 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { Customer } from "@/types/customers.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
-import type { Customer } from "@/types/customers.d"
-import { NAlert, NButton, NCard, NDataTable, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NCard, NDataTable, NDatePicker, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
@@ -149,6 +157,7 @@ const route = useRoute()
 
 const SearchIcon = "carbon:search"
 const CodeIcon = "carbon:code"
+const FIELD_TOKEN_REGEX = /(?:^|[\s(])([a-z_][\w.]*)$/i
 
 const message = useMessage()
 
@@ -192,6 +201,9 @@ const eventSourceOptions = computed(() =>
 const showNoSourcesWarning = computed(
 	() => selectedCustomerCode.value && !loadingEventSources.value && eventSourcesList.value.length === 0
 )
+
+// -- Field mappings / autocomplete --
+const fieldMappings = ref<FieldMapping[]>([])
 
 function getEventSources(customerCode: string) {
 	loadingEventSources.value = true
@@ -239,8 +251,10 @@ const timerangeOptions = [
 	{ label: "3 days", value: "3d" },
 	{ label: "7 days", value: "7d" },
 	{ label: "14 days", value: "14d" },
-	{ label: "30 days", value: "30d" }
+	{ label: "30 days", value: "30d" },
+	{ label: "Custom", value: "custom" }
 ]
+const customDateRange = ref<[number, number] | null>(null)
 
 const pageSize = ref(50)
 const pageSizeOptions = [
@@ -252,8 +266,6 @@ const pageSizeOptions = [
 
 const query = ref("")
 
-// -- Field mappings / autocomplete --
-const fieldMappings = ref<FieldMapping[]>([])
 const showSuggestions = ref(false)
 const activeSuggestionIndex = ref(0)
 
@@ -277,7 +289,7 @@ const currentFieldToken = computed(() => {
 	const cursorPos = query.value.length
 	const before = query.value.substring(0, cursorPos)
 	// Match the last word being typed (field name token before a colon or standalone)
-	const match = before.match(/(?:^|[\s(])([a-zA-Z_][\w.]*)$/)
+	const match = before.match(FIELD_TOKEN_REGEX)
 	return match ? match[1] : ""
 })
 
@@ -296,7 +308,7 @@ function applySuggestion(fieldName: string) {
 	const token = currentFieldToken.value
 	if (token) {
 		const lastIndex = query.value.lastIndexOf(token)
-		query.value = query.value.substring(0, lastIndex) + fieldName + ":"
+		query.value = `${query.value.substring(0, lastIndex) + fieldName}:`
 	}
 	showSuggestions.value = false
 }
@@ -329,12 +341,19 @@ function searchEvents() {
 	hasSearched.value = true
 	resetResults()
 
+	const params: { timerange?: string; page_size: number; query?: string; time_from?: string; time_to?: string } = {
+		page_size: pageSize.value,
+		query: query.value || undefined
+	}
+	if (timerange.value === "custom" && customDateRange.value) {
+		params.time_from = new Date(customDateRange.value[0]).toISOString()
+		params.time_to = new Date(customDateRange.value[1]).toISOString()
+	} else {
+		params.timerange = timerange.value === "custom" ? "24h" : timerange.value
+	}
+
 	Api.siem
-		.queryEvents(selectedCustomerCode.value, selectedSourceName.value, {
-			timerange: timerange.value,
-			page_size: pageSize.value,
-			query: query.value || undefined
-		})
+		.queryEvents(selectedCustomerCode.value, selectedSourceName.value, params)
 		.then(res => {
 			if (res.data.success) {
 				events.value = res.data.events || []
