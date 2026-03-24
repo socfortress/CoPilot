@@ -1,0 +1,109 @@
+{
+  "id": "EDR_NETWORK_CONNECTIONS",
+  "title": "Wazuh EDR - Network Connections",
+  "description": "Sysmon Event ID 3 (Network Connection), 8 (CreateRemoteThread), and 9 (RawAccessRead). Tracks outbound and inbound TCP/UDP connections by process, destination IPs, ports, and initiating users.",
+  "panels": [
+    {
+      "id": "total_network",
+      "title": "Network Connections (EID 3)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:3"
+    },
+    {
+      "id": "remote_threads",
+      "title": "Remote Thread Create (EID 8)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:8"
+    },
+    {
+      "id": "raw_access",
+      "title": "Raw Access Read (EID 9)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:9"
+    },
+    {
+      "id": "network_over_time",
+      "title": "Network Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:3"
+    },
+    {
+      "id": "by_protocol",
+      "title": "By Protocol",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_protocol",
+      "size": 8
+    },
+    {
+      "id": "by_initiated",
+      "title": "Initiated vs Received",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_initiated",
+      "size": 4
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:3",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "top_dst_ips",
+      "title": "Top Destination IPs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_destinationIp",
+      "size": 10
+    },
+    {
+      "id": "top_dst_ports",
+      "title": "Top Destination Ports",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_destinationPort",
+      "size": 10
+    },
+    {
+      "id": "top_src_images",
+      "title": "Top Connecting Processes",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:3",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    }
+  ]
+}

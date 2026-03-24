@@ -1,0 +1,89 @@
+{
+  "id": "EDR_REGISTRY_ACTIVITY",
+  "title": "Wazuh EDR - Registry Activity",
+  "description": "Sysmon registry events: Event ID 12 (RegistryEvent – Object Added/Deleted), 13 (RegistryEvent – Value Set), and 14 (RegistryEvent – Object Renamed). Tracks Windows registry modifications — useful for detecting persistence mechanisms, malware configuration, and hijacking.",
+  "panels": [
+    {
+      "id": "total_registry",
+      "title": "Total Registry Events",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14"
+    },
+    {
+      "id": "keys_added_deleted",
+      "title": "Keys Added / Deleted (EID 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:12"
+    },
+    {
+      "id": "values_set",
+      "title": "Values Set (EID 13)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_win_system_eventID:13"
+    },
+    {
+      "id": "registry_over_time",
+      "title": "Registry Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14"
+    },
+    {
+      "id": "by_event_type",
+      "title": "By Event Type",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14",
+      "field": "data_win_system_eventID",
+      "size": 4
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "by_user",
+      "title": "By User",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    },
+    {
+      "id": "top_target_objects",
+      "title": "Top Target Registry Keys",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14",
+      "field": "data_win_eventdata_targetObject",
+      "size": 10
+    },
+    {
+      "id": "top_modifying_processes",
+      "title": "Top Modifying Processes",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:12 OR data_win_system_eventID:13 OR data_win_system_eventID:14",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    }
+  ]
+}

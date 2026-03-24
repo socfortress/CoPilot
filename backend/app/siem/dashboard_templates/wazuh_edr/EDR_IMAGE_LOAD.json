@@ -1,0 +1,81 @@
+{
+  "id": "EDR_IMAGE_LOAD",
+  "title": "Wazuh EDR - Driver & Image Load",
+  "description": "Sysmon Event ID 6 (Driver Loaded) and Event ID 7 (Image Loaded / DLL). Tracks kernel drivers and shared libraries loaded by processes. Signature status visibility supports detection of unsigned or untrusted modules — key indicators of rootkits and DLL injection.",
+  "panels": [
+    {
+      "id": "drivers_loaded",
+      "title": "Drivers Loaded (EID 6)",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_win_system_eventID:6"
+    },
+    {
+      "id": "images_loaded",
+      "title": "Images (DLL) Loaded (EID 7)",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_win_system_eventID:7"
+    },
+    {
+      "id": "image_load_over_time",
+      "title": "Image Load Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:6 OR data_win_system_eventID:7"
+    },
+    {
+      "id": "by_event_type",
+      "title": "Driver vs Image Load",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:6 OR data_win_system_eventID:7",
+      "field": "data_win_system_eventID",
+      "size": 4
+    },
+    {
+      "id": "by_signed",
+      "title": "By Signature Status",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:7",
+      "field": "data_win_eventdata_signed",
+      "size": 4
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:6 OR data_win_system_eventID:7",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "top_loaded_images",
+      "title": "Top Loaded Images (DLL)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:7",
+      "field": "data_win_eventdata_imageLoaded",
+      "size": 10
+    },
+    {
+      "id": "top_loading_processes",
+      "title": "Top Loading Processes",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:7",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    }
+  ]
+}

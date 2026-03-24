@@ -1,0 +1,97 @@
+{
+  "id": "EDR_FILE_OPERATIONS",
+  "title": "Wazuh EDR - File Operations",
+  "description": "Sysmon file-system events: Event ID 11 (FileCreate), 15 (FileCreateStreamHash / ADS), 23 (FileDelete), and 26 (FileDeleteDetected). Tracks file creation and deletion activity across endpoints — useful for detecting malware drops, ransomware, and data staging.",
+  "panels": [
+    {
+      "id": "total_file_events",
+      "title": "Total File Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:15 OR data_win_system_eventID:23 OR data_win_system_eventID:26"
+    },
+    {
+      "id": "files_created",
+      "title": "Files Created (EID 11)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_win_system_eventID:11"
+    },
+    {
+      "id": "stream_hash",
+      "title": "ADS / Stream Hash (EID 15)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_win_system_eventID:15"
+    },
+    {
+      "id": "files_deleted",
+      "title": "Files Deleted (EID 23/26)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_win_system_eventID:23 OR data_win_system_eventID:26"
+    },
+    {
+      "id": "file_events_over_time",
+      "title": "File Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:15 OR data_win_system_eventID:23 OR data_win_system_eventID:26"
+    },
+    {
+      "id": "by_event_type",
+      "title": "By Event Type",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:15 OR data_win_system_eventID:23 OR data_win_system_eventID:26",
+      "field": "data_win_system_eventID",
+      "size": 6
+    },
+    {
+      "id": "by_agent",
+      "title": "By Agent",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:15 OR data_win_system_eventID:23 OR data_win_system_eventID:26",
+      "field": "agent_name",
+      "size": 10
+    },
+    {
+      "id": "by_user",
+      "title": "By User",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:23",
+      "field": "data_win_eventdata_user",
+      "size": 10
+    },
+    {
+      "id": "top_target_files",
+      "title": "Top Target File Paths",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:11 OR data_win_system_eventID:23 OR data_win_system_eventID:26",
+      "field": "data_win_eventdata_targetFilename",
+      "size": 10
+    },
+    {
+      "id": "top_creating_processes",
+      "title": "Top Creating Processes",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_win_system_eventID:11",
+      "field": "data_win_eventdata_image",
+      "size": 10
+    }
+  ]
+}
