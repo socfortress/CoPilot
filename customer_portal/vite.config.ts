@@ -21,7 +21,9 @@ export default defineConfig(({ mode }) => {
 					defineModel: true
 				}
 			}),
-			VueDevTools(),
+			VueDevTools({
+				launchEditor: "cursor"
+			}),
 			svgLoader()
 		],
 		resolve: {
