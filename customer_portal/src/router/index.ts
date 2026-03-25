@@ -77,7 +77,7 @@ const routes = [
 		meta: { requiresAuth: true }
 	},
 	{
-		path: "/dashboards/view/:id",
+		path: "/dashboards/:id",
 		name: "DashboardView",
 		component: DashboardViewPage,
 		meta: { requiresAuth: true }
