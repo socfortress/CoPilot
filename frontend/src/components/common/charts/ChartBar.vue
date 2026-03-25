@@ -53,7 +53,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			animations: { enabled: true },
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
-					const idx = config.dataPointIndex
+					const idx = config?.dataPointIndex ?? 0
 					const name = props.labels[idx]
 					if (name) emit("itemClick", { name })
 				}

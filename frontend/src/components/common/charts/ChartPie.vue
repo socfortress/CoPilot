@@ -50,7 +50,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			animations: { enabled: true },
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
-					const idx = config.dataPointIndex
+					const idx = config?.dataPointIndex ?? 0
 					const name = props.labels[idx]
 					if (name) emit("itemClick", { name })
 				}
@@ -73,7 +73,9 @@ const chartOptions = computed<ApexOptions>(() => {
 					size: "55%",
 					labels: {
 						show: true,
-						value: { color: fg }
+						name: { fontFamily: ff, fontSize: "12px", offsetY: -2 },
+						value: { color: fg, fontFamily: ff, fontSize: "12px", offsetY: 0 },
+						total: { color: fg, fontFamily: ff, fontSize: "12px", offsetY: 2 }
 					}
 				}
 			}
@@ -97,8 +99,8 @@ const chartOptions = computed<ApexOptions>(() => {
 				offsetX: -5
 			},
 			formatter: (seriesName, opts) => {
-				const series = opts.w.globals.series as number[]
-				const value = series[opts.seriesIndex] ?? 0
+				const series = opts?.w.globals.series as number[]
+				const value = series[opts?.seriesIndex ?? 0] ?? 0
 				const total = series.reduce((sum, v) => sum + v, 0)
 				const pct = total > 0 ? (value / total) * 100 : 0
 				return `${seriesName} - ${value} (${pct.toFixed(1)}%)`

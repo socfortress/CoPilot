@@ -57,7 +57,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			animations: { enabled: true },
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
-					const idx = config.dataPointIndex
+					const idx = config?.dataPointIndex ?? 0
 					const name = props.labels[idx]
 					if (name) emit("itemClick", { name })
 				}
@@ -65,7 +65,29 @@ const chartOptions = computed<ApexOptions>(() => {
 		},
 		responsive: [
 			{
-				breakpoint: 1200,
+				breakpoint: 1100,
+				options: {
+					xaxis: {
+						tickAmount: 10,
+						labels: {
+							show: true
+						}
+					}
+				}
+			},
+			{
+				breakpoint: 750,
+				options: {
+					xaxis: {
+						tickAmount: 5,
+						labels: {
+							show: true
+						}
+					}
+				}
+			},
+			{
+				breakpoint: 500,
 				options: {
 					xaxis: {
 						labels: {
@@ -102,9 +124,11 @@ const chartOptions = computed<ApexOptions>(() => {
 					? [dayjs(label).format(dFormats.date), dayjs(label).format(dFormats.time)]
 					: label
 			}),
+			tickAmount: 20,
 			labels: {
-				style: { colors: fg, fontSize: "9px" },
-				rotate: -65,
+				show: true,
+				style: { colors: fg, fontSize: "11px" },
+				rotate: -50,
 				rotateAlways: true,
 				hideOverlappingLabels: true,
 				trim: false
