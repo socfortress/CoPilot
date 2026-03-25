@@ -1,0 +1,73 @@
+/* router-fade */
+.router-fade-enter-active,
+.router-fade-leave-active {
+	transition: opacity var(--router-transition-duration) ease-in-out;
+}
+.router-fade-enter-from,
+.router-fade-leave-to {
+	opacity: 0;
+}
+
+/* router-fade-up */
+.router-fade-up-enter-active,
+.router-fade-up-leave-active {
+	transition:
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
+}
+.router-fade-up-enter-from {
+	opacity: 0;
+	transform: translateY(10px);
+}
+.router-fade-up-leave-to {
+	opacity: 0;
+	transform: translateY(-10px);
+}
+
+/* router-fade-bottom */
+.router-fade-bottom-enter-active,
+.router-fade-bottom-leave-active {
+	transition:
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
+}
+.router-fade-bottom-enter-from {
+	opacity: 0;
+	transform: translateY(-10px);
+}
+.router-fade-bottom-leave-to {
+	opacity: 0;
+	transform: translateY(10px);
+}
+
+/* router-fade-left */
+.router-fade-left-enter-active,
+.router-fade-left-leave-active {
+	transition:
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
+}
+.router-fade-left-enter-from {
+	opacity: 0;
+	transform: translateX(10px);
+}
+.router-fade-left-leave-to {
+	opacity: 0;
+	transform: translateX(-10px);
+}
+
+/* router-fade-right */
+.router-fade-right-enter-active,
+.router-fade-right-leave-active {
+	transition:
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
+}
+.router-fade-right-enter-from {
+	opacity: 0;
+	transform: translateX(-10px);
+}
+.router-fade-right-leave-to {
+	opacity: 0;
+	transform: translateX(10px);
+}
