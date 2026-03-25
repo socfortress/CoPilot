@@ -21,10 +21,12 @@ export interface FieldMapping {
 	type: string
 }
 
+export type DashboardPanelType = "stat" | "pie" | "bar_h" | "histogram"
+
 export interface DashboardPanel {
 	id: string
 	title: string
-	type: string
+	type: DashboardPanelType
 	w: number
 	h: number
 	lucene: string
@@ -120,7 +122,17 @@ export class SiemAPI {
 		return (await httpClient.get(`/siem/dashboards/enabled/${customerCode}`)).data
 	}
 
-	static async getPanelData(dashboardId: number, timerange: string): Promise<PanelDataResponse> {
-		return (await httpClient.post(`/siem/dashboards/panel-data`, { dashboard_id: dashboardId, timerange })).data
+	static async getPanelData(
+		dashboardId: number,
+		timerange: string,
+		signal?: AbortSignal
+	): Promise<PanelDataResponse> {
+		return (
+			await httpClient.post(
+				`/siem/dashboards/panel-data`,
+				{ dashboard_id: dashboardId, timerange },
+				signal ? { signal } : {}
+			)
+		).data
 	}
 }
