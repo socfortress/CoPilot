@@ -137,7 +137,7 @@ reactivex==4.0.4
 redis==4.6.0
 regex==2023.10.3
 reportlab==4.0.5
-requests==2.31.0
+requests==2.33.0
 requests-cache==1.1.0
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
