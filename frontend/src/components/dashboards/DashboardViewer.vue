@@ -58,7 +58,7 @@
 					:data="item.data.data"
 					:monochrome="item.panel.type === 'histogram'"
 					:labels-datetime="item.panel.type === 'histogram'"
-					:height="`${item.panel.h}px`"
+					:height="`${item.panel.type === 'histogram' ? `${item.panel.h + 100}px` : `${item.panel.h}px`}`"
 					@item-click="onChartItemClick(item.panel, $event.name)"
 				/>
 

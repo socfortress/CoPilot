@@ -1,0 +1,182 @@
+import type { Component } from "vue"
+import type { OsTypesFull, SafeAny } from "@/types/common.d"
+import process from "node:process"
+import { isMobile as detectMobile } from "detect-touch-device"
+import { md5 } from "js-md5"
+import isDateObject from "lodash/isDate"
+import _trim from "lodash/trim"
+import { h } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import dayjs from "./dayjs"
+
+// Transform File Instance in base64 string
+export function file2Base64(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader()
+		reader.readAsDataURL(blob)
+		reader.onload = () => resolve(reader.result as string)
+		reader.onerror = error => reject(error)
+	})
+}
+
+export function isEnvDev() {
+	return process.env.NODE_ENV === "development"
+}
+export function isEnvTest() {
+	return process.env.NODE_ENV === "test"
+}
+export function isEnvProd() {
+	return process.env.NODE_ENV === "production"
+}
+
+export function isMobile() {
+	return detectMobile
+}
+
+const URL_PATTERN = /^https?:\/\//i
+
+export function isUrlLike(text: string) {
+	return URL_PATTERN.test(text)
+}
+
+export function renderIcon(icon: Component | string) {
+	if (typeof icon === "string") {
+		return () => h(Icon, { name: icon })
+	} else {
+		return () => h(Icon, null, { default: () => h(icon) })
+	}
+}
+
+export function iconFromOs(os: string): string {
+	switch (getOS(os).toLowerCase()) {
+		case "windows":
+			return "mdi:microsoft"
+		case "macos":
+			return "mdi:apple"
+		case "linux":
+		case "unix":
+			return "mdi:linux"
+		default:
+			return "mdi:help-box"
+	}
+}
+
+export function getOS(os: string): OsTypesFull {
+	const test = os.toLowerCase()
+	if (test.includes("mac") || test.includes("darwin") || test.includes("apple")) {
+		return "MacOS"
+	}
+	if (test.includes("win") || test.includes("microsoft")) {
+		return "Windows"
+	}
+	if (
+		test.includes("linux") ||
+		test.includes("ubuntu") ||
+		test.includes("unix") ||
+		test.includes("x11") ||
+		test.includes("debian") ||
+		test.includes("centos")
+	) {
+		return "Linux"
+	}
+
+	return "Unknown"
+}
+
+export function getNavigatorOS(): OsTypesFull {
+	let os: OsTypesFull = "Unknown"
+	if (navigator.userAgent.includes("Win")) os = "Windows"
+	if (navigator.userAgent.includes("Mac")) os = "MacOS"
+	if (navigator.userAgent.includes("X11")) os = "UNIX"
+	if (navigator.userAgent.includes("Linux")) os = "Linux"
+
+	return os
+}
+
+export function delay(t: number) {
+	return new Promise(res => setTimeout(res, t))
+}
+
+export function hashMD5(text: number | string) {
+	return md5(text.toString())
+}
+
+export function price(
+	amount: number,
+	options: { currency?: "USD" | "EUR"; splitDecimal?: boolean } = { currency: "USD", splitDecimal: true }
+) {
+	let symbol = ""
+	switch (options.currency) {
+		case "USD":
+			symbol = "$"
+			break
+		case "EUR":
+			symbol = "€"
+			break
+	}
+
+	const price = options.splitDecimal ? (amount / 100).toFixed(2) : amount
+
+	return `${symbol}${price}`
+}
+
+export function getBaseUrl() {
+	return _trim(import.meta.env.VITE_API_URL, "/")
+}
+
+export function getNameInitials(name: string, cap?: number) {
+	let initials = name.slice(0, 2)
+
+	if (name.includes(" ")) {
+		initials = name
+			.split(" ")
+			.map(chunk => chunk[0])
+			.join()
+	}
+
+	return (cap ? initials.slice(0, cap) : initials).toUpperCase()
+}
+
+export function getAvatar(params: { seed: string; text?: string; size?: number; format?: "png" | "svg" }) {
+	const format: "png" | "svg" = params.text ? "svg" : params.format || "svg"
+
+	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`
+}
+
+const NUMERIC_TIMESTAMP_REGEX = /^\d{10,}$/
+
+export function isDate(val?: SafeAny): boolean {
+	if (val === undefined || val === null || val === "") return false
+
+	if (isDateObject(val)) return true
+
+	const strVal = String(val)
+
+	// Check for numeric timestamps (seconds, ms or µs)
+	// We enforce a minimum length of 10 digits to avoid false positives like "188" or "2"
+	if (NUMERIC_TIMESTAMP_REGEX.test(strVal)) {
+		const num = Number.parseInt(strVal)
+		// Handle ms (13 digits) or µs (16+ digits) by normalizing to ms
+		const date = strVal.length >= 13 ? dayjs(num / 10 ** (strVal.length - 13)) : dayjs(num * 1000)
+		return date.isValid()
+	}
+
+	// For ISO strings and other complex formats, we use a hybrid approach
+	// 1. Check for ISO-like strings (containing T and possibly Z or +/- offset)
+	if (strVal.includes("T")) {
+		// dayjs() parser is quite robust for ISO 8601 even without explicit format
+		return dayjs(strVal).isValid()
+	}
+
+	// 2. Strict parsing for regional formats
+	const regionalFormats = ["DD/MM/YYYY", "MM/DD/YYYY", "DD-MM-YYYY", "MM-DD-YYYY", "YYYY-MM-DD", "YYYY-DD-MM"]
+
+	return dayjs(strVal, regionalFormats, true).isValid()
+}
+
+export function formatCompactNumber(value: number | null | undefined): string {
+	if (value == null) return "—"
+	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+	return value.toLocaleString()
+}

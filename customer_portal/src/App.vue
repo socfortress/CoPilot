@@ -1,9 +1,12 @@
 <template>
-	<router-view />
+	<Provider>
+		<router-view />
+	</Provider>
 </template>
 
 <script setup lang="ts">
 import { onMounted, watch } from "vue"
+import Provider from "@/app-layouts/common/Provider.vue"
 import { usePortalSettingsStore } from "./stores/portalSettings"
 
 const portalSettingsStore = usePortalSettingsStore()

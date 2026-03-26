@@ -72,30 +72,6 @@
 
 		<!-- Main Content -->
 		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-			<!-- Customer Selector -->
-			<div class="mb-6 rounded-lg bg-white shadow">
-				<div class="px-4 py-5 sm:p-6">
-					<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-						<div>
-							<label for="customer-select" class="block text-sm font-medium text-gray-700">
-								Customer
-							</label>
-							<select
-								id="customer-select"
-								v-model="selectedCustomerCode"
-								@change="onCustomerChange"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							>
-								<option value="">Select a customer</option>
-								<option v-for="code in customerCodes" :key="code" :value="code">
-									{{ code }}
-								</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-
 			<!-- Error -->
 			<div v-if="error" class="mb-6 rounded-md border border-red-300 bg-red-50 p-4">
 				<p class="text-sm text-red-700">{{ error }}</p>
@@ -162,7 +138,7 @@
 									</td>
 									<td class="px-6 py-4 text-right text-sm whitespace-nowrap">
 										<router-link
-											:to="`/dashboards/view/${dash.id}`"
+											:to="{ name: 'DashboardView', params: { id: dash.id } }"
 											class="font-medium text-indigo-600 hover:text-indigo-900"
 										>
 											View Dashboard
@@ -229,12 +205,13 @@ const customerCodes = ref<string[]>([])
 const selectedCustomerCode = ref("")
 const dashboards = ref<EnabledDashboard[]>([])
 
+// TODO-FE: get customer code from login
 async function loadCustomerCodes() {
 	try {
 		const response = await SiemAPI.getCustomerCodes()
 		customerCodes.value = response.customer_codes.filter(c => c !== "*")
 		// Auto-select if only one customer
-		if (customerCodes.value.length === 1) {
+		if (customerCodes.value.length) {
 			selectedCustomerCode.value = customerCodes.value[0]
 			loadDashboards(selectedCustomerCode.value)
 		}
