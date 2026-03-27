@@ -434,7 +434,7 @@
 									:key
 									class="group flex items-start justify-between py-3"
 								>
-									<dt class="min-w-0 flex-shrink-0 font-mono text-xs font-semibold text-gray-500">
+									<dt class="min-w-0 shrink-0 font-mono text-xs font-semibold text-gray-500">
 										{{ key }}
 									</dt>
 									<dd class="ml-4 min-w-0 flex-1 text-right text-sm break-all text-gray-900">
@@ -493,11 +493,13 @@
 </template>
 
 <script setup lang="ts">
-import type { EventSearchResult, EventSource, FieldMapping } from "@/api/siem"
+import type { EventSearchResult, EventSource, FieldMapping } from "@/api/endpoints/siem"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import { SiemAPI } from "@/api/siem"
+import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
+
+const LUCENE_FIELD_TOKEN_AT_END_RE = /(?:^|[\s(])(\w[\w.]*)$/
 
 const router = useRouter()
 const route = useRoute()
@@ -533,12 +535,25 @@ const eventSources = ref<EventSource[]>([])
 const loadingEventSources = ref(false)
 const selectedSourceName = ref("")
 
+// -- Search parameters --
+const timerange = ref("24h")
+const pageSize = ref(50)
+const query = ref("")
+const customTimeFrom = ref("")
+const customTimeTo = ref("")
+
+// -- Field mappings / autocomplete --
+const fieldMappings = ref<FieldMapping[]>([])
+const showSuggestions = ref(false)
+const activeSuggestionIndex = ref(0)
+const queryInputRef = ref<HTMLInputElement | null>(null)
+
 const enabledSources = computed(() => eventSources.value.filter(s => s.enabled))
 
 async function loadCustomerCodes() {
 	try {
-		const response = await SiemAPI.getCustomerCodes()
-		customerCodes.value = response.customer_codes.filter(c => c !== "*")
+		const response = await Api.siem.getCustomerCodes()
+		customerCodes.value = response.data.customer_codes.filter(c => c !== "*")
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load customer codes"
 	}
@@ -550,8 +565,8 @@ async function loadEventSources(customerCode: string) {
 	selectedSourceName.value = ""
 	fieldMappings.value = []
 	try {
-		const response = await SiemAPI.getEventSources(customerCode)
-		eventSources.value = response.event_sources
+		const response = await Api.siem.getEventSources(customerCode)
+		eventSources.value = response.data.event_sources
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load event sources"
 	} finally {
@@ -577,24 +592,11 @@ function onSourceChange() {
 	}
 }
 
-// -- Search parameters --
-const timerange = ref("24h")
-const pageSize = ref(50)
-const query = ref("")
-const customTimeFrom = ref("")
-const customTimeTo = ref("")
-
-// -- Field mappings / autocomplete --
-const fieldMappings = ref<FieldMapping[]>([])
-const showSuggestions = ref(false)
-const activeSuggestionIndex = ref(0)
-const queryInputRef = ref<HTMLInputElement | null>(null)
-
 async function loadFieldMappings() {
 	if (!selectedCustomerCode.value || !selectedSourceName.value) return
 	try {
-		const response = await SiemAPI.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
-		fieldMappings.value = response.fields
+		const response = await Api.siem.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
+		fieldMappings.value = response.data.fields
 	} catch {
 		// Non-critical, autocomplete just won't work
 	}
@@ -602,7 +604,7 @@ async function loadFieldMappings() {
 
 const currentFieldToken = computed(() => {
 	const text = query.value
-	const match = text.match(/(?:^|[\s(])(\w[\w.]*)$/)
+	const match = text.match(LUCENE_FIELD_TOKEN_AT_END_RE)
 	return match ? match[1] : ""
 })
 
@@ -668,10 +670,10 @@ async function searchEvents() {
 			params.timerange = timerange.value === "custom" ? "24h" : timerange.value
 		}
 
-		const response = await SiemAPI.queryEvents(selectedCustomerCode.value, selectedSourceName.value, params)
-		events.value = response.events
-		totalEvents.value = response.total
-		scrollId.value = response.scroll_id
+		const response = await Api.siem.queryEvents(selectedCustomerCode.value, selectedSourceName.value, params)
+		events.value = response.data.events
+		totalEvents.value = response.data.total
+		scrollId.value = response.data.scroll_id
 		hasSearched.value = true
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to search events"
@@ -685,11 +687,11 @@ async function loadMoreEvents() {
 
 	loadingMore.value = true
 	try {
-		const response = await SiemAPI.queryEvents(selectedCustomerCode.value, selectedSourceName.value, {
+		const response = await Api.siem.queryEvents(selectedCustomerCode.value, selectedSourceName.value, {
 			scroll_id: scrollId.value
 		})
-		events.value.push(...response.events)
-		scrollId.value = response.scroll_id
+		events.value.push(...response.data.events)
+		scrollId.value = response.data.scroll_id
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load more events"
 	} finally {
