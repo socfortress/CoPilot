@@ -103,9 +103,7 @@ async def add_allowed_email(email: str, role_id: int = 2) -> SSOAllowedEmail:
     email = email.lower().strip()
     async with AsyncSession(async_engine) as session:
         # Check duplicate
-        result = await session.execute(
-            select(SSOAllowedEmail).where(SSOAllowedEmail.email == email)
-        )
+        result = await session.execute(select(SSOAllowedEmail).where(SSOAllowedEmail.email == email))
         existing = result.scalars().first()
         if existing:
             raise ValueError(f"Email {email} is already in the allowlist")
@@ -118,9 +116,7 @@ async def add_allowed_email(email: str, role_id: int = 2) -> SSOAllowedEmail:
 
 async def delete_allowed_email(email_id: int) -> bool:
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(SSOAllowedEmail).where(SSOAllowedEmail.id == email_id)
-        )
+        result = await session.execute(select(SSOAllowedEmail).where(SSOAllowedEmail.id == email_id))
         entry = result.scalars().first()
         if entry is None:
             return False
@@ -131,9 +127,7 @@ async def delete_allowed_email(email_id: int) -> bool:
 
 async def find_allowed_email(email: str) -> Optional[SSOAllowedEmail]:
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(SSOAllowedEmail).where(SSOAllowedEmail.email == email)
-        )
+        result = await session.execute(select(SSOAllowedEmail).where(SSOAllowedEmail.email == email))
         return result.scalars().first()
 
 
@@ -396,10 +390,7 @@ async def _get_cf_public_keys(team_domain: str) -> list:
 async def validate_cf_jwt(token: str, cfg: SSOConfig) -> dict:
     """Validate a Cloudflare Access JWT assertion and return its claims."""
     if not cfg.cf_team_domain or not _CF_DOMAIN_RE.match(cfg.cf_team_domain):
-        raise ValueError(
-            f"Invalid Cloudflare team domain '{cfg.cf_team_domain}'. "
-            "Must match *.cloudflareaccess.com"
-        )
+        raise ValueError(f"Invalid Cloudflare team domain '{cfg.cf_team_domain}'. " "Must match *.cloudflareaccess.com")
 
     header = jwt.get_unverified_header(token)
     kid = header.get("kid")

@@ -1,7 +1,9 @@
 """TOTP 2FA business logic — setup, verification, backup codes, brute-force protection."""
 
 import base64
-import datetime
+
+# ── Encryption key for TOTP secrets ──────────────────────────────────────────
+import hashlib
 import io
 import os
 import secrets
@@ -20,9 +22,6 @@ from sqlmodel import select
 
 from app.auth.models.totp import UserTOTP
 from app.db.db_session import async_engine
-
-# ── Encryption key for TOTP secrets ──────────────────────────────────────────
-import hashlib
 
 # Prefer a dedicated TOTP_ENCRYPTION_KEY (proper Fernet key, separate from JWT).
 # Falls back to a key derived from JWT_SECRET so existing deployments that
@@ -56,9 +55,7 @@ def _check_rate_limit(user_id: int) -> None:
         return
     if fail_count >= _MAX_ATTEMPTS:
         remaining = int(_LOCKOUT_SECONDS - (time.time() - first_fail_time))
-        raise ValueError(
-            f"Too many failed 2FA attempts. Try again in {remaining} seconds."
-        )
+        raise ValueError(f"Too many failed 2FA attempts. Try again in {remaining} seconds.")
 
 
 def _record_failure(user_id: int) -> None:
@@ -129,9 +126,7 @@ def _generate_qr_data_uri(otpauth_url: str) -> str:
 
 async def get_user_totp(user_id: int) -> Optional[UserTOTP]:
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         return result.scalars().first()
 
 
@@ -152,9 +147,7 @@ async def setup_totp(user_id: int, username: str) -> dict:
     qr_data_uri = _generate_qr_data_uri(otpauth_url)
 
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         existing = result.scalars().first()
         if existing and existing.enabled:
             raise ValueError("2FA is already enabled. Disable it first to reconfigure.")
@@ -190,9 +183,7 @@ async def verify_setup(user_id: int, code: str) -> bool:
     _check_rate_limit(user_id)
 
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         entry = result.scalars().first()
         if entry is None:
             raise ValueError("No 2FA setup found. Call setup first.")
@@ -216,9 +207,7 @@ async def verify_setup(user_id: int, code: str) -> bool:
     return True
 
 
-async def validate_totp(
-    user_id: int, code: Optional[str] = None, backup_code: Optional[str] = None
-) -> bool:
+async def validate_totp(user_id: int, code: Optional[str] = None, backup_code: Optional[str] = None) -> bool:
     """Validate a TOTP code or backup code during login."""
     _check_rate_limit(user_id)
 
@@ -226,9 +215,7 @@ async def validate_totp(
         raise ValueError("Provide either a TOTP code or a backup code.")
 
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         entry = result.scalars().first()
         if entry is None or not entry.enabled:
             raise ValueError("2FA is not enabled for this user.")
@@ -272,17 +259,13 @@ async def validate_totp(
     raise ValueError("Provide either a TOTP code or a backup code.")
 
 
-async def disable_totp(
-    user_id: int, code: Optional[str] = None, backup_code: Optional[str] = None
-) -> bool:
+async def disable_totp(user_id: int, code: Optional[str] = None, backup_code: Optional[str] = None) -> bool:
     """Disable 2FA. Requires a valid TOTP code or backup code."""
     # Validate the code first
     await validate_totp(user_id, code=code, backup_code=backup_code)
 
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         entry = result.scalars().first()
         if entry:
             await session.delete(entry)
@@ -297,9 +280,7 @@ async def regenerate_backup_codes(user_id: int, code: str) -> list[str]:
     _check_rate_limit(user_id)
 
     async with AsyncSession(async_engine) as session:
-        result = await session.execute(
-            select(UserTOTP).where(UserTOTP.user_id == user_id)
-        )
+        result = await session.execute(select(UserTOTP).where(UserTOTP.user_id == user_id))
         entry = result.scalars().first()
         if entry is None or not entry.enabled:
             raise ValueError("2FA is not enabled.")

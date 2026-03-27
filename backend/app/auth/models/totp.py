@@ -4,9 +4,9 @@ import datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from sqlmodel import JSON
 from sqlmodel import Column
 from sqlmodel import Field
-from sqlmodel import JSON
 from sqlmodel import SQLModel
 from sqlmodel import Text
 

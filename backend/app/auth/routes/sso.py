@@ -4,14 +4,11 @@ import os
 from datetime import timedelta
 
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Security
-from fastapi import status
 from fastapi.responses import RedirectResponse
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.sso import SSOAllowedEmailInput
 from app.auth.models.sso import SSOAllowedEmailListResponse
@@ -34,7 +31,6 @@ from app.auth.services.sso import upsert_sso_config
 from app.auth.services.sso import validate_cf_jwt
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
@@ -136,7 +132,7 @@ async def update_sso_settings(body: SSOConfigUpdate):
     cfg = await upsert_sso_config(data)
     logger.info(
         f"SSO config updated: sso_enabled={cfg.sso_enabled}, "
-        f"azure={cfg.azure_enabled}, google={cfg.google_enabled}, cf={cfg.cf_enabled}"
+        f"azure={cfg.azure_enabled}, google={cfg.google_enabled}, cf={cfg.cf_enabled}",
     )
 
     return SSOConfigResponse(
