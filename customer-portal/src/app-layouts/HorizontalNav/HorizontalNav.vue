@@ -1,5 +1,6 @@
 <template>
-	<div class="layout flex">
+	<div class="layout flex flex-col">
+		<HeaderBar />
 		<Sidebar />
 		<MainContainer class="grow">
 			<slot />
@@ -8,6 +9,7 @@
 </template>
 
 <script lang="ts" setup>
+import HeaderBar from "./HeaderBar.vue"
 import MainContainer from "./MainContainer.vue"
 import Sidebar from "./Sidebar.vue"
 import "./main.scss"

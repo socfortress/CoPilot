@@ -4,7 +4,7 @@ import { AuthUserRole, RouteRole } from "@/types/auth"
 import { Layout } from "@/types/theme"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
-import OverviewPage from "@/views/OverviewPage.vue"
+import Overview from "@/views/Overview.vue"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,14 +16,29 @@ const router = createRouter({
 		{
 			path: "/overview",
 			name: "Overview",
-			component: OverviewPage,
+			component: Overview,
 			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/alerts",
-			name: "Alerts",
-			component: () => import("@/views/Alerts.vue"),
-			meta: { title: "Alerts", auth: true, roles: RouteRole.All }
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "",
+					name: "AlertsList",
+					component: () => import("@/views/Alerts/List.vue"),
+					meta: { title: "Alerts" }
+				},
+				{
+					path: ":id",
+					name: "AlertOverview",
+					component: () => import("@/views/Alerts/Overview.vue"),
+					meta: { title: "Alert Details", skipPin: true }
+				}
+			]
 		},
 		{
 			path: "/cases",

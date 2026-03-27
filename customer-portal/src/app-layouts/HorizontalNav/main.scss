@@ -1,17 +1,17 @@
 @import "variables";
 @import "mixin";
 
-.layout-VerticalNav {
+.layout-HorizontalNav {
 	.page {
 		padding-bottom: var(--view-padding);
 	}
 	.page-wrapped {
 		padding-bottom: 0;
-		height: calc(100svh - var(--toolbar-height) - var(--view-padding));
+		height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
 	}
 	.page-min-wrapped {
 		padding-bottom: 0;
-		min-height: calc(100svh - var(--toolbar-height) - var(--view-padding));
+		min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
 	}
 	.page-mobile-full {
 		@media (max-width: $sidebar-bp) {
@@ -21,7 +21,7 @@
 	}
 }
 .direction-rtl {
-	.layout-VerticalNav {
+	.layout-HorizontalNav {
 		.page-mobile-full {
 			@media (max-width: $sidebar-bp) {
 				right: calc(var(--view-padding) * -1);
