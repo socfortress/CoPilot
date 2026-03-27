@@ -13,7 +13,9 @@
 					name="carbon:arrow-up-right"
 					class="group-hover:text-primary transition-colors"
 				/>
+				<slot name="header-extra" />
 			</div>
+			<slot />
 			<div class="font-mono text-xl font-semibold">
 				<slot name="value">{{ value }}</slot>
 			</div>

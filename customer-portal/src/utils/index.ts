@@ -101,7 +101,7 @@ export function getAvatar(params: { seed: string; text?: string; size?: number; 
 
 export function getApiErrorMessage(err: ApiError): string {
 	const axiosMessage = err.message
-	const detail = err.response?.data?.detail
+	const detail = err.response?.data?.message
 
 	// Handle validation errors (array of ValidationError objects)
 	if (Array.isArray(detail)) {
@@ -368,4 +368,11 @@ export function getHealthColor(status: string | null): "error" | "warning" | "in
 	}
 
 	return map[status.toLowerCase()] ?? "default"
+}
+
+export function formatCompactNumber(value: number | null | undefined): string {
+	if (value == null) return "—"
+	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+	return value.toLocaleString()
 }

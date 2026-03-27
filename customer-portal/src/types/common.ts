@@ -12,10 +12,6 @@ export interface ValidationError {
 	input?: any
 }
 
-export interface HttpError {
-	detail: string | ValidationError[]
-}
-
 export type OsTypesFull = "Unknown" | "Windows" | "MacOS" | "UNIX" | "Linux"
 export type OsTypesLower = "linux" | "windows" | "macos"
 export type Severity = "critical" | "high" | "medium" | "low" | "info"
@@ -30,7 +26,7 @@ export type Status =
 	| "success"
 	| "progress"
 	| "failure"
-export type ApiError = AxiosError<HttpError>
+export type ApiError = AxiosError<HttpCommonResponse>
 export type ApiResponse<T = unknown> = AxiosResponse<HttpCommonResponse & T>
 export type CommonResponse<T = unknown> = HttpCommonResponse & T
 

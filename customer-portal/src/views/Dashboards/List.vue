@@ -60,8 +60,8 @@
 							<span class="font-medium">{{ username }}</span>
 						</div>
 						<button
-							@click="logout"
 							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+							@click="logout"
 						>
 							Logout
 						</button>
@@ -171,10 +171,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount } from "vue"
+import type { EnabledDashboard } from "@/api/endpoints/siem"
+import { computed, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
+import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
-import { SiemAPI, type EnabledDashboard } from "@/api/siem"
 
 const router = useRouter()
 const portalSettingsStore = usePortalSettingsStore()
@@ -208,8 +209,8 @@ const dashboards = ref<EnabledDashboard[]>([])
 // TODO-FE: get customer code from login
 async function loadCustomerCodes() {
 	try {
-		const response = await SiemAPI.getCustomerCodes()
-		customerCodes.value = response.customer_codes.filter(c => c !== "*")
+		const response = await Api.siem.getCustomerCodes()
+		customerCodes.value = response.data.customer_codes.filter(c => c !== "*")
 		// Auto-select if only one customer
 		if (customerCodes.value.length) {
 			selectedCustomerCode.value = customerCodes.value[0]
@@ -220,19 +221,11 @@ async function loadCustomerCodes() {
 	}
 }
 
-function onCustomerChange() {
-	dashboards.value = []
-	error.value = ""
-	if (selectedCustomerCode.value) {
-		loadDashboards(selectedCustomerCode.value)
-	}
-}
-
 async function loadDashboards(customerCode: string) {
 	loading.value = true
 	try {
-		const response = await SiemAPI.getEnabledDashboards(customerCode)
-		dashboards.value = response.enabled_dashboards
+		const response = await Api.siem.getEnabledDashboards(customerCode)
+		dashboards.value = response.data.enabled_dashboards
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load dashboards"
 	} finally {
