@@ -1,25 +1,12 @@
-import { defineStore } from "pinia"
+import type { PortalSettings } from "@/types/portal"
 import axios from "axios"
-
-interface PortalSettings {
-	id: number
-	title: string
-	logo_base64: string
-	logo_mime_type: string
-	updated_at: string
-}
-
-interface PortalSettingsState {
-	settings: PortalSettings | null
-	loading: boolean
-	error: string | null
-}
+import { defineStore } from "pinia"
 
 const STORAGE_KEY = "customer-portal-settings"
 
 export const usePortalSettingsStore = defineStore("portalSettings", {
-	state: (): PortalSettingsState => ({
-		settings: null,
+	state: () => ({
+		settings: null as PortalSettings | null,
 		loading: false,
 		error: null
 	}),
@@ -35,7 +22,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 	},
 
 	actions: {
-		// TODO: use persist with custom storage
+		// TODO-FE: use persist with custom storage
 		loadFromSessionStorage() {
 			try {
 				const stored = sessionStorage.getItem(STORAGE_KEY)

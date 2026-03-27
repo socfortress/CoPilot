@@ -60,14 +60,14 @@
 							<span class="font-medium">{{ username }}</span>
 						</div>
 						<button
-							@click="openChangePasswordModal"
 							class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+							@click="openChangePasswordModal"
 						>
 							Change Password
 						</button>
 						<button
-							@click="logout"
 							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+							@click="logout"
 						>
 							Logout
 						</button>
@@ -108,8 +108,8 @@
 							<div class="mt-2 text-sm text-red-700">{{ error }}</div>
 							<div class="mt-3">
 								<button
-									@click="refreshData"
 									class="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200"
+									@click="refreshData"
 								>
 									Try Again
 								</button>
@@ -351,8 +351,8 @@
 								</div>
 								<div class="mt-6 text-center">
 									<button
-										@click="goToAlerts"
 										class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+										@click="goToAlerts"
 									>
 										View all alerts →
 									</button>
@@ -411,8 +411,8 @@
 								</div>
 								<div class="mt-6 text-center">
 									<button
-										@click="goToCases"
 										class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+										@click="goToCases"
 									>
 										View all cases →
 									</button>
@@ -429,8 +429,8 @@
 						<div class="p-6">
 							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
 								<button
-									@click="goToAlerts"
 									class="flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="goToAlerts"
 								>
 									<svg
 										class="mr-2 h-5 w-5 text-gray-400"
@@ -448,8 +448,8 @@
 									View Alerts
 								</button>
 								<button
-									@click="goToCases"
 									class="flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="goToCases"
 								>
 									<svg
 										class="mr-2 h-5 w-5 text-gray-400"
@@ -467,8 +467,8 @@
 									View Cases
 								</button>
 								<button
-									@click="goToAgents"
 									class="flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="goToAgents"
 								>
 									<svg
 										class="mr-2 h-5 w-5 text-gray-400"
@@ -486,8 +486,8 @@
 									View Agents
 								</button>
 								<button
-									@click="refreshData"
 									class="flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="refreshData"
 								>
 									<svg
 										class="mr-2 h-5 w-5 text-gray-400"
@@ -538,13 +538,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from "vue"
+import type { Alert } from "@/api/alerts"
+import type { Case } from "@/api/cases"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
-import { usePortalSettingsStore } from "@/stores/portalSettings"
-import AlertsAPI, { type Alert } from "@/api/alerts"
-import CasesAPI, { type Case } from "@/api/cases"
 import AgentsAPI from "@/api/agents"
+import AlertsAPI from "@/api/alerts"
+import CasesAPI from "@/api/cases"
 import ChangePasswordModal from "@/components/ChangePasswordModal.vue"
+import { usePortalSettingsStore } from "@/stores/portalSettings"
 
 interface Stats {
 	totalAlerts: number
@@ -613,7 +615,7 @@ const alertTrendClass = computed(() => {
 	return "text-gray-600"
 })
 
-const formatTimeAgo = (dateString: string) => {
+function formatTimeAgo(dateString: string) {
 	if (!dateString) return "Unknown"
 
 	try {
@@ -636,7 +638,7 @@ const formatTimeAgo = (dateString: string) => {
 	}
 }
 
-const fetchDashboardData = async () => {
+async function fetchDashboardData() {
 	loading.value = true
 	error.value = ""
 
@@ -730,36 +732,36 @@ const fetchDashboardData = async () => {
 	}
 }
 
-const refreshData = () => {
+function refreshData() {
 	fetchDashboardData()
 }
 
-const goToAlerts = () => {
-	router.push("/alerts")
+function goToAlerts() {
+	router.push({ name: "AlertsList" })
 }
 
-const goToCases = () => {
-	router.push("/cases")
+function goToCases() {
+	router.push({ name: "CasesList" })
 }
 
-const goToAgents = () => {
-	router.push("/agents")
+function goToAgents() {
+	router.push({ name: "AgentsList" })
 }
 
-const openChangePasswordModal = () => {
+function openChangePasswordModal() {
 	showChangePasswordModal.value = true
 }
 
-const closeChangePasswordModal = () => {
+function closeChangePasswordModal() {
 	showChangePasswordModal.value = false
 }
 
-const onPasswordChanged = () => {
+function onPasswordChanged() {
 	// Optionally show a success message or perform other actions
 	console.log("Password changed successfully")
 }
 
-const logout = () => {
+function logout() {
 	localStorage.removeItem("customer-portal-auth-token")
 	localStorage.removeItem("customer-portal-user")
 	router.push("/login")

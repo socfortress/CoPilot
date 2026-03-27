@@ -1,17 +1,16 @@
 import type { LoginPayload } from "@/api/endpoints/auth"
-import type { AuthResponse, AuthUser, JWTPayload, RouteMetaAuthRole } from "@/types/auth"
+import type { AuthResponse, AuthUser, AuthUserRole, JWTPayload, RouteMetaAuthRole } from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
 import * as jose from "jose"
 import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
-import _toLower from "lodash/toLower"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
-import { AuthUserRole, RouteRole } from "@/types/auth"
+import { RouteRole } from "@/types/auth"
 import { getAvatar } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
-import { getNameInitials, toBoolean, toNumber } from "@/utils/format"
+import { getNameInitials, toNumber } from "@/utils/format"
 import { piniaStorage, removePersistentSessionKey } from "@/utils/secure-storage"
 
 export const useAuthStore = defineStore("auth", {
@@ -19,10 +18,7 @@ export const useAuthStore = defineStore("auth", {
 		user: null as AuthUser | null,
 		profile: null as User | null,
 		loadingProfile: false,
-		tokenDebounceTime: toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) || 10, // seconds
-		useCustomAuth: toBoolean(import.meta.env.VITE_USE_CUSTOM_AUTH) || false,
-		useKeycloak: !toBoolean(import.meta.env.VITE_USE_CUSTOM_AUTH),
-		keycloakCallbackUrl: `${window.location.origin}${import.meta.env.VITE_KEYCLOAK_CALLBACK_URL || "/auth/callback"}`
+		tokenDebounceTime: toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) || 10 // seconds
 	}),
 	actions: {
 		setLogged(payload: AuthResponse) {
@@ -45,19 +41,11 @@ export const useAuthStore = defineStore("auth", {
 			this.profile = payload
 		},
 		setLogout() {
-			if (this.useKeycloak) {
-				const refreshToken = this.user?.refresh_token
-				if (refreshToken) {
-					Api.auth.logoutKeycloak(refreshToken).catch(() => {})
-				}
-			}
-
 			this.user = null
 			this.profile = null
 
 			removePersistentSessionKey()
 		},
-		/** used if USE_CUSTOM_AUTH is true */
 		async login(payload: LoginPayload) {
 			try {
 				const response = await Api.auth.login(payload)
@@ -103,9 +91,8 @@ export const useAuthStore = defineStore("auth", {
 			return new Promise((resolve, reject) => {
 				const refreshToken = this.user?.refresh_token || ""
 
-				const refreshMethod = this.useKeycloak ? Api.auth.refreshKeycloakToken : Api.auth.refresh
-
-				refreshMethod(refreshToken)
+				Api.auth
+					.refresh(refreshToken)
 					.then(res => {
 						if (res.data) {
 							this.setTokens(res.data)
@@ -149,18 +136,6 @@ export const useAuthStore = defineStore("auth", {
 		},
 		userCustomerId(): number | null {
 			return this.profile?.customer_id || null
-		},
-		isAdmin(): boolean {
-			return !!(this.userRoleName && _toLower(this.userRoleName) === "admin")
-		},
-		isSuperuser(): boolean {
-			return this.userRole === AuthUserRole.Superuser
-		},
-		isMSSPUser(): boolean {
-			return this.userCustomerId === null && !this.isSuperuser
-		},
-		isRegularUser(): boolean {
-			return !this.isSuperuser && this.userCustomerId !== null
 		},
 		isRoleGranted() {
 			return (roles?: RouteMetaAuthRole | RouteMetaAuthRole[]) => {
