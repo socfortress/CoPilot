@@ -60,8 +60,8 @@
 							<span class="font-medium">{{ username }}</span>
 						</div>
 						<button
-							@click="logout"
 							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+							@click="logout"
 						>
 							Logout
 						</button>
@@ -102,8 +102,8 @@
 							<div class="mt-2 text-sm text-red-700">{{ error }}</div>
 							<div class="mt-3">
 								<button
-									@click="loadAgents"
 									class="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200"
+									@click="loadAgents"
 								>
 									Try Again
 								</button>
@@ -292,8 +292,8 @@
 							</div>
 							<div class="mt-4 flex justify-end">
 								<button
-									@click="clearFilters"
 									class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+									@click="clearFilters"
 								>
 									Clear Filters
 								</button>
@@ -425,23 +425,23 @@
 											<div class="flex space-x-2">
 												<button
 													v-if="!agent.critical_asset"
-													@click="markAsCritical(agent)"
 													class="text-xs text-orange-600 hover:text-orange-900"
 													:disabled="updatingAgent === agent.agent_id"
+													@click="markAsCritical(agent)"
 												>
 													Mark Critical
 												</button>
 												<button
 													v-else
-													@click="markAsNotCritical(agent)"
 													class="text-xs text-gray-600 hover:text-gray-900"
 													:disabled="updatingAgent === agent.agent_id"
+													@click="markAsNotCritical(agent)"
 												>
 													Remove Critical
 												</button>
 												<button
-													@click="viewAgentDetails(agent)"
 													class="text-xs text-indigo-600 hover:text-indigo-900"
+													@click="viewAgentDetails(agent)"
 												>
 													Details
 												</button>
@@ -459,16 +459,16 @@
 						>
 							<div class="flex flex-1 justify-between sm:hidden">
 								<button
-									@click="previousPage"
 									:disabled="currentPage <= 1"
 									class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+									@click="previousPage"
 								>
 									Previous
 								</button>
 								<button
-									@click="nextPage"
 									:disabled="currentPage >= totalPages"
 									class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+									@click="nextPage"
 								>
 									Next
 								</button>
@@ -493,9 +493,9 @@
 										aria-label="Pagination"
 									>
 										<button
-											@click="previousPage"
 											:disabled="currentPage <= 1"
 											class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+											@click="previousPage"
 										>
 											<span class="sr-only">Previous</span>
 											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -509,7 +509,6 @@
 										<button
 											v-for="page in visiblePages"
 											:key="page"
-											@click="typeof page === 'number' ? (currentPage = page) : null"
 											:class="{
 												'z-10 border-indigo-500 bg-indigo-50 text-indigo-600':
 													page === currentPage,
@@ -518,13 +517,14 @@
 											}"
 											class="relative inline-flex items-center border px-4 py-2 text-sm font-medium"
 											:disabled="typeof page === 'string'"
+											@click="typeof page === 'number' ? (currentPage = page) : null"
 										>
 											{{ page }}
 										</button>
 										<button
-											@click="nextPage"
 											:disabled="currentPage >= totalPages"
 											class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+											@click="nextPage"
 										>
 											<span class="sr-only">Next</span>
 											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -556,7 +556,7 @@
 			>
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-bold text-gray-900">Agent Details</h3>
-					<button @click="closeAgentDetails" class="text-gray-400 hover:text-gray-600">
+					<button class="text-gray-400 hover:text-gray-600" @click="closeAgentDetails">
 						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -652,10 +652,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeMount } from "vue"
+import type { Agent } from "@/api/endpoints/agents"
+import { computed, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
+import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
-import AgentsAPI, { type Agent } from "@/api/agents"
 
 const router = useRouter()
 const portalSettingsStore = usePortalSettingsStore()
@@ -780,7 +781,7 @@ const visiblePages = computed(() => {
 		.slice(0, 7)
 })
 
-const formatTimeAgo = (dateString: string) => {
+function formatTimeAgo(dateString: string) {
 	if (!dateString) return "Never"
 
 	try {
@@ -805,7 +806,7 @@ const formatTimeAgo = (dateString: string) => {
 	}
 }
 
-const formatDateTime = (dateString: string) => {
+function formatDateTime(dateString: string) {
 	if (!dateString) return "N/A"
 
 	try {
@@ -816,13 +817,13 @@ const formatDateTime = (dateString: string) => {
 	}
 }
 
-const loadAgents = async () => {
+async function loadAgents() {
 	loading.value = true
 	error.value = ""
 
 	try {
-		const response = await AgentsAPI.getAgents()
-		agents.value = response.agents || []
+		const response = await Api.agents.getAgents()
+		agents.value = response.data.agents || []
 	} catch (err: any) {
 		console.error("Failed to load agents:", err)
 		error.value = err.response?.data?.detail || err.message || "Failed to load agents"
@@ -832,10 +833,10 @@ const loadAgents = async () => {
 	}
 }
 
-const markAsCritical = async (agent: Agent) => {
+async function markAsCritical(agent: Agent) {
 	updatingAgent.value = agent.agent_id
 	try {
-		await AgentsAPI.markAgentAsCritical(agent.agent_id)
+		await Api.agents.markAgentAsCritical(agent.agent_id)
 		agent.critical_asset = true
 	} catch (err: any) {
 		console.error("Failed to mark agent as critical:", err)
@@ -845,10 +846,10 @@ const markAsCritical = async (agent: Agent) => {
 	}
 }
 
-const markAsNotCritical = async (agent: Agent) => {
+async function markAsNotCritical(agent: Agent) {
 	updatingAgent.value = agent.agent_id
 	try {
-		await AgentsAPI.markAgentAsNotCritical(agent.agent_id)
+		await Api.agents.markAgentAsNotCritical(agent.agent_id)
 		agent.critical_asset = false
 	} catch (err: any) {
 		console.error("Failed to mark agent as not critical:", err)
@@ -858,15 +859,15 @@ const markAsNotCritical = async (agent: Agent) => {
 	}
 }
 
-const viewAgentDetails = (agent: Agent) => {
+function viewAgentDetails(agent: Agent) {
 	selectedAgent.value = agent
 }
 
-const closeAgentDetails = () => {
+function closeAgentDetails() {
 	selectedAgent.value = null
 }
 
-const clearFilters = () => {
+function clearFilters() {
 	filters.value = {
 		status: "",
 		critical: "",
@@ -876,19 +877,19 @@ const clearFilters = () => {
 	currentPage.value = 1
 }
 
-const nextPage = () => {
+function nextPage() {
 	if (currentPage.value < totalPages.value) {
 		currentPage.value++
 	}
 }
 
-const previousPage = () => {
+function previousPage() {
 	if (currentPage.value > 1) {
 		currentPage.value--
 	}
 }
 
-const logout = () => {
+function logout() {
 	localStorage.removeItem("customer-portal-auth-token")
 	localStorage.removeItem("customer-portal-user")
 	router.push("/login")
