@@ -86,12 +86,20 @@ export interface AlertCommentPayload {
 	user_name: string
 }
 
+export interface AlertsListResponse {
+	alerts: Alert[]
+	total: 0
+	open: 0
+	in_progress: 0
+	closed: 0
+}
+
 export default {
 	/**
 	 * Get all alerts with customer access control
 	 */
 	getAlerts({ page, pageSize = 25, order = "desc" }: { page: number; pageSize: number; order: "asc" | "desc" }) {
-		return HttpClient.get<CommonResponse<{ alerts: Alert[] }>>("/incidents/db_operations/alerts", {
+		return HttpClient.get<CommonResponse<AlertsListResponse>>("/incidents/db_operations/alerts", {
 			params: { page, page_size: pageSize, order }
 		})
 	},

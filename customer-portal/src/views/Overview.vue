@@ -538,13 +538,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/api/alerts"
-import type { Case } from "@/api/cases"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
-import AgentsAPI from "@/api/agents"
-import AlertsAPI from "@/api/alerts"
-import CasesAPI from "@/api/cases"
+import Api from "@/api"
 import ChangePasswordModal from "@/components/ChangePasswordModal.vue"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 
@@ -615,6 +611,7 @@ const alertTrendClass = computed(() => {
 	return "text-gray-600"
 })
 
+// TODO-FE: move to dayjs
 function formatTimeAgo(dateString: string) {
 	if (!dateString) return "Unknown"
 
@@ -645,37 +642,27 @@ async function fetchDashboardData() {
 	try {
 		// Fetch alerts, cases, and agents data using our API services
 		const [alertsResponse, casesResponse, agentsResponse] = await Promise.all([
-			AlertsAPI.getAlerts(1, 50).catch(() => ({
-				alerts: [],
-				total: 0,
-				open: 0,
-				in_progress: 0,
-				closed: 0,
-				success: false,
-				message: "Failed to load alerts"
-			})),
-			CasesAPI.getCases().catch(() => ({ cases: [], success: false, message: "Failed to load cases" })),
-			AgentsAPI.getAgents().catch(() => ({ agents: [], success: false, message: "Failed to load agents" }))
+			Api.alerts.getAlerts({ page: 1, pageSize: 50, order: "desc" }),
+			Api.cases.getCases(),
+			Api.agents.getAgents()
 		])
 
-		const alerts = alertsResponse.alerts || []
-		const cases = casesResponse.cases || []
-		const agents = agentsResponse.agents || []
+		const alerts = alertsResponse.data.alerts || []
+		const cases = casesResponse.data.cases || []
+		const agents = agentsResponse.data.agents || []
 
 		// Calculate stats from real data
-		const openAlerts = alertsResponse.open || 0
-		const inProgressAlerts = alertsResponse.in_progress || 0
+		const openAlerts = alertsResponse.data.open || 0
+		const inProgressAlerts = alertsResponse.data.in_progress || 0
 
-		const openCases = cases.filter(
-			(case_: Case) => case_.case_status === "OPEN" || case_.case_status === "IN_PROGRESS"
-		).length
+		const openCases = cases.filter(o => o.case_status === "OPEN" || o.case_status === "IN_PROGRESS").length
 
 		// Calculate security score based on actual data
 		const totalActiveIssues = openAlerts + inProgressAlerts + openCases
 		const securityScore = Math.max(60, 100 - totalActiveIssues * 2)
 
 		stats.value = {
-			totalAlerts: alertsResponse.total || 0,
+			totalAlerts: alertsResponse.data.total || 0,
 			criticalAlerts: openAlerts + inProgressAlerts,
 			openCases,
 			totalAgents: agents.length,
@@ -686,28 +673,25 @@ async function fetchDashboardData() {
 
 		// Get recent alerts (last 5, sorted by creation time)
 		recentAlerts.value = alerts
-			.map((alert: Alert) => ({
+			.map(alert => ({
 				id: alert.id,
 				name: alert.alert_name || "Unnamed Alert",
 				description: alert.alert_description || "No description available",
 				severity: alert.status === "OPEN" ? "high" : alert.status === "IN_PROGRESS" ? "medium" : "low",
 				created_at: alert.alert_creation_time || new Date().toISOString()
 			}))
-			.sort(
-				(a: DashboardAlert, b: DashboardAlert) =>
-					new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-			)
+			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 			.slice(0, 5)
 
 		// Get recent cases (last 5, sorted by creation time)
 		recentCases.value = cases
-			.map((case_: Case) => ({
-				id: case_.id,
-				name: case_.case_name || "Unnamed Case",
-				description: case_.case_description || "No description available",
-				status: case_.case_status || "open",
-				created_at: case_.case_creation_time || new Date().toISOString(),
-				assigned_to: case_.assigned_to || undefined
+			.map(o => ({
+				id: o.id,
+				name: o.case_name || "Unnamed Case",
+				description: o.case_description || "No description available",
+				status: o.case_status || "open",
+				created_at: o.case_creation_time || new Date().toISOString(),
+				assigned_to: o.assigned_to || undefined
 			}))
 			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 			.slice(0, 5)
@@ -758,7 +742,7 @@ function closeChangePasswordModal() {
 
 function onPasswordChanged() {
 	// Optionally show a success message or perform other actions
-	console.log("Password changed successfully")
+	// console.log("Password changed successfully")
 }
 
 function logout() {

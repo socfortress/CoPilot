@@ -60,8 +60,8 @@
 							<span class="font-medium">{{ username }}</span>
 						</div>
 						<button
-							@click="logout"
 							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+							@click="logout"
 						>
 							Logout
 						</button>
@@ -84,8 +84,8 @@
 							<select
 								id="customer-select"
 								v-model="selectedCustomerCode"
-								@change="onCustomerChange"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="onCustomerChange"
 							>
 								<option value="">Select a customer</option>
 								<option v-for="code in customerCodes" :key="code" :value="code">
@@ -102,9 +102,9 @@
 							<select
 								id="source-select"
 								v-model="selectedSourceName"
-								@change="onSourceChange"
 								:disabled="!selectedCustomerCode || loadingEventSources"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 sm:text-sm"
+								@change="onSourceChange"
 							>
 								<option value="">Select a source</option>
 								<option v-for="src in enabledSources" :key="src.name" :value="src.name">
@@ -191,9 +191,9 @@
 								@keydown.escape="showSuggestions = false"
 							/>
 							<button
-								@click="searchEvents"
 								:disabled="!selectedCustomerCode || !selectedSourceName || loadingEvents"
 								class="absolute inset-y-0 right-0 inline-flex items-center rounded-r-md border border-transparent bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+								@click="searchEvents"
 							>
 								<svg
 									v-if="loadingEvents"
@@ -375,9 +375,9 @@
 				<!-- Load More -->
 				<div v-if="scrollId && events.length < totalEvents" class="mt-4 text-center">
 					<button
-						@click="loadMoreEvents"
 						:disabled="loadingMore"
 						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+						@click="loadMoreEvents"
 					>
 						<svg v-if="loadingMore" class="mr-2 -ml-1 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
 							<circle
@@ -411,8 +411,8 @@
 							<div class="flex items-start justify-between">
 								<h2 class="text-lg font-medium text-gray-900">Event Details</h2>
 								<button
-									@click="selectedEvent = null"
 									class="rounded-md text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+									@click="selectedEvent = null"
 								>
 									<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
@@ -431,7 +431,7 @@
 							<dl class="divide-y divide-gray-200">
 								<div
 									v-for="[key, value] in sortedEventFields"
-									:key="key"
+									:key
 									class="group flex items-start justify-between py-3"
 								>
 									<dt class="min-w-0 flex-shrink-0 font-mono text-xs font-semibold text-gray-500">
@@ -444,9 +444,9 @@
 										class="ml-2 flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100"
 									>
 										<button
-											@click="addFilter(key, String(value))"
 											title="Filter for this value"
 											class="rounded p-1 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600"
+											@click="addFilter(key, String(value))"
 										>
 											<svg
 												class="h-3.5 w-3.5"
@@ -463,9 +463,9 @@
 											</svg>
 										</button>
 										<button
-											@click="excludeFilter(key, String(value))"
 											title="Exclude this value"
 											class="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+											@click="excludeFilter(key, String(value))"
 										>
 											<svg
 												class="h-3.5 w-3.5"
@@ -493,10 +493,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount } from "vue"
-import { useRouter, useRoute } from "vue-router"
+import type { EventSearchResult, EventSource, FieldMapping } from "@/api/siem"
+import { computed, onBeforeMount, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
+import { SiemAPI } from "@/api/siem"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
-import { SiemAPI, type EventSource, type EventSearchResult, type FieldMapping } from "@/api/siem"
 
 const router = useRouter()
 const route = useRoute()
@@ -620,7 +621,7 @@ function applySuggestion(fieldName: string) {
 	const token = currentFieldToken.value
 	if (token) {
 		const lastIndex = query.value.lastIndexOf(token)
-		query.value = query.value.substring(0, lastIndex) + fieldName + ":"
+		query.value = `${query.value.substring(0, lastIndex) + fieldName}:`
 	}
 	showSuggestions.value = false
 	queryInputRef.value?.focus()
