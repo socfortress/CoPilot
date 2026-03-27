@@ -1,0 +1,137 @@
+{
+  "id": "O365_SUMMARY",
+  "title": "Office 365 - Summary",
+  "description": "High-level overview of all Office 365 activity: alert counts, workload distribution, operations breakdown, Azure AD authentication events (successes and failures), failed auth accounts, and a full event log with MITRE ATT&CK context.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:* AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:*"
+    },
+    {
+      "id": "azure_ad_total_auths",
+      "title": "Azure AD - Total Auths",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:AzureActiveDirectory AND data_office365_Operation:UserLoggedIn"
+    },
+    {
+      "id": "azure_ad_failed_auths",
+      "title": "Azure AD - Failed Auths",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:AzureActiveDirectory AND data_office365_Operation:UserLoginFailed"
+    },
+    {
+      "id": "events_over_time",
+      "title": "Events Over Time by Workload",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_office365_Workload:*"
+    },
+    {
+      "id": "by_workload",
+      "title": "Events by Workload",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Workload",
+      "size": 10
+    },
+    {
+      "id": "by_operation",
+      "title": "Events by Operation",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "by_rule_level",
+      "title": "By Rule Severity Level",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_office365_Workload:*",
+      "field": "rule_level",
+      "size": 10
+    },
+    {
+      "id": "top_operations",
+      "title": "Top Operations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "top_workloads",
+      "title": "Top Workloads",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Workload",
+      "size": 10
+    },
+    {
+      "id": "failed_auth_by_account",
+      "title": "Failed Auths by Account",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:AzureActiveDirectory AND data_office365_Operation:UserLoginFailed",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+    {
+      "id": "auth_by_country",
+      "title": "Azure AD Auth Events by Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_ActorIpAddress_country_code",
+      "size": 15
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_UserId",
+      "size": 10
+    },
+    {
+      "id": "top_rules",
+      "title": "Top Rules Triggered",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND rule_level:>=12",
+      "field": "rule_description",
+      "size": 10
+    }
+  ]
+}
