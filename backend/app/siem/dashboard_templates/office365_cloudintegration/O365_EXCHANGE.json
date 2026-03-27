@@ -1,0 +1,120 @@
+{
+  "id": "O365_EXCHANGE",
+  "title": "Office 365 - Exchange",
+  "description": "Exchange Online activity: mailbox operations, messages containing links, sessions started, user activity, source country analysis, and operation breakdowns.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:Exchange AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Events (Total)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:Exchange"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Severity (0 - 15)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:Exchange"
+    },
+
+    {
+      "id": "messages_with_links",
+      "title": "Messages Containing Link",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_office365_Workload:Exchange AND data_office365_Operation:MessageCreatedHasLink"
+    },
+    {
+      "id": "sessions_started",
+      "title": "Sessions Started",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_office365_Workload:Exchange AND data_office365_Operation:TeamsSessionStarted"
+    },
+
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:Exchange",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "top_operations",
+      "title": "Events by Operation",
+      "type": "bar_h",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:Exchange",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+
+    {
+      "id": "operations_over_time",
+      "title": "Top 10 Operations - Histogram",
+      "type": "histogram",
+      "w": 12,
+      "h": 250,
+      "lucene": "data_office365_Workload:Exchange"
+    },
+
+    {
+      "id": "top_users",
+      "title": "Exchange Events by Account",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:Exchange",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+    {
+      "id": "by_country",
+      "title": "All Events by Source Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:Exchange",
+      "field": "data_office365_ClientIP_country_code",
+      "size": 15
+    },
+
+    {
+      "id": "phishing_senders",
+      "title": "Top Phishing Senders",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence AND data_office365_Verdict:Phish",
+      "field": "data_office365_P1Sender",
+      "size": 15
+    },
+    {
+      "id": "phishing_receivers",
+      "title": "Top Phishing Receivers",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence AND data_office365_Verdict:Phish",
+      "field": "data_office365_Recipients",
+      "size": 15
+    }
+  ]
+}
