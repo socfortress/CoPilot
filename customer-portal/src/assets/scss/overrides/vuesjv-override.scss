@@ -1,0 +1,64 @@
+.vuesjv-override {
+	color: var(--fg-default-color) !important;
+	font-family: var(--font-family-mono) !important;
+	line-height: 1.7 !important;
+
+	.font-mono {
+		font-family: var(--font-family-mono) !important;
+	}
+
+	i {
+		font-size: 1rem;
+
+		&.i-mdi-content-copy {
+			font-size: 0.85rem;
+		}
+	}
+
+	.bg-gray-200 {
+		background-color: rgba(var(--border-color-rgb) / 0.1);
+	}
+	.c-gray-400 {
+		color: var(--fg-secondary-color);
+	}
+	.c-indigo-600 {
+		color: var(--extra2-color);
+	}
+	.c-blue-600,
+	.c-purple-600,
+	.c-red-600,
+	.c-pink-600,
+	.c-blue-900,
+	.c-blue-600,
+	.c-amber-600 {
+		color: var(--primary-color);
+		font-weight: bold;
+	}
+	.hover\:bg-gray-100 {
+		&:hover {
+			background-color: transparent;
+		}
+	}
+
+	.cursor-pointer {
+		color: var(--fg-default-color);
+		background-color: transparent;
+		height: 18px;
+		border-radius: 0;
+
+		&:has(.i-mdi-content-copy) {
+			width: 30px;
+		}
+
+		&:hover {
+			color: var(--primary-color);
+			background-color: transparent;
+		}
+	}
+
+	.flex.flex-col > .flex {
+		& > div:first-child {
+			white-space: nowrap;
+		}
+	}
+}

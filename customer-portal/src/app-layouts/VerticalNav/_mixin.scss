@@ -1,0 +1,6 @@
+@mixin page-full-view {
+	height: calc(100svh - var(--toolbar-height));
+	position: relative;
+	left: calc(var(--view-padding) * -1);
+	width: 100vw;
+}

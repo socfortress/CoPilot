@@ -1,0 +1,32 @@
+@import "variables";
+@import "mixin";
+
+.layout-VerticalNav {
+	.page {
+		padding-bottom: var(--view-padding);
+	}
+	.page-wrapped {
+		padding-bottom: 0;
+		height: calc(100svh - var(--toolbar-height) - var(--view-padding));
+	}
+	.page-min-wrapped {
+		padding-bottom: 0;
+		min-height: calc(100svh - var(--toolbar-height) - var(--view-padding));
+	}
+	.page-mobile-full {
+		@media (max-width: $sidebar-bp) {
+			padding-bottom: 0;
+			@include page-full-view;
+		}
+	}
+}
+.direction-rtl {
+	.layout-VerticalNav {
+		.page-mobile-full {
+			@media (max-width: $sidebar-bp) {
+				right: calc(var(--view-padding) * -1);
+				left: unset;
+			}
+		}
+	}
+}
