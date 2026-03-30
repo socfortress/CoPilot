@@ -83,8 +83,8 @@ async function loginWithCloudflare() {
 		}
 	} catch (err: any) {
 		message.error(
-			err.response?.data?.detail
-				? err.response?.data?.detail?.toString()
+			err.response?.data?.message || err.response?.data?.detail
+				? (err.response?.data?.message || err.response?.data?.detail)?.toString()
 				: "Cloudflare Access authentication failed. Make sure you are behind Cloudflare Access."
 		)
 	} finally {

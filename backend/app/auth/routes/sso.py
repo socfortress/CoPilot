@@ -25,6 +25,7 @@ from app.auth.services.sso import delete_allowed_email
 from app.auth.services.sso import exchange_azure_code
 from app.auth.services.sso import exchange_google_code
 from app.auth.services.sso import find_allowed_email
+from app.auth.services.sso import find_user_by_email
 from app.auth.services.sso import get_or_create_sso_user
 from app.auth.services.sso import get_sso_config
 from app.auth.services.sso import list_allowed_emails
@@ -42,6 +43,26 @@ auth_handler = AuthHandler()
 def _error_redirect(detail: str) -> RedirectResponse:
     """Redirect to the login page with an error message in the query string."""
     return RedirectResponse(url=f"/login?error_message={quote(detail)}")
+
+
+async def _resolve_sso_user(email: str):
+    """
+    Resolve an SSO login to a user account.
+    - Existing users log in directly (no allowlist check).
+    - New users require an allowlist entry for auto-provisioning.
+    """
+    user = await find_user_by_email(email)
+    if user:
+        return user
+
+    # New user — require allowlist entry for provisioning
+    allowed = await find_allowed_email(email)
+    if allowed is None:
+        raise ValueError(
+            f"Email {email} is not authorized for SSO access. Contact your administrator.",
+        )
+
+    return await get_or_create_sso_user(email, role_id=allowed.role_id)
 
 
 async def _issue_token_or_2fa(user, auth_handler) -> dict:
@@ -257,15 +278,11 @@ async def azure_callback(code: str = None, state: str = None, error: str = None)
     if not claims.get("email_verified", True):
         return _error_redirect("Azure account email is not verified")
 
-    # Check allowlist
-    allowed = await find_allowed_email(email.lower())
-    if allowed is None:
-        return _error_redirect(
-            f"Email {email} is not authorized for SSO access. Contact your administrator.",
-        )
-
-    # Provision or find user
-    user = await get_or_create_sso_user(email.lower(), role_id=allowed.role_id)
+    # Existing users log in directly; new users require allowlist entry
+    try:
+        user = await _resolve_sso_user(email.lower())
+    except ValueError as e:
+        return _error_redirect(str(e))
 
     # Issue token (full or 2FA-pending)
     result = await _issue_token_or_2fa(user, auth_handler)
@@ -321,15 +338,11 @@ async def google_callback(code: str = None, state: str = None, error: str = None
     if not claims.get("email_verified", False):
         return _error_redirect("Google account email is not verified")
 
-    # Check allowlist
-    allowed = await find_allowed_email(email.lower())
-    if allowed is None:
-        return _error_redirect(
-            f"Email {email} is not authorized for SSO access. Contact your administrator.",
-        )
-
-    # Provision or find user
-    user = await get_or_create_sso_user(email.lower(), role_id=allowed.role_id)
+    # Existing users log in directly; new users require allowlist entry
+    try:
+        user = await _resolve_sso_user(email.lower())
+    except ValueError as e:
+        return _error_redirect(str(e))
 
     # Issue token (full or 2FA-pending)
     result = await _issue_token_or_2fa(user, auth_handler)
@@ -376,16 +389,11 @@ async def cloudflare_verify(request: Request):
     if not email:
         raise HTTPException(status_code=400, detail="No email claim in Cloudflare JWT")
 
-    # Check allowlist
-    allowed = await find_allowed_email(email.lower())
-    if allowed is None:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Email {email} is not authorized for SSO access. Contact your administrator.",
-        )
-
-    # Provision or find user
-    user = await get_or_create_sso_user(email.lower(), role_id=allowed.role_id)
+    # Existing users log in directly; new users require allowlist entry
+    try:
+        user = await _resolve_sso_user(email.lower())
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     # Issue token (full or 2FA-pending)
     result = await _issue_token_or_2fa(user, auth_handler)

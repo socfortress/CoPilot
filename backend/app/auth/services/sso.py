@@ -131,6 +131,13 @@ async def find_allowed_email(email: str) -> Optional[SSOAllowedEmail]:
         return result.scalars().first()
 
 
+async def find_user_by_email(email: str) -> Optional[User]:
+    """Look up an existing user by email address."""
+    async with AsyncSession(async_engine) as session:
+        result = await session.execute(select(User).where(User.email == email))
+        return result.scalars().first()
+
+
 # ── Auto‑provision SSO user ──────────────────────────────────────────────────
 
 
