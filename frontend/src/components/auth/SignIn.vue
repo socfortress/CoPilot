@@ -39,38 +39,7 @@
 				</div>
 			</n-form>
 
-			<!-- SSO Buttons -->
-			<div v-if="ssoStatus?.sso_enabled" class="mt-6">
-				<n-divider>
-					<span class="text-secondary text-xs">or sign in with</span>
-				</n-divider>
-				<div class="flex flex-col gap-3">
-					<n-button v-if="ssoStatus.azure_enabled" size="large" class="w-full!" @click="loginWithAzure">
-						<template #icon>
-							<Icon :name="AzureIcon" :size="18" />
-						</template>
-						Microsoft Entra ID
-					</n-button>
-					<n-button v-if="ssoStatus.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
-						<template #icon>
-							<Icon :name="GoogleIcon" :size="18" />
-						</template>
-						Google
-					</n-button>
-					<n-button
-						v-if="ssoStatus.cf_enabled"
-						size="large"
-						class="w-full!"
-						:loading="cfLoading"
-						@click="loginWithCloudflare"
-					>
-						<template #icon>
-							<Icon :name="CloudflareIcon" :size="18" />
-						</template>
-						Cloudflare Access
-					</n-button>
-				</div>
-			</div>
+			<SsoOptions @show2fa-form="handleShow2faForm" @login-success="handleLoginSuccess" />
 		</template>
 
 		<!-- ── 2FA verification step ── -->
@@ -135,20 +104,14 @@
 
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import type { SSOPublicStatus } from "@/api/endpoints/sso"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import type { LoginPayload } from "@/types/auth.d"
-import { NButton, NCollapseTransition, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { NButton, NCollapseTransition, NForm, NFormItem, NInput, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
-import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
-import { getSSOStatus, ssoAzure, ssoCloudflare, ssoGoogle } from "./sso"
-
-const AzureIcon = "devicon-plain:azure"
-const GoogleIcon = "devicon-plain:googlecloud"
-const CloudflareIcon = "simple-icons:cloudflare"
+import SsoOptions from "./SsoOptions.vue"
 
 interface ModelType {
 	username: string | null
@@ -156,7 +119,6 @@ interface ModelType {
 }
 
 const loading = ref(false)
-const cfLoading = ref(false)
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
@@ -165,7 +127,6 @@ const model = ref<ModelType>({
 	password: null
 })
 const authStore = useAuthStore()
-const ssoStatus = ref<SSOPublicStatus | null>(null)
 
 // ── 2FA state ────────────────────────────────────────────────────────────────
 const show2fa = ref(false)
@@ -196,6 +157,24 @@ const isValid = computed(() => {
 	return model.value.username && model.value.password
 })
 
+function cancel2fa() {
+	show2fa.value = false
+	twoFaTempToken.value = ""
+	twoFaCode.value = ""
+	backupCode.value = ""
+	showBackupInput.value = false
+}
+
+function handleShow2faForm(token: string) {
+	twoFaTempToken.value = token
+	show2fa.value = true
+}
+
+function handleLoginSuccess(token: string) {
+	authStore.setLogged(token)
+	router.push({ path: "/", replace: true })
+}
+
 function signIn(e: Event) {
 	e.preventDefault()
 
@@ -213,8 +192,7 @@ function signIn(e: Event) {
 				.then(res => {
 					// Check if 2FA is required
 					if (res?.requires_2fa) {
-						twoFaTempToken.value = res.access_token
-						show2fa.value = true
+						handleShow2faForm(res.access_token)
 						return
 					}
 					router.push({ path: "/", replace: true })
@@ -252,72 +230,6 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 			twoFaLoading.value = false
 		})
 }
-
-function cancel2fa() {
-	show2fa.value = false
-	twoFaTempToken.value = ""
-	twoFaCode.value = ""
-	backupCode.value = ""
-	showBackupInput.value = false
-}
-
-function loginWithAzure() {
-	ssoAzure()
-}
-
-function loginWithGoogle() {
-	ssoGoogle()
-}
-
-function loginWithCloudflare() {
-	cfLoading.value = true
-
-	ssoCloudflare((error, res) => {
-		cfLoading.value = false
-
-		if (error) {
-			message.error(error)
-			return
-		}
-
-		if (res?.requires_2fa && res?.access_token) {
-			// Cloudflare auth OK but user has 2FA — show verification step
-			twoFaTempToken.value = res.access_token
-			show2fa.value = true
-		} else if (res?.access_token) {
-			authStore.setLogged(res.access_token)
-			router.push({ path: "/", replace: true })
-		}
-	})
-}
-
-function loadSSOStatus() {
-	getSSOStatus(status => {
-		ssoStatus.value = status
-	})
-}
-
-onMounted(() => {
-	loadSSOStatus()
-
-	// Check if we're returning from SSO callback (token in URL fragment, not query)
-	if (window.location.hash) {
-		const params = new URLSearchParams(window.location.hash.substring(1))
-		const token = params.get("token")
-		const needs2fa = params.get("requires_2fa") === "true"
-
-		if (token && needs2fa) {
-			// SSO succeeded but user has 2FA — show verification step
-			twoFaTempToken.value = token
-			show2fa.value = true
-		} else if (token) {
-			// Remove fragment from history so the token isn't stored in browser history
-			history.replaceState(null, "", window.location.pathname + window.location.search)
-			authStore.setLogged(token)
-			router.push({ path: "/", replace: true })
-		}
-	}
-})
 
 watch(isValid, val => {
 	if (val) {
