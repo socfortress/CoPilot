@@ -54,7 +54,7 @@
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/types/auth.d"
 import { NButton, NCollapseTransition, NForm, NFormItem, NInput, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import SsoOptions from "./SsoOptions.vue"
@@ -152,5 +152,21 @@ watch(isValid, val => {
 	if (val) {
 		formRef.value?.validate()
 	}
+})
+
+onBeforeMount(() => {
+	// Check if we're returning from SSO callback (token in URL fragment, not query)
+	const params = new URLSearchParams(window.location.hash.substring(1) || window.location.search)
+	const error_message = params.get("error_message")
+
+	if (params.has("error_message")) {
+		params.delete("error_message")
+	}
+
+	if (error_message) {
+		message.error(error_message, { duration: 6_000 })
+	}
+
+	history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
 })
 </script>

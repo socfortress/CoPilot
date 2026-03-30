@@ -13,9 +13,9 @@
 				</n-button>
 				<n-button v-if="ssoStatus?.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
 					<template #icon>
-						<Icon :name="GoogleIcon" :size="18" />
+						<Icon :name="GoogleIcon" :size="16" />
 					</template>
-					Google Cloud
+					Google
 				</n-button>
 				<n-button
 					v-if="ssoStatus?.cf_enabled"
@@ -37,7 +37,7 @@
 <script lang="ts" setup>
 import type { SSOPublicStatus } from "@/api/endpoints/sso"
 import { NButton, NCollapseTransition, NDivider, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -47,7 +47,7 @@ const emit = defineEmits<{
 }>()
 
 const AzureIcon = "devicon-plain:azure"
-const GoogleIcon = "devicon-plain:googlecloud"
+const GoogleIcon = "devicon-plain:google"
 const CloudflareIcon = "simple-icons:cloudflare"
 
 const cfLoading = ref(false)
@@ -103,9 +103,7 @@ async function loadSSOStatus() {
 
 onBeforeMount(() => {
 	loadSSOStatus()
-})
 
-onMounted(() => {
 	// Check if we're returning from SSO callback (token in URL fragment, not query)
 	const params = new URLSearchParams(window.location.hash.substring(1) || window.location.search)
 	const token = params.get("token")
