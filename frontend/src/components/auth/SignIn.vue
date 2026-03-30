@@ -44,33 +44,37 @@
 
 		<!-- ── 2FA verification step ── -->
 		<template v-if="show2fa">
-			<div class="mb-6 text-center">
-				<Icon name="carbon:locked" :size="48" class="text-primary mb-3" />
-				<h3 class="mb-2 text-xl font-semibold">Two-Factor Authentication</h3>
-				<p class="text-secondary text-sm leading-relaxed">Enter the 6-digit code from your authenticator app</p>
-			</div>
+			<n-collapse-transition :show="!showBackupInput">
+				<div class="mb-6 text-center">
+					<Icon name="carbon:locked" :size="48" class="text-primary mb-3" />
+					<h3 class="mb-2 text-xl font-semibold">Two-Factor Authentication</h3>
+					<p class="text-secondary text-sm leading-relaxed">
+						Enter the 6-digit code from your authenticator app
+					</p>
+				</div>
 
-			<div class="mb-4">
-				<n-input
-					v-model:value="twoFaCode"
-					placeholder="123456"
-					maxlength="6"
+				<div class="mb-4">
+					<n-input
+						v-model:value="twoFaCode"
+						placeholder="123456"
+						maxlength="6"
+						size="large"
+						:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
+						@keydown.enter="verify2fa()"
+					/>
+				</div>
+
+				<n-button
+					type="primary"
+					class="mb-5 w-full!"
 					size="large"
-					:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
-					@keydown.enter="verify2fa()"
-				/>
-			</div>
-
-			<n-button
-				type="primary"
-				class="mb-5 w-full!"
-				size="large"
-				:loading="twoFaLoading"
-				:disabled="twoFaCode.length < 6"
-				@click="verify2fa()"
-			>
-				Verify
-			</n-button>
+					:loading="twoFaLoading"
+					:disabled="twoFaCode.length < 6"
+					@click="verify2fa()"
+				>
+					Verify
+				</n-button>
+			</n-collapse-transition>
 
 			<n-collapse-transition :show="showBackupInput">
 				<div class="mb-3">

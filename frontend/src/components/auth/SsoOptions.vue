@@ -5,30 +5,30 @@
 				<span class="text-secondary text-xs">or sign in with</span>
 			</n-divider>
 			<div class="flex flex-col gap-3">
-				<n-collapse-transition :show="ssoStatus?.azure_enabled || false">
-					<n-button size="large" class="w-full!" @click="loginWithAzure">
-						<template #icon>
-							<Icon :name="AzureIcon" :size="18" />
-						</template>
-						Microsoft Entra ID
-					</n-button>
-				</n-collapse-transition>
-				<n-collapse-transition :show="ssoStatus?.google_enabled || false">
-					<n-button size="large" class="w-full!" @click="loginWithGoogle">
-						<template #icon>
-							<Icon :name="GoogleIcon" :size="18" />
-						</template>
-						Google
-					</n-button>
-				</n-collapse-transition>
-				<n-collapse-transition :show="ssoStatus?.cf_enabled || false">
-					<n-button size="large" class="w-full!" :loading="cfLoading" @click="loginWithCloudflare">
-						<template #icon>
-							<Icon :name="CloudflareIcon" :size="18" />
-						</template>
-						Cloudflare Access
-					</n-button>
-				</n-collapse-transition>
+				<n-button v-if="ssoStatus?.azure_enabled" size="large" class="w-full!" @click="loginWithAzure">
+					<template #icon>
+						<Icon :name="AzureIcon" :size="15" />
+					</template>
+					Microsoft Azure
+				</n-button>
+				<n-button v-if="ssoStatus?.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
+					<template #icon>
+						<Icon :name="GoogleIcon" :size="18" />
+					</template>
+					Google Cloud
+				</n-button>
+				<n-button
+					v-if="ssoStatus?.cf_enabled"
+					size="large"
+					class="w-full!"
+					:loading="cfLoading"
+					@click="loginWithCloudflare"
+				>
+					<template #icon>
+						<Icon :name="CloudflareIcon" :size="18" />
+					</template>
+					Cloudflare Access
+				</n-button>
 			</div>
 		</div>
 	</n-collapse-transition>
@@ -56,8 +56,9 @@ const ssoStatus = ref<SSOPublicStatus | null>(null)
 
 const show = computed(() => {
 	return (
-		ssoStatus.value?.sso_enabled &&
-		(ssoStatus.value.azure_enabled || ssoStatus.value.google_enabled || ssoStatus.value.cf_enabled)
+		(ssoStatus.value?.sso_enabled &&
+			(ssoStatus.value.azure_enabled || ssoStatus.value.google_enabled || ssoStatus.value.cf_enabled)) ||
+		false
 	)
 })
 
