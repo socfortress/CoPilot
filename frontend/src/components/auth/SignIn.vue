@@ -25,7 +25,14 @@
 				</n-form-item>
 				<div class="flex flex-col items-end gap-6">
 					<div class="w-full">
-						<n-button type="primary" class="w-full!" size="large" :loading :disabled="!isValid" @click="signIn">
+						<n-button
+							type="primary"
+							class="w-full!"
+							size="large"
+							:loading
+							:disabled="!isValid"
+							@click="signIn"
+						>
 							Sign in
 						</n-button>
 					</div>
@@ -38,23 +45,13 @@
 					<span class="text-secondary text-xs">or sign in with</span>
 				</n-divider>
 				<div class="flex flex-col gap-3">
-					<n-button
-						v-if="ssoStatus.azure_enabled"
-						size="large"
-						class="w-full!"
-						@click="loginWithAzure"
-					>
+					<n-button v-if="ssoStatus.azure_enabled" size="large" class="w-full!" @click="loginWithAzure">
 						<template #icon>
 							<Icon :name="AzureIcon" :size="18" />
 						</template>
 						Microsoft Entra ID
 					</n-button>
-					<n-button
-						v-if="ssoStatus.google_enabled"
-						size="large"
-						class="w-full!"
-						@click="loginWithGoogle"
-					>
+					<n-button v-if="ssoStatus.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
 						<template #icon>
 							<Icon :name="GoogleIcon" :size="18" />
 						</template>
@@ -80,10 +77,8 @@
 		<template v-if="show2fa">
 			<div class="mb-6 text-center">
 				<Icon name="carbon:locked" :size="48" class="text-primary mb-3" />
-				<h3 class="text-xl font-semibold mb-2">Two-Factor Authentication</h3>
-				<p class="text-secondary text-sm leading-relaxed">
-					Enter the 6-digit code from your authenticator app
-				</p>
+				<h3 class="mb-2 text-xl font-semibold">Two-Factor Authentication</h3>
+				<p class="text-secondary text-sm leading-relaxed">Enter the 6-digit code from your authenticator app</p>
 			</div>
 
 			<div class="mb-4">
@@ -93,17 +88,17 @@
 					maxlength="6"
 					size="large"
 					:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
-					@keydown.enter="verify2fa"
+					@keydown.enter="verify2fa()"
 				/>
 			</div>
 
 			<n-button
 				type="primary"
-				class="w-full! mb-5"
+				class="mb-5 w-full!"
 				size="large"
 				:loading="twoFaLoading"
 				:disabled="twoFaCode.length < 6"
-				@click="verify2fa"
+				@click="verify2fa()"
 			>
 				Verify
 			</n-button>
@@ -114,21 +109,21 @@
 						v-model:value="backupCode"
 						placeholder="Backup code (e.g. ABCD1234EF)"
 						size="large"
-						@keydown.enter="verify2faBackup"
+						@keydown.enter="verify2fa({ useBackupCode: true })"
 					/>
 				</div>
 				<n-button
-					class="w-full! mb-5"
+					class="mb-5 w-full!"
 					size="large"
 					:loading="twoFaLoading"
 					:disabled="!backupCode"
-					@click="verify2faBackup"
+					@click="verify2fa({ useBackupCode: true })"
 				>
 					Use backup code
 				</n-button>
 			</n-collapse-transition>
 
-			<div class="flex justify-between items-center pt-2 border-t border-divider">
+			<div class="border-divider flex items-center justify-between border-t pt-2">
 				<n-button text size="small" @click="showBackupInput = !showBackupInput">
 					{{ showBackupInput ? "← Use authenticator code" : "Use a backup code instead" }}
 				</n-button>
@@ -140,17 +135,19 @@
 
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import type { LoginPayload } from "@/types/auth.d"
 import type { SSOPublicStatus } from "@/api/endpoints/sso"
+import type { TOTPValidateRequest } from "@/api/endpoints/totp"
+import type { LoginPayload } from "@/types/auth.d"
 import { NButton, NCollapseTransition, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
-import { useAuthStore } from "@/stores/auth"
-import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
+import { getSSOStatus, ssoAzure, ssoCloudflare, ssoGoogle } from "./sso"
 
-const AzureIcon = "mdi:microsoft-azure"
-const GoogleIcon = "mdi:google"
+const AzureIcon = "devicon-plain:azure"
+const GoogleIcon = "devicon-plain:googlecloud"
 const CloudflareIcon = "simple-icons:cloudflare"
 
 interface ModelType {
@@ -201,6 +198,7 @@ const isValid = computed(() => {
 
 function signIn(e: Event) {
 	e.preventDefault()
+
 	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
 		if (!errors) {
 			loading.value = true
@@ -233,34 +231,26 @@ function signIn(e: Event) {
 	})
 }
 
-async function verify2fa() {
+async function verify2fa(params?: { useBackupCode?: boolean }) {
 	twoFaLoading.value = true
-	try {
-		const res = await Api.totp.validate({ temp_token: twoFaTempToken.value, code: twoFaCode.value })
-		if (res.data.access_token) {
-			authStore.setLogged(res.data.access_token)
-			router.push({ path: "/", replace: true })
-		}
-	} catch (err: any) {
-		message.error(err.response?.data?.detail || "Invalid authentication code.")
-	} finally {
-		twoFaLoading.value = false
-	}
-}
 
-async function verify2faBackup() {
-	twoFaLoading.value = true
-	try {
-		const res = await Api.totp.validate({ temp_token: twoFaTempToken.value, backup_code: backupCode.value })
-		if (res.data.access_token) {
-			authStore.setLogged(res.data.access_token)
-			router.push({ path: "/", replace: true })
-		}
-	} catch (err: any) {
-		message.error(err.response?.data?.detail || "Invalid backup code.")
-	} finally {
-		twoFaLoading.value = false
+	const payload: TOTPValidateRequest = {
+		temp_token: twoFaTempToken.value,
+		code: params?.useBackupCode ? undefined : twoFaCode.value,
+		backup_code: params?.useBackupCode ? backupCode.value : undefined
 	}
+
+	authStore
+		.verify2fa(payload)
+		.then(() => {
+			router.push({ path: "/", replace: true })
+		})
+		.catch(err => {
+			message.error(err?.message || err.response?.data?.detail || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			twoFaLoading.value = false
+		})
 }
 
 function cancel2fa() {
@@ -272,41 +262,39 @@ function cancel2fa() {
 }
 
 function loginWithAzure() {
-	window.location.href = "/api/auth/sso/azure/login"
+	ssoAzure()
 }
 
 function loginWithGoogle() {
-	window.location.href = "/api/auth/sso/google/login"
+	ssoGoogle()
 }
 
-async function loginWithCloudflare() {
+function loginWithCloudflare() {
 	cfLoading.value = true
-	try {
-		const res = await Api.sso.cloudflareVerify()
-		if (res.data.requires_2fa && res.data.access_token) {
+
+	ssoCloudflare((error, res) => {
+		cfLoading.value = false
+
+		if (error) {
+			message.error(error)
+			return
+		}
+
+		if (res?.requires_2fa && res?.access_token) {
 			// Cloudflare auth OK but user has 2FA — show verification step
-			twoFaTempToken.value = res.data.access_token
+			twoFaTempToken.value = res.access_token
 			show2fa.value = true
-		} else if (res.data.access_token) {
-			authStore.setLogged(res.data.access_token)
+		} else if (res?.access_token) {
+			authStore.setLogged(res.access_token)
 			router.push({ path: "/", replace: true })
 		}
-	} catch (err: any) {
-		message.error(
-			err.response?.data?.detail || "Cloudflare Access authentication failed. Make sure you are behind Cloudflare Access."
-		)
-	} finally {
-		cfLoading.value = false
-	}
+	})
 }
 
-async function loadSSOStatus() {
-	try {
-		const res = await Api.sso.getStatus()
-		ssoStatus.value = res.data
-	} catch {
-		// SSO not configured — that's fine
-	}
+function loadSSOStatus() {
+	getSSOStatus(status => {
+		ssoStatus.value = status
+	})
 }
 
 onMounted(() => {
@@ -317,6 +305,7 @@ onMounted(() => {
 		const params = new URLSearchParams(window.location.hash.substring(1))
 		const token = params.get("token")
 		const needs2fa = params.get("requires_2fa") === "true"
+
 		if (token && needs2fa) {
 			// SSO succeeded but user has 2FA — show verification step
 			twoFaTempToken.value = token

@@ -15,8 +15,6 @@ export interface SSOConfigResponse {
 	cf_enabled: boolean
 	cf_team_domain: string | null
 	cf_audience: string | null
-	message: string
-	success: boolean
 }
 
 export interface SSOConfigUpdate {
@@ -56,20 +54,26 @@ export interface SSOPublicStatus {
 	google_authorization_url: string | null
 }
 
+export interface SSOCloudflareVerifyResponse {
+	access_token: string
+	token_type: string
+	requires_2fa?: boolean
+}
+
 export default {
 	/** Public — which SSO providers are active */
 	getStatus() {
-		return HttpClient.get<SSOPublicStatus>("/auth/sso/status")
+		return HttpClient.get<FlaskBaseResponse & SSOPublicStatus>("/auth/sso/status")
 	},
 
 	/** Admin — get SSO settings */
 	getSettings() {
-		return HttpClient.get<SSOConfigResponse>("/auth/sso/settings")
+		return HttpClient.get<FlaskBaseResponse & SSOConfigResponse>("/auth/sso/settings")
 	},
 
 	/** Admin — update SSO settings */
 	updateSettings(payload: SSOConfigUpdate) {
-		return HttpClient.put<SSOConfigResponse>("/auth/sso/settings", payload)
+		return HttpClient.put<FlaskBaseResponse & SSOConfigResponse>("/auth/sso/settings", payload)
 	},
 
 	/** Admin — list allowed emails */
@@ -89,8 +93,6 @@ export default {
 
 	/** Cloudflare Access — verify JWT from header */
 	cloudflareVerify() {
-		return HttpClient.post<FlaskBaseResponse & { access_token: string; token_type: string; requires_2fa?: boolean }>(
-			"/auth/sso/cloudflare/verify"
-		)
+		return HttpClient.post<FlaskBaseResponse & SSOCloudflareVerifyResponse>("/auth/sso/cloudflare/verify")
 	}
 }

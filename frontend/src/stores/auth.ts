@@ -1,3 +1,4 @@
+import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import type { AuthUser, JWTPayload, LoginPayload, RouteMetaAuthRole } from "@/types/auth.d"
 import type { ApiError } from "@/types/common.d"
 import * as jose from "jose"
@@ -59,6 +60,21 @@ export const useAuthStore = defineStore("auth", {
 				if (response.data.requires_2fa) {
 					return response.data
 				}
+
+				if (response.data.access_token) {
+					this.setLogged(response.data.access_token)
+					this.getEmail()
+				}
+
+				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				throw error.response?.data
+			}
+		},
+		async verify2fa(payload: TOTPValidateRequest) {
+			try {
+				const response = await Api.totp.validate(payload)
 
 				if (response.data.access_token) {
 					this.setLogged(response.data.access_token)
