@@ -2,6 +2,7 @@
 
 import os
 from datetime import timedelta
+from urllib.parse import quote
 
 from fastapi import APIRouter
 from fastapi import HTTPException
@@ -36,6 +37,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 
 
 sso_router = APIRouter()
 auth_handler = AuthHandler()
+
+
+def _error_redirect(detail: str) -> RedirectResponse:
+    """Redirect to the login page with an error message in the query string."""
+    return RedirectResponse(url=f"/login?error_message={quote(detail)}")
 
 
 async def _issue_token_or_2fa(user, auth_handler) -> dict:
@@ -228,35 +234,34 @@ async def azure_callback(code: str = None, state: str = None, error: str = None)
     checks the email allowlist, and returns a CoPilot JWT.
     """
     if error:
-        raise HTTPException(status_code=400, detail=f"Azure auth error: {error}")
+        return _error_redirect(f"Azure auth error: {error}")
     if not code or not state:
-        raise HTTPException(status_code=400, detail="Missing code or state parameter")
+        return _error_redirect("Missing code or state parameter")
 
     cfg = await get_sso_config()
     if cfg is None or not cfg.sso_enabled or not cfg.azure_enabled:
-        raise HTTPException(status_code=400, detail="Azure SSO is not enabled")
+        return _error_redirect("Azure SSO is not enabled")
 
     try:
         claims = await exchange_azure_code(code, state, cfg)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return _error_redirect(str(e))
     except Exception as e:
         logger.error(f"Azure SSO error: {e}")
-        raise HTTPException(status_code=500, detail="Azure authentication failed")
+        return _error_redirect("Azure authentication failed")
 
     email = claims.get("email") or claims.get("preferred_username")
     if not email:
-        raise HTTPException(status_code=400, detail="No email claim in Azure ID token")
+        return _error_redirect("No email claim in Azure ID token")
 
     if not claims.get("email_verified", True):
-        raise HTTPException(status_code=403, detail="Azure account email is not verified")
+        return _error_redirect("Azure account email is not verified")
 
     # Check allowlist
     allowed = await find_allowed_email(email.lower())
     if allowed is None:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Email {email} is not authorized for SSO access. Contact your administrator.",
+        return _error_redirect(
+            f"Email {email} is not authorized for SSO access. Contact your administrator.",
         )
 
     # Provision or find user
@@ -293,35 +298,34 @@ async def google_callback(code: str = None, state: str = None, error: str = None
     checks the email allowlist, and returns a CoPilot JWT.
     """
     if error:
-        raise HTTPException(status_code=400, detail=f"Google auth error: {error}")
+        return _error_redirect(f"Google auth error: {error}")
     if not code or not state:
-        raise HTTPException(status_code=400, detail="Missing code or state parameter")
+        return _error_redirect("Missing code or state parameter")
 
     cfg = await get_sso_config()
     if cfg is None or not cfg.sso_enabled or not cfg.google_enabled:
-        raise HTTPException(status_code=400, detail="Google SSO is not enabled")
+        return _error_redirect("Google SSO is not enabled")
 
     try:
         claims = await exchange_google_code(code, state, cfg)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return _error_redirect(str(e))
     except Exception as e:
         logger.error(f"Google SSO error: {e}")
-        raise HTTPException(status_code=500, detail="Google authentication failed")
+        return _error_redirect("Google authentication failed")
 
     email = claims.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="No email claim in Google ID token")
+        return _error_redirect("No email claim in Google ID token")
 
     if not claims.get("email_verified", False):
-        raise HTTPException(status_code=403, detail="Google account email is not verified")
+        return _error_redirect("Google account email is not verified")
 
     # Check allowlist
     allowed = await find_allowed_email(email.lower())
     if allowed is None:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Email {email} is not authorized for SSO access. Contact your administrator.",
+        return _error_redirect(
+            f"Email {email} is not authorized for SSO access. Contact your administrator.",
         )
 
     # Provision or find user
