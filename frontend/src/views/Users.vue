@@ -17,7 +17,7 @@
 				</template>
 
 				<n-spin :show="loading">
-					<n-form ref="formRef" :model="form" label-placement="left" label-width="220" class="max-w-220">
+					<n-form :model="form" label-placement="left" label-width="220" class="max-w-220">
 						<!-- Global toggle -->
 						<n-form-item label="Enable SSO">
 							<n-switch v-model:value="form.sso_enabled" />
@@ -42,42 +42,81 @@
 
 						<n-collapse-transition :show="showAzureGuide">
 							<n-alert type="info" class="mb-5" :show-icon="false">
-								<div class="setup-guide">
+								<div class="text-xs">
 									<p class="mb-2 font-semibold">How to configure Azure Entra ID:</p>
-									<ol class="guide-steps">
+									<ol>
 										<li>
 											Go to
-											<n-button text tag="a" href="https://portal.azure.com" target="_blank" type="info">
+											<n-button
+												text
+												tag="a"
+												href="https://portal.azure.com"
+												target="_blank"
+												type="info"
+											>
 												portal.azure.com
 											</n-button>
-											→ <strong>Azure Active Directory</strong> → <strong>App registrations</strong> →
+											→
+											<strong>Azure Active Directory</strong>
+											→
+											<strong>App registrations</strong>
+											→
 											<strong>New registration</strong>
 										</li>
 										<li>
-											Set a name (e.g. <code>CoPilot SSO</code>), choose
-											<em>Accounts in this organizational directory only</em>, then click
-											<strong>Register</strong>.
+											Set a name (e.g.
+											<code>CoPilot SSO</code>
+											), choose
+											<em>Accounts in this organizational directory only</em>
+											, then click
+											<strong>Register</strong>
+											.
 										</li>
 										<li>
-											Copy the <strong>Application (client) ID</strong> → paste as <em>Client ID</em> below.
+											Copy the
+											<strong>Application (client) ID</strong>
+											→ paste as
+											<em>Client ID</em>
+											below.
 										</li>
 										<li>
-											Copy the <strong>Directory (tenant) ID</strong> → paste as <em>Tenant ID</em> below.
+											Copy the
+											<strong>Directory (tenant) ID</strong>
+											→ paste as
+											<em>Tenant ID</em>
+											below.
 										</li>
 										<li>
-											Go to <strong>Certificates &amp; secrets</strong> → <strong>New client secret</strong>
-											→ copy the value → paste as <em>Client Secret</em> below.
+											Go to
+											<strong>Certificates &amp; secrets</strong>
+											→
+											<strong>New client secret</strong>
+											→ copy the value → paste as
+											<em>Client Secret</em>
+											below.
 										</li>
 										<li>
-											Go to <strong>Authentication</strong> → <strong>Add a platform</strong> →
-											<strong>Web</strong> → set Redirect URI to:<br />
+											Go to
+											<strong>Authentication</strong>
+											→
+											<strong>Add a platform</strong>
+											→
+											<strong>Web</strong>
+											→ set Redirect URI to:
+											<br />
 											<code>https://&lt;your-domain&gt;/api/auth/sso/azure/callback</code>
 										</li>
 										<li>
-											Under <strong>Token configuration</strong> add optional claim
-											<code>email</code> (ID token).
+											Under
+											<strong>Token configuration</strong>
+											add optional claim
+											<code>email</code>
+											(ID token).
 										</li>
-										<li>Fill in the fields below, save, then add allowed emails in the section below.</li>
+										<li>
+											Fill in the fields below, save, then add allowed emails in the section
+											below.
+										</li>
 									</ol>
 								</div>
 							</n-alert>
@@ -105,7 +144,9 @@
 								v-model:value="form.azure_client_secret"
 								type="password"
 								show-password-on="click"
-								:placeholder="azureSecretSet ? '••••••• (saved — leave empty to keep)' : 'Enter client secret'"
+								:placeholder="
+									azureSecretSet ? '••••••• (saved — leave empty to keep)' : 'Enter client secret'
+								"
 								:disabled="!form.azure_enabled || !form.sso_enabled"
 							/>
 						</n-form-item>
@@ -116,7 +157,10 @@
 									placeholder="https://your-domain.com/api/auth/sso/azure/callback"
 									:disabled="!form.azure_enabled || !form.sso_enabled"
 								/>
-								<n-button :disabled="!form.azure_enabled || !form.sso_enabled" @click="prefillRedirectUri">
+								<n-button
+									:disabled="!form.azure_enabled || !form.sso_enabled"
+									@click="prefillRedirectUri"
+								>
 									Auto-fill
 								</n-button>
 							</n-input-group>
@@ -137,16 +181,62 @@
 
 						<n-collapse-transition :show="showGoogleGuide">
 							<n-alert type="info" class="mb-5" :show-icon="false">
-								<div class="setup-guide">
+								<div class="text-xs">
 									<p class="mb-2 font-semibold">How to configure Google OAuth2:</p>
-									<ol class="guide-steps">
-										<li>Go to <n-button text tag="a" href="https://console.cloud.google.com/apis/credentials" target="_blank" type="info">Google Cloud Console &rarr; Credentials</n-button> and click <strong>Create Credentials &rarr; OAuth client ID</strong>.</li>
-										<li>Choose <strong>Web application</strong> as the application type.</li>
-										<li>Under <strong>Authorized redirect URIs</strong>, add: <code>https://&lt;your-domain&gt;/api/auth/sso/google/callback</code></li>
-										<li>Copy the <strong>Client ID</strong> &rarr; paste as <em>Client ID</em> below.</li>
-										<li>Copy the <strong>Client Secret</strong> &rarr; paste as <em>Client Secret</em> below.</li>
-										<li>Make sure the <strong>People API</strong> is enabled in your project (required for <code>email</code> and <code>profile</code> scopes).</li>
-										<li>Fill in the fields below, save, then add allowed emails in the section below.</li>
+									<ol>
+										<li>
+											Go to
+											<n-button
+												text
+												tag="a"
+												href="https://console.cloud.google.com/apis/credentials"
+												target="_blank"
+												type="info"
+											>
+												Google Cloud Console &rarr; Credentials
+											</n-button>
+											and click
+											<strong>Create Credentials &rarr; OAuth client ID</strong>
+											.
+										</li>
+										<li>
+											Choose
+											<strong>Web application</strong>
+											as the application type.
+										</li>
+										<li>
+											Under
+											<strong>Authorized redirect URIs</strong>
+											, add:
+											<code>https://&lt;your-domain&gt;/api/auth/sso/google/callback</code>
+										</li>
+										<li>
+											Copy the
+											<strong>Client ID</strong>
+											&rarr; paste as
+											<em>Client ID</em>
+											below.
+										</li>
+										<li>
+											Copy the
+											<strong>Client Secret</strong>
+											&rarr; paste as
+											<em>Client Secret</em>
+											below.
+										</li>
+										<li>
+											Make sure the
+											<strong>People API</strong>
+											is enabled in your project (required for
+											<code>email</code>
+											and
+											<code>profile</code>
+											scopes).
+										</li>
+										<li>
+											Fill in the fields below, save, then add allowed emails in the section
+											below.
+										</li>
 									</ol>
 								</div>
 							</n-alert>
@@ -156,15 +246,38 @@
 							<n-switch v-model:value="form.google_enabled" :disabled="!form.sso_enabled" />
 						</n-form-item>
 						<n-form-item label="Client ID">
-							<n-input v-model:value="form.google_client_id" placeholder="e.g. 123456789-abc...xyz.apps.googleusercontent.com" :disabled="!form.google_enabled || !form.sso_enabled" />
+							<n-input
+								v-model:value="form.google_client_id"
+								placeholder="e.g. 123456789-abc...xyz.apps.googleusercontent.com"
+								:disabled="!form.google_enabled || !form.sso_enabled"
+							/>
 						</n-form-item>
 						<n-form-item label="Client Secret">
-							<n-input v-model:value="form.google_client_secret" type="password" show-password-on="click" :placeholder="googleSecretSet ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved \u2014 leave empty to keep)' : 'Enter client secret'" :disabled="!form.google_enabled || !form.sso_enabled" />
+							<n-input
+								v-model:value="form.google_client_secret"
+								type="password"
+								show-password-on="click"
+								:placeholder="
+									googleSecretSet
+										? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved \u2014 leave empty to keep)'
+										: 'Enter client secret'
+								"
+								:disabled="!form.google_enabled || !form.sso_enabled"
+							/>
 						</n-form-item>
 						<n-form-item label="Redirect URI">
 							<n-input-group>
-								<n-input v-model:value="form.google_redirect_uri" placeholder="https://your-domain.com/api/auth/sso/google/callback" :disabled="!form.google_enabled || !form.sso_enabled" />
-								<n-button :disabled="!form.google_enabled || !form.sso_enabled" @click="prefillGoogleRedirectUri">Auto-fill</n-button>
+								<n-input
+									v-model:value="form.google_redirect_uri"
+									placeholder="https://your-domain.com/api/auth/sso/google/callback"
+									:disabled="!form.google_enabled || !form.sso_enabled"
+								/>
+								<n-button
+									:disabled="!form.google_enabled || !form.sso_enabled"
+									@click="prefillGoogleRedirectUri"
+								>
+									Auto-fill
+								</n-button>
 							</n-input-group>
 						</n-form-item>
 
@@ -184,9 +297,9 @@
 
 						<n-collapse-transition :show="showCFGuide">
 							<n-alert type="info" class="mb-5" :show-icon="false">
-								<div class="setup-guide">
+								<div class="text-xs">
 									<p class="mb-2 font-semibold">How to configure Cloudflare Access:</p>
-									<ol class="guide-steps">
+									<ol>
 										<li>
 											In
 											<n-button
@@ -198,36 +311,54 @@
 											>
 												Cloudflare Zero Trust dashboard
 											</n-button>
-											go to <strong>Access → Applications → Add an application</strong>.
+											go to
+											<strong>Access → Applications → Add an application</strong>
+											.
 										</li>
 										<li>
-											Choose <strong>Self-hosted</strong>. Set the domain to your CoPilot URL
-											(e.g. <code>copilot.example.com</code>).
+											Choose
+											<strong>Self-hosted</strong>
+											. Set the domain to your CoPilot URL (e.g.
+											<code>copilot.example.com</code>
+											).
 										</li>
 										<li>
-											Under <strong>Identity providers</strong> connect your IdP (e.g. Entra ID, Google,
-											GitHub).
+											Under
+											<strong>Identity providers</strong>
+											connect your IdP (e.g. Entra ID, Google, GitHub).
 										</li>
 										<li>
-											After creating the app, open it → <strong>Overview</strong> → copy the
-											<strong>Application Audience (AUD) Tag</strong> → paste as
-											<em>Application Audience</em> below.
+											After creating the app, open it →
+											<strong>Overview</strong>
+											→ copy the
+											<strong>Application Audience (AUD) Tag</strong>
+											→ paste as
+											<em>Application Audience</em>
+											below.
 										</li>
 										<li>
-											Copy your <strong>Team Domain</strong> from
+											Copy your
+											<strong>Team Domain</strong>
+											from
 											<strong>Settings → Custom Pages</strong>
-											(e.g. <code>myteam.cloudflareaccess.com</code>) → paste as
-											<em>Team Domain</em> below.
+											(e.g.
+											<code>myteam.cloudflareaccess.com</code>
+											) → paste as
+											<em>Team Domain</em>
+											below.
 										</li>
 										<li>
-											<strong>How it works:</strong> Cloudflare injects a signed
-											<code>Cf-Access-Jwt-Assertion</code> header into every request. CoPilot verifies the
-											JWT signature against Cloudflare's public JWKS — it is cryptographically impossible to
-											forge without Cloudflare's private key.
+											<strong>How it works:</strong>
+											Cloudflare injects a signed
+											<code>Cf-Access-Jwt-Assertion</code>
+											header into every request. CoPilot verifies the JWT signature against
+											Cloudflare's public JWKS — it is cryptographically impossible to forge
+											without Cloudflare's private key.
 										</li>
 										<li>
-											On the CoPilot login page click <strong>"Sign in with Cloudflare Access"</strong> — the
-											backend reads the header automatically.
+											On the CoPilot login page click
+											<strong>"Sign in with Cloudflare Access"</strong>
+											— the backend reads the header automatically.
 										</li>
 									</ol>
 								</div>
@@ -255,7 +386,9 @@
 						<n-divider />
 
 						<div class="flex justify-end">
-							<n-button type="primary" :loading="saving" @click="saveSettings">Save SSO Settings</n-button>
+							<n-button type="primary" :loading="saving" @click="saveSettings">
+								Save SSO Settings
+							</n-button>
 						</div>
 					</n-form>
 				</n-spin>
@@ -333,12 +466,7 @@
 					</n-form-item>
 					<div class="flex justify-end gap-2 pt-2">
 						<n-button @click="showAddEmail = false">Cancel</n-button>
-						<n-button
-							type="primary"
-							:loading="addingEmail"
-							:disabled="!newEmail.email"
-							@click="addEmail"
-						>
+						<n-button type="primary" :loading="addingEmail" :disabled="!newEmail.email" @click="addEmail">
 							Add Email
 						</n-button>
 					</div>
@@ -350,6 +478,7 @@
 
 <script setup lang="ts">
 import type { SSOAllowedEmail, SSOConfigUpdate } from "@/api/endpoints/sso"
+import dayjs from "dayjs"
 import {
 	NAlert,
 	NButton,
@@ -369,7 +498,6 @@ import {
 	NText,
 	useMessage
 } from "naive-ui"
-import dayjs from "dayjs"
 import { onBeforeMount, onMounted, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
@@ -470,8 +598,6 @@ async function loadSettings() {
 			cf_team_domain: d.cf_team_domain,
 			cf_audience: d.cf_audience
 		}
-	} catch {
-		// First time — no config yet, that's fine
 	} finally {
 		loading.value = false
 	}
@@ -543,26 +669,3 @@ onMounted(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.setup-guide {
-	font-size: 13px;
-	line-height: 1.6;
-
-	.guide-steps {
-		padding-left: 1.2rem;
-		margin: 0;
-
-		li {
-			margin-bottom: 6px;
-
-			code {
-				background: rgba(var(--primary-color-rgb) / 0.1);
-				border-radius: 3px;
-				padding: 1px 5px;
-				font-size: 12px;
-			}
-		}
-	}
-}
-</style>
