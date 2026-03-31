@@ -3,12 +3,21 @@
 		<!-- Allowed Emails Card -->
 		<n-card title="SSO Allowed Emails" size="small">
 			<template #header-extra>
-				<n-button size="small" type="primary" @click="showAddEmail = true">
-					<template #icon>
-						<Icon :name="AddIcon" />
-					</template>
-					Add Email
-				</n-button>
+				<div class="flex justify-end gap-2">
+					<n-button size="small" @click="routeSSOConfig().navigate()">
+						<template #icon>
+							<Icon :name="SSOConfigIcon" />
+						</template>
+						SSO Configuration
+					</n-button>
+
+					<n-button size="small" type="primary" @click="showAddEmail = true">
+						<template #icon>
+							<Icon :name="AddIcon" />
+						</template>
+						Add Email
+					</n-button>
+				</div>
 			</template>
 
 			<n-text class="text-secondary mb-4 block text-sm">
@@ -95,10 +104,14 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
+const { routeSSOConfig } = useNavigation()
+
+const SSOConfigIcon = "carbon:rule-locked"
 const AddIcon = "carbon:add"
 const DeleteIcon = "carbon:trash-can"
 

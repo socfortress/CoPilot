@@ -97,6 +97,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "EventSearch", query: routeQuery })
 	}
 
+	function routeSSOConfig() {
+		return routerConstructor({ name: "SSOConfig" })
+	}
+
 	return {
 		routeCustomer,
 		routeAgent,
@@ -113,6 +117,7 @@ export function useNavigation() {
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
-		routeEventSearch
+		routeEventSearch,
+		routeSSOConfig
 	}
 }
