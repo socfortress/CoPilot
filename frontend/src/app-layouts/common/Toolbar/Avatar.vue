@@ -18,6 +18,7 @@ const LogsIcon = "carbon:cloud-logging"
 const ContactIcon = "ic:outline-alternate-email"
 const DocsIcon = "carbon:document"
 const UsersIcon = "carbon:group-security"
+const SSOConfigIcon = "carbon:rule-locked"
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -39,6 +40,11 @@ const options = ref([
 		label: "Users",
 		key: "route-Users",
 		icon: renderIcon(UsersIcon)
+	},
+	{
+		label: "SSO Config",
+		key: "route-SSOConfig",
+		icon: renderIcon(SSOConfigIcon)
 	},
 	{
 		label: "Logs",

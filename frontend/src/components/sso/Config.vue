@@ -8,7 +8,7 @@
 		</template>
 
 		<n-spin :show="loading">
-			<n-form :model="form" label-placement="left" label-width="220" class="max-w-220">
+			<n-form :model="form" label-placement="left" label-width="220">
 				<!-- Global toggle -->
 				<n-form-item label="Enable SSO">
 					<n-switch v-model:value="form.sso_enabled" />

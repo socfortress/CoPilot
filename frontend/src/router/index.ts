@@ -438,6 +438,12 @@ const router = createRouter({
 				}
 			]
 		},
+		{
+			path: "/sso-config",
+			name: "SSOConfig",
+			component: () => import("@/views/SSOConfig.vue"),
+			meta: { title: "SSO Config", auth: true, roles: RouteRole.All }
+		},
 
 		{
 			path: "/profile",
