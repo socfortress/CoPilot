@@ -23,7 +23,7 @@
 
 		<n-spin :show="loading" content-class="min-h-32">
 			<n-scrollbar x-scrollable class="w-full">
-				<n-table :bordered="false" class="min-w-max">
+				<n-table class="min-h-50 min-w-max">
 					<thead>
 						<tr>
 							<th>ID</th>
