@@ -12,6 +12,9 @@ from app.stack_provisioning.graylog.routes.provision import (
 from app.stack_provisioning.graylog.routes.sonicwall import (
     stack_provisioning_graylog_sonicwall_router,
 )
+from app.stack_provisioning.graylog.routes.sentinelone import (
+    stack_provisioning_graylog_sentinelone_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()
@@ -40,6 +43,13 @@ router.include_router(
 # Include the Stack Provisioning related routes
 router.include_router(
     stack_provisioning_graylog_sonicwall_router,
+    prefix="/stack_provisioning",
+    tags=["Stack Provisioning"],
+)
+
+# Include the Stack Provisioning related routes
+router.include_router(
+    stack_provisioning_graylog_sentinelone_router,
     prefix="/stack_provisioning",
     tags=["Stack Provisioning"],
 )
