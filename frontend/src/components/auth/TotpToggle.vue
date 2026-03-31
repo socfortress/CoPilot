@@ -93,29 +93,9 @@
 							Two-factor authentication is now enabled!
 						</n-alert>
 
-						<p>Save these backup codes — they are shown only once:</p>
+						<BackupCodesPanel :codes="setupData?.backup_codes || []" />
 
-						<div class="grid max-w-100 grid-cols-2 gap-2">
-							<n-code v-for="c in setupData.backup_codes" :key="c" class="p-2 text-center">
-								{{ c }}
-							</n-code>
-						</div>
-
-						<div class="flex gap-2">
-							<n-button v-if="isCopySupported" @click="copyBackupCodes(setupData?.backup_codes || [])">
-								<template #icon>
-									<Icon name="carbon:copy" />
-								</template>
-								Copy all
-							</n-button>
-							<n-button @click="downloadBackupCodes(setupData?.backup_codes || [])">
-								<template #icon>
-									<Icon name="carbon:download" />
-								</template>
-								Download .txt
-							</n-button>
-							<n-button type="primary" class="ml-auto!" @click="finishSetup">Done</n-button>
-						</div>
+						<n-button type="primary" class="ml-auto!" @click="finishSetup">Done</n-button>
 					</div>
 				</div>
 
@@ -195,21 +175,8 @@
 				</div>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<n-alert type="success">New backup codes generated. Save them — they are shown only once.</n-alert>
-				<div class="grid grid-cols-2 gap-2">
-					<n-code v-for="c in regenCodes" :key="c">{{ c }}</n-code>
-				</div>
-				<div class="flex gap-2">
-					<n-button @click="copyBackupCodes(regenCodes!)">
-						<template #icon><Icon name="carbon:copy" /></template>
-						Copy all
-					</n-button>
-					<n-button @click="downloadBackupCodes(regenCodes!)">
-						<template #icon><Icon name="carbon:download" /></template>
-						Download .txt
-					</n-button>
-					<n-button type="primary" class="ml-auto!" @click="closeRegenModal">Done</n-button>
-				</div>
+				<BackupCodesPanel :codes="regenCodes || []" />
+				<n-button type="primary" class="ml-auto!" @click="closeRegenModal">Done</n-button>
 			</div>
 		</n-modal>
 	</div>
@@ -217,13 +184,10 @@
 
 <script lang="ts" setup>
 import type { TOTPSetupResponse } from "@/api/endpoints/totp"
-import { useClipboard } from "@vueuse/core"
-import { saveAs } from "file-saver"
 import {
 	NAlert,
 	NButton,
 	NCard,
-	NCode,
 	NInput,
 	NInputOtp,
 	NModal,
@@ -234,12 +198,12 @@ import {
 	NTag,
 	useMessage
 } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import BackupCodesPanel from "@/components/auth/BackupCodesPanel.vue"
 import Icon from "@/components/common/Icon.vue"
 
 const message = useMessage()
-const { copy, copied, isSupported: isCopySupported } = useClipboard()
 
 // ── 2FA state ────────────────────────────────────────────────────────────────
 const twoFaLoading = ref(false)
@@ -341,24 +305,6 @@ function closeRegenModal() {
 	regenCodes.value = null
 	regenCode.value = []
 }
-
-function copyBackupCodes(codes: string[]) {
-	copy(codes.join("\n"))
-}
-
-function downloadBackupCodes(codes: string[]) {
-	const text = `CoPilot — 2FA Backup Codes\n${"=".repeat(30)}\n\n${codes.join(
-		"\n"
-	)}\n\nKeep these codes safe. Each code can only be used once.\n`
-
-	saveAs(new Blob([text], { type: "text/plain" }), "copilot-2fa-backup-codes.txt")
-}
-
-watch(copied, newVal => {
-	if (newVal) {
-		message.success("Backup codes copied to clipboard")
-	}
-})
 
 onBeforeMount(() => {
 	load2faStatus()
