@@ -9,11 +9,11 @@ from app.stack_provisioning.graylog.routes.fortinet import (
 from app.stack_provisioning.graylog.routes.provision import (
     stack_provisioning_graylog_router,
 )
-from app.stack_provisioning.graylog.routes.sonicwall import (
-    stack_provisioning_graylog_sonicwall_router,
-)
 from app.stack_provisioning.graylog.routes.sentinelone import (
     stack_provisioning_graylog_sentinelone_router,
+)
+from app.stack_provisioning.graylog.routes.sonicwall import (
+    stack_provisioning_graylog_sonicwall_router,
 )
 
 # Instantiate the APIRouter
