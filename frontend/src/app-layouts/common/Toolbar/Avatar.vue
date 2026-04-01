@@ -41,11 +41,15 @@ const options = ref([
 		key: "route-Users",
 		icon: renderIcon(UsersIcon)
 	},
-	{
-		label: "SSO Config",
-		key: "route-SSOConfig",
-		icon: renderIcon(SSOConfigIcon)
-	},
+	...(authStore.isAdmin
+		? [
+				{
+					label: "SSO Config",
+					key: "route-SSOConfig",
+					icon: renderIcon(SSOConfigIcon)
+				}
+			]
+		: []),
 	{
 		label: "Logs",
 		key: "route-Logs",
