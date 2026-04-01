@@ -185,7 +185,12 @@ const options = [
 	{
 		key: "ChangePassword",
 		type: "render",
-		render: () => h(ChangePassword, { user: selectedUser.value || undefined })
+		render: () =>
+			h(ChangePassword, {
+				user: selectedUser.value || undefined,
+				quaternary: true,
+				className: "w-full! justify-start!"
+			})
 	},
 	{
 		key: "DeleteUser",

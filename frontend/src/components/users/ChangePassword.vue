@@ -1,5 +1,5 @@
 <template>
-	<n-button :size :type quaternary class="w-full! justify-start!" @click="showFormDrawer = true">
+	<n-button :size :type :quaternary :class="className" @click="showFormDrawer = true">
 		<template #icon>
 			<Icon :name="PasswordIcon" :size="14" />
 		</template>
@@ -67,10 +67,12 @@ interface ModelType {
 	confirmPassword: string | null
 }
 
-const { type, size, user } = defineProps<{
+const { type, size, user, quaternary, className } = defineProps<{
 	user?: User
 	size?: ButtonSize
 	type?: ButtonType
+	quaternary?: boolean
+	className?: string
 }>()
 
 const showFormDrawer = ref(false)

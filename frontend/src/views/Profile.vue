@@ -39,8 +39,6 @@
 					</div>
 				</div>
 				<div class="actions">
-					<ChangePassword :user="{ username: userName, id: 0, email: '' }" size="small" />
-
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
@@ -66,7 +64,10 @@
 					<ProfileSettings />
 				</n-tab-pane>
 				<n-tab-pane name="security">
-					<TotpToggle />
+					<div class="flex flex-col gap-4">
+						<ChangePasswordCard />
+						<TotpToggle />
+					</div>
 				</n-tab-pane>
 			</n-tabs>
 		</div>
@@ -77,11 +78,12 @@
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref } from "vue"
+import ChangePasswordCard from "@/components/auth/ChangePassword.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
-import ChangePassword from "@/components/users/ChangePassword.vue"
+
 import { useAuthStore } from "@/stores/auth"
 
 const propicEnabled = false
