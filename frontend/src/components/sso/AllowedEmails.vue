@@ -21,13 +21,13 @@
 			</template>
 
 			<n-text class="text-secondary mb-4 block text-sm">
-				Only users with an email listed here are allowed to log in via SSO. After first login, a CoPilot account
-				is automatically created with the assigned role.
+				Existing users are automatically enabled for SSO login. Add email addresses to allow new users to sign
+				in and create an account via SSO.
 			</n-text>
 
 			<n-spin :show="loadingEmails">
 				<p v-if="!allowedEmails.length" class="text-secondary py-4 text-center">
-					No allowed emails configured. Add emails to permit SSO login.
+					No allowed emails configured. Add an email to allow access via SSO.
 				</p>
 				<n-table v-else>
 					<thead>
