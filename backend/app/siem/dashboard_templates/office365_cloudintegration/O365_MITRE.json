@@ -1,0 +1,109 @@
+{
+  "id": "O365_MITRE",
+  "title": "Office 365 - MITRE ATT&CK",
+  "description": "MITRE ATT&CK enrichment across all Office 365 workloads: tactic and technique distributions, affected accounts, operations mapped to MITRE, and enriched alert telemetry.",
+  "panels": [
+    {
+      "id": "mitre_events",
+      "title": "MITRE ATT&CK Enriched Events",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "_exists_:rule_mitre_id AND data_office365_Workload:*"
+    },
+    {
+      "id": "mitre_alerts",
+      "title": "MITRE ATT&CK Alerts (≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "_exists_:rule_mitre_tactic AND data_office365_Workload:* AND rule_level:>=12"
+    },
+    {
+      "id": "accounts_affected",
+      "title": "Accounts Affected",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "_exists_:rule_mitre_tactic AND data_office365_Workload:* AND rule_level:>=12"
+    },
+    {
+      "id": "mitre_over_time",
+      "title": "MITRE Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "_exists_:rule_mitre_tactic AND data_office365_Workload:*"
+    },
+    {
+      "id": "by_tactic",
+      "title": "MITRE ATT&CK Tactics (Top 10)",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "rule_mitre_tactic",
+      "size": 10
+    },
+    {
+      "id": "by_technique",
+      "title": "MITRE ATT&CK Techniques (Top 10)",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "rule_mitre_technique",
+      "size": 10
+    },
+    {
+      "id": "by_workload",
+      "title": "By Workload",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "_exists_:rule_mitre_tactic AND data_office365_Workload:*",
+      "field": "data_office365_Workload",
+      "size": 10
+    },
+    {
+      "id": "top_tactics",
+      "title": "Top MITRE Tactics",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "rule_mitre_tactic",
+      "size": 15
+    },
+    {
+      "id": "top_technique_ids",
+      "title": "Top MITRE Technique IDs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "rule_mitre_id",
+      "size": 15
+    },
+    {
+      "id": "top_techniques",
+      "title": "Top MITRE Techniques (by name)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "rule_mitre_technique",
+      "size": 15
+    },
+    {
+      "id": "top_accounts",
+      "title": "Top Affected Accounts",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND _exists_:rule_mitre_tactic",
+      "field": "data_office365_UserId",
+      "size": 10
+    }
+  ]
+}

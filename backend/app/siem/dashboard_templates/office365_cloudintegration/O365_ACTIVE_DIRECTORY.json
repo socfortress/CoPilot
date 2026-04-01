@@ -1,0 +1,195 @@
+{
+  "id": "O365_ACTIVE_DIRECTORY",
+  "title": "Office 365 - Active Directory",
+  "description": "Azure Active Directory audit and sign-in activity: alerts, device events, user additions, external logins, non-MFA logins, failed authentications, auth by country, operations breakdown, and user agent analysis.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:AzureActiveDirectory AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Events (Total)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:AzureActiveDirectory"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Severity (0 - 15)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:AzureActiveDirectory"
+    },
+
+    {
+      "id": "operations_over_time",
+      "title": "Top 10 Operations - Histogram",
+      "type": "histogram",
+      "w": 12,
+      "h": 250,
+      "lucene": "data_office365_Workload:AzureActiveDirectory"
+    },
+
+    {
+      "id": "total_auths",
+      "title": "Azure AD - Total Auths",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Operation:UserLoggedIn"
+    },
+    {
+      "id": "failed_auths",
+      "title": "Azure AD - Failed Auths",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Operation:UserLoginFailed"
+    },
+    {
+      "id": "external_logins",
+      "title": "External Users Login",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Operation:UserLoggedIn AND (data_office365_UserId:*#EXT# OR data_office365_UserId:*gmail.com)"
+    },
+    {
+      "id": "non_mfa_logins",
+      "title": "Non-MFA Logins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Operation:UserLoggedIn AND data_office365_ResultStatus:Success AND data_office365_ExtendedProperties_UserAuthenticationMethod:1"
+    },
+
+    {
+      "id": "device_events",
+      "title": "Device Events (Total)",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_office365_Operation:\"Add device.\" OR data_office365_Operation:\"Add registered owner to device.\" OR data_office365_Operation:\"Add registered users to device.\""
+    },
+    {
+      "id": "users_added",
+      "title": "Users Added Events (Total)",
+      "type": "stat",
+      "w": 6,
+      "h": 100,
+      "lucene": "data_office365_Operation:\"Add user.\""
+    },
+
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "users_added_by_result",
+      "title": "Users Added Events (Results)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Operation:\"Add user.\"",
+      "field": "data_office365_ResultStatus",
+      "size": 10
+    },
+
+    {
+      "id": "top_operations",
+      "title": "Events by Operation",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "auth_by_country",
+      "title": "All Auth Events by Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_ActorIpAddress_country_code",
+      "size": 15
+    },
+
+    {
+      "id": "failed_auths_by_error",
+      "title": "Failed Auths by Error (Top 15)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:UserLoginFailed",
+      "field": "data_office365_LogonError",
+      "size": 15
+    },
+    {
+      "id": "failed_auths_by_account",
+      "title": "Failed Auths by Account",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:UserLoginFailed",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+
+    {
+      "id": "external_login_users",
+      "title": "External Users Login (Accounts)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:UserLoggedIn AND (data_office365_UserId:*#EXT# OR data_office365_UserId:*gmail.com)",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+    {
+      "id": "non_mfa_users",
+      "title": "Non-MFA Login Accounts",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:UserLoggedIn AND data_office365_ResultStatus:Success AND data_office365_ExtendedProperties_UserAuthenticationMethod:1",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+
+    {
+      "id": "device_events_by_operation",
+      "title": "Device Events by Operation",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:\"Add device.\" OR data_office365_Operation:\"Add registered owner to device.\" OR data_office365_Operation:\"Add registered users to device.\"",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "successful_auths_by_user_agent",
+      "title": "Successful Auths by User Agent (Top 15)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Operation:UserLoggedIn AND data_office365_ResultStatus:Success",
+      "field": "data_office365_ExtendedProperties_UserAgent",
+      "size": 15
+    }
+  ]
+}

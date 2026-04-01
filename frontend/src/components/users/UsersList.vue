@@ -23,7 +23,7 @@
 
 		<n-spin :show="loading" content-class="min-h-32">
 			<n-scrollbar x-scrollable class="w-full">
-				<n-table :bordered="false" class="min-w-max">
+				<n-table class="min-h-50 min-w-max">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -78,7 +78,7 @@
 			v-model:show="showTagRbacSettings"
 			display-directive="show"
 			preset="card"
-			:style="{ maxWidth: 'min(500px, 90vw)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(700px, 90vw)', overflow: 'hidden' }"
 			title="Tag RBAC Settings"
 			:bordered="false"
 			segmented
@@ -176,6 +176,7 @@ const options = [
 		key: "AssignTags",
 		type: "render",
 		render: () =>
+			// TODO-FE: use button + modal (see AssignCustomer, AssignRole)
 			h(AssignTags, {
 				user: selectedUser.value || undefined,
 				onSuccess: getUsers
@@ -184,7 +185,12 @@ const options = [
 	{
 		key: "ChangePassword",
 		type: "render",
-		render: () => h(ChangePassword, { user: selectedUser.value || undefined })
+		render: () =>
+			h(ChangePassword, {
+				user: selectedUser.value || undefined,
+				quaternary: true,
+				className: "w-full! justify-start!"
+			})
 	},
 	{
 		key: "DeleteUser",

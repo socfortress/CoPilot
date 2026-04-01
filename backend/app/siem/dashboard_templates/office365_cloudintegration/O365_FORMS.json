@@ -1,0 +1,99 @@
+{
+  "id": "O365_FORMS",
+  "title": "Office 365 - Forms",
+  "description": "Microsoft Forms activity: form creation, responses, sharing events, per-form breakdowns, user activity, and source country tracking.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:MicrosoftForms AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:MicrosoftForms"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Severity",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:MicrosoftForms"
+    },
+    {
+      "id": "operations_over_time",
+      "title": "Operations Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_office365_Workload:MicrosoftForms"
+    },
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "by_form_name",
+      "title": "Events by Form Name",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_FormName",
+      "size": 10
+    },
+    {
+      "id": "top_operations",
+      "title": "Top Operations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+    {
+      "id": "by_country",
+      "title": "Events by Source Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_ClientIP_country_code",
+      "size": 15
+    },
+    {
+      "id": "top_form_names",
+      "title": "Top Form Names",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:MicrosoftForms",
+      "field": "data_office365_FormName",
+      "size": 15
+    }
+  ]
+}

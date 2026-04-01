@@ -1,3 +1,4 @@
+import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import type { AuthUser, JWTPayload, LoginPayload, RouteMetaAuthRole } from "@/types/auth.d"
 import type { ApiError } from "@/types/common.d"
 import * as jose from "jose"
@@ -23,6 +24,11 @@ export const useAuthStore = defineStore("auth", {
 	}),
 	actions: {
 		setLogged(token: string) {
+			// NOTE: decodeJwt is intentionally used without signature verification.
+			// The token was just issued by our own backend (POST /auth/token or /auth/refresh)
+			// over HTTPS. We read `sub` and `scopes` solely to populate the UI state.
+			// All cryptographic validation is enforced server-side on every API call.
+			// This is by design and not a security vulnerability. // noqa: CWE-347
 			const jwtPayload = jose.decodeJwt<JWTPayload>(token)
 			const scopes = jwtPayload.scopes
 
@@ -49,6 +55,26 @@ export const useAuthStore = defineStore("auth", {
 		async login(payload: LoginPayload) {
 			try {
 				const response = await Api.auth.login(payload)
+
+				// If 2FA is required, don't set the temp token as logged-in state
+				if (response.data.requires_2fa) {
+					return response.data
+				}
+
+				if (response.data.access_token) {
+					this.setLogged(response.data.access_token)
+					this.getEmail()
+				}
+
+				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				throw error.response?.data
+			}
+		},
+		async verify2fa(payload: TOTPValidateRequest) {
+			try {
+				const response = await Api.totp.validate(payload)
 
 				if (response.data.access_token) {
 					this.setLogged(response.data.access_token)

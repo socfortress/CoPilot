@@ -1,0 +1,89 @@
+{
+  "id": "O365_DEFENDER_FOR_IDENTITY",
+  "title": "Office 365 - Defender for Identity",
+  "description": "Microsoft Defender for Identity detections: identity-related alerts, operation categories, and security events across the Defender for Identity workload.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:* AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:*"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Severity",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "data_office365_Workload:*"
+    },
+    {
+      "id": "operations_over_time",
+      "title": "Operations Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_office365_Workload:*"
+    },
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "by_category",
+      "title": "Events by Category",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Category",
+      "size": 10
+    },
+    {
+      "id": "top_operations",
+      "title": "Top Operations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "top_categories",
+      "title": "Top Categories",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:*",
+      "field": "data_office365_Category",
+      "size": 15
+    },
+    {
+      "id": "top_rules",
+      "title": "Top Rules Triggered",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:* AND rule_level:>=12",
+      "field": "rule_description",
+      "size": 10
+    }
+  ]
+}

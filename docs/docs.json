@@ -129,8 +129,10 @@
             ]
           },
           {
-            "group": "Access Control",
+            "group": "Authentication & Access",
             "pages": [
+              "user/ui/sso",
+              "user/ui/two-factor-authentication",
               "user/ui/tag-access"
             ]
           },

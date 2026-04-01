@@ -1,0 +1,11 @@
+{
+  "id": "office365_cloudintegration",
+  "title": "Office 365 - Cloud Integration",
+  "description": "Cloud integration dashboards for Microsoft Office 365. Covers Exchange Online, SharePoint, OneDrive, Teams, Azure AD sign-in and audit logs, DLP policy matches, and security & compliance events.",
+  "vendor": "Microsoft",
+  "product": "Office 365",
+  "event_type": "Cloud",
+  "tags": ["office365", "microsoft", "cloud", "exchange", "sharepoint", "azure-ad", "teams"],
+  "color": "#D83B01",
+  "icon": "cloud"
+}

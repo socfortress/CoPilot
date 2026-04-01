@@ -1,0 +1,117 @@
+{
+  "id": "O365_THREAT_INTELLIGENCE",
+  "title": "Office 365 - Threat Intelligence",
+  "description": "Microsoft Defender for Office 365 threat intelligence: phish and malware detections, delivery actions, detection methods, mail directionality, sender analysis, and source country tracking.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:ThreatIntelligence AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:ThreatIntelligence"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Rule Severity",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:ThreatIntelligence"
+    },
+    {
+      "id": "unique_senders",
+      "title": "Unique Senders",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:ThreatIntelligence"
+    },
+    {
+      "id": "events_over_time",
+      "title": "Threat Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_office365_Workload:ThreatIntelligence"
+    },
+    {
+      "id": "by_detection_method",
+      "title": "By Detection Method",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_DetectionMethod",
+      "size": 10
+    },
+    {
+      "id": "by_delivery_action",
+      "title": "By Delivery Action",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_DeliveryAction",
+      "size": 10
+    },
+    {
+      "id": "by_directionality",
+      "title": "By Directionality",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_Directionality",
+      "size": 10
+    },
+    {
+      "id": "top_senders",
+      "title": "Top Senders (P1Sender)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_P1Sender",
+      "size": 15
+    },
+    {
+      "id": "top_operations",
+      "title": "Top Operations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "by_country",
+      "title": "Events by Sender Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence",
+      "field": "data_office365_SenderIp_country_code",
+      "size": 15
+    },
+    {
+      "id": "top_rules",
+      "title": "Top Rules Triggered",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:ThreatIntelligence AND rule_level:>=12",
+      "field": "rule_description",
+      "size": 10
+    }
+  ]
+}

@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => {
 			include: ["fast-deep-equal"]
 		},
 		server: {
+			allowedHosts: true,
 			https:
 				fs.existsSync("/certs/key.pem") && fs.existsSync("/certs/cert.pem")
 					? { key: fs.readFileSync("/certs/key.pem"), cert: fs.readFileSync("/certs/cert.pem") }
