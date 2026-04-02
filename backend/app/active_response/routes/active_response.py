@@ -16,8 +16,8 @@ from app.active_response.schema.active_response import ActiveResponsesSupported
 from app.active_response.schema.active_response import ActiveResponsesSupportedResponse
 from app.active_response.schema.active_response import InvokeActiveResponseRequest
 from app.active_response.schema.active_response import InvokeActiveResponseResponse
-from app.auth.models.users import User
 from app.agents.routes.agents import get_agent
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.db.db_session import get_db
