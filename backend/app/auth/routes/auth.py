@@ -11,7 +11,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import PasswordReset
-from app.auth.models.users import PasswordResetToken
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
