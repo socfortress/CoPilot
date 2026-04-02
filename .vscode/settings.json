@@ -67,6 +67,7 @@
 		"timefield",
 		"timerange",
 		"timesec",
+		"totp",
 		"tsbuildinfo",
 		"unocss",
 		"uvicorn",

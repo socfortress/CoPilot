@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 
@@ -24,7 +25,7 @@ class AuthHandler:
         },
     )
     pwd_context = CryptContext(schemes=["bcrypt"])
-    secret = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
+    secret = os.environ.get("JWT_SECRET", "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc=")
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
@@ -284,6 +285,15 @@ class AuthHandler:
                 raise HTTPException(
                     status_code=401,
                     detail="Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            # Verify user still exists in DB — prevents ghost-user token abuse
+            user = await find_user(username)
+            if user is None:
+                raise HTTPException(
+                    status_code=401,
+                    detail="User not found",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 

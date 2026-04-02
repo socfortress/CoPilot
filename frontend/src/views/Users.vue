@@ -1,13 +1,17 @@
 <template>
-	<div class="page">
+	<div class="page flex flex-col gap-8">
 		<UsersList :highlight />
+
+		<AllowedEmails />
 	</div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import UsersList from "@/components/users/UsersList.vue"
+
+const AllowedEmails = defineAsyncComponent(() => import("@/components/sso/AllowedEmails.vue"))
 
 const route = useRoute()
 

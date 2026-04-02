@@ -17,6 +17,11 @@ export function isDebounceTimeOver(lastCheck: Date | null) {
  */
 export function isJwtExpiring(token: string, threshold: number): boolean {
 	try {
+		// NOTE: decodeJwt is intentionally used here without signature verification.
+		// This is a client-side SPA — we only read the `exp` claim to trigger a
+		// proactive refresh before the token expires. All cryptographic validation
+		// (signature, audience, issuer) is enforced server-side on every API call.
+		// This usage is by design and not a security vulnerability. // noqa: CWE-347
 		const { exp } = decodeJwt(token) || {}
 		return exp ? Date.now() / 1000 > exp - threshold : true
 	} catch {

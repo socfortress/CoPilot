@@ -1,6 +1,6 @@
 import datetime
-import random
 import re
+import secrets
 import string
 from enum import Enum
 from typing import List
@@ -160,23 +160,23 @@ class Password(BaseModel):
         lowercase = string.ascii_lowercase
         uppercase = string.ascii_uppercase
         digits = string.digits
+        special = "@$!%*?&#"
 
-        # Ensure the password has at least one lowercase, one uppercase, one digit, and one symbol
+        # Ensure the password has at least one lowercase, one uppercase, one digit, and one special char
         password_chars = [
-            random.choice(lowercase),
-            random.choice(uppercase),
-            random.choice(digits),
+            secrets.choice(lowercase),
+            secrets.choice(uppercase),
+            secrets.choice(digits),
+            secrets.choice(special),
         ]
 
-        # Fill the rest of the password length with a random mix of characters
+        # Fill the rest of the password length with a cryptographically secure random mix
+        alphabet = lowercase + uppercase + digits + special
         if length > 4:
-            password_chars += random.choices(
-                lowercase + uppercase + digits,
-                k=length - 4,
-            )
+            password_chars += [secrets.choice(alphabet) for _ in range(length - 4)]
 
-        # Shuffle the resulting password list to avoid predictable patterns
-        random.shuffle(password_chars)
+        # Shuffle using secrets-backed SystemRandom to avoid predictable patterns
+        secrets.SystemRandom().shuffle(password_chars)
 
         # Convert the list of characters into a string
         password = "".join(password_chars)

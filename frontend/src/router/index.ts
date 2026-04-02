@@ -438,6 +438,12 @@ const router = createRouter({
 				}
 			]
 		},
+		{
+			path: "/sso-config",
+			name: "SSOConfig",
+			component: () => import("@/views/SSOConfig.vue"),
+			meta: { title: "SSO Config", auth: true, roles: RouteRole.All }
+		},
 
 		{
 			path: "/profile",
@@ -452,6 +458,18 @@ const router = createRouter({
 			props: { formType: "signin" as FormType },
 			meta: {
 				title: "Login",
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				checkAuth: true,
+				skipPin: true
+			}
+		},
+		{
+			path: "/sso-callback",
+			name: "SSOCallback",
+			component: AuthPage,
+			props: { formType: "signin" as FormType },
+			meta: {
+				title: "SSO Login",
 				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
 				checkAuth: true,
 				skipPin: true

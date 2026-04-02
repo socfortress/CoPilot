@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from fastapi import APIRouter
@@ -20,19 +21,20 @@ from app.auth.schema.auth import UpdateUserRoleRequest
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
+from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
 auth_router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@auth_router.post("/token", response_model=Token)
+@auth_router.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
     """
     Authenticates a user and generates an access token.
@@ -63,6 +65,18 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Check if user has 2FA enabled
+    if await is_2fa_enabled(user.id):
+        from app.auth.routes.totp import _create_temp_token
+
+        temp_token = _create_temp_token(user.username)
+        logger.info(f"User {user.username} requires 2FA verification")
+        return {
+            "access_token": temp_token,
+            "token_type": "bearer",
+            "requires_2fa": True,
+        }
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
@@ -199,7 +213,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
             detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
         )
 
-    token = auth_handler.encode_token(user_found.username)
+    token = await auth_handler.encode_token(user_found.username)
     return {"token": token, "success": True, "message": "Login successful"}
 
 
@@ -251,6 +265,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     status_code=200,
     description="Request password reset",
     include_in_schema=False,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def request_password_reset(
     password_reset_request: PasswordResetToken,

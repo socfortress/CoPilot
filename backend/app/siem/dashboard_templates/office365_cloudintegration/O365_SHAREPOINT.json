@@ -1,0 +1,127 @@
+{
+  "id": "O365_SHAREPOINT",
+  "title": "Office 365 - SharePoint",
+  "description": "SharePoint Online activity: file operations, sharing events, site administration, user agents, authentication types, user activity, and source country analysis.",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:SharePoint AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:SharePoint"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Rule Severity",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:SharePoint"
+    },
+    {
+      "id": "unique_users",
+      "title": "Unique Users",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_office365_Workload:SharePoint"
+    },
+    {
+      "id": "operations_over_time",
+      "title": "Operations Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_office365_Workload:SharePoint"
+    },
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "by_user",
+      "title": "Events by User",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_UserId",
+      "size": 10
+    },
+    {
+      "id": "top_operations",
+      "title": "Top Operations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "top_users",
+      "title": "Top Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_UserId",
+      "size": 15
+    },
+    {
+      "id": "by_user_agent",
+      "title": "Top User Agents",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_UserAgent",
+      "size": 15
+    },
+    {
+      "id": "by_auth_type",
+      "title": "By Authentication Type",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_AuthenticationType",
+      "size": 10
+    },
+    {
+      "id": "by_country",
+      "title": "Events by Source Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint",
+      "field": "data_office365_ClientIP_country_code",
+      "size": 15
+    },
+    {
+      "id": "top_rules",
+      "title": "Top Rules Triggered",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_office365_Workload:SharePoint AND rule_level:>=12",
+      "field": "rule_description",
+      "size": 10
+    }
+  ]
+}

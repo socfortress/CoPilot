@@ -6,10 +6,9 @@ import { HttpClient } from "../httpClient"
 export default {
 	login(payload: LoginPayload) {
 		const formData = jsonToFormData(payload)
-		return HttpClient.post<FlaskBaseResponse & { access_token: string; token_type: string }>(
-			"/auth/token",
-			formData
-		)
+		return HttpClient.post<
+			FlaskBaseResponse & { access_token: string; token_type: string; requires_2fa?: boolean }
+		>("/auth/token", formData)
 	},
 	register(payload: RegisterPayload) {
 		return HttpClient.post<FlaskBaseResponse>("/auth/register", payload)

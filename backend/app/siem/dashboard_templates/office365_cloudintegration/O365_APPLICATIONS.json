@@ -1,0 +1,99 @@
+{
+  "id": "O365_APPLICATIONS",
+  "title": "Office 365 - Applications",
+  "description": "Cross-workload O365 application activity: events by workload, operations, user access patterns, source country analysis, and alert tracking (excludes Azure Active Directory).",
+  "panels": [
+    {
+      "id": "alerts",
+      "title": "Alerts (rule level ≥ 12)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory AND rule_level:>=12"
+    },
+    {
+      "id": "total_events",
+      "title": "Total Events",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory"
+    },
+    {
+      "id": "max_severity",
+      "title": "Max Severity (0 - 15)",
+      "type": "stat",
+      "w": 4,
+      "h": 100,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory"
+    },
+    {
+      "id": "by_workload",
+      "title": "Events by Workload (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Workload",
+      "size": 10
+    },
+    {
+      "id": "by_operation",
+      "title": "Events by Operation (Top 10)",
+      "type": "pie",
+      "w": 6,
+      "h": 300,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Operation",
+      "size": 10
+    },
+    {
+      "id": "operations_over_time",
+      "title": "Top 10 Operations - Histogram",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory"
+    },
+    {
+      "id": "top_workloads",
+      "title": "Events by Workload",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Workload",
+      "size": 15
+    },
+    {
+      "id": "top_operations",
+      "title": "Events by Operation",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_Operation",
+      "size": 15
+    },
+    {
+      "id": "by_country",
+      "title": "Applications Access by Source Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_ClientIP_country_code",
+      "size": 15
+    },
+    {
+      "id": "top_users",
+      "title": "Apps Access by Account",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "NOT data_office365_Workload:AzureActiveDirectory",
+      "field": "data_office365_UserId",
+      "size": 15
+    }
+  ]
+}
