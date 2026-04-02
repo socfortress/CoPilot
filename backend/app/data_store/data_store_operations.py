@@ -3,7 +3,6 @@ import os
 import tempfile
 from typing import Optional
 
-import aiofiles
 import aiohttp
 from fastapi import HTTPException
 from fastapi import UploadFile
