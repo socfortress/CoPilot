@@ -1,5 +1,6 @@
 import hashlib
 import os
+import tempfile
 from typing import Optional
 
 import aiofiles
@@ -26,48 +27,44 @@ async def upload_case_data_store(data: CaseDataStoreCreation, file: UploadFile) 
     client = await create_session()
     logger.info(f"Uploading file {file.filename} to bucket {data.bucket_name}")
 
-    # Define the temporary file path
-    temp_file_path = os.path.join(os.getcwd(), file.filename)
-
-    # Save the file to the temporary location
-    async with aiofiles.open(temp_file_path, "wb") as out_file:
+    # Save the file to a secure temporary location
+    with tempfile.NamedTemporaryFile(delete=False, dir="/tmp") as tmp:
         content = await file.read()
-        await out_file.write(content)
+        tmp.write(content)
+        temp_file_path = tmp.name
 
-    # Upload the file to Minio
-    await client.fput_object(
-        bucket_name=data.bucket_name,
-        object_name=f"{data.case_id}/{file.filename}",
-        file_path=temp_file_path,
-        content_type=data.content_type,
-    )
-
-    # Optionally, remove the temporary file after upload
-    os.remove(temp_file_path)
+    try:
+        await client.fput_object(
+            bucket_name=data.bucket_name,
+            object_name=f"{data.case_id}/{file.filename}",
+            file_path=temp_file_path,
+            content_type=data.content_type,
+        )
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
 
 
 async def upload_case_report_template_data_store(data: CaseReportTemplateDataStoreCreation, file: UploadFile) -> None:
     client = await create_session()
     logger.info(f"Uploading file {file.filename} to bucket {data.bucket_name}")
 
-    # Define the temporary file path
-    temp_file_path = os.path.join(os.getcwd(), file.filename)
-
-    # Save the file to the temporary location
-    async with aiofiles.open(temp_file_path, "wb") as out_file:
+    # Save the file to a secure temporary location
+    with tempfile.NamedTemporaryFile(delete=False, dir="/tmp") as tmp:
         content = await file.read()
-        await out_file.write(content)
+        tmp.write(content)
+        temp_file_path = tmp.name
 
-    # Upload the file to Minio
-    await client.fput_object(
-        bucket_name=data.bucket_name,
-        object_name=f"{file.filename}",
-        file_path=temp_file_path,
-        content_type=data.content_type,
-    )
-
-    # Optionally, remove the temporary file after upload
-    os.remove(temp_file_path)
+    try:
+        await client.fput_object(
+            bucket_name=data.bucket_name,
+            object_name=f"{file.filename}",
+            file_path=temp_file_path,
+            content_type=data.content_type,
+        )
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
 
 
 async def download_data_store(bucket_name: str, object_name: str) -> bytes:
@@ -138,15 +135,13 @@ async def upload_file_to_datastore(
 
     logger.info(f"Uploading file {file.filename} to bucket {bucket_name} as {object_name}")
 
-    # Define the temporary file path
-    temp_file_path = os.path.join(os.getcwd(), file.filename)
-
-    # Save the file to the temporary location and calculate hash
+    # Save the file to a secure temporary location and calculate hash
     sha256_hash = hashlib.sha256()
-    async with aiofiles.open(temp_file_path, "wb") as out_file:
+    with tempfile.NamedTemporaryFile(delete=False, dir="/tmp") as tmp:
         content = await file.read()
-        await out_file.write(content)
+        tmp.write(content)
         sha256_hash.update(content)
+        temp_file_path = tmp.name
 
     file_hash = sha256_hash.hexdigest()
     file_size = os.path.getsize(temp_file_path)
@@ -154,16 +149,17 @@ async def upload_file_to_datastore(
     # Determine content type
     content_type = file.content_type or "application/octet-stream"
 
-    # Upload the file to MinIO
-    await client.fput_object(
-        bucket_name=bucket_name,
-        object_name=object_name,
-        file_path=temp_file_path,
-        content_type=content_type,
-    )
-
-    # Remove the temporary file after upload
-    os.remove(temp_file_path)
+    try:
+        # Upload the file to MinIO
+        await client.fput_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            file_path=temp_file_path,
+            content_type=content_type,
+        )
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
 
     logger.info(f"Successfully uploaded {file.filename} ({file_size} bytes) to {bucket_name}/{object_name}")
 
@@ -215,21 +211,20 @@ async def upload_sysmon_config(customer_code: str, file: UploadFile) -> None:
 
     logger.info(f"Uploading sysmon config for customer {customer_code}")
 
-    # Define the temporary file path
-    temp_file_path = os.path.join(os.getcwd(), file.filename)
-
-    # Save the file to the temporary location
-    async with aiofiles.open(temp_file_path, "wb") as out_file:
+    # Save the file to a secure temporary location
+    with tempfile.NamedTemporaryFile(delete=False, dir="/tmp") as tmp:
         content = await file.read()
-        await out_file.write(content)
+        tmp.write(content)
+        temp_file_path = tmp.name
 
     # Upload the file to MinIO with customer folder structure
     object_name = f"{customer_code}/sysmon_config.xml"
 
-    await client.fput_object(bucket_name=bucket_name, object_name=object_name, file_path=temp_file_path, content_type="application/xml")
-
-    # Remove the temporary file after upload
-    os.remove(temp_file_path)
+    try:
+        await client.fput_object(bucket_name=bucket_name, object_name=object_name, file_path=temp_file_path, content_type="application/xml")
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
 
     logger.info(f"Successfully uploaded sysmon config for customer {customer_code}")
 
@@ -415,8 +410,6 @@ async def store_file_in_minio(
     Returns:
         dict: Upload details including success status, object_key, file_size, and file_hash
     """
-    import tempfile
-
     client = await create_session()
 
     # Create bucket if it doesn't exist
@@ -432,20 +425,21 @@ async def store_file_in_minio(
         file_size = len(file_content)
 
         # Create a temporary file to upload
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, dir="/tmp") as temp_file:
             temp_file.write(file_content)
             temp_file_path = temp_file.name
 
-        # Upload the file to MinIO
-        await client.fput_object(
-            bucket_name=bucket_name,
-            object_name=object_key,
-            file_path=temp_file_path,
-            content_type=content_type,
-        )
-
-        # Remove the temporary file after upload
-        os.remove(temp_file_path)
+        try:
+            # Upload the file to MinIO
+            await client.fput_object(
+                bucket_name=bucket_name,
+                object_name=object_key,
+                file_path=temp_file_path,
+                content_type=content_type,
+            )
+        finally:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
 
         logger.info(f"Successfully stored file ({file_size} bytes) to {bucket_name}/{object_key}")
 
