@@ -17,6 +17,7 @@ from app.active_response.schema.active_response import ActiveResponsesSupportedR
 from app.active_response.schema.active_response import InvokeActiveResponseRequest
 from app.active_response.schema.active_response import InvokeActiveResponseResponse
 from app.agents.routes.agents import get_agent
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.db.db_session import get_db
@@ -122,11 +123,15 @@ async def get_supported_active_responses_route() -> ActiveResponsesSupportedResp
     description="Get the list of supported active responses for a specific agent",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_supported_active_responses_agent_route(agent_id: str, db: AsyncSession = Depends(get_db)) -> ActiveResponsesSupportedResponse:
+async def get_supported_active_responses_agent_route(
+    agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ActiveResponsesSupportedResponse:
     """
     Get the list of supported active responses for a specific agent
     """
-    response = await get_agent(agent_id, db)
+    response = await get_agent(agent_id, current_user, db)
     agent = response.agents[0] if response.agents else None
     logger.info(f"Agent: {agent.os if agent else 'None'}")
     if agent and agent.os:
