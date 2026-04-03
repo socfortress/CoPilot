@@ -30,12 +30,6 @@
 								<span>Role</span>
 							</n-tooltip>
 						</div>
-						<div v-if="userEmail" class="item">
-							<div class="tooltip-wrap">
-								<Icon :name="EmailIcon" />
-								<span>{{ userEmail }}</span>
-							</div>
-						</div>
 					</div>
 				</div>
 				<div class="actions">
@@ -53,6 +47,7 @@
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
 					<n-tab name="settings">Settings</n-tab>
+					<n-tab name="security">Security</n-tab>
 				</n-tabs>
 			</div>
 		</n-card>
@@ -60,6 +55,11 @@
 			<n-tabs v-model:value="tabActive" tab-class="hidden!" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
+				</n-tab-pane>
+				<n-tab-pane name="security">
+					<div class="flex flex-col gap-4">
+						<ChangePasswordCard />
+					</div>
 				</n-tab-pane>
 			</n-tabs>
 		</div>
@@ -70,6 +70,7 @@
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref } from "vue"
+import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
@@ -79,14 +80,14 @@ const propicEnabled = false
 
 const RoleIcon = "tabler:user"
 const EditIcon = "uil:image-edit"
-const EmailIcon = "carbon:email"
 
 const tabActive = ref("settings")
 const authStore = useAuthStore()
 
 const userRole = authStore.userRoleName
 const userName = authStore.userName
-const userEmail = authStore.userEmail
+// TODO-FE: replace with customer_code
+// const userEmail = authStore.userEmail
 const userPic = ref(authStore.userPic)
 
 function setCroppedImage(result: ImageCropperResult) {
