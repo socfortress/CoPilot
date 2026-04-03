@@ -56,9 +56,9 @@
 					</div>
 					<div class="flex items-center space-x-4">
 						<button
-							@click="refreshAlerts"
 							:disabled="loading"
 							class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm leading-4 font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+							@click="refreshAlerts"
 						>
 							<svg
 								class="mr-2 h-4 w-4"
@@ -186,8 +186,8 @@
 							<select
 								id="status-filter"
 								v-model="filters.status"
-								@change="applyFilters"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="applyFilters"
 							>
 								<option value="">All Statuses</option>
 								<option value="OPEN">Open</option>
@@ -200,8 +200,8 @@
 							<select
 								id="source-filter"
 								v-model="filters.source"
-								@change="applyFilters"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="applyFilters"
 							>
 								<option value="">All Sources</option>
 								<option v-for="source in availableSources" :key="source" :value="source">
@@ -214,8 +214,8 @@
 							<select
 								id="asset-filter"
 								v-model="filters.asset"
-								@change="applyFilters"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="applyFilters"
 							>
 								<option value="">All Assets</option>
 								<option v-for="asset in availableAssets" :key="asset" :value="asset">
@@ -246,8 +246,8 @@
 					</div>
 					<p class="text-sm text-red-600">{{ error }}</p>
 					<button
-						@click="loadAlerts"
 						class="mt-2 inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-3 py-2 text-sm leading-4 font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+						@click="loadAlerts"
 					>
 						Try Again
 					</button>
@@ -288,17 +288,17 @@
 							<div class="flex items-center space-x-2">
 								<select
 									:value="alert.status"
-									@change="updateAlertStatus(alert.id, ($event.target as HTMLSelectElement).value)"
 									class="rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
 									:disabled="updatingStatus === alert.id"
+									@change="updateAlertStatus(alert.id, ($event.target as HTMLSelectElement).value)"
 								>
 									<option value="OPEN">Open</option>
 									<option value="IN_PROGRESS">In Progress</option>
 									<option value="CLOSED">Closed</option>
 								</select>
 								<button
-									@click="viewAlert(alert)"
 									class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="viewAlert(alert)"
 								>
 									View Details
 								</button>
@@ -331,16 +331,16 @@
 			>
 				<div class="flex flex-1 justify-between sm:hidden">
 					<button
-						@click="previousPage"
 						:disabled="currentPage <= 1"
 						class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+						@click="previousPage"
 					>
 						Previous
 					</button>
 					<button
-						@click="nextPage"
 						:disabled="currentPage >= totalPages"
 						class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+						@click="nextPage"
 					>
 						Next
 					</button>
@@ -360,16 +360,16 @@
 					<div>
 						<nav class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
 							<button
-								@click="previousPage"
 								:disabled="currentPage <= 1"
 								class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+								@click="previousPage"
 							>
 								Previous
 							</button>
 							<button
-								@click="nextPage"
 								:disabled="currentPage >= totalPages"
 								class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+								@click="nextPage"
 							>
 								Next
 							</button>
@@ -391,7 +391,7 @@
 			>
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-medium text-gray-900">Alert Details</h3>
-					<button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+					<button class="text-gray-400 hover:text-gray-600" @click="closeModal">
 						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -644,9 +644,9 @@
 							></textarea>
 							<div class="mt-3 flex justify-end">
 								<button
-									@click="addComment"
 									:disabled="!newComment.trim() || isAddingComment"
 									class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									@click="addComment"
 								>
 									<svg
 										v-if="isAddingComment"
@@ -681,9 +681,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from "vue"
+import type { AxiosResponse } from "axios"
+import type { Alert, AlertsListResponse, AlertsResponse, AlertStatus } from "@/api/endpoints/alerts"
+import type { CommonResponse } from "@/types/common"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
+import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
-import AlertsAPI, { type Alert, type AlertsResponse } from "@/api/alerts"
 
 const portalSettingsStore = usePortalSettingsStore()
 
@@ -732,29 +735,29 @@ const availableAssets = computed(() => {
 	return Array.from(assets).sort()
 })
 
-const loadAlerts = async () => {
+async function loadAlerts() {
 	loading.value = true
 	error.value = null
 
 	try {
-		let response: AlertsResponse
+		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
 
 		if (filters.value.status) {
-			response = await AlertsAPI.getAlertsByStatus(filters.value.status as any)
+			response = await Api.alerts.getAlertsByStatus(filters.value.status as AlertStatus)
 		} else if (filters.value.source) {
-			response = await AlertsAPI.getAlertsBySource(filters.value.source)
+			response = await Api.alerts.getAlertsBySource(filters.value.source)
 		} else if (filters.value.asset) {
-			response = await AlertsAPI.getAlertsByAsset(filters.value.asset)
+			response = await Api.alerts.getAlertsByAsset(filters.value.asset)
 		} else {
-			response = await AlertsAPI.getAlerts(currentPage.value, pageSize.value)
+			response = await Api.alerts.getAlerts({ page: currentPage.value, pageSize: pageSize.value, order: "desc" })
 		}
 
-		alerts.value = response.alerts
+		alerts.value = response.data.alerts
 		stats.value = {
-			total: response.total,
-			open: response.open,
-			in_progress: response.in_progress,
-			closed: response.closed
+			total: response.data.total,
+			open: response.data.open,
+			in_progress: response.data.in_progress,
+			closed: response.data.closed
 		}
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load alerts"
@@ -764,25 +767,25 @@ const loadAlerts = async () => {
 	}
 }
 
-const refreshAlerts = () => {
+function refreshAlerts() {
 	loadAlerts()
 }
 
-const applyFilters = () => {
+function applyFilters() {
 	currentPage.value = 1
 	loadAlerts()
 }
 
-const updateAlertStatus = async (alertId: number, newStatus: string) => {
+async function updateAlertStatus(alertId: number, newStatus: string) {
 	updatingStatus.value = alertId
 
 	try {
-		await AlertsAPI.updateAlertStatus(alertId, newStatus as any)
+		await Api.alerts.updateAlertStatus(alertId, newStatus as AlertStatus)
 
 		// Update the local alert status
 		const alert = alerts.value.find(a => a.id === alertId)
 		if (alert) {
-			alert.status = newStatus as any
+			alert.status = newStatus as AlertStatus
 		}
 
 		// Refresh stats
@@ -795,22 +798,22 @@ const updateAlertStatus = async (alertId: number, newStatus: string) => {
 	}
 }
 
-const viewAlert = (alert: Alert) => {
+function viewAlert(alert: Alert) {
 	selectedAlert.value = alert
 }
 
-const closeModal = () => {
+function closeModal() {
 	selectedAlert.value = null
 	newComment.value = "" // Clear comment when closing modal
 }
 
-const addComment = async () => {
+async function addComment() {
 	if (!selectedAlert.value || !newComment.value.trim()) return
 
 	isAddingComment.value = true
 	try {
 		// Make API call to add comment
-		const response = await AlertsAPI.addComment({
+		const response = await Api.alerts.addComment({
 			alert_id: selectedAlert.value.id,
 			comment: newComment.value.trim(),
 			user_name: "Customer User" // This should come from auth context later
@@ -820,7 +823,8 @@ const addComment = async () => {
 		if (!selectedAlert.value.comments) {
 			selectedAlert.value.comments = []
 		}
-		selectedAlert.value.comments.push(response.comment)
+
+		selectedAlert.value.comments.push(response.data.comment)
 
 		// Clear the input
 		newComment.value = ""
@@ -833,18 +837,18 @@ const addComment = async () => {
 	}
 }
 
-const formatDate = (dateString: string) => {
+function formatDate(dateString: string) {
 	return new Date(dateString).toLocaleString()
 }
 
-const previousPage = () => {
+function previousPage() {
 	if (currentPage.value > 1) {
 		currentPage.value--
 		loadAlerts()
 	}
 }
 
-const nextPage = () => {
+function nextPage() {
 	if (currentPage.value < totalPages.value) {
 		currentPage.value++
 		loadAlerts()

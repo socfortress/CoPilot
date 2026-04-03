@@ -142,20 +142,20 @@ export default {
 	 * Get alerts by status with customer filtering
 	 */
 	getAlertsByStatus(status: AlertStatus) {
-		return HttpClient.get<CommonResponse<{ alerts: Alert[] }>>(`/incidents/db_operations/alerts/status/${status}`)
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/status/${status}`)
 	},
 
 	/**
 	 * Get alerts by asset name with customer filtering
 	 */
 	getAlertsByAsset(assetName: string) {
-		return HttpClient.get<CommonResponse<{ alerts: Alert[] }>>(`/incidents/db_operations/alerts/asset/${assetName}`)
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/asset/${assetName}`)
 	},
 
 	/**
 	 * Get alerts by source with customer filtering
 	 */
 	getAlertsBySource(source: string) {
-		return HttpClient.get<CommonResponse<{ alerts: Alert[] }>>(`/incidents/db_operations/alerts/source/${source}`)
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/source/${source}`)
 	}
 }
