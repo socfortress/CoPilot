@@ -12,12 +12,6 @@
 					</div>
 					<div class="flex items-center space-x-4">
 						<span class="text-sm text-gray-700">{{ user?.username }}</span>
-						<button
-							@click="logout"
-							class="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-						>
-							Logout
-						</button>
 					</div>
 				</div>
 			</div>
@@ -149,7 +143,7 @@
 						<div class="px-4 py-5 sm:px-6">
 							<CaseCommentsList
 								:case-id="caseData.id"
-								:comments="comments"
+								:comments
 								@comments-updated="handleCommentsUpdated"
 							/>
 						</div>
@@ -161,13 +155,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from "vue"
-import { useRouter, useRoute } from "vue-router"
-import { useAuthStore } from "@/stores/auth"
-import { CasesAPI, type Case, type CaseComment } from "@/api/cases"
+import type { Case, CaseComment } from "@/api/endpoints/cases"
+import { computed, onBeforeMount, ref } from "vue"
+import { useRoute } from "vue-router"
+import Api from "@/api"
 import CaseCommentsList from "@/components/CaseCommentsList.vue"
+import { useAuthStore } from "@/stores/auth"
 
-const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
@@ -178,7 +172,7 @@ const error = ref("")
 
 const user = computed(() => authStore.user)
 
-const formatDate = (dateString: string) => {
+function formatDate(dateString: string) {
 	if (!dateString) return "Unknown"
 	try {
 		return new Date(dateString).toLocaleString()
@@ -187,7 +181,7 @@ const formatDate = (dateString: string) => {
 	}
 }
 
-const fetchCaseDetails = async () => {
+async function fetchCaseDetails() {
 	const caseId = Number(route.params.id)
 	if (!caseId) {
 		error.value = "Invalid case ID"
@@ -198,10 +192,10 @@ const fetchCaseDetails = async () => {
 	error.value = ""
 
 	try {
-		const response = await CasesAPI.getCase(caseId)
-		if (response.success && response.cases.length > 0) {
-			caseData.value = response.cases[0]
-			comments.value = response.cases[0].comments || []
+		const response = await Api.cases.getCase(caseId)
+		if (response.data.success && response.data.cases.length > 0) {
+			caseData.value = response.data.cases[0]
+			comments.value = response.data.cases[0].comments || []
 		} else {
 			error.value = "Case not found"
 		}
@@ -213,17 +207,12 @@ const fetchCaseDetails = async () => {
 	}
 }
 
-const handleCommentsUpdated = (updatedComments: CaseComment[]) => {
+function handleCommentsUpdated(updatedComments: CaseComment[]) {
 	comments.value = updatedComments
 	// Also update the case data if it has comments
 	if (caseData.value) {
 		caseData.value.comments = updatedComments
 	}
-}
-
-const logout = () => {
-	authStore.logout()
-	router.push("/login")
 }
 
 onBeforeMount(() => {

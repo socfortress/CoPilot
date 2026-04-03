@@ -29,6 +29,7 @@ const props = withDefaults(
 
 const { label, value, format, decimals, colorThresholds } = toRefs(props)
 
+// TODO-FE: refactor
 function formatBytes(bytes: number): string {
 	const units = ["B", "KB", "MB", "GB", "TB"]
 	let i = 0

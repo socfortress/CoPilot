@@ -14,7 +14,7 @@ export interface Case {
 	case_creation_time: string
 	case_description: string
 	case_name: string
-	case_status: "OPEN" | "IN_PROGRESS" | "CLOSED"
+	case_status: CaseStatus
 	assigned_to: string | null
 	customer_code: string
 	alert_ids: number[]
@@ -26,13 +26,13 @@ export interface Alert {
 	id: number
 	alert_name: string
 	asset_name: string
-	status: "OPEN" | "IN_PROGRESS" | "CLOSED"
+	status: CaseStatus
 	time_stamp: string
 }
 
 export interface CaseStatusUpdate {
 	case_id: number
-	status: "open" | "in_progress" | "closed"
+	status: CaseStatus
 }
 
 export interface CaseAssignedToUpdate {
@@ -69,6 +69,8 @@ export interface CaseDataStoreFile {
 	file_hash: string
 }
 
+export type CaseStatus = "OPEN" | "IN_PROGRESS" | "CLOSED"
+
 export default {
 	/**
 	 * Get all cases with customer access control
@@ -81,13 +83,13 @@ export default {
 	 * Get specific case by ID (with customer access validation)
 	 */
 	getCase(caseId: number) {
-		return HttpClient.get<CommonResponse<{ case: Case }>>(`/incidents/db_operations/case/${caseId}`)
+		return HttpClient.get<CommonResponse<{ cases: Case[] }>>(`/incidents/db_operations/case/${caseId}`)
 	},
 
 	/**
 	 * Update case status (customer access controlled)
 	 */
-	updateCaseStatus(caseId: number, status: "open" | "in_progress" | "closed") {
+	updateCaseStatus(caseId: number, status: CaseStatus) {
 		return HttpClient.put<CommonResponse<{ case: Case }>>(`/incidents/db_operations/case/status`, {
 			case_id: caseId,
 			status

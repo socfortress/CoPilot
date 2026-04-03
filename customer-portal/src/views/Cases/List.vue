@@ -56,9 +56,9 @@
 					</div>
 					<div class="flex items-center space-x-4">
 						<button
-							@click="refreshCases"
 							:disabled="loading"
 							class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm leading-4 font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+							@click="refreshCases"
 						>
 							<svg
 								class="mr-2 h-4 w-4"
@@ -191,8 +191,8 @@
 							<select
 								id="status-filter"
 								v-model="filters.status"
-								@change="applyFilters"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="applyFilters"
 							>
 								<option value="">All Statuses</option>
 								<option value="open">Open</option>
@@ -207,8 +207,8 @@
 							<select
 								id="assigned-to-filter"
 								v-model="filters.assignedTo"
-								@change="applyFilters"
 								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								@change="applyFilters"
 							>
 								<option value="">All Assignees</option>
 								<option v-for="assignee in availableAssignees" :key="assignee" :value="assignee">
@@ -239,8 +239,8 @@
 					</div>
 					<p class="text-sm text-red-600">{{ error }}</p>
 					<button
-						@click="loadCases"
 						class="mt-2 inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-3 py-2 text-sm leading-4 font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+						@click="loadCases"
 					>
 						Try Again
 					</button>
@@ -279,17 +279,17 @@
 							<div class="flex items-center space-x-2">
 								<select
 									:value="case_.case_status"
-									@change="updateCaseStatus(case_.id, ($event.target as HTMLSelectElement).value)"
 									class="rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
 									:disabled="updatingStatus === case_.id"
+									@change="updateCaseStatus(case_.id, ($event.target as HTMLSelectElement).value)"
 								>
 									<option value="open">Open</option>
 									<option value="in_progress">In Progress</option>
 									<option value="closed">Closed</option>
 								</select>
 								<button
-									@click="viewCase(case_)"
 									class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="viewCase(case_)"
 								>
 									View Details
 								</button>
@@ -331,7 +331,7 @@
 			>
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-medium text-gray-900">Case Details</h3>
-					<button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+					<button class="text-gray-400 hover:text-gray-600" @click="closeModal">
 						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -459,8 +459,8 @@
 							</label>
 							<div class="flex items-center space-x-2">
 								<button
-									@click="openUploadForm"
 									class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+									@click="openUploadForm"
 								>
 									<svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
@@ -474,8 +474,8 @@
 								</button>
 								<button
 									v-if="!loadingFiles"
-									@click="loadCaseFiles(selectedCase.id)"
 									class="text-xs text-indigo-600 hover:text-indigo-500 focus:outline-none"
+									@click="loadCaseFiles(selectedCase.id)"
 								>
 									<svg
 										class="mr-1 inline h-4 w-4"
@@ -499,7 +499,7 @@
 						<div v-if="showUploadForm" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
 							<div class="mb-3 flex items-center justify-between">
 								<h4 class="text-sm font-medium text-blue-900">Upload File to Case</h4>
-								<button @click="closeUploadForm" class="text-blue-400 hover:text-blue-600">
+								<button class="text-blue-400 hover:text-blue-600" @click="closeUploadForm">
 									<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											stroke-linecap="round"
@@ -516,15 +516,13 @@
 									<input
 										ref="fileInput"
 										type="file"
-										@change="handleFileSelect"
 										class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 focus:outline-none"
+										@change="handleFileSelect"
 									/>
 								</div>
 
 								<div v-if="selectedFile" class="text-sm text-gray-600">
-									Selected: {{ selectedFile.name }} ({{
-										CaseDataStoreAPI.formatFileSize(selectedFile.size)
-									}})
+									Selected: {{ selectedFile.name }} ({{ formatBytes(selectedFile.size ?? 0) }})
 								</div>
 
 								<!-- Error message for upload -->
@@ -537,16 +535,16 @@
 
 								<div class="flex justify-end space-x-2">
 									<button
-										@click="closeUploadForm"
 										type="button"
 										class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+										@click="closeUploadForm"
 									>
 										Cancel
 									</button>
 									<button
-										@click="uploadFile"
 										:disabled="!selectedFile || uploadingFile"
 										class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										@click="uploadFile"
 									>
 										<svg
 											v-if="uploadingFile"
@@ -612,15 +610,15 @@
 											</p>
 										</div>
 										<div class="mt-1 flex items-center space-x-4 text-xs text-gray-500">
-											<span>{{ CaseDataStoreAPI.formatFileSize(file.file_size) }}</span>
+											<span>{{ formatBytes(file.file_size ?? 0) }}</span>
 											<span v-if="file.content_type">{{ file.content_type }}</span>
 											<span>{{ formatDate(file.upload_time) }}</span>
 										</div>
 									</div>
 									<button
-										@click="downloadFile(selectedCase.id, file.file_name)"
 										:disabled="downloadingFile === file.file_name"
 										class="ml-3 inline-flex items-center rounded border border-transparent bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										@click="downloadFile(selectedCase.id, file.file_name)"
 									>
 										<svg
 											v-if="downloadingFile === file.file_name"
@@ -697,7 +695,7 @@
 			>
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-medium text-gray-900">Alert Details</h3>
-					<button @click="closeAlertModal" class="text-gray-400 hover:text-gray-600">
+					<button class="text-gray-400 hover:text-gray-600" @click="closeAlertModal">
 						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -896,11 +894,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from "vue"
+import type { AxiosResponse } from "axios"
+import type { Alert } from "@/api/endpoints/alerts"
+import type { Case, CaseDataStoreFile, CaseStatus } from "@/api/endpoints/cases"
+import type { CommonResponse } from "@/types/common"
+import { saveAs } from "file-saver"
+import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
-import CasesAPI, { type Case, type CasesResponse } from "@/api/cases"
-import CaseDataStoreAPI, { type CaseDataStoreFile } from "@/api/caseDataStore"
-import AlertsAPI, { type Alert } from "@/api/alerts"
+import { formatBytes } from "@/utils/format"
 
 const portalSettingsStore = usePortalSettingsStore()
 
@@ -959,29 +961,24 @@ const filteredCases = computed(() => {
 	return filtered.sort((a, b) => new Date(b.case_creation_time).getTime() - new Date(a.case_creation_time).getTime())
 })
 
-const loadCases = async () => {
+async function loadCases() {
 	loading.value = true
 	error.value = null
 
 	try {
-		let response: CasesResponse
+		let response: AxiosResponse<CommonResponse<{ cases: Case[] }>>
 
 		if (filters.value.status) {
 			// Convert lowercase filter to uppercase for backend API
-			const backendStatus = filters.value.status.toUpperCase() as any
-			response = await CasesAPI.getCasesByStatus(backendStatus)
+			const backendStatus = filters.value.status.toUpperCase()
+			response = await Api.cases.getCasesByStatus(backendStatus)
 		} else if (filters.value.assignedTo) {
-			response = await CasesAPI.getCasesByAssignedTo(filters.value.assignedTo)
+			response = await Api.cases.getCasesByAssignedTo(filters.value.assignedTo)
 		} else {
-			response = await CasesAPI.getCases()
+			response = await Api.cases.getCases()
 		}
 
-		cases.value = response.cases
-		console.log("Loaded cases:", response.cases)
-		console.log(
-			"Case statuses:",
-			response.cases.map(c => c.case_status)
-		)
+		cases.value = response.data.cases
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to load cases"
 		console.error("Error loading cases:", err)
@@ -990,26 +987,26 @@ const loadCases = async () => {
 	}
 }
 
-const refreshCases = () => {
+function refreshCases() {
 	loadCases()
 }
 
-const applyFilters = () => {
+function applyFilters() {
 	// Since we use computed filteredCases, we don't need to reload from API for local filtering
 	// But if we want to filter on the server side, we can call loadCases()
 	loadCases()
 }
 
-const updateCaseStatus = async (caseId: number, newStatus: string) => {
+async function updateCaseStatus(caseId: number, newStatus: string) {
 	updatingStatus.value = caseId
 
 	try {
-		await CasesAPI.updateCaseStatus(caseId, newStatus as any)
+		await Api.cases.updateCaseStatus(caseId, newStatus as CaseStatus)
 
 		// Update the local case status
 		const case_ = cases.value.find(c => c.id === caseId)
 		if (case_) {
-			case_.case_status = newStatus as any
+			case_.case_status = newStatus as CaseStatus
 		}
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || err.message || "Failed to update case status"
@@ -1019,16 +1016,16 @@ const updateCaseStatus = async (caseId: number, newStatus: string) => {
 	}
 }
 
-const viewCase = (case_: Case) => {
+function viewCase(case_: Case) {
 	selectedCase.value = case_
 	loadCaseFiles(case_.id)
 }
 
-const loadCaseFiles = async (caseId: number) => {
+async function loadCaseFiles(caseId: number) {
 	loadingFiles.value = true
 	try {
-		const response = await CaseDataStoreAPI.getCaseFiles(caseId)
-		caseFiles.value = response.case_data_store
+		const response = await Api.cases.getCaseFiles(caseId)
+		caseFiles.value = response.data.case_data_store
 	} catch (err: any) {
 		console.error("Error loading case files:", err)
 		caseFiles.value = []
@@ -1037,11 +1034,11 @@ const loadCaseFiles = async (caseId: number) => {
 	}
 }
 
-const downloadFile = async (caseId: number, fileName: string) => {
+async function downloadFile(caseId: number, fileName: string) {
 	downloadingFile.value = fileName
 	try {
-		const blob = await CaseDataStoreAPI.downloadCaseFile(caseId, fileName)
-		CaseDataStoreAPI.downloadFileBlob(blob, fileName)
+		const blob = await Api.cases.downloadCaseFile(caseId, fileName)
+		saveAs(blob.data, fileName)
 	} catch (err: any) {
 		console.error("Error downloading file:", err)
 		error.value = err.response?.data?.detail || err.message || "Failed to download file"
@@ -1050,13 +1047,13 @@ const downloadFile = async (caseId: number, fileName: string) => {
 	}
 }
 
-const openUploadForm = () => {
+function openUploadForm() {
 	showUploadForm.value = true
 	selectedFile.value = null
 	error.value = null
 }
 
-const closeUploadForm = () => {
+function closeUploadForm() {
 	showUploadForm.value = false
 	selectedFile.value = null
 	if (fileInput.value) {
@@ -1064,7 +1061,7 @@ const closeUploadForm = () => {
 	}
 }
 
-const handleFileSelect = (event: Event) => {
+function handleFileSelect(event: Event) {
 	const target = event.target as HTMLInputElement
 	if (target.files && target.files.length > 0) {
 		const file = target.files[0]
@@ -1080,23 +1077,20 @@ const handleFileSelect = (event: Event) => {
 	}
 }
 
-const uploadFile = async () => {
+async function uploadFile() {
 	if (!selectedFile.value || !selectedCase.value) return
 
 	uploadingFile.value = true
 	error.value = null
 
 	try {
-		await CaseDataStoreAPI.uploadCaseFile(selectedCase.value.id, selectedFile.value)
+		await Api.cases.uploadCaseFile(selectedCase.value.id, selectedFile.value)
 
 		// Refresh the files list
 		await loadCaseFiles(selectedCase.value.id)
 
 		// Close the upload form
 		closeUploadForm()
-
-		// You could add a success message here if you have a toast/notification system
-		console.log("File uploaded successfully!")
 	} catch (err: any) {
 		console.error("Error uploading file:", err)
 
@@ -1118,28 +1112,28 @@ const uploadFile = async () => {
 	}
 }
 
-const viewAlert = async (alertId: number) => {
+async function viewAlert(alertId: number) {
 	try {
-		const response = await AlertsAPI.getAlert(alertId)
-		selectedAlert.value = response.alerts[0] // AlertResponse contains alerts array
+		const response = await Api.alerts.getAlert(alertId)
+		selectedAlert.value = response.data.alerts[0] // AlertResponse contains alerts array
 	} catch (err: any) {
 		console.error("Error loading alert details:", err)
 		error.value = err.response?.data?.detail || err.message || "Failed to load alert details"
 	}
 }
 
-const closeAlertModal = () => {
+function closeAlertModal() {
 	selectedAlert.value = null
 }
 
-const closeModal = () => {
+function closeModal() {
 	selectedCase.value = null
 	caseFiles.value = []
 	closeUploadForm()
 	closeAlertModal()
 }
 
-const formatDate = (dateString: string) => {
+function formatDate(dateString: string) {
 	return new Date(dateString).toLocaleString()
 }
 
