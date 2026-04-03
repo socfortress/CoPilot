@@ -4,6 +4,8 @@ import { defineStore } from "pinia"
 
 const STORAGE_KEY = "customer-portal-settings"
 
+// TODO-FE: CP refactor
+
 export const usePortalSettingsStore = defineStore("portalSettings", {
 	state: () => ({
 		settings: null as PortalSettings | null,

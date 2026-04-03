@@ -29,13 +29,13 @@ const router = createRouter({
 				{
 					path: "",
 					name: "AlertsList",
-					component: () => import("@/views/Alerts/List.vue"),
+					component: () => import("@/views/Alerts/Overview.vue"),
 					meta: { title: "Alerts" }
 				},
 				{
 					path: ":id",
 					name: "AlertOverview",
-					component: () => import("@/views/Alerts/Overview.vue"),
+					component: () => import("@/views/Alerts/AlertsView.vue"),
 					meta: { title: "Alert Details", skipPin: true }
 				}
 			]

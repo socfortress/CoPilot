@@ -6,6 +6,7 @@
 			:options="menuOptions"
 			:collapsed
 			:indent="18"
+			:mode
 			accordion
 			:collapsed-width
 			:dropdown-props="{
@@ -33,6 +34,7 @@ import getItems from "./items"
 
 const { collapsed = false } = defineProps<{
 	collapsed?: boolean
+	mode?: "horizontal" | "vertical"
 }>()
 
 const route = useRoute()

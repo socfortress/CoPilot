@@ -2,78 +2,9 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { ICONS } from "@/const"
-import { useAuthStore } from "@/stores/auth"
-import { AuthUserRole } from "@/types/auth"
 import { renderIcon } from "@/utils"
 
 export default function getItems(): MenuMixedOption[] {
-	const authStore = useAuthStore()
-	const userRole = authStore.userRole
-	const isSuperuser = authStore.isSuperuser
-	const isAnalyst = userRole === AuthUserRole.Analyst
-
-	const systemChildren: MenuMixedOption[] = []
-
-	if (isSuperuser || isAnalyst) {
-		systemChildren.push({
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "SystemCollectorsList"
-						}
-					},
-					{ default: () => "Collectors" }
-				),
-			key: "SystemCollectorsList"
-		})
-	}
-
-	if (isSuperuser) {
-		systemChildren.push(
-			{
-				label: () =>
-					h(
-						RouterLink,
-						{
-							to: {
-								name: "SystemTasksList"
-							}
-						},
-						{ default: () => "Tasks" }
-					),
-				key: "SystemTasksList"
-			},
-			{
-				label: () =>
-					h(
-						RouterLink,
-						{
-							to: {
-								name: "SystemMonitoring"
-							}
-						},
-						{ default: () => "Monitoring" }
-					),
-				key: "SystemMonitoring"
-			},
-			{
-				label: () =>
-					h(
-						RouterLink,
-						{
-							to: {
-								name: "SystemCelery"
-							}
-						},
-						{ default: () => "Celery" }
-					),
-				key: "SystemCelery"
-			}
-		)
-	}
-
 	const items: MenuMixedOption[] = [
 		{
 			label: () =>
@@ -81,12 +12,12 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "Dashboard"
+							name: "Overview"
 						}
 					},
-					{ default: () => "Dashboard" }
+					{ default: () => "Overview" }
 				),
-			key: "Dashboard",
+			key: "Overview",
 			icon: renderIcon(ICONS.dashboard)
 		},
 		{
@@ -95,13 +26,13 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "AgentsList"
+							name: "AlertsList"
 						}
 					},
-					{ default: () => "Agents" }
+					{ default: () => "Alerts" }
 				),
-			key: "AgentsList",
-			icon: renderIcon(ICONS.agents)
+			key: "AlertsList",
+			icon: renderIcon(ICONS.alerts)
 		},
 		{
 			label: () =>
@@ -109,12 +40,12 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "CustomerList"
+							name: "CasesList"
 						}
 					},
-					{ default: () => "Customers" }
+					{ default: () => "Cases" }
 				),
-			key: "CustomerList",
+			key: "CasesList",
 			icon: renderIcon(ICONS.customers)
 		},
 		{
@@ -123,13 +54,13 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "PackagesList"
+							name: "Agents"
 						}
 					},
-					{ default: () => "Packages" }
+					{ default: () => "Agents" }
 				),
-			key: "PackagesList",
-			icon: renderIcon(ICONS.packages)
+			key: "Agents",
+			icon: renderIcon(ICONS.agents)
 		},
 		{
 			label: () =>
@@ -137,12 +68,12 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "PortsList"
+							name: "EventSearch"
 						}
 					},
-					{ default: () => "Ports" }
+					{ default: () => "Event Search" }
 				),
-			key: "PortsList",
+			key: "EventSearch",
 			icon: renderIcon(ICONS.ports)
 		},
 		{
@@ -151,38 +82,15 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "ProcessesList"
+							name: "DashboardsList"
 						}
 					},
-					{ default: () => "Processes" }
+					{ default: () => "Dashboards" }
 				),
-			key: "ProcessesList",
+			key: "DashboardsList",
 			icon: renderIcon(ICONS.processes)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "VulnerabilitiesList"
-						}
-					},
-					{ default: () => "Vulnerabilities" }
-				),
-			key: "VulnerabilitiesList",
-			icon: renderIcon(ICONS.vulnerabilities)
 		}
 	]
-
-	if (systemChildren.length) {
-		items.push({
-			label: "System",
-			key: "system",
-			icon: renderIcon(ICONS.system),
-			children: systemChildren
-		})
-	}
 
 	return items
 }

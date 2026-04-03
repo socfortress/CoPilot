@@ -18,7 +18,6 @@
 		</component>
 
 		<SplashScreen :show="loading" />
-		<SearchDialog v-if="isLogged" />
 	</Provider>
 </template>
 
@@ -32,8 +31,6 @@ import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
 import HorizontalNav from "@/app-layouts/HorizontalNav"
-import SearchDialog from "@/components/common/SearchDialog.vue"
-import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 import { usePortalSettingsStore } from "./stores/portalSettings"
@@ -50,7 +47,6 @@ const loading = ref(true)
 const portalSettingsStore = usePortalSettingsStore()
 const themeStore = useThemeStore()
 const mainStore = useMainStore()
-const authStore = useAuthStore()
 
 const routeName = computed<string>(() => route?.name?.toString() || "")
 const forceRefresh = computed<number>(() => mainStore.forceRefresh)
@@ -60,7 +56,6 @@ const layoutComponentName = computed<Layout>(() => forceLayout.value || layout.v
 const layoutComponent = computed<Component>(() => layoutComponents[layoutComponentName.value])
 const routerTransition = computed<RouterTransition>(() => themeStore.routerTransition)
 const themeName = computed<ThemeNameEnum>(() => themeStore.themeName)
-const isLogged = computed(() => authStore.isLogged)
 
 function checkThemeOverrides(currentRoute: RouteLocationNormalized) {
 	if (currentRoute.meta?.theme?.layout !== undefined) {
@@ -69,6 +64,8 @@ function checkThemeOverrides(currentRoute: RouteLocationNormalized) {
 		forceLayout.value = null
 	}
 }
+
+// TODO-FE: CP refactor
 
 // Function to convert logo to favicon format (32x32 PNG)
 async function logoToFavicon(logoDataUri: string) {
@@ -149,7 +146,6 @@ router.afterEach(currentRoute => {
 })
 
 onBeforeMount(() => {
-	authStore.loadProfile()
 	checkThemeOverrides(route)
 
 	setTimeout(() => {

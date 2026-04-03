@@ -7,11 +7,8 @@
 			</div>
 
 			<Breadcrumb class="grow" />
-			<PinnedPages />
 
 			<PillWrapper>
-				<Search />
-				<ChatButton v-if="isLogged" type="icon" />
 				<FullscreenSwitch />
 				<ThemeSwitch />
 				<Avatar />
@@ -24,19 +21,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue"
-import ChatButton from "@/components/chatbot/ChatButton.vue"
 import BlurEffect from "@/components/common/BlurEffect.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
 import { useThemeStore } from "@/stores/theme"
 import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
 import Breadcrumb from "./Breadcrumb.vue"
 import FullscreenSwitch from "./FullscreenSwitch.vue"
 import PillWrapper from "./PillWrapper.vue"
-import PinnedPages from "./PinnedPagesV2.vue"
-import Search from "./Search.vue"
 import ThemeSwitch from "./ThemeSwitch.vue"
 
 const { boxed, gradient } = defineProps<{
@@ -44,10 +36,8 @@ const { boxed, gradient } = defineProps<{
 	gradient?: "body" | "sidebar"
 }>()
 
-const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const openNav = () => themeStore.openSidebar()
-const isLogged = computed(() => authStore.isLogged)
 </script>
 
 <style lang="scss" scoped>

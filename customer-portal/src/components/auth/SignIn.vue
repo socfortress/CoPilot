@@ -1,12 +1,6 @@
 <template>
 	<div>
-		<div v-if="authStore.useKeycloak" class="mb-4">
-			<n-button type="primary" class="w-full!" size="large" :loading="ssoLoading" @click="handleSSOLogin">
-				<span v-if="!ssoLoading">Sign in with SSO</span>
-				<span v-else>Redirecting...</span>
-			</n-button>
-		</div>
-		<n-form v-else ref="formRef" :model :rules>
+		<n-form ref="formRef" :model :rules :disabled="loading">
 			<n-form-item path="username" label="Username">
 				<n-input
 					v-model:value="model.username"
@@ -41,13 +35,10 @@
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/api/endpoints/auth"
-import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
-import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
-import { getApiErrorMessage } from "@/utils"
 
 interface ModelType {
 	username: string | null
@@ -55,7 +46,6 @@ interface ModelType {
 }
 
 const loading = ref(false)
-const ssoLoading = ref(false)
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
@@ -119,19 +109,4 @@ watch(isValid, val => {
 		formRef.value?.validate()
 	}
 })
-
-async function handleSSOLogin() {
-	ssoLoading.value = true
-
-	try {
-		const response = await Api.auth.getKeycloakLoginUrl(authStore.keycloakCallbackUrl)
-
-		// Redirect user to Keycloak for authentication (including OTP)
-		window.location.href = response.data.auth_url
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to initiate SSO login")
-	} finally {
-		ssoLoading.value = false
-	}
-}
 </script>
