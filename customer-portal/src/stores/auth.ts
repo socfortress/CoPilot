@@ -1,7 +1,6 @@
 import type { LoginPayload } from "@/api/endpoints/auth"
 import type { AuthResponse, AuthUser, AuthUserRole, JWTPayload, RouteMetaAuthRole } from "@/types/auth"
 import type { ApiError } from "@/types/common"
-import type { User } from "@/types/user"
 import * as jose from "jose"
 import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
@@ -16,8 +15,6 @@ import { piniaStorage, removePersistentSessionKey } from "@/utils/secure-storage
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
 		user: null as AuthUser | null,
-		profile: null as User | null,
-		loadingProfile: false,
 		tokenDebounceTime: toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) || 10 // seconds
 	}),
 	actions: {
@@ -27,8 +24,8 @@ export const useAuthStore = defineStore("auth", {
 			this.user = {
 				access_token: payload.access_token,
 				refresh_token: payload.refresh_token,
-				username: jwtPayload.preferred_username || "",
-				role: jwtRoleToUserRole(jwtPayload.user_role)
+				username: jwtPayload.sub || "",
+				role: jwtRoleToUserRole(jwtPayload.scopes)
 			}
 		},
 		setTokens(payload: AuthResponse) {
@@ -37,12 +34,8 @@ export const useAuthStore = defineStore("auth", {
 				this.user.refresh_token = payload.refresh_token
 			}
 		},
-		setProfile(payload: User) {
-			this.profile = payload
-		},
 		setLogout() {
 			this.user = null
-			this.profile = null
 
 			removePersistentSessionKey()
 		},
@@ -52,39 +45,12 @@ export const useAuthStore = defineStore("auth", {
 
 				if (response.data) {
 					this.setLogged(response.data)
-					this.loadProfile()
 				}
 
 				return response.data
 			} catch (err) {
 				const error = err as ApiError
 				throw error.response?.data
-			}
-		},
-		async loadProfile(): Promise<User | null> {
-			if (this.profile) {
-				return this.profile
-			}
-
-			if (this.loadingProfile) {
-				return null
-			}
-
-			if (!this.isLogged) {
-				return null
-			}
-
-			this.loadingProfile = true
-
-			try {
-				const response = await Api.auth.getProfile()
-				this.setProfile(response.data.user)
-				return response.data.user || null
-			} catch (err) {
-				const error = err as ApiError
-				throw error.response?.data || error
-			} finally {
-				this.loadingProfile = false
 			}
 		},
 		refreshToken() {
@@ -117,12 +83,6 @@ export const useAuthStore = defineStore("auth", {
 		userName(state): string | null {
 			return state.user?.username || null
 		},
-		userFullName(state): string | null {
-			return state.profile?.full_name || null
-		},
-		userEmail(state): string | null {
-			return state.profile?.email || null
-		},
 		userRole(state): AuthUserRole | string | null {
 			return state.user?.role || null
 		},
@@ -133,9 +93,6 @@ export const useAuthStore = defineStore("auth", {
 			const initial = getNameInitials(this.userName || "")
 
 			return getAvatar({ seed: initial, text: initial, size: 64 })
-		},
-		userCustomerId(): number | null {
-			return this.profile?.customer_id || null
 		},
 		isRoleGranted() {
 			return (roles?: RouteMetaAuthRole | RouteMetaAuthRole[]) => {
@@ -158,7 +115,7 @@ export const useAuthStore = defineStore("auth", {
 	},
 	persist: {
 		storage: piniaStorage({ session: true }),
-		pick: ["user", "profile"]
+		pick: ["user"]
 	}
 })
 

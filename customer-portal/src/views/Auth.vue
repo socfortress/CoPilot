@@ -5,22 +5,7 @@
 			<div class="form-box flex basis-1/3 items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type />
 			</div>
-			<div v-if="align === 'left'" class="image-box basis-2/3">
-				<video
-					autoplay
-					muted
-					playsinline
-					loop
-					disablePictureInPicture
-					controlsList="nodownload"
-					class="h-auto w-full"
-					preload="none"
-					poster="/images/login/cover.webp"
-				>
-					<source src="/images/login/video.mp4" type="video/mp4" />
-					Your browser does not support the video tag.
-				</video>
-			</div>
+			<div v-if="align === 'left'" class="image-box basis-2/3">image...</div>
 		</div>
 	</div>
 </template>
