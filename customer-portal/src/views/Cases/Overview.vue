@@ -1,22 +1,5 @@
 <template>
 	<div class="min-h-screen bg-gray-50">
-		<!-- Header -->
-		<header class="bg-white shadow">
-			<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-				<div class="flex h-16 justify-between">
-					<div class="flex items-center">
-						<router-link to="/cases" class="mr-4 text-indigo-600 hover:text-indigo-500">
-							← Back to Cases
-						</router-link>
-						<h1 class="text-xl font-semibold">Case Details</h1>
-					</div>
-					<div class="flex items-center space-x-4">
-						<span class="text-sm text-gray-700">{{ user?.username }}</span>
-					</div>
-				</div>
-			</div>
-		</header>
-
 		<!-- Main Content -->
 		<main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
 			<div class="px-4 py-6 sm:px-0">
@@ -156,21 +139,17 @@
 
 <script setup lang="ts">
 import type { Case, CaseComment } from "@/api/endpoints/cases"
-import { computed, onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import CaseCommentsList from "@/components/CaseCommentsList.vue"
-import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
-const authStore = useAuthStore()
 
 const caseData = ref<Case | null>(null)
 const comments = ref<CaseComment[]>([])
 const loading = ref(false)
 const error = ref("")
-
-const user = computed(() => authStore.user)
 
 function formatDate(dateString: string) {
 	if (!dateString) return "Unknown"

@@ -1,75 +1,5 @@
 <template>
 	<div class="min-h-screen bg-gray-50">
-		<!-- Header -->
-		<header class="border-b bg-white shadow-sm">
-			<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-				<div class="flex h-16 justify-between">
-					<div class="flex items-center">
-						<div class="mr-3 min-h-8">
-							<img
-								v-if="portalLogo && showLogo"
-								class="h-8 w-auto"
-								:src="portalLogo"
-								:alt="portalTitle"
-								@error="showLogo = false"
-							/>
-						</div>
-						<h1 class="text-xl font-semibold text-gray-900">{{ portalTitle }}</h1>
-						<nav class="ml-8 flex space-x-8">
-							<router-link
-								to="/"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Overview
-							</router-link>
-							<router-link
-								to="/alerts"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Alerts
-							</router-link>
-							<router-link
-								to="/cases"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Cases
-							</router-link>
-							<router-link
-								to="/agents"
-								class="rounded-md border-b-2 border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-600"
-							>
-								Agents
-							</router-link>
-							<router-link
-								to="/event-search"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Event Search
-							</router-link>
-							<router-link
-								to="/dashboards"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Dashboards
-							</router-link>
-						</nav>
-					</div>
-					<div class="flex items-center space-x-4">
-						<div class="text-sm text-gray-700">
-							Welcome,
-							<span class="font-medium">{{ username }}</span>
-						</div>
-						<button
-							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-							@click="logout"
-						>
-							Logout
-						</button>
-					</div>
-				</div>
-			</div>
-		</header>
-
 		<!-- Main Content -->
 		<main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
 			<div class="px-4 py-6 sm:px-0">
@@ -654,16 +584,10 @@
 <script setup lang="ts">
 import type { Agent } from "@/api/endpoints/agents"
 import { computed, onBeforeMount, ref } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
-import { usePortalSettingsStore } from "@/stores/portalSettings"
-
-const router = useRouter()
-const portalSettingsStore = usePortalSettingsStore()
 
 const loading = ref(true)
 const error = ref("")
-const showLogo = ref(true)
 const agents = ref<Agent[]>([])
 const selectedAgent = ref<Agent | null>(null)
 const updatingAgent = ref<string | null>(null)
@@ -679,18 +603,6 @@ const filters = ref({
 // Pagination
 const currentPage = ref(1)
 const pageSize = ref(20)
-
-const username = computed(() => {
-	try {
-		const user = JSON.parse(localStorage.getItem("customer-portal-user") || "{}")
-		return user.username || "User"
-	} catch {
-		return "User"
-	}
-})
-
-const portalTitle = computed(() => portalSettingsStore.portalTitle || "Customer Portal")
-const portalLogo = computed(() => portalSettingsStore.portalLogo)
 
 const uniqueOperatingSystems = computed(() => {
 	const osSet = new Set(agents.value.map(agent => agent.os))
@@ -887,12 +799,6 @@ function previousPage() {
 	if (currentPage.value > 1) {
 		currentPage.value--
 	}
-}
-
-function logout() {
-	localStorage.removeItem("customer-portal-auth-token")
-	localStorage.removeItem("customer-portal-user")
-	router.push("/login")
 }
 
 onBeforeMount(() => {

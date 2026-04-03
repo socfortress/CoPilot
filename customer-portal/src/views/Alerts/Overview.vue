@@ -1,86 +1,5 @@
 <template>
 	<div class="min-h-screen bg-gray-50">
-		<!-- Header -->
-		<header class="border-b bg-white shadow-sm">
-			<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-				<div class="flex h-16 justify-between">
-					<div class="flex items-center">
-						<div class="mr-3 min-h-8">
-							<img
-								v-if="portalLogo && showLogo"
-								class="h-8 w-auto"
-								:src="portalLogo"
-								:alt="portalTitle"
-								@error="showLogo = false"
-							/>
-						</div>
-						<h1 class="text-xl font-semibold text-gray-900">{{ portalTitle }}</h1>
-						<nav class="ml-8 flex space-x-8">
-							<router-link
-								to="/"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Overview
-							</router-link>
-							<router-link
-								to="/alerts"
-								class="rounded-md border-b-2 border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-600"
-							>
-								Alerts
-							</router-link>
-							<router-link
-								to="/cases"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Cases
-							</router-link>
-							<router-link
-								to="/agents"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Agents
-							</router-link>
-							<router-link
-								to="/event-search"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Event Search
-							</router-link>
-							<router-link
-								to="/dashboards"
-								class="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-							>
-								Dashboards
-							</router-link>
-						</nav>
-					</div>
-					<div class="flex items-center space-x-4">
-						<button
-							:disabled="loading"
-							class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm leading-4 font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-							@click="refreshAlerts"
-						>
-							<svg
-								class="mr-2 h-4 w-4"
-								:class="{ 'animate-spin': loading }"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-								></path>
-							</svg>
-							Refresh
-						</button>
-					</div>
-				</div>
-			</div>
-		</header>
-
 		<!-- Stats Cards -->
 		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 			<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -686,9 +605,6 @@ import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/ale
 import type { CommonResponse } from "@/types/common"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import { usePortalSettingsStore } from "@/stores/portalSettings"
-
-const portalSettingsStore = usePortalSettingsStore()
 
 // Reactive data
 const alerts = ref<Alert[]>([])
@@ -700,7 +616,6 @@ const stats = ref({
 })
 const loading = ref(false)
 const error = ref<string | null>(null)
-const showLogo = ref(true)
 const selectedAlert = ref<Alert | null>(null)
 const updatingStatus = ref<number | null>(null)
 
@@ -718,10 +633,6 @@ const filters = ref({
 	source: "",
 	asset: ""
 })
-
-// Computed properties
-const portalTitle = computed(() => portalSettingsStore.portalTitle || "Customer Portal")
-const portalLogo = computed(() => portalSettingsStore.portalLogo)
 
 const totalPages = computed(() => Math.ceil(stats.value.total / pageSize.value))
 
@@ -765,10 +676,6 @@ async function loadAlerts() {
 	} finally {
 		loading.value = false
 	}
-}
-
-function refreshAlerts() {
-	loadAlerts()
 }
 
 function applyFilters() {
