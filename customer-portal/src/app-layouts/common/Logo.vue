@@ -1,41 +1,26 @@
 <template>
 	<div class="logo">
-		<Transition name="logo-fade" mode="out-in">
-			<img
-				:key="logoSrc"
-				:src="logoSrc"
-				alt="SOCFortress logo"
-				aria-label="SOCFortress logo"
-				class="logo-image"
-			/>
-		</Transition>
+		<img :src="portalLogo || portalLogoInitials" :alt="portalTitle" :aria-label="portalTitle" class="logo-image" />
 	</div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue"
-import { useThemeStore } from "@/stores/theme"
+import { usePortalSettingsStore } from "@/stores/portalSettings"
 
 interface Props {
-	type?: "default" | "small" | "large"
-	dark?: boolean
 	maxHeight?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
-	type: "default",
-	dark: undefined,
+withDefaults(defineProps<Props>(), {
 	maxHeight: "32px"
 })
 
-const themeStore = useThemeStore()
+const portalSettingsStore = usePortalSettingsStore()
 
-const isDark = computed<boolean>(() => props.dark ?? themeStore.isThemeDark)
-
-const logoSrc = computed<string>(() => {
-	const theme = isDark.value ? "dark" : "light"
-	return new URL(`../../assets/images/socfortress_logo_${props.type}_${theme}.svg`, import.meta.url).href
-})
+const portalTitle = computed(() => portalSettingsStore.portalTitle || "Customer Portal")
+const portalLogo = computed(() => portalSettingsStore.portalLogo)
+const portalLogoInitials = computed(() => portalSettingsStore.portalLogoInitials)
 </script>
 
 <style lang="scss" scoped>
@@ -53,16 +38,5 @@ const logoSrc = computed<string>(() => {
 		display: block;
 		object-fit: contain;
 	}
-}
-
-// Smooth transition between theme changes
-.logo-fade-enter-active,
-.logo-fade-leave-active {
-	transition: opacity 0.2s ease-in-out;
-}
-
-.logo-fade-enter-from,
-.logo-fade-leave-to {
-	opacity: 0;
 }
 </style>

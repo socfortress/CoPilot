@@ -1,6 +1,8 @@
 import type { PortalSettings } from "@/types/portal"
 import axios from "axios"
 import { defineStore } from "pinia"
+import { getAvatar } from "@/utils"
+import { getNameInitials } from "@/utils/format"
 
 const STORAGE_KEY = "customer-portal-settings"
 
@@ -20,6 +22,12 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 				return `data:${state.settings.logo_mime_type};base64,${state.settings.logo_base64}`
 			}
 			return null
+		},
+		portalInitials(): string {
+			return getNameInitials(this.portalTitle || "")
+		},
+		portalLogoInitials(): string {
+			return getAvatar({ seed: this.portalInitials, text: this.portalInitials, size: 64 })
 		}
 	},
 
