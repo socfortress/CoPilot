@@ -742,7 +742,6 @@ function closeChangePasswordModal() {
 
 function onPasswordChanged() {
 	// Optionally show a success message or perform other actions
-	// console.log("Password changed successfully")
 }
 
 function logout() {

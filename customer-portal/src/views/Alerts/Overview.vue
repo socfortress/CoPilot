@@ -682,9 +682,9 @@
 
 <script setup lang="ts">
 import type { AxiosResponse } from "axios"
-import type { Alert, AlertsListResponse, AlertsResponse, AlertStatus } from "@/api/endpoints/alerts"
+import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/alerts"
 import type { CommonResponse } from "@/types/common"
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 
