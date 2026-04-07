@@ -101,23 +101,17 @@ export function getAvatar(params: { seed: string; text?: string; size?: number; 
 
 export function getApiErrorMessage(err: ApiError): string {
 	const axiosMessage = err.message
-	const detail = err.response?.data?.message
-
-	// Handle validation errors (array of ValidationError objects)
-	if (Array.isArray(detail)) {
-		const validationMessages = detail
-			.map(validationError => validationError.msg)
-			.filter(msg => msg)
-			.join(". ")
-
-		if (validationMessages) {
-			return `${validationMessages.replace(TRAILING_DOT_REGEX, "")}.`
-		}
-	}
+	const message = err.response?.data?.message
+	const detail = err.response?.data?.detail
 
 	// Handle string detail
 	if (detail && typeof detail === "string") {
 		return `${detail.replace(TRAILING_DOT_REGEX, "")}.`
+	}
+
+	// Handle string message
+	if (message && typeof message === "string") {
+		return `${message.replace(TRAILING_DOT_REGEX, "")}.`
 	}
 
 	// Fallback to axios message
