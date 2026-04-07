@@ -1,6 +1,6 @@
 import type { PortalSettings } from "@/types/portal"
-import axios from "axios"
 import { defineStore } from "pinia"
+import Api from "@/api"
 import { getAvatar } from "@/utils"
 import { getNameInitials } from "@/utils/format"
 
@@ -33,7 +33,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 			this.loading = true
 
 			try {
-				const response = await axios.get("/api/customer_portal/settings")
+				const response = await Api.portal.getSettings()
 
 				if (response.data.success && response.data.settings) {
 					this.settings = response.data.settings
