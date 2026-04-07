@@ -413,3 +413,12 @@ export async function updateFavicon(logoDataUrl: string | null) {
 		console.error("Failed to update favicon:", error)
 	}
 }
+
+export function trendClass(trend: string, invert?: boolean) {
+	if (trend.startsWith("+")) {
+		return invert ? "text-success" : "text-error"
+	} else if (trend.startsWith("-")) {
+		return invert ? "text-error" : "text-success"
+	}
+	return "text-secondary"
+}
