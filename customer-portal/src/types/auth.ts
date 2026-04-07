@@ -25,6 +25,7 @@ export interface AuthUser {
 	refresh_token: string | null
 	role: AuthUserRole | string | null
 	username: string | null
+	customer_code: string | null
 }
 
 export interface AuthResponse {
@@ -36,4 +37,5 @@ export interface AuthResponse {
 export interface JWTPayload extends jose.JWTPayload {
 	scopes: string[]
 	sub: string
+	customer_codes: string[]
 }

@@ -8,7 +8,7 @@
 
 			<Breadcrumb class="grow" />
 
-			<PillWrapper>
+			<PillWrapper class="pl-3!">
 				<FullscreenSwitch />
 				<ThemeSwitch />
 				<Avatar />
