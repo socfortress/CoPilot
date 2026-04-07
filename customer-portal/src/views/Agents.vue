@@ -343,7 +343,7 @@
 											{{ agent.os }}
 										</td>
 										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-											{{ formatTimeAgo(agent.wazuh_last_seen) }}
+											{{ formatTimeAgo(agent.wazuh_last_seen, dFormats.datetime) }}
 										</td>
 										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
 											<div>Wazuh: {{ agent.wazuh_agent_version }}</div>
@@ -588,7 +588,7 @@ import type { Agent } from "@/api/endpoints/agents"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
+import { formatDate, formatTimeAgo } from "@/utils/format"
 
 const loading = ref(true)
 const error = ref("")
@@ -697,32 +697,6 @@ const visiblePages = computed(() => {
 		.filter((page, index, arr) => arr.indexOf(page) === index && page !== current - 1 && page !== current + 1)
 		.slice(0, 7)
 })
-
-// TODO-FE: move to dayjs
-function formatTimeAgo(dateString: string) {
-	if (!dateString) return "Never"
-
-	try {
-		const date = new Date(dateString)
-		const now = new Date()
-		const diffInMs = now.getTime() - date.getTime()
-		const diffInMinutes = diffInMs / (1000 * 60)
-		const diffInHours = diffInMs / (1000 * 60 * 60)
-		const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
-
-		if (diffInMinutes < 60) {
-			return `${Math.floor(diffInMinutes)} minutes ago`
-		} else if (diffInHours < 24) {
-			return `${Math.floor(diffInHours)} hours ago`
-		} else if (diffInDays < 30) {
-			return `${Math.floor(diffInDays)} days ago`
-		} else {
-			return date.toLocaleDateString()
-		}
-	} catch {
-		return "Invalid date"
-	}
-}
 
 async function loadAgents() {
 	loading.value = true

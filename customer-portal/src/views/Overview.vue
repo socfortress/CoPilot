@@ -258,7 +258,7 @@
 												{{ alert.description }}
 											</p>
 											<p class="mt-1 text-xs text-gray-400">
-												{{ formatTimeAgo(alert.created_at) }}
+												{{ formatTimeAgo(alert.created_at, dFormats.datetime) }}
 											</p>
 										</div>
 										<span
@@ -315,7 +315,7 @@
 												{{ case_.description }}
 											</p>
 											<p class="mt-1 text-xs text-gray-400">
-												{{ formatTimeAgo(case_.created_at) }}
+												{{ formatTimeAgo(case_.created_at, dFormats.datetime) }}
 												<span v-if="case_.assigned_to">
 													• Assigned to {{ case_.assigned_to }}
 												</span>
@@ -460,6 +460,8 @@
 import { computed, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
+import { formatTimeAgo } from "@/utils/format"
 
 interface Stats {
 	totalAlerts: number
@@ -503,6 +505,7 @@ const stats = ref<Stats>({
 })
 const recentAlerts = ref<DashboardAlert[]>([])
 const recentCases = ref<DashboardCase[]>([])
+const dFormats = useSettingsStore().dateFormat
 
 const alertTrendClass = computed(() => {
 	if (stats.value.alertTrend.startsWith("+")) {
@@ -512,30 +515,6 @@ const alertTrendClass = computed(() => {
 	}
 	return "text-gray-600"
 })
-
-// TODO-FE: move to dayjs
-function formatTimeAgo(dateString: string) {
-	if (!dateString) return "Unknown"
-
-	try {
-		const date = new Date(dateString)
-		const now = new Date()
-		const diffInMs = now.getTime() - date.getTime()
-		const diffInHours = diffInMs / (1000 * 60 * 60)
-
-		if (diffInHours < 1) {
-			const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-			return `${diffInMinutes} minutes ago`
-		} else if (diffInHours < 24) {
-			return `${Math.floor(diffInHours)} hours ago`
-		} else {
-			const diffInDays = Math.floor(diffInHours / 24)
-			return `${diffInDays} days ago`
-		}
-	} catch {
-		return "Unknown"
-	}
-}
 
 async function fetchDashboardData() {
 	loading.value = true

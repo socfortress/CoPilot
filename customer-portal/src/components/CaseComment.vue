@@ -15,7 +15,9 @@
 				<div class="grow">
 					<div class="mb-1 flex items-center space-x-2">
 						<h4 class="text-sm font-medium text-gray-900">{{ comment.user_name }}</h4>
-						<span class="text-xs text-gray-500">{{ formatDate(comment.created_at) }}</span>
+						<span class="text-xs text-gray-500">
+							{{ formatTimeAgo(comment.created_at, dFormats.datetime) }}
+						</span>
 					</div>
 
 					<!-- Edit Mode -->
@@ -109,6 +111,8 @@ import type { CaseComment } from "@/api/cases"
 import { computed, ref } from "vue"
 import { CasesAPI } from "@/api/cases"
 import { useAuthStore } from "@/stores/auth"
+import { useSettingsStore } from "@/stores/settings"
+import { formatTimeAgo } from "@/utils/format"
 
 interface Props {
 	comment: CaseComment
@@ -123,7 +127,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const authStore = useAuthStore()
-
+const dFormats = useSettingsStore().dateFormat
 const isEditing = ref(false)
 const editText = ref("")
 const isLoading = ref(false)
@@ -132,28 +136,6 @@ const error = ref("")
 const canEdit = computed(() => {
 	return authStore.user?.username === props.comment.user_name
 })
-
-// TODO-FE: move to dayjs
-function formatDate(dateString: string) {
-	try {
-		const date = new Date(dateString)
-		const now = new Date()
-		const diff = now.getTime() - date.getTime()
-
-		const minutes = Math.floor(diff / (1000 * 60))
-		const hours = Math.floor(diff / (1000 * 60 * 60))
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-		if (minutes < 1) return "Just now"
-		if (minutes < 60) return `${minutes}m ago`
-		if (hours < 24) return `${hours}h ago`
-		if (days < 7) return `${days}d ago`
-
-		return date.toLocaleDateString()
-	} catch {
-		return "Unknown"
-	}
-}
 
 function startEdit() {
 	editText.value = props.comment.comment
