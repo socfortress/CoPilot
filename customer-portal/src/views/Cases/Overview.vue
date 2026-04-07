@@ -62,7 +62,7 @@
 								<div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 sm:py-5">
 									<dt class="text-sm font-medium text-gray-500">Created</dt>
 									<dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-										{{ formatDate(caseData.case_creation_time) }}
+										{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
 									</dd>
 								</div>
 								<div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 sm:py-5">
@@ -143,6 +143,8 @@ import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import CaseCommentsList from "@/components/CaseCommentsList.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 
 const route = useRoute()
 
@@ -150,15 +152,7 @@ const caseData = ref<Case | null>(null)
 const comments = ref<CaseComment[]>([])
 const loading = ref(false)
 const error = ref("")
-
-function formatDate(dateString: string) {
-	if (!dateString) return "Unknown"
-	try {
-		return new Date(dateString).toLocaleString()
-	} catch {
-		return "Invalid date"
-	}
-}
+const dFormats = useSettingsStore().dateFormat
 
 async function fetchCaseDetails() {
 	const caseId = Number(route.params.id)

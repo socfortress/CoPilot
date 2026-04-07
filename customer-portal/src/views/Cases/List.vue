@@ -191,7 +191,7 @@
 										<span v-if="case_.assigned_to">| Assigned to: {{ case_.assigned_to }}</span>
 									</div>
 									<div class="text-xs text-gray-400">
-										Created: {{ formatDate(case_.case_creation_time) }}
+										Created: {{ formatDate(case_.case_creation_time, dFormats.datetime) }}
 									</div>
 								</div>
 							</div>
@@ -296,7 +296,9 @@
 						</div>
 						<div>
 							<label class="block text-sm font-medium text-gray-700">Created</label>
-							<p class="mt-1 text-sm text-gray-900">{{ formatDate(selectedCase.case_creation_time) }}</p>
+							<p class="mt-1 text-sm text-gray-900">
+								{{ formatDate(selectedCase.case_creation_time, dFormats.datetime) }}
+							</p>
 						</div>
 					</div>
 
@@ -531,7 +533,7 @@
 										<div class="mt-1 flex items-center space-x-4 text-xs text-gray-500">
 											<span>{{ formatBytes(file.file_size ?? 0) }}</span>
 											<span v-if="file.content_type">{{ file.content_type }}</span>
-											<span>{{ formatDate(file.upload_time) }}</span>
+											<span>{{ formatDate(file.upload_time, dFormats.datetime) }}</span>
 										</div>
 									</div>
 									<button
@@ -657,7 +659,7 @@
 						<div>
 							<label class="block text-sm font-medium text-gray-700">Created</label>
 							<p class="mt-1 text-sm text-gray-900">
-								{{ formatDate(selectedAlert.alert_creation_time) }}
+								{{ formatDate(selectedAlert.alert_creation_time, dFormats.datetime) }}
 							</p>
 						</div>
 						<div v-if="selectedAlert.assigned_to">
@@ -737,7 +739,10 @@
 										<p class="mt-1 text-xs text-gray-600">{{ linkedCase.case_description }}</p>
 										<div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
 											<span>Case #{{ linkedCase.id }}</span>
-											<span>Created: {{ formatDate(linkedCase.case_creation_time) }}</span>
+											<span>
+												Created:
+												{{ formatDate(linkedCase.case_creation_time, dFormats.datetime) }}
+											</span>
 											<span v-if="linkedCase.assigned_to">
 												Assigned to: {{ linkedCase.assigned_to }}
 											</span>
@@ -800,7 +805,9 @@
 							>
 								<div class="mb-2 flex items-start justify-between">
 									<span class="text-sm font-medium text-gray-900">{{ comment.user_name }}</span>
-									<span class="text-xs text-gray-500">{{ formatDate(comment.created_at) }}</span>
+									<span class="text-xs text-gray-500">
+										{{ formatDate(comment.created_at, dFormats.datetime) }}
+									</span>
 								</div>
 								<p class="text-sm whitespace-pre-wrap text-gray-700">{{ comment.comment }}</p>
 							</div>
@@ -820,7 +827,8 @@ import type { CommonResponse } from "@/types/common"
 import { saveAs } from "file-saver"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import { formatBytes } from "@/utils/format"
+import { useSettingsStore } from "@/stores/settings"
+import { formatBytes, formatDate } from "@/utils/format"
 
 // Reactive data
 const cases = ref<Case[]>([])
@@ -829,6 +837,7 @@ const error = ref<string | null>(null)
 const selectedCase = ref<Case | null>(null)
 const selectedAlert = ref<Alert | null>(null)
 const updatingStatus = ref<number | null>(null)
+const dFormats = useSettingsStore().dateFormat
 
 // Case files data
 const caseFiles = ref<CaseDataStoreFile[]>([])
@@ -1038,10 +1047,6 @@ function closeModal() {
 	caseFiles.value = []
 	closeUploadForm()
 	closeAlertModal()
-}
-
-function formatDate(dateString: string) {
-	return new Date(dateString).toLocaleString()
 }
 
 // Lifecycle

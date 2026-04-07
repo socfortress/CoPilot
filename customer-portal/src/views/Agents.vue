@@ -535,7 +535,9 @@
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700">Last Seen (Wazuh)</label>
-						<p class="mt-1 text-sm text-gray-900">{{ formatDateTime(selectedAgent.wazuh_last_seen) }}</p>
+						<p class="mt-1 text-sm text-gray-900">
+							{{ formatDate(selectedAgent.wazuh_last_seen, dFormats.datetime) }}
+						</p>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700">Velociraptor ID</label>
@@ -548,7 +550,7 @@
 					<div v-if="selectedAgent.velociraptor_last_seen">
 						<label class="block text-sm font-medium text-gray-700">Last Seen (Velociraptor)</label>
 						<p class="mt-1 text-sm text-gray-900">
-							{{ formatDateTime(selectedAgent.velociraptor_last_seen) }}
+							{{ formatDate(selectedAgent.velociraptor_last_seen, dFormats.datetime) }}
 						</p>
 					</div>
 					<div>
@@ -585,12 +587,15 @@
 import type { Agent } from "@/api/endpoints/agents"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 
 const loading = ref(true)
 const error = ref("")
 const agents = ref<Agent[]>([])
 const selectedAgent = ref<Agent | null>(null)
 const updatingAgent = ref<string | null>(null)
+const dFormats = useSettingsStore().dateFormat
 
 // Filters
 const filters = ref({
@@ -693,6 +698,7 @@ const visiblePages = computed(() => {
 		.slice(0, 7)
 })
 
+// TODO-FE: move to dayjs
 function formatTimeAgo(dateString: string) {
 	if (!dateString) return "Never"
 
@@ -713,17 +719,6 @@ function formatTimeAgo(dateString: string) {
 		} else {
 			return date.toLocaleDateString()
 		}
-	} catch {
-		return "Invalid date"
-	}
-}
-
-function formatDateTime(dateString: string) {
-	if (!dateString) return "N/A"
-
-	try {
-		const date = new Date(dateString)
-		return date.toLocaleString()
 	} catch {
 		return "Invalid date"
 	}

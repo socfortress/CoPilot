@@ -28,9 +28,9 @@
 						></textarea>
 						<div class="flex space-x-2">
 							<button
-								@click="saveEdit"
 								:disabled="!editText.trim() || isLoading"
 								class="inline-flex items-center rounded border border-transparent bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+								@click="saveEdit"
 							>
 								<span v-if="isLoading" class="mr-1">
 									<svg class="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -52,9 +52,9 @@
 								Save
 							</button>
 							<button
-								@click="cancelEdit"
 								:disabled="isLoading"
 								class="inline-flex items-center rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+								@click="cancelEdit"
 							>
 								Cancel
 							</button>
@@ -69,9 +69,9 @@
 			<!-- Actions -->
 			<div v-if="canEdit && !isEditing" class="ml-2 flex items-center space-x-1">
 				<button
-					@click="startEdit"
 					class="rounded p-1 text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
 					title="Edit comment"
+					@click="startEdit"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -83,9 +83,9 @@
 					</svg>
 				</button>
 				<button
-					@click="confirmDelete"
 					class="rounded p-1 text-gray-400 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
 					title="Delete comment"
+					@click="confirmDelete"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -105,10 +105,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
-import { useAuthStore } from "@/stores/auth"
 import type { CaseComment } from "@/api/cases"
+import { computed, ref } from "vue"
 import { CasesAPI } from "@/api/cases"
+import { useAuthStore } from "@/stores/auth"
 
 interface Props {
 	comment: CaseComment
@@ -133,7 +133,8 @@ const canEdit = computed(() => {
 	return authStore.user?.username === props.comment.user_name
 })
 
-const formatDate = (dateString: string) => {
+// TODO-FE: move to dayjs
+function formatDate(dateString: string) {
 	try {
 		const date = new Date(dateString)
 		const now = new Date()
@@ -154,19 +155,19 @@ const formatDate = (dateString: string) => {
 	}
 }
 
-const startEdit = () => {
+function startEdit() {
 	editText.value = props.comment.comment
 	isEditing.value = true
 	error.value = ""
 }
 
-const cancelEdit = () => {
+function cancelEdit() {
 	isEditing.value = false
 	editText.value = ""
 	error.value = ""
 }
 
-const saveEdit = async () => {
+async function saveEdit() {
 	if (!editText.value.trim()) return
 
 	isLoading.value = true
@@ -193,13 +194,13 @@ const saveEdit = async () => {
 	}
 }
 
-const confirmDelete = () => {
+function confirmDelete() {
 	if (confirm("Are you sure you want to delete this comment?")) {
 		deleteComment()
 	}
 }
 
-const deleteComment = async () => {
+async function deleteComment() {
 	isLoading.value = true
 	error.value = ""
 
