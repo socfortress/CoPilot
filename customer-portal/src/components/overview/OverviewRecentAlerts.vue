@@ -8,7 +8,7 @@
 
 		<n-scrollbar v-else class="flex grow" trigger="none">
 			<div class="flex flex-col gap-4 p-4">
-				<RecentAlertsCard v-for="alert in recentAlerts" :key="alert.id" embedded :alert />
+				<RecentAlertCard v-for="alert in recentAlerts" :key="alert.id" embedded :alert />
 			</div>
 		</n-scrollbar>
 
@@ -26,7 +26,7 @@ import type { DashboardAlert } from "./types"
 import { NButton, NCard, NEmpty, NScrollbar } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
-import RecentAlertsCard from "./RecentAlertsCard.vue"
+import RecentAlertCard from "./RecentAlertCard.vue"
 
 defineProps<{
 	recentAlerts: DashboardAlert[]
