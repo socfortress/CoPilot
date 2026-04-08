@@ -1,44 +1,33 @@
 <template>
-	<n-card title="Recent Alerts" segmented content-class="flex flex-col items-center justify-center gap-4">
+	<n-card
+		title="Recent Alerts"
+		segmented
+		:content-class="`flex flex-col gap-4 overflow-hidden ${!recentAlerts.length ? 'items-center justify-center' : 'p-0!'}`"
+	>
 		<n-empty v-if="!recentAlerts.length" description="No recent alerts" />
-		<div v-else class="flex grow flex-col gap-4">
-			<div
-				v-for="alert in recentAlerts"
-				:key="alert.id"
-				class="flex items-start space-x-3 rounded-lg p-3 hover:bg-gray-50"
-			>
-				<div
-					class="mt-2 h-3 w-3 rounded-full"
-					:class="{
-						'bg-red-500': alert.severity === 'high',
-						'bg-yellow-500': alert.severity === 'medium',
-						'bg-blue-500': alert.severity === 'low'
-					}"
-				></div>
-				<div class="min-w-0 flex-1">
-					<p class="truncate text-sm font-medium text-gray-900">
+
+		<n-scrollbar v-else class="flex grow" trigger="none">
+			<div class="flex flex-col gap-4 p-4">
+				<CardEntity v-for="alert in recentAlerts" :key="alert.id" embedded>
+					<template #header-main>
 						{{ alert.name }}
-					</p>
-					<p class="truncate text-sm text-gray-500">
+					</template>
+					<template #header-extra>
+						<n-tag :type="getSeverityColor(alert.severity)" size="small">
+							{{ alert.severity }}
+						</n-tag>
+					</template>
+					<template #default>
 						{{ alert.description }}
-					</p>
-					<p class="mt-1 text-xs text-gray-400">
+					</template>
+					<template #footer-main>
 						{{ formatTimeAgo(alert.created_at, dFormats.datetime) }}
-					</p>
-				</div>
-				<span
-					class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-					:class="{
-						'bg-red-100 text-red-800': alert.severity === 'high',
-						'bg-yellow-100 text-yellow-800': alert.severity === 'medium',
-						'bg-blue-100 text-blue-800': alert.severity === 'low'
-					}"
-				>
-					{{ alert.severity }}
-				</span>
+					</template>
+				</CardEntity>
 			</div>
-		</div>
-		<n-button @click="goToAlerts()">
+		</n-scrollbar>
+
+		<n-button :text="!!recentAlerts.length" class="mb-4!" @click="goToAlerts()">
 			<template #icon>
 				<Icon name="carbon:launch" />
 			</template>
@@ -48,10 +37,13 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NCard, NEmpty } from "naive-ui"
+import { NButton, NCard, NEmpty, NScrollbar, NTag } from "naive-ui"
+import { computed } from "vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { getSeverityColor } from "@/utils"
 import { formatTimeAgo } from "@/utils/format"
 
 export interface DashboardAlert {
@@ -62,9 +54,77 @@ export interface DashboardAlert {
 	created_at: string
 }
 
-defineProps<{
-	recentAlerts: DashboardAlert[]
+const props = defineProps<{
+	recentAlerts?: DashboardAlert[]
 }>()
+
+const mockDashboardAlerts: DashboardAlert[] = [
+	{
+		id: 1,
+		name: "CPU usage spike",
+		description: "CPU usage exceeded 90% for over 5 minutes.",
+		severity: "high",
+		created_at: "2026-04-08T08:30:00.000Z"
+	},
+	{
+		id: 2,
+		name: "Storage threshold warning",
+		description: "Disk usage reached 75% on node eu-west-1.",
+		severity: "medium",
+		created_at: "2026-04-08T07:45:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	},
+	{
+		id: 3,
+		name: "Scheduled backup completed",
+		description: "Nightly backup finished successfully.",
+		severity: "low",
+		created_at: "2026-04-08T06:10:00.000Z"
+	}
+]
+
+const recentAlerts = computed(() => mockDashboardAlerts)
 
 const dFormats = useSettingsStore().dateFormat
 const { routeAlertsList } = useNavigation()

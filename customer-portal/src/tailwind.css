@@ -64,18 +64,22 @@
 	}
 }
 
-@layer utilities {
-	.delay-100 {
-		animation-delay: 100ms;
-	}
+@utility delay-* {
+	animation-delay: calc(var(--value) * 1ms);
+}
 
-	.delay-200 {
-		animation-delay: 200ms;
-	}
+@utility page {
+	padding-bottom: var(--view-padding);
+}
 
-	.delay-300 {
-		animation-delay: 300ms;
-	}
+@utility page-wrapped {
+	padding-bottom: 0;
+	height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height) - 20px);
+}
+
+@utility page-min-wrapped {
+	padding-bottom: 0;
+	min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
 }
 
 @layer base {

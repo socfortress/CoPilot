@@ -1,19 +1,29 @@
 <template>
-	<div class="page">
+	<div class="page md:page-wrapped flex flex-col gap-6 md:overflow-hidden">
 		<p>Monitor your organization's security posture and recent activity</p>
 
-		<n-spin :show="loading">
-			<n-alert v-if="error" type="error" title="Error Loading Dashboard" :description="error" />
+		<div class="flex grow flex-col gap-6 overflow-hidden">
+			<n-spin
+				:show="loading"
+				class="overflow-hidden"
+				content-class="flex max-h-full grow flex-col overflow-hidden"
+			>
+				<n-alert v-if="error" type="error" title="Error Loading Dashboard" :description="error" />
 
-			<div v-else class="@container mt-4 flex flex-col gap-6">
-				<OverviewStatsCards :stats />
+				<div v-else class="@container flex grow flex-col gap-6 overflow-hidden">
+					<OverviewStatsCards :stats />
 
-				<div class="grid grid-cols-1 gap-6 @2xl:grid-cols-2">
-					<OverviewRecentAlerts :recent-alerts />
-					<OverviewRecentCases :recent-cases />
+					<div class="flex grow flex-col gap-6 overflow-hidden @2xl:flex-row">
+						<div class="max-h-full basis-1/2 overflow-hidden">
+							<OverviewRecentAlerts :recent-alerts class="h-full" size="small" />
+						</div>
+						<div class="max-h-full basis-1/2 overflow-hidden">
+							<OverviewRecentCases :recent-cases class="h-full" size="small" />
+						</div>
+					</div>
 				</div>
-			</div>
-		</n-spin>
+			</n-spin>
+		</div>
 	</div>
 </template>
 
