@@ -9,7 +9,7 @@
 					<div>
 						{{ stats.totalAlerts }}
 					</div>
-					<div class="text-sm" :class="trendClass(stats.alertTrend)">
+					<div v-if="stats.alertTrend !== '0'" class="text-sm" :class="trendClass(stats.alertTrend)">
 						{{ stats.alertTrend }}
 					</div>
 				</div>
