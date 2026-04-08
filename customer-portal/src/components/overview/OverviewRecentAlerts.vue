@@ -4,9 +4,7 @@
 			<h3 class="text-lg font-medium text-gray-900">Recent Alerts</h3>
 		</div>
 		<div class="p-6">
-			<div v-if="recentAlerts.length === 0" class="py-8 text-center text-gray-500">
-				No recent alerts
-			</div>
+			<div v-if="recentAlerts.length === 0" class="py-8 text-center text-gray-500">No recent alerts</div>
 			<div v-else class="space-y-4">
 				<div
 					v-for="alert in recentAlerts"
@@ -45,7 +43,7 @@
 				</div>
 			</div>
 			<div class="mt-6 text-center">
-				<button class="text-sm font-medium text-indigo-600 hover:text-indigo-500" @click="emit('viewAll')">
+				<button class="text-sm font-medium text-indigo-600 hover:text-indigo-500" @click="goToAlerts()">
 					View all alerts →
 				</button>
 			</div>
@@ -54,22 +52,26 @@
 </template>
 
 <script setup lang="ts">
+import { useNavigation } from "@/composables/common/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatTimeAgo } from "@/utils/format"
 
-defineProps<{
-	recentAlerts: {
-		id: number
-		name: string
-		description: string
-		severity: string
-		created_at: string
-	}[]
-}>()
+export interface DashboardAlert {
+	id: number
+	name: string
+	description: string
+	severity: string
+	created_at: string
+}
 
-const emit = defineEmits<{
-	viewAll: []
+defineProps<{
+	recentAlerts: DashboardAlert[]
 }>()
 
 const dFormats = useSettingsStore().dateFormat
+const { routeAlertsList } = useNavigation()
+
+function goToAlerts() {
+	routeAlertsList().navigate()
+}
 </script>

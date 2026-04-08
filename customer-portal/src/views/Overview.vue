@@ -8,10 +8,9 @@
 			<div v-else class="@container mt-4 flex flex-col gap-6">
 				<OverviewStatsCards :stats />
 
-				<!-- Recent Activity and Charts Section -->
-				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-					<OverviewRecentAlerts :recent-alerts @view-all="goToAlerts" />
-					<OverviewRecentCases :recent-cases @view-all="goToCases" />
+				<div class="grid grid-cols-1 gap-6 @2xl:grid-cols-2">
+					<OverviewRecentAlerts :recent-alerts />
+					<OverviewRecentCases :recent-cases />
 				</div>
 			</div>
 		</n-spin>
@@ -19,6 +18,9 @@
 </template>
 
 <script setup lang="ts">
+import type { DashboardAlert } from "@/components/overview/OverviewRecentAlerts.vue"
+import type { DashboardCase } from "@/components/overview/OverviewRecentCases.vue"
+import type { Stats } from "@/components/overview/OverviewStatsCards.vue"
 import type { ApiError } from "@/types/common"
 import { NAlert, NSpin } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
@@ -26,37 +28,7 @@ import Api from "@/api"
 import OverviewRecentAlerts from "@/components/overview/OverviewRecentAlerts.vue"
 import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
 import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
-import { useNavigation } from "@/composables/common/useNavigation"
 import { getApiErrorMessage } from "@/utils"
-
-interface Stats {
-	totalAlerts: number
-	criticalAlerts: number
-	openCases: number
-	totalAgents: number
-	securityScore: number
-	alertTrend: string
-	scoreImprovement: number
-}
-
-interface DashboardAlert {
-	id: number
-	name: string
-	description: string
-	severity: string
-	created_at: string
-}
-
-interface DashboardCase {
-	id: number
-	name: string
-	description: string
-	status: string
-	created_at: string
-	assigned_to?: string | null
-}
-
-const { routeAlertsList, routeCasesList } = useNavigation()
 
 const loading = ref(true)
 const error = ref("")
@@ -150,14 +122,6 @@ async function fetchDashboardData() {
 	} finally {
 		loading.value = false
 	}
-}
-
-function goToAlerts() {
-	routeAlertsList().navigate()
-}
-
-function goToCases() {
-	routeCasesList().navigate()
 }
 
 onBeforeMount(() => {

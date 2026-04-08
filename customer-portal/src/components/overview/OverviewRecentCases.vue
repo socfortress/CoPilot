@@ -4,9 +4,7 @@
 			<h3 class="text-lg font-medium text-gray-900">Recent Cases</h3>
 		</div>
 		<div class="p-6">
-			<div v-if="recentCases.length === 0" class="py-8 text-center text-gray-500">
-				No recent cases
-			</div>
+			<div v-if="recentCases.length === 0" class="py-8 text-center text-gray-500">No recent cases</div>
 			<div v-else class="space-y-4">
 				<div
 					v-for="case_ in recentCases"
@@ -46,7 +44,7 @@
 				</div>
 			</div>
 			<div class="mt-6 text-center">
-				<button class="text-sm font-medium text-indigo-600 hover:text-indigo-500" @click="emit('viewAll')">
+				<button class="text-sm font-medium text-indigo-600 hover:text-indigo-500" @click="goToCases()">
 					View all cases →
 				</button>
 			</div>
@@ -55,23 +53,27 @@
 </template>
 
 <script setup lang="ts">
+import { useNavigation } from "@/composables/common/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatTimeAgo } from "@/utils/format"
 
-defineProps<{
-	recentCases: {
-		id: number
-		name: string
-		description: string
-		status: string
-		created_at: string
-		assigned_to?: string | null
-	}[]
-}>()
+export interface DashboardCase {
+	id: number
+	name: string
+	description: string
+	status: string
+	created_at: string
+	assigned_to?: string | null
+}
 
-const emit = defineEmits<{
-	viewAll: []
+defineProps<{
+	recentCases: DashboardCase[]
 }>()
 
 const dFormats = useSettingsStore().dateFormat
+const { routeCasesList } = useNavigation()
+
+function goToCases() {
+	routeCasesList().navigate()
+}
 </script>

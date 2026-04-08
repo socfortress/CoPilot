@@ -55,15 +55,17 @@ import CardStats from "@/components/common/cards/CardStats.vue"
 import Icon from "@/components/common/Icon.vue"
 import { trendClass } from "@/utils"
 
+export interface Stats {
+	totalAlerts: number
+	criticalAlerts: number
+	openCases: number
+	totalAgents: number
+	securityScore: number
+	alertTrend: string
+	scoreImprovement: number
+}
+
 defineProps<{
-	stats: {
-		totalAlerts: number
-		criticalAlerts: number
-		openCases: number
-		totalAgents: number
-		securityScore: number
-		alertTrend: string
-		scoreImprovement: number
-	}
+	stats: Stats
 }>()
 </script>
