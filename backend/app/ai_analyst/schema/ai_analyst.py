@@ -3,8 +3,9 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from pydantic import Field
+import re
 
 
 # --- Enums ---
@@ -75,6 +76,15 @@ class SubmitReportRequest(BaseModel):
     summary: Optional[str] = Field(None, description="Short summary of findings")
     report_markdown: Optional[str] = Field(None, description="Full investigation report in Markdown")
     recommended_actions: Optional[str] = Field(None, description="Recommended response actions")
+
+    @validator("summary", "report_markdown", "recommended_actions", pre=True)
+    def strip_control_characters(cls, v):
+        """Strip control characters that break JSON serialization.
+        Preserves newline (0x0a), carriage return (0x0d), and tab (0x09).
+        """
+        if v is None:
+            return v
+        return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
 
 
 class SubmitIocRequest(BaseModel):
