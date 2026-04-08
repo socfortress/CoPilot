@@ -46,7 +46,7 @@ export default function getItems(): MenuMixedOption[] {
 					{ default: () => "Cases" }
 				),
 			key: "CasesList",
-			icon: renderIcon(ICONS.customers)
+			icon: renderIcon(ICONS.cases)
 		},
 		{
 			label: () =>
@@ -74,7 +74,7 @@ export default function getItems(): MenuMixedOption[] {
 					{ default: () => "Event Search" }
 				),
 			key: "EventSearch",
-			icon: renderIcon(ICONS.ports)
+			icon: renderIcon(ICONS.eventSearch)
 		},
 		{
 			label: () =>

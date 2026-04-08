@@ -8,6 +8,7 @@ export const ICONS = {
 	processes: "mynaui:activity-square",
 	vulnerabilities: "bi:radioactive",
 	alerts: "carbon:warning-hex",
+	cases: "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries",
 	chatbot: "carbon:ai-generate",
 	system: "carbon:settings",
 	collectors: "carbon:chip",
@@ -15,5 +16,6 @@ export const ICONS = {
 	monitoring: "carbon:analytics",
 	celery: "carbon:bee",
 	websocket: "carbon:ibm-watson-discovery",
-	worker: "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries"
+	worker: "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries",
+	eventSearch: "carbon:search-locate"
 }
