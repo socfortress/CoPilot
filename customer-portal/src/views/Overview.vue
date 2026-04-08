@@ -28,9 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardCase } from "@/components/overview/OverviewRecentCases.vue"
 import type { Stats } from "@/components/overview/OverviewStatsCards.vue"
-import type { DashboardAlert } from "@/components/overview/types"
+import type { DashboardAlert, DashboardCase } from "@/components/overview/types"
 import type { ApiError } from "@/types/common"
 import { NAlert, NSpin } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

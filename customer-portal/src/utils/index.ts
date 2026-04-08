@@ -338,6 +338,7 @@ export function getStatusColor(status: string | null): "error" | "warning" | "in
 	const map: Record<string, "error" | "warning" | "info" | "default" | "success"> = {
 		pending: "warning",
 		running: "info",
+		open: "info",
 		completed: "success",
 		failed: "error",
 		not_provided: "default",
