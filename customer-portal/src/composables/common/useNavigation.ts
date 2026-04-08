@@ -25,7 +25,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "EventSearch", query: routeQuery })
 	}
 
+	function routeAlertsList() {
+		return routerConstructor({ name: "AlertsList" })
+	}
+
+	function routeCasesList() {
+		return routerConstructor({ name: "CasesList" })
+	}
+
 	return {
-		routeEventSearch
+		routeEventSearch,
+		routeAlertsList,
+		routeCasesList
 	}
 }
