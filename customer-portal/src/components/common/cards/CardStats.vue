@@ -1,5 +1,13 @@
 <template>
-	<n-card size="small" :class="{ 'group cursor-pointer': clickable }" :hoverable>
+	<n-card
+		size="small"
+		:class="{ 'group cursor-pointer': clickable }"
+		:hoverable
+		content-class="flex items-center gap-4"
+	>
+		<div v-if="$slots.icon">
+			<slot name="icon" />
+		</div>
 		<div class="flex flex-col gap-2">
 			<div class="flex items-center justify-between gap-2">
 				<span

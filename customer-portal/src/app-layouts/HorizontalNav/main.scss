@@ -2,12 +2,13 @@
 @import "mixin";
 
 .layout-HorizontalNav {
+	/*
 	.page {
 		padding-bottom: var(--view-padding);
 	}
 	.page-wrapped {
 		padding-bottom: 0;
-		height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+		height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height) - 20px);
 	}
 	.page-min-wrapped {
 		padding-bottom: 0;
@@ -19,6 +20,7 @@
 			@include page-full-view;
 		}
 	}
+    */
 }
 .direction-rtl {
 	.layout-HorizontalNav {

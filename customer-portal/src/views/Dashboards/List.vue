@@ -14,7 +14,7 @@
 			</div>
 
 			<!-- Dashboards Table -->
-			<div v-else-if="selectedCustomerCode">
+			<div v-else-if="customerCode">
 				<div class="mb-4 flex items-center justify-between">
 					<h2 class="text-lg font-medium text-gray-900">Enabled Dashboards</h2>
 					<span class="text-sm text-gray-500">{{ dashboards.length }} dashboard(s)</span>
@@ -64,7 +64,7 @@
 										{{ dash.template_id }}
 									</td>
 									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-										{{ formatDate(dash.created_at) }}
+										{{ formatDate(dash.created_at, dFormats.datetime) }}
 									</td>
 									<td class="px-6 py-4 text-right text-sm whitespace-nowrap">
 										<router-link
@@ -102,53 +102,34 @@
 
 <script setup lang="ts">
 import type { EnabledDashboard } from "@/api/endpoints/siem"
-import { onBeforeMount, ref } from "vue"
+import type { ApiError } from "@/types/common"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
+import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
+const authStore = useAuthStore()
 const error = ref("")
 const loading = ref(false)
-
-// -- Customer selection --
-const customerCodes = ref<string[]>([])
-const selectedCustomerCode = ref("")
 const dashboards = ref<EnabledDashboard[]>([])
-
-// TODO-FE: CP get customer code from login
-async function loadCustomerCodes() {
-	try {
-		const response = await Api.siem.getCustomerCodes()
-		customerCodes.value = response.data.customer_codes.filter(c => c !== "*")
-		// Auto-select if only one customer
-		if (customerCodes.value.length) {
-			selectedCustomerCode.value = customerCodes.value[0]
-			loadDashboards(selectedCustomerCode.value)
-		}
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load customer codes"
-	}
-}
+const customerCode = computed(() => authStore.userCustomerCode || "")
+const dFormats = useSettingsStore().dateFormat
 
 async function loadDashboards(customerCode: string) {
 	loading.value = true
 	try {
 		const response = await Api.siem.getEnabledDashboards(customerCode)
-		dashboards.value = response.data.enabled_dashboards
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load dashboards"
+		dashboards.value = response.data?.enabled_dashboards || []
+	} catch (err) {
+		error.value = getApiErrorMessage(err as ApiError)
 	} finally {
 		loading.value = false
 	}
 }
 
-function formatDate(dateStr: string): string {
-	try {
-		return new Date(dateStr).toLocaleDateString()
-	} catch {
-		return dateStr
-	}
-}
-
 onBeforeMount(() => {
-	loadCustomerCodes()
+	loadDashboards(customerCode.value)
 })
 </script>

@@ -2,6 +2,7 @@ import type { AxiosError, AxiosResponse } from "axios"
 
 export interface HttpCommonResponse {
 	message: string
+	detail?: string
 	success: boolean
 }
 

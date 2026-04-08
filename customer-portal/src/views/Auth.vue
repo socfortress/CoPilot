@@ -5,7 +5,7 @@
 			<div class="form-box flex basis-1/3 items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type />
 			</div>
-			<div v-if="align === 'left'" class="image-box basis-2/3">image...</div>
+			<div v-if="align === 'left'" class="image-box basis-2/3"></div>
 		</div>
 	</div>
 </template>
@@ -53,7 +53,6 @@ onBeforeMount(() => {
 			position: relative;
 			background-color: v-bind(activeColor);
 
-			/*
 			&::after {
 				content: "";
 				width: 100%;
@@ -61,21 +60,22 @@ onBeforeMount(() => {
 				position: absolute;
 				top: 0;
 				left: 0;
-				background-image: url(@/assets/images/pattern-onboard.png);
-				background-size: 500px;
+				background-image: url(@/assets/images/customer-portal-login.webp);
+				background-size: cover;
 				background-position: center center;
 			}
-			*/
 
-			video {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				object-fit: cover;
-				object-position: center;
-			}
+			/*
+				video {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+					object-position: center;
+				}
+				*/
 		}
 
 		.form-box {

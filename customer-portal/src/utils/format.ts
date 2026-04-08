@@ -38,6 +38,25 @@ export function formatDate(date: Date | string | number, format: string) {
 	return dateJs.format(format)
 }
 
+export function formatTimeAgo(date: Date | string | number, format: string) {
+	const timestamp = formatDate(date, "x") as number
+
+	try {
+		const now = new Date()
+		const diffInMs = now.getTime() - timestamp
+
+		const days = diffInMs / (1000 * 60 * 60 * 24)
+
+		if (days < 30) {
+			return dayjs(timestamp).fromNow()
+		} else {
+			return formatDate(timestamp, format)
+		}
+	} catch {
+		return "Invalid date"
+	}
+}
+
 export function getNameInitials(name: string, cap?: number) {
 	let initials = name.slice(0, 2)
 

@@ -343,7 +343,7 @@
 											{{ agent.os }}
 										</td>
 										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-											{{ formatTimeAgo(agent.wazuh_last_seen) }}
+											{{ formatTimeAgo(agent.wazuh_last_seen, dFormats.datetime) }}
 										</td>
 										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
 											<div>Wazuh: {{ agent.wazuh_agent_version }}</div>
@@ -535,7 +535,9 @@
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700">Last Seen (Wazuh)</label>
-						<p class="mt-1 text-sm text-gray-900">{{ formatDateTime(selectedAgent.wazuh_last_seen) }}</p>
+						<p class="mt-1 text-sm text-gray-900">
+							{{ formatDate(selectedAgent.wazuh_last_seen, dFormats.datetime) }}
+						</p>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700">Velociraptor ID</label>
@@ -548,7 +550,7 @@
 					<div v-if="selectedAgent.velociraptor_last_seen">
 						<label class="block text-sm font-medium text-gray-700">Last Seen (Velociraptor)</label>
 						<p class="mt-1 text-sm text-gray-900">
-							{{ formatDateTime(selectedAgent.velociraptor_last_seen) }}
+							{{ formatDate(selectedAgent.velociraptor_last_seen, dFormats.datetime) }}
 						</p>
 					</div>
 					<div>
@@ -585,12 +587,15 @@
 import type { Agent } from "@/api/endpoints/agents"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate, formatTimeAgo } from "@/utils/format"
 
 const loading = ref(true)
 const error = ref("")
 const agents = ref<Agent[]>([])
 const selectedAgent = ref<Agent | null>(null)
 const updatingAgent = ref<string | null>(null)
+const dFormats = useSettingsStore().dateFormat
 
 // Filters
 const filters = ref({
@@ -692,42 +697,6 @@ const visiblePages = computed(() => {
 		.filter((page, index, arr) => arr.indexOf(page) === index && page !== current - 1 && page !== current + 1)
 		.slice(0, 7)
 })
-
-function formatTimeAgo(dateString: string) {
-	if (!dateString) return "Never"
-
-	try {
-		const date = new Date(dateString)
-		const now = new Date()
-		const diffInMs = now.getTime() - date.getTime()
-		const diffInMinutes = diffInMs / (1000 * 60)
-		const diffInHours = diffInMs / (1000 * 60 * 60)
-		const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
-
-		if (diffInMinutes < 60) {
-			return `${Math.floor(diffInMinutes)} minutes ago`
-		} else if (diffInHours < 24) {
-			return `${Math.floor(diffInHours)} hours ago`
-		} else if (diffInDays < 30) {
-			return `${Math.floor(diffInDays)} days ago`
-		} else {
-			return date.toLocaleDateString()
-		}
-	} catch {
-		return "Invalid date"
-	}
-}
-
-function formatDateTime(dateString: string) {
-	if (!dateString) return "N/A"
-
-	try {
-		const date = new Date(dateString)
-		return date.toLocaleString()
-	} catch {
-		return "Invalid date"
-	}
-}
 
 async function loadAgents() {
 	loading.value = true

@@ -25,7 +25,7 @@
 import type { Component } from "vue"
 import type { RouteLocationNormalized } from "vue-router"
 import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
@@ -34,6 +34,7 @@ import HorizontalNav from "@/app-layouts/HorizontalNav"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 import { usePortalSettingsStore } from "./stores/portalSettings"
+import { updateFavicon } from "./utils"
 
 const layoutComponents = {
 	HorizontalNav,
@@ -65,56 +66,6 @@ function checkThemeOverrides(currentRoute: RouteLocationNormalized) {
 	}
 }
 
-// TODO-FE: CP refactor
-
-// Function to convert logo to favicon format (32x32 PNG)
-async function logoToFavicon(logoDataUri: string) {
-	const img = await createImageBitmap(await (await fetch(logoDataUri)).blob())
-	// Canvas a 32x32
-	const canvas = new OffscreenCanvas(32, 32)
-	const ctx = canvas.getContext("2d")
-	if (!ctx) throw new Error("Failed to get canvas context")
-
-	ctx.drawImage(img, 0, 0, 32, 32)
-	const blob = await canvas.convertToBlob({ type: "image/png" })
-
-	// Convert blob to data URL
-	return new Promise<string>((resolve, reject) => {
-		const reader = new FileReader()
-		reader.onloadend = () => resolve(reader.result as string)
-		reader.onerror = reject
-		reader.readAsDataURL(blob)
-	})
-}
-
-// Function to update favicon
-async function updateFavicon(logoDataUrl: string | null) {
-	if (!logoDataUrl) return
-
-	try {
-		// Convert logo to ICO format
-		const faviconDataUrl = await logoToFavicon(logoDataUrl)
-
-		// Remove existing favicon links
-		const existingLinks = document.querySelectorAll("link[rel*='icon']")
-		existingLinks.forEach(link => link.remove())
-
-		// Create new favicon link
-		const link = document.createElement("link")
-		link.rel = "icon"
-		link.type = "image/png"
-		link.href = faviconDataUrl
-		document.head.appendChild(link)
-	} catch (error) {
-		console.error("Failed to update favicon:", error)
-	}
-}
-
-// Fetch portal settings on app mount
-onMounted(async () => {
-	await portalSettingsStore.fetchSettings()
-})
-
 // Watch for logo changes and update favicon
 watch(
 	() => portalSettingsStore.portalLogo,
@@ -145,7 +96,9 @@ router.afterEach(currentRoute => {
 	checkThemeOverrides(currentRoute)
 })
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
+	await portalSettingsStore.fetchSettings()
+
 	checkThemeOverrides(route)
 
 	setTimeout(() => {

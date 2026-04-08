@@ -30,6 +30,17 @@
 								<span>Role</span>
 							</n-tooltip>
 						</div>
+						<div class="item">
+							<n-tooltip placement="top">
+								<template #trigger>
+									<div class="tooltip-wrap">
+										<Icon :name="CustomerCodeIcon" />
+										<span>{{ userCustomerCode }}</span>
+									</div>
+								</template>
+								<span>Customer Code</span>
+							</n-tooltip>
+						</div>
 					</div>
 				</div>
 				<div class="actions">
@@ -80,14 +91,14 @@ const propicEnabled = false
 
 const RoleIcon = "tabler:user"
 const EditIcon = "uil:image-edit"
+const CustomerCodeIcon = "carbon:hashtag"
 
 const tabActive = ref("settings")
 const authStore = useAuthStore()
 
 const userRole = authStore.userRoleName
 const userName = authStore.userName
-// TODO-FE: replace with customer_code
-// const userEmail = authStore.userEmail
+const userCustomerCode = authStore.userCustomerCode
 const userPic = ref(authStore.userPic)
 
 function setCroppedImage(result: ImageCropperResult) {

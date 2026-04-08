@@ -25,6 +25,7 @@ export const useAuthStore = defineStore("auth", {
 				access_token: payload.access_token,
 				refresh_token: payload.refresh_token,
 				username: jwtPayload.sub || "",
+				customer_code: jwtPayload.customer_codes?.[0] || null,
 				role: jwtRoleToUserRole(jwtPayload.scopes)
 			}
 		},
@@ -79,6 +80,9 @@ export const useAuthStore = defineStore("auth", {
 		},
 		userToken(state): string | null {
 			return state.user?.access_token || null
+		},
+		userCustomerCode(state): string | null {
+			return state.user?.customer_code || null
 		},
 		userName(state): string | null {
 			return state.user?.username || null

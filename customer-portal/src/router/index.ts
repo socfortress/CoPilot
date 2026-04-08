@@ -82,7 +82,7 @@ const router = createRouter({
 				},
 				{
 					path: ":id",
-					name: "DashboardOverview",
+					name: "DashboardView",
 					component: () => import("@/views/Dashboards/Overview.vue"),
 					meta: { title: "Dashboard Details", skipPin: true }
 				}

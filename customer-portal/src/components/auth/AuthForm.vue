@@ -1,8 +1,8 @@
 <template>
 	<div class="w-full max-w-96 min-w-64">
-		<div>
+		<div class="flex flex-col items-start">
 			<Logo class="mb-4" max-height="40px" />
-			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">SOCFortress MDR</div>
+			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">{{ portalTitle }}</div>
 			<div class="text-secondary text-lg">
 				Access the world of OpenSource security: Simplified, Streamlined, Accessible.
 			</div>
@@ -16,8 +16,9 @@
 
 <script lang="ts" setup>
 import type { FormType } from "./types"
-import { onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Logo from "@/app-layouts/common/Logo.vue"
+import { usePortalSettingsStore } from "@/stores/portalSettings"
 import SignIn from "./SignIn.vue"
 
 const props = defineProps<{
@@ -25,6 +26,10 @@ const props = defineProps<{
 }>()
 
 const type = ref<FormType>("signin")
+
+const portalSettingsStore = usePortalSettingsStore()
+
+const portalTitle = computed(() => portalSettingsStore.portalTitle || "SOCFortress Customer Portal")
 
 onBeforeMount(() => {
 	if (props.type) {
