@@ -5,60 +5,11 @@
 		<n-spin :show="loading">
 			<n-alert v-if="error" type="error" title="Error Loading Dashboard" :description="error" />
 
-			<div v-else class="@container mt-4">
-				<!-- Key Metrics Cards -->
-				<div class="mb-8 grid grid-cols-1 gap-4 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-5">
-					<CardStats title="Total Alerts">
-						<template #icon>
-							<Icon name="carbon:warning-alt" :size="24" class="text-error" />
-						</template>
-						<template #value>
-							<div class="flex items-baseline gap-2">
-								<div>
-									{{ stats.totalAlerts }}
-								</div>
-								<div class="text-sm" :class="trendClass(stats.alertTrend)">
-									{{ stats.alertTrend }}
-								</div>
-							</div>
-						</template>
-					</CardStats>
-
-					<CardStats title="Critical Alerts" :value="stats.criticalAlerts">
-						<template #icon>
-							<Icon name="carbon:warning-diamond" :size="24" class="text-warning" />
-						</template>
-					</CardStats>
-
-					<CardStats title="Open Cases" :value="stats.openCases">
-						<template #icon>
-							<Icon name="carbon:document" :size="24" class="text-info" />
-						</template>
-					</CardStats>
-
-					<CardStats title="Security Score">
-						<template #icon>
-							<Icon name="carbon:security" :size="24" class="text-success" />
-						</template>
-						<template #value>
-							<div class="flex items-baseline gap-2">
-								<div>{{ stats.securityScore }}%</div>
-								<div class="text-sm" :class="trendClass(`+${stats.scoreImprovement}`, true)">
-									+{{ stats.scoreImprovement }}%
-								</div>
-							</div>
-						</template>
-					</CardStats>
-
-					<CardStats title="Total Agents" :value="stats.totalAgents">
-						<template #icon>
-							<Icon name="carbon:network-3" :size="24" class="text-primary" />
-						</template>
-					</CardStats>
-				</div>
+			<div v-else class="@container mt-4 flex flex-col gap-6">
+				<OverviewStatsCards :stats />
 
 				<!-- Recent Activity and Charts Section -->
-				<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 					<!-- Recent Alerts -->
 					<div class="rounded-lg bg-white shadow-sm">
 						<div class="border-b border-gray-200 px-6 py-4">
@@ -182,12 +133,10 @@
 <script setup lang="ts">
 import { NAlert, NSpin } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
-import CardStats from "@/components/common/cards/CardStats.vue"
-import Icon from "@/components/common/Icon.vue"
+import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
+import { useNavigation } from "@/composables/common/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { trendClass } from "@/utils"
 import { formatTimeAgo } from "@/utils/format"
 
 interface Stats {
@@ -217,7 +166,7 @@ interface DashboardCase {
 	assigned_to?: string | null
 }
 
-const router = useRouter()
+const { routeAlertsList, routeCasesList } = useNavigation()
 
 const loading = ref(true)
 const error = ref("")
@@ -233,6 +182,7 @@ const stats = ref<Stats>({
 const recentAlerts = ref<DashboardAlert[]>([])
 const recentCases = ref<DashboardCase[]>([])
 const dFormats = useSettingsStore().dateFormat
+
 async function fetchDashboardData() {
 	loading.value = true
 	error.value = ""
@@ -315,11 +265,11 @@ async function fetchDashboardData() {
 }
 
 function goToAlerts() {
-	router.push({ name: "AlertsList" })
+	routeAlertsList().navigate()
 }
 
 function goToCases() {
-	router.push({ name: "CasesList" })
+	routeCasesList().navigate()
 }
 
 onBeforeMount(() => {
