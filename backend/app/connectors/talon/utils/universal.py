@@ -168,3 +168,45 @@ async def send_post_request(
             "success": False,
             "message": f"Failed to send POST request to {endpoint} with error: {e}",
         }
+
+
+async def send_post_request_sse(
+    endpoint: str,
+    data: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Talon",
+):
+    """
+    Sends a POST request to the Talon service and yields SSE chunks as they arrive.
+
+    Args:
+        endpoint (str): The endpoint to send the POST request to.
+        data (Optional[Dict[str, Any]]): The data to send with the POST request.
+        connector_name (str, optional): The name of the connector to use. Defaults to "Talon".
+
+    Yields:
+        str: Raw SSE lines from the upstream response.
+    """
+    logger.info(f"Sending streaming POST request to Talon {endpoint}")
+    async with get_db_session() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No Talon connector found in the database")
+        yield "data: {\"error\": \"No Talon connector found in the database\"}\n\n"
+        return
+    try:
+        headers = _build_headers(attributes["connector_api_key"])
+        with requests.post(
+            f"{attributes['connector_url']}{endpoint}",
+            headers=headers,
+            json=data,
+            verify=False,
+            stream=True,
+            timeout=120,
+        ) as response:
+            response.raise_for_status()
+            for line in response.iter_lines(decode_unicode=True):
+                if line is not None:
+                    yield f"{line}\n"
+    except Exception as e:
+        logger.error(f"Failed to stream from Talon {endpoint} with error: {e}")
+        yield f"data: {{\"error\": \"Failed to stream from {endpoint}\"}}\n\n"
