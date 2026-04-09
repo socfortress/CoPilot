@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystJob
 from app.db.universal_models import AiAnalystReport
+from app.incidents.models import Alert
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocResponse
@@ -75,10 +76,19 @@ def _ioc_to_response(ioc: AiAnalystIoc) -> IocResponse:
 async def create_job(request: CreateJobRequest, session: AsyncSession) -> CreateJobResponse:
     logger.info(f"Creating AI analyst job {request.id} for alert {request.alert_id}")
 
-    # Check if job already exists
+    # Check if job already exists (may have been auto-created by an early status update)
     existing = await session.get(AiAnalystJob, request.id)
     if existing:
-        raise HTTPException(status_code=409, detail=f"Job {request.id} already exists")
+        logger.info(f"Job {request.id} already exists, updating fields")
+        if request.alert_type is not None:
+            existing.alert_type = request.alert_type
+        if request.template_used is not None:
+            existing.template_used = request.template_used
+        existing.triggered_by = request.triggered_by.value
+        session.add(existing)
+        await session.commit()
+        await session.refresh(existing)
+        return CreateJobResponse(success=True, message="Job updated", job=_job_to_response(existing))
 
     job = AiAnalystJob(
         id=request.id,
@@ -98,12 +108,51 @@ async def create_job(request: CreateJobRequest, session: AsyncSession) -> Create
     return CreateJobResponse(success=True, message="Job created", job=_job_to_response(job))
 
 
+async def _auto_create_job_from_id(job_id: str, session: AsyncSession) -> Optional[AiAnalystJob]:
+    """
+    Parse a job ID in the format 'copilot-inv-{alert_id}-{timestamp}' and
+    auto-create the job record by looking up the alert for customer_code.
+    Returns the created job, or None if parsing/lookup fails.
+    """
+    import re
+
+    match = re.match(r"^copilot-inv-(\d+)-\d+$", job_id)
+    if not match:
+        logger.warning(f"Cannot parse alert_id from job ID: {job_id}")
+        return None
+
+    alert_id = int(match.group(1))
+    alert = await session.get(Alert, alert_id)
+    if not alert:
+        logger.warning(f"Alert {alert_id} not found, cannot auto-create job {job_id}")
+        return None
+
+    job = AiAnalystJob(
+        id=job_id,
+        alert_id=alert_id,
+        customer_code=alert.customer_code,
+        status="pending",
+        triggered_by="webhook",
+        created_at=datetime.utcnow(),
+    )
+    session.add(job)
+    await session.commit()
+    await session.refresh(job)
+    logger.info(f"Auto-created AI analyst job {job_id} for alert {alert_id}")
+    return job
+
+
 async def update_job(job_id: str, request: UpdateJobRequest, session: AsyncSession) -> UpdateJobResponse:
     logger.info(f"Updating AI analyst job {job_id} to status {request.status}")
 
     job = await session.get(AiAnalystJob, job_id)
     if not job:
-        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        # Auto-create the job if it doesn't exist yet (handles race condition
+        # where Talon sends a status update before the create request arrives)
+        logger.info(f"Job {job_id} not found, attempting to auto-create from job ID")
+        job = await _auto_create_job_from_id(job_id, session)
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found and could not be auto-created")
 
     job.status = request.status.value
 
