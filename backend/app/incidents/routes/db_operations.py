@@ -71,10 +71,10 @@ from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import CommentCreate, PutAITrigger
 from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
-from app.incidents.schema.db_operations import ConfiguredSourcesResponse
+from app.incidents.schema.db_operations import ConfiguredSourcesResponse, AITriggerResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import DeleteAlertsRequest
 from app.incidents.schema.db_operations import DeleteAlertsResponse
@@ -199,7 +199,7 @@ from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_customer_code
 from app.incidents.services.db_operations import list_alerts_by_ioc
 from app.incidents.services.db_operations import list_alerts_by_source
-from app.incidents.services.db_operations import list_alerts_by_tag
+from app.incidents.services.db_operations import list_alerts_by_tag, get_customer_ai_trigger, put_customer_ai_trigger
 from app.incidents.services.db_operations import list_alerts_by_title
 from app.incidents.services.db_operations import list_alerts_for_user
 from app.incidents.services.db_operations import list_alerts_multiple_filters
@@ -233,6 +233,31 @@ from app.middleware.customer_access import customer_access_handler
 
 incidents_db_operations_router = APIRouter()
 
+@incidents_db_operations_router.get("/ai_trigger/{customer_code}", response_model=AITriggerResponse)
+async def get_customer_ai_trigger_endpoint(
+    customer_code: str,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
+    return AITriggerResponse(
+        ai_triggers=await get_customer_ai_trigger(customer_code, db),
+        success=True,
+        message="AI Trigger retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.put("/ai_trigger", response_model=AITriggerResponse)
+async def put_customer_ai_trigger_endpoint(
+    notification: PutAITrigger,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
+    await put_customer_ai_trigger(notification, db)
+    return AITriggerResponse(
+        ai_triggers=await get_customer_ai_trigger(notification.customer_code, db),
+        success=True,
+        message="AI Trigger updated successfully",
+    )
 
 @incidents_db_operations_router.get("/notification/{customer_code}", response_model=NotificationResponse)
 async def get_customer_notification_endpoint(

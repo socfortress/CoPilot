@@ -40,7 +40,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
-from app.incidents.models import CaseDataStore
+from app.incidents.models import CaseDataStore, AIAnalystTriggerEnabled
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
@@ -729,6 +729,22 @@ async def get_customer_code_names(source: str, session: AsyncSession):
     result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
     return result.scalars().first()
 
+async def get_customer_ai_trigger(customer_code: str, session: AsyncSession):
+    result = await session.execute(select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == customer_code))
+    notification = result.scalars().first()
+    logger.info(f"AI Notification: {notification}")
+    return [notification] if notification is not None else []
+
+async def put_customer_ai_trigger(notification: PutNotification, session: AsyncSession):
+    result = await session.execute(select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == notification.customer_code))
+    existing_notification = result.scalars().first()
+    if existing_notification is None:
+        new_notification = AIAnalystTriggerEnabled(**notification.dict())
+        session.add(new_notification)
+    else:
+        existing_notification.customer_code = notification.customer_code
+        existing_notification.enabled = notification.enabled
+    await session.commit()
 
 async def get_customer_notification(customer_code: str, session: AsyncSession):
     result = await session.execute(select(Notification).where(Notification.customer_code == customer_code))
