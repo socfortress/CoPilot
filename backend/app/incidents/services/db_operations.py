@@ -2952,3 +2952,75 @@ async def upload_report_template_to_data_store(db: AsyncSession) -> CaseReportTe
             await add_report_template_to_db(upload_file, len(content), hashlib.sha256(content).hexdigest(), db)
 
     return templates_list
+
+
+async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
+    """Get distinct sources, assets, and tags from alerts the user has access to."""
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
+
+    filters = []
+
+    # Customer filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    if "*" not in accessible_customers:
+        filters.append(Alert.customer_code.in_(accessible_customers))
+
+    # Tag filtering
+    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
+    accessible_tags = tag_filters["accessible_tags"]
+
+    if "*" not in accessible_tags:
+        tag_conditions = []
+        if accessible_tags:
+            has_accessible_tag = exists(
+                select(AlertToTag.alert_id).where(
+                    and_(
+                        AlertToTag.alert_id == Alert.id,
+                        AlertToTag.tag_id.in_(accessible_tags),
+                    ),
+                ),
+            )
+            tag_conditions.append(has_accessible_tag)
+
+        if tag_filters["include_untagged"]:
+            is_untagged = ~exists(
+                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
+            )
+            tag_conditions.append(is_untagged)
+
+        if tag_conditions:
+            filters.append(or_(*tag_conditions))
+        else:
+            return {"sources": [], "assets": [], "tags": []}
+
+    where_clause = and_(*filters) if filters else True
+
+    # Distinct sources
+    sources_query = select(distinct(Alert.source)).where(where_clause).order_by(Alert.source)
+    sources_result = await db.execute(sources_query)
+    sources = [row[0] for row in sources_result if row[0]]
+
+    # Distinct asset names
+    assets_query = (
+        select(distinct(Asset.asset_name))
+        .join(Alert, Asset.alert_linked == Alert.id)
+        .where(where_clause)
+        .order_by(Asset.asset_name)
+    )
+    assets_result = await db.execute(assets_query)
+    assets = [row[0] for row in assets_result if row[0]]
+
+    # Distinct tags
+    tags_query = (
+        select(distinct(AlertTag.tag))
+        .join(AlertToTag, AlertToTag.tag_id == AlertTag.id)
+        .join(Alert, AlertToTag.alert_id == Alert.id)
+        .where(where_clause)
+        .order_by(AlertTag.tag)
+    )
+    tags_result = await db.execute(tags_query)
+    tags = [row[0] for row in tags_result if row[0]]
+
+    return {"sources": sources, "assets": assets, "tags": tags}

@@ -36,6 +36,7 @@ from app.incidents.models import FieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertFilterOptionsResponse
 from app.incidents.schema.db_operations import AlertIoCCreate
 from app.incidents.schema.db_operations import AlertIoCDelete
 from app.incidents.schema.db_operations import AlertIoCResponse
@@ -182,6 +183,7 @@ from app.incidents.services.db_operations import edit_comment
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
+from app.incidents.services.db_operations import get_alert_filter_options
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
@@ -779,6 +781,22 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
         case_alert_link=await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db),
         success=True,
         message="Case created from alert successfully",
+    )
+
+
+@incidents_db_operations_router.get("/alerts/filter-options", response_model=AlertFilterOptionsResponse)
+async def get_alert_filter_options_endpoint(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get distinct sources, assets, and tags available for alert filtering."""
+    options = await get_alert_filter_options(current_user, db)
+    return AlertFilterOptionsResponse(
+        sources=options["sources"],
+        assets=options["assets"],
+        tags=options["tags"],
+        success=True,
+        message="Filter options retrieved successfully",
     )
 
 

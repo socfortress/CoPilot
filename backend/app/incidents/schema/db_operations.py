@@ -559,6 +559,15 @@ class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
 
 
+class AlertFilterOptionsResponse(BaseModel):
+    sources: List[str]
+    assets: List[str]
+    tags: List[str]
+    statuses: List[str] = [s.value for s in AlertStatus]
+    success: bool
+    message: str
+
+
 # ============================================
 # Tag Access RBAC Schemas
 # ============================================
