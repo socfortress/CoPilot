@@ -1,71 +1,62 @@
 <template>
-	<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-5">
-		<CardStats title="Total Alerts">
-			<template #icon>
-				<Icon name="carbon:warning-alt" :size="24" class="text-error" />
-			</template>
-			<template #value>
-				<div class="flex items-baseline gap-2">
-					<div>
-						{{ stats.totalAlerts }}
-					</div>
-					<div v-if="stats.alertTrend !== '0'" class="text-sm" :class="trendClass(stats.alertTrend)">
-						{{ stats.alertTrend }}
-					</div>
-				</div>
-			</template>
-		</CardStats>
+	<n-spin>
+		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-5">
+			<CardStats title="Total Alerts" :value="stats.total_alerts">
+				<template #icon>
+					<Icon :name="ICONS.alerts" :size="24" class="text-error" />
+				</template>
+			</CardStats>
 
-		<CardStats title="Critical Alerts" :value="stats.criticalAlerts">
-			<template #icon>
-				<Icon name="carbon:warning-diamond" :size="24" class="text-warning" />
-			</template>
-		</CardStats>
+			<CardStats title="Total Cases" :value="stats.total_cases">
+				<template #icon>
+					<Icon :name="ICONS.cases" :size="24" class="text-info" />
+				</template>
+			</CardStats>
 
-		<CardStats title="Open Cases" :value="stats.openCases">
-			<template #icon>
-				<Icon name="carbon:document" :size="24" class="text-info" />
-			</template>
-		</CardStats>
-
-		<CardStats title="Security Score">
-			<template #icon>
-				<Icon name="carbon:security" :size="24" class="text-success" />
-			</template>
-			<template #value>
-				<div class="flex items-baseline gap-2">
-					<div>{{ stats.securityScore }}%</div>
-					<div class="text-sm" :class="trendClass(`+${stats.scoreImprovement}`, true)">
-						+{{ stats.scoreImprovement }}%
-					</div>
-				</div>
-			</template>
-		</CardStats>
-
-		<CardStats title="Total Agents" :value="stats.totalAgents">
-			<template #icon>
-				<Icon name="carbon:network-3" :size="24" class="text-primary" />
-			</template>
-		</CardStats>
-	</div>
+			<CardStats title="Total Agents" :value="stats.total_agents">
+				<template #icon>
+					<Icon :name="ICONS.agents" :size="24" class="text-primary" />
+				</template>
+			</CardStats>
+		</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
+import type { DashboardStats } from "@/api/endpoints/portal"
+import type { ApiError } from "@/types/common"
+import { NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import Icon from "@/components/common/Icon.vue"
-import { trendClass } from "@/utils"
+import { ICONS } from "@/const"
+import { getApiErrorMessage } from "@/utils"
 
-export interface Stats {
-	totalAlerts: number
-	criticalAlerts: number
-	openCases: number
-	totalAgents: number
-	securityScore: number
-	alertTrend: string
-	scoreImprovement: number
+const loading = ref(false)
+const message = useMessage()
+const stats = ref<DashboardStats>({
+	total_alerts: 0,
+	total_cases: 0,
+	total_agents: 0
+})
+
+function fetchStats() {
+	loading.value = true
+	Api.portal
+		.dashBoardStats()
+		.then(res => {
+			stats.value = res.data
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError))
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 
-defineProps<{
-	stats: Stats
-}>()
+onBeforeMount(() => {
+	fetchStats()
+})
 </script>
