@@ -94,6 +94,13 @@ export interface AlertsListResponse {
 	closed: 0
 }
 
+export interface AlertsFilters {
+	sources: string[]
+	assets: string[]
+	tags: string[]
+	statuses: string[]
+}
+
 export default {
 	/**
 	 * Get all alerts with customer access control
@@ -166,5 +173,12 @@ export default {
 		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/source/${source}`, {
 			params: { page, page_size: pageSize, order }
 		})
+	},
+
+	/**
+	 * Get alerts filter options
+	 */
+	getAlertsFilters() {
+		return HttpClient.get<CommonResponse<AlertsFilters>>(`/incidents/db_operations/alerts/filter-options`)
 	}
 }

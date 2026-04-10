@@ -542,15 +542,8 @@ const filters = ref({
 
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value))
 
-const availableSources = computed(() => {
-	const sources = new Set(alerts.value.map(alert => alert.source))
-	return Array.from(sources).sort()
-})
-
-const availableAssets = computed(() => {
-	const assets = new Set(alerts.value.map(alert => alert.asset_name))
-	return Array.from(assets).sort()
-})
+const availableSources = ref<string[]>([])
+const availableAssets = ref<string[]>([])
 
 async function loadAlerts() {
 	loading.value = true
@@ -664,8 +657,19 @@ function nextPage() {
 	}
 }
 
+async function loadFilters() {
+	try {
+		const response = await Api.alerts.getAlertsFilters()
+		availableSources.value = response.data.sources
+		availableAssets.value = response.data.assets
+	} catch (err: any) {
+		console.error("Error loading filters:", err)
+	}
+}
+
 // Lifecycle
 onBeforeMount(() => {
 	loadAlerts()
+	loadFilters()
 })
 </script>
