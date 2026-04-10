@@ -41,3 +41,9 @@ export interface PaginationMetadata {
 	startIndex: number
 	endIndex: number
 }
+
+export interface Pagination {
+	page: number
+	pageSize: number
+	order: "asc" | "desc"
+}
