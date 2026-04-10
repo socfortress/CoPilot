@@ -272,6 +272,12 @@ const router = createRouter({
 					name: "IncidentManagement-Sigma",
 					component: () => import("@/views/incidentManagement/Sigma.vue"),
 					meta: { title: "Sigma rules" }
+				},
+				{
+					path: "ai-analyst",
+					name: "IncidentManagement-AiAnalyst",
+					component: () => import("@/views/incidentManagement/AiAnalyst.vue"),
+					meta: { title: "AI Analyst" }
 				}
 			]
 		},
