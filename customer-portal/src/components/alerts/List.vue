@@ -62,16 +62,12 @@
 								</div>
 							</div>
 							<div class="flex items-center space-x-2">
-								<select
-									:value="alert.status"
-									class="rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-									:disabled="updatingStatus === alert.id"
-									@change="updateAlertStatus(alert.id, ($event.target as HTMLSelectElement).value)"
-								>
-									<option value="OPEN">Open</option>
-									<option value="IN_PROGRESS">In Progress</option>
-									<option value="CLOSED">Closed</option>
-								</select>
+								<AlertStatusSelect
+									:alert-id="alert.id"
+									:status="alert.status"
+									@success="handleStatusUpdateSuccess"
+									@error="handleStatusUpdateError"
+								/>
 								<button
 									class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
 									@click="viewAlert(alert.id)"
@@ -159,6 +155,10 @@
 <script setup lang="ts">
 import type { AxiosResponse } from "axios"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/alerts"
+import type {
+	AlertStatusUpdateErrorPayload,
+	AlertStatusUpdateSuccessPayload
+} from "@/components/alerts/AlertStatusSelect.vue"
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { watchDebounced } from "@vueuse/core"
@@ -166,6 +166,7 @@ import { useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import AlertDetailsModal from "@/components/alerts/AlertDetailsModal.vue"
+import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import Filters from "@/components/alerts/Filters.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
@@ -177,7 +178,6 @@ const alerts = ref<Alert[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const selectedAlertId = ref<number | null>(null)
-const updatingStatus = ref<number | null>(null)
 const dFormats = useSettingsStore().dateFormat
 const totalItems = ref(0)
 
@@ -240,33 +240,23 @@ function applyFilters() {
 }
 
 watchDebounced(
-	filters,
+	() => filters.value.value,
 	() => {
 		applyFilters()
 	},
 	{ deep: true, immediate: true, debounce: 300 }
 )
 
-async function updateAlertStatus(alertId: number, newStatus: string) {
-	updatingStatus.value = alertId
-
-	try {
-		await Api.alerts.updateAlertStatus(alertId, newStatus as AlertStatus)
-
-		// Update the local alert status
-		const alert = alerts.value.find(a => a.id === alertId)
-		if (alert) {
-			alert.status = newStatus as AlertStatus
-		}
-
-		// Refresh stats
-		await loadAlerts()
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to update alert status"
-		console.error("Error updating alert status:", err)
-	} finally {
-		updatingStatus.value = null
+function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
+	message.success(`Alert status updated to ${payload.status}`)
+	const alert = alerts.value.find(a => a.id === payload.alertId)
+	if (alert) {
+		alert.status = payload.status
 	}
+}
+
+function handleStatusUpdateError(payload: AlertStatusUpdateErrorPayload) {
+	message.error(payload.message)
 }
 
 function viewAlert(alertId: number) {
