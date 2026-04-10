@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.ai_analyst.schema.ai_analyst import AlertAnalysisResponse
+from app.ai_analyst.schema.ai_analyst import AlertsWithReportsListResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
@@ -32,6 +33,7 @@ from app.ai_analyst.services.ai_analyst import list_jobs_by_alert
 from app.ai_analyst.services.ai_analyst import list_jobs_by_customer
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 from app.ai_analyst.services.ai_analyst import submit_iocs
+from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import submit_report
 from app.ai_analyst.services.ai_analyst import update_job
 
@@ -201,6 +203,27 @@ async def list_iocs_by_customer_route(
 ) -> IocListResponse:
     iocs = await list_iocs_by_customer(customer_code, session, vt_verdict=vt_verdict)
     return IocListResponse(success=True, message="IOCs retrieved", iocs=iocs)
+
+
+# --- Alerts with reports ---
+
+
+@ai_analyst_router.get(
+    "/alerts_with_reports",
+    response_model=AlertsWithReportsListResponse,
+    description="List all alerts that have an AI analyst report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_alerts_with_reports_route(
+    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    session: AsyncSession = Depends(get_db),
+) -> AlertsWithReportsListResponse:
+    alerts = await list_alerts_with_reports(session, customer_code=customer_code)
+    return AlertsWithReportsListResponse(
+        success=True,
+        message=f"{len(alerts)} alerts with reports found",
+        alerts=alerts,
+    )
 
 
 # --- Combined alert analysis endpoint ---

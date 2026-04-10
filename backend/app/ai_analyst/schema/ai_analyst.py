@@ -187,6 +187,23 @@ class IocListResponse(BaseModel):
     iocs: List[IocResponse]
 
 
+class AlertWithReportResponse(BaseModel):
+    alert_id: int
+    alert_name: str
+    customer_code: str
+    status: str
+    source: str
+    assigned_to: Optional[str]
+    alert_creation_time: datetime
+    report: ReportResponse
+
+
+class AlertsWithReportsListResponse(BaseModel):
+    success: bool
+    message: str
+    alerts: List[AlertWithReportResponse]
+
+
 class AlertAnalysisResponse(BaseModel):
     success: bool
     message: str

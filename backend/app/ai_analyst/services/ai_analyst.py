@@ -12,6 +12,7 @@ from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystJob
 from app.db.universal_models import AiAnalystReport
 from app.incidents.models import Alert
+from app.ai_analyst.schema.ai_analyst import AlertWithReportResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocResponse
@@ -314,6 +315,40 @@ async def list_iocs_by_customer(
     result = await session.execute(query)
     iocs = result.scalars().all()
     return [_ioc_to_response(i) for i in iocs]
+
+
+# --- Alerts with reports ---
+
+
+async def list_alerts_with_reports(
+    session: AsyncSession,
+    customer_code: Optional[str] = None,
+) -> List[AlertWithReportResponse]:
+    """Return all alerts that have at least one AI analyst report."""
+    query = (
+        select(Alert, AiAnalystReport)
+        .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
+        .order_by(AiAnalystReport.created_at.desc())
+    )
+    if customer_code:
+        query = query.where(Alert.customer_code == customer_code)
+
+    result = await session.execute(query)
+    rows = result.all()
+
+    return [
+        AlertWithReportResponse(
+            alert_id=alert.id,
+            alert_name=alert.alert_name,
+            customer_code=alert.customer_code,
+            status=alert.status,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            alert_creation_time=alert.alert_creation_time,
+            report=_report_to_response(report),
+        )
+        for alert, report in rows
+    ]
 
 
 # --- Combined alert analysis lookup ---
