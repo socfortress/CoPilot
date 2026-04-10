@@ -1,5 +1,6 @@
 import activeResponse from "./endpoints/activeResponse"
 import agents from "./endpoints/agents"
+import aiAnalyst from "./endpoints/aiAnalyst"
 import alerts from "./endpoints/alerts"
 import artifacts from "./endpoints/artifacts"
 import askSocfortress from "./endpoints/askSocfortress"
@@ -47,6 +48,7 @@ import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
 
 export default {
 	agents,
+	aiAnalyst,
 	alerts,
 	artifacts,
 	auth,
