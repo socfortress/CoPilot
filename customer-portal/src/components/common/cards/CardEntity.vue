@@ -26,7 +26,7 @@
 						class="header-box flex flex-wrap items-center justify-between"
 						:class="headerBoxClass"
 					>
-						<div>
+						<div :class="headerMainBoxClass">
 							<slot name="header-main" />
 						</div>
 						<div :class="headerExtraBoxClass">
@@ -79,6 +79,7 @@ const {
 	loadingDescription,
 	mainBoxClass,
 	headerBoxClass,
+	headerMainBoxClass,
 	headerExtraBoxClass,
 	footerBoxClass,
 	cardEntityClass,
@@ -95,6 +96,7 @@ const {
 	loadingDescription?: string
 	mainBoxClass?: string
 	headerBoxClass?: string
+	headerMainBoxClass?: string
 	headerExtraBoxClass?: string
 	footerBoxClass?: string
 	cardEntityClass?: string

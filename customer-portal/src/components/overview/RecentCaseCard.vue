@@ -1,5 +1,5 @@
 <template>
-	<CardEntity :embedded>
+	<CardEntity :embedded header-box-class="flex-nowrap!" header-main-box-class="truncate">
 		<template #header-main>
 			{{ caseData.name }}
 		</template>
