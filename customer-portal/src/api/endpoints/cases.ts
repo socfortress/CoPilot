@@ -1,4 +1,4 @@
-import type { CommonResponse } from "@/types/common"
+import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
 
 export interface CaseComment {
@@ -75,8 +75,10 @@ export default {
 	/**
 	 * Get all cases with customer access control
 	 */
-	getCases() {
-		return HttpClient.get<CommonResponse<{ cases: Case[] }>>("/incidents/db_operations/cases")
+	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination) {
+		return HttpClient.get<CommonResponse<{ cases: Case[] }>>("/incidents/db_operations/cases", {
+			params: { page, page_size: pageSize, order }
+		})
 	},
 
 	/**

@@ -61,7 +61,7 @@ async function fetchDashboardData() {
 		// Fetch alerts, cases, and agents data using our API services
 		const [alertsResponse, casesResponse, agentsResponse] = await Promise.all([
 			Api.alerts.getAlerts({ page: 1, pageSize: 50, order: "desc" }),
-			Api.cases.getCases(),
+			Api.cases.getCases({ page: 1, pageSize: 50, order: "desc" }),
 			Api.agents.getAgents()
 		])
 
