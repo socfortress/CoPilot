@@ -2996,13 +2996,13 @@ async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
                         AlertToTag.alert_id == Alert.id,
                         AlertToTag.tag_id.in_(accessible_tags),
                     ),
-                ),
+                ).correlate(Alert),
             )
             tag_conditions.append(has_accessible_tag)
 
         if tag_filters["include_untagged"]:
             is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
+                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id).correlate(Alert),
             )
             tag_conditions.append(is_untagged)
 
@@ -3018,11 +3018,14 @@ async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
     sources_result = await db.execute(sources_query)
     sources = [row[0] for row in sources_result if row[0]]
 
+    # Build a subquery of accessible alert IDs to avoid auto-correlation issues
+    # when joining Alert in asset/tag queries that also use exists() filters on Alert
+    accessible_alert_ids = select(Alert.id).where(where_clause).subquery()
+
     # Distinct asset names
     assets_query = (
         select(distinct(Asset.asset_name))
-        .join(Alert, Asset.alert_linked == Alert.id)
-        .where(where_clause)
+        .where(Asset.alert_linked.in_(select(accessible_alert_ids.c.id)))
         .order_by(Asset.asset_name)
     )
     assets_result = await db.execute(assets_query)
@@ -3032,8 +3035,7 @@ async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
     tags_query = (
         select(distinct(AlertTag.tag))
         .join(AlertToTag, AlertToTag.tag_id == AlertTag.id)
-        .join(Alert, AlertToTag.alert_id == Alert.id)
-        .where(where_clause)
+        .where(AlertToTag.alert_id.in_(select(accessible_alert_ids.c.id)))
         .order_by(AlertTag.tag)
     )
     tags_result = await db.execute(tags_query)
