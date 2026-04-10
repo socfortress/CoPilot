@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.settings import customer_portal_settings_router
 
 # Instantiate the APIRouter
@@ -10,4 +11,9 @@ router.include_router(
     customer_portal_settings_router,
     prefix="/customer_portal",
     tags=["Customer Portal Settings"],
+)
+router.include_router(
+    customer_portal_dashboard_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Dashboard"],
 )

@@ -63,6 +63,7 @@ from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license
 from app.routers import logs
+from app.routers import customer_portal
 from app.routers import microsoft_patch_tuesday
 from app.routers import mimecast
 from app.routers import modules
