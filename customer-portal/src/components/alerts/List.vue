@@ -1,55 +1,7 @@
 <template>
 	<div>
 		<div>
-			<!-- Filters -->
-			<div class="mb-6 rounded-lg bg-white shadow">
-				<div class="px-4 py-5 sm:p-6">
-					<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-						<div>
-							<label for="status-filter" class="block text-sm font-medium text-gray-700">Status</label>
-							<select
-								id="status-filter"
-								v-model="filters.status"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-								@change="applyFilters"
-							>
-								<option value="">All Statuses</option>
-								<option value="OPEN">Open</option>
-								<option value="IN_PROGRESS">In Progress</option>
-								<option value="CLOSED">Closed</option>
-							</select>
-						</div>
-						<div>
-							<label for="source-filter" class="block text-sm font-medium text-gray-700">Source</label>
-							<select
-								id="source-filter"
-								v-model="filters.source"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-								@change="applyFilters"
-							>
-								<option value="">All Sources</option>
-								<option v-for="source in availableSources" :key="source" :value="source">
-									{{ source }}
-								</option>
-							</select>
-						</div>
-						<div>
-							<label for="asset-filter" class="block text-sm font-medium text-gray-700">Asset</label>
-							<select
-								id="asset-filter"
-								v-model="filters.asset"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-								@change="applyFilters"
-							>
-								<option value="">All Assets</option>
-								<option v-for="asset in availableAssets" :key="asset" :value="asset">
-									{{ asset }}
-								</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
+			<Filters v-model:value="filters" />
 
 			<!-- Alerts List -->
 			<div class="overflow-hidden bg-white shadow sm:rounded-md">
@@ -509,13 +461,18 @@
 <script setup lang="ts">
 import type { AxiosResponse } from "axios"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/alerts"
-import type { Stats } from "@/components/alerts/AlertsOverviewStatsCards.vue"
-import type { CommonResponse, Pagination } from "@/types/common"
-import { computed, onBeforeMount, ref } from "vue"
+import type { FiltersModel } from "@/components/alerts/Filters.vue"
+import type { ApiError, CommonResponse, Pagination } from "@/types/common"
+import { watchDebounced } from "@vueuse/core"
+import { useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 import Api from "@/api"
+import Filters from "@/components/alerts/Filters.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
+const message = useMessage()
 // Reactive data
 const alerts = ref<Alert[]>([])
 const loading = ref(false)
@@ -534,16 +491,12 @@ const currentPage = ref(1)
 const pageSize = ref(25)
 
 // Filters
-const filters = ref({
-	status: "",
-	source: "",
-	asset: ""
+const filters = ref<FiltersModel>({
+	key: null,
+	value: null
 })
 
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value))
-
-const availableSources = ref<string[]>([])
-const availableAssets = ref<string[]>([])
 
 async function loadAlerts() {
 	loading.value = true
@@ -551,36 +504,51 @@ async function loadAlerts() {
 
 	try {
 		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
+
 		const pagination: Pagination = {
 			page: currentPage.value,
 			pageSize: pageSize.value,
 			order: "desc"
 		}
 
-		if (filters.value.status) {
-			response = await Api.alerts.getAlertsByStatus(filters.value.status as AlertStatus, pagination)
-		} else if (filters.value.source) {
-			response = await Api.alerts.getAlertsBySource(filters.value.source, pagination)
-		} else if (filters.value.asset) {
-			response = await Api.alerts.getAlertsByAsset(filters.value.asset, pagination)
-		} else {
-			response = await Api.alerts.getAlerts(pagination)
+		switch (filters.value.key) {
+			case "status":
+				response = await Api.alerts.getAlertsByStatus(filters.value.value as AlertStatus, pagination)
+				break
+			case "source":
+				response = await Api.alerts.getAlertsBySource(filters.value.value, pagination)
+				break
+			case "asset":
+				response = await Api.alerts.getAlertsByAsset(filters.value.value, pagination)
+				break
+			default:
+				response = await Api.alerts.getAlerts(pagination)
+				break
 		}
 
 		alerts.value = response.data.alerts
 		totalItems.value = response.data.total
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load alerts"
-		console.error("Error loading alerts:", err)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
 	} finally {
 		loading.value = false
 	}
 }
 
 function applyFilters() {
+	console.log("applyFilters", filters.value)
 	currentPage.value = 1
 	loadAlerts()
 }
+
+watchDebounced(
+	filters,
+	() => {
+		console.log("filters", filters.value)
+		// applyFilters()
+	},
+	{ deep: true, immediate: true, debounce: 300 }
+)
 
 async function updateAlertStatus(alertId: number, newStatus: string) {
 	updatingStatus.value = alertId
@@ -656,20 +624,4 @@ function nextPage() {
 		loadAlerts()
 	}
 }
-
-async function loadFilters() {
-	try {
-		const response = await Api.alerts.getAlertsFilters()
-		availableSources.value = response.data.sources
-		availableAssets.value = response.data.assets
-	} catch (err: any) {
-		console.error("Error loading filters:", err)
-	}
-}
-
-// Lifecycle
-onBeforeMount(() => {
-	loadAlerts()
-	loadFilters()
-})
 </script>

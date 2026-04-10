@@ -3,17 +3,20 @@
 		<n-spin :show="loading">
 			<AlertsOverviewStatsCards :stats />
 		</n-spin>
+
 		<AlertsList />
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { Stats } from "@/components/alerts/AlertsOverviewStatsCards.vue"
-import { NSpin } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import { NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import AlertsOverviewStatsCards from "@/components/alerts/AlertsOverviewStatsCards.vue"
 import AlertsList from "@/components/alerts/List.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const stats = ref<Stats>({
 	total: 0,
@@ -22,11 +25,10 @@ const stats = ref<Stats>({
 	closed: 0
 })
 const loading = ref(false)
-const error = ref<string | null>(null)
+const message = useMessage()
 
 async function loadAlerts() {
 	loading.value = true
-	error.value = null
 
 	try {
 		const response = await Api.alerts.getAlerts({ page: 1, pageSize: 10000, order: "desc" })
@@ -37,9 +39,8 @@ async function loadAlerts() {
 			in_progress: response.data.in_progress,
 			closed: response.data.closed
 		}
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load alerts"
-		console.error("Error loading alerts:", err)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
 	} finally {
 		loading.value = false
 	}
