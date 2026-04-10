@@ -48,7 +48,7 @@ export interface Alert {
 	time_closed: string | null
 	alert_name: string
 	alert_description: string
-	status: "OPEN" | "IN_PROGRESS" | "CLOSED"
+	status: AlertStatus
 	customer_code: string
 	source: string
 	assigned_to: string | null
