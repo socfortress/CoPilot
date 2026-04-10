@@ -511,19 +511,23 @@ async function loadAlerts() {
 			order: "desc"
 		}
 
-		switch (filters.value.key) {
-			case "status":
-				response = await Api.alerts.getAlertsByStatus(filters.value.value as AlertStatus, pagination)
-				break
-			case "source":
-				response = await Api.alerts.getAlertsBySource(filters.value.value, pagination)
-				break
-			case "asset":
-				response = await Api.alerts.getAlertsByAsset(filters.value.value, pagination)
-				break
-			default:
-				response = await Api.alerts.getAlerts(pagination)
-				break
+		if (filters.value.key && filters.value.value) {
+			switch (filters.value.key) {
+				case "status":
+					response = await Api.alerts.getAlertsByStatus(filters.value.value as AlertStatus, pagination)
+					break
+				case "source":
+					response = await Api.alerts.getAlertsBySource(filters.value.value, pagination)
+					break
+				case "asset":
+					response = await Api.alerts.getAlertsByAsset(filters.value.value, pagination)
+					break
+				default:
+					response = await Api.alerts.getAlerts(pagination)
+					break
+			}
+		} else {
+			response = await Api.alerts.getAlerts(pagination)
 		}
 
 		alerts.value = response.data.alerts
@@ -536,7 +540,6 @@ async function loadAlerts() {
 }
 
 function applyFilters() {
-	console.log("applyFilters", filters.value)
 	currentPage.value = 1
 	loadAlerts()
 }
@@ -544,8 +547,7 @@ function applyFilters() {
 watchDebounced(
 	filters,
 	() => {
-		console.log("filters", filters.value)
-		// applyFilters()
+		applyFilters()
 	},
 	{ deep: true, immediate: true, debounce: 300 }
 )
