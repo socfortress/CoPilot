@@ -518,6 +518,20 @@ class PutNotification(BaseModel):
     shuffle_workflow_id: str
     enabled: bool
 
+class AITrigger(BaseModel):
+    id: int
+    customer_code: str
+    enabled: bool
+
+class AITriggerResponse(BaseModel):
+    ai_triggers: Optional[List[AITrigger]] = []
+    success: bool
+    message: str
+
+class PutAITrigger(BaseModel):
+    customer_code: str
+    enabled: bool
+
 
 class CaseDataStoreResponse(BaseModel):
     case_data_store: CaseDataStore
@@ -557,6 +571,15 @@ class CaseReportTemplateDataStoreListResponse(BaseModel):
 
 class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
+
+
+class AlertFilterOptionsResponse(BaseModel):
+    sources: List[str]
+    assets: List[str]
+    tags: List[str]
+    statuses: List[str] = [s.value for s in AlertStatus]
+    success: bool
+    message: str
 
 
 # ============================================

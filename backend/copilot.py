@@ -79,6 +79,7 @@ from app.routers import siem
 from app.routers import smtp
 from app.routers import stack_provisioning
 from app.routers import sublime
+from app.routers import talon
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import version
@@ -184,6 +185,7 @@ api_router.include_router(ai_analyst.router)
 api_router.include_router(darktrace.router)
 api_router.include_router(defenderforendpoint.router)
 api_router.include_router(siem.router)
+api_router.include_router(talon.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
