@@ -63,6 +63,19 @@ export default function getItems(): MenuMixedOption[] {
 							RouterLink,
 							{
 								to: {
+									name: "IncidentManagement-AiAnalyst"
+								}
+							},
+							{ default: () => "AI Analyst" }
+						),
+					key: "IncidentManagement-AiAnalyst"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
 									name: "IncidentManagement-Alerts"
 								}
 							},
