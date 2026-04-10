@@ -26,7 +26,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="Report" tab="Full Report" display-directive="show:lazy">
 				<div class="p-7 pt-4">
-					<Markdown v-if="report?.report_markdown" :source="report.report_markdown" />
+					<Markdown v-if="report?.report_markdown" :source="report.report_markdown" breaks />
 					<n-empty v-else description="No report content available" />
 				</div>
 			</n-tab-pane>
