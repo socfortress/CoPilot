@@ -14,6 +14,18 @@
 					<AlertOverview :alert @updated="updateAlert($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="AiAnalyst" display-directive="show:lazy">
+				<template #tab>
+					<div class="flex items-center gap-1.5">
+						<Icon name="carbon:machine-learning-model" :size="14" class="text-primary" />
+						<span>AI Analyst</span>
+						<span v-if="hasAiReport" class="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
+					</div>
+				</template>
+				<div class="p-7 pt-4">
+					<AlertAiAnalyst :alert-id="alert.id" />
+				</div>
+			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
 				<div class="p-7 pt-4">
 					<AlertTimeline :alert />
@@ -36,18 +48,6 @@
 			<n-tab-pane name="IoCs" tab="IoCs" display-directive="show:lazy">
 				<div class="p-7 pt-4">
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="AiAnalyst" display-directive="show:lazy">
-				<template #tab>
-					<div class="flex items-center gap-1.5">
-						<Icon name="carbon:machine-learning-model" :size="14" class="text-primary" />
-						<span>AI Analyst</span>
-						<span v-if="hasAiReport" class="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
-					</div>
-				</template>
-				<div class="p-7 pt-4">
-					<AlertAiAnalyst :alert-id="alert.id" />
 				</div>
 			</n-tab-pane>
 		</n-tabs>
