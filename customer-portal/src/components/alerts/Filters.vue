@@ -6,6 +6,7 @@
 			clearable
 			placeholder="Filter key"
 			class="basis-1/2"
+			:consistent-menu-width="false"
 		/>
 		<n-select
 			v-model:value="model.value"
@@ -15,6 +16,7 @@
 			clearable
 			placeholder="Filter value"
 			class="basis-1/2"
+			:consistent-menu-width="false"
 		/>
 	</n-input-group>
 </template>

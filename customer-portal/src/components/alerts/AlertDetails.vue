@@ -1,87 +1,59 @@
 <template>
-	<div
-		v-if="alertId !== null"
-		class="bg-opacity-50 fixed inset-0 z-50 h-full w-full overflow-y-auto bg-gray-600"
-		@click="emitClose"
-	>
-		<div
-			class="relative top-10 mx-auto max-h-screen w-11/12 overflow-y-auto rounded-md border bg-white p-5 shadow-lg md:w-4/5 lg:w-3/4"
-			@click.stop
-		>
-			<div class="mb-4 flex items-center justify-between">
-				<h3 class="text-lg font-medium text-gray-900">Alert Details</h3>
-				<button class="text-gray-400 hover:text-gray-600" @click="emitClose">
-					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						></path>
-					</svg>
-				</button>
-			</div>
+	<n-spin :show="loadingDetails">
+		<div class="min-h-50">
+			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
 
-			<div v-if="loadingDetails" class="py-10 text-center">
-				<div class="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-				<p class="mt-2 text-sm text-gray-500">Loading alert details...</p>
-			</div>
-
-			<div v-else-if="detailsError" class="py-10 text-center">
-				<p class="text-sm text-red-600">{{ detailsError }}</p>
-				<button
-					class="mt-2 inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-3 py-2 text-sm leading-4 font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
-					@click="loadAlertDetails"
-				>
-					Try Again
-				</button>
-			</div>
-
-			<div v-else-if="alert" class="space-y-6">
+			<div v-else-if="alert" class="flex flex-col gap-4">
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Alert Name</label>
-						<p class="mt-1 text-sm text-gray-900">{{ alert.alert_name }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Status</label>
-						<span
-							class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-							:class="{
-								'bg-red-100 text-red-800': alert.status === 'OPEN',
-								'bg-yellow-100 text-yellow-800': alert.status === 'IN_PROGRESS',
-								'bg-green-100 text-green-800': alert.status === 'CLOSED'
-							}"
-						>
+					<n-card size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Alert Name</div>
+						</template>
+						{{ alert.alert_name }}
+					</n-card>
+					<n-card size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Status</div>
+						</template>
+						<n-tag :type="getStatusColor(alert.status)">
 							{{ alert.status.replace("_", " ").toUpperCase() }}
-						</span>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Source</label>
-						<p class="mt-1 text-sm text-gray-900">{{ alert.source }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Customer</label>
-						<p class="mt-1 text-sm text-gray-900">{{ alert.customer_code }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Created</label>
-						<p class="mt-1 text-sm text-gray-900">
-							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
-						</p>
-					</div>
-					<div v-if="alert.assigned_to">
-						<label class="block text-sm font-medium text-gray-700">Assigned To</label>
-						<p class="mt-1 text-sm text-gray-900">{{ alert.assigned_to }}</p>
-					</div>
+						</n-tag>
+					</n-card>
+					<n-card size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Source</div>
+						</template>
+						{{ alert.source }}
+					</n-card>
+
+					<n-card size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Customer</div>
+						</template>
+						{{ alert.customer_code }}
+					</n-card>
+
+					<n-card size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Created</div>
+						</template>
+						{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+					</n-card>
+
+					<n-card v-if="alert.assigned_to" size="small">
+						<template #header>
+							<div class="text-secondary text-sm">Assigned To</div>
+						</template>
+						{{ alert.assigned_to }}
+					</n-card>
 				</div>
 
-				<div v-if="alert.alert_description">
-					<label class="block text-sm font-medium text-gray-700">Description</label>
-					<p class="mt-1 text-sm whitespace-pre-wrap text-gray-900">
-						{{ alert.alert_description }}
-					</p>
-				</div>
+				<n-card v-if="alert.alert_description" size="small">
+					<template #header>
+						<div class="text-secondary text-sm">Description</div>
+					</template>
+					{{ alert.alert_description }}
+				</n-card>
 
 				<div v-if="alert.assets && alert.assets.length > 0">
 					<label class="mb-2 block text-sm font-medium text-gray-700">Assets</label>
@@ -297,25 +269,23 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
+import type { TagColor } from "naive-ui/es/tag/src/common-props"
 import type { Alert } from "@/api/endpoints/alerts"
 import type { ApiError } from "@/types/common"
-import { useMessage } from "naive-ui"
+import { NAlert, NCard, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
+import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	alertId: number | null
-}>()
-
-const emit = defineEmits<{
-	close: []
 }>()
 
 const message = useMessage()
@@ -326,10 +296,6 @@ const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const newComment = ref("")
 const isAddingComment = ref(false)
-
-function emitClose() {
-	emit("close")
-}
 
 async function loadAlertDetails() {
 	if (props.alertId === null) return

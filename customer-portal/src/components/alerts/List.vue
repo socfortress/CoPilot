@@ -1,15 +1,19 @@
 <template>
 	<div>
-		<div>
-			<Filters v-model:value="filters" />
+		<div class="flex flex-col gap-4">
+			<div>
+				<Filters v-model:value="filters" class="w-auto!" />
+			</div>
 
 			<div class="flex flex-col gap-2">
 				<div ref="headerRef" class="flex items-center justify-between">
 					<n-tag size="small">
-						<div :class="{ 'font-mono': !loading }">
-							{{ loading ? "Loading..." : pagination.total }}
+						<div class="flex items-center gap-2">
+							<div :class="{ 'font-mono': !loading }">
+								{{ loading ? "Loading..." : pagination.total }}
+							</div>
+							<div class="text-secondary">items</div>
 						</div>
-						<div class="text-secondary">items</div>
 					</n-tag>
 
 					<div class="flex items-center gap-2 whitespace-nowrap">
@@ -33,7 +37,7 @@
 						size="small"
 						:data
 						:columns
-						:scroll-x="2200"
+						:scroll-x="1400"
 						class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 					>
 						<template #empty>
@@ -57,8 +61,6 @@
 				</div>
 			</div>
 		</div>
-
-		<AlertDetailsModal :alert-id="selectedAlertId" @close="closeModal" />
 	</div>
 </template>
 
@@ -76,19 +78,17 @@ import { useElementSize, watchDebounced } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
-import AlertDetailsModal from "@/components/alerts/AlertDetailsModal.vue"
+import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import Filters from "@/components/alerts/Filters.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
+import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
-// Reactive data
 const data = ref<Alert[]>([])
 const loading = ref(false)
-const error = ref<string | null>(null)
-const selectedAlertId = ref<number | null>(null)
 const dFormats = useSettingsStore().dateFormat
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
@@ -109,32 +109,30 @@ const filters = ref<FiltersModel>({
 	value: null
 })
 
-// const totalPages = computed(() => Math.ceil(pagination.value.total / pagination.value.pageSize))
-
 const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Alert",
 		key: "alert",
 		fixed: simpleMode.value ? undefined : "left",
-		width: 280,
+		width: 380,
 		render: row => <div>{row.alert_name}</div>
-	},
-	{
-		title: "Assets",
-		key: "assets",
-		width: 180,
-		render: row => <div>{row.assets.map(asset => asset.asset_name).join(", ")}</div>
 	},
 	{
 		title: "Source",
 		key: "source",
-		minWidth: 400,
+		width: 180,
 		render: row => <div>{row.source}</div>
+	},
+	{
+		title: "Assets",
+		key: "assets",
+		width: "100%",
+		render: row => <div>{row.assets.map(asset => asset.asset_name).join(", ")}</div>
 	},
 	{
 		title: "Created",
 		key: "alert_creation_time",
-		width: 100,
+		width: 200,
 		render: row => <span class="font-mono text-sm">{formatDate(row.alert_creation_time, dFormats.datetime)}</span>
 	},
 	{
@@ -143,12 +141,22 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		width: 120,
 		render: row => {
 			return (
-				<AlertStatusSelect
-					alertId={row.id}
-					status={row.status}
-					onSuccess={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-					onError={(payload: AlertStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
-				/>
+				<div class="flex items-center gap-2">
+					<NTag
+						type={getStatusColor(row.status)}
+						round
+						class="p-1! [&_.n-tag\_\_icon]:m-0!"
+						v-slots={{
+							icon: () => <Icon name="carbon:circle-solid" />
+						}}
+					/>
+					<AlertStatusSelect
+						alertId={row.id}
+						status={row.status}
+						onSuccess={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
+						onError={(payload: AlertStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
+					/>
+				</div>
 			)
 		}
 	},
@@ -156,20 +164,14 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		title: "Actions",
 		key: "actions",
 		minWidth: 180,
-		render: row => (
-			<button
-				class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
-				onClick={() => viewAlert(row.id)}
-			>
-				View Details
-			</button>
-		)
+		render: row => {
+			return <AlertDetailsButton alertId={row.id} />
+		}
 	}
 ])
 
 async function loadAlerts() {
 	loading.value = true
-	error.value = null
 
 	try {
 		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
@@ -223,6 +225,7 @@ watchDebounced(
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	message.success(`Alert status updated to ${payload.status}`)
+
 	const alert = data.value.find(a => a.id === payload.alertId)
 	if (alert) {
 		alert.status = payload.status
@@ -231,14 +234,6 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 
 function handleStatusUpdateError(payload: AlertStatusUpdateErrorPayload) {
 	message.error(payload.message)
-}
-
-function viewAlert(alertId: number) {
-	selectedAlertId.value = alertId
-}
-
-function closeModal() {
-	selectedAlertId.value = null
 }
 
 watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadAlerts, {
