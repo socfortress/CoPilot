@@ -19,6 +19,7 @@ const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
+const AiAnalystIcon = "carbon:machine-learning-model"
 const ToolsIcon = "carbon:tool-box"
 // const EventSearchIcon = "carbon:search-locate"
 
@@ -40,6 +41,20 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(OverviewIcon)
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "AiAnalyst"
+						}
+					},
+					{ default: () => "AI Analyst" }
+				),
+			key: "AiAnalyst",
+			icon: renderIcon(AiAnalystIcon)
+		},
+		{
 			label: "Incident Management",
 			key: "IncidentManagement",
 			icon: renderIcon(IncidentManagementIcon),
@@ -56,19 +71,6 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Sources" }
 						),
 					key: "IncidentManagement-Sources"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-AiAnalyst"
-								}
-							},
-							{ default: () => "AI Analyst" }
-						),
-					key: "IncidentManagement-AiAnalyst"
 				},
 				{
 					label: () =>
@@ -191,20 +193,6 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "Artifacts"
-						}
-					},
-					{ default: () => "Artifacts" }
-				),
-			key: "Artifacts",
-			icon: renderIcon(ArtifactsIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
 							name: "Customers"
 						}
 					},
@@ -230,6 +218,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Agents list" }
 						),
 					key: "Agents"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Artifacts"
+								}
+							},
+							{ default: () => "Artifacts" }
+						),
+					key: "Artifacts"
 				},
 				{
 					label: () =>
@@ -436,9 +437,9 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: "Indices",
-			key: "IndicesMenu",
-			icon: renderIcon(IndiciesIcon),
+			label: "Log Management",
+			key: "LogManagement",
+			icon: renderIcon(GraylogIcon),
 			children: [
 				{
 					label: () =>
@@ -465,14 +466,7 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Snapshot & Restore" }
 						),
 					key: "Snapshots"
-				}
-			]
-		},
-		{
-			label: "Graylog",
-			key: "Graylog",
-			icon: renderIcon(GraylogIcon),
-			children: [
+				},
 				{
 					label: () =>
 						h(
@@ -482,7 +476,7 @@ export default function getItems(): MenuMixedOption[] {
 									name: "Graylog-Management"
 								}
 							},
-							{ default: () => "Management" }
+							{ default: () => "Graylog Management" }
 						),
 					key: "Graylog-Management"
 				},
@@ -495,7 +489,7 @@ export default function getItems(): MenuMixedOption[] {
 									name: "Graylog-Metrics"
 								}
 							},
-							{ default: () => "Metrics" }
+							{ default: () => "Graylog Metrics" }
 						),
 					key: "Graylog-Metrics"
 				},
@@ -508,7 +502,7 @@ export default function getItems(): MenuMixedOption[] {
 									name: "Graylog-Pipelines"
 								}
 							},
-							{ default: () => "Pipelines" }
+							{ default: () => "Graylog Pipelines" }
 						),
 					key: "Graylog-Pipelines"
 				}
@@ -631,34 +625,6 @@ export default function getItems(): MenuMixedOption[] {
 					key: "Tools-ThreatIntel"
 				}
 			]
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Scheduler"
-						}
-					},
-					{ default: () => "Scheduler" }
-				),
-			key: "Scheduler",
-			icon: renderIcon(SchedulerIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "CustomerPortal"
-						}
-					},
-					{ default: () => "Customer Portal" }
-				),
-			key: "CustomerPortal",
-			icon: renderIcon(CustomerPortalIcon)
 		}
 	]
 }
