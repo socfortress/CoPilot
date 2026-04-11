@@ -150,6 +150,13 @@
 
 				<div class="grow"></div>
 
+				<n-button type="primary" secondary :loading="investigating" @click="handleInvestigate()">
+					<template #icon>
+						<Icon name="carbon:machine-learning-model" />
+					</template>
+					Investigate with AI Analyst
+				</n-button>
+
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />
@@ -168,6 +175,7 @@ import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import Api from "@/api"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
@@ -194,6 +202,7 @@ const { routeCustomer } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
+const investigating = ref(false)
 const linkedCases = computed(() => alert.value.linked_cases)
 
 function updateAlert(updatedAlert: Alert) {
@@ -217,6 +226,31 @@ function handleDelete() {
 			dialog
 		})
 	}
+}
+
+function handleInvestigate() {
+	if (!alert.value) return
+	investigating.value = true
+
+	Api.talon
+		.investigate({
+			alert_id: alert.value.id,
+			customer_code: alert.value.customer_code,
+			sender: "copilot"
+		})
+		.then(res => {
+			if (res.data.success) {
+				message.success(res.data.message || "Investigation triggered successfully")
+			} else {
+				message.warning(res.data.message || "Failed to trigger investigation")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "Failed to trigger investigation")
+		})
+		.finally(() => {
+			investigating.value = false
+		})
 }
 </script>
 
