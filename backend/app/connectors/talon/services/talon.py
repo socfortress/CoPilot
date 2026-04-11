@@ -128,12 +128,31 @@ async def get_talon_job(alert_id: int, session: AsyncSession) -> TalonJobRespons
         .options(selectinload(AiAnalystJob.reports))
         .order_by(AiAnalystJob.created_at.desc()),
     )
-    job = result.scalars().first()
-    if not job:
+    jobs = result.scalars().all()
+    if not jobs:
         raise HTTPException(
             status_code=404,
             detail=f"No job found for alert {alert_id}",
         )
+    # Use the most recent job for top-level metadata
+    job = jobs[0]
+    # Aggregate reports from all jobs
+    all_reports = []
+    for j in jobs:
+        for r in (j.reports or []):
+            all_reports.append(
+                {
+                    "id": r.id,
+                    "job_id": j.id,
+                    "alert_id": j.alert_id,
+                    "customer_code": j.customer_code,
+                    "severity_assessment": r.severity_assessment,
+                    "summary": r.summary,
+                    "report_markdown": r.report_markdown,
+                    "recommended_actions": r.recommended_actions,
+                    "created_at": r.created_at.isoformat(),
+                },
+            )
     return TalonJobResponse(
         success=True,
         message="Talon job retrieved successfully",
@@ -149,16 +168,6 @@ async def get_talon_job(alert_id: int, session: AsyncSession) -> TalonJobRespons
             "started_at": job.started_at.isoformat() if job.started_at else None,
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "error_message": job.error_message,
-            "reports": [
-                {
-                    "id": r.id,
-                    "severity_assessment": r.severity_assessment,
-                    "summary": r.summary,
-                    "report_markdown": r.report_markdown,
-                    "recommended_actions": r.recommended_actions,
-                    "created_at": r.created_at.isoformat(),
-                }
-                for r in (job.reports or [])
-            ],
+            "reports": all_reports,
         },
     )

@@ -27,6 +27,9 @@ export interface TalonJobData {
 	error_message: string | null
 	reports: {
 		id: number
+		job_id: string
+		alert_id: number
+		customer_code: string
 		severity_assessment: string | null
 		summary: string | null
 		report_markdown: string | null
