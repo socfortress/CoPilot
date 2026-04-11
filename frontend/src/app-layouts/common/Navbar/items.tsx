@@ -55,6 +55,20 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(AiAnalystIcon)
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Customers"
+						}
+					},
+					{ default: () => "Customers" }
+				),
+			key: "Customers",
+			icon: renderIcon(CustomersIcon)
+		},
+		{
 			label: "SIEM",
 			key: "SIEM",
 			icon: renderIcon(AlertsIcon),
@@ -414,20 +428,6 @@ export default function getItems(): MenuMixedOption[] {
 					key: "Graylog-Pipelines"
 				}
 			]
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Customers"
-						}
-					},
-					{ default: () => "Customers" }
-				),
-			key: "Customers",
-			icon: renderIcon(CustomersIcon)
 		},
 		{
 			label: "Report Creation",
