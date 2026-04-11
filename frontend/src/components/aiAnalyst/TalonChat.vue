@@ -62,12 +62,35 @@
 			</div>
 			<div v-else class="text-secondary flex flex-col items-center justify-center py-12 text-center">
 				<Icon name="carbon:chat-bot" :size="40" class="mb-3 opacity-50" />
-				<p class="text-lg">Talon AI Assistant</p>
-				<p class="mt-1 text-sm opacity-70">Ask a question to get started</p>
+				<p class="text-lg font-semibold">Welcome to Talon AI</p>
+				<p class="mt-1 max-w-md text-sm opacity-70">
+					Your AI-powered security analyst. Ask questions about alerts, threats, or your environment and Talon
+					will investigate and respond.
+				</p>
+				<div class="mt-6 flex flex-col gap-2">
+					<button
+						v-for="example of exampleMessages"
+						:key="example"
+						class="bg-secondary hover:bg-hover rounded-lg px-4 py-2.5 text-left text-sm transition-colors"
+						@click="useExample(example)"
+					>
+						{{ example }}
+					</button>
+				</div>
 			</div>
 		</n-scrollbar>
 
 		<div class="border-color flex items-end gap-2 border-t p-3">
+			<n-tooltip v-if="messages.length && !streaming">
+				<template #trigger>
+					<n-button text @click="clearChat()">
+						<template #icon>
+							<Icon name="carbon:trash-can" :size="16" />
+						</template>
+					</n-button>
+				</template>
+				<div class="text-xs">Clear chat</div>
+			</n-tooltip>
 			<n-input
 				v-model:value="input"
 				type="textarea"
@@ -120,7 +143,23 @@ const streaming = ref(false)
 const streamBuffer = ref("")
 const scrollbar = ref<ScrollbarInst | null>(null)
 
+const exampleMessages = [
+	"Summarize the most critical alerts from today",
+	"What MITRE ATT&CK techniques have been seen this week?",
+	"Explain what a brute force attack looks like in our logs",
+	"What should I investigate first as a SOC analyst?"
+]
+
 let abortController: AbortController | null = null
+
+function useExample(example: string) {
+	input.value = example
+	sendMessage()
+}
+
+function clearChat() {
+	messages.value = []
+}
 
 function scrollChat() {
 	nextTick(() => {
