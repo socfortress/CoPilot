@@ -1,5 +1,5 @@
 <template>
-	<n-spin>
+	<n-spin :show="loading">
 		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-5">
 			<CardStats title="Total Alerts" :value="stats.total_alerts">
 				<template #icon>
@@ -44,7 +44,7 @@ const stats = ref<DashboardStats>({
 function fetchStats() {
 	loading.value = true
 	Api.portal
-		.dashBoardStats()
+		.dashboardStats()
 		.then(res => {
 			stats.value = res.data
 		})
