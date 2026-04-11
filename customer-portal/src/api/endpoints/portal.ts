@@ -8,11 +8,21 @@ export interface DashboardStats {
 	total_cases: number
 }
 
+export interface AlertsStats {
+	total: number
+	open: number
+	in_progress: number
+	closed: number
+}
+
 export default {
 	getSettings() {
 		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings")
 	},
-	dashBoardStats() {
+	dashboardStats() {
 		return HttpClient.get<CommonResponse<DashboardStats>>("/customer_portal/dashboard/stats")
+	},
+	alertsStats() {
+		return HttpClient.get<CommonResponse<AlertsStats>>("/customer_portal/dashboard/alert-stats")
 	}
 }
