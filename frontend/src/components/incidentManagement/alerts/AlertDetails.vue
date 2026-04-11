@@ -37,6 +37,11 @@
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="AiAnalyst" tab="AI Analyst" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<AlertAiAnalyst :alert-id="alert.id" />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -61,6 +66,7 @@ const AlertAssetsList = defineAsyncComponent(() => import("./AlertAssetsList.vue
 const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList.vue"))
 const AlertIoCsList = defineAsyncComponent(() => import("./AlertIoCsList.vue"))
 const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
+const AlertAiAnalyst = defineAsyncComponent(() => import("./AlertAiAnalyst.vue"))
 
 const { alertData, alertId } = toRefs(props)
 
