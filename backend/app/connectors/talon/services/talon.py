@@ -30,6 +30,7 @@ async def send_talon_message(request: TalonMessageRequest) -> TalonMessageRespon
     response = await send_post_request(
         endpoint="/message",
         data=request.dict(),
+        timeout=600,
     )
     if not response.get("success"):
         raise HTTPException(

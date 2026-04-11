@@ -28,7 +28,7 @@ talon_router = APIRouter()
 )
 async def send_message(request: TalonMessageRequest) -> StreamingResponse:
     """Send a message to Talon and stream the response as SSE."""
-    logger.info(f"Sending streaming message to Talon: {request.message}")
+    logger.info(f"Sending message to Talon: {request.message}")
     return StreamingResponse(
         stream_talon_message(request),
         media_type="text/event-stream",

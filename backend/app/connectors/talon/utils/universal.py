@@ -2,6 +2,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+import httpx
 import requests
 from loguru import logger
 
@@ -126,6 +127,7 @@ async def send_post_request(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
     connector_name: str = "Talon",
+    timeout: int = 120,
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the Talon service.
@@ -134,6 +136,7 @@ async def send_post_request(
         endpoint (str): The endpoint to send the POST request to.
         data (Optional[Dict[str, Any]]): The data to send with the POST request. Defaults to None.
         connector_name (str, optional): The name of the connector to use. Defaults to "Talon".
+        timeout (int, optional): Request timeout in seconds. Defaults to 120.
 
     Returns:
         Dict[str, Any]: The response from the POST request.
@@ -154,7 +157,7 @@ async def send_post_request(
             headers=headers,
             json=data,
             verify=False,
-            timeout=120,
+            timeout=timeout,
         )
         response.raise_for_status()
         return {
@@ -178,35 +181,37 @@ async def send_post_request_sse(
     """
     Sends a POST request to the Talon service and yields SSE chunks as they arrive.
 
+    Uses httpx async streaming to avoid blocking the event loop and preserves
+    the raw SSE wire format (including \\n\\n event boundaries).
+
     Args:
         endpoint (str): The endpoint to send the POST request to.
         data (Optional[Dict[str, Any]]): The data to send with the POST request.
         connector_name (str, optional): The name of the connector to use. Defaults to "Talon".
 
     Yields:
-        str: Raw SSE lines from the upstream response.
+        bytes: Raw SSE bytes from the upstream response.
     """
     logger.info(f"Sending streaming POST request to Talon {endpoint}")
     async with get_db_session() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Talon connector found in the database")
-        yield "data: {\"error\": \"No Talon connector found in the database\"}\n\n"
+        yield b'data: {"error": "No Talon connector found in the database"}\n\n'
         return
     try:
         headers = _build_headers(attributes["connector_api_key"])
-        with requests.post(
-            f"{attributes['connector_url']}{endpoint}",
-            headers=headers,
-            json=data,
-            verify=False,
-            stream=True,
-            timeout=120,
-        ) as response:
-            response.raise_for_status()
-            for line in response.iter_lines(decode_unicode=True):
-                if line is not None:
-                    yield f"{line}\n"
+        timeout = httpx.Timeout(connect=10.0, read=None, write=10.0, pool=10.0)
+        async with httpx.AsyncClient(verify=False, timeout=timeout) as client:
+            async with client.stream(
+                "POST",
+                f"{attributes['connector_url']}{endpoint}",
+                headers=headers,
+                json=data,
+            ) as response:
+                response.raise_for_status()
+                async for chunk in response.aiter_bytes():
+                    yield chunk
     except Exception as e:
         logger.error(f"Failed to stream from Talon {endpoint} with error: {e}")
-        yield f"data: {{\"error\": \"Failed to stream from {endpoint}\"}}\n\n"
+        yield f'data: {{"error": "Failed to stream from {endpoint}"}}\n\n'.encode()

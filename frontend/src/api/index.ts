@@ -37,6 +37,7 @@ import sso from "./endpoints/sso"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
 import tagRbac from "./endpoints/tagRbac"
+import talon from "./endpoints/talon"
 import threatIntel from "./endpoints/threatIntel"
 import totp from "./endpoints/totp"
 import users from "./endpoints/users"
@@ -92,6 +93,7 @@ export default {
 	version,
 	snapshots,
 	tagRbac,
+	talon,
 	sso,
 	totp
 }
