@@ -55,67 +55,6 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(AiAnalystIcon)
 		},
 		{
-			label: "Incident Management",
-			key: "IncidentManagement",
-			icon: renderIcon(IncidentManagementIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Sources"
-								}
-							},
-							{ default: () => "Sources" }
-						),
-					key: "IncidentManagement-Sources"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Alerts"
-								}
-							},
-							{ default: () => "Alerts" }
-						),
-					key: "IncidentManagement-Alerts"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Cases"
-								}
-							},
-							{ default: () => "Cases" }
-						),
-					key: "IncidentManagement-Cases"
-				}
-				/*
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Sigma"
-                                }
-                            },
-                            { default: () => "SIGMA" }
-                        ),
-                    key: "IncidentManagement-Sigma"
-                }
-                */
-			]
-		},
-		{
 			label: "SIEM",
 			key: "SIEM",
 			icon: renderIcon(AlertsIcon),
@@ -188,18 +127,65 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Customers"
-						}
-					},
-					{ default: () => "Customers" }
-				),
-			key: "Customers",
-			icon: renderIcon(CustomersIcon)
+			label: "Incident Management",
+			key: "IncidentManagement",
+			icon: renderIcon(IncidentManagementIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Sources"
+								}
+							},
+							{ default: () => "Sources" }
+						),
+					key: "IncidentManagement-Sources"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Alerts"
+								}
+							},
+							{ default: () => "Alerts" }
+						),
+					key: "IncidentManagement-Alerts"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Cases"
+								}
+							},
+							{ default: () => "Cases" }
+						),
+					key: "IncidentManagement-Cases"
+				}
+				/*
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "IncidentManagement-Sigma"
+                                }
+                            },
+                            { default: () => "SIGMA" }
+                        ),
+                    key: "IncidentManagement-Sigma"
+                }
+                */
+			]
 		},
 		{
 			label: "Agents",
@@ -358,6 +344,92 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
+			label: "Log Management",
+			key: "LogManagement",
+			icon: renderIcon(GraylogIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Indices"
+								}
+							},
+							{ default: () => "Index Management" }
+						),
+					key: "Indices"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Snapshots"
+								}
+							},
+							{ default: () => "Snapshot & Restore" }
+						),
+					key: "Snapshots"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Management"
+								}
+							},
+							{ default: () => "Graylog Management" }
+						),
+					key: "Graylog-Management"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Metrics"
+								}
+							},
+							{ default: () => "Graylog Metrics" }
+						),
+					key: "Graylog-Metrics"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Pipelines"
+								}
+							},
+							{ default: () => "Graylog Pipelines" }
+						),
+					key: "Graylog-Pipelines"
+				}
+			]
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Customers"
+						}
+					},
+					{ default: () => "Customers" }
+				),
+			key: "Customers",
+			icon: renderIcon(CustomersIcon)
+		},
+		{
 			label: "Report Creation",
 			key: "ReportCreation",
 			icon: renderIcon(ReportCreationIcon),
@@ -437,142 +509,23 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: "Log Management",
-			key: "LogManagement",
-			icon: renderIcon(GraylogIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Indices"
-								}
-							},
-							{ default: () => "Index Management" }
-						),
-					key: "Indices"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Snapshots"
-								}
-							},
-							{ default: () => "Snapshot & Restore" }
-						),
-					key: "Snapshots"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Management"
-								}
-							},
-							{ default: () => "Graylog Management" }
-						),
-					key: "Graylog-Management"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Metrics"
-								}
-							},
-							{ default: () => "Graylog Metrics" }
-						),
-					key: "Graylog-Metrics"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Pipelines"
-								}
-							},
-							{ default: () => "Graylog Pipelines" }
-						),
-					key: "Graylog-Pipelines"
-				}
-			]
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Connectors"
-						}
-					},
-					{ default: () => "Connectors" }
-				),
-			key: "Connectors",
-			icon: renderIcon(ConnectorsIcon)
-		},
-		{
-			label: "External Services",
-			key: "ExternalServices",
-			icon: renderIcon(ExternalServicesIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-ThirdPartyIntegrations"
-								}
-							},
-							{ default: () => "3rd Party Integrations" }
-						),
-					key: "ExternalServices-ThirdPartyIntegrations"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-NetworkConnectors"
-								}
-							},
-							{ default: () => "Network Connectors" }
-						),
-					key: "ExternalServices-NetworkConnectors"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-SingulAppAuth"
-								}
-							},
-							{ default: () => "Singul App Auth" }
-						),
-					key: "ExternalServices-SingulAppAuth"
-				}
-			]
-		},
-		{
 			label: "Tools",
 			key: "Tools",
 			icon: renderIcon(ToolsIcon),
 			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Connectors"
+								}
+							},
+							{ default: () => "Connectors" }
+						),
+					key: "Connectors"
+				},
 				{
 					label: "Stack Provisioning",
 					key: "Tools-StackProvisioning"
