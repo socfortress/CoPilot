@@ -2,6 +2,7 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<n-tabs
 			v-if="alert"
+			v-model:value="activeTab"
 			type="line"
 			animated
 			:tabs-padding="24"
@@ -37,7 +38,14 @@
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="AiAnalyst" tab="AI Analyst" display-directive="show:lazy">
+			<n-tab-pane name="AiAnalyst" display-directive="show:lazy">
+				<template #tab>
+					<div class="flex items-center gap-1.5">
+						<Icon name="carbon:machine-learning-model" :size="14" class="text-primary" />
+						<span>AI Analyst</span>
+						<span v-if="hasAiReport" class="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
+					</div>
+				</template>
 				<div class="p-7 pt-4">
 					<AlertAiAnalyst :alert-id="alert.id" />
 				</div>
@@ -52,6 +60,7 @@ import _clone from "lodash/cloneDeep"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	alertData?: Alert
@@ -73,6 +82,8 @@ const { alertData, alertId } = toRefs(props)
 const message = useMessage()
 const loading = ref(false)
 const alert = ref<Alert | null>(null)
+const activeTab = ref("Overview")
+const hasAiReport = ref(false)
 
 function updateAlert(updatedAlert: Alert) {
 	alert.value = updatedAlert
@@ -90,6 +101,20 @@ function updateIos(iocs: AlertIOC[]) {
 		alert.value.iocs = iocs
 		emit("updated", alert.value)
 	}
+}
+
+function checkAiReport(alertId: number) {
+	Api.talon
+		.getJob(alertId)
+		.then(res => {
+			if (res.data.success && res.data.data?.reports?.length) {
+				hasAiReport.value = true
+				activeTab.value = "AiAnalyst"
+			}
+		})
+		.catch(() => {
+			// No report — stay on Overview
+		})
 }
 
 function getAlert(alertId: number) {
@@ -115,8 +140,10 @@ function getAlert(alertId: number) {
 onBeforeMount(() => {
 	if (alertId.value) {
 		getAlert(alertId.value)
+		checkAiReport(alertId.value)
 	} else if (alertData.value) {
 		alert.value = _clone(alertData.value)
+		checkAiReport(alertData.value.id)
 	}
 })
 </script>
