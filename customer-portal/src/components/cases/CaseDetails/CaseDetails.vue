@@ -11,6 +11,9 @@
 						@assigned-to-updated="handleAssignedToUpdated"
 					/>
 				</n-tab-pane>
+				<n-tab-pane name="alerts" tab="Alerts">
+					<CaseAlerts :case-data />
+				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
 					<CaseFiles :case-id="caseData.id" />
 				</n-tab-pane>
@@ -32,6 +35,7 @@ import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
+import CaseAlerts from "./CaseAlerts.vue"
 import CaseComments from "./CaseComments.vue"
 import CaseFiles from "./CaseFiles.vue"
 import CaseOverview from "./CaseOverview.vue"

@@ -1,33 +1,27 @@
 <template>
-	<div v-if="alert.linked_cases?.length" class="flex flex-col gap-2">
-		<CardEntity v-for="linkedCase in alert.linked_cases" :key="linkedCase.id" size="small" embedded>
-			<template #header-main>#{{ linkedCase.id }} - {{ linkedCase.case_name }}</template>
+	<div v-if="caseData.alerts?.length" class="flex flex-col gap-2">
+		<CardEntity v-for="alert in caseData.alerts" :key="alert.id" size="small" embedded>
+			<template #header-main>#{{ alert.id }} - {{ alert.alert_name }}</template>
 			<template #header-extra>
-				<Chip :type="getStatusColor(linkedCase.case_status)">
-					{{ linkedCase.case_status.replace("_", " ").toUpperCase() }}
+				<Chip :type="getStatusColor(alert.status)">
+					{{ alert.status.replace("_", " ").toUpperCase() }}
 				</Chip>
 			</template>
 			<template #default>
-				{{ linkedCase.case_description }}
+				{{ alert.alert_description }}
 			</template>
-			<template #footer-main>
-				Created: {{ formatDate(linkedCase.case_creation_time, dFormats.datetime) }}
-			</template>
+			<template #footer-main>Created: {{ formatDate(alert.alert_creation_time, dFormats.datetime) }}</template>
 			<template #footer-extra>
-				<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
+				<Chip v-if="alert.assigned_to" :value="alert.assigned_to" label="Assigned to" />
 			</template>
 		</CardEntity>
 	</div>
 
-	<div v-else-if="alert.case_ids?.length" class="flex flex-wrap gap-2">
-		<code v-for="caseId in alert.case_ids" :key="caseId">Case #{{ caseId }}</code>
-	</div>
-
-	<n-empty v-else description="No linked cases found" class="min-h-50 justify-center" />
+	<n-empty v-else description="No alerts found" class="min-h-50 justify-center" />
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/alerts"
+import type { Case } from "@/types/cases"
 import { NEmpty } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
@@ -36,7 +30,7 @@ import { getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 defineProps<{
-	alert: Alert
+	caseData: Case
 }>()
 
 const dFormats = useSettingsStore().dateFormat
