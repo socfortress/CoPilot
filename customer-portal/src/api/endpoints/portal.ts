@@ -1,19 +1,6 @@
 import type { CommonResponse } from "@/types/common"
-import type { PortalSettings } from "@/types/portal"
+import type { AlertsStats, CasesStats, DashboardStats, PortalSettings } from "@/types/portal"
 import { HttpClient } from "../httpClient"
-
-export interface DashboardStats {
-	total_alerts: number
-	total_agents: number
-	total_cases: number
-}
-
-export interface AlertsStats {
-	total: number
-	open: number
-	in_progress: number
-	closed: number
-}
 
 export default {
 	getSettings() {
@@ -24,5 +11,8 @@ export default {
 	},
 	alertsStats() {
 		return HttpClient.get<CommonResponse<AlertsStats>>("/customer_portal/dashboard/alert-stats")
+	},
+	casesStats() {
+		return HttpClient.get<CommonResponse<CasesStats>>("/customer_portal/dashboard/case-stats")
 	}
 }

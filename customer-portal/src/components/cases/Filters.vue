@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsFilters } from "@/types/alerts"
+import type { CasesFilters } from "@/types/cases"
 import type { ApiError } from "@/types/common"
 import _pick from "lodash/pick"
 import { NInputGroup, NSelect, useMessage } from "naive-ui"
@@ -53,13 +53,8 @@ const message = useMessage()
 
 async function loadFilters() {
 	try {
-		const response = await Api.alerts.getAlertsFilters()
-		filters.value = _pick<AlertsFilters, keyof AlertsFilters>(response.data, [
-			"sources",
-			"assets",
-			"statuses",
-			"tags"
-		])
+		const response = await Api.cases.getCasesFilters()
+		filters.value = _pick<CasesFilters, keyof CasesFilters>(response.data, ["assigned_to", "status"])
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	}

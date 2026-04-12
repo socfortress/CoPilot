@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/api/endpoints/alerts"
+import type { Alert } from "@/types/alerts"
 import { NEmpty } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 

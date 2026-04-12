@@ -16,34 +16,17 @@ export interface ValidationError {
 export type OsTypesFull = "Unknown" | "Windows" | "MacOS" | "UNIX" | "Linux"
 export type OsTypesLower = "linux" | "windows" | "macos"
 export type Severity = "critical" | "high" | "medium" | "low" | "info"
-export type Status =
-	| "pending"
-	| "running"
-	| "completed"
-	| "failed"
-	| "not_provided"
-	| "unknown"
-	| "error"
-	| "success"
-	| "progress"
-	| "failure"
 export type ApiError = AxiosError<HttpCommonResponse>
 export type ApiResponse<T = unknown> = AxiosResponse<HttpCommonResponse & T>
 export type CommonResponse<T = unknown> = HttpCommonResponse & T
-
-export interface PaginationMetadata {
-	currentPage: number
-	pageSize: number
-	totalItems: number
-	totalPages: number
-	hasNextPage: boolean
-	hasPreviousPage: boolean
-	startIndex: number
-	endIndex: number
-}
 
 export interface Pagination {
 	page: number
 	pageSize: number
 	order: "asc" | "desc"
+}
+
+export interface Tag {
+	tag: string
+	id: number
 }

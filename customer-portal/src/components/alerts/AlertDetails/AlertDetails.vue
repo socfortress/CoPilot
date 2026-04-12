@@ -29,7 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert, AlertComment } from "@/api/endpoints/alerts"
+import type { Alert } from "@/types/alerts"
+import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
@@ -68,7 +69,7 @@ async function loadAlertDetails() {
 	}
 }
 
-async function addComment(comment: AlertComment) {
+async function addComment(comment: CommentItem) {
 	if (!alert.value) return
 
 	if (!alert.value.comments) {

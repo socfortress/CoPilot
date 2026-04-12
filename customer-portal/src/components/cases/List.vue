@@ -60,12 +60,12 @@
 <script setup lang="tsx">
 import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
+import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/alerts"
 import type {
 	AlertStatusUpdateErrorPayload,
 	AlertStatusUpdateSuccessPayload
 } from "@/components/alerts/AlertStatusSelect.vue"
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
-import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize, watchDebounced } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"

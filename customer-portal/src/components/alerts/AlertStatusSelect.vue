@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertStatus } from "@/api/endpoints/alerts"
+import type { AlertStatus } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { NSelect } from "naive-ui"
 import { ref, watch } from "vue"

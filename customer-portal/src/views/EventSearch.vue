@@ -423,24 +423,25 @@
 </template>
 
 <script setup lang="ts">
-import type { EventSearchResult, EventSource, FieldMapping } from "@/api/endpoints/siem"
+import type { EventSearchResult, EventSourceItem, FieldMapping } from "@/types/siem"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
 
 const LUCENE_FIELD_TOKEN_AT_END_RE = /(?:^|[\s(])(\w[\w.]*)$/
 
 const route = useRoute()
-
+const authStore = useAuthStore()
 const error = ref("")
 
 // Portal info
 // -- Customer selection --
-const customerCodes = ref<string[]>([])
-const selectedCustomerCode = ref("")
+const customerCodes = computed(() => (authStore.userCustomerCode ? [authStore.userCustomerCode] : []))
+const selectedCustomerCode = ref(authStore.userCustomerCode || "")
 
 // -- Event Source selection --
-const eventSources = ref<EventSource[]>([])
+const eventSources = ref<EventSourceItem[]>([])
 const loadingEventSources = ref(false)
 const selectedSourceName = ref("")
 
@@ -458,15 +459,6 @@ const activeSuggestionIndex = ref(0)
 const queryInputRef = ref<HTMLInputElement | null>(null)
 
 const enabledSources = computed(() => eventSources.value.filter(s => s.enabled))
-
-async function loadCustomerCodes() {
-	try {
-		const response = await Api.siem.getCustomerCodes()
-		customerCodes.value = response.data.customer_codes.filter(c => c !== "*")
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load customer codes"
-	}
-}
 
 async function loadEventSources(customerCode: string) {
 	loadingEventSources.value = true
@@ -688,8 +680,7 @@ async function applyRouteParams() {
 	}
 }
 
-onBeforeMount(async () => {
-	await loadCustomerCodes()
+onBeforeMount(() => {
 	applyRouteParams()
 })
 </script>

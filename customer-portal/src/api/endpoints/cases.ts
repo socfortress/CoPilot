@@ -1,44 +1,7 @@
+import type { Case, CaseDataStoreFile, CasesFilters, CasesListResponse, CaseStatus } from "@/types/cases"
+import type { CommentItem } from "@/types/comments"
 import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
-
-export interface CaseComment {
-	id: number
-	case_id: number
-	user_name: string
-	comment: string
-	created_at: string
-}
-
-export interface Case {
-	id: number
-	case_creation_time: string
-	case_description: string
-	case_name: string
-	case_status: CaseStatus
-	assigned_to: string | null
-	customer_code: string
-	alert_ids: number[]
-	alerts?: Alert[]
-	comments?: CaseComment[]
-}
-
-export interface Alert {
-	id: number
-	alert_name: string
-	asset_name: string
-	status: CaseStatus
-	time_stamp: string
-}
-
-export interface CaseStatusUpdate {
-	case_id: number
-	status: CaseStatus
-}
-
-export interface CaseAssignedToUpdate {
-	case_id: number
-	assigned_to: string
-}
 
 export interface CasePayload {
 	case_name: string
@@ -46,37 +9,12 @@ export interface CasePayload {
 	assigned_to?: string
 }
 
-export interface CaseCommentCreate {
-	case_id: number
-	comment: string
-}
-
-export interface CaseCommentEdit {
-	id: number
-	case_id: number
-	comment: string
-}
-
-export interface CaseDataStoreFile {
-	id: number
-	case_id: number
-	bucket_name: string
-	object_key: string
-	file_name: string
-	content_type: string | null
-	file_size: number | null
-	upload_time: string
-	file_hash: string
-}
-
-export type CaseStatus = "OPEN" | "IN_PROGRESS" | "CLOSED"
-
 export default {
 	/**
 	 * Get all cases with customer access control
 	 */
 	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination) {
-		return HttpClient.get<CommonResponse<{ cases: Case[] }>>("/incidents/db_operations/cases", {
+		return HttpClient.get<CommonResponse<CasesListResponse>>("/incidents/db_operations/cases", {
 			params: { page, page_size: pageSize, order }
 		})
 	},
@@ -85,7 +23,7 @@ export default {
 	 * Get specific case by ID (with customer access validation)
 	 */
 	getCase(caseId: number) {
-		return HttpClient.get<CommonResponse<{ cases: Case[] }>>(`/incidents/db_operations/case/${caseId}`)
+		return HttpClient.get<CommonResponse<CasesListResponse>>(`/incidents/db_operations/case/${caseId}`)
 	},
 
 	/**
@@ -177,7 +115,7 @@ export default {
 	 * Create a new case comment
 	 */
 	createCaseComment(caseId: number, comment: string, userName: string) {
-		return HttpClient.post<CommonResponse<{ comment: CaseComment }>>(`/incidents/db_operations/case/comment`, {
+		return HttpClient.post<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/case/comment`, {
 			case_id: caseId,
 			comment,
 			user_name: userName
@@ -188,7 +126,7 @@ export default {
 	 * Update an existing case comment
 	 */
 	updateCaseComment(id: number, caseId: number, comment: string, userName: string) {
-		return HttpClient.put<CommonResponse<{ comment: CaseComment }>>(`/incidents/db_operations/case/comment`, {
+		return HttpClient.put<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/case/comment`, {
 			comment_id: id,
 			case_id: caseId,
 			comment,
@@ -236,5 +174,12 @@ export default {
 				}
 			}
 		)
+	},
+
+	/**
+	 * Get cases filter options
+	 */
+	getCasesFilters() {
+		return HttpClient.get<CommonResponse<CasesFilters>>("/incidents/db_operations/cases/filter-options")
 	}
 }

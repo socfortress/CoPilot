@@ -31,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert, AlertComment } from "@/api/endpoints/alerts"
+import type { Alert } from "@/types/alerts"
+import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
@@ -46,7 +47,7 @@ const { alert } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "success", comment: AlertComment): void
+	(e: "success", comment: CommentItem): void
 }>()
 
 const message = useMessage()
