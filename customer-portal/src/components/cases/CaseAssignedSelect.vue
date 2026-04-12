@@ -30,6 +30,7 @@ export interface CaseAssignedUpdateErrorPayload {
 const props = defineProps<{
 	caseId: number
 	assignedTo: string | null
+	assignedAvailable?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -84,6 +85,10 @@ async function loadAssignedToOptions() {
 }
 
 onBeforeMount(() => {
-	loadAssignedToOptions()
+	if (props.assignedAvailable?.length) {
+		assignedToOptions.value = props.assignedAvailable.map(o => ({ label: o, value: o }))
+	} else {
+		loadAssignedToOptions()
+	}
 })
 </script>

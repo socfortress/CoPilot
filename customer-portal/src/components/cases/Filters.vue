@@ -35,6 +35,10 @@ export interface FiltersModel {
 	value: string | null
 }
 
+const emit = defineEmits<{
+	(e: "loaded", value: Record<string, string[]>): void
+}>()
+
 const model = defineModel<FiltersModel>("value", { required: true })
 const filters = ref<Record<string, string[]>>({})
 const filtersKeysOptions = computed(
@@ -55,6 +59,7 @@ async function loadFilters() {
 	try {
 		const response = await Api.cases.getCasesFilters()
 		filters.value = _pick<CasesFilters, keyof CasesFilters>(response.data, ["assigned_to", "status"])
+		emit("loaded", filters.value)
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	}

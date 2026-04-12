@@ -17,10 +17,15 @@
 		</CardEntity>
 	</div>
 
+	<div v-else-if="caseData.alert_ids?.length" class="flex flex-wrap gap-2">
+		<code v-for="alertId in caseData.alert_ids" :key="alertId">Alert #{{ alertId }}</code>
+	</div>
+
 	<n-empty v-else description="No alerts found" class="min-h-50 justify-center" />
 </template>
 
 <script setup lang="ts">
+// TODO-CP: add link to alert details
 import type { Case } from "@/types/cases"
 import { NEmpty } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

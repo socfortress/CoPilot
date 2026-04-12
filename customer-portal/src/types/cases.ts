@@ -11,6 +11,7 @@ export interface CasesListResponse {
 
 export interface Case {
 	id: number
+	alert_ids?: number[]
 	case_name: string
 	case_description: string
 	assigned_to: null | string

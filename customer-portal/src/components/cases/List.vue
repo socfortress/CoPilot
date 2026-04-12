@@ -2,7 +2,7 @@
 	<div>
 		<div class="flex flex-col gap-4">
 			<div>
-				<Filters v-model:value="filters" class="w-auto!" />
+				<Filters v-model:value="filters" class="w-auto!" @loaded="handleFiltersLoaded" />
 			</div>
 
 			<div class="flex flex-col gap-2">
@@ -65,7 +65,7 @@ import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStat
 import type { FiltersModel } from "@/components/cases/Filters.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useElementSize, watchDebounced } from "@vueuse/core"
+import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -89,6 +89,7 @@ const pageSizes = [10, 25, 50, 100]
 const pageSlot = computed(() => (headerWidthRef.value < 800 ? 5 : 8))
 const simpleMode = computed(() => headerWidthRef.value < 600)
 const showSizePicker = ref(true)
+const assignedAvailable = ref<string[]>([])
 
 const pagination = ref({
 	page: 1,
@@ -131,6 +132,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 				<CaseAssignedSelect
 					caseId={row.id}
 					assignedTo={row.assigned_to}
+					assignedAvailable={assignedAvailable.value}
 					onSuccess={handleAssignedToUpdateSuccess}
 				/>
 			)
@@ -172,7 +174,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	}
 ])
 
-async function loadCases() {
+const loadCases = useDebounceFn(async () => {
 	loading.value = true
 
 	try {
@@ -207,11 +209,15 @@ async function loadCases() {
 	} finally {
 		loading.value = false
 	}
-}
+}, 400)
 
 function applyFilters() {
 	pagination.value.page = 1
 	loadCases()
+}
+
+function handleFiltersLoaded(value: Record<string, string[]>) {
+	assignedAvailable.value = value.assigned_to || []
 }
 
 watchDebounced(
