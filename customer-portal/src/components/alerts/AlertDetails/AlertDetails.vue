@@ -12,7 +12,10 @@
 					<AlertAssets :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="linked-cases" tab="Linked Cases">
+				<n-tab-pane
+					name="linked-cases"
+					:tab="`Linked Cases (${alert?.linked_cases?.length || alert?.case_ids?.length || 0})`"
+				>
 					<AlertCases :alert />
 				</n-tab-pane>
 

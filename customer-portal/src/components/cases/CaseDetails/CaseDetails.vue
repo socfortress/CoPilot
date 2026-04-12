@@ -11,7 +11,10 @@
 						@assigned-to-updated="handleAssignedToUpdated"
 					/>
 				</n-tab-pane>
-				<n-tab-pane name="alerts" tab="Alerts">
+				<n-tab-pane
+					name="alerts"
+					:tab="`Alerts (${caseData?.alerts?.length || caseData?.alert_ids?.length || 0})`"
+				>
 					<CaseAlerts :case-data />
 				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
