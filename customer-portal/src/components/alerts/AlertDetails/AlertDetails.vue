@@ -4,23 +4,23 @@
 			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
 
 			<n-tabs v-else-if="alert" type="line" animated>
-				<n-tab-pane name="overview" label="Overview">
+				<n-tab-pane name="overview" tab="Overview">
 					<AlertOverview :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="assets" label="Assets">
+				<n-tab-pane name="assets" tab="Assets">
 					<AlertAssets :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="linked-cases" label="Linked Cases">
+				<n-tab-pane name="linked-cases" tab="Linked Cases">
 					<AlertCases :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="iocs" label="Indicators of Compromise (IoCs)">
+				<n-tab-pane name="iocs" tab="Indicators of Compromise (IoCs)">
 					<AlertIocs :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="comments" :label="`Comments (${alert.comments?.length || 0})`">
+				<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
 					<AlertComments :alert @success="addComment" />
 				</n-tab-pane>
 			</n-tabs>
