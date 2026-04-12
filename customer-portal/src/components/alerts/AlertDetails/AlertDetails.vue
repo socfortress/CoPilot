@@ -37,6 +37,7 @@ import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import AlertAssets from "./AlertAssets.vue"
 import AlertCases from "./AlertCases.vue"
+import AlertComments from "./AlertComments.vue"
 import AlertIocs from "./AlertIocs.vue"
 import AlertOverview from "./AlertOverview.vue"
 
