@@ -33,9 +33,19 @@ export function useNavigation() {
 		return routerConstructor({ name: "CasesList" })
 	}
 
+	function routeDashboardsList() {
+		return routerConstructor({ name: "DashboardsList" })
+	}
+
+	function routeDashboardViewer(dashboardId: number) {
+		return routerConstructor({ name: "DashboardViewer", params: { id: dashboardId.toString() } })
+	}
+
 	return {
 		routeEventSearch,
 		routeAlertsList,
-		routeCasesList
+		routeCasesList,
+		routeDashboardsList,
+		routeDashboardViewer
 	}
 }

@@ -25,17 +25,17 @@
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { EnabledDashboard } from "@/types/dashboards.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { EventSourceItem } from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
 import { NButton, NCard, NDataTable, NEmpty, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, useTemplateRef, watch } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
+import { useNavigation } from "@/composables/common/useNavigation"
 
 const props = defineProps<{
 	customerCode: string | null
 	visible: boolean
-	eventSourcesList: EventSource[]
+	eventSourcesList: EventSourceItem[]
 }>()
 
 const enabledDashboards = defineModel<EnabledDashboard[]>("enabledDashboards", { default: () => [] })
@@ -45,7 +45,7 @@ const loadingEnabled = ref(false)
 const message = useMessage()
 const dialog = useDialog()
 const { width: headerWidthRef } = useElementSize(useTemplateRef("wrapperRef"))
-const router = useRouter()
+const { routeDashboardViewer } = useNavigation()
 const simpleMode = computed(() => headerWidthRef.value < 600)
 
 function fetchEnabledDashboards(customerCode: string) {
@@ -127,7 +127,7 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 						type: "primary",
 						quaternary: true,
 						onClick: () => {
-							router.push({ name: "DashboardView", params: { id: String(row.id) } })
+							routeDashboardViewer(row.id).navigate()
 						}
 					},
 					{ default: () => "View" }

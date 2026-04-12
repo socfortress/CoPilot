@@ -44,6 +44,10 @@ export default {
 		)
 	},
 
+	disableDashboard(dashboardId: number) {
+		return HttpClient.delete<CommonResponse>(`/siem/dashboards/disable/${dashboardId}`)
+	},
+
 	getPanelData(dashboardId: number, timerange: string, signal?: AbortSignal) {
 		return HttpClient.post<CommonResponse<PanelDataResponse>>(
 			`/siem/dashboards/panel-data`,

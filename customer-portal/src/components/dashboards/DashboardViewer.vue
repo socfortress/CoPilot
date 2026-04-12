@@ -3,8 +3,7 @@
 		<!-- Header Bar -->
 		<div class="flex flex-wrap items-end justify-between gap-6">
 			<div class="flex gap-3">
-				<!-- TODO-FE: use router by name -->
-				<n-button quaternary size="small" @click="router.push({ name: 'DashboardsList' })">
+				<n-button quaternary size="small" @click="routeDashboardsList().navigate()">
 					<template #icon>
 						<Icon :name="ArrowBackIcon" :size="22" />
 					</template>
@@ -86,6 +85,7 @@ import ChartBar from "@/components/common/charts/ChartBar.vue"
 import ChartColumn from "@/components/common/charts/ChartColumn.vue"
 import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/common/useNavigation"
 import { formatCompactNumber } from "@/utils"
 import { panelColSpanClass } from "./utils"
 
@@ -108,7 +108,7 @@ const chartByType: Record<DashboardPanelType, Component | undefined> = {
 	histogram: ChartColumn
 }
 
-const router = useRouter()
+const { routeDashboardsList, routeEventSearch } = useNavigation()
 const InfoIcon = "carbon:information"
 const message = useMessage()
 
@@ -167,15 +167,11 @@ async function fetchPanelData() {
 }
 
 function openEventSearch(luceneQuery: string) {
-	const routeData = router.resolve({
-		name: "EventSearch",
-		query: {
-			customer_code: customerCode.value,
-			source_name: sourceName.value,
-			query: luceneQuery
-		}
-	})
-	window.open(routeData.href, "_blank")
+	routeEventSearch({
+		customer_code: customerCode.value,
+		source_name: sourceName.value,
+		query: luceneQuery
+	}).navigate()
 }
 
 function buildDrillDownQuery(panel: DashboardPanel, clickedValue: string): string {
