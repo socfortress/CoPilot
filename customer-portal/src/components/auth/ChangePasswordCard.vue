@@ -9,7 +9,7 @@
 <script lang="ts" setup>
 import { NButton, NCard } from "naive-ui"
 import { ref } from "vue"
-import ChangePasswordModal from "@/components/ChangePasswordModal.vue"
+import ChangePasswordModal from "@/components/auth/ChangePasswordModal.vue"
 
 const showChangePasswordModal = ref(false)
 const loading = ref(false)
