@@ -1,5 +1,5 @@
 import type { Component } from "vue"
-import type { ApiError, OsTypesFull, Severity, Status } from "@/types/common"
+import type { ApiError, OsTypesFull, Severity } from "@/types/common"
 import type { SafeAny } from "@/types/utils"
 import process from "node:process"
 import { isMobile as detectMobile } from "detect-touch-device"
@@ -250,7 +250,7 @@ export function getSeverityOptions(options?: { include?: Severity[] }): { value:
 	return [...base, ...include]
 }
 
-export function getStatusOptions(): { value: Status; label: string }[] {
+export function getStatusOptions(): { value: string; label: string }[] {
 	return [
 		{ value: "pending", label: "Pending" },
 		{ value: "running", label: "Running" },

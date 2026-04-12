@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO-CP: add link to case details
 import type { Alert } from "@/types/alerts"
 import { NEmpty } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

@@ -64,7 +64,7 @@ import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertS
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useElementSize, watchDebounced } from "@vueuse/core"
+import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -156,7 +156,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	}
 ])
 
-async function loadAlerts() {
+const loadAlerts = useDebounceFn(async () => {
 	loading.value = true
 
 	try {
@@ -194,7 +194,7 @@ async function loadAlerts() {
 	} finally {
 		loading.value = false
 	}
-}
+}, 400)
 
 function applyFilters() {
 	pagination.value.page = 1

@@ -78,7 +78,6 @@ import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/da
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import ChartBar from "@/components/common/charts/ChartBar.vue"
