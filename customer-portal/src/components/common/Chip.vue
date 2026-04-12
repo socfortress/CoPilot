@@ -1,5 +1,5 @@
 <template>
-	<n-tag :size :type>
+	<n-tag :size :type :bordered :round>
 		<div v-if="$slots.default">
 			<slot />
 		</div>
@@ -23,5 +23,7 @@ defineProps<{
 	value?: string | number
 	type?: TagProps["type"]
 	size?: TagProps["size"]
+	bordered?: boolean
+	round?: boolean
 }>()
 </script>

@@ -5,7 +5,7 @@
 
 			<n-tabs v-else-if="alert" type="line" animated>
 				<n-tab-pane name="overview" tab="Overview">
-					<AlertOverview :alert />
+					<AlertOverview :alert @status-updated="handleStatusUpdated" />
 				</n-tab-pane>
 
 				<n-tab-pane name="assets" tab="Assets">
@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import type { AlertStatusUpdateSuccessPayload } from "../AlertStatusSelect.vue"
 import type { Alert } from "@/types/alerts"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
@@ -44,6 +45,10 @@ import AlertOverview from "./AlertOverview.vue"
 
 const props = defineProps<{
 	alertId: number | null
+}>()
+
+const emit = defineEmits<{
+	(e: "statusUpdated", value: AlertStatusUpdateSuccessPayload): void
 }>()
 
 const alert = ref<Alert | null>(null)
@@ -76,6 +81,12 @@ async function addComment(comment: CommentItem) {
 		alert.value.comments = []
 	}
 	alert.value.comments.push(comment)
+}
+
+function handleStatusUpdated(payload: AlertStatusUpdateSuccessPayload) {
+	if (!alert.value) return
+	alert.value.status = payload.status
+	emit("statusUpdated", payload)
 }
 
 watch(

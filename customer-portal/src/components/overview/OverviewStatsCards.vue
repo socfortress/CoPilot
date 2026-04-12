@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardStats } from "@/api/endpoints/portal"
 import type { ApiError } from "@/types/common"
+import type { DashboardStats } from "@/types/portal"
 import { NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

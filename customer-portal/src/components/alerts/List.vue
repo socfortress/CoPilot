@@ -60,10 +60,7 @@
 <script setup lang="tsx">
 import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
-import type {
-	AlertStatusUpdateErrorPayload,
-	AlertStatusUpdateSuccessPayload
-} from "@/components/alerts/AlertStatusSelect.vue"
+import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertStatusSelect.vue"
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
@@ -148,7 +145,6 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 						alertId={row.id}
 						status={row.status}
 						onSuccess={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-						onError={(payload: AlertStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
 					/>
 				</div>
 			)
@@ -159,7 +155,12 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		key: "actions",
 		minWidth: 180,
 		render: row => {
-			return <AlertDetailsButton alertId={row.id} />
+			return (
+				<AlertDetailsButton
+					alertId={row.id}
+					onStatusUpdated={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
+				/>
+			)
 		}
 	}
 ])
@@ -218,16 +219,10 @@ watchDebounced(
 )
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
-	message.success(`Alert status updated to ${payload.status}`)
-
 	const alert = data.value.find(a => a.id === payload.alertId)
 	if (alert) {
 		alert.status = payload.status
 	}
-}
-
-function handleStatusUpdateError(payload: AlertStatusUpdateErrorPayload) {
-	message.error(payload.message)
 }
 
 watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadAlerts, {

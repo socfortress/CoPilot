@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import type { AlertStatus } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
-import { NSelect } from "naive-ui"
+import { NSelect, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -37,6 +37,8 @@ const emit = defineEmits<{
 	success: [payload: AlertStatusUpdateSuccessPayload]
 	error: [payload: AlertStatusUpdateErrorPayload]
 }>()
+
+const message = useMessage()
 
 const statusOptions = [
 	{ label: "Open", value: "OPEN" },
@@ -63,12 +65,14 @@ async function handleStatusChange(value: string) {
 
 	try {
 		await Api.alerts.updateAlertStatus(props.alertId, selectedStatus.value)
+		message.success(`Alert status updated to ${selectedStatus.value}`)
 		emit("success", {
 			alertId: props.alertId,
 			status: selectedStatus.value
 		})
 	} catch (err) {
 		selectedStatus.value = previousStatus
+		message.error(getApiErrorMessage(err as ApiError))
 		emit("error", {
 			alertId: props.alertId,
 			status: previousStatus,
