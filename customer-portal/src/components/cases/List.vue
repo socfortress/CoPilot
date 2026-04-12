@@ -34,7 +34,7 @@
 						class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 					>
 						<template #empty>
-							<n-empty description="No alerts found">
+							<n-empty description="No cases found">
 								<template #extra>try changing the filters</template>
 							</n-empty>
 						</template>
@@ -60,20 +60,25 @@
 <script setup lang="tsx">
 import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
-import type { Alert, AlertsListResponse, AlertStatus } from "@/api/endpoints/alerts"
 import type {
-	AlertStatusUpdateErrorPayload,
-	AlertStatusUpdateSuccessPayload
-} from "@/components/alerts/AlertStatusSelect.vue"
-import type { FiltersModel } from "@/components/alerts/Filters.vue"
+	CaseAssignedUpdateErrorPayload,
+	CaseAssignedUpdateSuccessPayload
+} from "@/components/cases/CaseAssignedSelect.vue"
+import type {
+	CaseStatusUpdateErrorPayload,
+	CaseStatusUpdateSuccessPayload
+} from "@/components/cases/CaseStatusSelect.vue"
+import type { FiltersModel } from "@/components/cases/Filters.vue"
+import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize, watchDebounced } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
-import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
-import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
-import Filters from "@/components/alerts/Filters.vue"
+import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
+import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
+import CaseStatusSelect from "@/components/cases/CaseStatusSelect.vue"
+import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -81,7 +86,7 @@ import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
-const data = ref<Alert[]>([])
+const data = ref<Case[]>([])
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
@@ -103,31 +108,40 @@ const filters = ref<FiltersModel>({
 	value: null
 })
 
-const columns = computed<DataTableColumns<Alert>>(() => [
+const columns = computed<DataTableColumns<Case>>(() => [
 	{
-		title: "Alert",
-		key: "alert",
+		title: "Case Name",
+		key: "case_name",
 		fixed: simpleMode.value ? undefined : "left",
 		width: 380,
-		render: row => <div>{row.alert_name}</div>
+		render: row => <div>{row.case_name}</div>
 	},
 	{
-		title: "Source",
+		title: "Description",
 		key: "source",
 		width: 180,
-		render: row => <div>{row.source}</div>
-	},
-	{
-		title: "Assets",
-		key: "assets",
-		width: "100%",
-		render: row => <div>{row.assets.map(asset => asset.asset_name).join(", ")}</div>
+		render: row => <div>{row.case_description}</div>
 	},
 	{
 		title: "Created",
-		key: "alert_creation_time",
+		key: "case_creation_time",
 		width: 200,
-		render: row => <span class="font-mono text-sm">{formatDate(row.alert_creation_time, dFormats.datetime)}</span>
+		render: row => <span class="font-mono text-sm">{formatDate(row.case_creation_time, dFormats.datetime)}</span>
+	},
+	{
+		title: "Assigned To",
+		key: "assigned_to",
+		width: 120,
+		render: row => {
+			return (
+				<CaseAssignedSelect
+					caseId={row.id}
+					assignedTo={row.assigned_to}
+					onSuccess={(payload: CaseAssignedUpdateSuccessPayload) => handleAssignedToUpdateSuccess(payload)}
+					onError={(payload: CaseAssignedUpdateErrorPayload) => handleAssignedToUpdateError(payload)}
+				/>
+			)
+		}
 	},
 	{
 		title: "Status",
@@ -137,18 +151,18 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 			return (
 				<div class="flex items-center gap-2">
 					<NTag
-						type={getStatusColor(row.status)}
+						type={getStatusColor(row.case_status)}
 						round
 						class="p-1! [&_.n-tag\_\_icon]:m-0!"
 						v-slots={{
 							icon: () => <Icon name="carbon:circle-solid" />
 						}}
 					/>
-					<AlertStatusSelect
-						alertId={row.id}
-						status={row.status}
-						onSuccess={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-						onError={(payload: AlertStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
+					<CaseStatusSelect
+						caseId={row.id}
+						status={row.case_status}
+						onSuccess={(payload: CaseStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
+						onError={(payload: CaseStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
 					/>
 				</div>
 			)
@@ -159,16 +173,16 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		key: "actions",
 		minWidth: 180,
 		render: row => {
-			return <AlertDetailsButton alertId={row.id} />
+			return <CaseDetailsButton caseId={row.id} />
 		}
 	}
 ])
 
-async function loadAlerts() {
+async function loadCases() {
 	loading.value = true
 
 	try {
-		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
+		let response: AxiosResponse<CommonResponse<CasesListResponse>>
 
 		const paginationPayload: Pagination = {
 			page: pagination.value.page,
@@ -179,23 +193,20 @@ async function loadAlerts() {
 		if (filters.value.key && filters.value.value) {
 			switch (filters.value.key) {
 				case "status":
-					response = await Api.alerts.getAlertsByStatus(filters.value.value as AlertStatus, paginationPayload)
+					response = await Api.cases.getCasesByStatus(filters.value.value as CaseStatus, paginationPayload)
 					break
-				case "source":
-					response = await Api.alerts.getAlertsBySource(filters.value.value, paginationPayload)
-					break
-				case "asset":
-					response = await Api.alerts.getAlertsByAsset(filters.value.value, paginationPayload)
+				case "assigned_to":
+					response = await Api.cases.getCasesByAssignedTo(filters.value.value, paginationPayload)
 					break
 				default:
-					response = await Api.alerts.getAlerts(paginationPayload)
+					response = await Api.cases.getCases(paginationPayload)
 					break
 			}
 		} else {
-			response = await Api.alerts.getAlerts(paginationPayload)
+			response = await Api.cases.getCases(paginationPayload)
 		}
 
-		data.value = response.data.alerts
+		data.value = response.data.cases
 		pagination.value.total = response.data.total
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
@@ -206,7 +217,7 @@ async function loadAlerts() {
 
 function applyFilters() {
 	pagination.value.page = 1
-	loadAlerts()
+	loadCases()
 }
 
 watchDebounced(
@@ -217,20 +228,33 @@ watchDebounced(
 	{ deep: true, immediate: true, debounce: 300 }
 )
 
-function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
-	message.success(`Alert status updated to ${payload.status}`)
+function handleAssignedToUpdateSuccess(payload: CaseAssignedUpdateSuccessPayload) {
+	message.success(`Assigned to updated to ${payload.assignedTo}`)
 
-	const alert = data.value.find(a => a.id === payload.alertId)
-	if (alert) {
-		alert.status = payload.status
+	const case_ = data.value.find(c => c.id === payload.caseId)
+	if (case_) {
+		case_.assigned_to = payload.assignedTo
 	}
 }
 
-function handleStatusUpdateError(payload: AlertStatusUpdateErrorPayload) {
+function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
+	message.success(`Case status updated to ${payload.status}`)
+
+	const case_ = data.value.find(c => c.id === payload.caseId)
+	if (case_) {
+		case_.case_status = payload.status
+	}
+}
+
+function handleAssignedToUpdateError(payload: CaseAssignedUpdateErrorPayload) {
 	message.error(payload.message)
 }
 
-watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadAlerts, {
+function handleStatusUpdateError(payload: CaseStatusUpdateErrorPayload) {
+	message.error(payload.message)
+}
+
+watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadCases, {
 	deep: true,
 	immediate: true,
 	debounce: 300

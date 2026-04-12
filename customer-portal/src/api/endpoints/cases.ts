@@ -63,16 +63,21 @@ export default {
 	/**
 	 * Get cases by status with customer filtering
 	 */
-	getCasesByStatus(status: string) {
-		return HttpClient.get<CommonResponse<{ cases: Case[] }>>(`/incidents/db_operations/case/status/${status}`)
+	getCasesByStatus(status: CaseStatus, { page = 1, pageSize = 25, order = "desc" }: Pagination) {
+		return HttpClient.get<CommonResponse<CasesListResponse>>(`/incidents/db_operations/case/status/${status}`, {
+			params: { page, page_size: pageSize, order }
+		})
 	},
 
 	/**
 	 * Get cases by assigned user with customer filtering
 	 */
-	getCasesByAssignedTo(assignedTo: string) {
-		return HttpClient.get<CommonResponse<{ cases: Case[] }>>(
-			`/incidents/db_operations/case/assigned-to/${assignedTo}`
+	getCasesByAssignedTo(assignedTo: string, { page = 1, pageSize = 25, order = "desc" }: Pagination) {
+		return HttpClient.get<CommonResponse<CasesListResponse>>(
+			`/incidents/db_operations/case/assigned-to/${assignedTo}`,
+			{
+				params: { page, page_size: pageSize, order }
+			}
 		)
 	},
 

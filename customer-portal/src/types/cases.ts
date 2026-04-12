@@ -7,8 +7,6 @@ export interface CasesListResponse {
 	open: number
 	in_progress: number
 	closed: number
-	success: boolean
-	message: string
 }
 
 export interface Case {
