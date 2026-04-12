@@ -7,14 +7,7 @@
 
 			<div class="flex flex-col gap-2">
 				<div ref="headerRef" class="flex items-center justify-between">
-					<n-tag size="small">
-						<div class="flex items-center gap-2">
-							<div :class="{ 'font-mono': !loading }">
-								{{ loading ? "Loading..." : pagination.total }}
-							</div>
-							<div class="text-secondary">items</div>
-						</div>
-					</n-tag>
+					<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
 
 					<div class="flex items-center gap-2 whitespace-nowrap">
 						<n-pagination
@@ -81,6 +74,7 @@ import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import Filters from "@/components/alerts/Filters.vue"
+import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"

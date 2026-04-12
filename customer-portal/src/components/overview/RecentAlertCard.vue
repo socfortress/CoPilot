@@ -4,9 +4,9 @@
 			{{ alert.name }}
 		</template>
 		<template #header-extra>
-			<n-tag :type="getSeverityColor(alert.severity)" size="small">
+			<Chip :type="getSeverityColor(alert.severity)" size="small">
 				{{ alert.severity }}
-			</n-tag>
+			</Chip>
 		</template>
 		<template #default>
 			{{ alert.description }}
@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import type { DashboardAlert } from "./types"
-import { NTag } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getSeverityColor } from "@/utils"
 import { formatTimeAgo } from "@/utils/format"

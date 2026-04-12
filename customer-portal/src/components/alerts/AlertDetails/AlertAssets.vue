@@ -5,18 +5,13 @@
 			<template #header-extra>{{ asset.index_name }}</template>
 			<template #default>
 				<div class="flex flex-wrap gap-2">
-					<n-tag size="small">
-						<div class="flex items-center gap-2">
-							<div class="text-secondary">Agent ID</div>
-							<div>{{ asset.agent_id }}</div>
-						</div>
-					</n-tag>
-					<n-tag v-if="asset.velociraptor_id" size="small">
-						<div class="flex items-center gap-2">
-							<div class="text-secondary">Velociraptor ID</div>
-							<div>{{ asset.velociraptor_id }}</div>
-						</div>
-					</n-tag>
+					<Chip size="small" :value="asset.agent_id" label="Agent ID" />
+					<Chip
+						v-if="asset.velociraptor_id"
+						size="small"
+						:value="asset.velociraptor_id"
+						label="Velociraptor ID"
+					/>
 				</div>
 			</template>
 		</CardEntity>
@@ -34,8 +29,9 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/api/endpoints/alerts"
-import { NCard, NEmpty, NTag } from "naive-ui"
+import { NCard, NEmpty } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Chip from "@/components/common/Chip.vue"
 
 defineProps<{
 	alert: Alert

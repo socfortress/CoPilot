@@ -11,9 +11,9 @@
 				<template #header>
 					<div class="text-secondary text-sm">Status</div>
 				</template>
-				<n-tag :type="getStatusColor(alert.status)">
+				<Chip :type="getStatusColor(alert.status)">
 					{{ alert.status.replace("_", " ").toUpperCase() }}
-				</n-tag>
+				</Chip>
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>
@@ -59,9 +59,9 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/api/endpoints/alerts"
-import { NTag } from "naive-ui"
 import { computed } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"

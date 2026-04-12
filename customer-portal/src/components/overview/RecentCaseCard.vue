@@ -4,9 +4,9 @@
 			{{ caseData.name }}
 		</template>
 		<template #header-extra>
-			<n-tag :type="getStatusColor(caseData.status)" size="small">
+			<Chip :type="getStatusColor(caseData.status)" size="small">
 				{{ caseData.status }}
-			</n-tag>
+			</Chip>
 		</template>
 		<template #default>
 			{{ caseData.description }}
@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import type { DashboardCase } from "./types"
-import { NTag } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getStatusColor } from "@/utils"
 import { formatTimeAgo } from "@/utils/format"
