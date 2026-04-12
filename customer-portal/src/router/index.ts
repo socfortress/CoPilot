@@ -29,8 +29,14 @@ const router = createRouter({
 				{
 					path: "",
 					name: "AlertsList",
-					component: () => import("@/views/Alerts/Overview.vue"),
+					component: () => import("@/views/Alerts/List.vue"),
 					meta: { title: "Alerts" }
+				},
+				{
+					path: ":id",
+					name: "AlertDetails",
+					component: () => import("@/views/Alerts/Details.vue"),
+					meta: { title: "Alert Details", skipPin: true }
 				}
 			]
 		},
@@ -49,8 +55,8 @@ const router = createRouter({
 				},
 				{
 					path: ":id",
-					name: "CaseOverview",
-					component: () => import("@/views/Cases/Overview.vue"),
+					name: "CaseDetails",
+					component: () => import("@/views/Cases/Details.vue"),
 					meta: { title: "Case Details", skipPin: true }
 				}
 			]
