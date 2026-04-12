@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
-import AlertDetails from "./AlertDetails.vue"
+import AlertDetails from "./AlertDetails"
 
 defineProps<{
 	alertId: number | null

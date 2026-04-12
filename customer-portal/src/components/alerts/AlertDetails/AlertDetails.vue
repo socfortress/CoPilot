@@ -1,0 +1,91 @@
+<template>
+	<n-spin :show="loadingDetails">
+		<div class="@container min-h-50">
+			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
+
+			<n-tabs v-else-if="alert" type="line" animated>
+				<n-tab-pane name="overview" label="Overview">
+					<AlertOverview :alert />
+				</n-tab-pane>
+
+				<n-tab-pane name="assets" label="Assets">
+					<AlertAssets :alert />
+				</n-tab-pane>
+
+				<n-tab-pane name="linked-cases" label="Linked Cases">
+					<AlertCases :alert />
+				</n-tab-pane>
+
+				<n-tab-pane name="iocs" label="Indicators of Compromise (IoCs)">
+					<AlertIocs :alert />
+				</n-tab-pane>
+
+				<n-tab-pane name="comments" :label="`Comments (${alert.comments?.length || 0})`">
+					<AlertComments :alert @success="addComment" />
+				</n-tab-pane>
+			</n-tabs>
+		</div>
+	</n-spin>
+</template>
+
+<script setup lang="ts">
+import type { Alert, AlertComment } from "@/api/endpoints/alerts"
+import type { ApiError } from "@/types/common"
+import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
+import { ref, watch } from "vue"
+import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
+import AlertAssets from "./AlertAssets.vue"
+import AlertCases from "./AlertCases.vue"
+import AlertIocs from "./AlertIocs.vue"
+import AlertOverview from "./AlertOverview.vue"
+
+const props = defineProps<{
+	alertId: number | null
+}>()
+
+const alert = ref<Alert | null>(null)
+const detailsError = ref<string | null>(null)
+const loadingDetails = ref(false)
+
+async function loadAlertDetails() {
+	if (props.alertId === null) return
+
+	loadingDetails.value = true
+	detailsError.value = null
+
+	try {
+		const response = await Api.alerts.getAlert(props.alertId)
+		alert.value = response.data.alerts[0] || null
+		if (!alert.value) {
+			detailsError.value = "Alert not found."
+		}
+	} catch (err) {
+		detailsError.value = getApiErrorMessage(err as ApiError)
+	} finally {
+		loadingDetails.value = false
+	}
+}
+
+async function addComment(comment: AlertComment) {
+	if (!alert.value) return
+
+	if (!alert.value.comments) {
+		alert.value.comments = []
+	}
+	alert.value.comments.push(comment)
+}
+
+watch(
+	() => props.alertId,
+	async newAlertId => {
+		alert.value = null
+		detailsError.value = null
+
+		if (newAlertId !== null) {
+			await loadAlertDetails()
+		}
+	},
+	{ immediate: true }
+)
+</script>
