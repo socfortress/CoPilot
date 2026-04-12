@@ -5,7 +5,7 @@ description: Define Graylog event alerts (detections) so CoPilot can ingest them
 
 # Graylog management (alerting)
 
-**Menu:** Graylog → Management
+**Menu:** Log Management → Graylog Management
 
 This page is for **Admin / Engineer** workflows.
 

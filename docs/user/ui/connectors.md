@@ -1,6 +1,6 @@
 # Connectors
 
-**Menu:** Connectors
+**Menu:** Tools → Connectors
 
 **Best for:** Admin/Engineer
 

@@ -1,6 +1,6 @@
 # Alerts
 
-**Menu:** Alerts
+**Menu:** SIEM
 
 **Best for:** Admin/Engineer + Detection engineering + SOC leadership
 
