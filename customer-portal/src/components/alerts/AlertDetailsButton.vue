@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO-CP: button group to open modal or open in new tab
 import type { AlertStatusUpdateSuccessPayload } from "./AlertStatusSelect.vue"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"

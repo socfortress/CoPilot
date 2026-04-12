@@ -48,6 +48,19 @@ export default {
 	},
 
 	/**
+	 * Update an existing alert comment
+	 */
+	updateComment(id: number, alertId: number, comment: string, userName: string) {
+		return HttpClient.put<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/alert/comment`, {
+			comment_id: id,
+			alert_id: alertId,
+			comment,
+			user_name: userName,
+			created_at: new Date().toISOString()
+		})
+	},
+
+	/**
 	 * Delete alert comment (customer access controlled)
 	 */
 	deleteComment(commentId: number) {
