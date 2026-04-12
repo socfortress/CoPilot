@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO-CP: add edit/delete
 import type { Case } from "@/types/cases"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"

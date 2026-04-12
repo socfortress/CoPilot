@@ -55,6 +55,7 @@ export default {
 	/**
 	 * Create new case (customer access controlled)
 	 */
+	// TODO-CP: add create case feature
 	createCase(payload: CasePayload) {
 		return HttpClient.post<CommonResponse<{ case: Case }>>(`/incidents/db_operations/case/create`, payload)
 	},
@@ -62,6 +63,7 @@ export default {
 	/**
 	 * Delete case (customer access controlled)
 	 */
+	// TODO-CP: add delete case feature
 	deleteCase(caseId: number) {
 		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
@@ -90,6 +92,7 @@ export default {
 	/**
 	 * Create case from alert (customer access controlled)
 	 */
+	// TODO-CP: add create case from alert feature
 	createCaseFromAlert(alertId: number) {
 		return HttpClient.post<CommonResponse<{ case_alert_link: { case_id: number; alert_id: number } }>>(
 			`/incidents/db_operations/case/from-alert`,
@@ -102,6 +105,7 @@ export default {
 	/**
 	 * Link case to alert (customer access controlled)
 	 */
+	// TODO-CP: add link case to alert feature
 	linkCaseToAlert(caseId: number, alertId: number) {
 		return HttpClient.post<CommonResponse<{ case_alert_link: { case_id: number; alert_id: number } }>>(
 			`/incidents/db_operations/case/alert-link`,
@@ -136,7 +140,7 @@ export default {
 	/**
 	 * Update an existing case comment
 	 */
-	updateCaseComment(id: number, caseId: number, comment: string, userName: string) {
+	updateComment(id: number, caseId: number, comment: string, userName: string) {
 		return HttpClient.put<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/case/comment`, {
 			comment_id: id,
 			case_id: caseId,
@@ -149,7 +153,7 @@ export default {
 	/**
 	 * Delete a case comment
 	 */
-	deleteCaseComment(commentId: number) {
+	deleteComment(commentId: number) {
 		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/comment/${commentId}`)
 	},
 
