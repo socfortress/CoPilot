@@ -77,6 +77,8 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import CaseAssignedSelect from "../CaseAssignedSelect.vue"
+import CaseStatusSelect from "../CaseStatusSelect.vue"
 
 defineProps<{
 	caseData: Case
