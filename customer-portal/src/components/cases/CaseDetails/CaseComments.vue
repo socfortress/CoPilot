@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<div v-if="alert.comments?.length" class="flex flex-col gap-2">
-			<CardEntity v-for="comment in alert.comments" :key="comment.id" size="small" embedded>
+		<div v-if="caseData.comments?.length" class="flex flex-col gap-2">
+			<CardEntity v-for="comment in caseData.comments" :key="comment.id" size="small" embedded>
 				<template #header-main>{{ comment.user_name }}</template>
 				<template #header-extra>{{ formatDate(comment.created_at, dFormats.datetime) }}</template>
 				<template #default>{{ comment.comment }}</template>
@@ -31,19 +31,20 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/alerts"
+import type { Case } from "@/types/cases"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
-const { alert } = defineProps<{
-	alert: Alert
+const { caseData } = defineProps<{
+	caseData: Case
 }>()
 
 const emit = defineEmits<{
@@ -51,20 +52,21 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const authStore = useAuthStore()
 const dFormats = useSettingsStore().dateFormat
 
 const newComment = ref<string | null>(null)
 const loading = ref(false)
 
 async function addComment() {
-	if (!alert || !newComment.value?.trim()) return
+	if (!caseData || !newComment.value?.trim()) return
 
 	loading.value = true
 	try {
-		const response = await Api.alerts.addComment({
-			alert_id: alert.id,
+		const response = await Api.cases.addComment({
+			caseId: caseData.id,
 			comment: newComment.value.trim(),
-			user_name: "Customer User"
+			userName: authStore.userName || ""
 		})
 
 		emit("success", response.data.comment)

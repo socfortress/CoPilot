@@ -9,6 +9,12 @@ export interface CasePayload {
 	assigned_to?: string
 }
 
+export interface CaseCommentPayload {
+	caseId: number
+	comment: string
+	userName: string
+}
+
 export default {
 	/**
 	 * Get all cases with customer access control
@@ -119,11 +125,11 @@ export default {
 	/**
 	 * Create a new case comment
 	 */
-	createCaseComment(caseId: number, comment: string, userName: string) {
+	addComment(payload: CaseCommentPayload) {
 		return HttpClient.post<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/case/comment`, {
-			case_id: caseId,
-			comment,
-			user_name: userName
+			comment: payload.comment,
+			case_id: payload.caseId,
+			user_name: payload.userName
 		})
 	},
 

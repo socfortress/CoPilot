@@ -60,14 +60,8 @@
 <script setup lang="tsx">
 import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
-import type {
-	CaseAssignedUpdateErrorPayload,
-	CaseAssignedUpdateSuccessPayload
-} from "@/components/cases/CaseAssignedSelect.vue"
-import type {
-	CaseStatusUpdateErrorPayload,
-	CaseStatusUpdateSuccessPayload
-} from "@/components/cases/CaseStatusSelect.vue"
+import type { CaseAssignedUpdateSuccessPayload } from "@/components/cases/CaseAssignedSelect.vue"
+import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStatusSelect.vue"
 import type { FiltersModel } from "@/components/cases/Filters.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
@@ -137,8 +131,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 				<CaseAssignedSelect
 					caseId={row.id}
 					assignedTo={row.assigned_to}
-					onSuccess={(payload: CaseAssignedUpdateSuccessPayload) => handleAssignedToUpdateSuccess(payload)}
-					onError={(payload: CaseAssignedUpdateErrorPayload) => handleAssignedToUpdateError(payload)}
+					onSuccess={handleAssignedToUpdateSuccess}
 				/>
 			)
 		}
@@ -158,12 +151,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 							icon: () => <Icon name="carbon:circle-solid" />
 						}}
 					/>
-					<CaseStatusSelect
-						caseId={row.id}
-						status={row.case_status}
-						onSuccess={(payload: CaseStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-						onError={(payload: CaseStatusUpdateErrorPayload) => handleStatusUpdateError(payload)}
-					/>
+					<CaseStatusSelect caseId={row.id} status={row.case_status} onSuccess={handleStatusUpdateSuccess} />
 				</div>
 			)
 		}
@@ -173,7 +161,13 @@ const columns = computed<DataTableColumns<Case>>(() => [
 		key: "actions",
 		minWidth: 180,
 		render: row => {
-			return <CaseDetailsButton caseId={row.id} />
+			return (
+				<CaseDetailsButton
+					caseId={row.id}
+					onStatusUpdated={handleStatusUpdateSuccess}
+					onAssignedToUpdated={handleAssignedToUpdateSuccess}
+				/>
+			)
 		}
 	}
 ])
@@ -229,8 +223,6 @@ watchDebounced(
 )
 
 function handleAssignedToUpdateSuccess(payload: CaseAssignedUpdateSuccessPayload) {
-	message.success(`Assigned to updated to ${payload.assignedTo}`)
-
 	const case_ = data.value.find(c => c.id === payload.caseId)
 	if (case_) {
 		case_.assigned_to = payload.assignedTo
@@ -238,20 +230,10 @@ function handleAssignedToUpdateSuccess(payload: CaseAssignedUpdateSuccessPayload
 }
 
 function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
-	message.success(`Case status updated to ${payload.status}`)
-
 	const case_ = data.value.find(c => c.id === payload.caseId)
 	if (case_) {
 		case_.case_status = payload.status
 	}
-}
-
-function handleAssignedToUpdateError(payload: CaseAssignedUpdateErrorPayload) {
-	message.error(payload.message)
-}
-
-function handleStatusUpdateError(payload: CaseStatusUpdateErrorPayload) {
-	message.error(payload.message)
 }
 
 watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadCases, {

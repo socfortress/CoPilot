@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import type { CaseStatus } from "@/types/cases"
 import type { ApiError } from "@/types/common"
-import { NSelect } from "naive-ui"
+import { NSelect, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -37,6 +37,8 @@ const emit = defineEmits<{
 	success: [payload: CaseStatusUpdateSuccessPayload]
 	error: [payload: CaseStatusUpdateErrorPayload]
 }>()
+
+const message = useMessage()
 
 const statusOptions = [
 	{ label: "Open", value: "OPEN" },
@@ -63,12 +65,14 @@ async function handleStatusChange(value: string) {
 
 	try {
 		await Api.cases.updateCaseStatus(props.caseId, selectedStatus.value)
+		message.success(`Case status updated to ${selectedStatus.value}`)
 		emit("success", {
 			caseId: props.caseId,
 			status: selectedStatus.value
 		})
 	} catch (err) {
 		selectedStatus.value = previousStatus
+		message.error(getApiErrorMessage(err as ApiError))
 		emit("error", {
 			caseId: props.caseId,
 			status: previousStatus,

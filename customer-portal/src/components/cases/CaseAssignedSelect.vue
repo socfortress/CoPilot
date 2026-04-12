@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import { NSelect } from "naive-ui"
+import { NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -37,6 +37,8 @@ const emit = defineEmits<{
 	error: [payload: CaseAssignedUpdateErrorPayload]
 }>()
 
+const message = useMessage()
+
 const assignedToOptions = ref<{ label: string; value: string }[]>([])
 
 const selectedAssignedTo = ref<string | null>(props.assignedTo)
@@ -58,12 +60,14 @@ async function handleAssignedToChange(value: string) {
 
 	try {
 		await Api.cases.updateCaseAssignedTo(props.caseId, selectedAssignedTo.value)
+		message.success(`Assigned to updated to ${selectedAssignedTo.value}`)
 		emit("success", {
 			caseId: props.caseId,
 			assignedTo: selectedAssignedTo.value
 		})
 	} catch (err) {
 		selectedAssignedTo.value = previousAssignedTo
+		message.error(getApiErrorMessage(err as ApiError))
 		emit("error", {
 			caseId: props.caseId,
 			assignedTo: previousAssignedTo,

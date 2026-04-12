@@ -21,9 +21,11 @@
 						:bordered="false"
 					/>
 				</template>
-				<Chip :type="getStatusColor(caseData.case_status)">
-					{{ caseData.case_status.replace("_", " ").toUpperCase() }}
-				</Chip>
+				<CaseStatusSelect
+					:case-id="caseData.id"
+					:status="caseData.case_status"
+					@success="handleStatusUpdateSuccess"
+				/>
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>
@@ -46,11 +48,15 @@
 				{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
 			</CardEntity>
 
-			<CardEntity v-if="caseData.assigned_to" size="small">
+			<CardEntity size="small">
 				<template #header>
 					<div class="text-secondary text-sm">Assigned To</div>
 				</template>
-				{{ caseData.assigned_to }}
+				<CaseAssignedSelect
+					:case-id="caseData.id"
+					:assigned-to="caseData.assigned_to"
+					@success="handleAssignedToUpdateSuccess"
+				/>
 			</CardEntity>
 
 			<CardEntity v-if="caseData.case_description" size="small" class="@xl:col-span-2">
@@ -64,16 +70,30 @@
 </template>
 
 <script setup lang="ts">
+import type { CaseAssignedUpdateSuccessPayload } from "../CaseAssignedSelect.vue"
+import type { CaseStatusUpdateSuccessPayload } from "../CaseStatusSelect.vue"
 import type { Case } from "@/types/cases"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 defineProps<{
 	caseData: Case
 }>()
 
+const emit = defineEmits<{
+	(e: "statusUpdated", value: CaseStatusUpdateSuccessPayload): void
+	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
+}>()
+
 const dFormats = useSettingsStore().dateFormat
+
+function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
+	emit("statusUpdated", payload)
+}
+
+function handleAssignedToUpdateSuccess(payload: CaseAssignedUpdateSuccessPayload) {
+	emit("assignedToUpdated", payload)
+}
 </script>

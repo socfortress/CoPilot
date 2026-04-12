@@ -5,10 +5,14 @@
 
 			<n-tabs v-else-if="caseData" type="line" animated>
 				<n-tab-pane name="overview" tab="Overview">
-					<CaseOverview :case-data />
+					<CaseOverview
+						:case-data
+						@status-updated="handleStatusUpdated"
+						@assigned-to-updated="handleAssignedToUpdated"
+					/>
 				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
-					<CaseFiles :case-data />
+					<CaseFiles :case-id="caseData.id" />
 				</n-tab-pane>
 				<n-tab-pane name="comments" :tab="`Comments (${caseData.comments?.length || 0})`">
 					<CaseComments :case-data @success="addComment" />
@@ -19,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import type { CaseAssignedUpdateSuccessPayload } from "../CaseAssignedSelect.vue"
+import type { CaseStatusUpdateSuccessPayload } from "../CaseStatusSelect.vue"
 import type { Case } from "@/types/cases"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
@@ -32,6 +38,11 @@ import CaseOverview from "./CaseOverview.vue"
 
 const props = defineProps<{
 	caseId: number | null
+}>()
+
+const emit = defineEmits<{
+	(e: "statusUpdated", value: CaseStatusUpdateSuccessPayload): void
+	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
 }>()
 
 const caseData = ref<Case | null>(null)
@@ -64,6 +75,18 @@ async function addComment(comment: CommentItem) {
 		caseData.value.comments = []
 	}
 	caseData.value.comments.push(comment)
+}
+
+function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {
+	if (!caseData.value) return
+	caseData.value.case_status = payload.status
+	emit("statusUpdated", payload)
+}
+
+function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
+	if (!caseData.value) return
+	caseData.value.assigned_to = payload.assignedTo
+	emit("assignedToUpdated", payload)
 }
 
 watch(
