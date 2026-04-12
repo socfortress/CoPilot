@@ -141,11 +141,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 							icon: () => <Icon name="carbon:circle-solid" />
 						}}
 					/>
-					<AlertStatusSelect
-						alertId={row.id}
-						status={row.status}
-						onSuccess={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-					/>
+					<AlertStatusSelect alertId={row.id} status={row.status} onSuccess={handleStatusUpdateSuccess} />
 				</div>
 			)
 		}
@@ -155,12 +151,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		key: "actions",
 		minWidth: 180,
 		render: row => {
-			return (
-				<AlertDetailsButton
-					alertId={row.id}
-					onStatusUpdated={(payload: AlertStatusUpdateSuccessPayload) => handleStatusUpdateSuccess(payload)}
-				/>
-			)
+			return <AlertDetailsButton alertId={row.id} onStatusUpdated={handleStatusUpdateSuccess} />
 		}
 	}
 ])

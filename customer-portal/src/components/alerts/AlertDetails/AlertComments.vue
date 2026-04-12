@@ -38,6 +38,7 @@ import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const authStore = useAuthStore()
 const dFormats = useSettingsStore().dateFormat
 
 const newComment = ref<string | null>(null)
@@ -62,9 +64,9 @@ async function addComment() {
 	loading.value = true
 	try {
 		const response = await Api.alerts.addComment({
-			alert_id: alert.id,
+			alertId: alert.id,
 			comment: newComment.value.trim(),
-			user_name: "Customer User"
+			userName: authStore.userName || ""
 		})
 
 		emit("success", response.data.comment)

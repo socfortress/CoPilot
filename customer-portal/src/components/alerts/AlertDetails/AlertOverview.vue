@@ -14,12 +14,7 @@
 				<template #header-extra>
 					<Chip v-if="alert.escalated" type="error" value="Escalated" size="tiny" round :bordered="false" />
 				</template>
-				<AlertStatusSelect
-					:alert-id="alert.id"
-					:status="alert.status"
-					@success="handleStatusUpdateSuccess"
-					@error="handleStatusUpdateError"
-				/>
+				<AlertStatusSelect :alert-id="alert.id" :status="alert.status" @success="handleStatusUpdateSuccess" />
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>
@@ -64,12 +59,8 @@
 </template>
 
 <script setup lang="ts">
-import type {
-	AlertStatusUpdateErrorPayload,
-	AlertStatusUpdateSuccessPayload
-} from "@/components/alerts/AlertStatusSelect.vue"
+import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertStatusSelect.vue"
 import type { Alert } from "@/types/alerts"
-import { useMessage } from "naive-ui"
 import { computed } from "vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -85,8 +76,6 @@ const emit = defineEmits<{
 	(e: "statusUpdated", value: AlertStatusUpdateSuccessPayload): void
 }>()
 
-const message = useMessage()
-
 const dFormats = useSettingsStore().dateFormat
 
 const tags = computed(() => {
@@ -94,10 +83,6 @@ const tags = computed(() => {
 })
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
-	emit("statusUpdated", { alertId: props.alert.id, status: payload.status })
-}
-
-function handleStatusUpdateError(payload: AlertStatusUpdateErrorPayload) {
-	message.error(payload.message)
+	emit("statusUpdated", payload)
 }
 </script>

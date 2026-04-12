@@ -4,9 +4,9 @@ import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
 
 export interface AlertCommentPayload {
-	alert_id: number
+	alertId: number
 	comment: string
-	user_name: string
+	userName: string
 }
 
 export default {
@@ -40,10 +40,11 @@ export default {
 	 * Add comment to alert (customer access controlled)
 	 */
 	addComment(payload: AlertCommentPayload) {
-		return HttpClient.post<CommonResponse<{ comment: CommentItem }>>(
-			`/incidents/db_operations/alert/comment`,
-			payload
-		)
+		return HttpClient.post<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/alert/comment`, {
+			alert_id: payload.alertId,
+			comment: payload.comment,
+			user_name: payload.userName
+		})
 	},
 
 	/**
