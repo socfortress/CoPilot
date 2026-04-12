@@ -176,21 +176,24 @@ export default {
 	/**
 	 * Create a new case comment
 	 */
-	createCaseComment(caseId: number, comment: string) {
+	createCaseComment(caseId: number, comment: string, userName: string) {
 		return HttpClient.post<CommonResponse<{ comment: CaseComment }>>(`/incidents/db_operations/case/comment`, {
 			case_id: caseId,
-			comment
+			comment,
+			user_name: userName
 		})
 	},
 
 	/**
 	 * Update an existing case comment
 	 */
-	updateCaseComment(id: number, caseId: number, comment: string) {
+	updateCaseComment(id: number, caseId: number, comment: string, userName: string) {
 		return HttpClient.put<CommonResponse<{ comment: CaseComment }>>(`/incidents/db_operations/case/comment`, {
-			id,
+			comment_id: id,
 			case_id: caseId,
-			comment
+			comment,
+			user_name: userName,
+			created_at: new Date().toISOString()
 		})
 	},
 

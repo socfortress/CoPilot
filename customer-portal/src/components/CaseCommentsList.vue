@@ -19,9 +19,9 @@
 				></textarea>
 				<div class="flex justify-end">
 					<button
-						@click="addComment"
 						:disabled="!newComment.trim() || isSubmitting"
 						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+						@click="addComment"
 					>
 						<span v-if="isSubmitting" class="mr-2">
 							<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -64,10 +64,10 @@
 		</div>
 
 		<div v-else class="space-y-3">
-			<CaseComment
+			<CaseCommentComponent
 				v-for="comment in sortedComments"
 				:key="comment.id"
-				:comment="comment"
+				:comment
 				@updated="handleCommentUpdated"
 				@deleted="handleCommentDeleted"
 			/>
@@ -76,18 +76,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
-import CaseComment from "./CaseComment.vue"
-import type { CaseComment as CaseCommentType } from "@/api/cases"
-import { CasesAPI } from "@/api/cases"
+import type { CaseComment } from "@/api/endpoints/cases"
+import { computed, ref } from "vue"
+import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
+import CaseCommentComponent from "./CaseComment.vue"
 
 interface Props {
 	caseId: number
-	comments: CaseCommentType[]
+	comments: CaseComment[]
 }
 
 interface Emits {
-	(e: "commentsUpdated", comments: CaseCommentType[]): void
+	(e: "commentsUpdated", comments: CaseComment[]): void
 }
 
 const props = defineProps<Props>()
@@ -101,21 +102,25 @@ const sortedComments = computed(() => {
 	return [...props.comments].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
 
-const addComment = async () => {
+async function addComment() {
 	if (!newComment.value.trim()) return
 
 	isSubmitting.value = true
 	error.value = ""
 
 	try {
-		const response = await CasesAPI.createCaseComment(props.caseId, newComment.value.trim())
+		const response = await Api.cases.createCaseComment(
+			props.caseId,
+			newComment.value.trim(),
+			useAuthStore().userName || ""
+		)
 
-		if (response.success) {
-			const updatedComments = [...props.comments, response.comment]
+		if (response.data.success) {
+			const updatedComments = [...props.comments, response.data.comment]
 			emit("commentsUpdated", updatedComments)
 			newComment.value = ""
 		} else {
-			error.value = response.message || "Failed to add comment"
+			error.value = response.data.message || "Failed to add comment"
 		}
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || "Failed to add comment"
@@ -124,12 +129,12 @@ const addComment = async () => {
 	}
 }
 
-const handleCommentUpdated = (updatedComment: CaseCommentType) => {
+function handleCommentUpdated(updatedComment: CaseComment) {
 	const updatedComments = props.comments.map(comment => (comment.id === updatedComment.id ? updatedComment : comment))
 	emit("commentsUpdated", updatedComments)
 }
 
-const handleCommentDeleted = (commentId: number) => {
+function handleCommentDeleted(commentId: number) {
 	const updatedComments = props.comments.filter(comment => comment.id !== commentId)
 	emit("commentsUpdated", updatedComments)
 }

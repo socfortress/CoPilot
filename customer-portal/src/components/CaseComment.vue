@@ -107,9 +107,9 @@
 </template>
 
 <script setup lang="ts">
-import type { CaseComment } from "@/api/cases"
+import type { CaseComment } from "@/api/endpoints/cases"
 import { computed, ref } from "vue"
-import { CasesAPI } from "@/api/cases"
+import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { formatTimeAgo } from "@/utils/format"
@@ -156,18 +156,19 @@ async function saveEdit() {
 	error.value = ""
 
 	try {
-		const response = await CasesAPI.updateCaseComment(
+		const response = await Api.cases.updateCaseComment(
 			props.comment.id,
 			props.comment.case_id,
-			editText.value.trim()
+			editText.value.trim(),
+			authStore.userName || ""
 		)
 
-		if (response.success) {
-			emit("updated", response.comment)
+		if (response.data.success) {
+			emit("updated", response.data.comment)
 			isEditing.value = false
 			editText.value = ""
 		} else {
-			error.value = response.message || "Failed to update comment"
+			error.value = response.data.message || "Failed to update comment"
 		}
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || "Failed to update comment"
@@ -177,7 +178,7 @@ async function saveEdit() {
 }
 
 function confirmDelete() {
-	if (confirm("Are you sure you want to delete this comment?")) {
+	if (window.confirm("Are you sure you want to delete this comment?")) {
 		deleteComment()
 	}
 }
@@ -187,12 +188,12 @@ async function deleteComment() {
 	error.value = ""
 
 	try {
-		const response = await CasesAPI.deleteCaseComment(props.comment.id)
+		const response = await Api.cases.deleteCaseComment(props.comment.id)
 
-		if (response.success) {
+		if (response.data.success) {
 			emit("deleted", props.comment.id)
 		} else {
-			error.value = response.message || "Failed to delete comment"
+			error.value = response.data.message || "Failed to delete comment"
 		}
 	} catch (err: any) {
 		error.value = err.response?.data?.detail || "Failed to delete comment"

@@ -600,6 +600,17 @@
 							<p class="mt-2 text-sm text-gray-500">No files available for this case</p>
 						</div>
 					</div>
+
+					<!-- Comments Section -->
+					<div class="overflow-hidden bg-white shadow sm:rounded-lg">
+						<div class="px-4 py-5 sm:px-6">
+							<CaseCommentsList
+								:case-id="selectedCase.id"
+								:comments="selectedCase.comments || []"
+								@comments-updated="handleCommentsUpdated"
+							/>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -822,11 +833,12 @@
 <script setup lang="ts">
 import type { AxiosResponse } from "axios"
 import type { Alert } from "@/api/endpoints/alerts"
-import type { Case, CaseDataStoreFile, CaseStatus } from "@/api/endpoints/cases"
+import type { Case, CaseComment, CaseDataStoreFile, CaseStatus } from "@/api/endpoints/cases"
 import type { CommonResponse } from "@/types/common"
 import { saveAs } from "file-saver"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import CaseCommentsList from "@/components/CaseCommentsList.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatBytes, formatDate } from "@/utils/format"
 
@@ -895,7 +907,7 @@ async function loadCases() {
 		} else if (filters.value.assignedTo) {
 			response = await Api.cases.getCasesByAssignedTo(filters.value.assignedTo)
 		} else {
-			response = await Api.cases.getCases()
+			response = await Api.cases.getCases({ page: 1, pageSize: 25, order: "desc" })
 		}
 
 		cases.value = response.data.cases
@@ -1047,6 +1059,16 @@ function closeModal() {
 	caseFiles.value = []
 	closeUploadForm()
 	closeAlertModal()
+}
+
+function handleCommentsUpdated(updatedComments: CaseComment[]) {
+	if (selectedCase.value) {
+		selectedCase.value.comments = updatedComments
+	}
+	// Also update the case data if it has comments
+	if (selectedCase.value) {
+		selectedCase.value.comments = updatedComments
+	}
 }
 
 // Lifecycle
