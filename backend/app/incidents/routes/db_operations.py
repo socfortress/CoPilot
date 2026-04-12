@@ -29,6 +29,7 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
+from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
@@ -65,6 +66,7 @@ from app.incidents.schema.db_operations import CaseCommentResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
+from app.incidents.schema.db_operations import CaseFilterOptionsResponse
 from app.incidents.schema.db_operations import CaseNotificationCreate
 from app.incidents.schema.db_operations import CaseNotificationResponse
 from app.incidents.schema.db_operations import CaseOutResponse
@@ -822,6 +824,42 @@ async def get_alert_filter_options_endpoint(
         tags=options["tags"],
         success=True,
         message="Filter options retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.get("/cases/filter-options", response_model=CaseFilterOptionsResponse)
+async def get_case_filter_options_endpoint(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get distinct case statuses and assigned_to values for filtering."""
+    from sqlalchemy import distinct
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        statuses_q = select(distinct(Case.case_status)).order_by(Case.case_status)
+        assigned_q = select(distinct(Case.assigned_to)).where(Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
+    else:
+        customer_filter = Case.customer_code.in_(accessible_customers)
+        statuses_q = select(distinct(Case.case_status)).where(customer_filter).order_by(Case.case_status)
+        assigned_q = (
+            select(distinct(Case.assigned_to))
+            .where(customer_filter, Case.assigned_to.isnot(None))
+            .order_by(Case.assigned_to)
+        )
+
+    statuses_result = await db.execute(statuses_q)
+    statuses = [row[0] for row in statuses_result if row[0]]
+
+    assigned_result = await db.execute(assigned_q)
+    assigned_to = [row[0] for row in assigned_result if row[0]]
+
+    return CaseFilterOptionsResponse(
+        statuses=statuses,
+        assigned_to=assigned_to,
+        success=True,
+        message="Case filter options retrieved successfully",
     )
 
 

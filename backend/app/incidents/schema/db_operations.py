@@ -582,6 +582,13 @@ class AlertFilterOptionsResponse(BaseModel):
     message: str
 
 
+class CaseFilterOptionsResponse(BaseModel):
+    statuses: List[str]
+    assigned_to: List[str]
+    success: bool
+    message: str
+
+
 # ============================================
 # Tag Access RBAC Schemas
 # ============================================

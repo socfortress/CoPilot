@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+
 from app.customer_portal.schema.dashboard import CustomerDashboardAlertStatsResponse
+from app.customer_portal.schema.dashboard import CustomerDashboardCaseStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardStatsResponse
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
@@ -88,4 +90,43 @@ async def get_customer_dashboard_alert_stats(
         closed=closed_count,
         success=True,
         message="Dashboard alert stats retrieved successfully",
+    )
+
+
+@customer_portal_dashboard_router.get(
+    "/dashboard/case-stats",
+    response_model=CustomerDashboardCaseStatsResponse,
+)
+async def get_customer_dashboard_case_stats(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get case counts (total, open, in-progress, closed) for the logged-in customer."""
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    logger.info(f"Fetching dashboard case stats for user {current_user.username}, customers: {accessible_customers}")
+
+    if "*" in accessible_customers:
+        total_q = select(func.count(Case.id))
+        open_q = select(func.count(Case.id)).where(Case.case_status == "OPEN")
+        in_progress_q = select(func.count(Case.id)).where(Case.case_status == "IN_PROGRESS")
+        closed_q = select(func.count(Case.id)).where(Case.case_status == "CLOSED")
+    else:
+        customer_filter = Case.customer_code.in_(accessible_customers)
+        total_q = select(func.count(Case.id)).where(customer_filter)
+        open_q = select(func.count(Case.id)).where(customer_filter, Case.case_status == "OPEN")
+        in_progress_q = select(func.count(Case.id)).where(customer_filter, Case.case_status == "IN_PROGRESS")
+        closed_q = select(func.count(Case.id)).where(customer_filter, Case.case_status == "CLOSED")
+
+    total = (await db.execute(total_q)).scalar_one()
+    open_count = (await db.execute(open_q)).scalar_one()
+    in_progress_count = (await db.execute(in_progress_q)).scalar_one()
+    closed_count = (await db.execute(closed_q)).scalar_one()
+
+    return CustomerDashboardCaseStatsResponse(
+        total=total,
+        open=open_count,
+        in_progress=in_progress_count,
+        closed=closed_count,
+        success=True,
+        message="Dashboard case stats retrieved successfully",
     )

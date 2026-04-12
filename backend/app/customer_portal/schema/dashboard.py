@@ -16,3 +16,19 @@ class CustomerDashboardAlertStatsResponse(BaseModel):
     closed: int
     success: bool
     message: str
+
+
+class CustomerDashboardCaseStatsResponse(BaseModel):
+    total: int
+    open: int
+    in_progress: int
+    closed: int
+    success: bool
+    message: str
+
+
+class CustomerCaseFilterOptionsResponse(BaseModel):
+    statuses: list[str]
+    assigned_to: list[str]
+    success: bool
+    message: str
