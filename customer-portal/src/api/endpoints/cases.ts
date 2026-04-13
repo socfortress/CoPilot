@@ -93,7 +93,6 @@ export default {
 	/**
 	 * Create case from alert (customer access controlled)
 	 */
-	// TODO-CP: add create case from alert feature
 	createCaseFromAlert(alertId: number) {
 		return HttpClient.post<CommonResponse<{ case_alert_link: { case_id: number; alert_id: number } }>>(
 			`/incidents/db_operations/case/from-alert`,

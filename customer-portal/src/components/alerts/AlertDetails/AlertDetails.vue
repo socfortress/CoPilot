@@ -16,7 +16,7 @@
 					name="linked-cases"
 					:tab="`Linked Cases (${alert?.linked_cases?.length || alert?.case_ids?.length || 0})`"
 				>
-					<AlertCases :alert />
+					<AlertCases :alert @created="handleCaseCreated" @updated="handleCaseCreated" />
 				</n-tab-pane>
 
 				<n-tab-pane name="iocs" tab="Indicators of Compromise (IoCs)">
@@ -99,6 +99,10 @@ function handleCommentUpdated(comment: CommentItem) {
 function handleCommentDeleted(commentId: number) {
 	if (!alert.value) return
 	alert.value.comments = alert.value.comments.filter(c => c.id !== commentId)
+}
+
+function handleCaseCreated() {
+	loadAlertDetails()
 }
 
 function handleStatusUpdated(payload: AlertStatusUpdateSuccessPayload) {
