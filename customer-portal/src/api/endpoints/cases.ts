@@ -13,6 +13,7 @@ export interface CaseCommentPayload {
 	caseId: number
 	comment: string
 	userName: string
+	commentId?: number
 }
 
 export default {
@@ -140,12 +141,12 @@ export default {
 	/**
 	 * Update an existing case comment
 	 */
-	updateComment(id: number, caseId: number, comment: string, userName: string) {
+	updateComment(payload: CaseCommentPayload) {
 		return HttpClient.put<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/case/comment`, {
-			comment_id: id,
-			case_id: caseId,
-			comment,
-			user_name: userName,
+			comment_id: payload.commentId,
+			case_id: payload.caseId,
+			comment: payload.comment,
+			user_name: payload.userName,
 			created_at: new Date().toISOString()
 		})
 	},

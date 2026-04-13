@@ -1,11 +1,14 @@
 <template>
 	<div class="flex flex-col gap-2">
 		<div v-if="caseData.comments?.length" class="flex flex-col gap-2">
-			<CardEntity v-for="comment in caseData.comments" :key="comment.id" size="small" embedded>
-				<template #header-main>{{ comment.user_name }}</template>
-				<template #header-extra>{{ formatDate(comment.created_at, dFormats.datetime) }}</template>
-				<template #default>{{ comment.comment }}</template>
-			</CardEntity>
+			<CaseComment
+				v-for="comment in caseData.comments"
+				:key="comment.id"
+				:comment
+				:case-id="caseData.id"
+				@updated="handleCommentUpdated"
+				@deleted="handleCommentDeleted"
+			/>
 		</div>
 
 		<n-empty v-else description="No comments found" class="min-h-50 justify-center" />
@@ -31,30 +34,28 @@
 </template>
 
 <script setup lang="ts">
-// TODO-CP: add edit/delete
 import type { Case } from "@/types/cases"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useAuthStore } from "@/stores/auth"
-import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
-import { formatDate } from "@/utils/format"
+import CaseComment from "./CaseComment.vue"
 
 const { caseData } = defineProps<{
 	caseData: Case
 }>()
 
 const emit = defineEmits<{
-	(e: "success", comment: CommentItem): void
+	(e: "added", comment: CommentItem): void
+	(e: "updated", comment: CommentItem): void
+	(e: "deleted", commentId: number): void
 }>()
 
 const message = useMessage()
 const authStore = useAuthStore()
-const dFormats = useSettingsStore().dateFormat
 
 const newComment = ref<string | null>(null)
 const loading = ref(false)
@@ -63,6 +64,7 @@ async function addComment() {
 	if (!caseData || !newComment.value?.trim()) return
 
 	loading.value = true
+
 	try {
 		const response = await Api.cases.addComment({
 			caseId: caseData.id,
@@ -70,12 +72,21 @@ async function addComment() {
 			userName: authStore.userName || ""
 		})
 
-		emit("success", response.data.comment)
+		emit("added", response.data.comment)
 		newComment.value = ""
+		message.success(response.data?.message || "Comment added successfully")
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {
 		loading.value = false
 	}
+}
+
+function handleCommentUpdated(comment: CommentItem) {
+	emit("updated", comment)
+}
+
+function handleCommentDeleted(commentId: number) {
+	emit("deleted", commentId)
 }
 </script>
