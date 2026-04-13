@@ -15,7 +15,7 @@
 					name="alerts"
 					:tab="`Alerts (${caseData?.alerts?.length || caseData?.alert_ids?.length || 0})`"
 				>
-					<CaseAlerts :case-data />
+					<CaseAlerts :case-data @updated="handleAlertUpdated" />
 				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
 					<CaseFiles :case-id="caseData.id" />
@@ -109,6 +109,10 @@ function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
 	if (!caseData.value) return
 	caseData.value.assigned_to = payload.assignedTo
 	emit("assignedToUpdated", payload)
+}
+
+function handleAlertUpdated() {
+	loadCaseDetails()
 }
 
 watch(

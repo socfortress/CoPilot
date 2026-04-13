@@ -1,18 +1,21 @@
 <template>
 	<div v-if="caseData.alerts?.length" class="flex flex-col gap-2">
 		<CardEntity v-for="alert in caseData.alerts" :key="alert.id" size="small" embedded>
-			<template #header-main>#{{ alert.id }} - {{ alert.alert_name }}</template>
+			<template #header-main>#{{ alert.id }}</template>
 			<template #header-extra>
 				<Chip :type="getStatusColor(alert.status)">
 					{{ alert.status.replace("_", " ").toUpperCase() }}
 				</Chip>
 			</template>
 			<template #default>
-				{{ alert.alert_description }}
+				{{ alert.alert_name }}
 			</template>
 			<template #footer-main>Created: {{ formatDate(alert.alert_creation_time, dFormats.datetime) }}</template>
 			<template #footer-extra>
-				<Chip v-if="alert.assigned_to" :value="alert.assigned_to" label="Assigned to" />
+				<div class="flex flex-wrap items-center justify-end gap-2">
+					<Chip v-if="alert.assigned_to" :value="alert.assigned_to" label="Assigned to" />
+					<AlertDetailsButton :alert-id="alert.id" size="small" @status-updated="handleStatusUpdated" />
+				</div>
 			</template>
 		</CardEntity>
 	</div>
@@ -25,9 +28,10 @@
 </template>
 
 <script setup lang="ts">
-// TODO-CP: add link to alert details
+import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertStatusSelect.vue"
 import type { Case } from "@/types/cases"
 import { NEmpty } from "naive-ui"
+import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -38,5 +42,13 @@ defineProps<{
 	caseData: Case
 }>()
 
+const emit = defineEmits<{
+	(e: "updated", value: number): void
+}>()
+
 const dFormats = useSettingsStore().dateFormat
+
+function handleStatusUpdated(payload: AlertStatusUpdateSuccessPayload) {
+	emit("updated", payload.alertId)
+}
 </script>
