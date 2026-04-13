@@ -1,13 +1,13 @@
 <template>
 	<div>
 		<n-button-group :size>
-			<n-button @click="showDetails = true">
+			<n-button :focusable="false" @click="showDetails = true">
 				<template #icon>
 					<Icon name="carbon:view" />
 				</template>
 				View Details
 			</n-button>
-			<n-button @click="routeCaseDetails(caseId).navigate()">
+			<n-button :focusable="false" @click="routeCaseDetails(caseId).navigate()">
 				<template #icon>
 					<Icon name="carbon:launch" />
 				</template>
@@ -18,6 +18,7 @@
 			v-model:show="showDetails"
 			title="Case Details"
 			preset="card"
+			display-directive="show"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
 		>
 			<CaseDetails
