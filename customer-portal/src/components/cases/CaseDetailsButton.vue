@@ -1,6 +1,18 @@
 <template>
 	<div>
-		<n-button @click="showDetails = true">View Details</n-button>
+		<n-button-group :size>
+			<n-button @click="showDetails = true">
+				<template #icon>
+					<Icon name="carbon:view" />
+				</template>
+				View Details
+			</n-button>
+			<n-button @click="routeCaseDetails(caseId).navigate()">
+				<template #icon>
+					<Icon name="carbon:launch" />
+				</template>
+			</n-button>
+		</n-button-group>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -18,15 +30,18 @@
 </template>
 
 <script setup lang="ts">
-// TODO-CP: button group to open modal or open in new tab
+import type { ButtonSize } from "naive-ui"
 import type { CaseAssignedUpdateSuccessPayload } from "./CaseAssignedSelect.vue"
 import type { CaseStatusUpdateSuccessPayload } from "./CaseStatusSelect.vue"
-import { NButton, NModal } from "naive-ui"
+import { NButton, NButtonGroup, NModal } from "naive-ui"
 import { ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/common/useNavigation"
 import CaseDetails from "./CaseDetails"
 
 defineProps<{
-	caseId: number | null
+	caseId: number
+	size?: ButtonSize
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +49,7 @@ const emit = defineEmits<{
 	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
 }>()
 
+const { routeCaseDetails } = useNavigation()
 const showDetails = ref(false)
 
 function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {

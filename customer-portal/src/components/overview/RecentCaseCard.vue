@@ -14,11 +14,15 @@
 		<template #footer-main>
 			{{ formatTimeAgo(caseData.created_at, dFormats.datetime) }}
 		</template>
+		<template #footer-extra>
+			<CaseDetailsButton :case-id="caseData.id" size="small" />
+		</template>
 	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { DashboardCase } from "./types"
+import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
