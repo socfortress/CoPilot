@@ -1,19 +1,19 @@
 <template>
 	<n-spin :show="loading">
 		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @3xl:grid-cols-3">
-			<CardStats title="Total Alerts" :value="stats.total_alerts">
+			<CardStats title="Total Alerts" :value="stats.total_alerts" clickable @click="routeAlertsList().navigate()">
 				<template #icon>
 					<Icon :name="ICONS.alerts" :size="24" class="text-error" />
 				</template>
 			</CardStats>
 
-			<CardStats title="Total Cases" :value="stats.total_cases">
+			<CardStats title="Total Cases" :value="stats.total_cases" clickable @click="routeCasesList().navigate()">
 				<template #icon>
 					<Icon :name="ICONS.cases" :size="24" class="text-info" />
 				</template>
 			</CardStats>
 
-			<CardStats title="Total Agents" :value="stats.total_agents">
+			<CardStats title="Total Agents" :value="stats.total_agents" clickable @click="routeAgentsList().navigate()">
 				<template #icon>
 					<Icon :name="ICONS.agents" :size="24" class="text-primary" />
 				</template>
@@ -30,9 +30,11 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/common/useNavigation"
 import { ICONS } from "@/const"
 import { getApiErrorMessage } from "@/utils"
 
+const { routeAlertsList, routeCasesList, routeAgentsList } = useNavigation()
 const loading = ref(false)
 const message = useMessage()
 const stats = ref<DashboardStats>({

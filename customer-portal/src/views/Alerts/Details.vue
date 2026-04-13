@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { useRoute } from "vue-router"
-import AlertDetails from "@/components/alerts/AlertDetails.vue"
+import AlertDetails from "@/components/alerts/AlertDetails"
 import { toNumber } from "@/utils/format"
 
 const route = useRoute()

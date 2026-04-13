@@ -29,12 +29,24 @@ export function useNavigation() {
 		return routerConstructor({ name: "AlertsList" })
 	}
 
+	function routeAlertDetails(alertId: number) {
+		return routerConstructor({ name: "AlertDetails", params: { id: alertId.toString() } })
+	}
+
 	function routeCasesList() {
 		return routerConstructor({ name: "CasesList" })
 	}
 
+	function routeCaseDetails(caseId: number) {
+		return routerConstructor({ name: "CaseDetails", params: { id: caseId.toString() } })
+	}
+
 	function routeDashboardsList() {
 		return routerConstructor({ name: "DashboardsList" })
+	}
+
+	function routeAgentsList() {
+		return routerConstructor({ name: "AgentsList" })
 	}
 
 	function routeDashboardViewer(dashboardId: number) {
@@ -44,8 +56,11 @@ export function useNavigation() {
 	return {
 		routeEventSearch,
 		routeAlertsList,
+		routeAlertDetails,
 		routeCasesList,
+		routeCaseDetails,
 		routeDashboardsList,
-		routeDashboardViewer
+		routeDashboardViewer,
+		routeAgentsList
 	}
 }
