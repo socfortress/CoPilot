@@ -1,6 +1,6 @@
 ---
 title: AI Analyst (Talon)
-description: Automated Tier 2 SOC analyst that investigates every alert end-to-end — from raw SIEM events to structured investigation reports with severity assessments and recommended actions.
+description: Automated Tier 1 SOC analyst that investigates every alert end-to-end — from raw SIEM events to structured investigation reports with severity assessments and recommended actions.
 ---
 
 Talon is an automated AI SOC analyst built by [SOCFortress](https://www.socfortress.co/) for CoPilot. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot.
@@ -13,7 +13,7 @@ Talon is an automated AI SOC analyst built by [SOCFortress](https://www.socfortr
 
 ## What it does
 
-- **Automated Tier 2 investigations** — every OPEN alert is investigated end-to-end: SIEM raw event → IOC extraction → VirusTotal / Shodan / AbuseIPDB → MITRE ATT&CK correlation → structured report
+- **Automated Tier 1 investigations** — every OPEN alert is investigated end-to-end: SIEM raw event → IOC extraction → VirusTotal / Shodan / AbuseIPDB → MITRE ATT&CK correlation → structured report
 - **Two trigger paths** — real-time via `POST /investigate` (CoPilot calls this when an alert is created) and a 15-minute scheduled sweep as a safety net
 - **Writes back to CoPilot** — job status, full report, and enriched IOCs are persisted in CoPilot's database via its REST API; no direct database writes
 - **Privacy-aware by default** — an anonymizing MCP proxy intercepts raw SIEM events and replaces PII (usernames, hostnames, internal IPs) with session tokens before they reach the cloud model; a built-in deanonymize tool restores real values in the final report

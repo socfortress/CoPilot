@@ -7,7 +7,7 @@
 			</div>
 			<h1 class="text-default text-2xl font-bold">Talon AI Analyst</h1>
 			<p class="text-secondary max-w-xl text-sm leading-relaxed">
-				Automated Tier 2 SOC analyst that investigates every alert end-to-end &mdash; from raw SIEM events to
+				Automated Tier 1 SOC analyst that investigates every alert end-to-end &mdash; from raw SIEM events to
 				structured investigation reports with severity assessments and recommended actions.
 			</p>
 			<div class="mt-1 flex items-center gap-2">
