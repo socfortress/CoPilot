@@ -14,11 +14,15 @@
 		<template #footer-main>
 			{{ formatTimeAgo(alert.created_at, dFormats.datetime) }}
 		</template>
+		<template #footer-extra>
+			<AlertDetailsButton :alert-id="alert.id" size="small" />
+		</template>
 	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { DashboardAlert } from "./types"
+import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
