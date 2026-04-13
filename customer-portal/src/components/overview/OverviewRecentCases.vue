@@ -8,7 +8,13 @@
 
 		<n-scrollbar v-else class="flex grow" trigger="none">
 			<div class="flex flex-col gap-4 p-4">
-				<RecentCaseCard v-for="caseData in recentCases" :key="caseData.id" embedded :case-data />
+				<RecentCaseCard
+					v-for="caseData in recentCases"
+					:key="caseData.id"
+					embedded
+					:case-data
+					@updated="handleCaseUpdated()"
+				/>
 			</div>
 		</n-scrollbar>
 
@@ -32,9 +38,17 @@ defineProps<{
 	recentCases: DashboardCase[]
 }>()
 
+const emit = defineEmits<{
+	(e: "updated"): void
+}>()
+
 const { routeCasesList } = useNavigation()
 
 function goToCases() {
 	routeCasesList().navigate()
+}
+
+function handleCaseUpdated() {
+	emit("updated")
 }
 </script>

@@ -6,20 +6,30 @@
 			<div class="@container flex grow flex-col gap-6 overflow-hidden">
 				<OverviewStatsCards />
 
-				<n-spin
-					:show="loading"
-					class="overflow-hidden"
-					content-class="flex max-h-full grow flex-col overflow-hidden"
-				>
+				<div class="flex max-h-full grow flex-col overflow-hidden">
 					<div class="flex grow flex-col gap-6 overflow-hidden @2xl:flex-row">
 						<div class="max-h-full basis-1/2 overflow-hidden">
-							<OverviewRecentAlerts :recent-alerts class="h-full" size="small" />
+							<n-spin :show="loadingAlerts" class="h-full" content-class="h-full">
+								<OverviewRecentAlerts
+									:recent-alerts
+									class="h-full"
+									size="small"
+									@updated="fetchAlerts()"
+								/>
+							</n-spin>
 						</div>
 						<div class="max-h-full basis-1/2 overflow-hidden">
-							<OverviewRecentCases :recent-cases class="h-full" size="small" />
+							<n-spin :show="loadingCases" class="h-full" content-class="h-full">
+								<OverviewRecentCases
+									:recent-cases
+									class="h-full"
+									size="small"
+									@updated="fetchCases()"
+								/>
+							</n-spin>
 						</div>
 					</div>
-				</n-spin>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -36,23 +46,20 @@ import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
 import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
 import { getApiErrorMessage } from "@/utils"
 
-const loading = ref(true)
+const loadingAlerts = ref(false)
+const loadingCases = ref(false)
 const message = useMessage()
 const recentAlerts = ref<DashboardAlert[]>([])
 const recentCases = ref<DashboardCase[]>([])
 
-async function fetchDashboardData() {
-	loading.value = true
+async function fetchAlerts() {
+	loadingAlerts.value = true
 
 	try {
 		// Fetch alerts, cases, and agents data using our API services
-		const [alertsResponse, casesResponse] = await Promise.all([
-			Api.alerts.getAlerts({ page: 1, pageSize: 10, order: "desc" }),
-			Api.cases.getCases({ page: 1, pageSize: 10, order: "desc" })
-		])
+		const alertsResponse = await Api.alerts.getAlerts({ page: 1, pageSize: 10, order: "desc" })
 
 		const alerts = alertsResponse.data.alerts || []
-		const cases = casesResponse.data.cases || []
 
 		// Get recent alerts (last 5, sorted by creation time)
 		recentAlerts.value = alerts
@@ -61,10 +68,25 @@ async function fetchDashboardData() {
 				name: alert.alert_name || "Unnamed Alert",
 				description: alert.alert_description || "No description available",
 				severity: alert.status === "OPEN" ? "high" : alert.status === "IN_PROGRESS" ? "medium" : "low",
-				created_at: alert.alert_creation_time || new Date().toISOString()
+				created_at: alert.alert_creation_time || new Date()
 			}))
 			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 			.slice(0, 10)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
+	} finally {
+		loadingAlerts.value = false
+	}
+}
+
+async function fetchCases() {
+	loadingCases.value = true
+
+	try {
+		// Fetch alerts, cases, and agents data using our API services
+		const casesResponse = await Api.cases.getCases({ page: 1, pageSize: 10, order: "desc" })
+
+		const cases = casesResponse.data.cases || []
 
 		// Get recent cases (last 5, sorted by creation time)
 		recentCases.value = cases
@@ -73,7 +95,7 @@ async function fetchDashboardData() {
 				name: o.case_name || "Unnamed Case",
 				description: o.case_description || "No description available",
 				status: o.case_status || "open",
-				created_at: o.case_creation_time || new Date().toISOString(),
+				created_at: o.case_creation_time || new Date(),
 				assigned_to: o.assigned_to || undefined
 			}))
 			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -81,11 +103,12 @@ async function fetchDashboardData() {
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {
-		loading.value = false
+		loadingCases.value = false
 	}
 }
 
 onBeforeMount(() => {
-	fetchDashboardData()
+	fetchAlerts()
+	fetchCases()
 })
 </script>
