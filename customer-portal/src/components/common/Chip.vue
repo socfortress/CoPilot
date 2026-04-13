@@ -18,12 +18,18 @@
 import type { TagProps } from "naive-ui"
 import { NTag } from "naive-ui"
 
-defineProps<{
-	label?: string | number
-	value?: string | number
-	type?: TagProps["type"]
-	size?: TagProps["size"]
-	bordered?: boolean
-	round?: boolean
-}>()
+withDefaults(
+	defineProps<{
+		label?: string | number | null
+		value?: string | number | null
+		type?: TagProps["type"]
+		size?: TagProps["size"]
+		bordered?: boolean
+		round?: boolean
+	}>(),
+	{
+		bordered: true,
+		round: false
+	}
+)
 </script>

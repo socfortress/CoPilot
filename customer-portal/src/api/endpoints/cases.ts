@@ -120,6 +120,7 @@ export default {
 	/**
 	 * Unlink case from alert (customer access controlled)
 	 */
+	// TODO-CP: add unlink case from alert feature
 	unlinkCaseFromAlert(caseId: number, alertId: number) {
 		return HttpClient.post<CommonResponse>(`/incidents/db_operations/case/alert-unlink`, {
 			case_id: caseId,
@@ -190,6 +191,13 @@ export default {
 				}
 			}
 		)
+	},
+
+	/**
+	 * Delete a file from a case data store
+	 */
+	deleteCaseFile(caseId: number, fileName: string) {
+		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
 	},
 
 	/**

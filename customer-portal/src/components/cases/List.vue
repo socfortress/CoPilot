@@ -112,15 +112,10 @@ const columns = computed<DataTableColumns<Case>>(() => [
 		render: row => <div>{row.case_name}</div>
 	},
 	{
-		title: "Description",
-		key: "source",
-		width: 180,
-		render: row => <div>{row.case_description}</div>
-	},
-	{
 		title: "Created",
 		key: "case_creation_time",
-		width: 200,
+		width: "100%",
+		minWidth: 200,
 		render: row => <span class="font-mono text-sm">{formatDate(row.case_creation_time, dFormats.datetime)}</span>
 	},
 	{
