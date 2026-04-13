@@ -7,6 +7,7 @@ export interface AlertCommentPayload {
 	alertId: number
 	comment: string
 	userName: string
+	commentId?: number
 }
 
 export default {
@@ -50,12 +51,12 @@ export default {
 	/**
 	 * Update an existing alert comment
 	 */
-	updateComment(id: number, alertId: number, comment: string, userName: string) {
+	updateComment(payload: AlertCommentPayload) {
 		return HttpClient.put<CommonResponse<{ comment: CommentItem }>>(`/incidents/db_operations/alert/comment`, {
-			comment_id: id,
-			alert_id: alertId,
-			comment,
-			user_name: userName,
+			comment_id: payload.commentId,
+			alert_id: payload.alertId,
+			comment: payload.comment,
+			user_name: payload.userName,
 			created_at: new Date().toISOString()
 		})
 	},

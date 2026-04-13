@@ -24,7 +24,12 @@
 				</n-tab-pane>
 
 				<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
-					<AlertComments :alert @success="addComment" />
+					<AlertComments
+						:alert
+						@added="handleCommentAdded"
+						@updated="handleCommentUpdated"
+						@deleted="handleCommentDeleted"
+					/>
 				</n-tab-pane>
 			</n-tabs>
 		</div>
@@ -77,13 +82,23 @@ async function loadAlertDetails() {
 	}
 }
 
-async function addComment(comment: CommentItem) {
+function handleCommentAdded(comment: CommentItem) {
 	if (!alert.value) return
 
 	if (!alert.value.comments) {
 		alert.value.comments = []
 	}
 	alert.value.comments.push(comment)
+}
+
+function handleCommentUpdated(comment: CommentItem) {
+	if (!alert.value) return
+	alert.value.comments = alert.value.comments.map(c => (c.id === comment.id ? comment : c))
+}
+
+function handleCommentDeleted(commentId: number) {
+	if (!alert.value) return
+	alert.value.comments = alert.value.comments.filter(c => c.id !== commentId)
 }
 
 function handleStatusUpdated(payload: AlertStatusUpdateSuccessPayload) {
