@@ -14,6 +14,13 @@
 			<template #footer-extra>
 				<div class="flex flex-wrap items-center justify-end gap-2">
 					<Chip v-if="alert.assigned_to" :value="alert.assigned_to" label="Assigned to" />
+					<UnlinkCase
+						:alert-id="alert.id"
+						:case-id="caseData.id"
+						size="small"
+						label="Unlink Alert"
+						@unlinked="handleAlertUnlinked"
+					/>
 					<AlertDetailsButton :alert-id="alert.id" size="small" @status-updated="handleStatusUpdated" />
 				</div>
 			</template>
@@ -32,6 +39,7 @@ import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertS
 import type { Case } from "@/types/cases"
 import { NEmpty } from "naive-ui"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
+import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -44,11 +52,16 @@ defineProps<{
 
 const emit = defineEmits<{
 	(e: "updated", value: number): void
+	(e: "unlinked", value: number): void
 }>()
 
 const dFormats = useSettingsStore().dateFormat
 
 function handleStatusUpdated(payload: AlertStatusUpdateSuccessPayload) {
 	emit("updated", payload.alertId)
+}
+
+function handleAlertUnlinked(alertId: number) {
+	emit("unlinked", alertId)
 }
 </script>

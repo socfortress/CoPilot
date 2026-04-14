@@ -16,6 +16,12 @@
 			<template #footer-extra>
 				<div class="flex flex-wrap items-center justify-end gap-2">
 					<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
+					<UnlinkCase
+						:alert-id="alert.id"
+						:case-id="linkedCase.id"
+						size="small"
+						@unlinked="handleCaseUnlinked"
+					/>
 					<CaseDetailsButton
 						:case-id="linkedCase.id"
 						size="small"
@@ -47,6 +53,7 @@ import { NButton, NEmpty, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
+import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -60,6 +67,7 @@ const { alert } = defineProps<{
 const emit = defineEmits<{
 	(e: "created", value: number): void
 	(e: "updated", value: number): void
+	(e: "unlinked", value: number): void
 }>()
 
 const dFormats = useSettingsStore().dateFormat
@@ -93,5 +101,9 @@ function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {
 
 function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
 	emit("updated", payload.caseId)
+}
+
+function handleCaseUnlinked(caseId: number) {
+	emit("unlinked", caseId)
 }
 </script>
