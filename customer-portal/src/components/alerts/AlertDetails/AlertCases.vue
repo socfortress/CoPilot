@@ -1,47 +1,67 @@
 <template>
-	<div v-if="alert.linked_cases?.length" class="flex flex-col gap-2">
-		<CardEntity v-for="linkedCase in alert.linked_cases" :key="linkedCase.id" size="small" embedded>
-			<template #header-main>#{{ linkedCase.id }}</template>
-			<template #header-extra>
-				<Chip :type="getStatusColor(linkedCase.case_status)">
-					{{ linkedCase.case_status.replace("_", " ").toUpperCase() }}
-				</Chip>
-			</template>
-			<template #default>
-				{{ linkedCase.case_name }}
-			</template>
-			<template #footer-main>
-				Created: {{ formatDate(linkedCase.case_creation_time, dFormats.datetime) }}
-			</template>
-			<template #footer-extra>
-				<div class="flex flex-wrap items-center justify-end gap-2">
-					<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
-					<UnlinkCase
+	<div class="flex flex-col gap-2">
+		<div v-if="alert.linked_cases?.length" class="flex items-center justify-end gap-2">
+			<n-button size="small" :loading="creatingCase" @click="createCase">Create Case</n-button>
+			<LinkAlert :alert-id="alert.id" size="small" secondary label="Link Case" @linked="handleCaseLinked" />
+		</div>
+
+		<div v-if="alert.linked_cases?.length" class="flex flex-col gap-2">
+			<CardEntity v-for="linkedCase in alert.linked_cases" :key="linkedCase.id" size="small" embedded>
+				<template #header-main>#{{ linkedCase.id }}</template>
+				<template #header-extra>
+					<div class="flex flex-wrap items-center justify-end gap-2">
+						<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
+						<Chip :type="getStatusColor(linkedCase.case_status)">
+							{{ linkedCase.case_status.replace("_", " ").toUpperCase() }}
+						</Chip>
+					</div>
+				</template>
+				<template #default>
+					{{ linkedCase.case_name }}
+				</template>
+				<template #footer-main>
+					Created: {{ formatDate(linkedCase.case_creation_time, dFormats.datetime) }}
+				</template>
+				<template #footer-extra>
+					<div class="flex flex-wrap items-center justify-end gap-2">
+						<UnlinkCase
+							:alert-id="alert.id"
+							:case-id="linkedCase.id"
+							size="small"
+							@unlinked="handleCaseUnlinked"
+						/>
+						<CaseDetailsButton
+							:case-id="linkedCase.id"
+							size="small"
+							@status-updated="handleStatusUpdated"
+							@assigned-to-updated="handleAssignedToUpdated"
+						/>
+					</div>
+				</template>
+			</CardEntity>
+		</div>
+
+		<div v-else-if="alert.case_ids?.length" class="flex flex-wrap gap-2">
+			<code v-for="caseId in alert.case_ids" :key="caseId">Case #{{ caseId }}</code>
+		</div>
+
+		<n-empty v-else description="No linked cases found" class="min-h-50 justify-center">
+			<template #extra>
+				<div class="flex items-center justify-center gap-2">
+					<n-button type="primary" size="small" :loading="creatingCase" @click="createCase">
+						Create Case
+					</n-button>
+					<LinkAlert
 						:alert-id="alert.id"
-						:case-id="linkedCase.id"
 						size="small"
-						@unlinked="handleCaseUnlinked"
-					/>
-					<CaseDetailsButton
-						:case-id="linkedCase.id"
-						size="small"
-						@status-updated="handleStatusUpdated"
-						@assigned-to-updated="handleAssignedToUpdated"
+						secondary
+						label="Link Case"
+						@linked="handleCaseLinked"
 					/>
 				</div>
 			</template>
-		</CardEntity>
+		</n-empty>
 	</div>
-
-	<div v-else-if="alert.case_ids?.length" class="flex flex-wrap gap-2">
-		<code v-for="caseId in alert.case_ids" :key="caseId">Case #{{ caseId }}</code>
-	</div>
-
-	<n-empty v-else description="No linked cases found" class="min-h-50 justify-center">
-		<template #extra>
-			<n-button type="primary" size="small" :loading="creatingCase" @click="createCase">Create Case</n-button>
-		</template>
-	</n-empty>
 </template>
 
 <script setup lang="ts">
@@ -52,6 +72,7 @@ import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
+import LinkAlert from "@/components/alerts/LinkAlert.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -68,6 +89,7 @@ const emit = defineEmits<{
 	(e: "created", value: number): void
 	(e: "updated", value: number): void
 	(e: "unlinked", value: number): void
+	(e: "linked", value: number): void
 }>()
 
 const dFormats = useSettingsStore().dateFormat
@@ -105,5 +127,9 @@ function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
 
 function handleCaseUnlinked(caseId: number) {
 	emit("unlinked", caseId)
+}
+
+function handleCaseLinked(caseId: number) {
+	emit("linked", caseId)
 }
 </script>

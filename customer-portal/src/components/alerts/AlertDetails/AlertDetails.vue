@@ -21,6 +21,7 @@
 						@created="handleCaseCreated"
 						@updated="handleCaseCreated"
 						@unlinked="handleCaseUnlinked"
+						@linked="handleCaseLinked"
 					/>
 				</n-tab-pane>
 
@@ -111,6 +112,10 @@ function handleCaseCreated() {
 }
 
 function handleCaseUnlinked() {
+	loadAlertDetails()
+}
+
+function handleCaseLinked() {
 	loadAlertDetails()
 }
 
