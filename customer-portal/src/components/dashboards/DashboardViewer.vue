@@ -85,7 +85,7 @@ import ChartColumn from "@/components/common/charts/ChartColumn.vue"
 import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
-import { formatCompactNumber } from "@/utils"
+import { formatCompactNumber, getApiErrorMessage } from "@/utils"
 import { panelColSpanClass } from "./utils"
 
 const { dashboardId } = defineProps<{
@@ -159,7 +159,7 @@ async function fetchPanelData() {
 	} catch (error) {
 		if (!axios.isCancel(error)) {
 			loading.value = false
-			errorMsg.value = (error as ApiError).response?.data?.message || "Failed to fetch panel data"
+			errorMsg.value = getApiErrorMessage(error as ApiError) || "Failed to fetch panel data"
 			message.error(errorMsg.value)
 		}
 	}

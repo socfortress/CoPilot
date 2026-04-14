@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSourceItem } from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
@@ -31,6 +32,7 @@ import { NButton, NCard, NDataTable, NEmpty, useDialog, useMessage } from "naive
 import { computed, h, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import { useNavigation } from "@/composables/common/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customerCode: string | null
@@ -61,7 +63,7 @@ function fetchEnabledDashboards(customerCode: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEnabled.value = false
@@ -159,7 +161,7 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 										})
 										.catch(err => {
 											message.error(
-												err.response?.data?.message ||
+												getApiErrorMessage(err as ApiError) ||
 													"An error occurred. Please try again later."
 											)
 										})

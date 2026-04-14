@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { DashboardTemplate, EnabledDashboard } from "@/types/dashboards.d"
 import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed } from "vue"
@@ -48,6 +49,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	template: DashboardTemplate
@@ -105,7 +107,7 @@ function onEnable() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 
@@ -136,7 +138,7 @@ function onDisable() {
 					}
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+					message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				})
 		}
 	})

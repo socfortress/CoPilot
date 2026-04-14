@@ -39,12 +39,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
 import { NAlert, NFormItem, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
@@ -57,9 +59,8 @@ const selectedCustomerCode = ref<string | null>(null)
 
 // ── Enabled dashboards (lista aggiornata da EnabledDashboardsSection via v-model) ──
 const enabledDashboards = ref<EnabledDashboard[]>([])
-const enabledDashboardsSectionRef = useTemplateRef<InstanceType<typeof EnabledDashboardsSection>>(
-	"enabledDashboardsSectionRef"
-)
+const enabledDashboardsSectionRef =
+	useTemplateRef<InstanceType<typeof EnabledDashboardsSection>>("enabledDashboardsSectionRef")
 
 const customersOptions = computed(() =>
 	customersList.value.map(c => ({ label: `#${c.customer_code} - ${c.customer_name}`, value: c.customer_code }))
@@ -78,7 +79,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -107,7 +108,7 @@ function getEventSources(customerCode: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEventSources.value = false
