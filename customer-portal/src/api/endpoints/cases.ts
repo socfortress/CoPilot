@@ -5,8 +5,10 @@ import { HttpClient } from "../httpClient"
 
 export interface CasePayload {
 	case_name: string
+	case_status: CaseStatus
 	case_description: string
 	assigned_to?: string
+	customer_code?: string
 }
 
 export interface CaseCommentPayload {
@@ -56,9 +58,11 @@ export default {
 	/**
 	 * Create new case (customer access controlled)
 	 */
-	// TODO-CP: add create case feature
 	createCase(payload: CasePayload) {
-		return HttpClient.post<CommonResponse<{ case: Case }>>(`/incidents/db_operations/case/create`, payload)
+		return HttpClient.post<CommonResponse<{ case: Case }>>(`/incidents/db_operations/case/create`, {
+			...payload,
+			case_creation_time: new Date().toISOString()
+		})
 	},
 
 	/**
