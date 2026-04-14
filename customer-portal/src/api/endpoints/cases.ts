@@ -64,7 +64,6 @@ export default {
 	/**
 	 * Delete case (customer access controlled)
 	 */
-	// TODO-CP: add delete case feature
 	deleteCase(caseId: number) {
 		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
@@ -105,7 +104,6 @@ export default {
 	/**
 	 * Link case to alert (customer access controlled)
 	 */
-	// TODO-CP: add link case to alert feature
 	linkCaseToAlert(caseId: number, alertId: number) {
 		return HttpClient.post<CommonResponse<{ case_alert_link: { case_id: number; alert_id: number } }>>(
 			`/incidents/db_operations/case/alert-link`,

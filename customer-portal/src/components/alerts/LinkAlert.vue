@@ -90,9 +90,8 @@ import { NButton, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	alertId?: number

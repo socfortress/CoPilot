@@ -25,6 +25,7 @@
 				:case-id
 				@assigned-to-updated="handleAssignedToUpdated"
 				@status-updated="handleStatusUpdated"
+				@deleted="handleDeleted"
 			/>
 		</n-modal>
 	</div>
@@ -48,6 +49,7 @@ defineProps<{
 const emit = defineEmits<{
 	(e: "statusUpdated", value: CaseStatusUpdateSuccessPayload): void
 	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
+	(e: "deleted"): void
 }>()
 
 const { routeCaseDetails } = useNavigation()
@@ -59,5 +61,10 @@ function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {
 
 function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
 	emit("assignedToUpdated", payload)
+}
+
+function handleDeleted() {
+	showDetails.value = false
+	emit("deleted")
 }
 </script>

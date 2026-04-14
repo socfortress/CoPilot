@@ -1,11 +1,7 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center justify-between gap-4">
-			<Chip
-				v-if="loadingFiles || caseFiles.length"
-				:value="loadingFiles ? 'Loading...' : caseFiles.length"
-				label="files"
-			/>
+			<Chip v-if="caseFiles.length" :value="loadingFiles ? 'Loading...' : caseFiles.length" label="files" />
 		</div>
 
 		<n-spin :show="loadingFiles">
