@@ -15,7 +15,12 @@
 					name="alerts"
 					:tab="`Alerts (${caseData?.alerts?.length || caseData?.alert_ids?.length || 0})`"
 				>
-					<CaseAlerts :case-data @updated="handleAlertUpdated" @unlinked="handleAlertUnlinked" />
+					<CaseAlerts
+						:case-data
+						@updated="handleAlertUpdated"
+						@unlinked="handleAlertUnlinked"
+						@linked="handleAlertLinked"
+					/>
 				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
 					<CaseFiles :case-id="caseData.id" />
@@ -116,6 +121,10 @@ function handleAlertUpdated() {
 }
 
 function handleAlertUnlinked() {
+	loadCaseDetails()
+}
+
+function handleAlertLinked() {
 	loadCaseDetails()
 }
 

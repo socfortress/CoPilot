@@ -37,7 +37,33 @@
 						</template>
 					</CardEntity>
 
-					<pre v-for="item in alerts" :key="item.id">{{ item.id }}</pre>
+					<CardEntity
+						v-for="item in alerts"
+						:key="item.id"
+						size="small"
+						embedded
+						main-box-class="p-1!"
+						header-box-class="flex-nowrap!"
+						hoverable
+					>
+						<template #header-main>
+							<div class="px-1">#{{ item.id }} - {{ item.alert_name }}</div>
+						</template>
+						<template #header-extra>
+							<n-button
+								type="primary"
+								size="tiny"
+								:loading="linkingAlertId === item.id"
+								:disabled="item.linked_cases.some(caseData => caseData.id === props.caseId)"
+								@click="linkAlert(props.caseId || 0, item.id)"
+							>
+								<template #icon>
+									<Icon name="carbon:link" />
+								</template>
+								Link
+							</n-button>
+						</template>
+					</CardEntity>
 				</div>
 				<div class="flex justify-end">
 					<n-pagination
