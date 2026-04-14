@@ -1,8 +1,9 @@
 <template>
 	<div>
 		<div class="flex flex-col gap-4">
-			<div>
+			<div class="flex w-full items-center justify-between gap-4">
 				<Filters v-model:value="filters" class="w-auto!" @loaded="handleFiltersLoaded" />
+				<CreateCaseButton secondary @success="handleCreated" />
 			</div>
 
 			<div class="flex flex-col gap-2">
@@ -72,6 +73,7 @@ import Api from "@/api"
 import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import CaseStatusSelect from "@/components/cases/CaseStatusSelect.vue"
+import CreateCaseButton from "@/components/cases/CreateCaseButton.vue"
 import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -217,6 +219,22 @@ function handleFiltersLoaded(value: Record<string, string[]>) {
 }
 
 function handleDeleted() {
+	loadCases()
+}
+
+function resetFilters() {
+	filters.value.key = null
+	filters.value.value = null
+}
+
+function resetPagination() {
+	pagination.value.page = 1
+	pagination.value.pageSize = pageSizes[1]
+}
+
+function handleCreated() {
+	resetFilters()
+	resetPagination()
 	loadCases()
 }
 
