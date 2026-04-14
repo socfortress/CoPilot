@@ -44,7 +44,7 @@
 
 				<div class="flex justify-end">
 					<n-pagination
-						v-if="data.length > 3"
+						v-if="pagination.total > pagination.pageSize"
 						v-model:page="pagination.page"
 						:page-size="pagination.pageSize"
 						:item-count="pagination.total"
@@ -66,10 +66,10 @@ import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStat
 import type { FiltersModel } from "@/components/cases/Filters.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
+import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
-import { computed, ref, useTemplateRef } from "vue"
+import { computed, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
@@ -225,7 +225,7 @@ const loadCases = useDebounceFn(async () => {
 	}
 }, 400)
 
-function applyFilters() {
+function resetPage() {
 	pagination.value.page = 1
 	loadCases()
 }
@@ -254,14 +254,6 @@ function handleCreated() {
 	loadCases()
 }
 
-watchDebounced(
-	() => filters.value.value,
-	() => {
-		applyFilters()
-	},
-	{ deep: true, immediate: true, debounce: 300 }
-)
-
 function handleAssignedToUpdateSuccess(payload: CaseAssignedUpdateSuccessPayload) {
 	const case_ = data.value.find(c => c.id === payload.caseId)
 	if (case_) {
@@ -276,9 +268,13 @@ function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
 	}
 }
 
-watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadCases, {
+watch([() => pagination.value.pageSize, () => filters.value.value], resetPage, {
 	deep: true,
-	immediate: true,
-	debounce: 300
+	immediate: true
+})
+
+watch(() => pagination.value.page, loadCases, {
+	deep: true,
+	immediate: true
 })
 </script>

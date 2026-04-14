@@ -43,7 +43,7 @@
 
 				<div class="flex justify-end">
 					<n-pagination
-						v-if="data.length > 3"
+						v-if="pagination.total > pagination.pageSize"
 						v-model:page="pagination.page"
 						:page-size="pagination.pageSize"
 						:item-count="pagination.total"
@@ -64,10 +64,10 @@ import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertS
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
+import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
-import { computed, ref, useTemplateRef } from "vue"
+import { computed, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
@@ -223,18 +223,10 @@ const loadAlerts = useDebounceFn(async () => {
 	}
 }, 400)
 
-function applyFilters() {
+function resetPage() {
 	pagination.value.page = 1
 	loadAlerts()
 }
-
-watchDebounced(
-	() => filters.value.value,
-	() => {
-		applyFilters()
-	},
-	{ deep: true, immediate: true, debounce: 300 }
-)
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	const alert = data.value.find(a => a.id === payload.alertId)
@@ -243,9 +235,13 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	}
 }
 
-watchDebounced([() => pagination.value.page, () => pagination.value.pageSize], loadAlerts, {
+watch([() => pagination.value.pageSize, () => filters.value.value], resetPage, {
 	deep: true,
-	immediate: true,
-	debounce: 300
+	immediate: true
+})
+
+watch(() => pagination.value.page, loadAlerts, {
+	deep: true,
+	immediate: true
 })
 </script>
