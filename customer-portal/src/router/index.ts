@@ -1,6 +1,6 @@
 import type { FormType } from "@/components/auth/types"
 import { createRouter, createWebHistory } from "vue-router"
-import { AuthUserRole, RouteRole } from "@/types/auth"
+import { RouteRole } from "@/types/auth"
 import { Layout } from "@/types/theme"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
@@ -63,9 +63,24 @@ const router = createRouter({
 		},
 		{
 			path: "/agents",
-			name: "Agents",
-			component: () => import("@/views/Agents.vue"),
-			meta: { title: "Agents", auth: true, roles: RouteRole.All }
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "",
+					name: "AgentsList",
+					component: () => import("@/views/Agents/List.vue"),
+					meta: { title: "Agents" }
+				},
+				{
+					path: ":id",
+					name: "AgentDetails",
+					component: () => import("@/views/Agents/Details.vue"),
+					meta: { title: "Agent Details", skipPin: true }
+				}
+			]
 		},
 		{
 			path: "/event-search",

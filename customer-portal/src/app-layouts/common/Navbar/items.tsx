@@ -54,12 +54,12 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
-							name: "Agents"
+							name: "AgentsList"
 						}
 					},
 					{ default: () => "Agents" }
 				),
-			key: "Agents",
+			key: "AgentsList",
 			icon: renderIcon(ICONS.agents)
 		},
 		{

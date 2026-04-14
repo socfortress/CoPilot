@@ -45,12 +45,16 @@ export function useNavigation() {
 		return routerConstructor({ name: "DashboardsList" })
 	}
 
+	function routeDashboardViewer(dashboardId: number) {
+		return routerConstructor({ name: "DashboardViewer", params: { id: dashboardId.toString() } })
+	}
+
 	function routeAgentsList() {
 		return routerConstructor({ name: "AgentsList" })
 	}
 
-	function routeDashboardViewer(dashboardId: number) {
-		return routerConstructor({ name: "DashboardViewer", params: { id: dashboardId.toString() } })
+	function routeAgentDetails(agentId: string) {
+		return routerConstructor({ name: "AgentDetails", params: { id: agentId } })
 	}
 
 	return {
@@ -61,6 +65,7 @@ export function useNavigation() {
 		routeCaseDetails,
 		routeDashboardsList,
 		routeDashboardViewer,
-		routeAgentsList
+		routeAgentsList,
+		routeAgentDetails
 	}
 }
