@@ -18,13 +18,6 @@ export default {
 	},
 
 	/**
-	 * Get agent by hostname
-	 */
-	getAgentByHostname(hostname: string) {
-		return HttpClient.get<CommonResponse<{ agent: Agent }>>(`/agents/hostname/${hostname}`)
-	},
-
-	/**
 	 * Mark agent as critical
 	 */
 	markAgentAsCritical(agentId: string) {

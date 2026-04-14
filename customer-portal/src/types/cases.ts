@@ -35,7 +35,7 @@ export interface LinkedCase {
 
 export interface CasesFilters {
 	assigned_to: string[]
-	status: string[]
+	statuses: string[]
 }
 
 export interface CaseDataStoreFile {

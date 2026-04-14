@@ -65,6 +65,7 @@ import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
+import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -156,8 +157,13 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	}
 ])
 
+let abortController = new AbortController()
+
 const loadAlerts = useDebounceFn(async () => {
 	loading.value = true
+
+	abortController?.abort()
+	abortController = new AbortController()
 
 	try {
 		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
@@ -170,29 +176,50 @@ const loadAlerts = useDebounceFn(async () => {
 
 		if (filters.value.key && filters.value.value) {
 			switch (filters.value.key) {
-				case "status":
-					response = await Api.alerts.getAlertsByStatus(filters.value.value as AlertStatus, paginationPayload)
+				case "statuses":
+					response = await Api.alerts.getAlertsByStatus(
+						filters.value.value as AlertStatus,
+						paginationPayload,
+						abortController.signal
+					)
 					break
-				case "source":
-					response = await Api.alerts.getAlertsBySource(filters.value.value, paginationPayload)
+				case "sources":
+					response = await Api.alerts.getAlertsBySource(
+						filters.value.value,
+						paginationPayload,
+						abortController.signal
+					)
 					break
-				case "asset":
-					response = await Api.alerts.getAlertsByAsset(filters.value.value, paginationPayload)
+				case "assets":
+					response = await Api.alerts.getAlertsByAsset(
+						filters.value.value,
+						paginationPayload,
+						abortController.signal
+					)
+					break
+				case "tags":
+					response = await Api.alerts.getAlertsByTag(
+						filters.value.value,
+						paginationPayload,
+						abortController.signal
+					)
 					break
 				default:
-					response = await Api.alerts.getAlerts(paginationPayload)
+					response = await Api.alerts.getAlerts(paginationPayload, abortController.signal)
 					break
 			}
 		} else {
-			response = await Api.alerts.getAlerts(paginationPayload)
+			response = await Api.alerts.getAlerts(paginationPayload, abortController.signal)
 		}
 
 		data.value = response.data.alerts
 		pagination.value.total = response.data.total
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
 		loading.value = false
+	} catch (err) {
+		if (!axios.isCancel(err)) {
+			message.error(getApiErrorMessage(err as ApiError))
+			loading.value = false
+		}
 	}
 }, 400)
 

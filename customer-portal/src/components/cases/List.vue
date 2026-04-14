@@ -67,6 +67,7 @@ import type { FiltersModel } from "@/components/cases/Filters.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useDebounceFn, useElementSize, watchDebounced } from "@vueuse/core"
+import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -172,8 +173,13 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	}
 ])
 
+let abortController = new AbortController()
+
 const loadCases = useDebounceFn(async () => {
 	loading.value = true
+
+	abortController?.abort()
+	abortController = new AbortController()
 
 	try {
 		let response: AxiosResponse<CommonResponse<CasesListResponse>>
@@ -186,26 +192,36 @@ const loadCases = useDebounceFn(async () => {
 
 		if (filters.value.key && filters.value.value) {
 			switch (filters.value.key) {
-				case "status":
-					response = await Api.cases.getCasesByStatus(filters.value.value as CaseStatus, paginationPayload)
+				case "statuses":
+					response = await Api.cases.getCasesByStatus(
+						filters.value.value as CaseStatus,
+						paginationPayload,
+						abortController.signal
+					)
 					break
 				case "assigned_to":
-					response = await Api.cases.getCasesByAssignedTo(filters.value.value, paginationPayload)
+					response = await Api.cases.getCasesByAssignedTo(
+						filters.value.value,
+						paginationPayload,
+						abortController.signal
+					)
 					break
 				default:
-					response = await Api.cases.getCases(paginationPayload)
+					response = await Api.cases.getCases(paginationPayload, abortController.signal)
 					break
 			}
 		} else {
-			response = await Api.cases.getCases(paginationPayload)
+			response = await Api.cases.getCases(paginationPayload, abortController.signal)
 		}
 
 		data.value = response.data.cases
 		pagination.value.total = response.data.total
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
 		loading.value = false
+	} catch (err) {
+		if (!axios.isCancel(err)) {
+			message.error(getApiErrorMessage(err as ApiError))
+			loading.value = false
+		}
 	}
 }, 400)
 

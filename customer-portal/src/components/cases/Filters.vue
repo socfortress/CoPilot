@@ -58,7 +58,7 @@ const message = useMessage()
 async function loadFilters() {
 	try {
 		const response = await Api.cases.getCasesFilters()
-		filters.value = _pick<CasesFilters, keyof CasesFilters>(response.data, ["assigned_to", "status"])
+		filters.value = _pick<CasesFilters, keyof CasesFilters>(response.data, ["assigned_to", "statuses"])
 		emit("loaded", filters.value)
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))

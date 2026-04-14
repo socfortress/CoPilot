@@ -22,9 +22,10 @@ export default {
 	/**
 	 * Get all cases with customer access control
 	 */
-	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination) {
+	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
 		return HttpClient.get<CommonResponse<CasesListResponse>>("/incidents/db_operations/cases", {
-			params: { page, page_size: pageSize, order }
+			params: { page, page_size: pageSize, order },
+			signal
 		})
 	},
 
@@ -75,20 +76,30 @@ export default {
 	/**
 	 * Get cases by status with customer filtering
 	 */
-	getCasesByStatus(status: CaseStatus, { page = 1, pageSize = 25, order = "desc" }: Pagination) {
+	getCasesByStatus(
+		status: CaseStatus,
+		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
+		signal?: AbortSignal
+	) {
 		return HttpClient.get<CommonResponse<CasesListResponse>>(`/incidents/db_operations/case/status/${status}`, {
-			params: { page, page_size: pageSize, order }
+			params: { page, page_size: pageSize, order },
+			signal
 		})
 	},
 
 	/**
 	 * Get cases by assigned user with customer filtering
 	 */
-	getCasesByAssignedTo(assignedTo: string, { page = 1, pageSize = 25, order = "desc" }: Pagination) {
+	getCasesByAssignedTo(
+		assignedTo: string,
+		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
+		signal?: AbortSignal
+	) {
 		return HttpClient.get<CommonResponse<CasesListResponse>>(
 			`/incidents/db_operations/case/assigned-to/${assignedTo}`,
 			{
-				params: { page, page_size: pageSize, order }
+				params: { page, page_size: pageSize, order },
+				signal
 			}
 		)
 	},
