@@ -1,5 +1,5 @@
 <template>
-	<n-card :title segmented class="@container" :size>
+	<div class="@container">
 		<div class="my-1 grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3 @3xl:grid-cols-4">
 			<slot name="prefix" />
 			<CardKV
@@ -10,13 +10,11 @@
 			/>
 			<slot name="suffix" />
 		</div>
-	</n-card>
+	</div>
 </template>
 
 <script setup lang="ts">
-import type { CardProps } from "naive-ui"
 import type { SafeAny } from "@/types/utils"
-import { NCard } from "naive-ui"
 import CardKV from "@/components/common/cards/CardKV.vue"
 
 export interface Field {
@@ -26,7 +24,7 @@ export interface Field {
 	formatter?: (value: any) => string | null
 }
 
-const { fields } = defineProps<{ fields: Field[]; title?: string; size?: CardProps["size"] }>()
+const { fields } = defineProps<{ fields: Field[] }>()
 
 function getFieldValue(field: Field): string {
 	const value = field.value

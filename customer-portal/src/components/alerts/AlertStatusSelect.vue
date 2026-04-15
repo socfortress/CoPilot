@@ -1,10 +1,12 @@
 <template>
 	<n-select
+		to="body"
 		:value="selectedStatus"
 		:options="statusOptions"
 		:loading
 		size="small"
 		class="min-w-36"
+		:consistent-menu-width="false"
 		@update:value="handleStatusChange"
 	/>
 </template>
