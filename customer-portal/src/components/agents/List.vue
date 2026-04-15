@@ -57,6 +57,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
+import type { AgentCriticalUpdateSuccessPayload } from "./AgentCriticalSelect.vue"
 import type { AgentsFilters } from "@/components/agents/Filters.vue"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
@@ -71,6 +72,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
+import AgentCriticalSelect from "./AgentCriticalSelect.vue"
 import AgentDetailsButton from "./AgentDetailsButton.vue"
 
 const emit = defineEmits<{
@@ -190,16 +192,25 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		}
 	},
 	{
+		title: "Critical Asset",
+		key: "critical_asset",
+		minWidth: 180,
+		render: row => {
+			return (
+				<AgentCriticalSelect
+					agentId={row.agent_id}
+					critical={row.critical_asset}
+					onSuccess={handleCriticalAssetUpdated}
+				/>
+			)
+		}
+	},
+	{
 		title: "Actions",
 		key: "actions",
 		minWidth: 180,
 		render: row => {
-			return (
-				<AgentDetailsButton
-					agentId={row.agent_id}
-					onCriticalAssetUpdated={payload => handleCriticalAssetUpdated(row.agent_id, payload)}
-				/>
-			)
+			return <AgentDetailsButton agentId={row.agent_id} onCriticalAssetUpdated={handleCriticalAssetUpdated} />
 		}
 	}
 ])
@@ -226,10 +237,10 @@ const loadAgents = useDebounceFn(async () => {
 	}
 }, 400)
 
-function handleCriticalAssetUpdated(agentId: string, payload: boolean) {
-	const agent = data.value.find(a => a.agent_id === agentId)
+function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) {
+	const agent = data.value.find(a => a.agent_id === payload.agentId)
 	if (agent) {
-		agent.critical_asset = payload
+		agent.critical_asset = payload.critical
 	}
 }
 

@@ -1,25 +1,33 @@
 <template>
 	<EntityDetailsCard :fields>
 		<template #suffix>
-			<n-button type="primary" @click="handleCriticalAssetUpdateSuccess(true)">Update Critical Asset</n-button>
+			<CardKV label="Critical Asset">
+				<AgentCriticalSelect
+					:agent-id="agent.agent_id"
+					:critical="agent.critical_asset"
+					@success="handleCriticalAssetUpdateSuccess"
+				/>
+			</CardKV>
 		</template>
 	</EntityDetailsCard>
 </template>
 
 <script setup lang="ts">
+import type { AgentCriticalUpdateSuccessPayload } from "../AgentCriticalSelect.vue"
 import type { Field } from "@/components/common/entity/EntityDetailsCard.vue"
 import type { Agent } from "@/types/agents"
 import _omit from "lodash/omit"
-import { NButton } from "naive-ui"
 import { computed } from "vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsCard from "@/components/common/entity/EntityDetailsCard.vue"
+import AgentCriticalSelect from "../AgentCriticalSelect.vue"
 
 const props = defineProps<{
 	agent: Agent
 }>()
 
 const emit = defineEmits<{
-	(e: "criticalAssetUpdated", value: boolean): void
+	(e: "criticalAssetUpdated", value: AgentCriticalUpdateSuccessPayload): void
 }>()
 
 const fields = computed<Field[]>(() =>
@@ -29,7 +37,7 @@ const fields = computed<Field[]>(() =>
 	}))
 )
 
-function handleCriticalAssetUpdateSuccess(payload: boolean) {
+function handleCriticalAssetUpdateSuccess(payload: AgentCriticalUpdateSuccessPayload) {
 	emit("criticalAssetUpdated", payload)
 }
 </script>

@@ -2,20 +2,16 @@
 	<n-spin :show="loadingDetails">
 		<div class="@container min-h-50">
 			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
-
-			<n-tabs v-else-if="agent" type="line" animated>
-				<n-tab-pane name="overview" tab="Overview">
-					<AgentOverview :agent @critical-asset-updated="handleCriticalAssetUpdated" />
-				</n-tab-pane>
-			</n-tabs>
+			<AgentOverview v-else-if="agent" :agent @critical-asset-updated="handleCriticalAssetUpdated" />
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
+import type { AgentCriticalUpdateSuccessPayload } from "../AgentCriticalSelect.vue"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
+import { NAlert, NSpin } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -26,7 +22,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "criticalAssetUpdated", value: boolean): void
+	(e: "criticalAssetUpdated", value: AgentCriticalUpdateSuccessPayload): void
 }>()
 
 const agent = ref<Agent | null>(null)
@@ -52,9 +48,9 @@ async function loadAgentDetails() {
 	}
 }
 
-function handleCriticalAssetUpdated(payload: boolean) {
+function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) {
 	if (!agent.value) return
-	agent.value.critical_asset = payload
+	agent.value.critical_asset = payload.critical
 	emit("criticalAssetUpdated", payload)
 }
 

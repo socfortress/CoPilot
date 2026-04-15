@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { AgentCriticalUpdateSuccessPayload } from "./AgentCriticalSelect.vue"
 import { NButton, NButtonGroup, NModal } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -40,13 +41,13 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "criticalAssetUpdated", value: boolean): void
+	(e: "criticalAssetUpdated", value: AgentCriticalUpdateSuccessPayload): void
 }>()
 
 const { routeAgentDetails } = useNavigation()
 const showDetails = ref(false)
 
-function handleCriticalAssetUpdated(payload: boolean) {
+function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) {
 	emit("criticalAssetUpdated", payload)
 }
 </script>
