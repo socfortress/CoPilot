@@ -348,7 +348,10 @@ export function getStatusColor(status: string | null): "error" | "warning" | "in
 		error: "error",
 		success: "success",
 		progress: "info",
-		failure: "error"
+		failure: "error",
+		disconnected: "error",
+		active: "success",
+		never_connected: "warning"
 	}
 
 	return map[status.toLowerCase()] ?? "default"

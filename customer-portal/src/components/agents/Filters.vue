@@ -21,15 +21,16 @@
 		<div>
 			<n-input v-model:value="filters.search" placeholder="Search (hostname, ip address, agent id)" clearable />
 		</div>
-		<div>
-			<n-checkbox v-model:checked="filters.critical">Only Critical Assets</n-checkbox>
+		<div class="flex items-center justify-between gap-2">
+			<n-checkbox v-model:checked="filters.critical">Critical Assets</n-checkbox>
+			<n-button size="small" secondary @click="resetFilters">Reset filters</n-button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { AgentStatus } from "@/types/agents"
-import { NCheckbox, NInput, NSelect } from "naive-ui"
+import { NButton, NCheckbox, NInput, NSelect } from "naive-ui"
 import { computed } from "vue"
 
 export interface AgentsFilters {
@@ -53,4 +54,13 @@ const statusOptions = computed(() => {
 const osOptions = computed(() => {
 	return props.os.map(os => ({ label: os, value: os }))
 })
+
+function resetFilters() {
+	filters.value = {
+		status: null,
+		critical: false,
+		os: null,
+		search: null
+	}
+}
 </script>

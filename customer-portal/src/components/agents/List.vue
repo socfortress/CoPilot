@@ -28,7 +28,7 @@
 						size="small"
 						:data="dataPaginated"
 						:columns
-						:scroll-x="1400"
+						:scroll-x="1500"
 						class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 					>
 						<template #empty>
@@ -144,20 +144,32 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		title: "Agent",
 		key: "agent_id",
 		fixed: simpleMode.value ? undefined : "left",
-		width: 380,
-		render: row => <div>{row.agent_id}</div>
+		width: 280,
+		render: row => (
+			<div class="flex items-center gap-2">
+				<NTag
+					type={getStatusColor(row.wazuh_agent_status)}
+					round
+					class="p-1! [&_.n-tag\_\_icon]:m-0!"
+					v-slots={{
+						icon: () => <Icon name="carbon:circle-solid" />
+					}}
+				/>
+				<div class="flex flex-col gap-0.5">
+					<div class="font-medium">{row.hostname}</div>
+					<div class="text-secondary text-xs">
+						ID:
+						{row.agent_id}
+					</div>
+				</div>
+			</div>
+		)
 	},
 	{
 		title: "IP Address",
 		key: "ip_address",
 		width: 180,
-		render: row => <div>{row.ip_address}</div>
-	},
-	{
-		title: "Hostname",
-		key: "hostname",
-		width: 180,
-		render: row => <div>{row.hostname}</div>
+		render: row => <div class="font-mono">{row.ip_address}</div>
 	},
 	{
 		title: "Operating System",
@@ -169,24 +181,16 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		title: "Last Seen",
 		key: "wazuh_last_seen",
 		width: 200,
-		render: row => <span class="font-mono text-sm">{formatDate(row.wazuh_last_seen, dFormats.datetime)}</span>
+		render: row => <div class="font-mono">{formatDate(row.wazuh_last_seen, dFormats.datetime)}</div>
 	},
 	{
 		title: "Status",
 		key: "wazuh_agent_status",
-		width: 120,
+		width: 180,
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
-					<NTag
-						type={getStatusColor(row.wazuh_agent_status)}
-						round
-						class="p-1! [&_.n-tag\_\_icon]:m-0!"
-						v-slots={{
-							icon: () => <Icon name="carbon:circle-solid" />
-						}}
-					/>
-					<div>{row.wazuh_agent_status}</div>
+					<Chip type={getStatusColor(row.wazuh_agent_status)} value={row.wazuh_agent_status.toUpperCase()} />
 				</div>
 			)
 		}
