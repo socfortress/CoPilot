@@ -6,6 +6,7 @@
 		:loading
 		size="small"
 		class="min-w-36"
+		:status="selectedCritical === 'CRITICAL' ? 'error' : undefined"
 		:consistent-menu-width="false"
 		@update:value="handleCriticalChange"
 	/>
