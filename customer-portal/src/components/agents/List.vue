@@ -1,0 +1,228 @@
+<template>
+	<div>
+		<div class="flex flex-col gap-4">
+			<Filters v-model:value="filters" :status="statusesList" :os="osList" />
+
+			<div class="flex flex-col gap-2">
+				<div ref="headerRef" class="flex items-center justify-between">
+					<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
+
+					<div class="flex items-center gap-2 whitespace-nowrap">
+						<n-pagination
+							v-model:page="pagination.page"
+							v-model:page-size="pagination.pageSize"
+							:page-slot
+							:show-size-picker
+							:page-sizes
+							:item-count="pagination.total"
+							:simple="simpleMode"
+							size="small"
+						/>
+					</div>
+				</div>
+
+				<div class="grow overflow-hidden">
+					<n-data-table
+						bordered
+						:loading
+						size="small"
+						:data="dataPaginated"
+						:columns
+						:scroll-x="1400"
+						class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
+					>
+						<template #empty>
+							<n-empty description="No agents found">
+								<template #extra>try changing the filters</template>
+							</n-empty>
+						</template>
+					</n-data-table>
+				</div>
+
+				<div class="flex justify-end">
+					<n-pagination
+						v-if="pagination.total > pagination.pageSize"
+						v-model:page="pagination.page"
+						:page-size="pagination.pageSize"
+						:item-count="pagination.total"
+						:page-slot="6"
+						size="small"
+						:simple="simpleMode"
+					/>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script setup lang="tsx">
+import type { DataTableColumns } from "naive-ui"
+import type { AgentsFilters } from "@/components/agents/Filters.vue"
+import type { Agent } from "@/types/agents"
+import type { ApiError } from "@/types/common"
+import { useDebounceFn, useElementSize } from "@vueuse/core"
+import axios from "axios"
+import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
+import Api from "@/api"
+import Filters from "@/components/agents/Filters.vue"
+import Chip from "@/components/common/Chip.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { formatDate } from "@/utils/format"
+
+const emit = defineEmits<{
+	(e: "loaded", value: Agent[]): void
+	(e: "loading", value: boolean): void
+}>()
+
+const message = useMessage()
+const loading = ref(false)
+const dFormats = useSettingsStore().dateFormat
+
+const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
+const pageSizes = [10, 4, 50, 100]
+const pageSlot = computed(() => (headerWidthRef.value < 800 ? 5 : 8))
+const simpleMode = computed(() => headerWidthRef.value < 600)
+const showSizePicker = ref(true)
+
+const pagination = ref({
+	page: 1,
+	pageSize: pageSizes[1],
+	total: 0
+})
+
+const filters = ref<AgentsFilters>({
+	status: null,
+	os: null,
+	critical: false,
+	search: null
+})
+
+const data = ref<Agent[]>([])
+
+const dataFiltered = computed(() => {
+	return data.value
+})
+
+const dataPaginated = computed(() => {
+	const from = (pagination.value.page - 1) * pagination.value.pageSize
+	const to = pagination.value.page * pagination.value.pageSize
+
+	return dataFiltered.value.slice(from, to)
+})
+
+const statusesList = computed(() => [...new Set(data.value.map(agent => agent.wazuh_agent_status))])
+const osList = computed(() => [...new Set(data.value.map(agent => agent.os))])
+
+const columns = computed<DataTableColumns<Agent>>(() => [
+	{
+		title: "Agent",
+		key: "agent_id",
+		fixed: simpleMode.value ? undefined : "left",
+		width: 380,
+		render: row => <div>{row.agent_id}</div>
+	},
+	{
+		title: "IP Address",
+		key: "ip_address",
+		width: 180,
+		render: row => <div>{row.ip_address}</div>
+	},
+	{
+		title: "Operating System",
+		key: "os",
+		width: "100%",
+		render: row => <div>{row.os}</div>
+	},
+	{
+		title: "Last Seen",
+		key: "wazuh_last_seen",
+		width: 200,
+		render: row => <span class="font-mono text-sm">{formatDate(row.wazuh_last_seen, dFormats.datetime)}</span>
+	},
+	{
+		title: "Status",
+		key: "wazuh_agent_status",
+		width: 120,
+		render: row => {
+			return (
+				<div class="flex items-center gap-2">
+					<NTag
+						type={getStatusColor(row.wazuh_agent_status)}
+						round
+						class="p-1! [&_.n-tag\_\_icon]:m-0!"
+						v-slots={{
+							icon: () => <Icon name="carbon:circle-solid" />
+						}}
+					/>
+					<div>{row.wazuh_agent_status}</div>
+				</div>
+			)
+		}
+	},
+	{
+		title: "Actions",
+		key: "actions",
+		minWidth: 180,
+		render: () => {
+			return <div>actions...</div>
+		}
+	}
+])
+
+let abortController = new AbortController()
+
+const loadAgents = useDebounceFn(async () => {
+	loading.value = true
+
+	abortController?.abort()
+	abortController = new AbortController()
+
+	try {
+		const response = await Api.agents.getAgents()
+
+		data.value = response.data.agents || []
+		pagination.value.total = data.value.length || 0
+		emit("loaded", data.value)
+		loading.value = false
+	} catch (err) {
+		if (!axios.isCancel(err)) {
+			message.error(getApiErrorMessage(err as ApiError))
+			loading.value = false
+		}
+	}
+}, 400)
+
+function resetPage() {
+	pagination.value.page = 1
+}
+
+watch(
+	loading,
+	value => {
+		emit("loading", value)
+	},
+	{ immediate: true }
+)
+
+/*
+watch(
+	() => filters.value.value,
+	() => {
+		applyFilters()
+	},
+	{ deep: true, immediate: true}
+)
+*/
+
+watch([() => pagination.value.pageSize], resetPage, {
+	deep: true,
+	immediate: true
+})
+
+onBeforeMount(() => {
+	loadAgents()
+})
+</script>

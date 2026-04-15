@@ -1,3 +1,5 @@
+export type AgentStatus = "active" | "disconnected" | "never_connected" | "pending"
+
 export interface Agent {
 	id: number
 	agent_id: string
@@ -6,13 +8,13 @@ export interface Agent {
 	hostname: string
 	label: string
 	critical_asset: boolean
-	wazuh_last_seen: string
-	velociraptor_id: string | null
-	velociraptor_last_seen: string | null
-	wazuh_agent_version: string
-	wazuh_agent_status: string
-	velociraptor_agent_version: string | null
-	customer_code: string
 	quarantined: boolean
+	wazuh_last_seen: Date
+	wazuh_agent_version: string
+	wazuh_agent_status: AgentStatus
+	velociraptor_id: string | null
+	velociraptor_agent_version: string | null
+	velociraptor_last_seen: Date | null
 	velociraptor_org: string | null
+	customer_code: string
 }

@@ -1,581 +1,611 @@
 <template>
-	<div class="min-h-screen bg-gray-50">
-		<!-- Main Content -->
-		<main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-			<div class="px-4 py-6 sm:px-0">
-				<!-- Page Header -->
-				<div class="mb-8">
-					<h2 class="mb-2 text-2xl font-bold text-gray-900">Agents</h2>
-					<p class="text-gray-600">Monitor and manage your organization's security agents</p>
-				</div>
-
-				<!-- Loading State -->
-				<div v-if="loading" class="flex items-center justify-center py-12">
-					<div class="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-					<span class="ml-3 text-gray-600">Loading agents...</span>
-				</div>
-
-				<!-- Error State -->
-				<div v-else-if="error" class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-					<div class="flex">
-						<div class="shrink-0">
-							<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-								<path
-									fill-rule="evenodd"
-									d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-									clip-rule="evenodd"
-								/>
-							</svg>
-						</div>
-						<div class="ml-3">
-							<h3 class="text-sm font-medium text-red-800">Error Loading Agents</h3>
-							<div class="mt-2 text-sm text-red-700">{{ error }}</div>
-							<div class="mt-3">
-								<button
-									class="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200"
-									@click="loadAgents"
-								>
-									Try Again
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Content -->
-				<div v-else>
-					<!-- Stats Summary -->
-					<div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-							<div class="p-6">
-								<div class="flex items-center">
-									<div class="shrink-0">
-										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500">
-											<svg
-												class="h-5 w-5 text-white"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-												></path>
-											</svg>
-										</div>
-									</div>
-									<div class="ml-5 w-0 flex-1">
-										<dl>
-											<dt class="truncate text-sm font-medium text-gray-500">Total Agents</dt>
-											<dd class="text-2xl font-semibold text-gray-900">{{ agents.length }}</dd>
-										</dl>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-							<div class="p-6">
-								<div class="flex items-center">
-									<div class="shrink-0">
-										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500">
-											<svg
-												class="h-5 w-5 text-white"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-												></path>
-											</svg>
-										</div>
-									</div>
-									<div class="ml-5 w-0 flex-1">
-										<dl>
-											<dt class="truncate text-sm font-medium text-gray-500">Active Agents</dt>
-											<dd class="text-2xl font-semibold text-gray-900">{{ activeAgents }}</dd>
-										</dl>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-							<div class="p-6">
-								<div class="flex items-center">
-									<div class="shrink-0">
-										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-500">
-											<svg
-												class="h-5 w-5 text-white"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-												></path>
-											</svg>
-										</div>
-									</div>
-									<div class="ml-5 w-0 flex-1">
-										<dl>
-											<dt class="truncate text-sm font-medium text-gray-500">Critical Assets</dt>
-											<dd class="text-2xl font-semibold text-gray-900">{{ criticalAgents }}</dd>
-										</dl>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-							<div class="p-6">
-								<div class="flex items-center">
-									<div class="shrink-0">
-										<div class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500">
-											<svg
-												class="h-5 w-5 text-white"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-												></path>
-											</svg>
-										</div>
-									</div>
-									<div class="ml-5 w-0 flex-1">
-										<dl>
-											<dt class="truncate text-sm font-medium text-gray-500">Offline Agents</dt>
-											<dd class="text-2xl font-semibold text-gray-900">{{ offlineAgents }}</dd>
-										</dl>
-									</div>
-								</div>
-							</div>
-						</div>
+	<div class="page @container flex flex-col gap-6">
+		<AgentsOverviewStatsCards :stats :loading="loadingAgents" />
+		<AgentsList @loaded="agentsList = $event" @loading="loadingAgents = $event" />
+		<div class="min-h-screen bg-gray-50">
+			<!-- Main Content -->
+			<main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+				<div class="px-4 py-6 sm:px-0">
+					<!-- Page Header -->
+					<div class="mb-8">
+						<h2 class="mb-2 text-2xl font-bold text-gray-900">Agents</h2>
+						<p class="text-gray-600">Monitor and manage your organization's security agents</p>
 					</div>
 
-					<!-- Filters -->
-					<div class="mb-6 rounded-lg bg-white shadow-sm">
-						<div class="border-b border-gray-200 px-6 py-4">
-							<h3 class="text-lg font-medium text-gray-900">Filters</h3>
-						</div>
-						<div class="p-6">
-							<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-								<div>
-									<label class="mb-2 block text-sm font-medium text-gray-700">Status</label>
-									<select
-										v-model="filters.status"
-										class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-									>
-										<option value="">All Statuses</option>
-										<option value="active">Active</option>
-										<option value="never_connected">Never Connected</option>
-										<option value="disconnected">Disconnected</option>
-										<option value="pending">Pending</option>
-									</select>
-								</div>
-								<div>
-									<label class="mb-2 block text-sm font-medium text-gray-700">Critical Asset</label>
-									<select
-										v-model="filters.critical"
-										class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-									>
-										<option value="">All Assets</option>
-										<option value="true">Critical Assets</option>
-										<option value="false">Regular Assets</option>
-									</select>
-								</div>
-								<div>
-									<label class="mb-2 block text-sm font-medium text-gray-700">Operating System</label>
-									<select
-										v-model="filters.os"
-										class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-									>
-										<option value="">All OS</option>
-										<option v-for="os in uniqueOperatingSystems" :key="os" :value="os">
-											{{ os }}
-										</option>
-									</select>
-								</div>
-								<div>
-									<label class="mb-2 block text-sm font-medium text-gray-700">Search</label>
-									<input
-										v-model="filters.search"
-										type="text"
-										placeholder="Search hostname, IP, agent ID..."
-										class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+					<!-- Loading State -->
+					<div v-if="loading" class="flex items-center justify-center py-12">
+						<div class="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+						<span class="ml-3 text-gray-600">Loading agents...</span>
+					</div>
+
+					<!-- Error State -->
+					<div v-else-if="error" class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+						<div class="flex">
+							<div class="shrink-0">
+								<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+									<path
+										fill-rule="evenodd"
+										d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+										clip-rule="evenodd"
 									/>
-								</div>
+								</svg>
 							</div>
-							<div class="mt-4 flex justify-end">
-								<button
-									class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-									@click="clearFilters"
-								>
-									Clear Filters
-								</button>
+							<div class="ml-3">
+								<h3 class="text-sm font-medium text-red-800">Error Loading Agents</h3>
+								<div class="mt-2 text-sm text-red-700">{{ error }}</div>
+								<div class="mt-3">
+									<button
+										class="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200"
+										@click="loadAgents"
+									>
+										Try Again
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 
-					<!-- Agents Table -->
-					<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-						<div class="border-b border-gray-200 px-6 py-4">
-							<h3 class="text-lg font-medium text-gray-900">Agents ({{ filteredAgents.length }})</h3>
+					<!-- Content -->
+					<div v-else>
+						<!-- Stats Summary -->
+						<div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+							<div class="overflow-hidden rounded-lg bg-white shadow-sm">
+								<div class="p-6">
+									<div class="flex items-center">
+										<div class="shrink-0">
+											<div
+												class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500"
+											>
+												<svg
+													class="h-5 w-5 text-white"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+													></path>
+												</svg>
+											</div>
+										</div>
+										<div class="ml-5 w-0 flex-1">
+											<dl>
+												<dt class="truncate text-sm font-medium text-gray-500">Total Agents</dt>
+												<dd class="text-2xl font-semibold text-gray-900">
+													{{ agents.length }}
+												</dd>
+											</dl>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="overflow-hidden rounded-lg bg-white shadow-sm">
+								<div class="p-6">
+									<div class="flex items-center">
+										<div class="shrink-0">
+											<div
+												class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500"
+											>
+												<svg
+													class="h-5 w-5 text-white"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+													></path>
+												</svg>
+											</div>
+										</div>
+										<div class="ml-5 w-0 flex-1">
+											<dl>
+												<dt class="truncate text-sm font-medium text-gray-500">
+													Active Agents
+												</dt>
+												<dd class="text-2xl font-semibold text-gray-900">{{ activeAgents }}</dd>
+											</dl>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="overflow-hidden rounded-lg bg-white shadow-sm">
+								<div class="p-6">
+									<div class="flex items-center">
+										<div class="shrink-0">
+											<div
+												class="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-500"
+											>
+												<svg
+													class="h-5 w-5 text-white"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+													></path>
+												</svg>
+											</div>
+										</div>
+										<div class="ml-5 w-0 flex-1">
+											<dl>
+												<dt class="truncate text-sm font-medium text-gray-500">
+													Critical Assets
+												</dt>
+												<dd class="text-2xl font-semibold text-gray-900">
+													{{ criticalAgents }}
+												</dd>
+											</dl>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="overflow-hidden rounded-lg bg-white shadow-sm">
+								<div class="p-6">
+									<div class="flex items-center">
+										<div class="shrink-0">
+											<div class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500">
+												<svg
+													class="h-5 w-5 text-white"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+													></path>
+												</svg>
+											</div>
+										</div>
+										<div class="ml-5 w-0 flex-1">
+											<dl>
+												<dt class="truncate text-sm font-medium text-gray-500">
+													Offline Agents
+												</dt>
+												<dd class="text-2xl font-semibold text-gray-900">
+													{{ offlineAgents }}
+												</dd>
+											</dl>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
-						<div v-if="filteredAgents.length === 0" class="p-6 text-center text-gray-500">
-							No agents found matching your criteria.
-						</div>
-						<div v-else class="overflow-x-auto">
-							<table class="min-w-full divide-y divide-gray-200">
-								<thead class="bg-gray-50">
-									<tr>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+
+						<!-- Filters -->
+						<div class="mb-6 rounded-lg bg-white shadow-sm">
+							<div class="border-b border-gray-200 px-6 py-4">
+								<h3 class="text-lg font-medium text-gray-900">Filters</h3>
+							</div>
+							<div class="p-6">
+								<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+									<div>
+										<label class="mb-2 block text-sm font-medium text-gray-700">Status</label>
+										<select
+											v-model="filters.status"
+											class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 										>
-											Agent
-										</th>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											<option value="">All Statuses</option>
+											<option value="active">Active</option>
+											<option value="never_connected">Never Connected</option>
+											<option value="disconnected">Disconnected</option>
+											<option value="pending">Pending</option>
+										</select>
+									</div>
+									<div>
+										<label class="mb-2 block text-sm font-medium text-gray-700">
+											Critical Asset
+										</label>
+										<select
+											v-model="filters.critical"
+											class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 										>
-											Status
-										</th>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-										>
+											<option value="">All Assets</option>
+											<option value="true">Critical Assets</option>
+											<option value="false">Regular Assets</option>
+										</select>
+									</div>
+									<div>
+										<label class="mb-2 block text-sm font-medium text-gray-700">
 											Operating System
-										</th>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+										</label>
+										<select
+											v-model="filters.os"
+											class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 										>
-											Last Seen
-										</th>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-										>
-											Version
-										</th>
-										<th
-											scope="col"
-											class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-										>
-											Actions
-										</th>
-									</tr>
-								</thead>
-								<tbody class="divide-y divide-gray-200 bg-white">
-									<tr v-for="agent in paginatedAgents" :key="agent.id" class="hover:bg-gray-50">
-										<td class="px-6 py-4 whitespace-nowrap">
-											<div class="flex items-center">
-												<div class="h-10 w-10 shrink-0">
-													<div
-														class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-white"
+											<option value="">All OS</option>
+											<option v-for="os in uniqueOperatingSystems" :key="os" :value="os">
+												{{ os }}
+											</option>
+										</select>
+									</div>
+									<div>
+										<label class="mb-2 block text-sm font-medium text-gray-700">Search</label>
+										<input
+											v-model="filters.search"
+											type="text"
+											placeholder="Search hostname, IP, agent ID..."
+											class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+										/>
+									</div>
+								</div>
+								<div class="mt-4 flex justify-end">
+									<button
+										class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+										@click="clearFilters"
+									>
+										Clear Filters
+									</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Agents Table -->
+						<div class="overflow-hidden rounded-lg bg-white shadow-sm">
+							<div class="border-b border-gray-200 px-6 py-4">
+								<h3 class="text-lg font-medium text-gray-900">Agents ({{ filteredAgents.length }})</h3>
+							</div>
+							<div v-if="filteredAgents.length === 0" class="p-6 text-center text-gray-500">
+								No agents found matching your criteria.
+							</div>
+							<div v-else class="overflow-x-auto">
+								<table class="min-w-full divide-y divide-gray-200">
+									<thead class="bg-gray-50">
+										<tr>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Agent
+											</th>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Status
+											</th>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Operating System
+											</th>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Last Seen
+											</th>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Version
+											</th>
+											<th
+												scope="col"
+												class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+											>
+												Actions
+											</th>
+										</tr>
+									</thead>
+									<tbody class="divide-y divide-gray-200 bg-white">
+										<tr v-for="agent in paginatedAgents" :key="agent.id" class="hover:bg-gray-50">
+											<td class="px-6 py-4 whitespace-nowrap">
+												<div class="flex items-center">
+													<div class="h-10 w-10 shrink-0">
+														<div
+															class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-white"
+															:class="{
+																'bg-green-500': agent.wazuh_agent_status === 'active',
+																'bg-red-500':
+																	agent.wazuh_agent_status === 'disconnected',
+																'bg-yellow-500':
+																	agent.wazuh_agent_status === 'never_connected',
+																'bg-gray-500': agent.wazuh_agent_status === 'pending'
+															}"
+														>
+															{{ agent.hostname.charAt(0).toUpperCase() }}
+														</div>
+													</div>
+													<div class="ml-4">
+														<div class="text-sm font-medium text-gray-900">
+															{{ agent.hostname }}
+														</div>
+														<div class="text-sm text-gray-500">{{ agent.ip_address }}</div>
+														<div class="text-xs text-gray-400">
+															ID: {{ agent.agent_id }}
+														</div>
+													</div>
+												</div>
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap">
+												<div class="flex items-center">
+													<span
+														class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
 														:class="{
-															'bg-green-500': agent.wazuh_agent_status === 'active',
-															'bg-red-500': agent.wazuh_agent_status === 'disconnected',
-															'bg-yellow-500':
+															'bg-green-100 text-green-800':
+																agent.wazuh_agent_status === 'active',
+															'bg-red-100 text-red-800':
+																agent.wazuh_agent_status === 'disconnected',
+															'bg-yellow-100 text-yellow-800':
 																agent.wazuh_agent_status === 'never_connected',
-															'bg-gray-500': agent.wazuh_agent_status === 'pending'
+															'bg-gray-100 text-gray-800':
+																agent.wazuh_agent_status === 'pending'
 														}"
 													>
-														{{ agent.hostname.charAt(0).toUpperCase() }}
-													</div>
+														{{ agent.wazuh_agent_status }}
+													</span>
+													<span
+														v-if="agent.critical_asset"
+														class="ml-2 inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800"
+													>
+														Critical
+													</span>
+													<span
+														v-if="agent.quarantined"
+														class="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800"
+													>
+														Quarantined
+													</span>
 												</div>
-												<div class="ml-4">
-													<div class="text-sm font-medium text-gray-900">
-														{{ agent.hostname }}
-													</div>
-													<div class="text-sm text-gray-500">{{ agent.ip_address }}</div>
-													<div class="text-xs text-gray-400">ID: {{ agent.agent_id }}</div>
+											</td>
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+												{{ agent.os }}
+											</td>
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+												{{ formatTimeAgo(agent.wazuh_last_seen, dFormats.datetime) }}
+											</td>
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+												<div>Wazuh: {{ agent.wazuh_agent_version }}</div>
+												<div v-if="agent.velociraptor_agent_version" class="text-xs">
+													VR: {{ agent.velociraptor_agent_version }}
 												</div>
-											</div>
-										</td>
-										<td class="px-6 py-4 whitespace-nowrap">
-											<div class="flex items-center">
-												<span
-													class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-													:class="{
-														'bg-green-100 text-green-800':
-															agent.wazuh_agent_status === 'active',
-														'bg-red-100 text-red-800':
-															agent.wazuh_agent_status === 'disconnected',
-														'bg-yellow-100 text-yellow-800':
-															agent.wazuh_agent_status === 'never_connected',
-														'bg-gray-100 text-gray-800':
-															agent.wazuh_agent_status === 'pending'
-													}"
-												>
-													{{ agent.wazuh_agent_status }}
-												</span>
-												<span
-													v-if="agent.critical_asset"
-													class="ml-2 inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800"
-												>
-													Critical
-												</span>
-												<span
-													v-if="agent.quarantined"
-													class="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800"
-												>
-													Quarantined
-												</span>
-											</div>
-										</td>
-										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-											{{ agent.os }}
-										</td>
-										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-											{{ formatTimeAgo(agent.wazuh_last_seen, dFormats.datetime) }}
-										</td>
-										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-											<div>Wazuh: {{ agent.wazuh_agent_version }}</div>
-											<div v-if="agent.velociraptor_agent_version" class="text-xs">
-												VR: {{ agent.velociraptor_agent_version }}
-											</div>
-										</td>
-										<td class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-											<div class="flex space-x-2">
-												<button
-													v-if="!agent.critical_asset"
-													class="text-xs text-orange-600 hover:text-orange-900"
-													:disabled="updatingAgent === agent.agent_id"
-													@click="markAsCritical(agent)"
-												>
-													Mark Critical
-												</button>
-												<button
-													v-else
-													class="text-xs text-gray-600 hover:text-gray-900"
-													:disabled="updatingAgent === agent.agent_id"
-													@click="markAsNotCritical(agent)"
-												>
-													Remove Critical
-												</button>
-												<button
-													class="text-xs text-indigo-600 hover:text-indigo-900"
-													@click="viewAgentDetails(agent)"
-												>
-													Details
-												</button>
-											</div>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<!-- Pagination -->
-						<div
-							v-if="totalPages > 1"
-							class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6"
-						>
-							<div class="flex flex-1 justify-between sm:hidden">
-								<button
-									:disabled="currentPage <= 1"
-									class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-									@click="previousPage"
-								>
-									Previous
-								</button>
-								<button
-									:disabled="currentPage >= totalPages"
-									class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-									@click="nextPage"
-								>
-									Next
-								</button>
+											</td>
+											<td class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+												<div class="flex space-x-2">
+													<button
+														v-if="!agent.critical_asset"
+														class="text-xs text-orange-600 hover:text-orange-900"
+														:disabled="updatingAgent === agent.agent_id"
+														@click="markAsCritical(agent)"
+													>
+														Mark Critical
+													</button>
+													<button
+														v-else
+														class="text-xs text-gray-600 hover:text-gray-900"
+														:disabled="updatingAgent === agent.agent_id"
+														@click="markAsNotCritical(agent)"
+													>
+														Remove Critical
+													</button>
+													<button
+														class="text-xs text-indigo-600 hover:text-indigo-900"
+														@click="viewAgentDetails(agent)"
+													>
+														Details
+													</button>
+												</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
 							</div>
-							<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-								<div>
-									<p class="text-sm text-gray-700">
-										Showing
-										<span class="font-medium">{{ (currentPage - 1) * pageSize + 1 }}</span>
-										to
-										<span class="font-medium">
-											{{ Math.min(currentPage * pageSize, filteredAgents.length) }}
-										</span>
-										of
-										<span class="font-medium">{{ filteredAgents.length }}</span>
-										results
-									</p>
-								</div>
-								<div>
-									<nav
-										class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm"
-										aria-label="Pagination"
+
+							<!-- Pagination -->
+							<div
+								v-if="totalPages > 1"
+								class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6"
+							>
+								<div class="flex flex-1 justify-between sm:hidden">
+									<button
+										:disabled="currentPage <= 1"
+										class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+										@click="previousPage"
 									>
-										<button
-											:disabled="currentPage <= 1"
-											class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-											@click="previousPage"
+										Previous
+									</button>
+									<button
+										:disabled="currentPage >= totalPages"
+										class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+										@click="nextPage"
+									>
+										Next
+									</button>
+								</div>
+								<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+									<div>
+										<p class="text-sm text-gray-700">
+											Showing
+											<span class="font-medium">{{ (currentPage - 1) * pageSize + 1 }}</span>
+											to
+											<span class="font-medium">
+												{{ Math.min(currentPage * pageSize, filteredAgents.length) }}
+											</span>
+											of
+											<span class="font-medium">{{ filteredAgents.length }}</span>
+											results
+										</p>
+									</div>
+									<div>
+										<nav
+											class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm"
+											aria-label="Pagination"
 										>
-											<span class="sr-only">Previous</span>
-											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-												<path
-													fill-rule="evenodd"
-													d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										</button>
-										<button
-											v-for="page in visiblePages"
-											:key="page"
-											:class="{
-												'z-10 border-indigo-500 bg-indigo-50 text-indigo-600':
-													page === currentPage,
-												'border-gray-300 bg-white text-gray-500 hover:bg-gray-50':
-													page !== currentPage
-											}"
-											class="relative inline-flex items-center border px-4 py-2 text-sm font-medium"
-											:disabled="typeof page === 'string'"
-											@click="typeof page === 'number' ? (currentPage = page) : null"
-										>
-											{{ page }}
-										</button>
-										<button
-											:disabled="currentPage >= totalPages"
-											class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-											@click="nextPage"
-										>
-											<span class="sr-only">Next</span>
-											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-												<path
-													fill-rule="evenodd"
-													d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										</button>
-									</nav>
+											<button
+												:disabled="currentPage <= 1"
+												class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+												@click="previousPage"
+											>
+												<span class="sr-only">Previous</span>
+												<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+													<path
+														fill-rule="evenodd"
+														d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</button>
+											<button
+												v-for="page in visiblePages"
+												:key="page"
+												:class="{
+													'z-10 border-indigo-500 bg-indigo-50 text-indigo-600':
+														page === currentPage,
+													'border-gray-300 bg-white text-gray-500 hover:bg-gray-50':
+														page !== currentPage
+												}"
+												class="relative inline-flex items-center border px-4 py-2 text-sm font-medium"
+												:disabled="typeof page === 'string'"
+												@click="typeof page === 'number' ? (currentPage = page) : null"
+											>
+												{{ page }}
+											</button>
+											<button
+												:disabled="currentPage >= totalPages"
+												class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+												@click="nextPage"
+											>
+												<span class="sr-only">Next</span>
+												<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+													<path
+														fill-rule="evenodd"
+														d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</button>
+										</nav>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-		</main>
+			</main>
 
-		<!-- Agent Details Modal -->
-		<div
-			v-if="selectedAgent"
-			class="bg-opacity-50 fixed inset-0 z-50 h-full w-full overflow-y-auto bg-gray-600"
-			@click="closeAgentDetails"
-		>
+			<!-- Agent Details Modal -->
 			<div
-				class="relative top-20 mx-auto w-11/12 rounded-md border bg-white p-5 shadow-lg md:w-3/4 lg:w-1/2"
-				@click.stop
+				v-if="selectedAgent"
+				class="bg-opacity-50 fixed inset-0 z-50 h-full w-full overflow-y-auto bg-gray-600"
+				@click="closeAgentDetails"
 			>
-				<div class="mb-4 flex items-center justify-between">
-					<h3 class="text-lg font-bold text-gray-900">Agent Details</h3>
-					<button class="text-gray-400 hover:text-gray-600" @click="closeAgentDetails">
-						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							></path>
-						</svg>
-					</button>
-				</div>
+				<div
+					class="relative top-20 mx-auto w-11/12 rounded-md border bg-white p-5 shadow-lg md:w-3/4 lg:w-1/2"
+					@click.stop
+				>
+					<div class="mb-4 flex items-center justify-between">
+						<h3 class="text-lg font-bold text-gray-900">Agent Details</h3>
+						<button class="text-gray-400 hover:text-gray-600" @click="closeAgentDetails">
+							<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								></path>
+							</svg>
+						</button>
+					</div>
 
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Hostname</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.hostname }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Agent ID</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.agent_id }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">IP Address</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.ip_address }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Operating System</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.os }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Wazuh Status</label>
-						<span
-							class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-							:class="{
-								'bg-green-100 text-green-800': selectedAgent.wazuh_agent_status === 'active',
-								'bg-red-100 text-red-800': selectedAgent.wazuh_agent_status === 'disconnected',
-								'bg-yellow-100 text-yellow-800': selectedAgent.wazuh_agent_status === 'never_connected',
-								'bg-gray-100 text-gray-800': selectedAgent.wazuh_agent_status === 'pending'
-							}"
-						>
-							{{ selectedAgent.wazuh_agent_status }}
-						</span>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Wazuh Version</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.wazuh_agent_version }}</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Last Seen (Wazuh)</label>
-						<p class="mt-1 text-sm text-gray-900">
-							{{ formatDate(selectedAgent.wazuh_last_seen, dFormats.datetime) }}
-						</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Velociraptor ID</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.velociraptor_id || "N/A" }}</p>
-					</div>
-					<div v-if="selectedAgent.velociraptor_agent_version">
-						<label class="block text-sm font-medium text-gray-700">Velociraptor Version</label>
-						<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.velociraptor_agent_version }}</p>
-					</div>
-					<div v-if="selectedAgent.velociraptor_last_seen">
-						<label class="block text-sm font-medium text-gray-700">Last Seen (Velociraptor)</label>
-						<p class="mt-1 text-sm text-gray-900">
-							{{ formatDate(selectedAgent.velociraptor_last_seen, dFormats.datetime) }}
-						</p>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Critical Asset</label>
-						<span
-							class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-							:class="{
-								'bg-orange-100 text-orange-800': selectedAgent.critical_asset,
-								'bg-gray-100 text-gray-800': !selectedAgent.critical_asset
-							}"
-						>
-							{{ selectedAgent.critical_asset ? "Yes" : "No" }}
-						</span>
-					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700">Quarantined</label>
-						<span
-							class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-							:class="{
-								'bg-red-100 text-red-800': selectedAgent.quarantined,
-								'bg-gray-100 text-gray-800': !selectedAgent.quarantined
-							}"
-						>
-							{{ selectedAgent.quarantined ? "Yes" : "No" }}
-						</span>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Hostname</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.hostname }}</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Agent ID</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.agent_id }}</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">IP Address</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.ip_address }}</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Operating System</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.os }}</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Wazuh Status</label>
+							<span
+								class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+								:class="{
+									'bg-green-100 text-green-800': selectedAgent.wazuh_agent_status === 'active',
+									'bg-red-100 text-red-800': selectedAgent.wazuh_agent_status === 'disconnected',
+									'bg-yellow-100 text-yellow-800':
+										selectedAgent.wazuh_agent_status === 'never_connected',
+									'bg-gray-100 text-gray-800': selectedAgent.wazuh_agent_status === 'pending'
+								}"
+							>
+								{{ selectedAgent.wazuh_agent_status }}
+							</span>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Wazuh Version</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.wazuh_agent_version }}</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Last Seen (Wazuh)</label>
+							<p class="mt-1 text-sm text-gray-900">
+								{{ formatDate(selectedAgent.wazuh_last_seen, dFormats.datetime) }}
+							</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Velociraptor ID</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.velociraptor_id || "N/A" }}</p>
+						</div>
+						<div v-if="selectedAgent.velociraptor_agent_version">
+							<label class="block text-sm font-medium text-gray-700">Velociraptor Version</label>
+							<p class="mt-1 text-sm text-gray-900">{{ selectedAgent.velociraptor_agent_version }}</p>
+						</div>
+						<div v-if="selectedAgent.velociraptor_last_seen">
+							<label class="block text-sm font-medium text-gray-700">Last Seen (Velociraptor)</label>
+							<p class="mt-1 text-sm text-gray-900">
+								{{ formatDate(selectedAgent.velociraptor_last_seen, dFormats.datetime) }}
+							</p>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Critical Asset</label>
+							<span
+								class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+								:class="{
+									'bg-orange-100 text-orange-800': selectedAgent.critical_asset,
+									'bg-gray-100 text-gray-800': !selectedAgent.critical_asset
+								}"
+							>
+								{{ selectedAgent.critical_asset ? "Yes" : "No" }}
+							</span>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Quarantined</label>
+							<span
+								class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+								:class="{
+									'bg-red-100 text-red-800': selectedAgent.quarantined,
+									'bg-gray-100 text-gray-800': !selectedAgent.quarantined
+								}"
+							>
+								{{ selectedAgent.quarantined ? "Yes" : "No" }}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -584,11 +614,27 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/api/endpoints/agents"
+import type { AgentsStats } from "@/components/agents/AgentsOverviewStatsCards.vue"
+import type { Agent } from "@/types/agents"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import AgentsOverviewStatsCards from "@/components/agents/AgentsOverviewStatsCards.vue"
+import AgentsList from "@/components/agents/List.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate, formatTimeAgo } from "@/utils/format"
+
+const agentsList = ref<Agent[]>([])
+const stats = computed<AgentsStats>(() => {
+	return {
+		total: agentsList.value.length,
+		active: agentsList.value.filter(agent => agent.wazuh_agent_status === "active").length,
+		critical: agentsList.value.filter(agent => agent.critical_asset).length,
+		offline: agentsList.value.filter(
+			agent => agent.wazuh_agent_status === "disconnected" || agent.wazuh_agent_status === "never_connected"
+		).length
+	}
+})
+const loadingAgents = ref(false)
 
 const loading = ref(true)
 const error = ref("")
