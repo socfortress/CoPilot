@@ -6,6 +6,7 @@
 				:options="statusOptions"
 				placeholder="Status"
 				:consistent-menu-width="false"
+				clearable
 			/>
 		</div>
 		<div>
@@ -14,10 +15,11 @@
 				:options="osOptions"
 				placeholder="Operating System"
 				:consistent-menu-width="false"
+				clearable
 			/>
 		</div>
 		<div>
-			<n-input v-model:value="filters.search" placeholder="Search..." clearable />
+			<n-input v-model:value="filters.search" placeholder="Search (hostname, ip address, agent id)" clearable />
 		</div>
 		<div>
 			<n-checkbox v-model:checked="filters.critical">Only Critical Assets</n-checkbox>

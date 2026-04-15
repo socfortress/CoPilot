@@ -5,7 +5,7 @@
 
 			<div class="flex flex-col gap-2">
 				<div ref="headerRef" class="flex items-center justify-between">
-					<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
+					<Chip size="small" :value="loading ? 'Loading...' : paginatedTotal" label="items" />
 
 					<div class="flex items-center gap-2 whitespace-nowrap">
 						<n-pagination
@@ -14,7 +14,7 @@
 							:page-slot
 							:show-size-picker
 							:page-sizes
-							:item-count="pagination.total"
+							:item-count="paginatedTotal"
 							:simple="simpleMode"
 							size="small"
 						/>
@@ -41,10 +41,10 @@
 
 				<div class="flex justify-end">
 					<n-pagination
-						v-if="pagination.total > pagination.pageSize"
+						v-if="paginatedTotal > pagination.pageSize"
 						v-model:page="pagination.page"
 						:page-size="pagination.pageSize"
-						:item-count="pagination.total"
+						:item-count="paginatedTotal"
 						:page-slot="6"
 						size="small"
 						:simple="simpleMode"
@@ -82,15 +82,14 @@ const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
-const pageSizes = [10, 4, 50, 100]
+const pageSizes = [10, 25, 50, 100]
 const pageSlot = computed(() => (headerWidthRef.value < 800 ? 5 : 8))
 const simpleMode = computed(() => headerWidthRef.value < 600)
 const showSizePicker = ref(true)
 
 const pagination = ref({
 	page: 1,
-	pageSize: pageSizes[1],
-	total: 0
+	pageSize: pageSizes[1]
 })
 
 const filters = ref<AgentsFilters>({
@@ -103,7 +102,26 @@ const filters = ref<AgentsFilters>({
 const data = ref<Agent[]>([])
 
 const dataFiltered = computed(() => {
-	return data.value
+	return data.value.filter(agent => {
+		if (filters.value.status && agent.wazuh_agent_status !== filters.value.status) {
+			return false
+		}
+		if (filters.value.critical && agent.critical_asset !== filters.value.critical) {
+			return false
+		}
+		if (filters.value.os && agent.os !== filters.value.os) {
+			return false
+		}
+		if (
+			filters.value.search &&
+			!agent.hostname.toLowerCase().includes(filters.value.search.toLowerCase()) &&
+			!agent.ip_address.toLowerCase().includes(filters.value.search.toLowerCase()) &&
+			!agent.agent_id.toLowerCase().includes(filters.value.search.toLowerCase())
+		) {
+			return false
+		}
+		return true
+	})
 })
 
 const dataPaginated = computed(() => {
@@ -112,6 +130,8 @@ const dataPaginated = computed(() => {
 
 	return dataFiltered.value.slice(from, to)
 })
+
+const paginatedTotal = computed(() => dataFiltered.value.length)
 
 const statusesList = computed(() => [...new Set(data.value.map(agent => agent.wazuh_agent_status))])
 const osList = computed(() => [...new Set(data.value.map(agent => agent.os))])
@@ -129,6 +149,12 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		key: "ip_address",
 		width: 180,
 		render: row => <div>{row.ip_address}</div>
+	},
+	{
+		title: "Hostname",
+		key: "hostname",
+		width: 180,
+		render: row => <div>{row.hostname}</div>
 	},
 	{
 		title: "Operating System",
@@ -184,7 +210,6 @@ const loadAgents = useDebounceFn(async () => {
 		const response = await Api.agents.getAgents()
 
 		data.value = response.data.agents || []
-		pagination.value.total = data.value.length || 0
 		emit("loaded", data.value)
 		loading.value = false
 	} catch (err) {
@@ -207,17 +232,7 @@ watch(
 	{ immediate: true }
 )
 
-/*
-watch(
-	() => filters.value.value,
-	() => {
-		applyFilters()
-	},
-	{ deep: true, immediate: true}
-)
-*/
-
-watch([() => pagination.value.pageSize], resetPage, {
+watch([() => pagination.value.pageSize, filters], resetPage, {
 	deep: true,
 	immediate: true
 })
