@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="flex flex-col gap-4">
+		<div class="flex flex-col gap-6">
 			<Filters v-model:value="filters" :status="statusesList" :os="osList" />
 
 			<div class="flex flex-col gap-2">
@@ -71,6 +71,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
+import AgentDetailsButton from "./AgentDetailsButton.vue"
 
 const emit = defineEmits<{
 	(e: "loaded", value: Agent[]): void
@@ -192,8 +193,13 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		title: "Actions",
 		key: "actions",
 		minWidth: 180,
-		render: () => {
-			return <div>actions...</div>
+		render: row => {
+			return (
+				<AgentDetailsButton
+					agentId={row.agent_id}
+					onCriticalAssetUpdated={payload => handleCriticalAssetUpdated(row.agent_id, payload)}
+				/>
+			)
 		}
 	}
 ])
@@ -219,6 +225,13 @@ const loadAgents = useDebounceFn(async () => {
 		}
 	}
 }, 400)
+
+function handleCriticalAssetUpdated(agentId: string, payload: boolean) {
+	const agent = data.value.find(a => a.agent_id === agentId)
+	if (agent) {
+		agent.critical_asset = payload
+	}
+}
 
 function resetPage() {
 	pagination.value.page = 1

@@ -1,5 +1,5 @@
 <template>
-	<div class="grid grid-cols-1 items-center gap-6 @xl:grid-cols-2 @4xl:grid-cols-4">
+	<div class="grid grid-cols-1 items-center gap-x-6 gap-y-4 @xl:grid-cols-2 @4xl:grid-cols-4">
 		<div>
 			<n-select
 				v-model:value="filters.status"

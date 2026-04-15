@@ -14,7 +14,7 @@ export default {
 	 * Get a specific agent by ID
 	 */
 	getAgentById(agentId: string) {
-		return HttpClient.get<CommonResponse<{ agent: Agent }>>(`/agents/${agentId}`)
+		return HttpClient.get<CommonResponse<{ agents: Agent[] }>>(`/agents/${agentId}`)
 	},
 
 	/**
