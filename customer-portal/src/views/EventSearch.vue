@@ -1,53 +1,32 @@
 <template>
-	<div class="min-h-screen bg-gray-50">
+	<div class="page @container flex flex-col gap-6">
 		<!-- Main Content -->
-		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+		<div>
 			<!-- Search Controls -->
-			<div class="mb-6 rounded-lg bg-white shadow">
-				<div class="px-4 py-5 sm:p-6">
-					<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+			<div>
+				<div>
+					<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-4">
 						<!-- Customer Code -->
-						<div>
-							<label for="customer-select" class="block text-sm font-medium text-gray-700">
-								Customer
-							</label>
-							<select
-								id="customer-select"
-								v-model="selectedCustomerCode"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-								@change="onCustomerChange"
-							>
-								<option value="">Select a customer</option>
-								<option v-for="code in customerCodes" :key="code" :value="code">
-									{{ code }}
-								</option>
-							</select>
-						</div>
 
-						<!-- Event Source -->
-						<div>
-							<label for="source-select" class="block text-sm font-medium text-gray-700">
-								Event Source
-							</label>
-							<select
-								id="source-select"
-								v-model="selectedSourceName"
-								:disabled="!selectedCustomerCode || loadingEventSources"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 sm:text-sm"
+						<n-form-item label="Customer">
+							<n-input v-model:value="selectedCustomerCode" disabled />
+						</n-form-item>
+
+						<n-form-item label="Event Source">
+							<n-select
+								v-model:value="selectedSourceName"
+								placeholder="Select Source"
+								filterable
+								:options="eventSourceOptions"
+								:disabled="!selectedCustomerCode"
+								:loading="loadingEventSources"
 								@change="onSourceChange"
-							>
-								<option value="">Select a source</option>
-								<option v-for="src in enabledSources" :key="src.name" :value="src.name">
-									{{ src.name }} ({{ src.event_type }})
-								</option>
-							</select>
-						</div>
+							/>
+						</n-form-item>
 
 						<!-- Time Range -->
 						<div>
-							<label for="timerange-select" class="block text-sm font-medium text-gray-700">
-								Time Range
-							</label>
+							<label for="timerange-select" class="block text-sm font-medium">Time Range</label>
 							<select
 								id="timerange-select"
 								v-model="timerange"
@@ -66,9 +45,7 @@
 
 						<!-- Page Size -->
 						<div>
-							<label for="pagesize-select" class="block text-sm font-medium text-gray-700">
-								Results per page
-							</label>
+							<label for="pagesize-select" class="block text-sm font-medium">Results per page</label>
 							<select
 								id="pagesize-select"
 								v-model="pageSize"
@@ -85,7 +62,7 @@
 					<!-- Custom Date Range -->
 					<div v-if="timerange === 'custom'" class="col-span-full grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div>
-							<label for="time-from" class="block text-sm font-medium text-gray-700">From</label>
+							<label for="time-from" class="block text-sm font-medium">From</label>
 							<input
 								id="time-from"
 								v-model="customTimeFrom"
@@ -94,7 +71,7 @@
 							/>
 						</div>
 						<div>
-							<label for="time-to" class="block text-sm font-medium text-gray-700">To</label>
+							<label for="time-to" class="block text-sm font-medium">To</label>
 							<input
 								id="time-to"
 								v-model="customTimeTo"
@@ -106,7 +83,7 @@
 
 					<!-- Query Bar -->
 					<div class="relative">
-						<label for="query-input" class="block text-sm font-medium text-gray-700">Lucene Query</label>
+						<label for="query-input" class="block text-sm font-medium">Lucene Query</label>
 						<div class="relative mt-1">
 							<input
 								id="query-input"
@@ -213,7 +190,7 @@
 			<div v-else-if="hasSearched">
 				<!-- Results Summary -->
 				<div class="mb-4 flex items-center justify-between">
-					<p class="text-sm text-gray-700">
+					<p class="text-sm">
 						Showing
 						<span class="font-medium">{{ events.length }}</span>
 						of
@@ -424,6 +401,7 @@
 
 <script setup lang="ts">
 import type { EventSearchResult, EventSourceItem, FieldMapping } from "@/types/siem"
+import { NFormItem, NInput, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
@@ -437,13 +415,13 @@ const error = ref("")
 
 // Portal info
 // -- Customer selection --
-const customerCodes = computed(() => (authStore.userCustomerCode ? [authStore.userCustomerCode] : []))
-const selectedCustomerCode = ref(authStore.userCustomerCode || "")
+const customerCode = computed(() => authStore.userCustomerCode)
+const selectedCustomerCode = ref(customerCode.value || "")
 
 // -- Event Source selection --
 const eventSources = ref<EventSourceItem[]>([])
 const loadingEventSources = ref(false)
-const selectedSourceName = ref("")
+const selectedSourceName = ref<string | null>(null)
 
 // -- Search parameters --
 const timerange = ref("24h")
@@ -459,11 +437,14 @@ const activeSuggestionIndex = ref(0)
 const queryInputRef = ref<HTMLInputElement | null>(null)
 
 const enabledSources = computed(() => eventSources.value.filter(s => s.enabled))
+const eventSourceOptions = computed(() =>
+	enabledSources.value.map(s => ({ label: `${s.name} (${s.event_type})`, value: s.name }))
+)
 
 async function loadEventSources(customerCode: string) {
 	loadingEventSources.value = true
 	eventSources.value = []
-	selectedSourceName.value = ""
+	selectedSourceName.value = null
 	fieldMappings.value = []
 	try {
 		const response = await Api.siem.getEventSources(customerCode)
@@ -475,19 +456,9 @@ async function loadEventSources(customerCode: string) {
 	}
 }
 
-function onCustomerChange() {
-	resetResults()
-	error.value = ""
-	if (selectedCustomerCode.value) {
-		loadEventSources(selectedCustomerCode.value)
-	} else {
-		eventSources.value = []
-		selectedSourceName.value = ""
-	}
-}
-
 function onSourceChange() {
 	resetResults()
+
 	if (selectedSourceName.value) {
 		loadFieldMappings()
 	}
@@ -588,7 +559,7 @@ async function loadMoreEvents() {
 
 	loadingMore.value = true
 	try {
-		const response = await Api.siem.queryEvents(selectedCustomerCode.value, selectedSourceName.value, {
+		const response = await Api.siem.queryEvents(selectedCustomerCode.value, selectedSourceName.value || "", {
 			scroll_id: scrollId.value
 		})
 		events.value.push(...response.data.events)
@@ -654,7 +625,7 @@ function levelClass(level: number | undefined): string {
 
 // -- Lifecycle --
 async function applyRouteParams() {
-	const qCustomer = route.query.customer_code as string | undefined
+	const qCustomer = (route.query.customer_code || customerCode.value) as string
 	const qSource = route.query.source_name as string | undefined
 	const qQuery = route.query.query as string | undefined
 
@@ -684,7 +655,3 @@ onBeforeMount(() => {
 	applyRouteParams()
 })
 </script>
-
-<style scoped>
-/* Tailwind handles all styles */
-</style>
