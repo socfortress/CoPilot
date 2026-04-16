@@ -1,6 +1,6 @@
 <template>
 	<div class="page @container flex flex-col gap-6">
-		<div class="grid grid-cols-1 gap-6 @3xl:grid-cols-2">
+		<div class="grid grid-cols-1 gap-6 @md:grid-cols-2 @5xl:grid-cols-3">
 			<n-form-item label="Customer" :show-feedback="false">
 				<n-input v-model:value="selectedCustomerCode" disabled />
 			</n-form-item>
@@ -16,7 +16,7 @@
 				/>
 			</n-form-item>
 
-			<n-form-item label="Time Range" :show-feedback="false">
+			<n-form-item label="Time Range" :show-feedback="false" class="col-span-full @5xl:col-span-1">
 				<n-input-group class="w-full">
 					<n-input-number
 						v-if="timerangeMode === 'relative'"
@@ -52,33 +52,41 @@
 				</n-input-group>
 			</n-form-item>
 
-			<n-form-item label="Results per page" :show-feedback="false">
-				<n-select v-model:value="pageSize" :options="pageSizeOptions" />
-			</n-form-item>
-
 			<n-form-item label="Lucene Query" :show-feedback="false" class="col-span-full">
-				<n-input-group class="w-full">
+				<div class="flex w-full flex-col gap-1">
 					<n-mention
 						v-model:value="query"
+						type="textarea"
+						:autosize="{ minRows: 3, maxRows: 8 }"
 						placeholder="e.g. agent_name:web-server AND rule_level:>=10"
 						:options="suggestionOptions"
 						:prefix="['#']"
+						:loading="loadingFieldMappings"
+						:render-label
 						@select="onMentionSelect"
 					/>
-
-					<n-button
-						secondary
-						:loading="loadingEvents"
-						:disabled="!selectedCustomerCode || !selectedSourceName"
-						@click="searchEvents"
-					>
-						<template #icon>
-							<Icon name="carbon:search" />
-						</template>
-						Search
-					</n-button>
-				</n-input-group>
+					<p class="text-secondary text-xs">type # to autocomplete</p>
+				</div>
 			</n-form-item>
+
+			<div class="col-span-full flex items-center justify-end gap-3">
+				<n-button
+					secondary
+					type="primary"
+					:loading="loadingEvents"
+					:disabled="!selectedCustomerCode || !selectedSourceName"
+					@click="searchEvents"
+				>
+					<template #icon>
+						<Icon name="carbon:search" />
+					</template>
+					Search
+				</n-button>
+
+				<n-form-item label="Results per page" :show-feedback="false">
+					<n-select v-model:value="pageSize" :options="pageSizeOptions" />
+				</n-form-item>
+			</div>
 		</div>
 
 		<!-- No Event Sources Warning -->
@@ -304,6 +312,7 @@
 
 <script setup lang="ts">
 import type { MentionOption } from "naive-ui"
+import type { VNodeChild } from "vue"
 import type { ApiError } from "@/types/common"
 import type {
 	EventSearchQueryParams,
@@ -324,7 +333,7 @@ import {
 	NSelect,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -372,7 +381,21 @@ const pageSizeOptions = [
 const pageSize = ref(pageSizeOptions[1].value)
 const query = ref<string | undefined>(undefined)
 
+const loadingFieldMappings = ref(false)
 const fieldMappings = ref<FieldMapping[]>([])
+const suggestionOptions = computed(() => {
+	return fieldMappings.value.map(f => ({ label: f.field, type: f.type, value: f.field }))
+})
+
+function renderLabel(option: MentionOption): VNodeChild {
+	const label = String(option.label ?? "")
+	const type = String(option.type ?? "")
+
+	return h("div", { class: "flex items-center gap-2 justify-between w-full" }, [
+		h("div", { class: "text-sm font-medium" }, label),
+		h("div", { class: "text-xs text-secondary" }, type)
+	])
+}
 
 async function loadEventSources(customerCode: string) {
 	loadingEventSources.value = true
@@ -399,17 +422,18 @@ function onSourceChange() {
 
 async function loadFieldMappings() {
 	if (!selectedCustomerCode.value || !selectedSourceName.value) return
+
+	loadingFieldMappings.value = true
+	fieldMappings.value = []
 	try {
 		const response = await Api.siem.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
 		fieldMappings.value = response.data.fields
 	} catch {
 		// Non-critical, autocomplete just won't work
+	} finally {
+		loadingFieldMappings.value = false
 	}
 }
-
-const suggestionOptions = computed(() => {
-	return fieldMappings.value.map(f => ({ label: `${f.field}  [${f.type}]`, value: f.field }))
-})
 
 // -- Events data --
 const events = ref<EventSearchResult[]>([])
