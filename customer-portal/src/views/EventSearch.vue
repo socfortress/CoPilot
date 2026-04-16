@@ -1,309 +1,212 @@
 <template>
 	<div class="page @container flex flex-col gap-6">
-		<!-- Main Content -->
-		<div>
-			<!-- Search Controls -->
-			<div>
-				<div>
-					<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-4">
-						<!-- Customer Code -->
+		<div class="grid grid-cols-1 gap-6 @3xl:grid-cols-2">
+			<n-form-item label="Customer" :show-feedback="false">
+				<n-input v-model:value="selectedCustomerCode" disabled />
+			</n-form-item>
 
-						<n-form-item label="Customer">
-							<n-input v-model:value="selectedCustomerCode" disabled />
-						</n-form-item>
+			<n-form-item label="Event Source" :show-feedback="false">
+				<n-select
+					v-model:value="selectedSourceName"
+					placeholder="Select Source"
+					filterable
+					:options="eventSourceOptions"
+					:disabled="!selectedCustomerCode"
+					:loading="loadingEventSources"
+				/>
+			</n-form-item>
 
-						<n-form-item label="Event Source">
-							<n-select
-								v-model:value="selectedSourceName"
-								placeholder="Select Source"
-								filterable
-								:options="eventSourceOptions"
-								:disabled="!selectedCustomerCode"
-								:loading="loadingEventSources"
-								@change="onSourceChange"
-							/>
-						</n-form-item>
+			<n-form-item label="Time Range" :show-feedback="false">
+				<n-input-group class="w-full">
+					<n-input-number
+						v-if="timerangeMode === 'relative'"
+						v-model:value="filterTimeRange.time"
+						:min="1"
+						placeholder="Time"
+						class="grow text-right [&_input]:pr-3!"
+					/>
+					<n-select
+						v-if="timerangeMode === 'relative'"
+						v-model:value="filterTimeRange.unit"
+						:options="unitOptions"
+						placeholder="Time unit"
+						class="w-40!"
+					/>
+					<n-date-picker
+						v-if="timerangeMode === 'absolute'"
+						v-model:value="daterange"
+						type="datetimerange"
+						clearable
+						class="grow"
+					/>
+					<n-button v-if="timerangeMode === 'relative'" secondary @click="timerangeMode = 'absolute'">
+						<template #icon>
+							<Icon name="carbon:calendar" />
+						</template>
+					</n-button>
+					<n-button v-if="timerangeMode === 'absolute'" secondary @click="timerangeMode = 'relative'">
+						<template #icon>
+							<Icon name="carbon:reset" />
+						</template>
+					</n-button>
+				</n-input-group>
+			</n-form-item>
 
-						<!-- Time Range -->
-						<div>
-							<label for="timerange-select" class="block text-sm font-medium">Time Range</label>
-							<select
-								id="timerange-select"
-								v-model="timerange"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							>
-								<option value="1h">Last 1 hour</option>
-								<option value="6h">Last 6 hours</option>
-								<option value="24h">Last 24 hours</option>
-								<option value="2d">Last 2 days</option>
-								<option value="7d">Last 7 days</option>
-								<option value="14d">Last 14 days</option>
-								<option value="30d">Last 30 days</option>
-								<option value="custom">Custom range</option>
-							</select>
-						</div>
+			<n-form-item label="Results per page" :show-feedback="false">
+				<n-select v-model:value="pageSize" :options="pageSizeOptions" />
+			</n-form-item>
 
-						<!-- Page Size -->
-						<div>
-							<label for="pagesize-select" class="block text-sm font-medium">Results per page</label>
-							<select
-								id="pagesize-select"
-								v-model="pageSize"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							>
-								<option :value="25">25</option>
-								<option :value="50">50</option>
-								<option :value="100">100</option>
-								<option :value="250">250</option>
-							</select>
-						</div>
-					</div>
+			<n-form-item label="Lucene Query" :show-feedback="false" class="col-span-full">
+				<n-input-group class="w-full">
+					<n-mention
+						v-model:value="query"
+						placeholder="e.g. agent_name:web-server AND rule_level:>=10"
+						:options="suggestionOptions"
+						:prefix="['#']"
+						@select="onMentionSelect"
+					/>
 
-					<!-- Custom Date Range -->
-					<div v-if="timerange === 'custom'" class="col-span-full grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div>
-							<label for="time-from" class="block text-sm font-medium">From</label>
-							<input
-								id="time-from"
-								v-model="customTimeFrom"
-								type="datetime-local"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							/>
-						</div>
-						<div>
-							<label for="time-to" class="block text-sm font-medium">To</label>
-							<input
-								id="time-to"
-								v-model="customTimeTo"
-								type="datetime-local"
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							/>
-						</div>
-					</div>
-
-					<!-- Query Bar -->
-					<div class="relative">
-						<label for="query-input" class="block text-sm font-medium">Lucene Query</label>
-						<div class="relative mt-1">
-							<input
-								id="query-input"
-								ref="queryInputRef"
-								v-model="query"
-								type="text"
-								placeholder="e.g. agent_name:web-server AND rule_level:>=10"
-								class="block w-full rounded-md border-gray-300 pr-24 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-								@input="onQueryInput"
-								@keydown.enter="searchEvents"
-								@keydown.tab.prevent="acceptSuggestion"
-								@keydown.escape="showSuggestions = false"
-							/>
-							<button
-								:disabled="!selectedCustomerCode || !selectedSourceName || loadingEvents"
-								class="absolute inset-y-0 right-0 inline-flex items-center rounded-r-md border border-transparent bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-								@click="searchEvents"
-							>
-								<svg
-									v-if="loadingEvents"
-									class="mr-1 h-4 w-4 animate-spin"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										class="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										stroke-width="4"
-									></circle>
-									<path
-										class="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-								Search
-							</button>
-						</div>
-
-						<!-- Autocomplete dropdown -->
-						<ul
-							v-if="showSuggestions && filteredSuggestions.length > 0"
-							class="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
-						>
-							<li
-								v-for="(suggestion, idx) in filteredSuggestions"
-								:key="suggestion.field"
-								class="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
-								:class="{ 'bg-indigo-50': idx === activeSuggestionIndex }"
-								@mousedown.prevent="applySuggestion(suggestion.field)"
-							>
-								<span class="font-medium text-gray-900">{{ suggestion.field }}</span>
-								<span class="ml-2 text-xs text-gray-400">{{ suggestion.type }}</span>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<!-- No Event Sources Warning -->
-			<div
-				v-if="selectedCustomerCode && !loadingEventSources && eventSources.length === 0"
-				class="mb-6 rounded-md border border-yellow-300 bg-yellow-50 p-4"
-			>
-				<div class="flex">
-					<svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-						<path
-							fill-rule="evenodd"
-							d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-							clip-rule="evenodd"
-						></path>
-					</svg>
-					<p class="ml-3 text-sm text-yellow-700">
-						No event sources are configured for this customer. Contact your administrator to set up event
-						sources.
-					</p>
-				</div>
-			</div>
-
-			<!-- Error -->
-			<div v-if="error" class="mb-6 rounded-md border border-red-300 bg-red-50 p-4">
-				<div class="flex">
-					<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-						<path
-							fill-rule="evenodd"
-							d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-							clip-rule="evenodd"
-						></path>
-					</svg>
-					<p class="ml-3 text-sm text-red-700">{{ error }}</p>
-				</div>
-			</div>
-
-			<!-- Loading -->
-			<div v-if="loadingEvents" class="rounded-lg bg-white px-4 py-12 text-center shadow">
-				<div class="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-				<p class="mt-2 text-sm text-gray-500">Searching events...</p>
-			</div>
-
-			<!-- Results -->
-			<div v-else-if="hasSearched">
-				<!-- Results Summary -->
-				<div class="mb-4 flex items-center justify-between">
-					<p class="text-sm">
-						Showing
-						<span class="font-medium">{{ events.length }}</span>
-						of
-						<span class="font-medium">{{ totalEvents }}</span>
-						events
-					</p>
-				</div>
-
-				<!-- Events Table -->
-				<div v-if="events.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
-					<div class="overflow-x-auto">
-						<table class="min-w-full divide-y divide-gray-200">
-							<thead class="bg-gray-50">
-								<tr>
-									<th
-										class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>
-										Timestamp
-									</th>
-									<th
-										class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>
-										Source
-									</th>
-									<th
-										class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>
-										Rule
-									</th>
-									<th
-										class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>
-										Level
-									</th>
-									<th
-										class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>
-										Summary
-									</th>
-								</tr>
-							</thead>
-							<tbody class="divide-y divide-gray-200 bg-white">
-								<tr
-									v-for="(event, idx) in events"
-									:key="idx"
-									class="cursor-pointer hover:bg-gray-50"
-									@click="selectEvent(event)"
-								>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-										{{ formatTimestamp(event.timestamp || event["@timestamp"]) }}
-									</td>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-										{{ event.agent_name || event.agent?.name || "-" }}
-									</td>
-									<td class="max-w-xs truncate px-6 py-4 text-sm text-gray-900">
-										{{ event.rule_description || event.rule?.description || "-" }}
-									</td>
-									<td class="px-6 py-4 text-sm whitespace-nowrap">
-										<span
-											class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-											:class="levelClass(event.rule_level ?? event.rule?.level)"
-										>
-											{{ event.rule_level ?? event.rule?.level ?? "-" }}
-										</span>
-									</td>
-									<td class="max-w-sm truncate px-6 py-4 text-sm text-gray-500">
-										{{ event.full_log || event.data || "-" }}
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-
-				<!-- Empty State -->
-				<div v-else class="rounded-lg bg-white px-4 py-12 text-center shadow">
-					<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-						></path>
-					</svg>
-					<h3 class="mt-2 text-sm font-medium text-gray-900">No events found</h3>
-					<p class="mt-1 text-sm text-gray-500">Try adjusting your query or expanding the time range.</p>
-				</div>
-
-				<!-- Load More -->
-				<div v-if="scrollId && events.length < totalEvents" class="mt-4 text-center">
-					<button
-						:disabled="loadingMore"
-						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-						@click="loadMoreEvents"
+					<n-button
+						secondary
+						:loading="loadingEvents"
+						:disabled="!selectedCustomerCode || !selectedSourceName"
+						@click="searchEvents"
 					>
-						<svg v-if="loadingMore" class="mr-2 -ml-1 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						{{ loadingMore ? "Loading..." : "Load More" }}
-					</button>
+						<template #icon>
+							<Icon name="carbon:search" />
+						</template>
+						Search
+					</n-button>
+				</n-input-group>
+			</n-form-item>
+		</div>
+
+		<!-- No Event Sources Warning -->
+		<n-alert
+			v-if="selectedCustomerCode && !loadingEventSources && eventSources.length === 0"
+			type="warning"
+			title="No Event Sources Configured"
+		>
+			No event sources are configured for this customer. Contact your administrator to set up event sources.
+		</n-alert>
+
+		<!-- Results -->
+		<div v-if="hasSearched">
+			<!-- Results Summary -->
+			<div class="mb-4 flex items-center justify-between">
+				<p class="text-sm">
+					Showing
+					<span class="font-medium">{{ events.length }}</span>
+					of
+					<span class="font-medium">{{ totalEvents }}</span>
+					events
+				</p>
+			</div>
+
+			<!-- Events Table -->
+			<div v-if="events.length > 0" class="overflow-hidden rounded-lg bg-white shadow">
+				<div class="overflow-x-auto">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
+									Timestamp
+								</th>
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
+									Source
+								</th>
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
+									Rule
+								</th>
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
+									Level
+								</th>
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
+									Summary
+								</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-200 bg-white">
+							<tr
+								v-for="(event, idx) in events"
+								:key="idx"
+								class="cursor-pointer hover:bg-gray-50"
+								@click="selectEvent(event)"
+							>
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+									{{ formatTimestamp(event.timestamp || event["@timestamp"]) }}
+								</td>
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+									{{ event.agent_name || event.agent?.name || "-" }}
+								</td>
+								<td class="max-w-xs truncate px-6 py-4 text-sm text-gray-900">
+									{{ event.rule_description || event.rule?.description || "-" }}
+								</td>
+								<td class="px-6 py-4 text-sm whitespace-nowrap">
+									<span
+										class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+										:class="levelClass(event.rule_level ?? event.rule?.level)"
+									>
+										{{ event.rule_level ?? event.rule?.level ?? "-" }}
+									</span>
+								</td>
+								<td class="max-w-sm truncate px-6 py-4 text-sm text-gray-500">
+									{{ event.full_log || event.data || "-" }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
+			</div>
+
+			<!-- Empty State -->
+			<div v-else class="rounded-lg bg-white px-4 py-12 text-center shadow">
+				<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+					></path>
+				</svg>
+				<h3 class="mt-2 text-sm font-medium text-gray-900">No events found</h3>
+				<p class="mt-1 text-sm text-gray-500">Try adjusting your query or expanding the time range.</p>
+			</div>
+
+			<!-- Load More -->
+			<div v-if="scrollId && events.length < totalEvents" class="mt-4 text-center">
+				<button
+					:disabled="loadingMore"
+					class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+					@click="loadMoreEvents"
+				>
+					<svg v-if="loadingMore" class="mr-2 -ml-1 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+						<circle
+							class="opacity-25"
+							cx="12"
+							cy="12"
+							r="10"
+							stroke="currentColor"
+							stroke-width="4"
+						></circle>
+						<path
+							class="opacity-75"
+							fill="currentColor"
+							d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+						></path>
+					</svg>
+					{{ loadingMore ? "Loading..." : "Load More" }}
+				</button>
 			</div>
 		</div>
 
@@ -400,46 +303,76 @@
 </template>
 
 <script setup lang="ts">
-import type { EventSearchResult, EventSourceItem, FieldMapping } from "@/types/siem"
-import { NFormItem, NInput, NSelect } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import type { MentionOption } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import type {
+	EventSearchQueryParams,
+	EventSearchQueryTimerange,
+	EventSearchResult,
+	EventSourceItem,
+	FieldMapping
+} from "@/types/siem"
+import {
+	NAlert,
+	NButton,
+	NDatePicker,
+	NFormItem,
+	NInput,
+	NInputGroup,
+	NInputNumber,
+	NMention,
+	NSelect,
+	useMessage
+} from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 
-const LUCENE_FIELD_TOKEN_AT_END_RE = /(?:^|[\s(])(\w[\w.]*)$/
+const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
 const authStore = useAuthStore()
-const error = ref("")
+const message = useMessage()
 
-// Portal info
-// -- Customer selection --
 const customerCode = computed(() => authStore.userCustomerCode)
 const selectedCustomerCode = ref(customerCode.value || "")
 
-// -- Event Source selection --
 const eventSources = ref<EventSourceItem[]>([])
 const loadingEventSources = ref(false)
 const selectedSourceName = ref<string | null>(null)
-
-// -- Search parameters --
-const timerange = ref("24h")
-const pageSize = ref(50)
-const query = ref("")
-const customTimeFrom = ref("")
-const customTimeTo = ref("")
-
-// -- Field mappings / autocomplete --
-const fieldMappings = ref<FieldMapping[]>([])
-const showSuggestions = ref(false)
-const activeSuggestionIndex = ref(0)
-const queryInputRef = ref<HTMLInputElement | null>(null)
-
 const enabledSources = computed(() => eventSources.value.filter(s => s.enabled))
 const eventSourceOptions = computed(() =>
 	enabledSources.value.map(s => ({ label: `${s.name} (${s.event_type})`, value: s.name }))
 )
+
+const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
+	unit: "h",
+	time: 24
+})
+const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
+	{ label: "Hours", value: "h" },
+	{ label: "Days", value: "d" },
+	{ label: "Weeks", value: "w" }
+]
+const timerange = computed<EventSearchQueryTimerange>(
+	() => `${filterTimeRange.value.time}${filterTimeRange.value.unit}`
+)
+const daterange = ref<[number, number]>([1183135260000, Date.now()])
+const timerangeMode = ref<"relative" | "absolute">("relative")
+
+const pageSizeOptions = [
+	{ label: "25", value: 25 },
+	{ label: "50", value: 50 },
+	{ label: "100", value: 100 },
+	{ label: "250", value: 250 }
+]
+const pageSize = ref(pageSizeOptions[1].value)
+const query = ref<string | undefined>(undefined)
+
+const fieldMappings = ref<FieldMapping[]>([])
 
 async function loadEventSources(customerCode: string) {
 	loadingEventSources.value = true
@@ -449,8 +382,8 @@ async function loadEventSources(customerCode: string) {
 	try {
 		const response = await Api.siem.getEventSources(customerCode)
 		eventSources.value = response.data.event_sources
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load event sources"
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load event sources")
 	} finally {
 		loadingEventSources.value = false
 	}
@@ -474,38 +407,9 @@ async function loadFieldMappings() {
 	}
 }
 
-const currentFieldToken = computed(() => {
-	const text = query.value
-	const match = text.match(LUCENE_FIELD_TOKEN_AT_END_RE)
-	return match ? match[1] : ""
+const suggestionOptions = computed(() => {
+	return fieldMappings.value.map(f => ({ label: `${f.field}  [${f.type}]`, value: f.field }))
 })
-
-const filteredSuggestions = computed(() => {
-	const token = currentFieldToken.value.toLowerCase()
-	if (!token || token.length < 2) return []
-	return fieldMappings.value.filter(f => f.field.toLowerCase().includes(token)).slice(0, 15)
-})
-
-function onQueryInput() {
-	showSuggestions.value = currentFieldToken.value.length >= 2
-	activeSuggestionIndex.value = 0
-}
-
-function applySuggestion(fieldName: string) {
-	const token = currentFieldToken.value
-	if (token) {
-		const lastIndex = query.value.lastIndexOf(token)
-		query.value = `${query.value.substring(0, lastIndex) + fieldName}:`
-	}
-	showSuggestions.value = false
-	queryInputRef.value?.focus()
-}
-
-function acceptSuggestion() {
-	if (showSuggestions.value && filteredSuggestions.value.length > 0) {
-		applySuggestion(filteredSuggestions.value[activeSuggestionIndex.value].field)
-	}
-}
 
 // -- Events data --
 const events = ref<EventSearchResult[]>([])
@@ -526,20 +430,18 @@ async function searchEvents() {
 	if (!selectedCustomerCode.value || !selectedSourceName.value) return
 
 	loadingEvents.value = true
-	error.value = ""
 	resetResults()
 
 	try {
-		const params: { timerange?: string; page_size: number; query?: string; time_from?: string; time_to?: string } =
-			{
-				page_size: pageSize.value,
-				query: query.value || undefined
-			}
-		if (timerange.value === "custom" && customTimeFrom.value && customTimeTo.value) {
-			params.time_from = new Date(customTimeFrom.value).toISOString()
-			params.time_to = new Date(customTimeTo.value).toISOString()
+		const params: EventSearchQueryParams = {
+			page_size: pageSize.value,
+			query: query.value || undefined
+		}
+		if (timerangeMode.value === "absolute") {
+			params.time_from = new Date(daterange.value[0]).toISOString()
+			params.time_to = new Date(daterange.value[1]).toISOString()
 		} else {
-			params.timerange = timerange.value === "custom" ? "24h" : timerange.value
+			params.timerange = timerange.value
 		}
 
 		const response = await Api.siem.queryEvents(selectedCustomerCode.value, selectedSourceName.value, params)
@@ -547,8 +449,8 @@ async function searchEvents() {
 		totalEvents.value = response.data.total
 		scrollId.value = response.data.scroll_id
 		hasSearched.value = true
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to search events"
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to search events")
 	} finally {
 		loadingEvents.value = false
 	}
@@ -564,8 +466,8 @@ async function loadMoreEvents() {
 		})
 		events.value.push(...response.data.events)
 		scrollId.value = response.data.scroll_id
-	} catch (err: any) {
-		error.value = err.response?.data?.detail || err.message || "Failed to load more events"
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load more events")
 	} finally {
 		loadingMore.value = false
 	}
@@ -623,6 +525,32 @@ function levelClass(level: number | undefined): string {
 	return "bg-gray-100 text-gray-800"
 }
 
+function onMentionSelect(option: MentionOption, prefix: string) {
+	// Current query text and the raw token as typed in the mention (e.g. "#field")
+	const currentQuery = query.value || ""
+	const target = `${prefix}${option.value}`
+
+	// Find the last occurrence of the typed token to replace it
+	const lastIndex = currentQuery.lastIndexOf(target)
+
+	if (lastIndex === -1) {
+		// If the token is not found, append the field followed by ":" at the end of the query
+		const needsSpace = currentQuery.length > 0 && !TRAILING_WHITESPACE_RE.test(currentQuery)
+		query.value = `${currentQuery}${needsSpace ? " " : ""}${option.value}:`
+		return
+	}
+
+	// Split query around the matched token
+	const before = currentQuery.slice(0, lastIndex)
+	const after = currentQuery.slice(lastIndex + target.length)
+
+	// Rebuild query replacing the token with the plain field name followed by ":"
+	const needsSpace = before.length > 0 && !TRAILING_WHITESPACE_RE.test(before)
+	const replacement = `${needsSpace ? " " : ""}${option.value}:`
+
+	query.value = `${before}${replacement}${after}`
+}
+
 // -- Lifecycle --
 async function applyRouteParams() {
 	const qCustomer = (route.query.customer_code || customerCode.value) as string
@@ -650,6 +578,8 @@ async function applyRouteParams() {
 		searchEvents()
 	}
 }
+
+watch(selectedSourceName, onSourceChange)
 
 onBeforeMount(() => {
 	applyRouteParams()

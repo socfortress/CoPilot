@@ -65,3 +65,14 @@ export interface PanelDataResponse {
 	source_name: string
 	accent_color: string
 }
+
+export type EventSearchQueryTimerange = `${number}${"h" | "d" | "w"}`
+
+export interface EventSearchQueryParams {
+	timerange?: EventSearchQueryTimerange
+	page_size?: number
+	scroll_id?: string
+	query?: string
+	time_from?: string
+	time_to?: string
+}
