@@ -46,7 +46,7 @@ export function useNavigation() {
 	}
 
 	function routeDashboardViewer(dashboardId: number) {
-		return routerConstructor({ name: "DashboardViewer", params: { id: dashboardId.toString() } })
+		return routerConstructor({ name: "DashboardView", params: { id: dashboardId.toString() } })
 	}
 
 	function routeAgentsList() {

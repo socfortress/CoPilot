@@ -1,57 +1,55 @@
 <template>
-	<div>
-		<div class="flex flex-col gap-4">
-			<div>
-				<Filters v-model:value="filters" class="w-auto!" />
-			</div>
+	<div class="flex flex-col gap-4">
+		<div>
+			<Filters v-model:value="filters" class="w-auto!" />
+		</div>
 
-			<div class="flex flex-col gap-2">
-				<div ref="headerRef" class="flex items-center justify-between">
-					<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
+		<div class="flex flex-col gap-2">
+			<div ref="headerRef" class="flex items-center justify-between">
+				<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
 
-					<div class="flex items-center gap-2 whitespace-nowrap">
-						<n-pagination
-							v-model:page="pagination.page"
-							v-model:page-size="pagination.pageSize"
-							:page-slot
-							:show-size-picker
-							:page-sizes
-							:item-count="pagination.total"
-							:simple="simpleMode"
-							size="small"
-						/>
-					</div>
-				</div>
-
-				<div class="grow overflow-hidden">
-					<n-data-table
-						bordered
-						:loading
-						size="small"
-						:data
-						:columns
-						:scroll-x="1400"
-						class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
-					>
-						<template #empty>
-							<n-empty description="No alerts found">
-								<template #extra>try changing the filters</template>
-							</n-empty>
-						</template>
-					</n-data-table>
-				</div>
-
-				<div class="flex justify-end">
+				<div class="flex items-center gap-2 whitespace-nowrap">
 					<n-pagination
-						v-if="pagination.total > pagination.pageSize"
 						v-model:page="pagination.page"
-						:page-size="pagination.pageSize"
+						v-model:page-size="pagination.pageSize"
+						:page-slot
+						:show-size-picker
+						:page-sizes
 						:item-count="pagination.total"
-						:page-slot="6"
-						size="small"
 						:simple="simpleMode"
+						size="small"
 					/>
 				</div>
+			</div>
+
+			<div class="grow overflow-hidden">
+				<n-data-table
+					bordered
+					:loading
+					size="small"
+					:data
+					:columns
+					:scroll-x="1400"
+					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
+				>
+					<template #empty>
+						<n-empty description="No alerts found">
+							<template #extra>try changing the filters</template>
+						</n-empty>
+					</template>
+				</n-data-table>
+			</div>
+
+			<div class="flex justify-end">
+				<n-pagination
+					v-if="pagination.total > pagination.pageSize"
+					v-model:page="pagination.page"
+					:page-size="pagination.pageSize"
+					:item-count="pagination.total"
+					:page-slot="6"
+					size="small"
+					:simple="simpleMode"
+				/>
 			</div>
 		</div>
 	</div>
