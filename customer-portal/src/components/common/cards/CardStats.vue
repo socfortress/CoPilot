@@ -8,7 +8,7 @@
 		<div v-if="$slots.icon">
 			<slot name="icon" />
 		</div>
-		<div class="flex flex-col gap-2">
+		<div class="flex w-full flex-col gap-2">
 			<div class="flex items-center justify-between gap-2">
 				<span
 					class="text-secondary text-sm transition-colors"
