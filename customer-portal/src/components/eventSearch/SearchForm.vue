@@ -255,7 +255,6 @@ async function searchEvents() {
 }
 
 function onMentionSelect(option: MentionOption, prefix: string) {
-	console.log(option, prefix, query.value)
 	// Current query text and the raw token as typed in the mention (e.g. "#field")
 	const currentQuery = query.value || ""
 	const target = `${prefix}${option.value}`
@@ -264,7 +263,18 @@ function onMentionSelect(option: MentionOption, prefix: string) {
 	const lastIndex = currentQuery.lastIndexOf(target)
 
 	if (lastIndex === -1) {
-		// If the token is not found, append the field followed by ":" at the end of the query
+		// If only the trigger is present (e.g. "... #"), replace the last trigger with "field:"
+		const lastPrefixIndex = currentQuery.lastIndexOf(prefix)
+		if (lastPrefixIndex !== -1) {
+			const before = currentQuery.slice(0, lastPrefixIndex)
+			const after = currentQuery.slice(lastPrefixIndex + prefix.length)
+			const needsSpace = before.length > 0 && !TRAILING_WHITESPACE_RE.test(before)
+			const replacement = `${needsSpace ? " " : ""}${option.value}:`
+			query.value = `${before}${replacement}${after}`
+			return
+		}
+
+		// If neither token nor trigger is found, append the field followed by ":" at the end of the query
 		const needsSpace = currentQuery.length > 0 && !TRAILING_WHITESPACE_RE.test(currentQuery)
 		query.value = `${currentQuery}${needsSpace ? " " : ""}${option.value}:`
 		return
