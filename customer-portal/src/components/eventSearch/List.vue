@@ -47,7 +47,12 @@
 			</div>
 		</div>
 
-		<EventDetails :event="selectedEvent" @filter-add="addFilter" @filter-exclude="excludeFilter" />
+		<EventDetails
+			:event="selectedEvent"
+			@filter-add="addFilter"
+			@filter-exclude="excludeFilter"
+			@close="selectedEvent = null"
+		/>
 	</div>
 </template>
 

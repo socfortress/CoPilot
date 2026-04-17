@@ -119,6 +119,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
+import dayjs from "@/utils/dayjs"
 
 export interface SearchFormParams {
 	customerCode: string
@@ -176,7 +177,7 @@ const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 const timerange = computed<EventSearchQueryTimerange>(
 	() => `${filterTimeRange.value.time}${filterTimeRange.value.unit}`
 )
-const daterange = ref<[number, number]>([1183135260000, Date.now()])
+const daterange = ref<[number, number]>([dayjs().subtract(1, "day").valueOf(), Date.now()])
 const timerangeMode = ref<"relative" | "absolute">("relative")
 
 const pageSizeOptions = [
