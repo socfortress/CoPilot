@@ -6,7 +6,7 @@ CoPilot is a “single pane of glass” security operations platform. It central
 Key entry points:
 - Backend runtime: `backend/copilot.py`
 - Frontend app: `frontend/src`
-- Customer portal app: `customer_portal/src`
+- Customer portal app: `customer-portal/src`
 
 ## Tech Stack
 
@@ -28,7 +28,7 @@ Key entry points:
 - Cypress + Vitest: tests. `frontend/cypress`, `frontend/vitest.config.ts`
 
 ### Customer Portal (Optional)
-- Vue 3 + Vite + Pinia + Naive UI. `customer_portal/package.json`, `customer_portal/src`
+- Vue 3 + Vite + Pinia + Naive UI. `customer-portal/package.json`, `customer-portal/src`
 
 ## Directory Layout & Responsibilities
 
@@ -64,8 +64,8 @@ Key entry points:
 - `frontend/.env.example`: API base URL and UI behavior.
 
 ### Customer Portal
-- `customer_portal/src/router/index.ts`: simple login + alerts/cases/agents views.
-- `customer_portal/src/views/*`: customer‑limited UI.
+- `customer-portal/src/router/index.ts`: simple login + alerts/cases/agents views.
+- `customer-portal/src/views/*`: customer‑limited UI.
 
 ## Core Runtime Flows
 
@@ -223,4 +223,4 @@ Key entry points:
 
 ### Add a New Customer Portal Feature
 1. Add backend route with `customer_user` role scope.
-2. Add UI in `customer_portal/src/views` and wire in `customer_portal/src/router/index.ts`.
+2. Add UI in `customer-portal/src/views` and wire in `customer-portal/src/router/index.ts`.

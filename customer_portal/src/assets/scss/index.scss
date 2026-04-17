@@ -1,6 +1,0 @@
-@use "sass:meta";
-@include meta.load-css("fonts");
-@include meta.load-css("common");
-@include meta.load-css("common-animations");
-@include meta.load-css("router-animations");
-@include meta.load-css("overrides/naive-override");
