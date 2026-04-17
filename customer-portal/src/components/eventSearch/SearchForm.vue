@@ -57,6 +57,7 @@
 					<n-mention
 						v-model:value="query"
 						type="textarea"
+						separator=" "
 						:autosize="{ minRows: 3, maxRows: 8 }"
 						placeholder="e.g. agent_name:web-server AND rule_level:>=10"
 						:options="suggestionOptions"
@@ -109,6 +110,7 @@ import {
 	NInputNumber,
 	NMention,
 	NSelect,
+	NSpin,
 	useMessage
 } from "naive-ui"
 import { computed, h, onBeforeMount, ref, watch } from "vue"
@@ -253,6 +255,7 @@ async function searchEvents() {
 }
 
 function onMentionSelect(option: MentionOption, prefix: string) {
+	console.log(option, prefix, query.value)
 	// Current query text and the raw token as typed in the mention (e.g. "#field")
 	const currentQuery = query.value || ""
 	const target = `${prefix}${option.value}`
