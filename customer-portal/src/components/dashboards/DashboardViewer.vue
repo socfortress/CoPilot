@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import type { Component } from "vue"
 import type { ApiError } from "@/types/common"
-import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/dashboards.d"
+import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/siem"
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"

@@ -52,7 +52,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { EnabledDashboard } from "@/types/dashboards"
+import type { EnabledDashboard } from "@/types/siem"
 import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NDataTable, NEmpty, NPagination, useMessage } from "naive-ui"
