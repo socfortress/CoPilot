@@ -64,12 +64,18 @@
 						:loading="loadingFieldMappings"
 						:render-label
 						@select="onMentionSelect"
-					/>
+					>
+						<template #empty>
+							<n-spin :show="loadingFieldMappings">
+								<div class="text-secondary text-xs">No field mappings found</div>
+							</n-spin>
+						</template>
+					</n-mention>
 					<p class="text-secondary text-xs">type # to autocomplete</p>
 				</div>
 			</n-form-item>
 
-			<div class="col-span-full flex items-center justify-end gap-3">
+			<div class="col-span-full -mt-4 flex items-center justify-end gap-3">
 				<n-button
 					secondary
 					type="primary"
@@ -83,9 +89,7 @@
 					Search
 				</n-button>
 
-				<n-form-item label="Results per page" :show-feedback="false">
-					<n-select v-model:value="pageSize" :options="pageSizeOptions" />
-				</n-form-item>
+				<n-select v-model:value="pageSize" :options="pageSizeOptions" class="w-36!" />
 			</div>
 		</div>
 
@@ -373,10 +377,10 @@ const daterange = ref<[number, number]>([1183135260000, Date.now()])
 const timerangeMode = ref<"relative" | "absolute">("relative")
 
 const pageSizeOptions = [
-	{ label: "25", value: 25 },
-	{ label: "50", value: 50 },
-	{ label: "100", value: 100 },
-	{ label: "250", value: 250 }
+	{ label: "25 per page", value: 25 },
+	{ label: "50 per page", value: 50 },
+	{ label: "100 per page", value: 100 },
+	{ label: "250 per page", value: 250 }
 ]
 const pageSize = ref(pageSizeOptions[1].value)
 const query = ref<string | undefined>(undefined)
