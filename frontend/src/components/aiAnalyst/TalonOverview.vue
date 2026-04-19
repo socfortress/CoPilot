@@ -39,12 +39,12 @@
 			<SectionHeader title="How It Works" icon="carbon:flow" />
 			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<StepCard
-					v-for="step in investigationSteps"
-					:key="step.step"
-					:step="step.step"
-					:title="step.title"
-					:description="step.description"
-					:icon="step.icon"
+					v-for="item in investigationSteps"
+					:key="item.step"
+					:step="item.step"
+					:title="item.title"
+					:description="item.description"
+					:icon="item.icon"
 				/>
 			</div>
 		</section>
@@ -100,7 +100,7 @@ const SectionHeader = defineComponent({
 	setup(props) {
 		return () =>
 			h("div", { class: "flex items-center gap-2" }, [
-				h(Icon, { name: props.icon!, size: 18, class: "text-primary" }),
+				h(Icon, { name: props.icon, size: 18, class: "text-primary" }),
 				h("h2", { class: "text-default text-lg font-semibold" }, props.title)
 			])
 	}
@@ -132,7 +132,7 @@ const FeatureCard = defineComponent({
 				h(
 					"div",
 					{ class: "bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" },
-					h(Icon, { name: props.icon!, size: 16, class: "text-primary" })
+					h(Icon, { name: props.icon, size: 16, class: "text-primary" })
 				),
 				h("div", { class: "flex flex-col gap-1" }, [
 					h("div", { class: "text-default text-sm font-semibold" }, props.title),

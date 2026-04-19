@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { AiAnalystIoc, AiAnalystJob, AiAnalystReport, AlertWithReport } from "@/types/aiAnalyst.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 export default {

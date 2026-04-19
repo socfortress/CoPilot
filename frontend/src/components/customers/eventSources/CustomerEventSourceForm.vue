@@ -87,7 +87,7 @@ function submit() {
 			.updateEventSource(props.editingSource.id, {
 				name: form.name,
 				index_pattern: form.index_pattern,
-				event_type: form.event_type!,
+				event_type: form.event_type || "",
 				time_field: form.time_field,
 				enabled: form.enabled
 			})
@@ -111,7 +111,7 @@ function submit() {
 				customer_code: props.customerCode,
 				name: form.name,
 				index_pattern: form.index_pattern,
-				event_type: form.event_type!,
+				event_type: form.event_type || "",
 				time_field: form.time_field,
 				enabled: form.enabled
 			})

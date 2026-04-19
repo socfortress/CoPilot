@@ -123,8 +123,8 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { secureLocalStorage } from "@/utils/secure-storage"
 import { formatDate } from "@/utils/format"
+import { secureLocalStorage } from "@/utils/secure-storage"
 
 interface TalonMessage {
 	id: string

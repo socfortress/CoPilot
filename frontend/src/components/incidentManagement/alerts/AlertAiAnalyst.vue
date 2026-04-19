@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import type { TalonJobData } from "@/types/talon.d"
-import { NSpin, NSelect, NTabPane, NTabs, NTag, useMessage } from "naive-ui"
+import { NSelect, NSpin, NTabPane, NTabs, NTag } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -59,7 +59,6 @@ const props = defineProps<{
 	alertId: number
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 
 const loading = ref(false)
