@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-reports-list @container">
-		<div ref="header" class="flex items-center justify-between gap-2">
+		<div class="flex items-center justify-between gap-2">
 			<div class="flex items-center gap-2">
 				<div class="flex items-center gap-1 text-sm">
 					<span>Total</span>

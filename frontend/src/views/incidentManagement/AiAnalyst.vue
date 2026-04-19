@@ -13,9 +13,9 @@
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">
 				<AlertsReportsList />
 			</n-tab-pane>
-			<n-tab-pane name="talon" tab="Talon Chat" display-directive="show:lazy" class="!p-0">
+			<n-tab-pane name="talon" tab="Talon Chat" display-directive="show:lazy" class="p-0!">
 				<div class="h-[calc(100vh-200px)]">
-					<TalonChat ref="talonChatRef" />
+					<TalonChat />
 				</div>
 			</n-tab-pane>
 		</n-tabs>
@@ -25,10 +25,10 @@
 <script setup lang="ts">
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
 import TalonChat from "@/components/aiAnalyst/TalonChat.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
+import Icon from "@/components/common/Icon.vue"
 
 const activeTab = ref("overview")
 </script>

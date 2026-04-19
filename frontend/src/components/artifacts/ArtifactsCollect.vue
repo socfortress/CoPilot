@@ -327,19 +327,19 @@ function getData() {
 
 		Object.entries(parameterValues.value).forEach(([key, value]) => {
 			if (value !== undefined && value !== null && value !== "") {
-				parameters.env!.push({ key, value })
+				parameters.env?.push({ key, value })
 			}
 		})
 
 		const payload: CollectRequest = {
 			...filters.value,
-			hostname: filters.value.hostname!,
-			artifact_name: filters.value.artifact_name!,
+			hostname: filters.value.hostname || "",
+			artifact_name: filters.value.artifact_name || "",
 			data_store_only: filters.value.data_store_only || false
 		}
 
 		// Only add parameters if there are any
-		if (parameters.env!.length > 0) {
+		if (parameters.env?.length && parameters.env.length > 0) {
 			payload.parameters = parameters
 		}
 

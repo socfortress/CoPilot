@@ -2,7 +2,7 @@
 	<div class="customer-ai-triggers-form flex grow flex-col justify-between">
 		<div class="form-box">
 			<n-spin v-model:show="loading">
-				<n-form ref="formRef" :label-width="80" :model="form">
+				<n-form :label-width="80" :model="form">
 					<n-form-item label="Enabled" path="enabled">
 						<n-switch v-model:value="form.enabled" />
 					</n-form-item>
@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst } from "naive-ui"
 import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/aiTriggers"
 import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
 import { NButton, NForm, NFormItem, NSpin, NSwitch, useMessage } from "naive-ui"
@@ -52,7 +51,6 @@ const emit = defineEmits<{
 
 const message = useMessage()
 const form = ref<AITriggerForm>(getClearForm(aiTrigger))
-const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
 
 watch(loading, val => {

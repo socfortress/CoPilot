@@ -57,9 +57,8 @@ const selectedCustomerCode = ref<string | null>(null)
 
 // ── Enabled dashboards (lista aggiornata da EnabledDashboardsSection via v-model) ──
 const enabledDashboards = ref<EnabledDashboard[]>([])
-const enabledDashboardsSectionRef = useTemplateRef<InstanceType<typeof EnabledDashboardsSection>>(
-	"enabledDashboardsSectionRef"
-)
+const enabledDashboardsSectionRef =
+	useTemplateRef<InstanceType<typeof EnabledDashboardsSection>>("enabledDashboardsSectionRef")
 
 const customersOptions = computed(() =>
 	customersList.value.map(c => ({ label: `#${c.customer_code} - ${c.customer_name}`, value: c.customer_code }))
