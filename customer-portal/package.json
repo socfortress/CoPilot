@@ -38,7 +38,7 @@
 		"@shikijs/markdown-it": "^4.0.2",
 		"@vueuse/core": "^14.2.1",
 		"@vueuse/motion": "^3.0.3",
-		"axios": "^1.15.0",
+		"axios": "^1.15.1",
 		"bytes": "^3.1.2",
 		"colord": "^2.9.3",
 		"dayjs": "^1.11.20",
@@ -109,7 +109,7 @@
 		"vite-plugin-inspect": "^11.3.3",
 		"vite-plugin-vue-devtools": "^8.1.1",
 		"vite-svg-loader": "^5.1.1",
-		"vue-tsc": "^3.2.6"
+		"vue-tsc": "^3.2.7"
 	},
 	"pnpm": {
 		"peerDependencyRules": {
