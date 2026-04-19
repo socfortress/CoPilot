@@ -6,7 +6,7 @@ import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
 
 type HttpClientBase = "api" | "ws"
 
-const DEFAULT_API_ROOT = "/api/v1"
+const DEFAULT_API_ROOT = "/api"
 const API_ROOT = import.meta.env.VITE_API_ROOT || DEFAULT_API_ROOT
 const WS_ROOT = import.meta.env.VITE_WS_ROOT || API_ROOT
 
