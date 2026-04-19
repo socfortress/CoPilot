@@ -161,8 +161,8 @@ def get_connectors_list():
             "Talon",
             "3",
             "api_key",
-            "Talon is an automated AI SOC analyst built by SOCfortress for the CoPilot stack. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot. Repo at: https://github.com/taylorwalton/talon",
-        )
+            "Talon is an automated AI SOC analyst built by SOCfortress for the CoPilot stack. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot.",
+        ),
         # ... Add more connectors as needed ...
     ]
 

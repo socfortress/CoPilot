@@ -7,15 +7,12 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
 from app.ai_analyst.schema.ai_analyst import AlertAnalysisResponse
 from app.ai_analyst.schema.ai_analyst import AlertsWithReportsListResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
 from app.ai_analyst.schema.ai_analyst import JobListResponse
-from app.ai_analyst.schema.ai_analyst import JobResponse
 from app.ai_analyst.schema.ai_analyst import ReportListResponse
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
 from app.ai_analyst.schema.ai_analyst import SubmitIocsResponse
@@ -26,6 +23,7 @@ from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.ai_analyst.services.ai_analyst import get_job
+from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
 from app.ai_analyst.services.ai_analyst import list_iocs_by_customer
 from app.ai_analyst.services.ai_analyst import list_iocs_by_report
@@ -33,9 +31,10 @@ from app.ai_analyst.services.ai_analyst import list_jobs_by_alert
 from app.ai_analyst.services.ai_analyst import list_jobs_by_customer
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 from app.ai_analyst.services.ai_analyst import submit_iocs
-from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import submit_report
 from app.ai_analyst.services.ai_analyst import update_job
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
 
 ai_analyst_router = APIRouter()
 

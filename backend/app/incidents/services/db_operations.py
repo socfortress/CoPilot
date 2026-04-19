@@ -29,6 +29,7 @@ from app.data_store.data_store_operations import upload_case_report_template_dat
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
 from app.incidents.middleware.tag_access import tag_access_handler
+from app.incidents.models import AIAnalystTriggerEnabled
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
@@ -40,7 +41,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
-from app.incidents.models import CaseDataStore, AIAnalystTriggerEnabled
+from app.incidents.models import CaseDataStore
 from app.incidents.models import CaseReportTemplateDataStore
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
@@ -729,14 +730,18 @@ async def get_customer_code_names(source: str, session: AsyncSession):
     result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
     return result.scalars().first()
 
+
 async def get_customer_ai_trigger(customer_code: str, session: AsyncSession):
     result = await session.execute(select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == customer_code))
     notification = result.scalars().first()
     logger.info(f"AI Notification: {notification}")
     return [notification] if notification is not None else []
 
+
 async def put_customer_ai_trigger(notification: PutNotification, session: AsyncSession):
-    result = await session.execute(select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == notification.customer_code))
+    result = await session.execute(
+        select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == notification.customer_code),
+    )
     existing_notification = result.scalars().first()
     if existing_notification is None:
         new_notification = AIAnalystTriggerEnabled(**notification.dict())
@@ -745,6 +750,7 @@ async def put_customer_ai_trigger(notification: PutNotification, session: AsyncS
         existing_notification.customer_code = notification.customer_code
         existing_notification.enabled = notification.enabled
     await session.commit()
+
 
 async def get_customer_notification(customer_code: str, session: AsyncSession):
     result = await session.execute(select(Notification).where(Notification.customer_code == customer_code))
@@ -3001,12 +3007,14 @@ async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
         tag_conditions = []
         if accessible_tags:
             has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
+                select(AlertToTag.alert_id)
+                .where(
                     and_(
                         AlertToTag.alert_id == Alert.id,
                         AlertToTag.tag_id.in_(accessible_tags),
                     ),
-                ).correlate(Alert),
+                )
+                .correlate(Alert),
             )
             tag_conditions.append(has_accessible_tag)
 
@@ -3034,9 +3042,7 @@ async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
 
     # Distinct asset names
     assets_query = (
-        select(distinct(Asset.asset_name))
-        .where(Asset.alert_linked.in_(select(accessible_alert_ids.c.id)))
-        .order_by(Asset.asset_name)
+        select(distinct(Asset.asset_name)).where(Asset.alert_linked.in_(select(accessible_alert_ids.c.id))).order_by(Asset.asset_name)
     )
     assets_result = await db.execute(assets_query)
     assets = [row[0] for row in assets_result if row[0]]

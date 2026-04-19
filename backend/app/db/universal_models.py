@@ -570,6 +570,7 @@ class EnabledDashboards(SQLModel, table=True):
     customer: Optional["Customers"] = Relationship()
     event_source: Optional["EventSources"] = Relationship()
 
+
 class AiAnalystJob(SQLModel, table=True):
     __tablename__ = "ai_analyst_job"
 

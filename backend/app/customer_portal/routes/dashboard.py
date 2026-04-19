@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
-
 from app.customer_portal.schema.dashboard import CustomerDashboardAlertStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardCaseStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardStatsResponse

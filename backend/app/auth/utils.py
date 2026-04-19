@@ -126,17 +126,17 @@ class AuthHandler:
         username: str,
         access_token_expires: timedelta = timedelta(hours=24),
         extra_claims: dict = None,
-        ):
-            role = await get_role(username)
-            payload = {
-                "exp": datetime.utcnow() + access_token_expires,
-                "iat": datetime.utcnow(),
-                "sub": username,
-                "scopes": [role],
-            }
-            if extra_claims:
-                payload.update(extra_claims)
-            return jwt.encode(payload, self.secret, algorithm="HS256")
+    ):
+        role = await get_role(username)
+        payload = {
+            "exp": datetime.utcnow() + access_token_expires,
+            "iat": datetime.utcnow(),
+            "sub": username,
+            "scopes": [role],
+        }
+        if extra_claims:
+            payload.update(extra_claims)
+        return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token):
         """

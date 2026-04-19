@@ -6,12 +6,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
-from app.db.universal_models import AiAnalystIoc
-from app.db.universal_models import AiAnalystJob
-from app.db.universal_models import AiAnalystReport
-from app.incidents.models import Alert
 from app.ai_analyst.schema.ai_analyst import AlertWithReportResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
@@ -24,6 +19,10 @@ from app.ai_analyst.schema.ai_analyst import SubmitReportRequest
 from app.ai_analyst.schema.ai_analyst import SubmitReportResponse
 from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
+from app.db.universal_models import AiAnalystIoc
+from app.db.universal_models import AiAnalystJob
+from app.db.universal_models import AiAnalystReport
+from app.incidents.models import Alert
 
 
 def _job_to_response(job: AiAnalystJob) -> JobResponse:

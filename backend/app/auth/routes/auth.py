@@ -105,12 +105,10 @@ async def login_for_customer_portal(
 
     # Fetch assigned customer codes
     from sqlalchemy import select
+
     from app.auth.models.users import UserCustomerAccess
 
-    result = await session.execute(
-        select(UserCustomerAccess.customer_code)
-        .where(UserCustomerAccess.user_id == user.id)
-    )
+    result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
     customer_codes = result.scalars().all()
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

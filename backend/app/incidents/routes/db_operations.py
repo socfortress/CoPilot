@@ -34,6 +34,7 @@ from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
+from app.incidents.schema.db_operations import AITriggerResponse
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -73,10 +74,10 @@ from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentCreate, PutAITrigger
+from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
-from app.incidents.schema.db_operations import ConfiguredSourcesResponse, AITriggerResponse
+from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import DefaultReportTemplateFileNames
 from app.incidents.schema.db_operations import DeleteAlertsRequest
 from app.incidents.schema.db_operations import DeleteAlertsResponse
@@ -87,6 +88,7 @@ from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
+from app.incidents.schema.db_operations import PutAITrigger
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
@@ -189,6 +191,7 @@ from app.incidents.services.db_operations import get_alert_filter_options
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
+from app.incidents.services.db_operations import get_customer_ai_trigger
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
@@ -201,7 +204,7 @@ from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_customer_code
 from app.incidents.services.db_operations import list_alerts_by_ioc
 from app.incidents.services.db_operations import list_alerts_by_source
-from app.incidents.services.db_operations import list_alerts_by_tag, get_customer_ai_trigger, put_customer_ai_trigger
+from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_alerts_by_title
 from app.incidents.services.db_operations import list_alerts_for_user
 from app.incidents.services.db_operations import list_alerts_multiple_filters
@@ -212,6 +215,7 @@ from app.incidents.services.db_operations import list_cases_by_customer_code
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import list_cases_for_user
 from app.incidents.services.db_operations import list_files_by_case_id
+from app.incidents.services.db_operations import put_customer_ai_trigger
 from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
@@ -234,6 +238,7 @@ from app.incidents.services.incident_case import handle_customer_notifications_c
 from app.middleware.customer_access import customer_access_handler
 
 incidents_db_operations_router = APIRouter()
+
 
 @incidents_db_operations_router.get("/ai_trigger/{customer_code}", response_model=AITriggerResponse)
 async def get_customer_ai_trigger_endpoint(
@@ -260,6 +265,7 @@ async def put_customer_ai_trigger_endpoint(
         success=True,
         message="AI Trigger updated successfully",
     )
+
 
 @incidents_db_operations_router.get("/notification/{customer_code}", response_model=NotificationResponse)
 async def get_customer_notification_endpoint(
@@ -843,11 +849,7 @@ async def get_case_filter_options_endpoint(
     else:
         customer_filter = Case.customer_code.in_(accessible_customers)
         statuses_q = select(distinct(Case.case_status)).where(customer_filter).order_by(Case.case_status)
-        assigned_q = (
-            select(distinct(Case.assigned_to))
-            .where(customer_filter, Case.assigned_to.isnot(None))
-            .order_by(Case.assigned_to)
-        )
+        assigned_q = select(distinct(Case.assigned_to)).where(customer_filter, Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
 
     statuses_result = await db.execute(statuses_q)
     statuses = [row[0] for row in statuses_result if row[0]]

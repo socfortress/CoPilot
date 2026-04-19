@@ -1,12 +1,12 @@
+import re
 from datetime import datetime
 from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from pydantic import Field
-import re
-
+from pydantic import validator
 
 # --- Enums ---
 

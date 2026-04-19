@@ -15,6 +15,10 @@ from sqlalchemy.sql import func
 
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
+from app.connectors.talon.schema.talon import TalonInvestigateRequest
+from app.connectors.talon.services.talon import (
+    investigate_alert as talon_investigate_alert,
+)
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -42,8 +46,6 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
-from app.connectors.talon.schema.talon import TalonInvestigateRequest
-from app.connectors.talon.services.talon import investigate_alert as talon_investigate_alert
 from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,

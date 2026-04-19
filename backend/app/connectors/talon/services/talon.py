@@ -139,7 +139,7 @@ async def get_talon_job(alert_id: int, session: AsyncSession) -> TalonJobRespons
     # Aggregate reports from all jobs
     all_reports = []
     for j in jobs:
-        for r in (j.reports or []):
+        for r in j.reports or []:
             all_reports.append(
                 {
                     "id": r.id,

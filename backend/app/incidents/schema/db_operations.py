@@ -518,15 +518,18 @@ class PutNotification(BaseModel):
     shuffle_workflow_id: str
     enabled: bool
 
+
 class AITrigger(BaseModel):
     id: int
     customer_code: str
     enabled: bool
 
+
 class AITriggerResponse(BaseModel):
     ai_triggers: Optional[List[AITrigger]] = []
     success: bool
     message: str
+
 
 class PutAITrigger(BaseModel):
     customer_code: str
