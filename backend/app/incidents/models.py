@@ -194,6 +194,13 @@ class Notification(SQLModel, table=True):
     enabled: bool = Field(default=True)
 
 
+class AIAnalystTriggerEnabled(SQLModel, table=True):
+    __tablename__ = "incident_management_ai_analyst_trigger_enabled"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: str = Field(max_length=50, nullable=False, unique=True)
+    enabled: bool = Field(default=True)
+
+
 class CaseDataStore(SQLModel, table=True):
     __tablename__ = "incident_management_case_datastore"
     id: Optional[int] = Field(default=None, primary_key=True)

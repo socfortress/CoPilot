@@ -569,3 +569,58 @@ class EnabledDashboards(SQLModel, table=True):
     # Relationships
     customer: Optional["Customers"] = Relationship()
     event_source: Optional["EventSources"] = Relationship()
+
+
+class AiAnalystJob(SQLModel, table=True):
+    __tablename__ = "ai_analyst_job"
+
+    id: str = Field(primary_key=True, max_length=64)
+    alert_id: int = Field(nullable=False, index=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
+    status: str = Field(default="pending", max_length=50, index=True)  # pending, running, completed, failed
+    alert_type: Optional[str] = Field(default=None, max_length=64)
+    triggered_by: str = Field(max_length=50, nullable=False)  # scheduled, manual, webhook
+    template_used: Optional[str] = Field(default=None, max_length=128)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    started_at: Optional[datetime] = Field(default=None)
+    completed_at: Optional[datetime] = Field(default=None)
+    error_message: Optional[str] = Field(sa_column=Column(Text), default=None)
+
+    customer: Optional["Customers"] = Relationship()
+    reports: list["AiAnalystReport"] = Relationship(back_populates="job")
+
+
+class AiAnalystReport(SQLModel, table=True):
+    __tablename__ = "ai_analyst_report"
+
+    id: Optional[int] = Field(primary_key=True)
+    job_id: str = Field(foreign_key="ai_analyst_job.id", max_length=64, nullable=False, index=True)
+    alert_id: int = Field(nullable=False, index=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
+    severity_assessment: Optional[str] = Field(default=None, max_length=50)  # Critical, High, Medium, Low, Informational
+    report_markdown: Optional[str] = Field(sa_column=Column(LONGTEXT), default=None)
+    summary: Optional[str] = Field(sa_column=Column(Text), default=None)
+    recommended_actions: Optional[str] = Field(sa_column=Column(Text), default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    job: Optional["AiAnalystJob"] = Relationship(back_populates="reports")
+    iocs: list["AiAnalystIoc"] = Relationship(back_populates="report")
+    customer: Optional["Customers"] = Relationship()
+
+
+class AiAnalystIoc(SQLModel, table=True):
+    __tablename__ = "ai_analyst_ioc"
+
+    id: Optional[int] = Field(primary_key=True)
+    report_id: int = Field(foreign_key="ai_analyst_report.id", nullable=False, index=True)
+    alert_id: int = Field(nullable=False, index=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
+    ioc_value: str = Field(max_length=512, nullable=False)
+    ioc_type: str = Field(max_length=50, nullable=False)  # ip, domain, hash, process, url, user, command
+    vt_verdict: str = Field(default="unknown", max_length=50)  # malicious, suspicious, clean, unknown
+    vt_score: Optional[str] = Field(default=None, max_length=32)
+    details: Optional[str] = Field(sa_column=Column(Text), default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    report: Optional["AiAnalystReport"] = Relationship(back_populates="iocs")
+    customer: Optional["Customers"] = Relationship()

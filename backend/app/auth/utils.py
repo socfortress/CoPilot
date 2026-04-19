@@ -125,18 +125,8 @@ class AuthHandler:
         self,
         username: str,
         access_token_expires: timedelta = timedelta(hours=24),
+        extra_claims: dict = None,
     ):
-        """
-        Encodes a JWT token with the given username and expiration time.
-
-        Args:
-            username (str): The username for which the token is being encoded.
-            access_token_expires (timedelta, optional): The expiration time for the token.
-                Defaults to 24 hours.
-
-        Returns:
-            str: The encoded JWT token.
-        """
         role = await get_role(username)
         payload = {
             "exp": datetime.utcnow() + access_token_expires,
@@ -144,6 +134,8 @@ class AuthHandler:
             "sub": username,
             "scopes": [role],
         }
+        if extra_claims:
+            payload.update(extra_claims)
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token):

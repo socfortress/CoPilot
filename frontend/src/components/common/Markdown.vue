@@ -3,6 +3,7 @@
 		<vue-markdown-it
 			v-if="highlighter"
 			:source
+			:options="mdOptions"
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
@@ -27,13 +28,14 @@ import type Token from "markdown-it/lib/token.mjs"
 import type { HighlighterGeneric } from "shiki/core"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
-import { onMounted, ref, toRefs } from "vue"
+import { computed, onMounted, ref, toRefs } from "vue"
 import { codeThemes, getHighlighter } from "@/utils/highlighter"
 import "@/assets/scss/overrides/vue-md-it-override.scss"
 
 const props = defineProps<{
 	source: string
 	codeBgTransparent?: boolean
+	breaks?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,7 +77,11 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	}
 }
 
-const { source, codeBgTransparent } = toRefs(props)
+const { source, codeBgTransparent, breaks } = toRefs(props)
+
+const mdOptions = computed(() => ({
+	...(breaks.value ? { breaks: true } : {})
+}))
 
 onMounted(async () => {
 	highlighter.value = (await getHighlighter()) as unknown as HighlighterGeneric<string, string>

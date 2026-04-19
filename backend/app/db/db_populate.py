@@ -157,6 +157,12 @@ def get_connectors_list():
             "username_password",
             "Connection to Graylog. If you only have one Graylog instance, set this to the same as Graylog.",
         ),
+        (
+            "Talon",
+            "3",
+            "api_key",
+            "Talon is an automated AI SOC analyst built by SOCfortress for the CoPilot stack. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot.",
+        ),
         # ... Add more connectors as needed ...
     ]
 

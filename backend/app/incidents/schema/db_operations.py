@@ -519,6 +519,23 @@ class PutNotification(BaseModel):
     enabled: bool
 
 
+class AITrigger(BaseModel):
+    id: int
+    customer_code: str
+    enabled: bool
+
+
+class AITriggerResponse(BaseModel):
+    ai_triggers: Optional[List[AITrigger]] = []
+    success: bool
+    message: str
+
+
+class PutAITrigger(BaseModel):
+    customer_code: str
+    enabled: bool
+
+
 class CaseDataStoreResponse(BaseModel):
     case_data_store: CaseDataStore
     success: bool
@@ -557,6 +574,22 @@ class CaseReportTemplateDataStoreListResponse(BaseModel):
 
 class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
+
+
+class AlertFilterOptionsResponse(BaseModel):
+    sources: List[str]
+    assets: List[str]
+    tags: List[str]
+    statuses: List[str] = [s.value for s in AlertStatus]
+    success: bool
+    message: str
+
+
+class CaseFilterOptionsResponse(BaseModel):
+    statuses: List[str]
+    assigned_to: List[str]
+    success: bool
+    message: str
 
 
 # ============================================

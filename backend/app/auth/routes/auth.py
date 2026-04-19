@@ -84,20 +84,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 
 @auth_router.post("/token/customer-portal", response_model=Token)
-async def login_for_customer_portal(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
-    """
-    Authenticates a customer user and generates an access token for the customer portal.
-
-    Args:
-        form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
-        session (AsyncSession): The database session.
-
-    Returns:
-        dict: A dictionary containing the access token and token type.
-
-    Raises:
-        HTTPException: If user is not a customer_user role.
-    """
+async def login_for_customer_portal(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db),
+):
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -106,18 +96,27 @@ async def login_for_customer_portal(form_data: OAuth2PasswordRequestForm = Depen
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Only allow customer_user role to log in here
     if user.role_id != RoleEnum.customer_user.value:
-        logger.warning(f"Non-customer user {user.username} attempted to log in to customer portal")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account does not have access to the Customer Portal. Please log in at the main portal.",
+            detail="This account does not have access to the Customer Portal.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Fetch assigned customer codes
+    from sqlalchemy import select
+
+    from app.auth.models.users import UserCustomerAccess
+
+    result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
+    customer_codes = result.scalars().all()
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await auth_handler.encode_token(user.username, access_token_expires)
-    logger.info(f"Customer user {user.username} logged in successfully to customer portal")
+    access_token = await auth_handler.encode_token(
+        user.username,
+        access_token_expires,
+        extra_claims={"customer_codes": customer_codes},
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 

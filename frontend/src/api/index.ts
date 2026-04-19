@@ -1,5 +1,6 @@
 import activeResponse from "./endpoints/activeResponse"
 import agents from "./endpoints/agents"
+import aiAnalyst from "./endpoints/aiAnalyst"
 import alerts from "./endpoints/alerts"
 import artifacts from "./endpoints/artifacts"
 import askSocfortress from "./endpoints/askSocfortress"
@@ -36,6 +37,7 @@ import sso from "./endpoints/sso"
 import stackProvisioning from "./endpoints/stackProvisioning"
 import sysmonConfig from "./endpoints/sysmonConfig"
 import tagRbac from "./endpoints/tagRbac"
+import talon from "./endpoints/talon"
 import threatIntel from "./endpoints/threatIntel"
 import totp from "./endpoints/totp"
 import users from "./endpoints/users"
@@ -47,6 +49,7 @@ import webVulnerabilityAssessment from "./endpoints/webVulnerabilityAssessment"
 
 export default {
 	agents,
+	aiAnalyst,
 	alerts,
 	artifacts,
 	auth,
@@ -90,6 +93,7 @@ export default {
 	version,
 	snapshots,
 	tagRbac,
+	talon,
 	sso,
 	totp
 }

@@ -19,6 +19,7 @@ const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
+const AiAnalystIcon = "carbon:machine-learning-model"
 const ToolsIcon = "carbon:tool-box"
 // const EventSearchIcon = "carbon:search-locate"
 
@@ -40,65 +41,32 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(OverviewIcon)
 		},
 		{
-			label: "Incident Management",
-			key: "IncidentManagement",
-			icon: renderIcon(IncidentManagementIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Sources"
-								}
-							},
-							{ default: () => "Sources" }
-						),
-					key: "IncidentManagement-Sources"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Alerts"
-								}
-							},
-							{ default: () => "Alerts" }
-						),
-					key: "IncidentManagement-Alerts"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "IncidentManagement-Cases"
-								}
-							},
-							{ default: () => "Cases" }
-						),
-					key: "IncidentManagement-Cases"
-				}
-				/*
-                {
-                    label: () =>
-                        h(
-                            RouterLink,
-                            {
-                                to: {
-                                    name: "IncidentManagement-Sigma"
-                                }
-                            },
-                            { default: () => "SIGMA" }
-                        ),
-                    key: "IncidentManagement-Sigma"
-                }
-                */
-			]
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "AiAnalyst"
+						}
+					},
+					{ default: () => "AI Analyst" }
+				),
+			key: "AiAnalyst",
+			icon: renderIcon(AiAnalystIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Customers"
+						}
+					},
+					{ default: () => "Customers" }
+				),
+			key: "Customers",
+			icon: renderIcon(CustomersIcon)
 		},
 		{
 			label: "SIEM",
@@ -173,32 +141,65 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Artifacts"
-						}
-					},
-					{ default: () => "Artifacts" }
-				),
-			key: "Artifacts",
-			icon: renderIcon(ArtifactsIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Customers"
-						}
-					},
-					{ default: () => "Customers" }
-				),
-			key: "Customers",
-			icon: renderIcon(CustomersIcon)
+			label: "Incident Management",
+			key: "IncidentManagement",
+			icon: renderIcon(IncidentManagementIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Sources"
+								}
+							},
+							{ default: () => "Sources" }
+						),
+					key: "IncidentManagement-Sources"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Alerts"
+								}
+							},
+							{ default: () => "Alerts" }
+						),
+					key: "IncidentManagement-Alerts"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Cases"
+								}
+							},
+							{ default: () => "Cases" }
+						),
+					key: "IncidentManagement-Cases"
+				}
+				/*
+                {
+                    label: () =>
+                        h(
+                            RouterLink,
+                            {
+                                to: {
+                                    name: "IncidentManagement-Sigma"
+                                }
+                            },
+                            { default: () => "SIGMA" }
+                        ),
+                    key: "IncidentManagement-Sigma"
+                }
+                */
+			]
 		},
 		{
 			label: "Agents",
@@ -217,6 +218,19 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Agents list" }
 						),
 					key: "Agents"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Artifacts"
+								}
+							},
+							{ default: () => "Artifacts" }
+						),
+					key: "Artifacts"
 				},
 				{
 					label: () =>
@@ -344,6 +358,78 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
+			label: "Log Management",
+			key: "LogManagement",
+			icon: renderIcon(GraylogIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Indices"
+								}
+							},
+							{ default: () => "Index Management" }
+						),
+					key: "Indices"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Snapshots"
+								}
+							},
+							{ default: () => "Snapshot & Restore" }
+						),
+					key: "Snapshots"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Management"
+								}
+							},
+							{ default: () => "Graylog Management" }
+						),
+					key: "Graylog-Management"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Metrics"
+								}
+							},
+							{ default: () => "Graylog Metrics" }
+						),
+					key: "Graylog-Metrics"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Pipelines"
+								}
+							},
+							{ default: () => "Graylog Pipelines" }
+						),
+					key: "Graylog-Pipelines"
+				}
+			]
+		},
+		{
 			label: "Report Creation",
 			key: "ReportCreation",
 			icon: renderIcon(ReportCreationIcon),
@@ -423,149 +509,23 @@ export default function getItems(): MenuMixedOption[] {
 			]
 		},
 		{
-			label: "Indices",
-			key: "IndicesMenu",
-			icon: renderIcon(IndiciesIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Indices"
-								}
-							},
-							{ default: () => "Index Management" }
-						),
-					key: "Indices"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Snapshots"
-								}
-							},
-							{ default: () => "Snapshot & Restore" }
-						),
-					key: "Snapshots"
-				}
-			]
-		},
-		{
-			label: "Graylog",
-			key: "Graylog",
-			icon: renderIcon(GraylogIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Management"
-								}
-							},
-							{ default: () => "Management" }
-						),
-					key: "Graylog-Management"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Metrics"
-								}
-							},
-							{ default: () => "Metrics" }
-						),
-					key: "Graylog-Metrics"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "Graylog-Pipelines"
-								}
-							},
-							{ default: () => "Pipelines" }
-						),
-					key: "Graylog-Pipelines"
-				}
-			]
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Connectors"
-						}
-					},
-					{ default: () => "Connectors" }
-				),
-			key: "Connectors",
-			icon: renderIcon(ConnectorsIcon)
-		},
-		{
-			label: "External Services",
-			key: "ExternalServices",
-			icon: renderIcon(ExternalServicesIcon),
-			children: [
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-ThirdPartyIntegrations"
-								}
-							},
-							{ default: () => "3rd Party Integrations" }
-						),
-					key: "ExternalServices-ThirdPartyIntegrations"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-NetworkConnectors"
-								}
-							},
-							{ default: () => "Network Connectors" }
-						),
-					key: "ExternalServices-NetworkConnectors"
-				},
-				{
-					label: () =>
-						h(
-							RouterLink,
-							{
-								to: {
-									name: "ExternalServices-SingulAppAuth"
-								}
-							},
-							{ default: () => "Singul App Auth" }
-						),
-					key: "ExternalServices-SingulAppAuth"
-				}
-			]
-		},
-		{
 			label: "Tools",
 			key: "Tools",
 			icon: renderIcon(ToolsIcon),
 			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Connectors"
+								}
+							},
+							{ default: () => "Connectors" }
+						),
+					key: "Connectors"
+				},
 				{
 					label: "Stack Provisioning",
 					key: "Tools-StackProvisioning"
@@ -618,34 +578,6 @@ export default function getItems(): MenuMixedOption[] {
 					key: "Tools-ThreatIntel"
 				}
 			]
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Scheduler"
-						}
-					},
-					{ default: () => "Scheduler" }
-				),
-			key: "Scheduler",
-			icon: renderIcon(SchedulerIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "CustomerPortal"
-						}
-					},
-					{ default: () => "Customer Portal" }
-				),
-			key: "CustomerPortal",
-			icon: renderIcon(CustomerPortalIcon)
 		}
 	]
 }

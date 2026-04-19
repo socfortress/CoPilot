@@ -9,6 +9,216 @@ This page explains what each left‑hand navigation item in CoPilot does and how
 ## Quick tips (applies to everyone)
 
 - **Use the left nav as your workflow map**:
+  - *AI Analyst* = AI-powered investigation and chat
+  - *Customers* = select your customer context first
+  - *SIEM + Incident Management* = where analysts detect and respond
+  - *Agents* = endpoint management and detection rules
+  - *Log Management* = indices, snapshots, and Graylog pipeline health
+  - *Tools* = connectors, assessments, and utilities
+
+- **Deep links exist** (helpful for bookmarking / SOPs):
+  - Incident Alerts can be opened directly via `?alert_id=<id>`
+  - Incident Cases can be opened directly via `?case_id=<id>`
+  - Customers supports `?code=<customer_code>` and `?action=add-customer`
+  - Graylog Management supports tab anchors like `#streams`, `#inputs`, etc.
+
+---
+
+## "Where do I start?" by role
+
+### SOC operator / analyst
+
+1. **AI Analyst** (`/ai-analyst`) – AI-powered investigation, reports, and Talon chat
+2. **Incident Management → Alerts** (`/incident-management/alerts`)
+3. **Incident Management → Cases** (`/incident-management/cases`)
+
+### Admin / engineer
+
+1. **Tools → Connectors** (`/connectors`) – connect the underlying systems (Wazuh, Graylog, Grafana, Velociraptor, etc.)
+2. **Log Management → Index Management** (`/indices/management`) – index health/visibility and troubleshooting
+3. **Log Management → Graylog Management** (`/graylog/management`) – alert plumbing / streams / inputs / provisioning
+
+---
+
+## Left navigation map (what each item does)
+
+Below are screenshots of the main areas (from a lab environment) to help you quickly recognize where you are in the UI.
+
+- Overview:
+
+  ![Overview](../assets/ui/overview.png)
+
+- Incident Management → Alerts:
+
+  ![Incident Alerts](../assets/ui/incident-alerts.png)
+
+- Connectors:
+
+  ![Connectors](../assets/ui/connectors.png)
+
+- Log Management → Index Management:
+
+  ![Indices](../assets/ui/indices-management.png)
+
+- Log Management → Graylog Management:
+
+  ![Graylog Management](../assets/ui/graylog-management.png)
+
+---
+
+### Overview
+
+- **Overview** → `/overview`
+  - High-level dashboard/landing page once logged in.
+
+### AI Analyst
+
+- **AI Analyst** → `/ai-analyst`
+  - AI-powered investigation hub with Talon chat, alert reports, and architecture overview.
+
+### Customers
+
+- **Customers** → `/customers`
+  - Multi-tenant/customer context management.
+  - Deep links:
+    - `/customers?code=<customer_code>`
+    - `/customers?action=add-customer`
+
+### SIEM (detection/testing oriented)
+
+- **SIEM → Alerts** → `/alerts/siem`
+  - SIEM-centric alert view (Graylog-backed in current routing).
+
+- **SIEM → Event Search** → `/alerts/event-search`
+  - Search and filter raw events.
+
+- **SIEM → Dashboards** → `/alerts/dashboards`
+  - SIEM dashboards.
+
+- **SIEM → MITRE ATT&CK** → `/alerts/mitre`
+  - ATT&CK mapping view.
+
+- **SIEM → Atomic Red Team** → `/alerts/atomic-red-team`
+  - Adversary simulation / test harness view.
+
+### Incident Management (operator-first)
+
+- **Incident Management → Sources** → `/incident-management/sources`
+  - Defines/controls *where alerts come from* (your "alert sources" / categories).
+
+- **Incident Management → Alerts** → `/incident-management/alerts`
+  - Primary triage queue.
+  - Deep link: `/incident-management/alerts?alert_id=<id>`
+
+- **Incident Management → Cases** → `/incident-management/cases`
+  - Investigation lifecycle management.
+  - Deep link: `/incident-management/cases?case_id=<id>`
+
+### Agents (endpoint-facing capabilities)
+
+- **Agents → Agents list** → `/agents`
+- **Agents → Artifacts** → `/artifacts`
+  - Evidence, files, and investigation artifacts.
+- **Agents → Groups** → `/agents/groups`
+- **Agents → Sysmon Config** → `/agents/sysmon-config`
+- **Agents → Detection Rules** → `/agents/detection-rules`
+- **Agents → CoPilot Actions** → `/agents/copilot-actions`
+- **Agents → CoPilot Searches** → `/agents/copilot-searches`
+- **Agents → Vulnerability Overview** → `/agents/vulnerability-overview`
+- **Agents → Patch Tuesday** → `/patch-tuesday` *(note: defined under Agents menu, but route is top-level)*
+- **Agents → SCA Overview** → `/agents/sca-overview`
+- **Agents → SCA Policies** → `/agents/sca-policies`
+
+### Log Management (admin/ops)
+
+- **Log Management → Index Management** → `/indices/management`
+  - Deep link supports `?index_name=<name>`.
+
+- **Log Management → Snapshot & Restore** → `/indices/snapshots`
+
+- **Log Management → Graylog Management** → `/graylog/management`
+  - Supports hash navigation to tabs (example):
+    - `/graylog/management#streams`
+    - `/graylog/management#inputs`
+    - `/graylog/management#events`
+
+- **Log Management → Graylog Metrics** → `/graylog/metrics`
+
+- **Log Management → Graylog Pipelines** → `/graylog/pipelines`
+  - Supports `?rule=<something>` for jumping to a pipeline rule.
+
+### Report Creation
+
+- **Report Creation → General Reports** → `/report-creation/general`
+- **Report Creation → Vulnerability Reports** → `/report-creation/vulnerability-reports`
+- **Report Creation → SCA Reports** → `/report-creation/sca-reports`
+
+### Healthcheck
+
+- **Healthcheck → Healthcheck Alerts** → `/healthcheck`
+  - Health/status style overview (commonly used by admins/operators to confirm stack state).
+- **Healthcheck → Metrics Overview** → `/healthcheck/metrics`
+
+### Tools (admin/engineer)
+
+- **Tools → Connectors** → `/connectors`
+  - Configure and validate connections to underlying stack services.
+- **Tools → Stack Provisioning** – stack provisioning workflows
+- **Tools → Cloud Security Assessment** → `/tools/cloud-security-assessment`
+- **Tools → Web Vulnerability Assessment** → `/tools/web-vulnerability-assessment`
+- **Tools → GitHub Audit** → `/tools/github-audit`
+- **Tools → Active Response** – active response actions
+- **Tools → Threat Intel** – threat intelligence lookups
+
+---
+
+## User menu (avatar icon, top-right)
+
+The user avatar dropdown contains account, administration, and resource links:
+
+### Account
+- **Profile** → `/profile`
+- **License** → `/license`
+- **Users** → `/users`
+- **SSO Config** → `/sso-config` *(admin only)*
+
+### Administration
+- **Scheduler** → `/scheduler` – job scheduling / automation
+- **Customer Portal** → `/customer-portal` – customer-facing portal view
+- **Logs** → `/logs`
+
+### External Services
+- **3rd Party Integrations** → `/external-services/third-party-integrations`
+- **Network Connectors** → `/external-services/network-connectors`
+- **Singul App Auth** → `/external-services/singul-app-auth`
+
+### Resources
+- **Documentation** → [docs.socfortress.co](https://docs.socfortress.co/) *(external)*
+- **Contact SOCFortress** → [socfortress.co/contact-us](https://www.socfortress.co/contact-us) *(external)*
+
+---
+
+## Suggested mental model (helps teams onboard)
+
+- **Operators**:
+  - live in *AI Analyst*, *SIEM*, and *Incident Management* — select a *Customer* first, then triage.
+
+- **Admins/Engineers**:
+  - spend time in *Tools → Connectors*, *Log Management*, and the *User menu → External Services* to ensure the pipeline is healthy.
+
+- **Detection engineering / testing**:
+  - *SIEM (MITRE/Atomic Red Team)* + *Agents (Rules/Sysmon)* + *User menu → Scheduler*.
+# Navigation Guide (UI Map + Tips)
+
+This page explains what each left‑hand navigation item in CoPilot does and how to use the UI efficiently.
+
+> Source of truth: `frontend/src/app-layouts/common/Navbar/items.tsx` (nav items) and `frontend/src/router/index.ts` (routes).
+
+---
+
+## Quick tips (applies to everyone)
+
+- **Use the left nav as your workflow map**:
   - *Incident Management* = where analysts live (alerts/cases)
   - *Connectors / External Services / Indices* = where engineers wire up data and keep the stack healthy
 

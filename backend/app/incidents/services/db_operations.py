@@ -29,6 +29,7 @@ from app.data_store.data_store_operations import upload_case_report_template_dat
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
 from app.incidents.middleware.tag_access import tag_access_handler
+from app.incidents.models import AIAnalystTriggerEnabled
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
@@ -728,6 +729,27 @@ async def get_alert_title_names(source: str, session: AsyncSession):
 async def get_customer_code_names(source: str, session: AsyncSession):
     result = await session.execute(select(CustomerCodeFieldName.field_name).where(CustomerCodeFieldName.source == source).distinct())
     return result.scalars().first()
+
+
+async def get_customer_ai_trigger(customer_code: str, session: AsyncSession):
+    result = await session.execute(select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == customer_code))
+    notification = result.scalars().first()
+    logger.info(f"AI Notification: {notification}")
+    return [notification] if notification is not None else []
+
+
+async def put_customer_ai_trigger(notification: PutNotification, session: AsyncSession):
+    result = await session.execute(
+        select(AIAnalystTriggerEnabled).where(AIAnalystTriggerEnabled.customer_code == notification.customer_code),
+    )
+    existing_notification = result.scalars().first()
+    if existing_notification is None:
+        new_notification = AIAnalystTriggerEnabled(**notification.dict())
+        session.add(new_notification)
+    else:
+        existing_notification.customer_code = notification.customer_code
+        existing_notification.enabled = notification.enabled
+    await session.commit()
 
 
 async def get_customer_notification(customer_code: str, session: AsyncSession):
@@ -1535,6 +1557,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         case_description=case.case_description,
         assigned_to=case.assigned_to,
         alerts=alerts_out,
+        case_status=case.case_status,
         case_creation_time=case.case_creation_time,
         customer_code=case.customer_code,
         notification_invoked_number=case.notification_invoked_number or 0,
@@ -1729,7 +1752,10 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            case_status=case.case_status,
+            case_creation_time=case.case_creation_time,
             customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
         )
@@ -1795,7 +1821,10 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            case_status=case.case_status,
+            case_creation_time=case.case_creation_time,
             customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
         )
@@ -1858,7 +1887,10 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             case_description=case.case_description,
             assigned_to=case.assigned_to,
             alerts=alerts_out,
+            case_status=case.case_status,
+            case_creation_time=case.case_creation_time,
             customer_code=case.customer_code,
+            notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
         )
@@ -2952,3 +2984,77 @@ async def upload_report_template_to_data_store(db: AsyncSession) -> CaseReportTe
             await add_report_template_to_db(upload_file, len(content), hashlib.sha256(content).hexdigest(), db)
 
     return templates_list
+
+
+async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
+    """Get distinct sources, assets, and tags from alerts the user has access to."""
+    from sqlalchemy import and_
+    from sqlalchemy import exists
+    from sqlalchemy import or_
+
+    filters = []
+
+    # Customer filtering
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    if "*" not in accessible_customers:
+        filters.append(Alert.customer_code.in_(accessible_customers))
+
+    # Tag filtering
+    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
+    accessible_tags = tag_filters["accessible_tags"]
+
+    if "*" not in accessible_tags:
+        tag_conditions = []
+        if accessible_tags:
+            has_accessible_tag = exists(
+                select(AlertToTag.alert_id)
+                .where(
+                    and_(
+                        AlertToTag.alert_id == Alert.id,
+                        AlertToTag.tag_id.in_(accessible_tags),
+                    ),
+                )
+                .correlate(Alert),
+            )
+            tag_conditions.append(has_accessible_tag)
+
+        if tag_filters["include_untagged"]:
+            is_untagged = ~exists(
+                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id).correlate(Alert),
+            )
+            tag_conditions.append(is_untagged)
+
+        if tag_conditions:
+            filters.append(or_(*tag_conditions))
+        else:
+            return {"sources": [], "assets": [], "tags": []}
+
+    where_clause = and_(*filters) if filters else True
+
+    # Distinct sources
+    sources_query = select(distinct(Alert.source)).where(where_clause).order_by(Alert.source)
+    sources_result = await db.execute(sources_query)
+    sources = [row[0] for row in sources_result if row[0]]
+
+    # Build a subquery of accessible alert IDs to avoid auto-correlation issues
+    # when joining Alert in asset/tag queries that also use exists() filters on Alert
+    accessible_alert_ids = select(Alert.id).where(where_clause).subquery()
+
+    # Distinct asset names
+    assets_query = (
+        select(distinct(Asset.asset_name)).where(Asset.alert_linked.in_(select(accessible_alert_ids.c.id))).order_by(Asset.asset_name)
+    )
+    assets_result = await db.execute(assets_query)
+    assets = [row[0] for row in assets_result if row[0]]
+
+    # Distinct tags
+    tags_query = (
+        select(distinct(AlertTag.tag))
+        .join(AlertToTag, AlertToTag.tag_id == AlertTag.id)
+        .where(AlertToTag.alert_id.in_(select(accessible_alert_ids.c.id)))
+        .order_by(AlertTag.tag)
+    )
+    tags_result = await db.execute(tags_query)
+    tags = [row[0] for row in tags_result if row[0]]
+
+    return {"sources": sources, "assets": assets, "tags": tags}

@@ -15,6 +15,10 @@ from sqlalchemy.sql import func
 
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
+from app.connectors.talon.schema.talon import TalonInvestigateRequest
+from app.connectors.talon.services.talon import (
+    investigate_alert as talon_investigate_alert,
+)
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -37,6 +41,7 @@ from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_customer_ai_trigger
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
@@ -882,6 +887,9 @@ async def create_alert_full(
             else:
                 logger.info(f"Skipping notifications for existing asset {alert_payload.asset_payload} in alert {existing_alert_id}")
 
+            # Trigger Talon investigation if enabled for this customer
+            await handle_talon_investigation(existing_alert_id, customer_code, session)
+
             return existing_alert_id
 
     # If not velo_sigma_alert or no existing alert found, proceed with normal alert creation
@@ -929,6 +937,9 @@ async def create_alert_full(
             session=session,
         )
 
+    # Trigger Talon investigation if enabled for this customer
+    await handle_talon_investigation(alert_id, customer_code, session)
+
     if threshold_alert is True or velo_sigma_alert is True:
         logger.info(
             f"{'Threshold' if threshold_alert else 'Velociraptor Sigma'} alert created for customer code {customer_code} with alert ID {alert_id}",
@@ -938,6 +949,31 @@ async def create_alert_full(
     await add_alert_to_document(CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id), alert_id)
 
     return alert_id
+
+
+async def handle_talon_investigation(alert_id: int, customer_code: str, session: AsyncSession) -> None:
+    """
+    Trigger a Talon investigation if AI analyst triggers are enabled for the customer.
+
+    Args:
+        alert_id: The alert ID to investigate.
+        customer_code: The customer code.
+        session: The database session.
+    """
+    try:
+        ai_triggers = await get_customer_ai_trigger(customer_code, session)
+        if ai_triggers and ai_triggers[0].enabled:
+            logger.info(f"AI analyst trigger enabled for customer {customer_code}, invoking Talon investigation for alert {alert_id}")
+            await talon_investigate_alert(
+                TalonInvestigateRequest(
+                    alert_id=alert_id,
+                    customer_code=customer_code,
+                ),
+            )
+        else:
+            logger.info(f"AI analyst trigger not enabled for customer {customer_code}, skipping Talon investigation")
+    except Exception as e:
+        logger.error(f"Failed to trigger Talon investigation for alert {alert_id}: {e}")
 
 
 async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:

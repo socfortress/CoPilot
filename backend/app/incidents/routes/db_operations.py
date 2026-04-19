@@ -29,13 +29,16 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
+from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
+from app.incidents.schema.db_operations import AITriggerResponse
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertFilterOptionsResponse
 from app.incidents.schema.db_operations import AlertIoCCreate
 from app.incidents.schema.db_operations import AlertIoCDelete
 from app.incidents.schema.db_operations import AlertIoCResponse
@@ -64,6 +67,7 @@ from app.incidents.schema.db_operations import CaseCommentResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseDataStoreResponse
+from app.incidents.schema.db_operations import CaseFilterOptionsResponse
 from app.incidents.schema.db_operations import CaseNotificationCreate
 from app.incidents.schema.db_operations import CaseNotificationResponse
 from app.incidents.schema.db_operations import CaseOutResponse
@@ -84,6 +88,7 @@ from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import NotificationResponse
+from app.incidents.schema.db_operations import PutAITrigger
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAlertTitleName
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhAssetName
@@ -182,9 +187,11 @@ from app.incidents.services.db_operations import edit_comment
 from app.incidents.services.db_operations import file_exists
 from app.incidents.services.db_operations import get_alert_by_id
 from app.incidents.services.db_operations import get_alert_context_by_id
+from app.incidents.services.db_operations import get_alert_filter_options
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
+from app.incidents.services.db_operations import get_customer_ai_trigger
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
@@ -208,6 +215,7 @@ from app.incidents.services.db_operations import list_cases_by_customer_code
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import list_cases_for_user
 from app.incidents.services.db_operations import list_files_by_case_id
+from app.incidents.services.db_operations import put_customer_ai_trigger
 from app.incidents.services.db_operations import put_customer_notification
 from app.incidents.services.db_operations import replace_alert_title_name
 from app.incidents.services.db_operations import replace_asset_name
@@ -230,6 +238,33 @@ from app.incidents.services.incident_case import handle_customer_notifications_c
 from app.middleware.customer_access import customer_access_handler
 
 incidents_db_operations_router = APIRouter()
+
+
+@incidents_db_operations_router.get("/ai_trigger/{customer_code}", response_model=AITriggerResponse)
+async def get_customer_ai_trigger_endpoint(
+    customer_code: str,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
+    return AITriggerResponse(
+        ai_triggers=await get_customer_ai_trigger(customer_code, db),
+        success=True,
+        message="AI Trigger retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.put("/ai_trigger", response_model=AITriggerResponse)
+async def put_customer_ai_trigger_endpoint(
+    notification: PutAITrigger,
+    _customer: Customers = Depends(check_customer_exists),
+    db: AsyncSession = Depends(get_db),
+):
+    await put_customer_ai_trigger(notification, db)
+    return AITriggerResponse(
+        ai_triggers=await get_customer_ai_trigger(notification.customer_code, db),
+        success=True,
+        message="AI Trigger updated successfully",
+    )
 
 
 @incidents_db_operations_router.get("/notification/{customer_code}", response_model=NotificationResponse)
@@ -779,6 +814,54 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
         case_alert_link=await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db),
         success=True,
         message="Case created from alert successfully",
+    )
+
+
+@incidents_db_operations_router.get("/alerts/filter-options", response_model=AlertFilterOptionsResponse)
+async def get_alert_filter_options_endpoint(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get distinct sources, assets, and tags available for alert filtering."""
+    options = await get_alert_filter_options(current_user, db)
+    return AlertFilterOptionsResponse(
+        sources=options["sources"],
+        assets=options["assets"],
+        tags=options["tags"],
+        success=True,
+        message="Filter options retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.get("/cases/filter-options", response_model=CaseFilterOptionsResponse)
+async def get_case_filter_options_endpoint(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get distinct case statuses and assigned_to values for filtering."""
+    from sqlalchemy import distinct
+
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+
+    if "*" in accessible_customers:
+        statuses_q = select(distinct(Case.case_status)).order_by(Case.case_status)
+        assigned_q = select(distinct(Case.assigned_to)).where(Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
+    else:
+        customer_filter = Case.customer_code.in_(accessible_customers)
+        statuses_q = select(distinct(Case.case_status)).where(customer_filter).order_by(Case.case_status)
+        assigned_q = select(distinct(Case.assigned_to)).where(customer_filter, Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
+
+    statuses_result = await db.execute(statuses_q)
+    statuses = [row[0] for row in statuses_result if row[0]]
+
+    assigned_result = await db.execute(assigned_q)
+    assigned_to = [row[0] for row in assigned_result if row[0]]
+
+    return CaseFilterOptionsResponse(
+        statuses=statuses,
+        assigned_to=assigned_to,
+        success=True,
+        message="Case filter options retrieved successfully",
     )
 
 

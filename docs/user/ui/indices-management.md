@@ -5,7 +5,7 @@ description: Monitor index health, disk usage by customer, and manage retention 
 
 # Index management (Wazuh Indexer)
 
-**Menu:** Indices → Index Management
+**Menu:** Log Management → Index Management
 
 **Best for:** Admin / Engineer
 

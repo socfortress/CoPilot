@@ -89,7 +89,7 @@ jobs:
           - name: Build and push Docker image
             uses: docker/build-push-action@v2
             with:
-                context: ./customer_portal
+                context: ./customer-portal
                 push: true
                 tags: ghcr.io/socfortress/copilot-customer-portal:latest
 

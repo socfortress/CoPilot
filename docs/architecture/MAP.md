@@ -131,7 +131,7 @@
   Vite environment defaults.
 
 ## Customer Portal
-- `customer_portal/src/router/index.ts`
+- `customer-portal/src/router/index.ts`
   Customer portal routes (login, alerts, cases, agents).
-- `customer_portal/src/views/`
+- `customer-portal/src/views/`
   Customer‑facing views with limited features.

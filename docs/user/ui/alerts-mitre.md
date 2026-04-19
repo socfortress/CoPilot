@@ -1,6 +1,6 @@
 # MITRE ATT&CK
 
-**Menu:** Alerts → MITRE ATT&CK
+**Menu:** SIEM → MITRE ATT&CK
 
 **Best for:** Operators + detection engineering + reporting
 

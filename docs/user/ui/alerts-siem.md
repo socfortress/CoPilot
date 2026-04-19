@@ -1,6 +1,6 @@
 # SIEM
 
-**Menu:** Alerts → SIEM
+**Menu:** SIEM → Alerts
 
 **Best for:** Both
 

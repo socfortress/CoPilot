@@ -1,0 +1,33 @@
+.apexcharts-canvas {
+	.apexcharts-toolbar {
+		z-index: 2;
+
+		.apexcharts-menu-item {
+			color: #000;
+		}
+	}
+}
+
+.apexcharts-tooltip {
+	backdrop-filter: blur(3px);
+	box-shadow:
+		0px 5px 10px -5px rgba(0, 0, 0, 0.2),
+		0px 5px 20px 0px rgba(0, 0, 0, 0.2) !important;
+
+	&.apexcharts-theme-dark {
+		background: rgba(0, 0, 0, 0.5) !important;
+	}
+
+	&.apexcharts-theme-light {
+		background: rgba(255, 255, 255, 0.5) !important;
+	}
+}
+
+.direction-rtl {
+	.apexcharts-legend {
+		direction: ltr;
+	}
+	.apexcharts-title-text {
+		direction: ltr;
+	}
+}

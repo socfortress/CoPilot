@@ -1,4 +1,295 @@
 ---
+title: AI Analyst (Talon)
+description: Automated Tier 1 SOC analyst that investigates every alert end-to-end — from raw SIEM events to structured investigation reports with severity assessments and recommended actions.
+---
+
+Talon is an automated AI SOC analyst built by [SOCFortress](https://www.socfortress.co/) for CoPilot. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot.
+
+<Card title="GitHub Repository" icon="github" href="https://github.com/taylorwalton/talon">
+  Source code, deployment guide, and architecture docs.
+</Card>
+
+---
+
+## What it does
+
+- **Automated Tier 1 investigations** — every OPEN alert is investigated end-to-end: SIEM raw event → IOC extraction → VirusTotal / Shodan / AbuseIPDB → MITRE ATT&CK correlation → structured report
+- **Two trigger paths** — real-time via `POST /investigate` (CoPilot calls this when an alert is created) and a 15-minute scheduled sweep as a safety net
+- **Writes back to CoPilot** — job status, full report, and enriched IOCs are persisted in CoPilot's database via its REST API; no direct database writes
+- **Privacy-aware by default** — an anonymizing MCP proxy intercepts raw SIEM events and replaces PII (usernames, hostnames, internal IPs) with session tokens before they reach the cloud model; a built-in deanonymize tool restores real values in the final report
+- **Optional local LLM analysis** — if [Ollama](https://ollama.com/) is running, the agent routes raw event interpretation through a local model instead of the cloud; no config needed if Ollama is on the same host
+- **Alert-type prompt templates** — per-alert-type investigation guides (Sysmon Event 1, 3, 7, 11, 22) are loaded automatically based on the alert's `rule.groups` field; add new templates without touching code
+
+---
+
+## How it works
+
+### Step 1 — Alert ingestion
+
+Talon picks up OPEN alerts via two paths:
+1. **Real-time webhook**: CoPilot calls `POST /investigate` when an alert is created
+2. **Scheduled sweep**: Every 15 minutes, Talon queries the CoPilot database for OPEN alerts with no existing investigation job
+
+### Step 2 — SIEM correlation
+
+Talon queries OpenSearch/Wazuh for:
+- The raw event that triggered the alert
+- Correlated events across the same asset, time window, and rule groups
+- Historical context from the 30-day lookback period
+
+### Step 3 — IOC extraction & enrichment
+
+IOCs (IPs, file hashes, domains, user accounts, commands) are extracted from the raw events and enriched via:
+- **VirusTotal** — file hash and domain reputation
+- **Shodan** — IP exposure and service enumeration
+- **AbuseIPDB** — IP abuse reports
+
+### Step 4 — Report generation & write-back
+
+Talon generates a structured investigation report containing:
+- Executive summary
+- Attack timeline
+- IOC analysis with verdicts
+- SIEM correlation findings
+- Severity assessment with justification
+- Recommended actions
+
+The report, job status, and enriched IOCs are written back to CoPilot via the CoPilot MCP server.
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────┐
+│                  CoPilot (FastAPI)                    │
+│                                                      │
+│  Alert created → POST /investigate ──────────────┐   │
+│  GET /status, GET /jobs/:alertId ← Talon HTTP API│   │
+│                                                  │   │
+│  Write-back API (MCP tools):                     │   │
+│    POST /api/ai_analyst/jobs         ←───────────┘   │
+│    POST /api/ai_analyst/reports                      │
+│    POST /api/ai_analyst/iocs                         │
+│  MySQL: ai_analyst_job / report / ioc                │
+└───────────────────────┬──────────────────────────────┘
+                        │ read-only MCP        ▲ REST write-back
+                        ▼                      │
+┌──────────────────────────────────────────────────────┐
+│                    Talon (Node.js)                    │
+│                                                      │
+│  HTTP channel (port 3100)                            │
+│    POST /investigate  ← CoPilot triggers this        │
+│    POST /message      ← ad-hoc analyst prompts       │
+│    GET  /status       ← queue + job overview         │
+│                                                      │
+│  Scheduled task (every 15 min)                       │
+│    Queries MySQL for OPEN alerts with no job row     │
+│    Runs full investigation per alert                 │
+│                                                      │
+│  SOC agent (containerized)                           │
+│    groups/copilot/CLAUDE.md  ← investigation flow    │
+│    groups/copilot/prompts/   ← per-alert templates   │
+└──────────────────────────────────────────────────────┘
+         │ MCP tools (read-only)
+         ▼
+┌──────────────────────────────────────────────────────┐
+│  opensearch-mcp    — raw SIEM queries                │
+│  opensearch_anon   — anonymizing proxy (PII→tokens)  │
+│  mysql-mcp         — CoPilot DB (alerts, assets)     │
+│  copilot-mcp       — CoPilot REST API write-back     │
+│  ollama (optional) — local LLM for sensitive data    │
+│  mempalace         — persistent investigation memory │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## Privacy & anonymization
+
+Raw SIEM events contain sensitive data — usernames, internal hostnames, RFC1918 IPs. Talon's anonymizing MCP proxy intercepts all document and search results before they reach the Claude cloud API and replaces known PII fields with consistent session tokens:
+
+| Token pattern | What it replaces |
+|---------------|------------------|
+| `USER_1`, `USER_2`, … | Usernames, account names |
+| `HOST_1`, `HOST_2`, … | Hostnames, computer names |
+| `IP_INT_1`, … | Internal / RFC1918 IP addresses |
+| `EMAIL_1`, … | Email addresses |
+
+Security-critical values — file hashes, external IPs, domains, process paths, rule metadata — pass through unchanged so threat intel lookups work normally. Before the final report is written, the agent calls a built-in `deanonymize` tool to restore real names and IPs so the analyst sees accurate output.
+
+Field definitions live in `siem/anon_proxy/fields.yaml` — add new fields and deploy to extend coverage.
+
+---
+
+## Local LLM support (Ollama)
+
+If [Ollama](https://ollama.com/) is running on the same host, Talon automatically routes raw event interpretation through a local model rather than the cloud. This keeps the most sensitive step — reading the full raw event and extracting IOCs — entirely on-premises.
+
+The agent checks for Ollama at startup. If it's not running, the investigation continues without it — no errors, no configuration required.
+
+### Deployment options
+
+| Option | Hardware | Cost | Privacy |
+|--------|----------|------|---------|
+| **Local Ollama** | GPU required | $0 (sunk) | Best (fully on-prem) |
+| **RunPod cloud GPU** | None | ~$0.20–0.44/hr | Good (PII already tokenized) |
+| **Skip (cloud only)** | None | Per-investigation | Good (anonymized before cloud) |
+
+---
+
+## MemPalace persistent memory
+
+MemPalace gives the SOC agent long-term memory — past investigation outcomes, asset metadata, confirmed false positives, and IOC history are stored in a local ChromaDB + SQLite knowledge graph and retrieved automatically at the start of each investigation.
+
+This allows Talon to:
+- Reference prior investigations for the same alert or asset
+- Avoid redundant analysis for known-good patterns
+- Track remediation status across repeated investigations
+
+---
+
+## CoPilot UI integration
+
+### AI Analyst page
+
+Navigate to **Incident Management → AI Analyst** to access:
+
+| Tab | Purpose |
+|-----|---------|
+| **Overview** | Live status, architecture, capabilities, and integration details |
+| **Reports** | Browse all investigation reports across all alerts |
+| **Talon Chat** | Ad-hoc analyst prompts with SSE streaming responses |
+
+### Alert-level integration
+
+When you open any alert in **Incident Management → Alerts**:
+
+1. The **AI Analyst** tab appears next to Overview — if an investigation report exists, it auto-selects as the default tab with a pulsing indicator dot
+2. Reports show severity tag, summary, full markdown report, and recommended actions
+3. If multiple investigations exist for the same alert, a dropdown lets you switch between them (most recent first)
+4. The **"Investigate with AI Analyst"** button on the Overview tab triggers a new investigation on demand
+
+---
+
+## Alert-type templates
+
+Investigation templates live in `groups/copilot/prompts/`. Each file is a plain-text guide with template variables that the agent fills in at runtime.
+
+| File | Alert type |
+|------|-----------|
+| `sysmon_event_1.txt` | Process Creation (Sysmon Event 1) |
+| `sysmon_event_3.txt` | Network Connection (Event 3) |
+| `sysmon_event_7.txt` | Image Load / DLL (Event 7) |
+| `sysmon_event_11.txt` | File Create (Event 11) |
+| `sysmon_event_22.txt` | DNS Query (Event 22) |
+
+To add a new alert type, create the corresponding `.txt` file — no code changes required. The agent detects the type from `rule.groups` in the raw event and loads the matching template automatically.
+
+---
+
+## Deployment
+
+### Prerequisites
+
+- Docker
+- Node.js 20+
+- A running OpenSearch / Wazuh SIEM
+- A running CoPilot instance (MySQL/MariaDB + FastAPI)
+- A [Claude Code](https://claude.ai/download) OAuth token
+
+### Quick start
+
+```bash
+git clone https://github.com/taylorwalton/talon.git talon
+cd talon
+npm install && npm run build
+```
+
+Then configure credentials:
+
+```bash
+# SIEM (OpenSearch)
+bash siem/setup.sh
+
+# CoPilot database
+bash mysql/setup.sh
+
+# CoPilot REST API
+bash copilot-mcp/setup.sh
+
+# MemPalace persistent memory
+bash mempalace/setup.sh
+
+# Build the agent container
+CONTAINER_RUNTIME=docker ./container/build.sh
+```
+
+See the full [deployment guide](https://github.com/taylorwalton/talon#deployment-guide) for detailed steps including OAuth token setup, mount allowlist configuration, systemd/launchd service setup, and Ollama integration.
+
+### Verify
+
+```bash
+# Health check (unauthenticated)
+curl http://localhost:3100/health
+
+# Test SIEM connectivity
+curl -s -N -X POST http://localhost:3100/message \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $TALON_API_KEY" \
+  -d '{"message": "Check cluster health", "sender": "test"}'
+```
+
+---
+
+## Key source files
+
+| File | Purpose |
+|------|---------|
+| `src/index.ts` | Orchestrator: message loop, agent invocation |
+| `src/channels/http.ts` | HTTP channel: /investigate, /status, /jobs, /message |
+| `src/task-scheduler.ts` | 15-minute scheduled alert sweep |
+| `src/container-runner.ts` | Spawns agent containers with mounts |
+| `groups/copilot/CLAUDE.md` | SOC agent investigation workflow |
+| `groups/copilot/.mcp.json` | MCP server registry (opensearch, mysql, copilot, ollama) |
+| `siem/anon_proxy/anon_proxy.py` | Anonymizing MCP proxy |
+| `siem/anon_proxy/fields.yaml` | PII field definitions |
+| `container/Dockerfile` | Agent container image |
+
+---
+
+## Per-deployment configuration
+
+| Path | Purpose |
+|------|---------|
+| `siem/.env` | OpenSearch credentials |
+| `mysql/.env` | CoPilot MySQL credentials |
+| `copilot-mcp/.env` | CoPilot REST API credentials |
+| `ollama/.env` | Optional Ollama host override |
+| `mempalace-data/` | MemPalace palace data (ChromaDB + SQLite) |
+| `.env` | Claude OAuth token, webhook URL, HTTP API key |
+| `groups/copilot/CLAUDE.md` | SOC agent identity, known assets, ongoing investigations |
+| `groups/copilot/prompts/` | Per-alert-type investigation templates |
+| `siem/anon_proxy/fields.yaml` | PII field definitions for the anonymizing proxy |
+
+---
+
+## Safety & guardrails
+
+- **Containerized isolation**: Each investigation runs in an isolated Linux container with a mount allowlist controlling file system access
+- **No direct DB writes**: All data is written back via the CoPilot REST API with proper authentication
+- **PII anonymization**: Sensitive data is tokenized before reaching any cloud model
+- **Treat output as a draft**: AI-generated reports should be reviewed by an analyst before action
+- **RBAC enforcement**: All CoPilot API endpoints require `admin` or `analyst` scope
+
+---
+
+## Video context
+
+- AI analyst (alert-context + exclusion-rule assistance): https://www.youtube.com/watch?v=-2srPC-Dw-0
+- AI chatbot + MCP-style "chat with your stack": https://www.youtube.com/watch?v=FHjD9QBaLD4
+- Expanded AI companion features: https://www.youtube.com/watch?v=QaLrmSgEcLI
+---
 title: AI analyst / AI-assisted investigation
 description: AI-assisted workflows to speed up alert triage, investigation, and knowledge capture across your open-source SIEM stack.
 ---

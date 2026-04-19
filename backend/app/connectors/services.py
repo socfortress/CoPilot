@@ -22,6 +22,7 @@ from app.connectors.portainer.utils.universal import verify_portainer_connection
 from app.connectors.schema import ConnectorResponse
 from app.connectors.shuffle.utils.universal import verify_shuffle_connection
 from app.connectors.sublime.utils.universal import verify_sublime_connection
+from app.connectors.talon.utils.universal import verify_talon_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
@@ -198,6 +199,15 @@ class PortainerService(ConnectorServiceInterface):
         return await verify_portainer_connection(connector.connector_name)
 
 
+# Talon Service
+class TalonService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_talon_connection(connector.connector_name)
+
+
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
     """
@@ -226,6 +236,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Alert Creation Provisioning": AlertCreationService,
         "VirusTotal": VirustotalService,
         "Portainer": PortainerService,
+        "Talon": TalonService,
     }
     return service_map.get(connector_name, None)
 

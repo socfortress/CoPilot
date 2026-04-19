@@ -19,6 +19,9 @@ const ContactIcon = "ic:outline-alternate-email"
 const DocsIcon = "carbon:document"
 const UsersIcon = "carbon:group-security"
 const SSOConfigIcon = "carbon:rule-locked"
+const SchedulerIcon = "material-symbols:autoplay"
+const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
+const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -51,9 +54,46 @@ const options = ref([
 			]
 		: []),
 	{
+		type: "divider",
+		key: "divider-1"
+	},
+	{
+		label: "Scheduler",
+		key: "route-Scheduler",
+		icon: renderIcon(SchedulerIcon)
+	},
+	{
+		label: "Customer Portal",
+		key: "route-CustomerPortal",
+		icon: renderIcon(CustomerPortalIcon)
+	},
+	{
 		label: "Logs",
 		key: "route-Logs",
 		icon: renderIcon(LogsIcon)
+	},
+	{
+		type: "divider",
+		key: "divider-2"
+	},
+	{
+		label: "3rd Party Integrations",
+		key: "route-ExternalServices-ThirdPartyIntegrations",
+		icon: renderIcon(ExternalServicesIcon)
+	},
+	{
+		label: "Network Connectors",
+		key: "route-ExternalServices-NetworkConnectors",
+		icon: renderIcon(ExternalServicesIcon)
+	},
+	{
+		label: "Singul App Auth",
+		key: "route-ExternalServices-SingulAppAuth",
+		icon: renderIcon(ExternalServicesIcon)
+	},
+	{
+		type: "divider",
+		key: "divider-3"
 	},
 	{
 		label: () =>
@@ -82,6 +122,10 @@ const options = ref([
 			),
 		key: "contact-socfortress",
 		icon: renderIcon(ContactIcon)
+	},
+	{
+		type: "divider",
+		key: "divider-4"
 	},
 	{
 		label: "Logout",

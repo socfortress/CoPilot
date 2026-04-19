@@ -1,0 +1,66 @@
+<template>
+	<div class="grid grid-cols-1 items-center gap-x-6 gap-y-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+		<div>
+			<n-select
+				v-model:value="filters.status"
+				:options="statusOptions"
+				placeholder="Status"
+				:consistent-menu-width="false"
+				clearable
+			/>
+		</div>
+		<div>
+			<n-select
+				v-model:value="filters.os"
+				:options="osOptions"
+				placeholder="Operating System"
+				:consistent-menu-width="false"
+				clearable
+			/>
+		</div>
+		<div>
+			<n-input v-model:value="filters.search" placeholder="Search (hostname, ip address, agent id)" clearable />
+		</div>
+		<div class="flex items-center justify-between gap-2">
+			<n-checkbox v-model:checked="filters.critical">Critical Assets</n-checkbox>
+			<n-button size="small" secondary @click="resetFilters">Reset filters</n-button>
+		</div>
+	</div>
+</template>
+
+<script setup lang="ts">
+import type { AgentStatus } from "@/types/agents"
+import { NButton, NCheckbox, NInput, NSelect } from "naive-ui"
+import { computed } from "vue"
+
+export interface AgentsFilters {
+	status: AgentStatus | null
+	critical: boolean
+	os: string | null
+	search: string | null
+}
+
+const props = defineProps<{
+	status: AgentStatus[]
+	os: string[]
+}>()
+
+const filters = defineModel<AgentsFilters>("value", { required: true })
+
+const statusOptions = computed(() => {
+	return props.status.map(status => ({ label: status, value: status }))
+})
+
+const osOptions = computed(() => {
+	return props.os.map(os => ({ label: os, value: os }))
+})
+
+function resetFilters() {
+	filters.value = {
+		status: null,
+		critical: false,
+		os: null,
+		search: null
+	}
+}
+</script>

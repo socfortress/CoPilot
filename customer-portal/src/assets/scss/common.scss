@@ -1,0 +1,84 @@
+/*
+	DOES NOT WORK ON FIREFOX!
+	:has() CSS relational pseudo-class not yet supported by Firefox
+	(https://caniuse.com/css-has)
+	you can find a worker around in pages that use this class
+*/
+#app {
+	.layout {
+		.main {
+			.view:has(.page-without-footer) {
+				& + footer {
+					display: none;
+				}
+			}
+		}
+	}
+}
+
+.scrollbar-styled {
+	/* Works on Firefox */
+
+	scrollbar-width: thin;
+	scrollbar-color: var(--hover-color) var(--bg-secondary-color);
+
+	/* Works on Chrome, Edge, and Safari */
+	&::-webkit-scrollbar,
+	::-webkit-scrollbar {
+		width: 12px;
+	}
+
+	&::-webkit-scrollbar-track,
+	::-webkit-scrollbar-track {
+		background: var(--bg-secondary-color);
+	}
+
+	&::-webkit-scrollbar-thumb,
+	::-webkit-scrollbar-thumb {
+		background-color: var(--hover-color);
+		border-radius: 20px;
+		border: 2px solid var(--bg-secondary-color);
+	}
+}
+
+.code-bg-transparent {
+	code {
+		background-color: transparent;
+	}
+}
+
+.over-layer {
+	background-color: rgba(var(--bg-body-color-rgb) / 0.8);
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px;
+
+	.n-alert {
+		width: 90vw;
+		max-width: 500px;
+		background-color: var(--bg-default-color);
+	}
+}
+
+.grid-auto-fit-200 {
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	grid-auto-flow: row dense;
+}
+.grid-auto-fit-250 {
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	grid-auto-flow: row dense;
+}
+.grid-auto-fill-200 {
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	grid-auto-flow: row dense;
+}
+.grid-auto-fill-250 {
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	grid-auto-flow: row dense;
+}
