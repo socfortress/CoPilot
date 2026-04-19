@@ -107,7 +107,7 @@ async def send_get_request(
             headers=headers,
             params=params,
             verify=False,
-            timeout=30,
+            timeout=(5, 30),
         )
         response.raise_for_status()
         return {
