@@ -13,7 +13,7 @@
 			<div class="mt-1 flex items-center gap-2">
 				<n-tag size="small" round type="success">
 					<template #icon>
-						<Icon name="carbon:checkmark-filled" :size="12" />
+						<Icon name="carbon:checkmark-filled" />
 					</template>
 					Integrated
 				</n-tag>
@@ -26,7 +26,7 @@
 				href="https://github.com/taylorwalton/talon"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="text-primary mt-1 inline-flex items-center gap-1.5 text-xs hover:underline"
+				class="text-primary mt-1 inline-flex items-center gap-1.5 text-xs no-underline hover:underline"
 			>
 				<Icon name="carbon:logo-github" :size="14" />
 				<span>github.com/taylorwalton/talon</span>
