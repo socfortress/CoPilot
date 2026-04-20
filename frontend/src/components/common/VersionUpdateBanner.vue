@@ -1,22 +1,26 @@
 <template>
-	<n-alert v-if="showBanner && versionInfo?.is_outdated" type="info" closable class="mb-4" @close="dismissBanner">
+	<n-alert
+		v-if="showBanner && versionInfo?.is_outdated"
+		title="New version available!"
+		type="info"
+		closable
+		@close="dismissBanner"
+	>
 		<template #icon>
-			<Icon :name="UpdateIcon" />
+			<Icon :name="UpdateIcon" :size="18" />
 		</template>
+		<template #header>New version available!</template>
 		<div class="flex flex-col gap-3">
 			<div class="flex items-center justify-between gap-4">
-				<div>
-					<strong>New version available!</strong>
-					<div class="mt-1 text-sm">
-						You're running v{{ versionInfo.current_version }}, v{{ versionInfo.latest_version }} is now
-						available.
-						<span v-if="versionInfo.published_at" class="opacity-75">
-							(Released {{ formatDate(versionInfo.published_at) }})
-						</span>
-					</div>
+				<div class="text-sm">
+					You're running v{{ versionInfo.current_version }}, v{{ versionInfo.latest_version }} is now
+					available.
+					<span v-if="versionInfo.published_at" class="opacity-75">
+						(Released {{ formatDate(versionInfo.published_at, dFormats.datetime) }})
+					</span>
 				</div>
 				<div class="flex gap-2">
-					<n-button v-if="showReleaseNotes" size="small" @click="toggleNotes">
+					<n-button v-if="showReleaseNotes" size="small" secondary @click="toggleNotes">
 						{{ expandedNotes ? "Hide" : "Show" }} Release Notes
 					</n-button>
 					<n-button
@@ -44,45 +48,43 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { VersionCheckResponse } from "@/types/version.d"
+import { useStorage } from "@vueuse/core"
 import { NAlert, NButton, NCollapseTransition, NDivider } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 
 const UpdateIcon = "carbon:update-now"
 const versionInfo = ref<VersionCheckResponse | null>(null)
 const showBanner = ref(false)
 const expandedNotes = ref(false)
 
+const dFormats = useSettingsStore().dateFormat
 const DISMISS_KEY = "version_banner_dismissed"
 const DISMISS_DURATION = 24 * 60 * 60 * 1000 // 24 hours
+
+const dismissedAt = useStorage<number | null>(DISMISS_KEY, null)
 
 const showReleaseNotes = computed(() => {
 	return versionInfo.value?.release_notes && versionInfo.value.release_notes.trim().length > 0
 })
-
-function formatDate(dateString: string): string {
-	return dayjs(dateString).format("MMM D, YYYY")
-}
 
 function toggleNotes() {
 	expandedNotes.value = !expandedNotes.value
 }
 
 function checkIfDismissed() {
-	const dismissed = localStorage.getItem(DISMISS_KEY)
-	if (dismissed) {
-		const dismissedTime = Number.parseInt(dismissed)
-		const now = Date.now()
+	if (dismissedAt.value) {
 		// Show again after 24 hours
-		return now - dismissedTime < DISMISS_DURATION
+		return Date.now() - dismissedAt.value < DISMISS_DURATION
 	}
 	return false
 }
 
 function dismissBanner() {
-	localStorage.setItem(DISMISS_KEY, Date.now().toString())
+	dismissedAt.value = Date.now()
 	showBanner.value = false
 }
 
