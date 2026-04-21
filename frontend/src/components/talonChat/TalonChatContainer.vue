@@ -1,8 +1,8 @@
 <template>
 	<div class="flex h-full flex-col overflow-hidden">
 		<n-scrollbar ref="scrollbar" class="grow">
-			<div v-if="messages.length" class="flex flex-col gap-6 p-4 pb-20">
-				<TalonChatBubble v-for="msg of messages" :key="msg.id" :msg />
+			<div v-if="messages.length" class="flex flex-col gap-6 pb-20">
+				<TalonChatBubble v-for="msg of messages" :key="msg.id" :msg class="animate-fade" />
 
 				<div v-if="streaming" class="group animate-fade flex flex-col gap-0.5">
 					<div class="text-secondary inline-flex items-center gap-1 text-sm font-semibold">

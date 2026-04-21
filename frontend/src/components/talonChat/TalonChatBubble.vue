@@ -15,7 +15,7 @@
 								</template>
 							</n-button>
 						</template>
-						<div class="text-xs">Copy</div>
+						<div class="text-xs">{{ showCopyTooltip ? "Copied!" : "Copy" }}</div>
 					</n-tooltip>
 				</div>
 			</div>
@@ -58,5 +58,5 @@ defineProps<{
 }>()
 
 const dFormats = useSettingsStore().dateFormat
-const { copy: copyText, isSupported: isCopySupported } = useClipboard()
+const { copy: copyText, copied: showCopyTooltip, isSupported: isCopySupported } = useClipboard()
 </script>
