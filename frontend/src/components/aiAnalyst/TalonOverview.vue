@@ -17,10 +17,18 @@
 					</template>
 					Integrated
 				</n-tag>
-				<n-tag v-if="status" size="small" round :type="status === 'healthy' ? 'success' : 'warning'">
+				<n-tag
+					v-if="status"
+					size="small"
+					round
+					:type="status === 'healthy' ? 'success' : 'warning'"
+					class="animate-fade"
+				>
 					{{ status === "healthy" ? "Online" : status }}
 				</n-tag>
-				<n-tag v-else-if="statusChecked" size="small" round type="error">Unreachable</n-tag>
+				<n-tag v-else-if="statusChecked" size="small" round type="error" class="animate-fade">
+					Unreachable
+				</n-tag>
 			</div>
 			<a
 				href="https://github.com/taylorwalton/talon"

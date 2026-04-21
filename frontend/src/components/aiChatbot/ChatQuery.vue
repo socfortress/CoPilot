@@ -93,7 +93,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { RemovableRef } from "@vueuse/core"
 import type { SelectOption } from "naive-ui"
 import type { VNode } from "vue"
