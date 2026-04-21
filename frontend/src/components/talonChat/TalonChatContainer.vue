@@ -63,7 +63,7 @@
 			<div v-else class="text-secondary flex flex-col items-center justify-center py-12 text-center">
 				<Icon name="carbon:chat-bot" :size="40" class="mb-3 opacity-50" />
 				<p class="text-lg font-semibold">Welcome to Talon AI</p>
-				<p class="mt-1 max-w-md text-sm opacity-70">
+				<p class="text-tertiary mt-1 max-w-md text-sm">
 					Your AI-powered security analyst. Ask questions about alerts, threats, or your environment and Talon
 					will investigate and respond.
 				</p>
@@ -80,43 +80,21 @@
 			</div>
 		</n-scrollbar>
 
-		<div class="border-color flex items-end gap-2 border-t p-3">
-			<n-tooltip v-if="messages.length && !streaming">
-				<template #trigger>
-					<n-button text @click="clearChat()">
-						<template #icon>
-							<Icon name="carbon:trash-can" :size="16" />
-						</template>
-					</n-button>
-				</template>
-				<div class="text-xs">Clear chat</div>
-			</n-tooltip>
-			<n-input
-				v-model:value="input"
-				type="textarea"
-				:autosize="{ minRows: 1, maxRows: 6 }"
-				placeholder="Ask Talon..."
-				:disabled="streaming"
-				@keydown.enter.exact.prevent="sendMessage()"
-			/>
-			<n-button v-if="!streaming" type="primary" :disabled="!input?.trim()" @click="sendMessage()">
-				<template #icon>
-					<Icon name="carbon:send-filled" :size="16" />
-				</template>
-			</n-button>
-			<n-button v-else type="error" @click="stopStream()">
-				<template #icon>
-					<Icon name="carbon:stop-filled" :size="16" />
-				</template>
-			</n-button>
-		</div>
+		<TalonChatQuery
+			v-model:input="input"
+			:loading="streaming"
+			@message="sendMessage"
+			@stop="stopStream()"
+			@clear-chat="clearChat()"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ScrollbarInst } from "naive-ui"
+import type { Message } from "./TalonChatQuery.vue"
 import { useClipboard, useStorage } from "@vueuse/core"
-import { NButton, NInput, NScrollbar, NTooltip, useMessage } from "naive-ui"
+import { NButton, NScrollbar, NTooltip, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { nextTick, ref } from "vue"
 import Api from "@/api"
@@ -125,6 +103,7 @@ import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import { secureLocalStorage } from "@/utils/secure-storage"
+import TalonChatQuery from "./TalonChatQuery.vue"
 
 interface TalonMessage {
 	id: string
@@ -154,7 +133,7 @@ let abortController: AbortController | null = null
 
 function useExample(example: string) {
 	input.value = example
-	sendMessage()
+	sendMessage({ input: example })
 }
 
 function clearChat() {
@@ -167,8 +146,8 @@ function scrollChat() {
 	})
 }
 
-async function sendMessage() {
-	const text = input.value?.trim()
+async function sendMessage(payload: Message) {
+	const text = payload.input.trim()
 	if (!text || streaming.value) return
 
 	messages.value.push({
