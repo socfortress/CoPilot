@@ -278,7 +278,7 @@ const router = createRouter({
 		{
 			path: "/ai-analyst",
 			name: "AiAnalyst",
-			component: () => import("@/views/incidentManagement/AiAnalyst.vue"),
+			component: () => import("@/views/AiAnalyst.vue"),
 			meta: { title: "AI Analyst", auth: true, roles: RouteRole.All }
 		},
 		{
