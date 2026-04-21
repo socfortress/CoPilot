@@ -1,16 +1,10 @@
 <template>
-	<n-alert
-		v-if="showBanner && versionInfo?.is_outdated"
-		title="New version available!"
-		type="info"
-		closable
-		@close="dismissBanner"
-	>
+	<n-alert v-if="showBanner" title="New version available!" type="info" closable @close="dismissBanner">
 		<template #icon>
 			<Icon :name="UpdateIcon" :size="18" />
 		</template>
 		<template #header>New version available!</template>
-		<div class="flex flex-col gap-3">
+		<div v-if="versionInfo" class="flex flex-col">
 			<div class="flex items-center justify-between gap-4">
 				<div class="text-sm">
 					You're running v{{ versionInfo.current_version }}, v{{ versionInfo.latest_version }} is now
@@ -36,23 +30,24 @@
 				</div>
 			</div>
 			<n-collapse-transition :show="expandedNotes">
-				<div v-if="versionInfo.release_notes" class="release-notes text-sm">
-					<n-divider class="my-2!" />
-					<pre class="whitespace-pre-wrap">{{ versionInfo.release_notes }}</pre>
-				</div>
+				<n-card v-if="versionInfo.release_notes" class="mt-4" content-class="pr-2!">
+					<n-scrollbar class="max-h-50 pr-4">
+						<Markdown :source="versionInfo.release_notes" breaks />
+					</n-scrollbar>
+				</n-card>
 			</n-collapse-transition>
 		</div>
 	</n-alert>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { VersionCheckResponse } from "@/types/version.d"
 import { useStorage } from "@vueuse/core"
-import { NAlert, NButton, NCollapseTransition, NDivider } from "naive-ui"
+import { NAlert, NButton, NCard, NCollapseTransition, NScrollbar } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -110,18 +105,3 @@ onBeforeMount(() => {
 	checkVersion()
 })
 </script>
-
-<style lang="scss" scoped>
-.release-notes {
-	max-height: 400px;
-	overflow-y: auto;
-	padding: 0.5rem;
-	border-radius: 4px;
-	background-color: rgba(0, 0, 0, 0.05);
-
-	pre {
-		font-family: inherit;
-		margin: 0;
-	}
-}
-</style>
