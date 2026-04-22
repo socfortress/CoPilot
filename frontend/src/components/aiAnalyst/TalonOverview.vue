@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-8 p-2">
+	<div class="flex flex-col gap-8">
 		<!-- Hero -->
 		<div class="flex flex-col items-center gap-3 py-6 text-center">
 			<div class="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
@@ -13,20 +13,28 @@
 			<div class="mt-1 flex items-center gap-2">
 				<n-tag size="small" round type="success">
 					<template #icon>
-						<Icon name="carbon:checkmark-filled" :size="12" />
+						<Icon name="carbon:checkmark-filled" />
 					</template>
 					Integrated
 				</n-tag>
-				<n-tag v-if="status" size="small" round :type="status === 'healthy' ? 'success' : 'warning'">
+				<n-tag
+					v-if="status"
+					size="small"
+					round
+					:type="status === 'healthy' ? 'success' : 'warning'"
+					class="animate-fade"
+				>
 					{{ status === "healthy" ? "Online" : status }}
 				</n-tag>
-				<n-tag v-else-if="statusChecked" size="small" round type="error">Unreachable</n-tag>
+				<n-tag v-else-if="statusChecked" size="small" round type="error" class="animate-fade">
+					Unreachable
+				</n-tag>
 			</div>
 			<a
 				href="https://github.com/taylorwalton/talon"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="text-primary mt-1 inline-flex items-center gap-1.5 text-xs hover:underline"
+				class="text-primary mt-1 inline-flex items-center gap-1.5 text-xs no-underline hover:underline"
 			>
 				<Icon name="carbon:logo-github" :size="14" />
 				<span>github.com/taylorwalton/talon</span>
@@ -34,77 +42,53 @@
 			</a>
 		</div>
 
-		<!-- How It Works -->
-		<section>
-			<SectionHeader title="How It Works" icon="carbon:flow" />
-			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-				<StepCard
-					v-for="item in investigationSteps"
-					:key="item.step"
-					:step="item.step"
-					:title="item.title"
-					:description="item.description"
-					:icon="item.icon"
-				/>
-			</div>
-		</section>
-
-		<!-- Capabilities -->
-		<section>
-			<SectionHeader title="Capabilities" icon="carbon:catalog" />
-			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				<FeatureCard
-					v-for="feature in capabilities"
-					:key="feature.title"
-					:title="feature.title"
-					:description="feature.description"
-					:icon="feature.icon"
-				/>
-			</div>
-		</section>
-
-		<!-- Architecture -->
-		<section>
-			<SectionHeader title="Architecture" icon="carbon:network-4" />
-			<div class="bg-secondary mt-3 overflow-x-auto rounded-lg p-5">
+		<n-tabs type="card" placement="left" animated>
+			<n-tab-pane name="How It Works" tab="How It Works">
+				<div class="grid grid-cols-1 gap-3">
+					<StepCard
+						v-for="item in investigationSteps"
+						:key="item.step"
+						:step="item.step"
+						:title="item.title"
+						:description="item.description"
+						:icon="item.icon"
+					/>
+				</div>
+			</n-tab-pane>
+			<n-tab-pane name="Capabilities" tab="Capabilities">
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					<FeatureCard
+						v-for="feature in capabilities"
+						:key="feature.title"
+						:title="feature.title"
+						:description="feature.description"
+						:icon="feature.icon"
+					/>
+				</div>
+			</n-tab-pane>
+			<n-tab-pane name="Architecture" tab="Architecture">
 				<pre class="text-default text-xs leading-relaxed"><code>{{ architectureDiagram }}</code></pre>
-			</div>
-		</section>
-
-		<!-- Integration Points -->
-		<section>
-			<SectionHeader title="CoPilot Integration" icon="carbon:connect" />
-			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-				<FeatureCard
-					v-for="point in integrationPoints"
-					:key="point.title"
-					:title="point.title"
-					:description="point.description"
-					:icon="point.icon"
-				/>
-			</div>
-		</section>
+			</n-tab-pane>
+			<n-tab-pane name="CoPilot Integration" tab="CoPilot Integration">
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+					<FeatureCard
+						v-for="point in integrationPoints"
+						:key="point.title"
+						:title="point.title"
+						:description="point.description"
+						:icon="point.icon"
+					/>
+				</div>
+			</n-tab-pane>
+		</n-tabs>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NTag } from "naive-ui"
+import { NTabPane, NTabs, NTag } from "naive-ui"
 import { defineComponent, h, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-
-// --- Inline sub-components ---
-
-const SectionHeader = defineComponent({
-	props: { title: String, icon: String },
-	setup(props) {
-		return () =>
-			h("div", { class: "flex items-center gap-2" }, [
-				h(Icon, { name: props.icon, size: 18, class: "text-primary" }),
-				h("h2", { class: "text-default text-lg font-semibold" }, props.title)
-			])
-	}
-})
 
 const StepCard = defineComponent({
 	props: { step: Number, title: String, description: String, icon: String },
@@ -260,44 +244,44 @@ const integrationPoints = [
 	}
 ]
 
-const architectureDiagram = `┌──────────────────────────────────────────────────────┐
+const architectureDiagram = `┌───────────────────────────────────────────────────────┐
 │                  CoPilot (FastAPI)                    │
-│                                                      │
-│  Alert created → POST /investigate ──────────────┐   │
-│  GET /status, GET /jobs/:alertId ← Talon HTTP API│   │
-│                                                  │   │
-│  Write-back API (MCP tools):                     │   │
-│    POST /api/ai_analyst/jobs         ←───────────┘   │
-│    POST /api/ai_analyst/reports                      │
-│    POST /api/ai_analyst/iocs                         │
-│  MySQL: ai_analyst_job / report / ioc                │
-└───────────────────────┬──────────────────────────────┘
-                        │ read-only MCP        ▲ REST write-back
-                        ▼                      │
-┌──────────────────────────────────────────────────────┐
+│                                                       │
+│  Alert created → POST /investigate ───────────────┐   │
+│  GET /status, GET /jobs/:alertId ← Talon HTTP API │   │
+│                                                   │   │
+│  Write-back API (MCP tools):                      │   │
+│    POST /api/ai_analyst/jobs         ←────────────┘   │
+│    POST /api/ai_analyst/reports                       │
+│    POST /api/ai_analyst/iocs                          │
+│  MySQL: ai_analyst_job / report / ioc                 │
+└───────────┬───────────────────────────────────────────┘
+            │                    ▲ REST write-back
+            ▼ read-only MCP      │
+┌────────────────────────────────┴──────────────────────┐
 │                    Talon (Node.js)                    │
-│                                                      │
-│  HTTP channel (port 3100)                            │
-│    POST /investigate  ← CoPilot triggers this        │
-│    POST /message      ← ad-hoc analyst prompts       │
-│    GET  /status       ← queue + job overview         │
-│                                                      │
-│  Scheduled task (every 15 min)                       │
-│    Queries MySQL for OPEN alerts with no job row     │
-│    Runs full investigation per alert                 │
-│                                                      │
-│  SOC agent (containerized)                           │
-│    groups/copilot/CLAUDE.md  ← investigation flow    │
-│    groups/copilot/prompts/   ← per-alert templates   │
-└──────────────────────────────────────────────────────┘
-         │ MCP tools (read-only)
-         ▼
-┌──────────────────────────────────────────────────────┐
-│  opensearch-mcp    — raw SIEM queries                │
-│  opensearch_anon   — anonymizing proxy (PII→tokens)  │
-│  mysql-mcp         — CoPilot DB (alerts, assets)     │
-│  copilot-mcp       — CoPilot REST API write-back     │
-│  ollama (optional) — local LLM for sensitive data    │
-│  mempalace         — persistent investigation memory │
-└──────────────────────────────────────────────────────┘`
+│                                                       │
+│  HTTP channel (port 3100)                             │
+│    POST /investigate  ← CoPilot triggers this         │
+│    POST /message      ← ad-hoc analyst prompts        │
+│    GET  /status       ← queue + job overview          │
+│                                                       │
+│  Scheduled task (every 15 min)                        │
+│    Queries MySQL for OPEN alerts with no job row      │
+│    Runs full investigation per alert                  │
+│                                                       │
+│  SOC agent (containerized)                            │
+│    groups/copilot/CLAUDE.md  ← investigation flow     │
+│    groups/copilot/prompts/   ← per-alert templates    │
+└───────────────┬───────────────────────────────────────┘
+                │
+                ▼ MCP tools (read-only)
+┌───────────────────────────────────────────────────────┐
+│  opensearch-mcp    — raw SIEM queries                 │
+│  opensearch_anon   — anonymizing proxy (PII→tokens)   │
+│  mysql-mcp         — CoPilot DB (alerts, assets)      │
+│  copilot-mcp       — CoPilot REST API write-back      │
+│  ollama (optional) — local LLM for sensitive data     │
+│  mempalace         — persistent investigation memory  │
+└───────────────────────────────────────────────────────┘`
 </script>

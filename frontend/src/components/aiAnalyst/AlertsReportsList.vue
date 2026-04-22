@@ -55,17 +55,16 @@
 
 <script setup lang="ts">
 import type { AlertWithReport } from "@/types/aiAnalyst.d"
-import axios from "axios"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import AlertReportItem from "./AlertReportItem.vue"
 
 const message = useMessage()
 const loading = ref(false)
 const alertsList = ref<AlertWithReport[]>([])
 const customerFilter = ref<string | null>(null)
-let abortController: AbortController | null = null
 
 const sort = ref<"desc" | "asc">("desc")
 const sortOptions = [
@@ -90,9 +89,6 @@ const customerOptions = computed(() => {
 })
 
 function getData() {
-	abortController?.abort()
-	abortController = new AbortController()
-
 	loading.value = true
 
 	Api.aiAnalyst
@@ -105,10 +101,8 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			if (!axios.isCancel(err)) {
-				alertsList.value = []
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			}
+			alertsList.value = []
+			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

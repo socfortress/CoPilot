@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-2">
+	<div class="flex flex-col gap-0.5">
 		<n-card v-if="!showSource" content-class="p-0!" embedded class="overflow-hidden">
 			<div v-shiki="{ lang, decode }" class="scrollbar-styled code-bg-transparent overflow-hidden">
 				<pre v-html="source"></pre>

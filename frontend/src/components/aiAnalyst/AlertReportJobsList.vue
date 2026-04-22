@@ -1,42 +1,53 @@
 <template>
-	<n-spin :show="loading">
-		<div class="flex flex-col gap-2">
+	<n-spin :show="loading" class="min-h-40">
+		<div ref="jobsListRef" class="flex flex-col gap-2">
 			<template v-if="jobs.length">
-				<n-card v-for="job of jobs" :key="job.id" size="small" embedded>
-					<div class="flex flex-wrap items-center gap-3">
-						<Badge type="splitted" bright :color="statusColor(job.status)">
-							<template #label>Status</template>
-							<template #value>{{ job.status }}</template>
-						</Badge>
-						<Badge type="splitted">
-							<template #label>Triggered By</template>
-							<template #value>{{ job.triggered_by }}</template>
-						</Badge>
-						<Badge v-if="job.alert_type" type="splitted">
-							<template #label>Alert Type</template>
-							<template #value>{{ job.alert_type }}</template>
-						</Badge>
-						<Badge v-if="job.template_used" type="splitted">
-							<template #label>Template</template>
-							<template #value>{{ job.template_used }}</template>
-						</Badge>
-					</div>
-					<div class="mt-2 flex flex-wrap items-center gap-3 text-sm opacity-70">
-						<span>
-							<Icon :name="TimeIcon" :size="12" class="relative top-0.5" />
-							Created: {{ formatDate(job.created_at, dFormats.datetime) }}
-						</span>
-						<span v-if="job.started_at">Started: {{ formatDate(job.started_at, dFormats.datetime) }}</span>
-						<span v-if="job.completed_at">
-							Completed: {{ formatDate(job.completed_at, dFormats.datetime) }}
-						</span>
-					</div>
-					<div v-if="job.error_message" class="mt-2">
+				<CardEntity v-for="job of jobs" :key="job.id" size="small" embedded>
+					<template #default>
+						<div class="flex flex-wrap items-center gap-3">
+							<Badge type="splitted" bright :color="statusColor(job.status)">
+								<template #label>Status</template>
+								<template #value>{{ job.status }}</template>
+							</Badge>
+							<Badge type="splitted">
+								<template #label>Triggered By</template>
+								<template #value>{{ job.triggered_by }}</template>
+							</Badge>
+							<Badge v-if="job.alert_type" type="splitted">
+								<template #label>Alert Type</template>
+								<template #value>{{ job.alert_type }}</template>
+							</Badge>
+							<Badge v-if="job.template_used" type="splitted">
+								<template #label>Template</template>
+								<template #value>{{ job.template_used }}</template>
+							</Badge>
+						</div>
+					</template>
+					<template v-if="job.error_message" #mainExtra>
 						<n-alert type="error" :bordered="false" size="small">
 							{{ job.error_message }}
 						</n-alert>
-					</div>
-				</n-card>
+					</template>
+					<template #footer>
+						<n-timeline :horizontal="horizontalMode">
+							<n-timeline-item title="Created">
+								<div class="text-secondary font-mono text-sm">
+									{{ formatDate(job.created_at, dFormats.datetime).toString() }}
+								</div>
+							</n-timeline-item>
+							<n-timeline-item v-if="job.started_at" title="Started" type="warning">
+								<div class="text-secondary font-mono text-sm">
+									{{ formatDate(job.started_at, dFormats.datetime).toString() }}
+								</div>
+							</n-timeline-item>
+							<n-timeline-item v-if="job.completed_at" title="Completed" type="success">
+								<div class="text-secondary font-mono text-sm">
+									{{ formatDate(job.completed_at, dFormats.datetime).toString() }}
+								</div>
+							</n-timeline-item>
+						</n-timeline>
+					</template>
+				</CardEntity>
 			</template>
 			<n-empty v-else-if="!loading" description="No jobs found for this alert" />
 		</div>
@@ -45,11 +56,12 @@
 
 <script setup lang="ts">
 import type { AiAnalystJob } from "@/types/aiAnalyst.d"
-import { NAlert, NCard, NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs } from "vue"
+import { useElementSize } from "@vueuse/core"
+import { NAlert, NEmpty, NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs, useTemplateRef } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import Icon from "@/components/common/Icon.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -59,8 +71,8 @@ const props = defineProps<{
 
 const { alertId } = toRefs(props)
 
-const TimeIcon = "carbon:time"
-
+const { width: jobsListWidthRef } = useElementSize(useTemplateRef("jobsListRef"))
+const horizontalMode = computed(() => jobsListWidthRef.value > 550)
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
