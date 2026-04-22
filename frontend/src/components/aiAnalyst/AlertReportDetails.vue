@@ -45,6 +45,11 @@
 					<AlertReportReviewPanel :report="report" />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Compare" tab="Compare" display-directive="show:lazy">
+				<div class="p-6 pt-3">
+					<AlertReportCompare :alert-id="alert.alert_id" :current-report-id="report.id" />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -66,6 +71,7 @@ const { alert } = toRefs(props)
 const AlertReportIocsList = defineAsyncComponent(() => import("./AlertReportIocsList.vue"))
 const AlertReportJobsList = defineAsyncComponent(() => import("./AlertReportJobsList.vue"))
 const AlertReportReviewPanel = defineAsyncComponent(() => import("./AlertReportReviewPanel.vue"))
+const AlertReportCompare = defineAsyncComponent(() => import("./AlertReportCompare.vue"))
 
 const loading = ref(false)
 const report = computed(() => alert.value.report)
