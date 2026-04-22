@@ -557,9 +557,7 @@ async def submit_review(
 
     # Re-fetch with ioc_reviews eagerly loaded for the response
     result = await session.execute(
-        select(AiAnalystReview)
-        .where(AiAnalystReview.id == review.id)
-        .options(selectinload(AiAnalystReview.ioc_reviews)),
+        select(AiAnalystReview).where(AiAnalystReview.id == review.id).options(selectinload(AiAnalystReview.ioc_reviews)),
     )
     review_loaded = result.scalars().first()
 
@@ -622,7 +620,8 @@ async def queue_palace_lesson(
     """
     logger.info(
         f"Queuing palace lesson for customer {request.customer_code} "
-        f"(type={request.lesson_type.value}, durability={request.durability.value})",
+        f"(type={request.lesson_type.value}, durability={request.durability.value},
+    )",
     )
 
     # If review_id supplied, validate it exists
@@ -927,8 +926,7 @@ def _render_consolidation_markdown(
     lines.append("## Rooms")
     for group in rooms:
         lines.append(
-            f"### {group.room}  ({group.total} total — "
-            f"{group.durable} durable, {group.one_off} one-off)",
+            f"### {group.room}  ({group.total} total — " f"{group.durable} durable, {group.one_off} one-off)",
         )
         for ls in group.lessons:
             tag = "🧷" if ls.durability == "durable" else "⏳"
@@ -977,9 +975,7 @@ async def get_palace_consolidation(
         [
             ls
             for ls in lessons
-            if ls.durability == "one_off"
-            and ls.days_until_expiry is not None
-            and ls.days_until_expiry <= _EXPIRY_SOON_WINDOW_DAYS
+            if ls.durability == "one_off" and ls.days_until_expiry is not None and ls.days_until_expiry <= _EXPIRY_SOON_WINDOW_DAYS
         ],
         key=lambda ls: ls.days_until_expiry if ls.days_until_expiry is not None else 0,
     )

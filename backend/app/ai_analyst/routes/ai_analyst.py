@@ -36,6 +36,8 @@ from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.ai_analyst.services.ai_analyst import get_job
 from app.ai_analyst.services.ai_analyst import get_my_review
+from app.ai_analyst.services.ai_analyst import get_palace_consolidation
+from app.ai_analyst.services.ai_analyst import get_review_stats
 from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
 from app.ai_analyst.services.ai_analyst import list_iocs_by_customer
@@ -43,8 +45,6 @@ from app.ai_analyst.services.ai_analyst import list_iocs_by_report
 from app.ai_analyst.services.ai_analyst import list_jobs_by_alert
 from app.ai_analyst.services.ai_analyst import list_jobs_by_customer
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
-from app.ai_analyst.services.ai_analyst import get_review_stats
-from app.ai_analyst.services.ai_analyst import get_palace_consolidation
 from app.ai_analyst.services.ai_analyst import list_reviews_by_customer
 from app.ai_analyst.services.ai_analyst import queue_palace_lesson
 from app.ai_analyst.services.ai_analyst import submit_iocs
@@ -53,8 +53,12 @@ from app.ai_analyst.services.ai_analyst import submit_review
 from app.ai_analyst.services.ai_analyst import update_job
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
-from app.connectors.talon.services.talon import replay_investigation as talon_replay_investigation
-from app.connectors.talon.services.talon import search_palace_lessons as talon_search_palace_lessons
+from app.connectors.talon.services.talon import (
+    replay_investigation as talon_replay_investigation,
+)
+from app.connectors.talon.services.talon import (
+    search_palace_lessons as talon_search_palace_lessons,
+)
 from app.db.db_session import get_db
 from app.db.universal_models import AiAnalystReport
 
@@ -345,15 +349,11 @@ async def replay_report_route(
     if request.customer_code != report.customer_code:
         raise HTTPException(
             status_code=400,
-            detail=(
-                f"customer_code mismatch: report belongs to {report.customer_code}, "
-                f"got {request.customer_code}"
-            ),
+            detail=(f"customer_code mismatch: report belongs to {report.customer_code}, " f"got {request.customer_code}"),
         )
 
     logger.info(
-        f"Replaying investigation for report {report_id} (alert {report.alert_id}) "
-        f"with template_override={request.template_override}",
+        f"Replaying investigation for report {report_id} (alert {report.alert_id}) " f"with template_override={request.template_override}",
     )
     talon_response = await talon_replay_investigation(
         alert_id=report.alert_id,

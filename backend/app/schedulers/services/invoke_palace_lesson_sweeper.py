@@ -18,7 +18,8 @@ either way, and a stuck row would jam the sweeper forever.
 Scheduling: hourly batch drain, capped at DEFAULT_BATCH_SIZE per tick to
 keep the scheduler responsive if a big expiry wave lands at once.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from loguru import logger
 from sqlalchemy.future import select
@@ -77,8 +78,8 @@ async def invoke_palace_lesson_sweeper() -> None:
             return
 
         logger.info(
-            f"Sweeping {len(lessons)} expired one-off palace lesson(s) "
-            f"(cutoff={cutoff.isoformat()})",
+            f"Sweeping {len(lessons)} expired one-off palace lesson(s) " f"(cutoff={cutoff.isoformat()},
+        )",
         )
 
         forgotten = 0
@@ -110,8 +111,8 @@ async def invoke_palace_lesson_sweeper() -> None:
             if response.get("success") and mem_success:
                 forgotten += 1
                 logger.info(
-                    f"Palace lesson {lesson.id} forgotten "
-                    f"(drawer_id={lesson.drawer_id}, customer={lesson.customer_code})",
+                    f"Palace lesson {lesson.id} forgotten " f"(drawer_id={lesson.drawer_id}, customer={lesson.customer_code},
+                )",
                 )
             else:
                 forget_failed += 1
@@ -132,8 +133,7 @@ async def invoke_palace_lesson_sweeper() -> None:
             await session.commit()
 
         logger.info(
-            f"Palace lesson sweeper complete: forgotten={forgotten}, "
-            f"forget_failed={forget_failed}",
+            f"Palace lesson sweeper complete: forgotten={forgotten}, " f"forget_failed={forget_failed}",
         )
 
         await _mark_job_success(session)

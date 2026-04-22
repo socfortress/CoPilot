@@ -108,14 +108,14 @@ async def invoke_palace_lesson_drainer() -> None:
                 logger.info(
                     f"Palace lesson {lesson.id} ingested "
                     f"(customer={lesson.customer_code}, room={lesson.lesson_type}, "
-                    f"drawer_id={lesson.drawer_id})",
+                    f"drawer_id={lesson.drawer_id},
+                )",
                 )
             else:
                 lesson.status = "failed"
                 failed += 1
                 logger.warning(
-                    f"Palace lesson {lesson.id} failed: "
-                    f"{response.get('message', 'unknown error')}",
+                    f"Palace lesson {lesson.id} failed: " f"{response.get('message', 'unknown error')}",
                 )
 
             session.add(lesson)

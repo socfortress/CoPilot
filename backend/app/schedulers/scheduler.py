@@ -26,8 +26,12 @@ from app.schedulers.services.invoke_duo import invoke_duo_integration_collect
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
-from app.schedulers.services.invoke_palace_lesson_drainer import invoke_palace_lesson_drainer
-from app.schedulers.services.invoke_palace_lesson_sweeper import invoke_palace_lesson_sweeper
+from app.schedulers.services.invoke_palace_lesson_drainer import (
+    invoke_palace_lesson_drainer,
+)
+from app.schedulers.services.invoke_palace_lesson_sweeper import (
+    invoke_palace_lesson_sweeper,
+)
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins,
 )

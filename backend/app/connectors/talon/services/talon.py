@@ -1,12 +1,12 @@
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-
-from typing import Any
-from typing import Dict
-from typing import Optional
 
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.schema.talon import TalonInvestigateResponse
@@ -198,8 +198,7 @@ async def replay_investigation(
         Raw Talon response envelope (success, message, data).
     """
     logger.info(
-        f"Replaying Talon investigation for alert {alert_id} "
-        f"with template_override={template_override}",
+        f"Replaying Talon investigation for alert {alert_id} " f"with template_override={template_override}",
     )
     response = await send_post_request(
         endpoint="/investigate",
