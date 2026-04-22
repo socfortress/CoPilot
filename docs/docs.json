@@ -199,6 +199,7 @@
               "power-features/web-vulnerability-assessment",
               "power-features/github-audit",
               "power-features/ai-analyst",
+              "power-features/ai-analyst-review",
               "power-features/atomic-red-team",
               "power-features/report-creation",
               "power-features/copilot-searches",

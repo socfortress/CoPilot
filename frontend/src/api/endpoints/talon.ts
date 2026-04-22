@@ -1,5 +1,5 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { TalonInvestigateRequest, TalonJobData } from "@/types/talon.d"
+import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/types/talon.d"
 import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "../httpClient"
 
@@ -12,6 +12,13 @@ export default {
 	},
 	getJob(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { data?: TalonJobData }>(`/talon/jobs/${alertId}`)
+	},
+	/**
+	 * List the prompt templates available in NanoClaw's CoPilot group.
+	 * Used by the replay picker in the review UI — metadata only, no bodies.
+	 */
+	getTemplates() {
+		return HttpClient.get<FlaskBaseResponse & { templates: TalonTemplate[] }>(`/talon/templates`)
 	},
 	/**
 	 * Stream a message to Talon via SSE.

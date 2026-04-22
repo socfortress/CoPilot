@@ -1,4 +1,17 @@
-import type { AiAnalystIoc, AiAnalystJob, AiAnalystReport, AlertWithReport } from "@/types/aiAnalyst.d"
+import type {
+	AiAnalystIoc,
+	AiAnalystJob,
+	AiAnalystPalaceLesson,
+	AiAnalystReport,
+	AiAnalystReview,
+	AiAnalystReviewStats,
+	AlertWithReport,
+	PalaceConsolidation,
+	PalaceSearchHit,
+	QueuePalaceLessonPayload,
+	ReplayPayload,
+	SubmitReviewPayload
+} from "@/types/aiAnalyst.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
@@ -102,5 +115,92 @@ export default {
 				iocs: AiAnalystIoc[] | null
 			}
 		>(`/ai_analyst/alert/${alertId}`)
+	},
+
+	// --- Reviews ---
+	/**
+	 * Fetch the current user's existing review for a report (if any).
+	 * Returns review=null in create-mode so the UI shows a fresh rubric.
+	 */
+	getMyReview(reportId: number) {
+		return HttpClient.get<FlaskBaseResponse & { review: AiAnalystReview | null }>(
+			`/ai_analyst/reports/${reportId}/review/mine`
+		)
+	},
+	/**
+	 * Upsert the current user's review for a report. Backend enforces
+	 * one review per (report, user) via unique constraint — a second call
+	 * updates the existing row and sets updated_at.
+	 */
+	submitReview(reportId: number, payload: SubmitReviewPayload) {
+		return HttpClient.post<FlaskBaseResponse & { review: AiAnalystReview }>(
+			`/ai_analyst/reports/${reportId}/review`,
+			payload
+		)
+	},
+	getReviewsByCustomer(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { reviews: AiAnalystReview[] }>(
+			`/ai_analyst/reviews/customer/${customerCode}`
+		)
+	},
+	/**
+	 * SQL-side feedback dashboard rollup — counts, averages, template
+	 * breakdown, IOC accuracy, and embedded recent reviews for drill-in.
+	 */
+	getReviewStats(customerCode: string, recentLimit = 10) {
+		return HttpClient.get<FlaskBaseResponse & AiAnalystReviewStats>(
+			`/ai_analyst/reviews/customer/${customerCode}/stats`,
+			{
+				params: { recent_limit: recentLimit }
+			}
+		)
+	},
+
+	// --- Replay ---
+	/**
+	 * Re-run an investigation for the report's alert with a forced template.
+	 * The replay creates its own new job/report via Talon's normal callbacks —
+	 * this call does not mutate local DB itself.
+	 */
+	replayReport(reportId: number, payload: ReplayPayload) {
+		return HttpClient.post<FlaskBaseResponse & { data?: Record<string, unknown> }>(
+			`/ai_analyst/reports/${reportId}/replay`,
+			payload
+		)
+	},
+
+	// --- Palace lessons ---
+	queuePalaceLesson(payload: QueuePalaceLessonPayload) {
+		return HttpClient.post<FlaskBaseResponse & { lesson: AiAnalystPalaceLesson }>(
+			`/ai_analyst/palace_lessons`,
+			payload
+		)
+	},
+	/**
+	 * Preview similar lessons already stored in MemPalace — debounced against
+	 * the lesson-text textarea so the reviewer can see overlap before queueing.
+	 */
+	searchPalaceLessons(customerCode: string, query: string, room?: string, limit = 5) {
+		return HttpClient.get<FlaskBaseResponse & { lessons: PalaceSearchHit[] }>(
+			`/ai_analyst/palace_lessons/customer/${customerCode}`,
+			{
+				params: {
+					query,
+					limit,
+					...(room ? { room } : {})
+				}
+			}
+		)
+	},
+	/**
+	 * Manual consolidation digest — builds a point-in-time view of a
+	 * customer's active MemPalace lessons (pending + ingested), grouped
+	 * by room, with near-duplicate pairs and upcoming expirations
+	 * surfaced for reviewer action. Pure read-only, no Talon round-trip.
+	 */
+	getPalaceConsolidation(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & PalaceConsolidation>(
+			`/ai_analyst/palace_lessons/customer/${customerCode}/consolidation`
+		)
 	}
 }

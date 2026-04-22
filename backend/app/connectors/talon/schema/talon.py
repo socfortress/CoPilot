@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -39,3 +40,16 @@ class TalonJobResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Dict[str, Any]] = None
+
+
+class TalonTemplate(BaseModel):
+    filename: str = Field(..., description="Template filename, e.g. sysmon_event_1.txt")
+    size_bytes: int = Field(..., description="File size in bytes")
+    modified_at: str = Field(..., description="Last modification ISO timestamp")
+    first_line: Optional[str] = Field(None, description="First non-empty line (preview, ≤200 chars)")
+
+
+class TalonTemplatesResponse(BaseModel):
+    success: bool
+    message: str
+    templates: List[TalonTemplate] = Field(default_factory=list)

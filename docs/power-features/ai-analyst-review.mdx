@@ -1,0 +1,248 @@
+---
+title: AI Analyst — Analyst review workflow
+description: Review and grade every AI investigation, correct IOC verdicts, teach the agent with durable or one-off lessons, replay with a different template, and track feedback trends over time.
+---
+
+Every report Talon produces is a **draft**. The review workflow lets a SOC analyst grade it, correct what's wrong, teach the agent with a lesson, and — if needed — replay the investigation with a different template. Feedback is aggregated per customer so you can see which templates are reliable and which need tuning.
+
+This page is for **operators** (analysts reviewing reports). For the architecture and deployment guide, see [AI Analyst (Talon)](/power-features/ai-analyst).
+
+---
+
+## Why review matters
+
+AI reports are fast, consistent, and cheap — but they're not infallible. Without a feedback loop you can't tell:
+
+- Whether the agent picked the right investigation template
+- Whether IOC verdicts match reality (was that hash really malicious?)
+- Whether the severity call was appropriate for your environment
+- What recurring patterns the agent should treat as benign (and stop paging you about)
+
+The review workflow turns every investigation into a training signal. Lessons you capture land in **MemPalace** — the agent's persistent memory — and are surfaced on the next investigation for that customer.
+
+---
+
+## Where it lives in the UI
+
+Reviews and feedback live across two places:
+
+| Location | Purpose |
+|----------|---------|
+| **Incident Management → Alert → AI Analyst tab → Review** | Grade a specific report, correct IOCs, queue a lesson, replay |
+| **AI Analyst page → Reports** | Browse all reports, jump into any to review |
+| **AI Analyst page → Feedback** | Per-customer rollup: thumbs, ratings, template accuracy, IOC accuracy, recent reviews |
+
+---
+
+## Reviewing a report
+
+### Open the report
+
+1. **Incident Management → Alerts** → open any alert that has an AI investigation
+2. Click the **AI Analyst** tab (pulses if a report exists)
+3. Inside that tab, click **Review**
+
+You'll see a rubric if this is the first review, or your previous grades pre-filled if you've reviewed this report before — submitting again updates the existing review (one review per analyst per report).
+
+### The rubric
+
+| Field | What it captures |
+|-------|------------------|
+| **Overall verdict** | Thumbs up / down — fast signal, shows up in the dashboard |
+| **Template choice** | `correct` / `partial` / `wrong` — was the right investigation template picked? |
+| **Rating: instructions** | 1–5 — did the agent follow the template's instructions? |
+| **Rating: artifacts** | 1–5 — did it find and cite the right evidence from SIEM? |
+| **Rating: severity** | 1–5 — did the severity assessment match reality? |
+| **Missing steps** | Free-text — what should the agent have done but didn't? |
+| **Suggested edits** | Free-text — specific rewrites or additions for the report |
+
+Leave any axis blank if you don't have a confident opinion — averages ignore nulls.
+
+### IOC corrections
+
+Below the rubric you'll see the IOCs the agent extracted, each with its VirusTotal verdict. For every IOC you can mark:
+
+- **Verdict correct** ✓ — agent's verdict matches reality
+- **Verdict wrong** ✗ — explain in the note field (e.g. "this IP is our jumphost, not malicious")
+
+IOC-level accuracy rolls up into the feedback dashboard separately from the overall rubric — useful for spotting when the agent trusts VirusTotal too much or too little for your environment.
+
+### Submit
+
+Click **Submit review** (or **Update review** if you're editing). The review persists immediately — no pending state.
+
+---
+
+## Teach the palace
+
+The **Teach the palace** section under the rubric lets you add a lesson to the agent's persistent memory. Lessons get retrieved automatically at the start of every investigation for that customer, so the next time the agent sees a similar pattern it already has your context.
+
+### When to add a lesson
+
+- **After a false positive** — "Host X runs nightly backups at 02:00 UTC; Sysmon 1 on robocopy during that window is benign"
+- **After confirming threat intel** — "APT group Y targets customer; any outbound to IP range Z should be escalated"
+- **Asset context** — "DC-01 is the primary domain controller; any unsigned binary execution there is critical"
+- **Environment specifics** — "This customer uses piHole at 192.168.1.53; DNS traffic to that IP is expected"
+
+### Lesson types (rooms)
+
+Lessons are filed into one of four "rooms" so the agent can retrieve them by context:
+
+| Room | Use for |
+|------|---------|
+| `environment` | Customer infra, network layout, scheduled jobs, expected traffic patterns |
+| `false_positives` | Confirmed benign patterns that should stop paging the on-call |
+| `assets` | Per-host context — role, owner, criticality, known-good processes |
+| `threat_intel` | Campaigns, IOC blocklists, TTP notes specific to this customer |
+
+Pick the room that matches how you'd want to retrieve the lesson later.
+
+### Durable vs one-off
+
+| Durability | TTL | Use for |
+|------------|-----|---------|
+| **Durable** | Never expires | Long-term truths — "DC-01 is the PDC", "customer uses Cloudflare" |
+| **One-off** | 7 days | Temporary context — "maintenance window April 15–17", "incident IR-2025-0042 in progress" |
+
+One-off lessons are swept automatically after their TTL — CoPilot tracks the expiry and tells MemPalace to forget them. Keep the palace clean so retrieval stays relevant.
+
+### Similar-lessons preview
+
+As you type a lesson, a debounced search runs against the palace and shows up to 5 already-stored lessons that overlap your draft. Use it to:
+
+- Avoid duplicating an existing lesson
+- See what the agent already "knows" about this pattern
+- Phrase the new lesson consistently with prior ones
+
+### Submit the lesson
+
+Click **Queue lesson**. The lesson is persisted to CoPilot's database with `status=pending`. A background drainer (APScheduler) picks it up within ~30 seconds, POSTs to Talon, and flips the row to `status=ingested` with a `drawer_id` handle. After that, the agent will retrieve it on the next investigation for that customer.
+
+---
+
+## Replay with a different template
+
+If the agent picked the wrong template — or you want to try a different one — click **Replay** on the Review tab.
+
+1. The modal lists all templates currently deployed in Talon's `groups/copilot/prompts/` directory
+2. Pick a template (e.g. `sysmon_event_1.txt`, `windows_defender.txt`)
+3. Click **Replay**
+
+Talon spins up a **brand-new investigation job** for the same alert with your chosen template forced. The original report is untouched — CoPilot now has two (or more) reports for the alert, and the **Compare** tab lets you view them side-by-side.
+
+Good use cases:
+
+- Agent ran the generic template when a specific one would've been better
+- You want to see how a different template frames the same raw evidence
+- A/B test a newly tuned template against the previous one
+
+---
+
+## Palace consolidation
+
+Over time the palace accumulates lessons. Some expire, some duplicate each other, some get stale. The **Consolidate lessons** button (Feedback tab → top right) opens a point-in-time digest for the selected customer:
+
+| Panel | What it shows |
+|-------|---------------|
+| **Summary tiles** | Total active, durable, one-off, near-duplicate pair count |
+| **Expiring soon** | One-off lessons within 2 days of expiry — act now or let them lapse |
+| **Near-duplicate candidates** | Lesson pairs above 70% similarity — merge or delete |
+| **By room** | Full lesson list grouped by room, with durability + status badges |
+
+Click **Copy markdown** to paste the digest into a ticket, a team channel, or your own knowledge base — useful for monthly palace reviews.
+
+This is read-only — you can't edit lessons from the drawer. To remove a lesson, either wait for the one-off TTL or mark the row manually via the database / API.
+
+---
+
+## Feedback dashboard
+
+**AI Analyst page → Feedback tab.** Pick a customer and see:
+
+### Tiles
+
+- **Total reviews** — how much feedback you have for this customer
+- **Thumbs up %** — overall sentiment
+- **IOC verdict accuracy %** — of all IOC corrections submitted, how often did the agent agree with the analyst
+- **Avg rating (overall)** — composite of instructions / artifacts / severity (nulls excluded)
+
+### Template choice distribution
+
+Stacked bar — `correct` / `partial` / `wrong`. If the "wrong" bar is non-trivial, your agent is mis-selecting templates. Candidates for fixing:
+
+- The template detection logic (`rule.groups` matching in Talon)
+- Adding a more specific template for the miss case
+
+### Per-template performance
+
+Table showing per-template counts and averages. Use it to spot:
+
+- Templates with consistently low `instructions` ratings → the template itself may be wrong
+- Templates with high `template_choice=wrong` for a rule type → detection rule is mis-classified
+- Templates with low IOC accuracy → the template's enrichment steps may be flawed
+
+### Recent reviews
+
+Last 10 reviews with drill-in. Click any one to open a drawer with the full rubric, IOC corrections, and free-text fields.
+
+---
+
+## Typical workflows
+
+### Fast triage (10 seconds)
+
+1. Open alert → AI Analyst tab → skim report
+2. If report matches reality → thumbs up, submit
+3. If obviously wrong → thumbs down, one-line in "Missing steps", submit
+
+### False-positive capture (30 seconds)
+
+1. Confirm the alert is benign (e.g. scheduled job, known-good process)
+2. Review tab → thumbs down → template choice `correct` (template was right, signal was noise)
+3. **Teach the palace** → room `false_positives`, durable, describe the benign pattern with enough detail that the agent would recognize it next time
+4. Queue lesson → submit review
+
+### Template tuning (2 minutes)
+
+1. Report picked a bad template → review it, template choice `wrong`
+2. Note in "Suggested edits" what template *should* have been used
+3. Click **Replay** → select the correct template → submit
+4. Compare tab → confirm the new report is better
+5. Report the mis-selection pattern to whoever maintains Talon's template detection
+
+### Monthly palace review (10 minutes)
+
+1. Feedback tab → pick customer → **Consolidate lessons**
+2. Review **Expiring soon** — promote anything still valid from one-off to a fresh durable lesson
+3. Review **Near-duplicates** — pick the better-worded lesson, manually delete the other
+4. **Copy markdown** → paste into your team's wiki for the customer
+
+---
+
+## Safety & guardrails
+
+- **Reviews are analyst-scoped** — one review per analyst per report, updates overwrite. Multiple analysts can each leave their own review.
+- **Lessons are customer-scoped** — a lesson queued for customer `00001` is only retrieved on investigations for that customer.
+- **One-off lessons auto-expire** — use them for temporary context so the palace stays clean.
+- **Replays don't mutate the original** — every replay is a new job/report; the original stays for comparison.
+- **Palace consolidation is read-only** — you can't accidentally delete the palace from the UI.
+- **Don't put secrets in lessons** — lesson text is sent to Talon and embedded by MemPalace / ChromaDB. Treat it as you would a SIEM comment.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| "Review" tab missing | Report doesn't exist yet | Click **Investigate with AI Analyst** on the alert Overview tab first |
+| Lesson stays `pending` forever | Drainer job not running | Check CoPilot scheduler logs for `invoke_palace_lesson_drainer` |
+| Lesson ingested but not retrieved on next investigation | Customer code mismatch, or wrong room | Verify lesson's `customer_code` matches the alert's; check palace search with the expected query |
+| Replay modal shows no templates | Talon unreachable | Check `GET /api/talon/templates` — should list `.txt` files from `groups/copilot/prompts/` |
+| Feedback dashboard shows zero reviews | No reviews submitted yet, or wrong customer picked | Submit at least one review, confirm the customer dropdown matches the alert's code |
+| IOC accuracy shows `0/0` | No IOC corrections submitted | Review individual IOCs on the Review tab, not just the overall rubric |
+
+---
+
+## Video context
+
+- AI analyst (alert-context + exclusion-rule assistance): https://www.youtube.com/watch?v=-2srPC-Dw-0

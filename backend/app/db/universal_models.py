@@ -624,3 +624,76 @@ class AiAnalystIoc(SQLModel, table=True):
 
     report: Optional["AiAnalystReport"] = Relationship(back_populates="iocs")
     customer: Optional["Customers"] = Relationship()
+    ioc_reviews: list["AiAnalystIocReview"] = Relationship(back_populates="ioc")
+
+
+class AiAnalystReview(SQLModel, table=True):
+    __tablename__ = "ai_analyst_review"
+    __table_args__ = (
+        UniqueConstraint(
+            "report_id",
+            "reviewer_user_id",
+            name="uq_ai_analyst_review_report_reviewer",
+        ),
+    )
+
+    id: Optional[int] = Field(primary_key=True)
+    report_id: int = Field(foreign_key="ai_analyst_report.id", nullable=False, index=True)
+    alert_id: int = Field(nullable=False, index=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
+    reviewer_user_id: int = Field(nullable=False, index=True)
+    overall_verdict: Optional[str] = Field(default=None, max_length=4)  # up, down
+    template_choice: Optional[str] = Field(default=None, max_length=7)  # correct, wrong, partial
+    template_used: Optional[str] = Field(default=None, max_length=128)
+    rating_instructions: Optional[int] = Field(default=None)  # 1–5
+    rating_artifacts: Optional[int] = Field(default=None)  # 1–5
+    rating_severity: Optional[int] = Field(default=None)  # 1–5
+    missing_steps: Optional[str] = Field(sa_column=Column(Text), default=None)
+    suggested_edits: Optional[str] = Field(sa_column=Column(Text), default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    report: Optional["AiAnalystReport"] = Relationship()
+    customer: Optional["Customers"] = Relationship()
+    ioc_reviews: list["AiAnalystIocReview"] = Relationship(back_populates="review")
+    palace_lessons: list["AiAnalystPalaceLesson"] = Relationship(back_populates="review")
+
+
+class AiAnalystIocReview(SQLModel, table=True):
+    __tablename__ = "ai_analyst_ioc_review"
+
+    id: Optional[int] = Field(primary_key=True)
+    review_id: int = Field(foreign_key="ai_analyst_review.id", nullable=False, index=True)
+    ioc_id: int = Field(foreign_key="ai_analyst_ioc.id", nullable=False, index=True)
+    verdict_correct: bool = Field(nullable=False)
+    note: Optional[str] = Field(sa_column=Column(Text), default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    review: Optional["AiAnalystReview"] = Relationship(back_populates="ioc_reviews")
+    ioc: Optional["AiAnalystIoc"] = Relationship(back_populates="ioc_reviews")
+
+
+class AiAnalystPalaceLesson(SQLModel, table=True):
+    __tablename__ = "ai_analyst_palace_lesson"
+
+    id: Optional[int] = Field(primary_key=True)
+    review_id: Optional[int] = Field(foreign_key="ai_analyst_review.id", default=None, index=True)  # nullable — can be standalone
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
+    lesson_type: str = Field(max_length=20, nullable=False)  # environment, false_positives, assets, threat_intel
+    lesson_text: str = Field(sa_column=Column(Text), nullable=False)
+    durability: str = Field(default="durable", max_length=8)  # one_off, durable
+    status: str = Field(default="pending", max_length=8, index=True)  # pending, ingested, failed, expired
+    # drawer_id returned by mempalace add_drawer — required to call
+    # delete_drawer later when the durability sweeper expires one-offs.
+    # Nullable because legacy rows predate this column and because the
+    # drainer may fail to capture it if NanoClaw returns a malformed body.
+    drawer_id: Optional[str] = Field(default=None, max_length=64, index=True)
+    ingested_at: Optional[datetime] = Field(default=None)
+    # Timestamp of the sweeper's delete_drawer call. Set when status flips
+    # from 'ingested' → 'expired' so audit queries can tell "never swept"
+    # apart from "swept but failed".
+    expired_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+    review: Optional["AiAnalystReview"] = Relationship(back_populates="palace_lessons")
+    customer: Optional["Customers"] = Relationship()

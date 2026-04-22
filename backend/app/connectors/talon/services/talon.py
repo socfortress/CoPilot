@@ -1,3 +1,7 @@
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +14,7 @@ from app.connectors.talon.schema.talon import TalonJobResponse
 from app.connectors.talon.schema.talon import TalonMessageRequest
 from app.connectors.talon.schema.talon import TalonMessageResponse
 from app.connectors.talon.schema.talon import TalonStatusResponse
+from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.utils.universal import send_get_request
 from app.connectors.talon.utils.universal import send_post_request
 from app.connectors.talon.utils.universal import send_post_request_sse
@@ -171,3 +176,106 @@ async def get_talon_job(alert_id: int, session: AsyncSession) -> TalonJobRespons
             "reports": all_reports,
         },
     )
+
+
+async def replay_investigation(
+    alert_id: int,
+    customer_code: str,
+    template_override: str,
+    sender: str = "copilot-replay",
+) -> Dict[str, Any]:
+    """
+    Trigger an investigation replay with a forced template via Talon's
+    POST /investigate endpoint.
+
+    Args:
+        alert_id: CoPilot alert ID to re-investigate.
+        customer_code: Customer code for the alert.
+        template_override: Template filename to force (validated upstream).
+        sender: Audit identifier for the replay.
+
+    Returns:
+        Raw Talon response envelope (success, message, data).
+    """
+    logger.info(
+        f"Replaying Talon investigation for alert {alert_id} " f"with template_override={template_override}",
+    )
+    response = await send_post_request(
+        endpoint="/investigate",
+        data={
+            "alert_id": alert_id,
+            "customer_code": customer_code,
+            "template_override": template_override,
+            "sender": sender,
+        },
+    )
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to replay Talon investigation"),
+        )
+    return response
+
+
+async def list_talon_templates() -> TalonTemplatesResponse:
+    """
+    List the prompt templates available in NanoClaw's CoPilot group.
+    Powers the "Re-run with different template" picker in the review UI.
+
+    NanoClaw returns {templates: [{filename, size_bytes, modified_at, first_line}]}.
+    We surface that envelope directly — template bodies stay server-side.
+    """
+    logger.info("Fetching Talon templates list")
+    response = await send_get_request(endpoint="/templates")
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to list Talon templates"),
+        )
+    data = response.get("data") or {}
+    raw_templates = data.get("templates") if isinstance(data, dict) else None
+    if raw_templates is None:
+        raw_templates = []
+    return TalonTemplatesResponse(
+        success=True,
+        message=f"{len(raw_templates)} templates retrieved",
+        templates=raw_templates,
+    )
+
+
+async def search_palace_lessons(
+    customer_code: str,
+    query: str,
+    room: Optional[str] = None,
+    limit: int = 5,
+) -> Dict[str, Any]:
+    """
+    Preview similar MemPalace lessons via Talon's GET /palace/search endpoint.
+    Read-only — never mutates the palace.
+
+    Args:
+        customer_code: Customer whose wing to search.
+        query: Semantic search query.
+        room: Optional room filter (environment, false_positives, assets, threat_intel, alerts).
+        limit: Max hits to return (clamped 1–25 upstream).
+
+    Returns:
+        Raw Talon response envelope (success, message, data).
+    """
+    logger.info(
+        f"Searching MemPalace for customer={customer_code} room={room} query={query!r} limit={limit}",
+    )
+    params: Dict[str, Any] = {
+        "customer_code": customer_code,
+        "query": query,
+        "limit": limit,
+    }
+    if room:
+        params["room"] = room
+    response = await send_get_request(endpoint="/palace/search", params=params)
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to search MemPalace"),
+        )
+    return response

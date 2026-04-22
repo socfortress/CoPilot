@@ -10,6 +10,9 @@
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">
 				<AlertsReportsList />
 			</n-tab-pane>
+			<n-tab-pane name="feedback" tab="Feedback" display-directive="show:lazy">
+				<FeedbackDashboard />
+			</n-tab-pane>
 		</n-tabs>
 	</div>
 </template>
@@ -18,6 +21,7 @@
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
+import FeedbackDashboard from "@/components/aiAnalyst/FeedbackDashboard.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
 import TalonChat from "@/components/talonChat/TalonChatContainer.vue"
 

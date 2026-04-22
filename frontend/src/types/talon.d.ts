@@ -13,6 +13,13 @@ export interface TalonStatusData {
 	[key: string]: unknown
 }
 
+export interface TalonTemplate {
+	filename: string
+	size_bytes: number
+	modified_at: string
+	first_line: string | null
+}
+
 export interface TalonJobData {
 	id: string
 	alert_id: number
