@@ -90,10 +90,25 @@ async def invoke_palace_lesson_drainer() -> None:
             if response.get("success"):
                 lesson.status = "ingested"
                 lesson.ingested_at = datetime.utcnow()
+                # Capture drawer_id so the durability sweeper can later
+                # call /palace/forget for expired one-off lessons.
+                # send_post_request wraps the raw NanoClaw body under
+                # response["data"]; mempalace's tool_add_drawer places
+                # drawer_id at the top of its return dict.
+                body = response.get("data") if isinstance(response.get("data"), dict) else {}
+                drawer_id = body.get("drawer_id")
+                if isinstance(drawer_id, str) and drawer_id:
+                    lesson.drawer_id = drawer_id
+                else:
+                    logger.warning(
+                        f"Palace lesson {lesson.id} ingested without drawer_id in response "
+                        f"(body_keys={list(body.keys()) if body else []}); sweeper will skip this row",
+                    )
                 ingested += 1
                 logger.info(
                     f"Palace lesson {lesson.id} ingested "
-                    f"(customer={lesson.customer_code}, room={lesson.lesson_type})",
+                    f"(customer={lesson.customer_code}, room={lesson.lesson_type}, "
+                    f"drawer_id={lesson.drawer_id})",
                 )
             else:
                 lesson.status = "failed"

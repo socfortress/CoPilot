@@ -682,8 +682,17 @@ class AiAnalystPalaceLesson(SQLModel, table=True):
     lesson_type: str = Field(max_length=20, nullable=False)  # environment, false_positives, assets, threat_intel
     lesson_text: str = Field(sa_column=Column(Text), nullable=False)
     durability: str = Field(default="durable", max_length=8)  # one_off, durable
-    status: str = Field(default="pending", max_length=8, index=True)  # pending, ingested, failed
+    status: str = Field(default="pending", max_length=8, index=True)  # pending, ingested, failed, expired
+    # drawer_id returned by mempalace add_drawer — required to call
+    # delete_drawer later when the durability sweeper expires one-offs.
+    # Nullable because legacy rows predate this column and because the
+    # drainer may fail to capture it if NanoClaw returns a malformed body.
+    drawer_id: Optional[str] = Field(default=None, max_length=64, index=True)
     ingested_at: Optional[datetime] = Field(default=None)
+    # Timestamp of the sweeper's delete_drawer call. Set when status flips
+    # from 'ingested' → 'expired' so audit queries can tell "never swept"
+    # apart from "swept but failed".
+    expired_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
 
     review: Optional["AiAnalystReview"] = Relationship(back_populates="palace_lessons")

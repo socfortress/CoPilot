@@ -27,6 +27,7 @@ from app.schedulers.services.invoke_huntress import invoke_huntress_integration_
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
 from app.schedulers.services.invoke_palace_lesson_drainer import invoke_palace_lesson_drainer
+from app.schedulers.services.invoke_palace_lesson_sweeper import invoke_palace_lesson_sweeper
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins,
 )
@@ -161,6 +162,12 @@ async def initialize_job_metadata():
                 "function": invoke_palace_lesson_drainer,
                 "description": "Drains pending AI analyst palace lessons into MemPalace via NanoClaw /palace/lesson.",
             },
+            {
+                "job_id": "invoke_palace_lesson_sweeper",
+                "time_interval": 60,
+                "function": invoke_palace_lesson_sweeper,
+                "description": "Forgets expired one-off AI analyst palace lessons via NanoClaw /palace/forget.",
+            },
             # ! Mirgrated SIGMA to VELO ! #
             # {
             #     "job_id": "invoke_sigma_queries_collect",
@@ -292,6 +299,7 @@ def get_function_by_name(function_name: str):
         "invoke_darktrace_integration_collect": invoke_darktrace_integration_collect,
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
+        "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
         # Add other function mappings here
     }
     return function_map.get(
