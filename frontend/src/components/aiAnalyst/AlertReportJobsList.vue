@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading">
+	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-2">
 			<template v-if="jobs.length">
 				<n-card v-for="job of jobs" :key="job.id" size="small" embedded>

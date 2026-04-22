@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<n-tabs type="line" animated :tabs-padding="24" class="grow" pane-wrapper-class="flex grow flex-col">
 			<n-tab-pane name="Summary" tab="Summary" display-directive="show:lazy" class="flex grow flex-col">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<div class="flex flex-col gap-4">
 						<div v-if="report?.severity_assessment" class="flex items-center gap-2">
 							<Badge type="splitted" bright :color="severityColor">
@@ -25,18 +25,18 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Report" tab="Full Report" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<Markdown v-if="report?.report_markdown" :source="report.report_markdown" breaks />
 					<n-empty v-else description="No report content available" class="h-40" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="IOCs" tab="IOCs" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertReportIocsList :alert-id="alert.alert_id" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Jobs" tab="Jobs" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertReportJobsList :alert-id="alert.alert_id" />
 				</div>
 			</n-tab-pane>

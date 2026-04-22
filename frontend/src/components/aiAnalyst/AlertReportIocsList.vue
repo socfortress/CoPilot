@@ -2,40 +2,44 @@
 	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-2">
 			<template v-if="iocs.length">
-				<n-card v-for="ioc of iocs" :key="ioc.id" size="small" embedded>
-					<div class="flex flex-wrap items-center gap-3">
-						<Badge type="splitted" bright>
-							<template #label>Type</template>
-							<template #value>{{ ioc.ioc_type }}</template>
-						</Badge>
-						<Badge type="splitted" bright :color="verdictColor(ioc.vt_verdict)">
-							<template #label>VT Verdict</template>
-							<template #value>{{ ioc.vt_verdict }}</template>
-						</Badge>
-						<Badge v-if="ioc.vt_score" type="splitted">
-							<template #label>VT Score</template>
-							<template #value>{{ ioc.vt_score }}</template>
-						</Badge>
-					</div>
-					<div class="mt-2">
-						<code class="text-sm break-all">{{ ioc.ioc_value }}</code>
-					</div>
-					<div v-if="ioc.details" class="mt-2 text-sm opacity-70">
+				<CardEntity v-for="ioc of iocs" :key="ioc.id" size="small" embedded>
+					<template #default>
+						<CodeSource :code="ioc.ioc_value" />
+					</template>
+					<template v-if="ioc.details" #mainExtra>
 						{{ ioc.details }}
-					</div>
-				</n-card>
+					</template>
+					<template #footer>
+						<div class="flex flex-wrap items-center gap-3">
+							<Badge type="splitted" bright>
+								<template #label>Type</template>
+								<template #value>{{ ioc.ioc_type }}</template>
+							</Badge>
+							<Badge type="splitted" bright :color="verdictColor(ioc.vt_verdict)">
+								<template #label>VT Verdict</template>
+								<template #value>{{ ioc.vt_verdict }}</template>
+							</Badge>
+							<Badge v-if="ioc.vt_score" type="splitted">
+								<template #label>VT Score</template>
+								<template #value>{{ ioc.vt_score }}</template>
+							</Badge>
+						</div>
+					</template>
+				</CardEntity>
 			</template>
-			<n-empty v-else-if="!loading" description="No IOCs found for this alert" />
+			<n-empty v-else-if="!loading" description="No IOCs found for this alert" class="min-h-40 justify-center" />
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import type { AiAnalystIoc } from "@/types/aiAnalyst.d"
-import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 
 const props = defineProps<{
 	alertId: number
