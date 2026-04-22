@@ -629,6 +629,13 @@ class AiAnalystIoc(SQLModel, table=True):
 
 class AiAnalystReview(SQLModel, table=True):
     __tablename__ = "ai_analyst_review"
+    __table_args__ = (
+        UniqueConstraint(
+            "report_id",
+            "reviewer_user_id",
+            name="uq_ai_analyst_review_report_reviewer",
+        ),
+    )
 
     id: Optional[int] = Field(primary_key=True)
     report_id: int = Field(foreign_key="ai_analyst_report.id", nullable=False, index=True)
@@ -644,6 +651,7 @@ class AiAnalystReview(SQLModel, table=True):
     missing_steps: Optional[str] = Field(sa_column=Column(Text), default=None)
     suggested_edits: Optional[str] = Field(sa_column=Column(Text), default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
 
     report: Optional["AiAnalystReport"] = Relationship()
     customer: Optional["Customers"] = Relationship()

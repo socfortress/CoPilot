@@ -299,7 +299,17 @@ class ReviewResponse(BaseModel):
     missing_steps: Optional[str]
     suggested_edits: Optional[str]
     created_at: datetime
+    updated_at: Optional[datetime] = None
     ioc_reviews: List[IocReviewResponse] = Field(default_factory=list)
+
+
+class MyReviewResponse(BaseModel):
+    """Response for 'fetch my existing review for this report' — used by the UI to
+    decide whether to show the rubric in create mode or edit-existing mode."""
+
+    success: bool
+    message: str
+    review: Optional[ReviewResponse] = None
 
 
 class SubmitReviewResponse(BaseModel):

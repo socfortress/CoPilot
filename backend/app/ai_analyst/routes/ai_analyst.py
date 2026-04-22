@@ -14,6 +14,7 @@ from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
 from app.ai_analyst.schema.ai_analyst import JobListResponse
+from app.ai_analyst.schema.ai_analyst import MyReviewResponse
 from app.ai_analyst.schema.ai_analyst import PalaceSearchResponse
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
@@ -32,6 +33,7 @@ from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.ai_analyst.services.ai_analyst import get_job
+from app.ai_analyst.services.ai_analyst import get_my_review
 from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
 from app.ai_analyst.services.ai_analyst import list_iocs_by_customer
@@ -290,6 +292,25 @@ async def submit_review_route(
     return await submit_review(
         report_id=report_id,
         request=request,
+        reviewer_user_id=current_user.id,
+        session=session,
+    )
+
+
+@ai_analyst_router.get(
+    "/reports/{report_id}/review/mine",
+    response_model=MyReviewResponse,
+    description="Fetch the current user's existing review for a report (returns review=null if none yet)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_my_review_route(
+    report_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> MyReviewResponse:
+    """UI calls this on open to decide between create-mode and edit-existing-mode."""
+    return await get_my_review(
+        report_id=report_id,
         reviewer_user_id=current_user.id,
         session=session,
     )

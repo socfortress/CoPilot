@@ -14,6 +14,7 @@ from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocResponse
 from app.ai_analyst.schema.ai_analyst import IocReviewResponse
 from app.ai_analyst.schema.ai_analyst import JobResponse
+from app.ai_analyst.schema.ai_analyst import MyReviewResponse
 from app.ai_analyst.schema.ai_analyst import PalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
@@ -425,6 +426,7 @@ def _review_to_response(review: AiAnalystReview) -> ReviewResponse:
         missing_steps=review.missing_steps,
         suggested_edits=review.suggested_edits,
         created_at=review.created_at,
+        updated_at=review.updated_at,
         ioc_reviews=[_ioc_review_to_response(ir) for ir in (review.ioc_reviews or [])],
     )
 
@@ -450,9 +452,12 @@ async def submit_review(
     session: AsyncSession,
 ) -> SubmitReviewResponse:
     """
-    Persist an analyst review of an AI investigation report, plus any per-IOC
-    verdict corrections. Writes AiAnalystReview and AiAnalystIocReview rows in
-    a single transaction.
+    Upsert an analyst review of an AI investigation report.
+
+    Enforces one review per (report_id, reviewer_user_id) pair. If the user
+    has already reviewed this report, their existing row is updated in place
+    (and `updated_at` is set) and their per-IOC corrections are replaced
+    wholesale. Otherwise a new row is inserted.
     """
     logger.info(f"Submitting review for report {report_id} by user {reviewer_user_id}")
 
@@ -467,25 +472,8 @@ async def submit_review(
         if job is not None:
             template_used = job.template_used
 
-    review = AiAnalystReview(
-        report_id=report_id,
-        alert_id=report.alert_id,
-        customer_code=report.customer_code,
-        reviewer_user_id=reviewer_user_id,
-        overall_verdict=request.overall_verdict.value if request.overall_verdict else None,
-        template_choice=request.template_choice.value if request.template_choice else None,
-        template_used=template_used,
-        rating_instructions=request.rating_instructions,
-        rating_artifacts=request.rating_artifacts,
-        rating_severity=request.rating_severity,
-        missing_steps=request.missing_steps,
-        suggested_edits=request.suggested_edits,
-        created_at=datetime.utcnow(),
-    )
-    session.add(review)
-    await session.flush()  # get review.id before inserting child rows
-
-    # Validate each ioc_id is associated with this report, then insert corrections
+    # Validate every referenced IOC before mutating anything. A 400 here means
+    # we don't half-write and then bail.
     for correction in request.ioc_reviews:
         ioc = await session.get(AiAnalystIoc, correction.ioc_id)
         if ioc is None or ioc.report_id != report_id:
@@ -493,6 +481,57 @@ async def submit_review(
                 status_code=400,
                 detail=f"IOC {correction.ioc_id} not found or does not belong to report {report_id}",
             )
+
+    # Look up existing review by the unique (report_id, reviewer_user_id) key
+    existing_result = await session.execute(
+        select(AiAnalystReview)
+        .where(AiAnalystReview.report_id == report_id)
+        .where(AiAnalystReview.reviewer_user_id == reviewer_user_id)
+        .options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review = existing_result.scalars().first()
+
+    is_edit = review is not None
+
+    if is_edit:
+        # Update existing review in place
+        review.overall_verdict = request.overall_verdict.value if request.overall_verdict else None
+        review.template_choice = request.template_choice.value if request.template_choice else None
+        review.template_used = template_used
+        review.rating_instructions = request.rating_instructions
+        review.rating_artifacts = request.rating_artifacts
+        review.rating_severity = request.rating_severity
+        review.missing_steps = request.missing_steps
+        review.suggested_edits = request.suggested_edits
+        review.updated_at = datetime.utcnow()
+        session.add(review)
+
+        # Replace per-IOC corrections wholesale — simpler than diffing and the
+        # edit UI always submits the full set anyway.
+        for old_ir in list(review.ioc_reviews or []):
+            await session.delete(old_ir)
+        await session.flush()
+    else:
+        review = AiAnalystReview(
+            report_id=report_id,
+            alert_id=report.alert_id,
+            customer_code=report.customer_code,
+            reviewer_user_id=reviewer_user_id,
+            overall_verdict=request.overall_verdict.value if request.overall_verdict else None,
+            template_choice=request.template_choice.value if request.template_choice else None,
+            template_used=template_used,
+            rating_instructions=request.rating_instructions,
+            rating_artifacts=request.rating_artifacts,
+            rating_severity=request.rating_severity,
+            missing_steps=request.missing_steps,
+            suggested_edits=request.suggested_edits,
+            created_at=datetime.utcnow(),
+        )
+        session.add(review)
+        await session.flush()  # get review.id before inserting child rows
+
+    # Insert the new per-IOC corrections
+    for correction in request.ioc_reviews:
         session.add(
             AiAnalystIocReview(
                 review_id=review.id,
@@ -513,11 +552,51 @@ async def submit_review(
     )
     review_loaded = result.scalars().first()
 
-    logger.info(f"Review {review.id} created for report {report_id}")
+    action = "updated" if is_edit else "created"
+    logger.info(f"Review {review.id} {action} for report {report_id}")
     return SubmitReviewResponse(
         success=True,
-        message="Review submitted",
+        message=f"Review {action}",
         review=_review_to_response(review_loaded),
+    )
+
+
+async def get_my_review(
+    report_id: int,
+    reviewer_user_id: int,
+    session: AsyncSession,
+) -> MyReviewResponse:
+    """
+    Look up the current user's existing review for a report.
+
+    Used by the UI to decide whether to render the rubric in 'create' mode or
+    'edit existing' mode. Returns success=True with review=None when no review
+    exists yet (not an error).
+    """
+    # Ensure the report itself exists so the UI gets a real 404 for bad ids
+    report = await session.get(AiAnalystReport, report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+
+    result = await session.execute(
+        select(AiAnalystReview)
+        .where(AiAnalystReview.report_id == report_id)
+        .where(AiAnalystReview.reviewer_user_id == reviewer_user_id)
+        .options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review = result.scalars().first()
+
+    if review is None:
+        return MyReviewResponse(
+            success=True,
+            message="No existing review for this user on this report",
+            review=None,
+        )
+
+    return MyReviewResponse(
+        success=True,
+        message="Existing review retrieved",
+        review=_review_to_response(review),
     )
 
 
