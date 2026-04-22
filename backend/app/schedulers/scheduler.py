@@ -26,6 +26,7 @@ from app.schedulers.services.invoke_duo import invoke_duo_integration_collect
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
+from app.schedulers.services.invoke_palace_lesson_drainer import invoke_palace_lesson_drainer
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins,
 )
@@ -153,6 +154,12 @@ async def initialize_job_metadata():
                 "time_interval": 60,
                 "function": invoke_snapshot_schedules,
                 "description": "Invokes Index snapshot schedules execution.",
+            },
+            {
+                "job_id": "invoke_palace_lesson_drainer",
+                "time_interval": 2,
+                "function": invoke_palace_lesson_drainer,
+                "description": "Drains pending AI analyst palace lessons into MemPalace via NanoClaw /palace/lesson.",
             },
             # ! Mirgrated SIGMA to VELO ! #
             # {
@@ -284,6 +291,7 @@ def get_function_by_name(function_name: str):
         "invoke_duo_integration_collect": invoke_duo_integration_collect,
         "invoke_darktrace_integration_collect": invoke_darktrace_integration_collect,
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
+        "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         # Add other function mappings here
     }
     return function_map.get(
