@@ -10,16 +10,16 @@
 								<template #value>{{ report.severity_assessment }}</template>
 							</Badge>
 						</div>
-						<div v-if="report?.summary">
-							<h4 class="mb-2 text-sm font-semibold opacity-70">Summary</h4>
-							<p class="whitespace-pre-wrap">{{ report.summary }}</p>
-						</div>
-						<div v-if="report?.recommended_actions">
-							<h4 class="mb-2 text-sm font-semibold opacity-70">Recommended Actions</h4>
-							<p class="whitespace-pre-wrap">{{ report.recommended_actions }}</p>
-						</div>
+						<CardKV v-if="report?.summary">
+							<template #key>Summary</template>
+							<template #value>{{ report.summary }}</template>
+						</CardKV>
+						<CardKV v-if="report?.recommended_actions">
+							<template #key>Recommended Actions</template>
+							<template #value>{{ report.recommended_actions }}</template>
+						</CardKV>
 						<div v-if="!report?.summary && !report?.recommended_actions">
-							<n-empty description="No summary available" />
+							<n-empty description="No summary available" class="h-40" />
 						</div>
 					</div>
 				</div>
@@ -27,7 +27,7 @@
 			<n-tab-pane name="Report" tab="Full Report" display-directive="show:lazy">
 				<div class="p-7 pt-4">
 					<Markdown v-if="report?.report_markdown" :source="report.report_markdown" breaks />
-					<n-empty v-else description="No report content available" />
+					<n-empty v-else description="No report content available" class="h-40" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="IOCs" tab="IOCs" display-directive="show:lazy">
@@ -49,6 +49,7 @@ import type { AlertWithReport } from "@/types/aiAnalyst.d"
 import { NEmpty, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import Markdown from "@/components/common/Markdown.vue"
 
 const props = defineProps<{

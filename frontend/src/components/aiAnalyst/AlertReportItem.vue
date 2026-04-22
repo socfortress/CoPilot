@@ -69,19 +69,14 @@
 		<n-modal
 			v-model:show="showDetails"
 			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
+			content-class="p-0!"
 			display-directive="show"
+			preset="card"
+			:title="alertNameTruncated"
+			:bordered="false"
+			segmented
 		>
-			<n-card
-				content-class="flex flex-col p-0!"
-				:title="alertNameTruncated"
-				closable
-				:bordered="false"
-				segmented
-				role="modal"
-				@close="showDetails = false"
-			>
-				<AlertReportDetails v-if="alert" :alert />
-			</n-card>
+			<AlertReportDetails v-if="alert" :alert />
 		</n-modal>
 	</div>
 </template>
@@ -89,7 +84,7 @@
 <script setup lang="ts">
 import type { AlertWithReport } from "@/types/aiAnalyst.d"
 import _truncate from "lodash/truncate"
-import { NCard, NModal } from "naive-ui"
+import { NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
