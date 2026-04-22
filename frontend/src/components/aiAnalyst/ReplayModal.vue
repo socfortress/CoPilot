@@ -28,44 +28,29 @@
 					<div v-if="!loading && !templates.length">
 						<n-empty description="No templates available" class="min-h-20 justify-center" />
 					</div>
-					<div v-else class="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
-						<CardEntity
+					<n-radio-group
+						v-else
+						v-model:value="selectedFilename"
+						class="flex max-h-80 w-full flex-col gap-2 overflow-y-auto pr-1"
+					>
+						<n-radio
 							v-for="tpl of templates"
 							:key="tpl.filename"
-							size="small"
-							embedded
-							hoverable
-							clickable
-							:highlighted="selectedFilename === tpl.filename"
-							@click="selectedFilename = tpl.filename"
+							:value="tpl.filename"
+							class="border-color hover:border-primary w-full rounded border p-3"
+							:class="selectedFilename === tpl.filename ? 'border-primary bg-primary/5' : ''"
 						>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="flex items-center gap-2">
-										<Icon
-											:name="
-												selectedFilename === tpl.filename
-													? RadioOnIcon
-													: RadioOffIcon
-											"
-											:size="16"
-										/>
-										<code class="text-primary">{{ tpl.filename }}</code>
-									</div>
-									<div v-if="tpl.first_line" class="text-secondary text-sm">
-										{{ tpl.first_line }}
-									</div>
+							<div class="flex w-full flex-col gap-1">
+								<div class="flex items-center justify-between gap-3">
+									<span class="font-medium">{{ tpl.filename }}</span>
+									<span class="text-secondary text-xs">{{ formatBytes(tpl.size_bytes) }}</span>
 								</div>
-							</template>
-							<template #footer>
-								<div class="text-tertiary flex items-center gap-3 text-xs">
-									<span>{{ formatBytes(tpl.size_bytes) }}</span>
-									<span>·</span>
-									<span>updated {{ formatDate(tpl.modified_at, "MMM D, YYYY HH:mm") }}</span>
-								</div>
-							</template>
-						</CardEntity>
-					</div>
+								<span class="text-secondary text-xs">
+									updated {{ formatDate(tpl.modified_at, "MMM D, YYYY HH:mm") }}
+								</span>
+							</div>
+						</n-radio>
+					</n-radio-group>
 				</div>
 			</div>
 		</n-spin>
@@ -89,12 +74,10 @@
 <script setup lang="ts">
 import type { AiAnalystReport } from "@/types/aiAnalyst.d"
 import type { TalonTemplate } from "@/types/talon.d"
-import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NModal, NRadio, NRadioGroup, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
 import { formatBytes, formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -106,9 +89,6 @@ const emit = defineEmits<{
 	(e: "update:show", v: boolean): void
 	(e: "replayed", data: Record<string, unknown> | undefined): void
 }>()
-
-const RadioOnIcon = "carbon:radio-button-checked"
-const RadioOffIcon = "carbon:radio-button"
 
 const message = useMessage()
 const loading = ref(false)

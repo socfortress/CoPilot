@@ -320,16 +320,19 @@ async function copyMarkdown() {
 }
 
 // Auto-load on open (and reload if customer changes while open).
+// NB: don't destructure oldValue in the handler — on `immediate: true` the
+// initial oldValue is `undefined`, which throws on tuple destructure and
+// crashes setup, which Vue's error-recovery retries → infinite remount loop.
 watch(
 	() => [props.show, props.customerCode] as const,
-	([show, code], [prevShow]) => {
+	(curr, prev) => {
+		const [show, code] = curr
+		const prevShow = prev ? prev[0] : false
 		if (show && code && (!prevShow || data.value?.customer_code !== code)) {
 			load()
 		}
-		if (!show) {
-			// Keep the previous data around so re-opening feels instant;
-			// reset only when the customer changes.
-		}
+		// When show flips back to false we keep the previous data around so
+		// re-opening feels instant; reset only when the customer changes.
 	},
 	{ immediate: true }
 )

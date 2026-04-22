@@ -18,7 +18,6 @@
 					:show-checkmark="false"
 					class="min-w-40"
 					:disabled="loading"
-					@update:value="getData()"
 				/>
 				<n-select
 					v-model:value="sort"
@@ -56,7 +55,7 @@
 <script setup lang="ts">
 import type { AlertWithReport } from "@/types/aiAnalyst.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import AlertReportItem from "./AlertReportItem.vue"
@@ -108,6 +107,15 @@ function getData() {
 			loading.value = false
 		})
 }
+
+// Refetch only on actual user-driven filter changes. Previously wired via
+// @update:value on the select, but naive-ui can fire update:value when the
+// options prop identity changes (our computed returns a new array each time
+// alertsList updates) — that created a feedback loop: fetch → options ref
+// changes → update:value fires → fetch again.
+watch(customerFilter, () => {
+	getData()
+})
 
 onBeforeMount(() => {
 	getData()

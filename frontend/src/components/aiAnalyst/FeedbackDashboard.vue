@@ -12,7 +12,6 @@
 					:show-checkmark="false"
 					class="min-w-52"
 					:disabled="loading || customerBootstrapLoading"
-					@update:value="loadStats()"
 				/>
 			</div>
 			<div class="flex items-center gap-2">
@@ -264,7 +263,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -393,8 +392,9 @@ async function bootstrapCustomers() {
 				.sort()
 				.map(c => ({ label: c, value: c }))
 			if (customerOptions.value.length && !customer.value) {
+				// The watch(customer, loadStats) below picks this up — no
+				// need to call loadStats() explicitly from bootstrap.
 				customer.value = customerOptions.value[0].value
-				await loadStats()
 			}
 		}
 	} catch (err: unknown) {
@@ -425,6 +425,15 @@ async function loadStats() {
 		loading.value = false
 	}
 }
+
+// Refetch stats on actual customer changes only. Wiring via @update:value on
+// the select is fragile — naive-ui can fire update:value when the options
+// prop identity churns, which would loop the stats endpoint. watch() only
+// fires on real value changes, so programmatic and user-driven picks behave
+// the same and options churn is ignored.
+watch(customer, () => {
+	loadStats()
+})
 
 onBeforeMount(() => {
 	bootstrapCustomers()
