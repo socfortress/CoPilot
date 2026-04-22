@@ -54,7 +54,7 @@ export type OverallVerdict = "up" | "down"
 export type TemplateChoice = "correct" | "wrong" | "partial"
 export type LessonType = "environment" | "false_positives" | "assets" | "threat_intel" | "alerts"
 export type Durability = "one_off" | "durable"
-export type PalaceLessonStatus = "pending" | "ingested" | "failed"
+export type PalaceLessonStatus = "pending" | "ingested" | "failed" | "expired"
 
 export interface AiAnalystIocReview {
 	id: number
@@ -175,4 +175,49 @@ export interface AiAnalystReviewStats {
 	ioc_accuracy: ReviewStatsIocAccuracy
 	per_template: ReviewStatsTemplate[]
 	recent_reviews: AiAnalystReview[]
+}
+
+// --- Palace consolidation (Step 21.B) ---
+
+export interface PalaceConsolidationLesson {
+	id: number
+	lesson_type: string
+	lesson_text: string
+	durability: string
+	status: string
+	drawer_id: string | null
+	created_at: string
+	ingested_at: string | null
+	days_until_expiry: number | null
+}
+
+export interface PalaceConsolidationRoomGroup {
+	room: string
+	total: number
+	durable: number
+	one_off: number
+	lessons: PalaceConsolidationLesson[]
+}
+
+export interface PalaceConsolidationDuplicatePair {
+	room: string
+	lesson_a_id: number
+	lesson_b_id: number
+	lesson_a_text: string
+	lesson_b_text: string
+	similarity: number
+}
+
+export interface PalaceConsolidation {
+	customer_code: string
+	generated_at: string
+	total_lessons: number
+	total_durable: number
+	total_one_off: number
+	total_pending: number
+	total_ingested: number
+	upcoming_expirations: PalaceConsolidationLesson[]
+	rooms: PalaceConsolidationRoomGroup[]
+	duplicate_candidates: PalaceConsolidationDuplicatePair[]
+	markdown: string
 }

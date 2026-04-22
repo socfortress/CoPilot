@@ -15,12 +15,20 @@
 					@update:value="loadStats()"
 				/>
 			</div>
-			<n-button size="small" :disabled="!customer || loading" @click="loadStats()">
-				<template #icon>
-					<Icon :name="RefreshIcon" :size="14" />
-				</template>
-				Refresh
-			</n-button>
+			<div class="flex items-center gap-2">
+				<n-button size="small" :disabled="!customer" @click="showConsolidation = true">
+					<template #icon>
+						<Icon :name="ConsolidateIcon" :size="14" />
+					</template>
+					Consolidate lessons
+				</n-button>
+				<n-button size="small" :disabled="!customer || loading" @click="loadStats()">
+					<template #icon>
+						<Icon :name="RefreshIcon" :size="14" />
+					</template>
+					Refresh
+				</n-button>
+			</div>
 		</div>
 
 		<n-spin :show="loading" class="min-h-40">
@@ -233,6 +241,9 @@
 				</div>
 			</n-drawer-content>
 		</n-drawer>
+
+		<!-- Palace consolidation drawer (manual Step 21.B trigger) -->
+		<PalaceConsolidationDrawer v-model:show="showConsolidation" :customer-code="customer" />
 	</div>
 </template>
 
@@ -262,9 +273,11 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import MetricTile from "./FeedbackMetricTile.vue"
+import PalaceConsolidationDrawer from "./PalaceConsolidationDrawer.vue"
 import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"
 
 const RefreshIcon = "carbon:renew"
+const ConsolidateIcon = "carbon:data-collection"
 
 const message = useMessage()
 
@@ -277,6 +290,8 @@ const stats = ref<AiAnalystReviewStats | null>(null)
 
 const showDrawer = ref(false)
 const drawerReview = ref<AiAnalystReview | null>(null)
+
+const showConsolidation = ref(false)
 
 const templateChoiceTotal = computed(() =>
 	stats.value

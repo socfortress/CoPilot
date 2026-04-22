@@ -15,6 +15,7 @@ from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
 from app.ai_analyst.schema.ai_analyst import JobListResponse
 from app.ai_analyst.schema.ai_analyst import MyReviewResponse
+from app.ai_analyst.schema.ai_analyst import PalaceConsolidationResponse
 from app.ai_analyst.schema.ai_analyst import PalaceSearchResponse
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
@@ -43,6 +44,7 @@ from app.ai_analyst.services.ai_analyst import list_jobs_by_alert
 from app.ai_analyst.services.ai_analyst import list_jobs_by_customer
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 from app.ai_analyst.services.ai_analyst import get_review_stats
+from app.ai_analyst.services.ai_analyst import get_palace_consolidation
 from app.ai_analyst.services.ai_analyst import list_reviews_by_customer
 from app.ai_analyst.services.ai_analyst import queue_palace_lesson
 from app.ai_analyst.services.ai_analyst import submit_iocs
@@ -450,3 +452,21 @@ async def search_palace_lessons_route(
         message=f"{len(raw_lessons)} palace lessons matched",
         lessons=raw_lessons,
     )
+
+
+@ai_analyst_router.get(
+    "/palace_lessons/customer/{customer_code}/consolidation",
+    response_model=PalaceConsolidationResponse,
+    description=(
+        "Manual consolidation digest for a customer's active MemPalace lessons — "
+        "groups by room, flags near-duplicate pairs, and surfaces one-offs about "
+        "to be swept. Pure read-only; no Talon round-trip."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_palace_consolidation_route(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> PalaceConsolidationResponse:
+    logger.info(f"Building palace consolidation for customer {customer_code}")
+    return await get_palace_consolidation(customer_code, session)

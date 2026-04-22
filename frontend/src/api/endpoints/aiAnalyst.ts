@@ -6,6 +6,7 @@ import type {
 	AiAnalystReview,
 	AiAnalystReviewStats,
 	AlertWithReport,
+	PalaceConsolidation,
 	PalaceSearchHit,
 	QueuePalaceLessonPayload,
 	ReplayPayload,
@@ -189,6 +190,17 @@ export default {
 					...(room ? { room } : {})
 				}
 			}
+		)
+	},
+	/**
+	 * Manual consolidation digest — builds a point-in-time view of a
+	 * customer's active MemPalace lessons (pending + ingested), grouped
+	 * by room, with near-duplicate pairs and upcoming expirations
+	 * surfaced for reviewer action. Pure read-only, no Talon round-trip.
+	 */
+	getPalaceConsolidation(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & PalaceConsolidation>(
+			`/ai_analyst/palace_lessons/customer/${customerCode}/consolidation`
 		)
 	}
 }

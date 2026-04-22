@@ -438,3 +438,68 @@ class ReviewStatsResponse(BaseModel):
     ioc_accuracy: ReviewStatsIocAccuracy = Field(default_factory=ReviewStatsIocAccuracy)
     per_template: List[ReviewStatsTemplate] = Field(default_factory=list)
     recent_reviews: List[ReviewResponse] = Field(default_factory=list)
+
+
+# --- Palace consolidation (Step 21.B) ---
+
+
+class PalaceConsolidationLesson(BaseModel):
+    """A single lesson row, shaped for the consolidation digest UI."""
+
+    id: int
+    lesson_type: str
+    lesson_text: str
+    durability: str
+    status: str
+    drawer_id: Optional[str] = None
+    created_at: datetime
+    ingested_at: Optional[datetime] = None
+    # For one_off lessons only — how many days until the sweeper expires
+    # this row. Negative numbers mean the sweeper is about to take it on
+    # the next tick. None for durable rows (no expiry).
+    days_until_expiry: Optional[int] = None
+
+
+class PalaceConsolidationRoomGroup(BaseModel):
+    """Per-room slice — lessons grouped by lesson_type."""
+
+    room: str
+    total: int
+    durable: int
+    one_off: int
+    lessons: List[PalaceConsolidationLesson] = Field(default_factory=list)
+
+
+class PalaceConsolidationDuplicatePair(BaseModel):
+    """Near-duplicate candidate flagged for reviewer attention."""
+
+    room: str
+    lesson_a_id: int
+    lesson_b_id: int
+    lesson_a_text: str
+    lesson_b_text: str
+    similarity: float  # 0.0 – 1.0, difflib SequenceMatcher ratio
+
+
+class PalaceConsolidationResponse(BaseModel):
+    """Full digest for a customer — renders inline in a drawer; the
+    reviewer can also grab the pre-rendered markdown for export."""
+
+    success: bool
+    message: str
+    customer_code: str
+    generated_at: datetime
+    # Top-level counts across active (non-expired, non-failed) lessons
+    total_lessons: int = 0
+    total_durable: int = 0
+    total_one_off: int = 0
+    total_pending: int = 0
+    total_ingested: int = 0
+    # One-off lessons whose expiry is within SOON_WINDOW_DAYS — reviewer
+    # may want to promote them to durable before the sweeper deletes them.
+    upcoming_expirations: List[PalaceConsolidationLesson] = Field(default_factory=list)
+    rooms: List[PalaceConsolidationRoomGroup] = Field(default_factory=list)
+    duplicate_candidates: List[PalaceConsolidationDuplicatePair] = Field(default_factory=list)
+    # Rendered markdown digest — pre-baked so the drawer can offer a
+    # "copy as markdown" button without client-side templating.
+    markdown: str = ""

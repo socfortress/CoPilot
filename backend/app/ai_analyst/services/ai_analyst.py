@@ -1,4 +1,6 @@
 from datetime import datetime
+from datetime import timedelta
+from difflib import SequenceMatcher
 from typing import List
 from typing import Optional
 
@@ -17,6 +19,10 @@ from app.ai_analyst.schema.ai_analyst import IocResponse
 from app.ai_analyst.schema.ai_analyst import IocReviewResponse
 from app.ai_analyst.schema.ai_analyst import JobResponse
 from app.ai_analyst.schema.ai_analyst import MyReviewResponse
+from app.ai_analyst.schema.ai_analyst import PalaceConsolidationDuplicatePair
+from app.ai_analyst.schema.ai_analyst import PalaceConsolidationLesson
+from app.ai_analyst.schema.ai_analyst import PalaceConsolidationResponse
+from app.ai_analyst.schema.ai_analyst import PalaceConsolidationRoomGroup
 from app.ai_analyst.schema.ai_analyst import PalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
@@ -796,4 +802,235 @@ async def get_review_stats(
         ),
         per_template=per_template,
         recent_reviews=[_review_to_response(r) for r in recent_reviews],
+    )
+
+
+# --- Palace consolidation (Step 21.B) ---
+
+# Keep in sync with invoke_palace_lesson_sweeper.ONE_OFF_EXPIRY_DAYS —
+# duplicated here rather than imported to avoid pulling a scheduler
+# service into the synchronous route path at import time.
+_ONE_OFF_EXPIRY_DAYS = 7
+# Lessons within this many days of expiring are surfaced to the reviewer
+# as "about to be swept" — gives a window to promote to durable.
+_EXPIRY_SOON_WINDOW_DAYS = 2
+# Similarity threshold for near-duplicate detection. 0.70 picks up
+# paraphrases without flooding the reviewer with every shared phrase.
+# difflib's SequenceMatcher on short strings is cheap — we can afford
+# O(n²) pairs per room.
+_DUPLICATE_SIMILARITY_THRESHOLD = 0.70
+
+
+def _lesson_to_consolidation(
+    lesson: AiAnalystPalaceLesson,
+    now: datetime,
+) -> PalaceConsolidationLesson:
+    days_until_expiry: Optional[int] = None
+    if lesson.durability == "one_off" and lesson.ingested_at is not None:
+        expiry = lesson.ingested_at + timedelta(days=_ONE_OFF_EXPIRY_DAYS)
+        days_until_expiry = (expiry - now).days
+    return PalaceConsolidationLesson(
+        id=lesson.id,
+        lesson_type=lesson.lesson_type,
+        lesson_text=lesson.lesson_text,
+        durability=lesson.durability,
+        status=lesson.status,
+        drawer_id=lesson.drawer_id,
+        created_at=lesson.created_at,
+        ingested_at=lesson.ingested_at,
+        days_until_expiry=days_until_expiry,
+    )
+
+
+def _find_duplicate_pairs(
+    lessons: List[PalaceConsolidationLesson],
+) -> List[PalaceConsolidationDuplicatePair]:
+    """Pairwise SequenceMatcher within the same room. Only returns
+    pairs above the threshold, sorted by similarity descending."""
+    pairs: List[PalaceConsolidationDuplicatePair] = []
+    # Group by room first so we only compare within-room.
+    by_room: dict[str, List[PalaceConsolidationLesson]] = {}
+    for lesson in lessons:
+        by_room.setdefault(lesson.lesson_type, []).append(lesson)
+
+    for room, room_lessons in by_room.items():
+        # Normalize once up-front so SequenceMatcher has stable inputs.
+        normalized = [(ls, ls.lesson_text.strip().lower()) for ls in room_lessons]
+        for i in range(len(normalized)):
+            a_lesson, a_text = normalized[i]
+            if not a_text:
+                continue
+            for j in range(i + 1, len(normalized)):
+                b_lesson, b_text = normalized[j]
+                if not b_text:
+                    continue
+                ratio = SequenceMatcher(None, a_text, b_text).ratio()
+                if ratio >= _DUPLICATE_SIMILARITY_THRESHOLD:
+                    pairs.append(
+                        PalaceConsolidationDuplicatePair(
+                            room=room,
+                            lesson_a_id=a_lesson.id,
+                            lesson_b_id=b_lesson.id,
+                            lesson_a_text=a_lesson.lesson_text,
+                            lesson_b_text=b_lesson.lesson_text,
+                            similarity=round(ratio, 3),
+                        ),
+                    )
+    pairs.sort(key=lambda p: p.similarity, reverse=True)
+    return pairs
+
+
+def _render_consolidation_markdown(
+    customer_code: str,
+    generated_at: datetime,
+    total_lessons: int,
+    total_durable: int,
+    total_one_off: int,
+    rooms: List[PalaceConsolidationRoomGroup],
+    duplicates: List[PalaceConsolidationDuplicatePair],
+    upcoming: List[PalaceConsolidationLesson],
+) -> str:
+    """Pre-render the digest as markdown so the drawer can offer a
+    one-click copy/export. Kept intentionally terse — headings + bullets."""
+    lines: List[str] = []
+    lines.append(f"# Palace consolidation — {customer_code}")
+    lines.append(f"_Generated {generated_at.isoformat()} UTC_")
+    lines.append("")
+    lines.append("## Summary")
+    lines.append(f"- Total active lessons: **{total_lessons}**")
+    lines.append(f"- Durable: {total_durable}  |  One-off: {total_one_off}")
+    if upcoming:
+        lines.append(
+            f"- **{len(upcoming)} one-off lesson(s) expiring within "
+            f"{_EXPIRY_SOON_WINDOW_DAYS} day(s)** — consider promoting to durable.",
+        )
+    if duplicates:
+        lines.append(f"- **{len(duplicates)} near-duplicate pair(s)** flagged for review.")
+    lines.append("")
+
+    if upcoming:
+        lines.append("## Upcoming expirations")
+        for ls in upcoming:
+            due = ls.days_until_expiry if ls.days_until_expiry is not None else "?"
+            lines.append(f"- _{ls.lesson_type}_ (id {ls.id}, in {due}d): {ls.lesson_text}")
+        lines.append("")
+
+    if duplicates:
+        lines.append("## Near-duplicate candidates")
+        for pair in duplicates:
+            pct = int(pair.similarity * 100)
+            lines.append(f"- **{pair.room}** — {pct}% similar")
+            lines.append(f"  - #{pair.lesson_a_id}: {pair.lesson_a_text}")
+            lines.append(f"  - #{pair.lesson_b_id}: {pair.lesson_b_text}")
+        lines.append("")
+
+    lines.append("## Rooms")
+    for group in rooms:
+        lines.append(
+            f"### {group.room}  ({group.total} total — "
+            f"{group.durable} durable, {group.one_off} one-off)",
+        )
+        for ls in group.lessons:
+            tag = "🧷" if ls.durability == "durable" else "⏳"
+            suffix = ""
+            if ls.durability == "one_off" and ls.days_until_expiry is not None:
+                suffix = f" _(expires in {ls.days_until_expiry}d)_"
+            lines.append(f"- {tag} #{ls.id}{suffix}: {ls.lesson_text}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+async def get_palace_consolidation(
+    customer_code: str,
+    session: AsyncSession,
+) -> PalaceConsolidationResponse:
+    """Build a point-in-time digest of a customer's active MemPalace
+    lessons. Pure read-only, pure Python — no Talon round-trip. Used by
+    the manual "Consolidate Lessons" button in the Feedback dashboard."""
+    logger.info(f"Building palace consolidation digest for customer {customer_code}")
+
+    # Exclude expired (already swept) and failed (never reached the palace)
+    # rows — consolidation is about what's actually live right now.
+    stmt = (
+        select(AiAnalystPalaceLesson)
+        .where(AiAnalystPalaceLesson.customer_code == customer_code)
+        .where(AiAnalystPalaceLesson.status.in_(["pending", "ingested"]))
+        .order_by(
+            AiAnalystPalaceLesson.lesson_type.asc(),
+            AiAnalystPalaceLesson.created_at.desc(),
+        )
+    )
+    result = await session.execute(stmt)
+    raw_lessons = result.scalars().all()
+
+    now = datetime.utcnow()
+    lessons = [_lesson_to_consolidation(ls, now) for ls in raw_lessons]
+
+    total_lessons = len(lessons)
+    total_durable = sum(1 for ls in lessons if ls.durability == "durable")
+    total_one_off = sum(1 for ls in lessons if ls.durability == "one_off")
+    total_pending = sum(1 for ls in lessons if ls.status == "pending")
+    total_ingested = sum(1 for ls in lessons if ls.status == "ingested")
+
+    upcoming = sorted(
+        [
+            ls
+            for ls in lessons
+            if ls.durability == "one_off"
+            and ls.days_until_expiry is not None
+            and ls.days_until_expiry <= _EXPIRY_SOON_WINDOW_DAYS
+        ],
+        key=lambda ls: ls.days_until_expiry if ls.days_until_expiry is not None else 0,
+    )
+
+    # Build per-room groups in deterministic room order.
+    by_room: dict[str, List[PalaceConsolidationLesson]] = {}
+    for ls in lessons:
+        by_room.setdefault(ls.lesson_type, []).append(ls)
+    rooms: List[PalaceConsolidationRoomGroup] = []
+    for room in sorted(by_room.keys()):
+        room_lessons = by_room[room]
+        rooms.append(
+            PalaceConsolidationRoomGroup(
+                room=room,
+                total=len(room_lessons),
+                durable=sum(1 for ls in room_lessons if ls.durability == "durable"),
+                one_off=sum(1 for ls in room_lessons if ls.durability == "one_off"),
+                lessons=room_lessons,
+            ),
+        )
+
+    duplicates = _find_duplicate_pairs(lessons)
+
+    markdown = _render_consolidation_markdown(
+        customer_code=customer_code,
+        generated_at=now,
+        total_lessons=total_lessons,
+        total_durable=total_durable,
+        total_one_off=total_one_off,
+        rooms=rooms,
+        duplicates=duplicates,
+        upcoming=upcoming,
+    )
+
+    return PalaceConsolidationResponse(
+        success=True,
+        message=(
+            f"Palace consolidation for {customer_code}: "
+            f"{total_lessons} active lesson(s), "
+            f"{len(duplicates)} duplicate pair(s), "
+            f"{len(upcoming)} expiring soon"
+        ),
+        customer_code=customer_code,
+        generated_at=now,
+        total_lessons=total_lessons,
+        total_durable=total_durable,
+        total_one_off=total_one_off,
+        total_pending=total_pending,
+        total_ingested=total_ingested,
+        upcoming_expirations=upcoming,
+        rooms=rooms,
+        duplicate_candidates=duplicates,
+        markdown=markdown,
     )
