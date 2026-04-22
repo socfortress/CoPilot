@@ -1,6 +1,5 @@
 export interface FlaskBaseResponse {
-	/** common response property */
 	message: string
-	/** common response property */
+	detail?: string
 	success: boolean
 }

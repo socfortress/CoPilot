@@ -1,12 +1,7 @@
 <template>
 	<div>
 		<CardEntity hoverable clickable @click="openDetails()">
-			<template v-if="alert" #headerMain>
-				<div class="flex items-center gap-2">
-					<span>#{{ alert.alert_id }} - {{ alert.source }}</span>
-					<Icon :name="InfoIcon" :size="16" />
-				</div>
-			</template>
+			<template v-if="alert" #headerMain>#{{ alert.alert_id }} - {{ alert.source }}</template>
 
 			<template v-if="alert?.alert_creation_time" #headerExtra>
 				<div class="flex items-center gap-2">
@@ -16,52 +11,55 @@
 			</template>
 
 			<template v-if="alert" #default>
-				{{ alert.alert_name }}
-			</template>
+				<div class="flex flex-col gap-2">
+					<div>{{ alert.alert_name }}</div>
+					<div class="flex flex-wrap items-center gap-3">
+						<Badge
+							type="splitted"
+							bright
+							:color="
+								alert.status === 'OPEN'
+									? 'danger'
+									: alert.status === 'IN_PROGRESS'
+										? 'warning'
+										: 'success'
+							"
+						>
+							<template #iconLeft>
+								<Icon :name="StatusIcon" :size="14" />
+							</template>
+							<template #label>Status</template>
+							<template #value>{{ alert.status || "n/d" }}</template>
+						</Badge>
 
-			<template v-if="alert" #mainExtra>
-				<div class="flex flex-wrap items-center gap-3">
-					<Badge
-						type="splitted"
-						bright
-						:color="
-							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
-						"
-					>
-						<template #iconLeft>
-							<Icon :name="StatusIcon" :size="14" />
-						</template>
-						<template #label>Status</template>
-						<template #value>{{ alert.status || "n/d" }}</template>
-					</Badge>
+						<Badge v-if="alert.report.severity_assessment" type="splitted" bright :color="severityColor">
+							<template #iconLeft>
+								<Icon :name="SeverityIcon" :size="14" />
+							</template>
+							<template #label>Severity</template>
+							<template #value>{{ alert.report.severity_assessment }}</template>
+						</Badge>
 
-					<Badge v-if="alert.report.severity_assessment" type="splitted" bright :color="severityColor">
-						<template #iconLeft>
-							<Icon :name="SeverityIcon" :size="14" />
-						</template>
-						<template #label>Severity</template>
-						<template #value>{{ alert.report.severity_assessment }}</template>
-					</Badge>
+						<Badge v-if="alert.assigned_to" type="splitted" bright color="success">
+							<template #iconLeft>
+								<Icon :name="AssigneeIcon" :size="14" />
+							</template>
+							<template #label>Assignee</template>
+							<template #value>{{ alert.assigned_to }}</template>
+						</Badge>
 
-					<Badge v-if="alert.assigned_to" type="splitted" bright color="success">
-						<template #iconLeft>
-							<Icon :name="AssigneeIcon" :size="14" />
-						</template>
-						<template #label>Assignee</template>
-						<template #value>{{ alert.assigned_to }}</template>
-					</Badge>
-
-					<Badge type="splitted">
-						<template #label>Customer</template>
-						<template #value>
-							<code class="text-primary leading-none">#{{ alert.customer_code }}</code>
-						</template>
-					</Badge>
+						<Badge type="splitted">
+							<template #label>Customer</template>
+							<template #value>
+								<code class="text-primary leading-none">#{{ alert.customer_code }}</code>
+							</template>
+						</Badge>
+					</div>
 				</div>
 			</template>
 
 			<template v-if="alert" #footerMain>
-				<div class="flex items-center gap-2 text-sm opacity-70">
+				<div class="text-secondary flex items-center gap-1 text-sm">
 					<Icon :name="ReportIcon" :size="14" />
 					<span>Report generated {{ formatDate(alert.report.created_at, dFormats.datetime) }}</span>
 				</div>
@@ -106,7 +104,6 @@ const props = defineProps<{
 
 const { alertData } = toRefs(props)
 
-const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
 const StatusIcon = "carbon:circle-dash"
 const SeverityIcon = "carbon:warning-alt"

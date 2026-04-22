@@ -1,5 +1,5 @@
 import type { Component } from "vue"
-import type { OsTypesFull, SafeAny } from "@/types/common.d"
+import type { ApiError, OsTypesFull, SafeAny } from "@/types/common.d"
 import process from "node:process"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
@@ -8,6 +8,8 @@ import _trim from "lodash/trim"
 import { h } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "./dayjs"
+
+const TRAILING_DOT_REGEX = /\.$/
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {
@@ -179,4 +181,23 @@ export function formatCompactNumber(value: number | null | undefined): string {
 	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
 	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
 	return value.toLocaleString()
+}
+
+export function getApiErrorMessage(err: ApiError): string {
+	const axiosMessage = err.message
+	const message = err.response?.data?.message
+	const detail = err.response?.data?.detail
+
+	// Handle string detail
+	if (detail && typeof detail === "string") {
+		return `${detail.replace(TRAILING_DOT_REGEX, "")}.`
+	}
+
+	// Handle string message
+	if (message && typeof message === "string") {
+		return `${message.replace(TRAILING_DOT_REGEX, "")}.`
+	}
+
+	// Fallback to axios message
+	return `${axiosMessage.replace(TRAILING_DOT_REGEX, "")}.`
 }
