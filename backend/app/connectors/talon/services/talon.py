@@ -4,6 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.schema.talon import TalonInvestigateResponse
 from app.connectors.talon.schema.talon import TalonJobResponse
@@ -171,3 +175,81 @@ async def get_talon_job(alert_id: int, session: AsyncSession) -> TalonJobRespons
             "reports": all_reports,
         },
     )
+
+
+async def replay_investigation(
+    alert_id: int,
+    customer_code: str,
+    template_override: str,
+    sender: str = "copilot-replay",
+) -> Dict[str, Any]:
+    """
+    Trigger an investigation replay with a forced template via Talon's
+    POST /investigate endpoint.
+
+    Args:
+        alert_id: CoPilot alert ID to re-investigate.
+        customer_code: Customer code for the alert.
+        template_override: Template filename to force (validated upstream).
+        sender: Audit identifier for the replay.
+
+    Returns:
+        Raw Talon response envelope (success, message, data).
+    """
+    logger.info(
+        f"Replaying Talon investigation for alert {alert_id} "
+        f"with template_override={template_override}",
+    )
+    response = await send_post_request(
+        endpoint="/investigate",
+        data={
+            "alert_id": alert_id,
+            "customer_code": customer_code,
+            "template_override": template_override,
+            "sender": sender,
+        },
+    )
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to replay Talon investigation"),
+        )
+    return response
+
+
+async def search_palace_lessons(
+    customer_code: str,
+    query: str,
+    room: Optional[str] = None,
+    limit: int = 5,
+) -> Dict[str, Any]:
+    """
+    Preview similar MemPalace lessons via Talon's GET /palace/search endpoint.
+    Read-only — never mutates the palace.
+
+    Args:
+        customer_code: Customer whose wing to search.
+        query: Semantic search query.
+        room: Optional room filter (environment, false_positives, assets, threat_intel, alerts).
+        limit: Max hits to return (clamped 1–25 upstream).
+
+    Returns:
+        Raw Talon response envelope (success, message, data).
+    """
+    logger.info(
+        f"Searching MemPalace for customer={customer_code} room={room} query={query!r} limit={limit}",
+    )
+    params: Dict[str, Any] = {
+        "customer_code": customer_code,
+        "query": query,
+        "limit": limit,
+    }
+    if room:
+        params["room"] = room
+    response = await send_get_request(endpoint="/palace/search", params=params)
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to search MemPalace"),
+        )
+    return response

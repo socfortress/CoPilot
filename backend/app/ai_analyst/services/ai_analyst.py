@@ -6,22 +6,33 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.ai_analyst.schema.ai_analyst import AlertWithReportResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocResponse
+from app.ai_analyst.schema.ai_analyst import IocReviewResponse
 from app.ai_analyst.schema.ai_analyst import JobResponse
+from app.ai_analyst.schema.ai_analyst import PalaceLessonResponse
+from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
+from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import ReportResponse
+from app.ai_analyst.schema.ai_analyst import ReviewResponse
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
 from app.ai_analyst.schema.ai_analyst import SubmitIocsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitReportRequest
 from app.ai_analyst.schema.ai_analyst import SubmitReportResponse
+from app.ai_analyst.schema.ai_analyst import SubmitReviewRequest
+from app.ai_analyst.schema.ai_analyst import SubmitReviewResponse
 from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.db.universal_models import AiAnalystIoc
+from app.db.universal_models import AiAnalystIocReview
 from app.db.universal_models import AiAnalystJob
+from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import AiAnalystReport
+from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
 
 
@@ -382,3 +393,188 @@ async def get_alert_analysis(alert_id: int, session: AsyncSession):
         _report_to_response(report) if report else None,
         [_ioc_to_response(i) for i in iocs],
     )
+
+
+# --- Review / Palace lesson helpers ---
+
+
+def _ioc_review_to_response(ir: AiAnalystIocReview) -> IocReviewResponse:
+    return IocReviewResponse(
+        id=ir.id,
+        review_id=ir.review_id,
+        ioc_id=ir.ioc_id,
+        verdict_correct=ir.verdict_correct,
+        note=ir.note,
+        created_at=ir.created_at,
+    )
+
+
+def _review_to_response(review: AiAnalystReview) -> ReviewResponse:
+    return ReviewResponse(
+        id=review.id,
+        report_id=review.report_id,
+        alert_id=review.alert_id,
+        customer_code=review.customer_code,
+        reviewer_user_id=review.reviewer_user_id,
+        overall_verdict=review.overall_verdict,
+        template_choice=review.template_choice,
+        template_used=review.template_used,
+        rating_instructions=review.rating_instructions,
+        rating_artifacts=review.rating_artifacts,
+        rating_severity=review.rating_severity,
+        missing_steps=review.missing_steps,
+        suggested_edits=review.suggested_edits,
+        created_at=review.created_at,
+        ioc_reviews=[_ioc_review_to_response(ir) for ir in (review.ioc_reviews or [])],
+    )
+
+
+def _palace_lesson_to_response(lesson: AiAnalystPalaceLesson) -> PalaceLessonResponse:
+    return PalaceLessonResponse(
+        id=lesson.id,
+        review_id=lesson.review_id,
+        customer_code=lesson.customer_code,
+        lesson_type=lesson.lesson_type,
+        lesson_text=lesson.lesson_text,
+        durability=lesson.durability,
+        status=lesson.status,
+        ingested_at=lesson.ingested_at,
+        created_at=lesson.created_at,
+    )
+
+
+async def submit_review(
+    report_id: int,
+    request: SubmitReviewRequest,
+    reviewer_user_id: int,
+    session: AsyncSession,
+) -> SubmitReviewResponse:
+    """
+    Persist an analyst review of an AI investigation report, plus any per-IOC
+    verdict corrections. Writes AiAnalystReview and AiAnalystIocReview rows in
+    a single transaction.
+    """
+    logger.info(f"Submitting review for report {report_id} by user {reviewer_user_id}")
+
+    report = await session.get(AiAnalystReport, report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+
+    # If template_used wasn't supplied, inherit from the job for auditability
+    template_used = request.template_used
+    if template_used is None:
+        job = await session.get(AiAnalystJob, report.job_id)
+        if job is not None:
+            template_used = job.template_used
+
+    review = AiAnalystReview(
+        report_id=report_id,
+        alert_id=report.alert_id,
+        customer_code=report.customer_code,
+        reviewer_user_id=reviewer_user_id,
+        overall_verdict=request.overall_verdict.value if request.overall_verdict else None,
+        template_choice=request.template_choice.value if request.template_choice else None,
+        template_used=template_used,
+        rating_instructions=request.rating_instructions,
+        rating_artifacts=request.rating_artifacts,
+        rating_severity=request.rating_severity,
+        missing_steps=request.missing_steps,
+        suggested_edits=request.suggested_edits,
+        created_at=datetime.utcnow(),
+    )
+    session.add(review)
+    await session.flush()  # get review.id before inserting child rows
+
+    # Validate each ioc_id is associated with this report, then insert corrections
+    for correction in request.ioc_reviews:
+        ioc = await session.get(AiAnalystIoc, correction.ioc_id)
+        if ioc is None or ioc.report_id != report_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"IOC {correction.ioc_id} not found or does not belong to report {report_id}",
+            )
+        session.add(
+            AiAnalystIocReview(
+                review_id=review.id,
+                ioc_id=correction.ioc_id,
+                verdict_correct=correction.verdict_correct,
+                note=correction.note,
+                created_at=datetime.utcnow(),
+            ),
+        )
+
+    await session.commit()
+
+    # Re-fetch with ioc_reviews eagerly loaded for the response
+    result = await session.execute(
+        select(AiAnalystReview)
+        .where(AiAnalystReview.id == review.id)
+        .options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review_loaded = result.scalars().first()
+
+    logger.info(f"Review {review.id} created for report {report_id}")
+    return SubmitReviewResponse(
+        success=True,
+        message="Review submitted",
+        review=_review_to_response(review_loaded),
+    )
+
+
+async def queue_palace_lesson(
+    request: QueuePalaceLessonRequest,
+    session: AsyncSession,
+) -> QueuePalaceLessonResponse:
+    """
+    Queue a MemPalace lesson for async drainer pickup. Does NOT call Talon
+    directly — the drainer (roadmap item 17) reads status='pending' rows and
+    POSTs to NanoClaw's /palace/lesson endpoint.
+    """
+    logger.info(
+        f"Queuing palace lesson for customer {request.customer_code} "
+        f"(type={request.lesson_type.value}, durability={request.durability.value})",
+    )
+
+    # If review_id supplied, validate it exists
+    if request.review_id is not None:
+        review = await session.get(AiAnalystReview, request.review_id)
+        if review is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Review {request.review_id} not found",
+            )
+
+    lesson = AiAnalystPalaceLesson(
+        review_id=request.review_id,
+        customer_code=request.customer_code,
+        lesson_type=request.lesson_type.value,
+        lesson_text=request.lesson_text,
+        durability=request.durability.value,
+        status="pending",
+        created_at=datetime.utcnow(),
+    )
+    session.add(lesson)
+    await session.commit()
+    await session.refresh(lesson)
+
+    logger.info(f"Palace lesson {lesson.id} queued (status=pending)")
+    return QueuePalaceLessonResponse(
+        success=True,
+        message="Palace lesson queued for ingestion",
+        lesson=_palace_lesson_to_response(lesson),
+    )
+
+
+async def list_reviews_by_customer(
+    customer_code: str,
+    session: AsyncSession,
+) -> List[ReviewResponse]:
+    """Dashboard feed — reviews for a customer, newest first, with nested IOC reviews."""
+    result = await session.execute(
+        select(AiAnalystReview)
+        .where(AiAnalystReview.customer_code == customer_code)
+        .options(selectinload(AiAnalystReview.ioc_reviews))
+        .order_by(AiAnalystReview.created_at.desc()),
+    )
+    reviews = result.scalars().all()
+    return [_review_to_response(r) for r in reviews]

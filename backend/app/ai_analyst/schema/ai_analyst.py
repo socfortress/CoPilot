@@ -49,6 +49,36 @@ class VtVerdict(str, Enum):
     UNKNOWN = "unknown"
 
 
+class OverallVerdict(str, Enum):
+    UP = "up"
+    DOWN = "down"
+
+
+class TemplateChoice(str, Enum):
+    CORRECT = "correct"
+    WRONG = "wrong"
+    PARTIAL = "partial"
+
+
+class LessonType(str, Enum):
+    ENVIRONMENT = "environment"
+    FALSE_POSITIVES = "false_positives"
+    ASSETS = "assets"
+    THREAT_INTEL = "threat_intel"
+    ALERTS = "alerts"
+
+
+class Durability(str, Enum):
+    ONE_OFF = "one_off"
+    DURABLE = "durable"
+
+
+class PalaceLessonStatus(str, Enum):
+    PENDING = "pending"
+    INGESTED = "ingested"
+    FAILED = "failed"
+
+
 # --- Request schemas ---
 
 
@@ -210,3 +240,145 @@ class AlertAnalysisResponse(BaseModel):
     job: Optional[JobResponse] = None
     report: Optional[ReportResponse] = None
     iocs: Optional[List[IocResponse]] = None
+
+
+# --- Review / Palace Lesson / Replay schemas ---
+
+
+class IocVerdictCorrection(BaseModel):
+    ioc_id: int = Field(..., description="The AiAnalystIoc.id being reviewed")
+    verdict_correct: bool = Field(..., description="True if the original VT verdict was correct")
+    note: Optional[str] = Field(None, max_length=2000, description="Optional reviewer note")
+
+    @validator("note", pre=True)
+    def strip_control_characters_note(cls, v):
+        if v is None:
+            return v
+        return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
+
+
+class SubmitReviewRequest(BaseModel):
+    overall_verdict: Optional[OverallVerdict] = Field(None, description="Overall thumbs up/down")
+    template_choice: Optional[TemplateChoice] = Field(None, description="Was the selected template correct")
+    template_used: Optional[str] = Field(None, max_length=128, description="Template filename that ran (mirrored from report)")
+    rating_instructions: Optional[int] = Field(None, ge=1, le=5, description="Rating 1–5 on instructions quality")
+    rating_artifacts: Optional[int] = Field(None, ge=1, le=5, description="Rating 1–5 on collected artifacts")
+    rating_severity: Optional[int] = Field(None, ge=1, le=5, description="Rating 1–5 on severity assessment accuracy")
+    missing_steps: Optional[str] = Field(None, description="Free-text list of steps the analyst missed")
+    suggested_edits: Optional[str] = Field(None, description="Free-text suggested prompt / template edits")
+    ioc_reviews: List[IocVerdictCorrection] = Field(default_factory=list, description="Per-IOC verdict corrections")
+
+    @validator("missing_steps", "suggested_edits", pre=True)
+    def strip_control_characters(cls, v):
+        if v is None:
+            return v
+        return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
+
+
+class IocReviewResponse(BaseModel):
+    id: int
+    review_id: int
+    ioc_id: int
+    verdict_correct: bool
+    note: Optional[str]
+    created_at: datetime
+
+
+class ReviewResponse(BaseModel):
+    id: int
+    report_id: int
+    alert_id: int
+    customer_code: str
+    reviewer_user_id: int
+    overall_verdict: Optional[str]
+    template_choice: Optional[str]
+    template_used: Optional[str]
+    rating_instructions: Optional[int]
+    rating_artifacts: Optional[int]
+    rating_severity: Optional[int]
+    missing_steps: Optional[str]
+    suggested_edits: Optional[str]
+    created_at: datetime
+    ioc_reviews: List[IocReviewResponse] = Field(default_factory=list)
+
+
+class SubmitReviewResponse(BaseModel):
+    success: bool
+    message: str
+    review: Optional[ReviewResponse] = None
+
+
+class ReviewListResponse(BaseModel):
+    success: bool
+    message: str
+    reviews: List[ReviewResponse]
+
+
+class QueuePalaceLessonRequest(BaseModel):
+    customer_code: str = Field(..., max_length=64, description="Customer code this lesson applies to")
+    lesson_type: LessonType = Field(..., description="MemPalace room / category")
+    lesson_text: str = Field(..., min_length=1, description="The lesson text to store")
+    durability: Durability = Field(default=Durability.DURABLE, description="one_off = single-session hint, durable = persistent knowledge")
+    review_id: Optional[int] = Field(None, description="Optional review.id this lesson was born from")
+
+    @validator("lesson_text", pre=True)
+    def strip_control_characters_lesson(cls, v):
+        if v is None:
+            return v
+        return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
+
+
+class PalaceLessonResponse(BaseModel):
+    id: int
+    review_id: Optional[int]
+    customer_code: str
+    lesson_type: str
+    lesson_text: str
+    durability: str
+    status: str
+    ingested_at: Optional[datetime]
+    created_at: datetime
+
+
+class QueuePalaceLessonResponse(BaseModel):
+    success: bool
+    message: str
+    lesson: Optional[PalaceLessonResponse] = None
+
+
+class ReplayRequest(BaseModel):
+    template_override: str = Field(
+        ...,
+        max_length=128,
+        description="Template filename to force for this replay (e.g. sysmon_event_1.txt)",
+    )
+    customer_code: str = Field(..., max_length=64, description="Customer code for the alert")
+    sender: str = Field(default="copilot-replay", max_length=64, description="Sender identifier for audit")
+
+    @validator("template_override")
+    def validate_template_filename(cls, v):
+        if not re.match(r"^[a-zA-Z0-9._-]+\.txt$", v):
+            raise ValueError("template_override must be a filename matching ^[a-zA-Z0-9._-]+\\.txt$")
+        return v
+
+
+class ReplayResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+
+class PalaceSearchHit(BaseModel):
+    id: Optional[str] = None
+    room: Optional[str] = None
+    wing: Optional[str] = None
+    text: Optional[str] = None
+    source_file: Optional[str] = None
+    score: Optional[float] = None
+    metadata: Optional[dict] = None
+
+
+class PalaceSearchResponse(BaseModel):
+    success: bool
+    message: str
+    lessons: List[PalaceSearchHit] = Field(default_factory=list)
