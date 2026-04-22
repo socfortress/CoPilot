@@ -1,19 +1,30 @@
 <template>
 	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-6">
-			<!-- Mode banner -->
-			<div v-if="existingReview" class="flex items-center gap-2">
-				<Badge type="splitted" bright color="success">
-					<template #label>Already reviewed</template>
-					<template #value>Editing your previous submission</template>
-				</Badge>
-				<span v-if="existingReview.updated_at" class="text-secondary text-sm">
-					Last edited {{ formatTs(existingReview.updated_at) }}
-				</span>
-				<span v-else class="text-secondary text-sm">
-					Submitted {{ formatTs(existingReview.created_at) }}
-				</span>
+			<!-- Toolbar: mode banner + replay trigger -->
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div v-if="existingReview" class="flex items-center gap-2">
+					<Badge type="splitted" bright color="success">
+						<template #label>Already reviewed</template>
+						<template #value>Editing your previous submission</template>
+					</Badge>
+					<span v-if="existingReview.updated_at" class="text-secondary text-sm">
+						Last edited {{ formatTs(existingReview.updated_at) }}
+					</span>
+					<span v-else class="text-secondary text-sm">
+						Submitted {{ formatTs(existingReview.created_at) }}
+					</span>
+				</div>
+				<div v-else />
+				<n-button size="small" @click="showReplayModal = true">
+					<template #icon>
+						<Icon :name="ReplayIcon" :size="14" />
+					</template>
+					Replay with different template
+				</n-button>
 			</div>
+
+			<ReplayModal v-model:show="showReplayModal" :report="report" @replayed="onReplayed" />
 
 			<!-- Rubric -->
 			<CardEntity size="small" embedded>
@@ -274,6 +285,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils/format"
+import ReplayModal from "./ReplayModal.vue"
 
 const props = defineProps<{
 	report: AiAnalystReport
@@ -284,6 +296,16 @@ const { report } = toRefs(props)
 const ThumbUpIcon = "mdi:thumb-up-outline"
 const ThumbDownIcon = "mdi:thumb-down-outline"
 const BrainIcon = "mdi:brain"
+const ReplayIcon = "carbon:restart"
+
+const showReplayModal = ref(false)
+
+function onReplayed(_data: Record<string, unknown> | undefined) {
+	// The new report is created asynchronously by Talon's callbacks. Surface a
+	// pointer so the reviewer knows where to watch — they can switch to the
+	// Jobs tab or come back after the run completes.
+	message.success("Replay queued — check the Jobs tab for the new run", { duration: 6000 })
+}
 
 const message = useMessage()
 const loading = ref(false)
