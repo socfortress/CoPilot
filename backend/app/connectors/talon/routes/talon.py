@@ -11,9 +11,11 @@ from app.connectors.talon.schema.talon import TalonInvestigateResponse
 from app.connectors.talon.schema.talon import TalonJobResponse
 from app.connectors.talon.schema.talon import TalonMessageRequest
 from app.connectors.talon.schema.talon import TalonStatusResponse
+from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.services.talon import get_talon_job
 from app.connectors.talon.services.talon import get_talon_status
 from app.connectors.talon.services.talon import investigate_alert
+from app.connectors.talon.services.talon import list_talon_templates
 from app.connectors.talon.services.talon import stream_talon_message
 from app.db.db_session import get_db
 
@@ -62,6 +64,18 @@ async def get_status() -> TalonStatusResponse:
     """Get the current status of the Talon service."""
     logger.info("Fetching Talon status")
     return await get_talon_status()
+
+
+@talon_router.get(
+    "/templates",
+    response_model=TalonTemplatesResponse,
+    description="List the prompt templates available in NanoClaw's CoPilot group (for replay picker)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_templates() -> TalonTemplatesResponse:
+    """Proxy NanoClaw GET /templates — read-only template metadata, no bodies."""
+    logger.info("Fetching Talon templates list")
+    return await list_talon_templates()
 
 
 @talon_router.get(

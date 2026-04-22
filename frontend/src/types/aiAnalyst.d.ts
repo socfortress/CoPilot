@@ -47,3 +47,93 @@ export interface AlertWithReport {
 	alert_creation_time: string
 	report: AiAnalystReport
 }
+
+// --- Review / Palace / Replay ---
+
+export type OverallVerdict = "up" | "down"
+export type TemplateChoice = "correct" | "wrong" | "partial"
+export type LessonType = "environment" | "false_positives" | "assets" | "threat_intel" | "alerts"
+export type Durability = "one_off" | "durable"
+export type PalaceLessonStatus = "pending" | "ingested" | "failed"
+
+export interface AiAnalystIocReview {
+	id: number
+	review_id: number
+	ioc_id: number
+	verdict_correct: boolean
+	note: string | null
+	created_at: string
+}
+
+export interface AiAnalystReview {
+	id: number
+	report_id: number
+	alert_id: number
+	customer_code: string
+	reviewer_user_id: number
+	overall_verdict: OverallVerdict | null
+	template_choice: TemplateChoice | null
+	template_used: string | null
+	rating_instructions: number | null
+	rating_artifacts: number | null
+	rating_severity: number | null
+	missing_steps: string | null
+	suggested_edits: string | null
+	created_at: string
+	updated_at: string | null
+	ioc_reviews: AiAnalystIocReview[]
+}
+
+export interface IocVerdictCorrection {
+	ioc_id: number
+	verdict_correct: boolean
+	note?: string
+}
+
+export interface SubmitReviewPayload {
+	overall_verdict?: OverallVerdict
+	template_choice?: TemplateChoice
+	template_used?: string
+	rating_instructions?: number
+	rating_artifacts?: number
+	rating_severity?: number
+	missing_steps?: string
+	suggested_edits?: string
+	ioc_reviews?: IocVerdictCorrection[]
+}
+
+export interface AiAnalystPalaceLesson {
+	id: number
+	review_id: number | null
+	customer_code: string
+	lesson_type: string
+	lesson_text: string
+	durability: string
+	status: string
+	ingested_at: string | null
+	created_at: string
+}
+
+export interface QueuePalaceLessonPayload {
+	customer_code: string
+	lesson_type: LessonType
+	lesson_text: string
+	durability?: Durability
+	review_id?: number
+}
+
+export interface ReplayPayload {
+	template_override: string
+	customer_code: string
+	sender?: string
+}
+
+export interface PalaceSearchHit {
+	id: string | null
+	room: string | null
+	wing: string | null
+	text: string | null
+	source_file: string | null
+	score: number | null
+	metadata: Record<string, unknown> | null
+}

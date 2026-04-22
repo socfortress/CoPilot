@@ -14,6 +14,7 @@ from app.connectors.talon.schema.talon import TalonJobResponse
 from app.connectors.talon.schema.talon import TalonMessageRequest
 from app.connectors.talon.schema.talon import TalonMessageResponse
 from app.connectors.talon.schema.talon import TalonStatusResponse
+from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.utils.universal import send_get_request
 from app.connectors.talon.utils.universal import send_post_request
 from app.connectors.talon.utils.universal import send_post_request_sse
@@ -215,6 +216,32 @@ async def replay_investigation(
             detail=response.get("message", "Failed to replay Talon investigation"),
         )
     return response
+
+
+async def list_talon_templates() -> TalonTemplatesResponse:
+    """
+    List the prompt templates available in NanoClaw's CoPilot group.
+    Powers the "Re-run with different template" picker in the review UI.
+
+    NanoClaw returns {templates: [{filename, size_bytes, modified_at, first_line}]}.
+    We surface that envelope directly — template bodies stay server-side.
+    """
+    logger.info("Fetching Talon templates list")
+    response = await send_get_request(endpoint="/templates")
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to list Talon templates"),
+        )
+    data = response.get("data") or {}
+    raw_templates = data.get("templates") if isinstance(data, dict) else None
+    if raw_templates is None:
+        raw_templates = []
+    return TalonTemplatesResponse(
+        success=True,
+        message=f"{len(raw_templates)} templates retrieved",
+        templates=raw_templates,
+    )
 
 
 async def search_palace_lessons(
