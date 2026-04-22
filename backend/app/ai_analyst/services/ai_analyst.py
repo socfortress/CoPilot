@@ -618,11 +618,7 @@ async def queue_palace_lesson(
     directly — the drainer (roadmap item 17) reads status='pending' rows and
     POSTs to NanoClaw's /palace/lesson endpoint.
     """
-    logger.info(
-        f"Queuing palace lesson for customer {request.customer_code} "
-        f"(type={request.lesson_type.value}, durability={request.durability.value},
-    )",
-    )
+    logger.info(f"Queuing palace lesson for {request.customer_code})")
 
     # If review_id supplied, validate it exists
     if request.review_id is not None:
@@ -897,7 +893,7 @@ def _render_consolidation_markdown(
     lines.append("")
     lines.append("## Summary")
     lines.append(f"- Total active lessons: **{total_lessons}**")
-    lines.append(f"- Durable: {total_durable}  |  One-off: {total_one_off}")
+    lines.append(f"- Durable: {total_durable} | One-off: {total_one_off}")
     if upcoming:
         lines.append(
             f"- **{len(upcoming)} one-off lesson(s) expiring within "

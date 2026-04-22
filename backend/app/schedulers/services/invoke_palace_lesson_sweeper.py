@@ -77,10 +77,7 @@ async def invoke_palace_lesson_sweeper() -> None:
             await _mark_job_success(session)
             return
 
-        logger.info(
-            f"Sweeping {len(lessons)} expired one-off palace lesson(s) " f"(cutoff={cutoff.isoformat()},
-        )",
-        )
+        logger.info(f"Sweeping {len(lessons)} expired one-off lessons (cutoff={cutoff.isoformat()})")
 
         forgotten = 0
         forget_failed = 0
@@ -110,10 +107,7 @@ async def invoke_palace_lesson_sweeper() -> None:
 
             if response.get("success") and mem_success:
                 forgotten += 1
-                logger.info(
-                    f"Palace lesson {lesson.id} forgotten " f"(drawer_id={lesson.drawer_id}, customer={lesson.customer_code},
-                )",
-                )
+                logger.info(f"Lesson {lesson.id} forgotten (drawer_id={lesson.drawer_id}, customer={lesson.customer_code})")
             else:
                 forget_failed += 1
                 logger.warning(

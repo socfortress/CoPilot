@@ -105,12 +105,7 @@ async def invoke_palace_lesson_drainer() -> None:
                         f"(body_keys={list(body.keys()) if body else []}); sweeper will skip this row",
                     )
                 ingested += 1
-                logger.info(
-                    f"Palace lesson {lesson.id} ingested "
-                    f"(customer={lesson.customer_code}, room={lesson.lesson_type}, "
-                    f"drawer_id={lesson.drawer_id},
-                )",
-                )
+                logger.info(f"Lesson {lesson.id} ingested (customer={lesson.customer_code}, type={lesson.lesson_type})")
             else:
                 lesson.status = "failed"
                 failed += 1
