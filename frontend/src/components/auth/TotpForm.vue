@@ -5,6 +5,7 @@
 
 			<n-collapse-transition :show="!showBackupInput">
 				<n-input-otp
+					ref="twoFaCodeRef"
 					v-model:value="twoFaCode"
 					block
 					size="large"
@@ -46,9 +47,10 @@
 </template>
 
 <script lang="ts" setup>
+import type { InputOtpInst } from "naive-ui"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, nextTick, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
@@ -60,6 +62,7 @@ const twoFaTempToken = defineModel<string>("twoFaTempToken", { default: "" })
 
 const router = useRouter()
 const message = useMessage()
+const twoFaCodeRef = ref<InputOtpInst | null>(null)
 const authStore = useAuthStore()
 
 const twoFaCode = ref<string[]>([])
@@ -108,4 +111,8 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 			twoFaLoading.value = false
 		})
 }
+
+onMounted(() => {
+	twoFaCodeRef.value?.focusOnChar(0)
+})
 </script>
