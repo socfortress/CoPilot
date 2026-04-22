@@ -137,3 +137,42 @@ export interface PalaceSearchHit {
 	score: number | null
 	metadata: Record<string, unknown> | null
 }
+
+// --- Feedback dashboard ---
+
+export interface ReviewStatsTemplate {
+	template_used: string | null
+	total: number
+	thumbs_up: number
+	thumbs_down: number
+	correct: number
+	partial: number
+	wrong: number
+	avg_rating_instructions: number | null
+	avg_rating_artifacts: number | null
+	avg_rating_severity: number | null
+}
+
+export interface ReviewStatsIocAccuracy {
+	total: number
+	correct: number
+	incorrect: number
+	accuracy_pct: number | null
+}
+
+export interface AiAnalystReviewStats {
+	customer_code: string
+	total_reviews: number
+	thumbs_up: number
+	thumbs_down: number
+	thumbs_up_pct: number | null
+	template_choice_correct: number
+	template_choice_partial: number
+	template_choice_wrong: number
+	avg_rating_instructions: number | null
+	avg_rating_artifacts: number | null
+	avg_rating_severity: number | null
+	ioc_accuracy: ReviewStatsIocAccuracy
+	per_template: ReviewStatsTemplate[]
+	recent_reviews: AiAnalystReview[]
+}

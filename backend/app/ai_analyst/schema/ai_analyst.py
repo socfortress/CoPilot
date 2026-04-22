@@ -392,3 +392,49 @@ class PalaceSearchResponse(BaseModel):
     success: bool
     message: str
     lessons: List[PalaceSearchHit] = Field(default_factory=list)
+
+
+# --- Review stats / feedback dashboard ---
+
+
+class ReviewStatsTemplate(BaseModel):
+    """Per-template slice of review metrics (grouped by template_used)."""
+
+    template_used: Optional[str] = Field(None, description="Template filename, or None for untemplated runs")
+    total: int = 0
+    thumbs_up: int = 0
+    thumbs_down: int = 0
+    correct: int = 0
+    partial: int = 0
+    wrong: int = 0
+    avg_rating_instructions: Optional[float] = None
+    avg_rating_artifacts: Optional[float] = None
+    avg_rating_severity: Optional[float] = None
+
+
+class ReviewStatsIocAccuracy(BaseModel):
+    """Aggregate IOC verdict accuracy — derived from analyst per-IOC corrections."""
+
+    total: int = 0
+    correct: int = 0
+    incorrect: int = 0
+    accuracy_pct: Optional[float] = None
+
+
+class ReviewStatsResponse(BaseModel):
+    success: bool
+    message: str
+    customer_code: str
+    total_reviews: int = 0
+    thumbs_up: int = 0
+    thumbs_down: int = 0
+    thumbs_up_pct: Optional[float] = None
+    template_choice_correct: int = 0
+    template_choice_partial: int = 0
+    template_choice_wrong: int = 0
+    avg_rating_instructions: Optional[float] = None
+    avg_rating_artifacts: Optional[float] = None
+    avg_rating_severity: Optional[float] = None
+    ioc_accuracy: ReviewStatsIocAccuracy = Field(default_factory=ReviewStatsIocAccuracy)
+    per_template: List[ReviewStatsTemplate] = Field(default_factory=list)
+    recent_reviews: List[ReviewResponse] = Field(default_factory=list)

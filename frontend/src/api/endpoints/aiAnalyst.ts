@@ -4,6 +4,7 @@ import type {
 	AiAnalystPalaceLesson,
 	AiAnalystReport,
 	AiAnalystReview,
+	AiAnalystReviewStats,
 	AlertWithReport,
 	PalaceSearchHit,
 	QueuePalaceLessonPayload,
@@ -139,6 +140,18 @@ export default {
 	getReviewsByCustomer(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { reviews: AiAnalystReview[] }>(
 			`/ai_analyst/reviews/customer/${customerCode}`
+		)
+	},
+	/**
+	 * SQL-side feedback dashboard rollup — counts, averages, template
+	 * breakdown, IOC accuracy, and embedded recent reviews for drill-in.
+	 */
+	getReviewStats(customerCode: string, recentLimit = 10) {
+		return HttpClient.get<FlaskBaseResponse & AiAnalystReviewStats>(
+			`/ai_analyst/reviews/customer/${customerCode}/stats`,
+			{
+				params: { recent_limit: recentLimit }
+			}
 		)
 	},
 

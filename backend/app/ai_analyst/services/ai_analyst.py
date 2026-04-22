@@ -4,6 +4,8 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import case
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -20,6 +22,9 @@ from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonRequest
 from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import ReportResponse
 from app.ai_analyst.schema.ai_analyst import ReviewResponse
+from app.ai_analyst.schema.ai_analyst import ReviewStatsIocAccuracy
+from app.ai_analyst.schema.ai_analyst import ReviewStatsResponse
+from app.ai_analyst.schema.ai_analyst import ReviewStatsTemplate
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
 from app.ai_analyst.schema.ai_analyst import SubmitIocsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitReportRequest
@@ -657,3 +662,138 @@ async def list_reviews_by_customer(
     )
     reviews = result.scalars().all()
     return [_review_to_response(r) for r in reviews]
+
+
+def _pct(numerator: int, denominator: int) -> Optional[float]:
+    """Percentage helper — None when the denominator is 0 so the UI can
+    render a dash instead of a misleading '0%'."""
+    if denominator <= 0:
+        return None
+    return round((numerator / denominator) * 100, 2)
+
+
+def _round_float(v) -> Optional[float]:
+    """Avg helper — SQLAlchemy returns Decimal on some dialects; normalize to
+    a 2-decimal float for JSON. Returns None if the source was NULL (no rows)."""
+    if v is None:
+        return None
+    return round(float(v), 2)
+
+
+async def get_review_stats(
+    customer_code: str,
+    session: AsyncSession,
+    recent_limit: int = 10,
+) -> ReviewStatsResponse:
+    """Aggregate feedback metrics for the customer's review dashboard.
+
+    Uses SQL-side COUNT/AVG/CASE aggregates so this scales with review count
+    rather than pulling every row through Python — per the scale-first
+    design call on Step 20.
+    """
+    # Main rollup: totals, verdict counts, template-choice counts, avg ratings.
+    main_q = select(
+        func.count(AiAnalystReview.id).label("total"),
+        func.sum(case((AiAnalystReview.overall_verdict == "up", 1), else_=0)).label("thumbs_up"),
+        func.sum(case((AiAnalystReview.overall_verdict == "down", 1), else_=0)).label("thumbs_down"),
+        func.sum(case((AiAnalystReview.template_choice == "correct", 1), else_=0)).label("tpl_correct"),
+        func.sum(case((AiAnalystReview.template_choice == "partial", 1), else_=0)).label("tpl_partial"),
+        func.sum(case((AiAnalystReview.template_choice == "wrong", 1), else_=0)).label("tpl_wrong"),
+        func.avg(AiAnalystReview.rating_instructions).label("avg_instr"),
+        func.avg(AiAnalystReview.rating_artifacts).label("avg_artifacts"),
+        func.avg(AiAnalystReview.rating_severity).label("avg_severity"),
+    ).where(AiAnalystReview.customer_code == customer_code)
+    main_row = (await session.execute(main_q)).one()
+
+    total = int(main_row.total or 0)
+    thumbs_up = int(main_row.thumbs_up or 0)
+    thumbs_down = int(main_row.thumbs_down or 0)
+    # Non-null denominator for the up% gauge — reviews that actually picked a
+    # thumb. Skips reviews that left overall_verdict null.
+    verdict_total = thumbs_up + thumbs_down
+
+    # Per-template rollup, grouped by template_used (which may be NULL).
+    per_template_q = (
+        select(
+            AiAnalystReview.template_used.label("template_used"),
+            func.count(AiAnalystReview.id).label("total"),
+            func.sum(case((AiAnalystReview.overall_verdict == "up", 1), else_=0)).label("thumbs_up"),
+            func.sum(case((AiAnalystReview.overall_verdict == "down", 1), else_=0)).label("thumbs_down"),
+            func.sum(case((AiAnalystReview.template_choice == "correct", 1), else_=0)).label("correct"),
+            func.sum(case((AiAnalystReview.template_choice == "partial", 1), else_=0)).label("partial"),
+            func.sum(case((AiAnalystReview.template_choice == "wrong", 1), else_=0)).label("wrong"),
+            func.avg(AiAnalystReview.rating_instructions).label("avg_instr"),
+            func.avg(AiAnalystReview.rating_artifacts).label("avg_artifacts"),
+            func.avg(AiAnalystReview.rating_severity).label("avg_severity"),
+        )
+        .where(AiAnalystReview.customer_code == customer_code)
+        .group_by(AiAnalystReview.template_used)
+        .order_by(func.count(AiAnalystReview.id).desc())
+    )
+    per_template_rows = (await session.execute(per_template_q)).all()
+
+    # IOC verdict accuracy — join IocReview rows back to the customer's reviews
+    # so we only count corrections attached to this customer's reports.
+    ioc_q = (
+        select(
+            func.count(AiAnalystIocReview.id).label("total"),
+            func.sum(case((AiAnalystIocReview.verdict_correct.is_(True), 1), else_=0)).label("correct"),
+            func.sum(case((AiAnalystIocReview.verdict_correct.is_(False), 1), else_=0)).label("incorrect"),
+        )
+        .join(AiAnalystReview, AiAnalystReview.id == AiAnalystIocReview.review_id)
+        .where(AiAnalystReview.customer_code == customer_code)
+    )
+    ioc_row = (await session.execute(ioc_q)).one()
+    ioc_total = int(ioc_row.total or 0)
+    ioc_correct = int(ioc_row.correct or 0)
+    ioc_incorrect = int(ioc_row.incorrect or 0)
+
+    # Recent reviews (hydrated with ioc_reviews for drill-in).
+    recent_q = (
+        select(AiAnalystReview)
+        .where(AiAnalystReview.customer_code == customer_code)
+        .options(selectinload(AiAnalystReview.ioc_reviews))
+        .order_by(AiAnalystReview.created_at.desc())
+        .limit(recent_limit)
+    )
+    recent_reviews = (await session.execute(recent_q)).scalars().all()
+
+    per_template: List[ReviewStatsTemplate] = [
+        ReviewStatsTemplate(
+            template_used=row.template_used,
+            total=int(row.total or 0),
+            thumbs_up=int(row.thumbs_up or 0),
+            thumbs_down=int(row.thumbs_down or 0),
+            correct=int(row.correct or 0),
+            partial=int(row.partial or 0),
+            wrong=int(row.wrong or 0),
+            avg_rating_instructions=_round_float(row.avg_instr),
+            avg_rating_artifacts=_round_float(row.avg_artifacts),
+            avg_rating_severity=_round_float(row.avg_severity),
+        )
+        for row in per_template_rows
+    ]
+
+    return ReviewStatsResponse(
+        success=True,
+        message=f"Review stats for {customer_code}",
+        customer_code=customer_code,
+        total_reviews=total,
+        thumbs_up=thumbs_up,
+        thumbs_down=thumbs_down,
+        thumbs_up_pct=_pct(thumbs_up, verdict_total),
+        template_choice_correct=int(main_row.tpl_correct or 0),
+        template_choice_partial=int(main_row.tpl_partial or 0),
+        template_choice_wrong=int(main_row.tpl_wrong or 0),
+        avg_rating_instructions=_round_float(main_row.avg_instr),
+        avg_rating_artifacts=_round_float(main_row.avg_artifacts),
+        avg_rating_severity=_round_float(main_row.avg_severity),
+        ioc_accuracy=ReviewStatsIocAccuracy(
+            total=ioc_total,
+            correct=ioc_correct,
+            incorrect=ioc_incorrect,
+            accuracy_pct=_pct(ioc_correct, ioc_total),
+        ),
+        per_template=per_template,
+        recent_reviews=[_review_to_response(r) for r in recent_reviews],
+    )

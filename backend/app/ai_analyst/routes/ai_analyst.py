@@ -22,6 +22,7 @@ from app.ai_analyst.schema.ai_analyst import ReplayRequest
 from app.ai_analyst.schema.ai_analyst import ReplayResponse
 from app.ai_analyst.schema.ai_analyst import ReportListResponse
 from app.ai_analyst.schema.ai_analyst import ReviewListResponse
+from app.ai_analyst.schema.ai_analyst import ReviewStatsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
 from app.ai_analyst.schema.ai_analyst import SubmitIocsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitReportRequest
@@ -41,6 +42,7 @@ from app.ai_analyst.services.ai_analyst import list_iocs_by_report
 from app.ai_analyst.services.ai_analyst import list_jobs_by_alert
 from app.ai_analyst.services.ai_analyst import list_jobs_by_customer
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
+from app.ai_analyst.services.ai_analyst import get_review_stats
 from app.ai_analyst.services.ai_analyst import list_reviews_by_customer
 from app.ai_analyst.services.ai_analyst import queue_palace_lesson
 from app.ai_analyst.services.ai_analyst import submit_iocs
@@ -393,6 +395,25 @@ async def list_reviews_by_customer_route(
         success=True,
         message=f"{len(reviews)} reviews retrieved",
         reviews=reviews,
+    )
+
+
+@ai_analyst_router.get(
+    "/reviews/customer/{customer_code}/stats",
+    response_model=ReviewStatsResponse,
+    description="Aggregate review metrics (feedback dashboard) for a customer — SQL-side rollup",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_review_stats_route(
+    customer_code: str,
+    recent_limit: int = Query(10, ge=0, le=50, description="How many recent reviews to embed"),
+    session: AsyncSession = Depends(get_db),
+) -> ReviewStatsResponse:
+    logger.info(f"Fetching review stats for customer {customer_code}")
+    return await get_review_stats(
+        customer_code=customer_code,
+        session=session,
+        recent_limit=recent_limit,
     )
 
 
