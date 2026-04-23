@@ -64,7 +64,7 @@ import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
-import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { NDataTable, NEllipsis, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
@@ -117,7 +117,13 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		title: "Assets",
 		key: "assets",
 		width: "100%",
-		render: row => <div>{row.assets.map(asset => asset.asset_name).join(", ")}</div>
+		render: row => (
+			<div class="flex max-w-80 flex-col gap-0.5">
+				<NEllipsis class="text-sm" tooltip={{ contentClass: "text-xs max-w-90" }}>
+					{row.assets.map(asset => asset.asset_name).join(", ")}
+				</NEllipsis>
+			</div>
+		)
 	},
 	{
 		title: "Created",
