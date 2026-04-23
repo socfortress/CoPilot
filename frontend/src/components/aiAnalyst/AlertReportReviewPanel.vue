@@ -9,10 +9,10 @@
 						<template #value>Editing your previous submission</template>
 					</Badge>
 					<span v-if="existingReview.updated_at" class="text-secondary text-sm">
-						Last edited {{ formatTs(existingReview.updated_at) }}
+						Last edited {{ formatDate(existingReview.updated_at, dFormats.datetime) }}
 					</span>
 					<span v-else class="text-secondary text-sm">
-						Submitted {{ formatTs(existingReview.created_at) }}
+						Submitted {{ formatDate(existingReview.created_at, dFormats.datetime) }}
 					</span>
 				</div>
 				<div v-else />
@@ -24,7 +24,7 @@
 				</n-button>
 			</div>
 
-			<ReplayModal v-model:show="showReplayModal" :report="report" @replayed="onReplayed" />
+			<ReplayModal v-model:show="showReplayModal" :report @replayed="onReplayed" />
 
 			<!-- Rubric -->
 			<CardEntity size="small" embedded>
@@ -284,8 +284,24 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import ReplayModal from "./ReplayModal.vue"
+
+interface FormState {
+	overall_verdict: "up" | "down" | null
+	template_choice: "correct" | "wrong" | "partial" | null
+	rating_instructions: number
+	rating_artifacts: number
+	rating_severity: number
+	missing_steps: string
+	suggested_edits: string
+}
+
+interface IocState {
+	verdict_correct: boolean
+	note: string
+}
 
 const props = defineProps<{
 	report: AiAnalystReport
@@ -298,32 +314,18 @@ const ThumbDownIcon = "mdi:thumb-down-outline"
 const BrainIcon = "mdi:brain"
 const ReplayIcon = "carbon:restart"
 
-const showReplayModal = ref(false)
-
-function onReplayed(_data: Record<string, unknown> | undefined) {
-	// The new report is created asynchronously by Talon's callbacks. Surface a
-	// pointer so the reviewer knows where to watch — they can switch to the
-	// Jobs tab or come back after the run completes.
-	message.success("Replay queued — check the Jobs tab for the new run", { duration: 6000 })
-}
-
 const message = useMessage()
 const loading = ref(false)
 const submitting = ref(false)
 const queuing = ref(false)
 
+const dFormats = useSettingsStore().dateFormat
+
+// Per-IOC review state — keyed by ioc.id so order stays stable with the list
+const iocState = ref<Map<number, IocState>>(new Map())
+
 const existingReview = ref<AiAnalystReview | null>(null)
 const iocs = ref<AiAnalystIoc[]>([])
-
-type FormState = {
-	overall_verdict: "up" | "down" | null
-	template_choice: "correct" | "wrong" | "partial" | null
-	rating_instructions: number
-	rating_artifacts: number
-	rating_severity: number
-	missing_steps: string
-	suggested_edits: string
-}
 
 const form = ref<FormState>({
 	overall_verdict: null,
@@ -335,9 +337,44 @@ const form = ref<FormState>({
 	suggested_edits: ""
 })
 
-// Per-IOC review state — keyed by ioc.id so order stays stable with the list
-type IocState = { verdict_correct: boolean; note: string }
-const iocState = ref<Map<number, IocState>>(new Map())
+const showReplayModal = ref(false)
+
+// --- Teach the palace ---
+
+const lessonTypeOptions: { label: string; value: LessonType }[] = [
+	{ label: "Environment", value: "environment" },
+	{ label: "False positives", value: "false_positives" },
+	{ label: "Assets", value: "assets" },
+	{ label: "Threat intel", value: "threat_intel" },
+	{ label: "Alerts", value: "alerts" }
+]
+
+const lesson = ref<{ lesson_type: LessonType | null; lesson_text: string }>({
+	lesson_type: null,
+	lesson_text: ""
+})
+const lessonDurable = ref(true)
+const lessonDurability = computed<Durability>(() => (lessonDurable.value ? "durable" : "one_off"))
+
+const canQueueLesson = computed(() => !!lesson.value.lesson_type && lesson.value.lesson_text.trim().length > 0)
+
+// Debounced similar-lesson preview — re-run when the user pauses typing OR
+// changes the room. Keeps the lesson draft honest against what's already stored.
+const similarLessons = ref<PalaceSearchHit[]>([])
+const similarLoading = ref(false)
+let similarTimer: ReturnType<typeof setTimeout> | null = null
+
+const rateMarks = { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5" }
+
+// At least overall_verdict must be set
+const canSubmit = computed(() => form.value.overall_verdict !== null)
+
+function onReplayed(_data: Record<string, unknown> | undefined) {
+	// The new report is created asynchronously by Talon's callbacks. Surface a
+	// pointer so the reviewer knows where to watch — they can switch to the
+	// Jobs tab or come back after the run completes.
+	message.success("Replay queued — check the Jobs tab for the new run", { duration: 6000 })
+}
 
 function iocCorrect(iocId: number): boolean {
 	return iocState.value.get(iocId)?.verdict_correct ?? true
@@ -359,15 +396,6 @@ function verdictColor(verdict: string) {
 	if (verdict === "suspicious") return "warning"
 	if (verdict === "clean") return "success"
 	return undefined
-}
-
-const rateMarks = { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5" }
-
-// At least overall_verdict must be set
-const canSubmit = computed(() => form.value.overall_verdict !== null)
-
-function formatTs(iso: string): string {
-	return String(formatDate(iso, "MMM D, YYYY HH:mm"))
 }
 
 function hydrateFromReview(r: AiAnalystReview) {
@@ -398,6 +426,7 @@ function seedIocDefaults() {
 
 async function loadAll() {
 	loading.value = true
+
 	try {
 		const [mineRes, iocsRes] = await Promise.all([
 			Api.aiAnalyst.getMyReview(report.value.id),
@@ -466,27 +495,6 @@ async function handleSubmit() {
 	}
 }
 
-// --- Teach the palace ---
-
-const lessonTypeOptions: { label: string; value: LessonType }[] = [
-	{ label: "Environment", value: "environment" },
-	{ label: "False positives", value: "false_positives" },
-	{ label: "Assets", value: "assets" },
-	{ label: "Threat intel", value: "threat_intel" },
-	{ label: "Alerts", value: "alerts" }
-]
-
-const lesson = ref<{ lesson_type: LessonType | null; lesson_text: string }>({
-	lesson_type: null,
-	lesson_text: ""
-})
-const lessonDurable = ref(true)
-const lessonDurability = computed<Durability>(() => (lessonDurable.value ? "durable" : "one_off"))
-
-const canQueueLesson = computed(
-	() => !!lesson.value.lesson_type && lesson.value.lesson_text.trim().length > 0
-)
-
 async function handleQueueLesson() {
 	if (!canQueueLesson.value || !lesson.value.lesson_type) return
 	queuing.value = true
@@ -512,12 +520,6 @@ async function handleQueueLesson() {
 		queuing.value = false
 	}
 }
-
-// Debounced similar-lesson preview — re-run when the user pauses typing OR
-// changes the room. Keeps the lesson draft honest against what's already stored.
-const similarLessons = ref<PalaceSearchHit[]>([])
-const similarLoading = ref(false)
-let similarTimer: ReturnType<typeof setTimeout> | null = null
 
 function scheduleSimilarSearch() {
 	if (similarTimer) clearTimeout(similarTimer)
