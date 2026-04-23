@@ -2,8 +2,8 @@
 	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-6">
 			<!-- Toolbar: mode banner + replay trigger -->
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<div v-if="existingReview" class="flex items-center gap-2">
+			<div class="flex flex-wrap items-start justify-between gap-3">
+				<div v-if="existingReview" class="flex flex-col gap-2">
 					<Badge type="splitted" bright color="success">
 						<template #label>Already reviewed</template>
 						<template #value>Editing your previous submission</template>
