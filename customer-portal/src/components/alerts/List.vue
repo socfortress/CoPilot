@@ -64,7 +64,7 @@ import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
-import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { NDataTable, NEllipsis, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
@@ -116,8 +116,8 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Assets",
 		key: "assets",
-		width: "100%",
-		render: row => <div>{row.assets.map(asset => asset.asset_name).join(", ")}</div>
+		ellipsis: true,
+		render: row => row.assets.map(asset => asset.asset_name).join(", ")
 	},
 	{
 		title: "Created",
@@ -128,7 +128,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Status",
 		key: "status",
-		width: 120,
+		width: 200,
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
@@ -148,7 +148,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 180,
+		width: 194,
 		render: row => {
 			return <AlertDetailsButton alertId={row.id} onStatusUpdated={handleStatusUpdateSuccess} />
 		}

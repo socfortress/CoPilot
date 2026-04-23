@@ -29,7 +29,7 @@
 				size="small"
 				:data="events"
 				:columns
-				:scroll-x="1500"
+				:scroll-x="1200"
 				class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 			>
 				<template #empty>
@@ -123,13 +123,12 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => [
 	{
 		title: "Rule",
 		key: "Rule",
-		width: "100%",
 		render: row => <div>{row.rule_description || row.rule?.description || "-"}</div>
 	},
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 150,
+		width: 150,
 		fixed: simpleMode.value ? undefined : "right",
 		render: row => {
 			return (

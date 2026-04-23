@@ -1,9 +1,9 @@
 <template>
 	<div v-if="alert.iocs?.length" class="flex flex-col gap-2">
 		<CardEntity v-for="ioc in alert.iocs" :key="ioc.id" size="small" embedded>
-			<template #header-main>{{ ioc.ioc_value }}</template>
-			<template #header-extra>{{ ioc.ioc_type }}</template>
-			<template #default>{{ ioc.ioc_description }}</template>
+			<template #header-main>{{ ioc.ioc_value || ioc.value }}</template>
+			<template #header-extra>{{ ioc.ioc_type || ioc.type }}</template>
+			<template #default>{{ ioc.ioc_description || ioc.description }}</template>
 		</CardEntity>
 	</div>
 
