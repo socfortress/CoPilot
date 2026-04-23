@@ -1,30 +1,7 @@
 <template>
 	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-6">
-			<!-- Toolbar: mode banner + replay trigger -->
-			<div class="flex flex-wrap items-start justify-between gap-3">
-				<div v-if="existingReview" class="flex flex-col gap-2">
-					<Badge type="splitted" bright color="success">
-						<template #label>Already reviewed</template>
-						<template #value>Editing your previous submission</template>
-					</Badge>
-					<span v-if="existingReview.updated_at" class="text-secondary text-sm">
-						Last edited {{ formatDate(existingReview.updated_at, dFormats.datetime) }}
-					</span>
-					<span v-else class="text-secondary text-sm">
-						Submitted {{ formatDate(existingReview.created_at, dFormats.datetime) }}
-					</span>
-				</div>
-				<div v-else />
-				<n-button size="small" @click="showReplayModal = true">
-					<template #icon>
-						<Icon :name="ReplayIcon" :size="14" />
-					</template>
-					Replay with different template
-				</n-button>
-			</div>
-
-			<ReplayModal v-model:show="showReplayModal" :report @replayed="onReplayed" />
+			<AlertReportReviewPanelReplay :report :existing-review />
 
 			<!-- Rubric -->
 			<CardEntity size="small" embedded>
@@ -284,9 +261,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
-import ReplayModal from "./ReplayModal.vue"
+import AlertReportReviewPanelReplay from "./AlertReportReviewPanelReplay.vue"
 
 interface FormState {
 	overall_verdict: "up" | "down" | null
@@ -312,14 +287,11 @@ const { report } = toRefs(props)
 const ThumbUpIcon = "mdi:thumb-up-outline"
 const ThumbDownIcon = "mdi:thumb-down-outline"
 const BrainIcon = "mdi:brain"
-const ReplayIcon = "carbon:restart"
 
 const message = useMessage()
 const loading = ref(false)
 const submitting = ref(false)
 const queuing = ref(false)
-
-const dFormats = useSettingsStore().dateFormat
 
 // Per-IOC review state — keyed by ioc.id so order stays stable with the list
 const iocState = ref<Map<number, IocState>>(new Map())
@@ -336,8 +308,6 @@ const form = ref<FormState>({
 	missing_steps: "",
 	suggested_edits: ""
 })
-
-const showReplayModal = ref(false)
 
 // --- Teach the palace ---
 
@@ -368,13 +338,6 @@ const rateMarks = { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5" }
 
 // At least overall_verdict must be set
 const canSubmit = computed(() => form.value.overall_verdict !== null)
-
-function onReplayed(_data: Record<string, unknown> | undefined) {
-	// The new report is created asynchronously by Talon's callbacks. Surface a
-	// pointer so the reviewer knows where to watch — they can switch to the
-	// Jobs tab or come back after the run completes.
-	message.success("Replay queued — check the Jobs tab for the new run", { duration: 6000 })
-}
 
 function iocCorrect(iocId: number): boolean {
 	return iocState.value.get(iocId)?.verdict_correct ?? true

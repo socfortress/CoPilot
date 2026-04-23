@@ -42,7 +42,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="Review" tab="Review" display-directive="show:lazy">
 				<div class="p-6 pt-3">
-					<AlertReportReviewPanel :report="report" />
+					<AlertReportReviewPanel :report />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Compare" tab="Compare" display-directive="show:lazy">
@@ -70,7 +70,7 @@ const { alert } = toRefs(props)
 
 const AlertReportIocsList = defineAsyncComponent(() => import("./AlertReportIocsList.vue"))
 const AlertReportJobsList = defineAsyncComponent(() => import("./AlertReportJobsList.vue"))
-const AlertReportReviewPanel = defineAsyncComponent(() => import("./AlertReportReviewPanel.vue"))
+const AlertReportReviewPanel = defineAsyncComponent(() => import("./AlertReportReviewPanel/AlertReportReviewPanel.vue"))
 const AlertReportCompare = defineAsyncComponent(() => import("./AlertReportCompare.vue"))
 
 const loading = ref(false)
