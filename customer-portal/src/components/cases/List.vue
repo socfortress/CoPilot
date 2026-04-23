@@ -115,7 +115,6 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	{
 		title: "Created",
 		key: "case_creation_time",
-		width: "100%",
 		minWidth: 200,
 		render: row => <span class="font-mono text-sm">{formatDate(row.case_creation_time, dFormats.datetime)}</span>
 	},
@@ -137,7 +136,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	{
 		title: "Status",
 		key: "status",
-		width: 120,
+		width: 200,
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
@@ -157,7 +156,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 180,
+		width: 194,
 		render: row => {
 			return (
 				<CaseDetailsButton

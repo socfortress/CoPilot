@@ -5,7 +5,7 @@
 			:options="filtersKeysOptions"
 			clearable
 			placeholder="Filter key"
-			class="basis-1/2"
+			class="min-w-20 basis-1/2"
 			:consistent-menu-width="false"
 		/>
 		<n-select
@@ -15,7 +15,7 @@
 			filterable
 			clearable
 			placeholder="Filter value"
-			class="basis-1/2"
+			class="min-w-20 basis-1/2"
 			:consistent-menu-width="false"
 		/>
 	</n-input-group>

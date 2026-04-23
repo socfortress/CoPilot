@@ -116,14 +116,8 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Assets",
 		key: "assets",
-		width: "100%",
-		render: row => (
-			<div class="flex max-w-80 flex-col gap-0.5">
-				<NEllipsis class="text-sm" tooltip={{ contentClass: "text-xs max-w-90" }}>
-					{row.assets.map(asset => asset.asset_name).join(", ")}
-				</NEllipsis>
-			</div>
-		)
+		ellipsis: true,
+		render: row => row.assets.map(asset => asset.asset_name).join(", ")
 	},
 	{
 		title: "Created",
@@ -134,7 +128,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Status",
 		key: "status",
-		width: 120,
+		width: 200,
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
@@ -154,7 +148,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 180,
+		width: 194,
 		render: row => {
 			return <AlertDetailsButton alertId={row.id} onStatusUpdated={handleStatusUpdateSuccess} />
 		}
