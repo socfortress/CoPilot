@@ -117,19 +117,18 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 	{
 		title: "Template",
 		key: "template_id",
-		width: "100%",
 		render: row => <div>{row.template_id}</div>
 	},
 	{
 		title: "Created",
 		key: "created_at",
-		width: 200,
+		width: 180,
 		render: row => <div>{formatDate(row.created_at, dFormats.datetime)}</div>
 	},
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 130,
+		width: 180,
 		render: row => {
 			return (
 				<NButton

@@ -27,7 +27,7 @@
 					size="small"
 					:data="dataPaginated"
 					:columns
-					:scroll-x="1500"
+					:scroll-x="1400"
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 				>
 					<template #empty>
@@ -166,19 +166,18 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 	{
 		title: "IP Address",
 		key: "ip_address",
-		width: 180,
+		width: 160,
 		render: row => <div class="font-mono">{row.ip_address}</div>
 	},
 	{
 		title: "Operating System",
 		key: "os",
-		width: "100%",
 		render: row => <div>{row.os}</div>
 	},
 	{
 		title: "Last Seen",
 		key: "wazuh_last_seen",
-		width: 200,
+		width: 180,
 		render: row => <div class="font-mono">{formatDate(row.wazuh_last_seen, dFormats.datetime)}</div>
 	},
 	{
@@ -196,7 +195,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 	{
 		title: "Critical Asset",
 		key: "critical_asset",
-		minWidth: 180,
+		width: 200,
 		render: row => {
 			return (
 				<AgentCriticalSelect
@@ -210,7 +209,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 	{
 		title: "Actions",
 		key: "actions",
-		minWidth: 180,
+		width: 194,
 		render: row => {
 			return <AgentDetailsButton agentId={row.agent_id} onCriticalAssetUpdated={handleCriticalAssetUpdated} />
 		}
