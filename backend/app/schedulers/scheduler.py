@@ -62,7 +62,6 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
-from app.schedulers.services.invoke_sigma_queries import invoke_sigma_queries_collect
 from app.schedulers.services.invoke_snapshot_and_restore import (
     invoke_snapshot_schedules,
 )
@@ -233,7 +232,6 @@ async def schedule_enabled_jobs(scheduler):
             "wazuh_index_fields_resize",
             "invoke_huntress_integration_collection",
             "invoke_cato_integration_collect",
-            "invoke_sigma_queries_collect",
         ]
 
         # Disable each job in the list
@@ -283,7 +281,6 @@ def get_function_by_name(function_name: str):
         # "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "resize_wazuh_index_fields": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
-        "invoke_sigma_queries_collect": invoke_sigma_queries_collect,
         "invoke_snapshot_schedules": invoke_snapshot_schedules,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
