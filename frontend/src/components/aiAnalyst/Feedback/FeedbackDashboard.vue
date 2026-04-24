@@ -8,27 +8,7 @@
 			</div>
 
 			<div v-else-if="stats" class="flex flex-col gap-5">
-				<!-- Metric tiles -->
-				<div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-					<MetricTile label="Total reviews" :value="stats.total_reviews.toString()" />
-					<MetricTile
-						label="Thumbs up"
-						:value="pctLabel(stats.thumbs_up_pct)"
-						:sub="`${stats.thumbs_up} up / ${stats.thumbs_down} down`"
-						:color="pctColor(stats.thumbs_up_pct)"
-					/>
-					<MetricTile
-						label="IOC verdict accuracy"
-						:value="pctLabel(stats.ioc_accuracy.accuracy_pct)"
-						:sub="`${stats.ioc_accuracy.correct}/${stats.ioc_accuracy.total} IOCs correct`"
-						:color="pctColor(stats.ioc_accuracy.accuracy_pct)"
-					/>
-					<MetricTile
-						label="Avg rating (overall)"
-						:value="avgOverall == null ? '—' : `${avgOverall.toFixed(2)} / 5`"
-						:sub="ratingSubtitle"
-					/>
-				</div>
+				<FeedbackDashboardMetricTiles :stats />
 
 				<!-- Template choice breakdown -->
 				<CardEntity size="small" embedded>
@@ -224,8 +204,8 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import FeedbackDashboardMetricTiles from "./FeedbackDashboardMetricTiles.vue"
 import FeedbackDashboardToolbar from "./FeedbackDashboardToolbar.vue"
-import MetricTile from "./FeedbackMetricTile.vue"
 import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"
 
 const message = useMessage()
@@ -243,37 +223,6 @@ const templateChoiceTotal = computed(() =>
 		? stats.value.template_choice_correct + stats.value.template_choice_partial + stats.value.template_choice_wrong
 		: 0
 )
-
-// Composite avg across the three rubric axes — only counts axes with data.
-const avgOverall = computed(() => {
-	if (!stats.value) return null
-	const parts = [
-		stats.value.avg_rating_instructions,
-		stats.value.avg_rating_artifacts,
-		stats.value.avg_rating_severity
-	].filter((v): v is number => v !== null)
-	if (!parts.length) return null
-	return parts.reduce((a, b) => a + b, 0) / parts.length
-})
-
-const ratingSubtitle = computed(() => {
-	if (!stats.value) return ""
-	const i = stats.value.avg_rating_instructions
-	const a = stats.value.avg_rating_artifacts
-	const s = stats.value.avg_rating_severity
-	return `instr ${i ?? "—"} · artif ${a ?? "—"} · sev ${s ?? "—"}`
-})
-
-function pctLabel(pct: number | null): string {
-	return pct === null || pct === undefined ? "—" : `${pct.toFixed(1)}%`
-}
-
-function pctColor(pct: number | null): "success" | "warning" | "danger" | undefined {
-	if (pct === null) return undefined
-	if (pct >= 75) return "success"
-	if (pct >= 50) return "warning"
-	return "danger"
-}
 
 function tplChoiceColor(choice: string): "success" | "warning" | "danger" | undefined {
 	if (choice === "correct") return "success"
