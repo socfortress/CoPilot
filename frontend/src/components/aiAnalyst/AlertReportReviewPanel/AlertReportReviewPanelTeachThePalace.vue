@@ -1,37 +1,35 @@
 <template>
 	<n-card size="small" title="Teach the palace" segmented>
-		<div class="flex flex-col gap-4 p-2">
-			<div class="text-secondary text-sm">
-				Queue a lesson for the MemPalace. The NanoClaw drainer ingests these asynchronously.
-			</div>
-			<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-				<div>
-					<div class="mb-1 font-medium">Room</div>
+		<div class="flex flex-col gap-6">
+			<p class="text-sm">Queue a lesson for the MemPalace. The NanoClaw drainer ingests these asynchronously.</p>
+
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				<n-form-item label="Room" :show-feedback="false">
 					<n-select
 						v-model:value="lesson.lesson_type"
 						:options="lessonTypeOptions"
 						placeholder="Select room"
 					/>
-				</div>
-				<div>
-					<div class="mb-1 font-medium">Durability</div>
+				</n-form-item>
+
+				<n-form-item label="Durability" :show-feedback="false">
 					<div class="flex items-center gap-3">
 						<n-switch v-model:value="lesson.durable" />
 						<span class="text-secondary text-sm">
 							{{ lesson.durable ? "Durable (persistent)" : "One-off (single session)" }}
 						</span>
 					</div>
-				</div>
+				</n-form-item>
 			</div>
-			<div>
-				<div class="mb-1 font-medium">Lesson text</div>
+
+			<n-form-item label="Lesson text" :show-feedback="false">
 				<n-input
 					v-model:value="lesson.lesson_text"
 					type="textarea"
 					placeholder="What should the palace remember?"
 					:autosize="{ minRows: 3, maxRows: 10 }"
 				/>
-			</div>
+			</n-form-item>
 
 			<!-- Similar-lesson preview -->
 			<div v-if="similarLoading || similarLessons.length" class="flex flex-col gap-2">
@@ -60,7 +58,15 @@
 
 			<div class="flex items-center justify-end gap-3">
 				<span v-if="queuing" class="text-secondary text-sm">Queuing…</span>
-				<n-button :disabled="queuing || !canQueueLesson" @click="handleQueueLesson">Queue lesson</n-button>
+				<n-button
+					:disabled="!canQueueLesson"
+					:loading="queuing"
+					type="primary"
+					secondary
+					@click="handleQueueLesson"
+				>
+					Queue lesson
+				</n-button>
 			</div>
 		</div>
 	</n-card>
@@ -69,7 +75,7 @@
 <script setup lang="ts">
 import type { AiAnalystReport, AiAnalystReview, Durability, LessonType, PalaceSearchHit } from "@/types/aiAnalyst.d"
 import type { ApiError } from "@/types/common"
-import { NButton, NCard, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
+import { NButton, NCard, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
