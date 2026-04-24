@@ -11,7 +11,7 @@
 				<AlertsReportsList />
 			</n-tab-pane>
 			<n-tab-pane name="feedback" tab="Feedback" display-directive="show:lazy">
-				<FeedbackDashboard />
+				<FeedbackDashboard class="pt-8" />
 			</n-tab-pane>
 		</n-tabs>
 	</div>
