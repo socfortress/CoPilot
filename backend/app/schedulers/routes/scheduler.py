@@ -4,10 +4,12 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
@@ -16,7 +18,9 @@ from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsNextRunResponse
 from app.schedulers.schema.scheduler import JobsResponse
 
-scheduler_router = APIRouter()
+scheduler_router = APIRouter(
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 
 
 async def get_scheduler():
