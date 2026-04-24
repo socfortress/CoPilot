@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -33,6 +34,7 @@ from app.integrations.alert_creation_settings.schema.alert_creation_settings imp
 from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
     EventOrderResponse,
 )
+from app.auth.routes.auth import AuthHandler
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
@@ -42,6 +44,7 @@ alert_creation_settings_router = APIRouter()
     "/{customer_code}/event_configs",
     response_model=List[List[AlertCreationEventConfigResponse]],
     description="Get all alert event configs for a customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_event_configs(
     customer_code: str,
@@ -75,6 +78,7 @@ async def get_customer_event_configs(
     "/create",
     response_model=AlertCreationSettings,
     description="Create a new alert creation setting.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_creation_settings(
     alert_creation_settings: AlertCreationSettingsCreate,
@@ -137,6 +141,7 @@ async def create_alert_creation_settings(
     "/{customer_name}",
     response_model=AlertCreationSettingsResponse,
     description="Retrieve alert creation settings by customer name.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alert_creation_settings(
     customer_name: str,
@@ -178,6 +183,7 @@ async def get_alert_creation_settings(
     "/{customer_name}/event",
     response_model=EventOrderResponse,
     description="Add a new event to a customer's alert creation settings.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def add_event_order(
     customer_name: str,
@@ -240,6 +246,7 @@ async def add_event_order(
     "/{customer_name}",
     response_model=AlertCreationSettingsResponse,
     description="Update a customer's event orders.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_event_orders(
     customer_name: str,
@@ -306,6 +313,7 @@ async def update_event_orders(
 @alert_creation_settings_router.delete(
     "/{customer_name}/event/{order_label}",
     description="Delete an event order by order_label.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_event_order(
     customer_name: str,
