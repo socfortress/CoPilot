@@ -14,6 +14,27 @@ from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
 
 
+# Known-compromised value published in prior versions of .env.example and as a
+# hardcoded fallback. Refuse to boot if it reappears, regardless of source.
+_KNOWN_COMPROMISED_JWT_SECRET = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
+
+
+def _load_jwt_secret() -> str:
+    secret = os.environ.get("JWT_SECRET")
+    if not secret:
+        raise RuntimeError(
+            "JWT_SECRET environment variable is not set. Generate a secure value "
+            "with `openssl rand -base64 32` and set it before starting the application.",
+        )
+    if secret == _KNOWN_COMPROMISED_JWT_SECRET:
+        raise RuntimeError(
+            "JWT_SECRET is set to the known-compromised default value disclosed in "
+            "GHSA-4gxj-hw3c-3x2x. Generate a new secret with `openssl rand -base64 32` "
+            "and update your environment.",
+        )
+    return secret
+
+
 class AuthHandler:
     security = OAuth2PasswordBearer(
         tokenUrl="api/auth/token",
@@ -25,7 +46,7 @@ class AuthHandler:
         },
     )
     pwd_context = CryptContext(schemes=["bcrypt"])
-    secret = os.environ.get("JWT_SECRET", "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc=")
+    secret = _load_jwt_secret()
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
