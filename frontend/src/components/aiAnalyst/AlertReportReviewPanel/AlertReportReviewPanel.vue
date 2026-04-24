@@ -8,88 +8,96 @@
 			<AlertReportReviewPanelIocs v-model:state="iocState" v-model:iocs="iocs" :report />
 
 			<!-- Submit review -->
-			<div class="flex items-center justify-end gap-3">
-				<span v-if="submitting" class="text-secondary text-sm">Saving…</span>
-				<n-button :disabled="submitting || !canSubmit" type="primary" @click="handleSubmit">
-					{{ existingReview ? "Update review" : "Submit review" }}
+			<div class="flex items-center justify-between gap-3">
+				<n-button text size="large" @click="showTeachPalace = !showTeachPalace">
+					<template #icon>
+						<Icon
+							name="carbon:chevron-right"
+							class="transition-transform duration-300"
+							:class="{ 'rotate-90': showTeachPalace }"
+						/>
+					</template>
+					Teach the palace
+				</n-button>
+				<n-button :disabled="!canSubmit" :loading="submitting" type="primary" @click="handleSubmit">
+					{{ submitting ? "Saving..." : existingReview ? "Update review" : "Submit review" }}
 				</n-button>
 			</div>
 
 			<!-- Inline teach-the-palace -->
-			<n-collapse>
-				<n-collapse-item name="teach-palace" title="Teach the palace">
-					<div class="flex flex-col gap-4 p-2">
-						<div class="text-secondary text-sm">
-							Queue a lesson for the MemPalace. The NanoClaw drainer ingests these asynchronously.
-						</div>
-						<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-							<div>
-								<div class="mb-1 font-medium">Room</div>
-								<n-select
-									v-model:value="lesson.lesson_type"
-									:options="lessonTypeOptions"
-									placeholder="Select room"
-								/>
-							</div>
-							<div>
-								<div class="mb-1 font-medium">Durability</div>
-								<div class="flex items-center gap-3">
-									<n-switch v-model:value="lessonDurable" />
-									<span class="text-secondary text-sm">
-										{{ lessonDurable ? "Durable (persistent)" : "One-off (single session)" }}
-									</span>
-								</div>
-							</div>
-						</div>
+			<n-collapse-transition :show="showTeachPalace">
+				<div class="flex flex-col gap-4 p-2">
+					<div class="text-secondary text-sm">
+						Queue a lesson for the MemPalace. The NanoClaw drainer ingests these asynchronously.
+					</div>
+					<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
 						<div>
-							<div class="mb-1 font-medium">Lesson text</div>
-							<n-input
-								v-model:value="lesson.lesson_text"
-								type="textarea"
-								placeholder="What should the palace remember?"
-								:autosize="{ minRows: 3, maxRows: 10 }"
+							<div class="mb-1 font-medium">Room</div>
+							<n-select
+								v-model:value="lesson.lesson_type"
+								:options="lessonTypeOptions"
+								placeholder="Select room"
 							/>
 						</div>
-
-						<!-- Similar-lesson preview -->
-						<div v-if="similarLoading || similarLessons.length" class="flex flex-col gap-2">
-							<div class="text-secondary text-sm">
-								<span v-if="similarLoading">Searching similar lessons…</span>
-								<span v-else>Similar lessons already in the palace:</span>
+						<div>
+							<div class="mb-1 font-medium">Durability</div>
+							<div class="flex items-center gap-3">
+								<n-switch v-model:value="lessonDurable" />
+								<span class="text-secondary text-sm">
+									{{ lessonDurable ? "Durable (persistent)" : "One-off (single session)" }}
+								</span>
 							</div>
-							<div v-if="!similarLoading" class="flex flex-col gap-1">
-								<div
-									v-for="(hit, idx) of similarLessons"
-									:key="hit.id ?? idx"
-									class="border-color bg-secondary rounded border p-2 text-sm"
-								>
-									<div class="flex items-center justify-between gap-2">
-										<span class="text-secondary">
-											{{ hit.room || "—" }}
-											<template v-if="hit.score !== null && hit.score !== undefined">
-												· score {{ hit.score.toFixed(2) }}
-											</template>
-										</span>
-									</div>
-									<div>{{ hit.text || "(no text)" }}</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="flex items-center justify-end gap-3">
-							<span v-if="queuing" class="text-secondary text-sm">Queuing…</span>
-							<n-button :disabled="queuing || !canQueueLesson" @click="handleQueueLesson">
-								Queue lesson
-							</n-button>
 						</div>
 					</div>
-				</n-collapse-item>
-			</n-collapse>
+					<div>
+						<div class="mb-1 font-medium">Lesson text</div>
+						<n-input
+							v-model:value="lesson.lesson_text"
+							type="textarea"
+							placeholder="What should the palace remember?"
+							:autosize="{ minRows: 3, maxRows: 10 }"
+						/>
+					</div>
+
+					<!-- Similar-lesson preview -->
+					<div v-if="similarLoading || similarLessons.length" class="flex flex-col gap-2">
+						<div class="text-secondary text-sm">
+							<span v-if="similarLoading">Searching similar lessons…</span>
+							<span v-else>Similar lessons already in the palace:</span>
+						</div>
+						<div v-if="!similarLoading" class="flex flex-col gap-1">
+							<div
+								v-for="(hit, idx) of similarLessons"
+								:key="hit.id ?? idx"
+								class="border-color bg-secondary rounded border p-2 text-sm"
+							>
+								<div class="flex items-center justify-between gap-2">
+									<span class="text-secondary">
+										{{ hit.room || "—" }}
+										<template v-if="hit.score !== null && hit.score !== undefined">
+											· score {{ hit.score.toFixed(2) }}
+										</template>
+									</span>
+								</div>
+								<div>{{ hit.text || "(no text)" }}</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="flex items-center justify-end gap-3">
+						<span v-if="queuing" class="text-secondary text-sm">Queuing…</span>
+						<n-button :disabled="queuing || !canQueueLesson" @click="handleQueueLesson">
+							Queue lesson
+						</n-button>
+					</div>
+				</div>
+			</n-collapse-transition>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
+import type { FormState } from "./AlertReportReviewPanelForm.vue"
 import type {
 	AiAnalystIoc,
 	AiAnalystReport,
@@ -100,14 +108,15 @@ import type {
 	PalaceSearchHit,
 	SubmitReviewPayload
 } from "@/types/aiAnalyst.d"
-import { NButton, NCollapse, NCollapseItem, NInput, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import { NButton, NCollapseTransition, NInput, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
-import AlertReportReviewPanelReplay from "./AlertReportReviewPanelReplay.vue"
-import AlertReportReviewPanelForm, { type FormState } from "./AlertReportReviewPanelForm.vue"
-import AlertReportReviewPanelIocs from "./AlertReportReviewPanelIocs.vue"
+import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-import type { ApiError } from "@/types/common"
+import AlertReportReviewPanelForm from "./AlertReportReviewPanelForm.vue"
+import AlertReportReviewPanelIocs from "./AlertReportReviewPanelIocs.vue"
+import AlertReportReviewPanelReplay from "./AlertReportReviewPanelReplay.vue"
 
 interface IocState {
 	verdict_correct: boolean
@@ -141,6 +150,8 @@ const form = ref<FormState>({
 })
 
 // --- Teach the palace ---
+const showTeachPalace = ref(false)
+
 const lessonTypeOptions: { label: string; value: LessonType }[] = [
 	{ label: "Environment", value: "environment" },
 	{ label: "False positives", value: "false_positives" },
