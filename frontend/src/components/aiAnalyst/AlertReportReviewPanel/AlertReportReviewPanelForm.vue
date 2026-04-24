@@ -1,5 +1,5 @@
 <template>
-	<n-card size="small">
+	<n-card size="small" title="Review" segmented>
 		<div class="@container flex flex-col gap-6">
 			<n-form-item label="Overall verdict" :show-feedback="false">
 				<n-radio-group v-model:value="form.overall_verdict">

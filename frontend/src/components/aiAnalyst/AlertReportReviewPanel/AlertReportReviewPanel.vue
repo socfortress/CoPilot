@@ -5,51 +5,7 @@
 
 			<AlertReportReviewPanelForm v-model:form="form" :report />
 
-			<!-- Per-IOC verdict corrections -->
-			<div>
-				<div class="mb-2 font-medium">IOC verdict corrections</div>
-				<div class="text-secondary mb-3 text-sm">
-					Toggle off any IOC where the VirusTotal verdict above was wrong. Optionally note why.
-				</div>
-				<div v-if="iocs.length" class="flex flex-col gap-2">
-					<CardEntity v-for="ioc of iocs" :key="ioc.id" size="small" embedded>
-						<template #default>
-							<div class="flex flex-col gap-2">
-								<div class="flex flex-wrap items-center justify-between gap-3">
-									<CodeSource :code="ioc.ioc_value" />
-									<div class="flex items-center gap-3">
-										<Badge type="splitted" bright>
-											<template #label>Type</template>
-											<template #value>{{ ioc.ioc_type }}</template>
-										</Badge>
-										<Badge type="splitted" bright :color="verdictColor(ioc.vt_verdict)">
-											<template #label>VT</template>
-											<template #value>{{ ioc.vt_verdict }}</template>
-										</Badge>
-										<n-tooltip placement="top">
-											<template #trigger>
-												<n-switch
-													:value="iocCorrect(ioc.id)"
-													@update:value="setIocCorrect(ioc.id, $event)"
-												/>
-											</template>
-											{{ iocCorrect(ioc.id) ? "Verdict correct" : "Verdict wrong" }}
-										</n-tooltip>
-									</div>
-								</div>
-								<n-input
-									:value="iocNote(ioc.id)"
-									type="textarea"
-									placeholder="Optional reviewer note"
-									:autosize="{ minRows: 1, maxRows: 4 }"
-									@update:value="setIocNote(ioc.id, $event)"
-								/>
-							</div>
-						</template>
-					</CardEntity>
-				</div>
-				<n-empty v-else description="No IOCs recorded for this report" class="min-h-24 justify-center" />
-			</div>
+			<AlertReportReviewPanelIocs v-model:state="iocState" v-model:iocs="iocs" :report />
 
 			<!-- Submit review -->
 			<div class="flex items-center justify-end gap-3">
@@ -61,13 +17,7 @@
 
 			<!-- Inline teach-the-palace -->
 			<n-collapse>
-				<n-collapse-item name="teach-palace">
-					<template #header>
-						<div class="flex items-center gap-2 font-medium">
-							<Icon :name="BrainIcon" :size="16" />
-							Teach the palace
-						</div>
-					</template>
+				<n-collapse-item name="teach-palace" title="Teach the palace">
 					<div class="flex flex-col gap-4 p-2">
 						<div class="text-secondary text-sm">
 							Queue a lesson for the MemPalace. The NanoClaw drainer ingests these asynchronously.
@@ -150,26 +100,14 @@ import type {
 	PalaceSearchHit,
 	SubmitReviewPayload
 } from "@/types/aiAnalyst.d"
-import {
-	NButton,
-	NCollapse,
-	NCollapseItem,
-	NEmpty,
-	NInput,
-	NSelect,
-	NSpin,
-	NSwitch,
-	NTooltip,
-	useMessage
-} from "naive-ui"
+import { NButton, NCollapse, NCollapseItem, NInput, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CodeSource from "@/components/common/CodeSource.vue"
-import Icon from "@/components/common/Icon.vue"
 import AlertReportReviewPanelReplay from "./AlertReportReviewPanelReplay.vue"
 import AlertReportReviewPanelForm, { type FormState } from "./AlertReportReviewPanelForm.vue"
+import AlertReportReviewPanelIocs from "./AlertReportReviewPanelIocs.vue"
+import { getApiErrorMessage } from "@/utils"
+import type { ApiError } from "@/types/common"
 
 interface IocState {
 	verdict_correct: boolean
@@ -182,18 +120,15 @@ const props = defineProps<{
 
 const { report } = toRefs(props)
 
-const BrainIcon = "mdi:brain"
-
 const message = useMessage()
 const loading = ref(false)
 const submitting = ref(false)
 const queuing = ref(false)
 
-// Per-IOC review state — keyed by ioc.id so order stays stable with the list
 const iocState = ref<Map<number, IocState>>(new Map())
+const iocs = ref<AiAnalystIoc[]>([])
 
 const existingReview = ref<AiAnalystReview | null>(null)
-const iocs = ref<AiAnalystIoc[]>([])
 
 const form = ref<FormState>({
 	overall_verdict: null,
@@ -206,7 +141,6 @@ const form = ref<FormState>({
 })
 
 // --- Teach the palace ---
-
 const lessonTypeOptions: { label: string; value: LessonType }[] = [
 	{ label: "Environment", value: "environment" },
 	{ label: "False positives", value: "false_positives" },
@@ -233,28 +167,6 @@ let similarTimer: ReturnType<typeof setTimeout> | null = null
 // At least overall_verdict must be set
 const canSubmit = computed(() => form.value.overall_verdict !== null)
 
-function iocCorrect(iocId: number): boolean {
-	return iocState.value.get(iocId)?.verdict_correct ?? true
-}
-function iocNote(iocId: number): string {
-	return iocState.value.get(iocId)?.note ?? ""
-}
-function setIocCorrect(iocId: number, val: boolean) {
-	const cur = iocState.value.get(iocId) ?? { verdict_correct: true, note: "" }
-	iocState.value.set(iocId, { ...cur, verdict_correct: val })
-}
-function setIocNote(iocId: number, val: string) {
-	const cur = iocState.value.get(iocId) ?? { verdict_correct: true, note: "" }
-	iocState.value.set(iocId, { ...cur, note: val })
-}
-
-function verdictColor(verdict: string) {
-	if (verdict === "malicious") return "danger"
-	if (verdict === "suspicious") return "warning"
-	if (verdict === "clean") return "success"
-	return undefined
-}
-
 function hydrateFromReview(r: AiAnalystReview) {
 	form.value.overall_verdict = (r.overall_verdict as "up" | "down" | null) ?? null
 	form.value.template_choice = (r.template_choice as "correct" | "wrong" | "partial" | null) ?? null
@@ -271,33 +183,18 @@ function hydrateFromReview(r: AiAnalystReview) {
 	iocState.value = next
 }
 
-function seedIocDefaults() {
-	// Any IOC not yet in state defaults to "verdict correct". Preserves
-	// per-IOC state hydrated from an existing review.
-	for (const ioc of iocs.value) {
-		if (!iocState.value.has(ioc.id)) {
-			iocState.value.set(ioc.id, { verdict_correct: true, note: "" })
-		}
-	}
-}
-
-async function loadAll() {
+async function loadReview() {
 	loading.value = true
 
 	try {
-		const [mineRes, iocsRes] = await Promise.all([
-			Api.aiAnalyst.getMyReview(report.value.id),
-			Api.aiAnalyst.getIocsByReport(report.value.id)
-		])
-		if (iocsRes.data.success) iocs.value = iocsRes.data.iocs || []
+		const mineRes = await Api.aiAnalyst.getMyReview(report.value.id)
+
 		if (mineRes.data.success) {
 			existingReview.value = mineRes.data.review ?? null
 			if (existingReview.value) hydrateFromReview(existingReview.value)
 		}
-		seedIocDefaults()
-	} catch (err: unknown) {
-		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to load review data")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load review data")
 	} finally {
 		loading.value = false
 	}
@@ -344,9 +241,8 @@ async function handleSubmit() {
 		} else {
 			message.warning(res.data.message || "Failed to save review")
 		}
-	} catch (err: unknown) {
-		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to save review")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save review")
 	} finally {
 		submitting.value = false
 	}
@@ -370,9 +266,8 @@ async function handleQueueLesson() {
 		} else {
 			message.warning(res.data.message || "Failed to queue lesson")
 		}
-	} catch (err: unknown) {
-		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to queue lesson")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to queue lesson")
 	} finally {
 		queuing.value = false
 	}
@@ -409,6 +304,6 @@ function scheduleSimilarSearch() {
 watch(() => [lesson.value.lesson_text, lesson.value.lesson_type], scheduleSimilarSearch)
 
 onBeforeMount(() => {
-	loadAll()
+	loadReview()
 })
 </script>
