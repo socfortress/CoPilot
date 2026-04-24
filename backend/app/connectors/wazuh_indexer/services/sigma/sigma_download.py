@@ -1,10 +1,15 @@
 import os
 import shutil
 import zipfile
+from pathlib import Path
 from typing import List
+from urllib.parse import urlparse
 
 import requests
+from fastapi import HTTPException
 from loguru import logger
+
+ALLOWED_HOSTS = {"github.com", "raw.githubusercontent.com"}
 
 
 async def download_and_extract_zip(url: str) -> None:
@@ -26,6 +31,10 @@ async def download_and_extract_zip(url: str) -> None:
     os.makedirs(full_path, exist_ok=True)
 
     # Download the zipped folder
+    parsed_url = urlparse(url)
+    if parsed_url.hostname not in ALLOWED_HOSTS:
+        raise HTTPException(status_code=400, detail="Only approved Sigma download hosts are allowed.")
+
     response = requests.get(url)
     response.raise_for_status()  # Check if the request was successful
 
@@ -35,6 +44,11 @@ async def download_and_extract_zip(url: str) -> None:
 
     # Extract the contents of the zipped folder
     with zipfile.ZipFile(local_zip_path, "r") as zip_ref:
+        extract_root = Path(full_path).resolve()
+        for member_name in zip_ref.namelist():
+            dest = (Path(full_path) / member_name).resolve()
+            if not str(dest).startswith(str(extract_root)):
+                raise ValueError(f"Zip Slip attempt blocked: {member_name}")
         zip_ref.extractall(full_path)
 
     # Remove the downloaded zip file

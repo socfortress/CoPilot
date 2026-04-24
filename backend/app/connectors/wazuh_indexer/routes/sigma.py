@@ -6,10 +6,12 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Security
 from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.sigma import ActivateSigmaQueryResponse
 from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
@@ -183,6 +185,7 @@ async def create_sigma_query_endpoint(
 
 @wazuh_indexer_sigma_router.post(
     "/download",
+    dependencies=[Security(AuthHandler().get_current_user)],
 )
 async def download_sigma_queries_endpoint(
     request: DownloadSigmaRulesRequest,
