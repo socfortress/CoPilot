@@ -25,26 +25,33 @@
 			<template #value>{{ report.recommended_actions }}</template>
 		</CardKV>
 
-		<n-collapse>
-			<n-collapse-item name="markdown">
-				<template #header>
-					<span class="font-medium">Full report</span>
-				</template>
-				<div v-if="report.report_markdown" class="pt-2">
-					<Markdown :source="report.report_markdown" breaks />
-				</div>
-				<n-empty v-else description="No report content" class="min-h-20 justify-center" />
-			</n-collapse-item>
-		</n-collapse>
+		<n-button text size="large" @click="showFullReport = !showFullReport">
+			<template #icon>
+				<Icon
+					name="carbon:chevron-right"
+					class="transition-transform duration-300"
+					:class="{ 'rotate-90': showFullReport }"
+				/>
+			</template>
+			Full report
+		</n-button>
+
+		<n-collapse-transition :show="showFullReport">
+			<div v-if="report.report_markdown">
+				<Markdown :source="report.report_markdown" breaks />
+			</div>
+			<n-empty v-else description="No report content" class="min-h-20 justify-center" />
+		</n-collapse-transition>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { AiAnalystReport } from "@/types/aiAnalyst.d"
-import { NCollapse, NCollapseItem, NEmpty } from "naive-ui"
+import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { formatDate } from "@/utils/format"
 
@@ -53,6 +60,8 @@ const props = defineProps<{
 }>()
 
 const { report } = toRefs(props)
+
+const showFullReport = defineModel<boolean>("showFullReport", { required: true })
 
 const severityColor = computed(() => {
 	const severity = report.value.severity_assessment

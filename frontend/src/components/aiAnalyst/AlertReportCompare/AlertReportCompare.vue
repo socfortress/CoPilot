@@ -11,35 +11,36 @@
 			<template v-else>
 				<div class="text-secondary text-sm">
 					Side-by-side view of two investigations for alert
-					<code class="text-primary">#{{ alertId }}</code>. Pick any two runs below — defaults
-					to the current report on the left and the next-most-recent run on the right.
+					<code class="text-primary">#{{ alertId }}</code>
+					. Pick any two runs below — defaults to the current report on the left and the next-most-recent run
+					on the right.
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<!-- Side A -->
 					<div class="flex flex-col gap-3">
-						<div>
-							<div class="mb-1 font-medium">Version A</div>
+						<n-form-item label="Version A" :show-feedback="false">
 							<n-select
 								v-model:value="idA"
 								:options="reportOptions"
 								:render-label="renderOption"
+								size="large"
 							/>
-						</div>
-						<ReportColumn v-if="reportA" :report="reportA" />
+						</n-form-item>
+						<ReportColumn v-if="reportA" v-model:show-full-report="showFullReport" :report="reportA" />
 					</div>
 
 					<!-- Side B -->
 					<div class="flex flex-col gap-3">
-						<div>
-							<div class="mb-1 font-medium">Version B</div>
+						<n-form-item label="Version B" :show-feedback="false">
 							<n-select
 								v-model:value="idB"
 								:options="reportOptions"
 								:render-label="renderOption"
+								size="large"
 							/>
-						</div>
-						<ReportColumn v-if="reportB" :report="reportB" />
+						</n-form-item>
+						<ReportColumn v-if="reportB" v-model:show-full-report="showFullReport" :report="reportB" />
 					</div>
 				</div>
 			</template>
@@ -49,9 +50,8 @@
 
 <script setup lang="ts">
 import type { AiAnalystReport } from "@/types/aiAnalyst.d"
-import { h } from "vue"
-import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, h, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { formatDate } from "@/utils/format"
 import ReportColumn from "./AlertReportCompareColumn.vue"
@@ -70,6 +70,8 @@ const reports = ref<AiAnalystReport[]>([])
 const idA = ref<number | null>(null)
 const idB = ref<number | null>(null)
 
+const showFullReport = ref(false)
+
 const reportOptions = computed(() =>
 	reports.value.map(r => ({
 		label: r.id.toString(),
@@ -79,27 +81,23 @@ const reportOptions = computed(() =>
 	}))
 )
 
+const reportA = computed(() => reports.value.find(r => r.id === idA.value) ?? null)
+const reportB = computed(() => reports.value.find(r => r.id === idB.value) ?? null)
+
 // Render option with created_at + severity so the picker shows meaningful
 // distinctions between runs rather than just bare IDs.
-function renderOption(option: {
-	label: string
-	value: number
-	severity?: string | null
-	created_at?: string
-}) {
+function renderOption(option: { label: string; value: number; severity?: string | null; created_at?: string }) {
 	const ts = option.created_at ? String(formatDate(option.created_at, "MMM D, YYYY HH:mm")) : ""
 	const sev = option.severity ? ` · ${option.severity}` : ""
-	return h("div", { class: "flex flex-col" }, [
+	return h("div", { class: "flex flex-col leading-none py-2" }, [
 		h("span", `#${option.label}${sev}`),
 		h("span", { class: "text-secondary text-xs" }, ts)
 	])
 }
 
-const reportA = computed(() => reports.value.find(r => r.id === idA.value) ?? null)
-const reportB = computed(() => reports.value.find(r => r.id === idB.value) ?? null)
-
 async function loadReports() {
 	loading.value = true
+
 	try {
 		const res = await Api.aiAnalyst.getReportsByAlert(alertId.value)
 		if (res.data.success) {
@@ -129,9 +127,5 @@ async function loadReports() {
 	}
 }
 
-watch(alertId, () => loadReports())
-
-onBeforeMount(() => {
-	loadReports()
-})
+watch(alertId, () => loadReports(), { immediate: true })
 </script>
