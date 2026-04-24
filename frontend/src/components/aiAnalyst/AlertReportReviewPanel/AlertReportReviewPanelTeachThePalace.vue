@@ -57,7 +57,6 @@
 			</div>
 
 			<div class="flex items-center justify-end gap-3">
-				<span v-if="queuing" class="text-secondary text-sm">Queuing…</span>
 				<n-button
 					:disabled="!canQueueLesson"
 					:loading="queuing"
@@ -65,7 +64,7 @@
 					secondary
 					@click="handleQueueLesson"
 				>
-					Queue lesson
+					{{ queuing ? "Queueing..." : "Queue lesson" }}
 				</n-button>
 			</div>
 		</div>
