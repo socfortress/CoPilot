@@ -51,7 +51,6 @@ from app.routers import darktrace
 from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import dfir_iris
-from app.routers import dnstwist
 from app.routers import duo
 from app.routers import github_audit
 from app.routers import grafana
@@ -144,7 +143,6 @@ api_router.include_router(sublime.router)
 api_router.include_router(microsoft_patch_tuesday.router)
 api_router.include_router(customers.router)
 api_router.include_router(healthcheck.router)
-api_router.include_router(dnstwist.router)
 api_router.include_router(logs.router)
 api_router.include_router(influxdb.router)
 api_router.include_router(version.router)
