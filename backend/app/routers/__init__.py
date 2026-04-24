@@ -9,7 +9,6 @@ from .graylog import router as graylog_router
 from .healthcheck import router as healtcheck_router
 from .logs import router as logs_router
 from .shuffle import router as shuffle_router
-from .smtp import router as smtp_router
 from .sublime import router as sublime_router
 from .velociraptor import router as velociraptor_router
 from .wazuh_indexer import router as wazuh_indexer_router

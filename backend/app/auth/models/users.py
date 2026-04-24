@@ -69,7 +69,6 @@ class User(SQLModel, table=True):
     created_at: datetime.datetime = datetime.datetime.now()
     role_id: Optional[int] = Field(foreign_key="role.id")
 
-    smtp: "SMTP" = Relationship(back_populates="user")
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")
     tag_access: List["UserTagAccess"] = Relationship(back_populates="user")
@@ -108,31 +107,6 @@ class UserInput(SQLModel):
 class UserLogin(SQLModel):
     username: str
     password: str
-
-
-class SMTP(SQLModel, table=True):
-    id: Optional[int] = Field(primary_key=True)
-    email: EmailStr
-    smtp_password: str = Field(max_length=256)
-    smtp_server: str = Field(max_length=256)
-    smtp_port: int
-    user_id: int = Field(foreign_key="user.id")
-
-    user: "User" = Relationship(back_populates="smtp")
-
-
-class SMTPInput(SQLModel):
-    email: EmailStr
-    smtp_password: str = Field(max_length=256)
-    smtp_password2: str = Field(max_length=256)
-    smtp_server: str = Field(max_length=256)
-    smtp_port: int
-
-    @validator("smtp_password2")
-    def password_match(cls, v, values, **kwargs):
-        if "smtp_password" in values and v != values["smtp_password"]:
-            raise ValueError("passwords don't match")
-        return v
 
 
 class Password(BaseModel):

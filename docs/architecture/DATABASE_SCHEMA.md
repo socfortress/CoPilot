@@ -10,7 +10,7 @@ This document summarizes the **current schema** for AI-agent workflows, using **
 For typical agent change work, these domains are most relevant:
 
 - Connectors and integration metadata: `connectors*`, `available_*`, `customer_*_connectors*`, `customer_*integrations*`, `integration_*`, `network_connectors_*`, `custom_alert_creation_*`, `monitoring_alerts`, `sigma_queries`, `github_audit_*`
-- Auth / users / roles: `user`, `role`, `smtp`, `user_customer_access`, `user_tag_access`, `role_tag_access`
+- Auth / users / roles: `user`, `role`, `user_customer_access`, `user_tag_access`, `role_tag_access`
 - Incidents (alerts/cases/tags/comments): all `incident_management_*` tables
 - Scheduler/job metadata: `scheduled_job_metadata`, `schedulerjob`, `index_snapshot_schedules`
 - Agent data store / artifacts / reports: `agent_datastore`, `incident_management_case_datastore`, `incident_management_case_report_template_datastore`, `vulnerability_reports`, `sca_reports`, `agent_vulnerabilities`
@@ -149,7 +149,6 @@ When tag access control is enabled, alert visibility is constrained by the tag I
 | `customer_provisioning_default_settings` | `id` | `cluster_name`, `cluster_key`, `master_ip`, `grafana_url`, `wazuh_worker_hostname` | None | `backend/app/customer_provisioning/models/default_settings.py` |
 | `user` | `id` | `username`, `password`, `email`, `created_at`, `role_id` | `role_id -> role.id` | `backend/app/auth/models/users.py` (`User`) |
 | `role` | `id` | `name`, `description` | None | `backend/app/auth/models/users.py` (`Role`) |
-| `smtp` | `id` | `email`, `smtp_server`, `smtp_port`, `user_id` | `user_id -> user.id` | `backend/app/auth/models/users.py` (`SMTP`) |
 | `user_customer_access` | `id` | `user_id`, `customer_code`, `created_at` | `user_id -> user.id`, `customer_code -> customers.customer_code` | `backend/app/auth/models/users.py` |
 | `user_tag_access` | `id` | `user_id`, `tag_id`, `created_at` | `user_id -> user.id`, `tag_id -> incident_management_alerttag.id` | `backend/app/auth/models/users.py` |
 | `role_tag_access` | `id` | `role_id`, `tag_id`, `created_at` | `role_id -> role.id`, `tag_id -> incident_management_alerttag.id` | `backend/app/auth/models/users.py` |

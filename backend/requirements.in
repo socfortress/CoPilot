@@ -15,7 +15,6 @@ influxdb-client[async]
 libmagic
 loguru
 marshmallow-sqlalchemy
-matplotlib
 mitreattack-python
 openai
 passlib
@@ -31,7 +30,6 @@ python-magic
 python-multipart
 pyvelociraptor~=0.1
 regex
-reportlab
 requests
 sqlmodel
 uvicorn
