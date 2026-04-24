@@ -11,7 +11,7 @@
 	</n-card>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/aiAnalyst.d"
 import { NCard, NDataTable, NEmpty } from "naive-ui"
@@ -27,38 +27,61 @@ const perTemplateColumns = computed<DataTableColumns<ReviewStatsTemplate>>(() =>
 	{
 		title: "Template",
 		key: "template_used",
-		render: row => row.template_used ?? "(none)"
+		minWidth: 200,
+		render: row => <div class="min-w-40">{row.template_used ?? "(none)"}</div>
 	},
-	{ title: "Total", key: "total", width: 80 },
+	{ title: "Total", key: "total", width: 80, render: row => <div class="min-w-14">{row.total}</div> },
 	{
 		title: "Up / Down",
 		key: "verdict",
 		width: 110,
-		render: row => `${row.thumbs_up} / ${row.thumbs_down}`
+		render: row => (
+			<div class="min-w-18">
+				{row.thumbs_up}
+				{" / "}
+				{row.thumbs_down}
+			</div>
+		)
 	},
 	{
 		title: "C / P / W",
 		key: "choice",
 		width: 110,
-		render: row => `${row.correct} / ${row.partial} / ${row.wrong}`
+		render: row => (
+			<div class="min-w-22">
+				{row.correct}
+				{" / "}
+				{row.partial}
+				{" / "}
+				{row.wrong}
+			</div>
+		)
 	},
 	{
 		title: "Instr",
 		key: "avg_rating_instructions",
 		width: 80,
-		render: row => (row.avg_rating_instructions == null ? "—" : row.avg_rating_instructions.toFixed(2))
+		render: row => (
+			<div class="min-w-14">
+				{row.avg_rating_instructions == null ? "—" : row.avg_rating_instructions.toFixed(2)}
+			</div>
+		)
 	},
 	{
 		title: "Artif",
 		key: "avg_rating_artifacts",
 		width: 80,
-		render: row => (row.avg_rating_artifacts == null ? "—" : row.avg_rating_artifacts.toFixed(2))
+		render: row => (
+			<div class="min-w-14">{row.avg_rating_artifacts == null ? "—" : row.avg_rating_artifacts.toFixed(2)}</div>
+		)
 	},
 	{
 		title: "Sev",
 		key: "avg_rating_severity",
 		width: 80,
-		render: row => (row.avg_rating_severity == null ? "—" : row.avg_rating_severity.toFixed(2))
+		render: row => (
+			<div class="min-w-14">{row.avg_rating_severity == null ? "—" : row.avg_rating_severity.toFixed(2)}</div>
+		)
 	}
 ])
 </script>
