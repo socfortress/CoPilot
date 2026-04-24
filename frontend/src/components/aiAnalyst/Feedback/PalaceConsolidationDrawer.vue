@@ -3,7 +3,7 @@
 		<n-drawer-content closable>
 			<template #header>
 				Palace consolidation
-				<span v-if="customerCode" class="text-secondary ml-2 text-sm">· {{ customerCode }}</span>
+				<code v-if="customerCode" class="ml-2">{{ customerCode }}</code>
 			</template>
 
 			<n-spin :show="loading" class="min-h-40">

@@ -17,13 +17,13 @@
 			<div class="flex items-center gap-2">
 				<n-button size="small" :disabled="!customer" @click="showConsolidation = true">
 					<template #icon>
-						<Icon :name="ConsolidateIcon" :size="14" />
+						<Icon :name="ConsolidateIcon" />
 					</template>
 					Consolidate lessons
 				</n-button>
-				<n-button size="small" :disabled="!customer || loading" @click="loadStats()">
+				<n-button size="small" :disabled="!customer" :loading @click="loadStats()">
 					<template #icon>
-						<Icon :name="RefreshIcon" :size="14" />
+						<Icon :name="RefreshIcon" />
 					</template>
 					Refresh
 				</n-button>
@@ -112,9 +112,7 @@
 				<CardEntity size="small" embedded>
 					<template #headerMain>Recent reviews</template>
 					<template #default>
-						<div v-if="!stats.recent_reviews.length" class="text-secondary text-sm">
-							No reviews yet.
-						</div>
+						<div v-if="!stats.recent_reviews.length" class="text-secondary text-sm">No reviews yet.</div>
 						<div v-else class="flex flex-col gap-2">
 							<CardEntity
 								v-for="r of stats.recent_reviews"
@@ -247,22 +245,9 @@
 </template>
 
 <script setup lang="ts">
-import type {
-	AiAnalystReview,
-	AiAnalystReviewStats,
-	ReviewStatsTemplate
-} from "@/types/aiAnalyst.d"
 import type { DataTableColumns } from "naive-ui"
-import {
-	NButton,
-	NDataTable,
-	NDrawer,
-	NDrawerContent,
-	NEmpty,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import type { AiAnalystReview, AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/aiAnalyst.d"
+import { NButton, NDataTable, NDrawer, NDrawerContent, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -272,8 +257,8 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import MetricTile from "./FeedbackMetricTile.vue"
-import PalaceConsolidationDrawer from "./PalaceConsolidationDrawer.vue"
 import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"
+import PalaceConsolidationDrawer from "./PalaceConsolidationDrawer.vue"
 
 const RefreshIcon = "carbon:renew"
 const ConsolidateIcon = "carbon:data-collection"
@@ -294,9 +279,7 @@ const showConsolidation = ref(false)
 
 const templateChoiceTotal = computed(() =>
 	stats.value
-		? stats.value.template_choice_correct +
-			stats.value.template_choice_partial +
-			stats.value.template_choice_wrong
+		? stats.value.template_choice_correct + stats.value.template_choice_partial + stats.value.template_choice_wrong
 		: 0
 )
 

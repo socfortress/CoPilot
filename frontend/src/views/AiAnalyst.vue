@@ -21,7 +21,7 @@
 import { NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
-import FeedbackDashboard from "@/components/aiAnalyst/FeedbackDashboard.vue"
+import FeedbackDashboard from "@/components/aiAnalyst/Feedback/FeedbackDashboard.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
 import TalonChat from "@/components/talonChat/TalonChatContainer.vue"
 
