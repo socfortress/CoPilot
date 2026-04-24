@@ -50,7 +50,6 @@ from app.routers import customers
 from app.routers import darktrace
 from app.routers import data_store
 from app.routers import defenderforendpoint
-from app.routers import dfir_iris
 from app.routers import duo
 from app.routers import github_audit
 from app.routers import grafana
@@ -134,7 +133,6 @@ api_router.include_router(cato.router)
 api_router.include_router(wazuh_manager.router)
 api_router.include_router(agents.router)
 api_router.include_router(graylog.router)
-api_router.include_router(dfir_iris.router)
 api_router.include_router(cortex.router)
 api_router.include_router(velociraptor.router)
 api_router.include_router(shuffle.router)
