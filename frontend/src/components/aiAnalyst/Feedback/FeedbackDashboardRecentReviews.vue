@@ -62,74 +62,18 @@
 			</CardEntity>
 		</div>
 
-		<!-- Drawer: full review detail -->
-		<n-drawer v-model:show="showDrawer" :width="520" placement="right">
-			<n-drawer-content v-if="drawerReview" closable>
-				<template #header>Review for report #{{ drawerReview.report_id }}</template>
-				<div class="flex flex-col gap-3">
-					<div class="flex flex-wrap items-center gap-2">
-						<Badge
-							v-if="drawerReview.overall_verdict"
-							type="splitted"
-							bright
-							:color="drawerReview.overall_verdict === 'up' ? 'success' : 'danger'"
-						>
-							<template #label>Verdict</template>
-							<template #value>
-								{{ drawerReview.overall_verdict === "up" ? "Up" : "Down" }}
-							</template>
-						</Badge>
-						<Badge v-if="drawerReview.template_used" type="splitted">
-							<template #label>Template</template>
-							<template #value>{{ drawerReview.template_used }}</template>
-						</Badge>
-						<Badge v-if="drawerReview.template_choice" type="splitted" bright>
-							<template #label>Template choice</template>
-							<template #value>{{ drawerReview.template_choice }}</template>
-						</Badge>
-					</div>
-
-					<CardKV v-if="drawerReview.missing_steps">
-						<template #key>Missing steps</template>
-						<template #value>{{ drawerReview.missing_steps }}</template>
-					</CardKV>
-					<CardKV v-if="drawerReview.suggested_edits">
-						<template #key>Suggested edits</template>
-						<template #value>{{ drawerReview.suggested_edits }}</template>
-					</CardKV>
-
-					<div v-if="drawerReview.ioc_reviews.length" class="flex flex-col gap-2">
-						<div class="font-medium">IOC corrections</div>
-						<div
-							v-for="ir of drawerReview.ioc_reviews"
-							:key="ir.id"
-							class="border-color bg-secondary rounded border p-2 text-sm"
-						>
-							<div class="flex items-center gap-2">
-								<Badge type="splitted" :color="ir.verdict_correct ? 'success' : 'danger'">
-									<template #label>IOC {{ ir.ioc_id }}</template>
-									<template #value>
-										{{ ir.verdict_correct ? "Correct" : "Wrong" }}
-									</template>
-								</Badge>
-							</div>
-							<div v-if="ir.note" class="text-secondary mt-1">{{ ir.note }}</div>
-						</div>
-					</div>
-				</div>
-			</n-drawer-content>
-		</n-drawer>
+		<FeedbackDashboardRecentReviewDetail v-model:show="showDrawer" :review="drawerReview" />
 	</n-card>
 </template>
 
 <script setup lang="ts">
 import type { AiAnalystReview, AiAnalystReviewStats } from "@/types/aiAnalyst.d"
-import { NCard, NDrawer, NDrawerContent } from "naive-ui"
+import { NCard } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
 import { formatDate } from "@/utils/format"
+import FeedbackDashboardRecentReviewDetail from "./FeedbackDashboardRecentReviewDetail.vue"
 
 const props = defineProps<{
 	stats: AiAnalystReviewStats

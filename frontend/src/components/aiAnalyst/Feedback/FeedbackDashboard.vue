@@ -9,11 +9,8 @@
 
 			<div v-else-if="stats" class="flex flex-col gap-5">
 				<FeedbackDashboardMetricTiles :stats />
-
 				<FeedbackDashboardTemplateChoiceDistribution :stats />
-
 				<FeedbackDashboardTemplateTable :stats />
-
 				<FeedbackDashboardRecentReviews :stats />
 			</div>
 		</n-spin>
@@ -33,9 +30,7 @@ import FeedbackDashboardTemplateTable from "./FeedbackDashboardTemplateTable.vue
 import FeedbackDashboardToolbar from "./FeedbackDashboardToolbar.vue"
 
 const message = useMessage()
-
 const customer = ref<string | null>(null)
-
 const loading = ref(false)
 const stats = ref<AiAnalystReviewStats | null>(null)
 
