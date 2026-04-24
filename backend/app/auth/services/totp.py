@@ -21,6 +21,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 
 from app.auth.models.totp import UserTOTP
+from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
 
 # Prefer a dedicated TOTP_ENCRYPTION_KEY (proper Fernet key, separate from JWT).
@@ -30,8 +31,7 @@ _totp_enc_key = os.environ.get("TOTP_ENCRYPTION_KEY")
 if _totp_enc_key:
     _fernet_key = _totp_enc_key.encode()
 else:
-    _raw_secret = os.environ.get("JWT_SECRET", "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc=")
-    _fernet_key = base64.urlsafe_b64encode(hashlib.sha256(_raw_secret.encode()).digest())
+    _fernet_key = base64.urlsafe_b64encode(hashlib.sha256(AuthHandler.secret.encode()).digest())
 _fernet = Fernet(_fernet_key)
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"])
