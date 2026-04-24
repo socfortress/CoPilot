@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
@@ -34,7 +35,6 @@ from app.integrations.alert_creation_settings.schema.alert_creation_settings imp
 from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
     EventOrderResponse,
 )
-from app.auth.routes.auth import AuthHandler
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
