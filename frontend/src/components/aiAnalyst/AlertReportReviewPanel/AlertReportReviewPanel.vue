@@ -3,96 +3,7 @@
 		<div class="flex flex-col gap-6">
 			<AlertReportReviewPanelReplay :report :existing-review />
 
-			<!-- Rubric -->
-			<CardEntity size="small" embedded>
-				<template #default>
-					<div class="flex flex-col gap-4">
-						<!-- Overall verdict -->
-						<div>
-							<div class="mb-1 font-medium">Overall verdict</div>
-							<n-radio-group v-model:value="form.overall_verdict">
-								<n-radio-button value="up">
-									<Icon :name="ThumbUpIcon" :size="14" class="mr-1" />
-									Good
-								</n-radio-button>
-								<n-radio-button value="down">
-									<Icon :name="ThumbDownIcon" :size="14" class="mr-1" />
-									Bad
-								</n-radio-button>
-							</n-radio-group>
-						</div>
-
-						<!-- Template choice -->
-						<div>
-							<div class="mb-1 font-medium">Template used</div>
-							<div v-if="report.report_markdown === null" class="text-secondary text-sm">
-								No template recorded on this report.
-							</div>
-							<n-radio-group v-model:value="form.template_choice">
-								<n-radio value="correct">Correct template</n-radio>
-								<n-radio value="partial">Partially correct</n-radio>
-								<n-radio value="wrong">Wrong template</n-radio>
-							</n-radio-group>
-						</div>
-
-						<!-- Ratings -->
-						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-							<div>
-								<div class="mb-1 font-medium">Instructions quality</div>
-								<n-slider
-									v-model:value="form.rating_instructions"
-									:min="1"
-									:max="5"
-									:step="1"
-									:marks="rateMarks"
-								/>
-							</div>
-							<div>
-								<div class="mb-1 font-medium">Artifact collection</div>
-								<n-slider
-									v-model:value="form.rating_artifacts"
-									:min="1"
-									:max="5"
-									:step="1"
-									:marks="rateMarks"
-								/>
-							</div>
-							<div>
-								<div class="mb-1 font-medium">Severity assessment</div>
-								<n-slider
-									v-model:value="form.rating_severity"
-									:min="1"
-									:max="5"
-									:step="1"
-									:marks="rateMarks"
-								/>
-							</div>
-						</div>
-
-						<!-- Missing steps -->
-						<div>
-							<div class="mb-1 font-medium">Missing steps</div>
-							<n-input
-								v-model:value="form.missing_steps"
-								type="textarea"
-								placeholder="What investigation steps were missed?"
-								:autosize="{ minRows: 2, maxRows: 6 }"
-							/>
-						</div>
-
-						<!-- Suggested edits -->
-						<div>
-							<div class="mb-1 font-medium">Suggested prompt / template edits</div>
-							<n-input
-								v-model:value="form.suggested_edits"
-								type="textarea"
-								placeholder="How should the template or prompt be improved?"
-								:autosize="{ minRows: 2, maxRows: 6 }"
-							/>
-						</div>
-					</div>
-				</template>
-			</CardEntity>
+			<AlertReportReviewPanelForm v-model:form="form" :report />
 
 			<!-- Per-IOC verdict corrections -->
 			<div>
@@ -245,11 +156,7 @@ import {
 	NCollapseItem,
 	NEmpty,
 	NInput,
-	NRadio,
-	NRadioButton,
-	NRadioGroup,
 	NSelect,
-	NSlider,
 	NSpin,
 	NSwitch,
 	NTooltip,
@@ -262,16 +169,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import AlertReportReviewPanelReplay from "./AlertReportReviewPanelReplay.vue"
-
-interface FormState {
-	overall_verdict: "up" | "down" | null
-	template_choice: "correct" | "wrong" | "partial" | null
-	rating_instructions: number
-	rating_artifacts: number
-	rating_severity: number
-	missing_steps: string
-	suggested_edits: string
-}
+import AlertReportReviewPanelForm, { type FormState } from "./AlertReportReviewPanelForm.vue"
 
 interface IocState {
 	verdict_correct: boolean
@@ -284,8 +182,6 @@ const props = defineProps<{
 
 const { report } = toRefs(props)
 
-const ThumbUpIcon = "mdi:thumb-up-outline"
-const ThumbDownIcon = "mdi:thumb-down-outline"
 const BrainIcon = "mdi:brain"
 
 const message = useMessage()
@@ -333,8 +229,6 @@ const canQueueLesson = computed(() => !!lesson.value.lesson_type && lesson.value
 const similarLessons = ref<PalaceSearchHit[]>([])
 const similarLoading = ref(false)
 let similarTimer: ReturnType<typeof setTimeout> | null = null
-
-const rateMarks = { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5" }
 
 // At least overall_verdict must be set
 const canSubmit = computed(() => form.value.overall_verdict !== null)
