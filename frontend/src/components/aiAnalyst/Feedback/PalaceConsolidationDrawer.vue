@@ -18,47 +18,25 @@
 				<div v-else-if="data" class="flex flex-col gap-4">
 					<!-- Summary tiles -->
 					<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Active</div>
-									<div class="text-2xl font-semibold">{{ data.total_lessons }}</div>
-									<div class="text-secondary text-xs">{{ data.total_pending }} pending</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Durable</div>
-									<div class="text-success text-2xl font-semibold">{{ data.total_durable }}</div>
-									<div class="text-secondary text-xs">never expire</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">One-off</div>
-									<div class="text-warning text-2xl font-semibold">{{ data.total_one_off }}</div>
-									<div class="text-secondary text-xs">7-day TTL</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Duplicates</div>
-									<div
-										class="text-2xl font-semibold"
-										:class="data.duplicate_candidates.length ? 'text-warning' : ''"
-									>
-										{{ data.duplicate_candidates.length }}
-									</div>
-									<div class="text-secondary text-xs">near-dupe pairs</div>
-								</div>
-							</template>
-						</CardEntity>
+						<MetricTile label="Active" :value="data.total_lessons.toString()" :sub="`${data.total_pending} pending`" />
+						<MetricTile
+							label="Durable"
+							:value="data.total_durable.toString()"
+							sub="never expire"
+							color="success"
+						/>
+						<MetricTile
+							label="One-off"
+							:value="data.total_one_off.toString()"
+							sub="7-day TTL"
+							color="warning"
+						/>
+						<MetricTile
+							label="Duplicates"
+							:value="data.duplicate_candidates.length.toString()"
+							sub="near-dupe pairs"
+							:color="data.duplicate_candidates.length ? 'warning' : undefined"
+						/>
 					</div>
 
 					<!-- Upcoming expirations -->
@@ -242,6 +220,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import MetricTile from "./FeedbackMetricTile.vue"
 
 const props = defineProps<{
 	show: boolean
