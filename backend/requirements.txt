@@ -37,7 +37,6 @@ cybox==2.1.0.21
 cycler==0.12.0
 deepdiff==6.5.0
 Deprecated==1.2.14
-dfir-iris-client==2.0.4
 dnspython==2.4.2
 docxtpl==0.18.0
 drawsvg==2.3.0
