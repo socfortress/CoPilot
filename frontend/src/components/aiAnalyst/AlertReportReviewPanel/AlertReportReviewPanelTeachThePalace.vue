@@ -38,21 +38,20 @@
 					<span v-else>Similar lessons already in the palace:</span>
 				</div>
 				<div v-if="!similarLoading" class="flex flex-col gap-1">
-					<div
-						v-for="(hit, idx) of similarLessons"
-						:key="hit.id ?? idx"
-						class="border-color bg-secondary rounded border p-2 text-sm"
-					>
-						<div class="flex items-center justify-between gap-2">
-							<span class="text-secondary">
-								{{ hit.room || "—" }}
-								<template v-if="hit.score !== null && hit.score !== undefined">
-									· score {{ hit.score.toFixed(2) }}
-								</template>
-							</span>
-						</div>
-						<div>{{ hit.text || "(no text)" }}</div>
-					</div>
+					<CardEntity v-for="(hit, idx) of similarLessons" :key="hit.id ?? idx" size="small" embedded>
+						<template #headerMain>
+							{{ hit.room || "—" }}
+						</template>
+						<template #headerExtra>
+							<Badge v-if="hit.score != null" type="splitted" bright>
+								<template #label>score</template>
+								<template #value>{{ hit.score.toFixed(2) }}</template>
+							</Badge>
+						</template>
+						<template #default>
+							<div>{{ hit.text || "(no text)" }}</div>
+						</template>
+					</CardEntity>
 				</div>
 			</div>
 
@@ -77,6 +76,8 @@ import type { ApiError } from "@/types/common"
 import { NButton, NCard, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
