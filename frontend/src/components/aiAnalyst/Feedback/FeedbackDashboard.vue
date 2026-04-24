@@ -1,34 +1,6 @@
 <template>
 	<div class="feedback-dashboard @container flex flex-col gap-5">
-		<!-- Customer picker -->
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div class="flex items-center gap-2 text-sm">
-				<span>Customer</span>
-				<n-select
-					v-model:value="customer"
-					size="small"
-					placeholder="Select a customer"
-					:options="customerOptions"
-					:show-checkmark="false"
-					class="min-w-52"
-					:disabled="loading || customerBootstrapLoading"
-				/>
-			</div>
-			<div class="flex items-center gap-2">
-				<n-button size="small" :disabled="!customer" @click="showConsolidation = true">
-					<template #icon>
-						<Icon :name="ConsolidateIcon" />
-					</template>
-					Consolidate lessons
-				</n-button>
-				<n-button size="small" :disabled="!customer" :loading @click="loadStats()">
-					<template #icon>
-						<Icon :name="RefreshIcon" />
-					</template>
-					Refresh
-				</n-button>
-			</div>
-		</div>
+		<FeedbackDashboardToolbar v-model:customer="customer" v-model:loading="loading" @refresh="loadStats()" />
 
 		<n-spin :show="loading" class="min-h-40">
 			<div v-if="!customer" class="pt-6 text-center">
@@ -238,44 +210,33 @@
 				</div>
 			</n-drawer-content>
 		</n-drawer>
-
-		<!-- Palace consolidation drawer (manual Step 21.B trigger) -->
-		<PalaceConsolidationDrawer v-model:show="showConsolidation" :customer-code="customer" />
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { AiAnalystReview, AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/aiAnalyst.d"
-import { NButton, NDataTable, NDrawer, NDrawerContent, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { NDataTable, NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import FeedbackDashboardToolbar from "./FeedbackDashboardToolbar.vue"
 import MetricTile from "./FeedbackMetricTile.vue"
 import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"
-import PalaceConsolidationDrawer from "./PalaceConsolidationDrawer.vue"
-
-const RefreshIcon = "carbon:renew"
-const ConsolidateIcon = "carbon:data-collection"
 
 const message = useMessage()
 
 const customer = ref<string | null>(null)
-const customerOptions = ref<{ label: string; value: string }[]>([])
-const customerBootstrapLoading = ref(false)
 
 const loading = ref(false)
 const stats = ref<AiAnalystReviewStats | null>(null)
 
 const showDrawer = ref(false)
 const drawerReview = ref<AiAnalystReview | null>(null)
-
-const showConsolidation = ref(false)
 
 const templateChoiceTotal = computed(() =>
 	stats.value
@@ -306,12 +267,14 @@ const ratingSubtitle = computed(() => {
 function pctLabel(pct: number | null): string {
 	return pct === null || pct === undefined ? "—" : `${pct.toFixed(1)}%`
 }
+
 function pctColor(pct: number | null): "success" | "warning" | "danger" | undefined {
 	if (pct === null) return undefined
 	if (pct >= 75) return "success"
 	if (pct >= 50) return "warning"
 	return "danger"
 }
+
 function tplChoiceColor(choice: string): "success" | "warning" | "danger" | undefined {
 	if (choice === "correct") return "success"
 	if (choice === "partial") return "warning"
@@ -363,30 +326,6 @@ function openDrawer(r: AiAnalystReview) {
 	showDrawer.value = true
 }
 
-async function bootstrapCustomers() {
-	// Bootstrap customer picker off alerts_with_reports so we only list
-	// customers that actually have AI runs — no external customer endpoint call.
-	customerBootstrapLoading.value = true
-	try {
-		const res = await Api.aiAnalyst.getAlertsWithReports()
-		if (res.data.success) {
-			const codes = new Set((res.data.alerts || []).map(a => a.customer_code))
-			customerOptions.value = Array.from(codes)
-				.sort()
-				.map(c => ({ label: c, value: c }))
-			if (customerOptions.value.length && !customer.value) {
-				// The watch(customer, loadStats) below picks this up — no
-				// need to call loadStats() explicitly from bootstrap.
-				customer.value = customerOptions.value[0].value
-			}
-		}
-	} catch (err: unknown) {
-		message.error(getApiErrorMessage(err as never) || "Failed to load customers")
-	} finally {
-		customerBootstrapLoading.value = false
-	}
-}
-
 async function loadStats() {
 	if (!customer.value) {
 		stats.value = null
@@ -416,9 +355,5 @@ async function loadStats() {
 // the same and options churn is ignored.
 watch(customer, () => {
 	loadStats()
-})
-
-onBeforeMount(() => {
-	bootstrapCustomers()
 })
 </script>
