@@ -9,7 +9,6 @@ from fastapi import UploadFile
 from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
-
 from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
 )
