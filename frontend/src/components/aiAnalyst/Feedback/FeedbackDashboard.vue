@@ -10,55 +10,9 @@
 			<div v-else-if="stats" class="flex flex-col gap-5">
 				<FeedbackDashboardMetricTiles :stats />
 
-				<!-- Template choice breakdown -->
-				<CardEntity size="small" embedded>
-					<template #headerMain>Template choice distribution</template>
-					<template #default>
-						<div class="flex flex-col gap-2">
-							<TemplateChoiceBar
-								label="Correct"
-								color="success"
-								:count="stats.template_choice_correct"
-								:total="templateChoiceTotal"
-							/>
-							<TemplateChoiceBar
-								label="Partial"
-								color="warning"
-								:count="stats.template_choice_partial"
-								:total="templateChoiceTotal"
-							/>
-							<TemplateChoiceBar
-								label="Wrong"
-								color="danger"
-								:count="stats.template_choice_wrong"
-								:total="templateChoiceTotal"
-							/>
-							<div v-if="templateChoiceTotal === 0" class="text-secondary text-sm">
-								No template choice feedback yet.
-							</div>
-						</div>
-					</template>
-				</CardEntity>
+				<FeedbackDashboardTemplateChoiceDistribution :stats />
 
-				<!-- Per-template table -->
-				<CardEntity size="small" embedded>
-					<template #headerMain>Per-template performance</template>
-					<template #default>
-						<n-empty
-							v-if="!stats.per_template.length"
-							description="No reviews yet"
-							class="min-h-20 justify-center"
-						/>
-						<n-data-table
-							v-else
-							:columns="perTemplateColumns"
-							:data="stats.per_template"
-							:bordered="false"
-							size="small"
-							:row-key="(r: ReviewStatsTemplate) => r.template_used ?? '__null__'"
-						/>
-					</template>
-				</CardEntity>
+				<FeedbackDashboardTemplateTable :stats />
 
 				<!-- Recent reviews -->
 				<CardEntity size="small" embedded>
@@ -194,10 +148,9 @@
 </template>
 
 <script setup lang="ts">
-import type { DataTableColumns } from "naive-ui"
-import type { AiAnalystReview, AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/aiAnalyst.d"
-import { NDataTable, NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import type { AiAnalystReview, AiAnalystReviewStats } from "@/types/aiAnalyst.d"
+import { NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -205,8 +158,9 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import FeedbackDashboardMetricTiles from "./FeedbackDashboardMetricTiles.vue"
+import FeedbackDashboardTemplateChoiceDistribution from "./FeedbackDashboardTemplateChoiceDistribution.vue"
+import FeedbackDashboardTemplateTable from "./FeedbackDashboardTemplateTable.vue"
 import FeedbackDashboardToolbar from "./FeedbackDashboardToolbar.vue"
-import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"
 
 const message = useMessage()
 
@@ -218,57 +172,12 @@ const stats = ref<AiAnalystReviewStats | null>(null)
 const showDrawer = ref(false)
 const drawerReview = ref<AiAnalystReview | null>(null)
 
-const templateChoiceTotal = computed(() =>
-	stats.value
-		? stats.value.template_choice_correct + stats.value.template_choice_partial + stats.value.template_choice_wrong
-		: 0
-)
-
 function tplChoiceColor(choice: string): "success" | "warning" | "danger" | undefined {
 	if (choice === "correct") return "success"
 	if (choice === "partial") return "warning"
 	if (choice === "wrong") return "danger"
 	return undefined
 }
-
-const perTemplateColumns = computed<DataTableColumns<ReviewStatsTemplate>>(() => [
-	{
-		title: "Template",
-		key: "template_used",
-		render: row => row.template_used ?? "(none)"
-	},
-	{ title: "Total", key: "total", width: 80 },
-	{
-		title: "Up / Down",
-		key: "verdict",
-		width: 110,
-		render: row => `${row.thumbs_up} / ${row.thumbs_down}`
-	},
-	{
-		title: "C / P / W",
-		key: "choice",
-		width: 110,
-		render: row => `${row.correct} / ${row.partial} / ${row.wrong}`
-	},
-	{
-		title: "Instr",
-		key: "avg_rating_instructions",
-		width: 80,
-		render: row => (row.avg_rating_instructions == null ? "—" : row.avg_rating_instructions.toFixed(2))
-	},
-	{
-		title: "Artif",
-		key: "avg_rating_artifacts",
-		width: 80,
-		render: row => (row.avg_rating_artifacts == null ? "—" : row.avg_rating_artifacts.toFixed(2))
-	},
-	{
-		title: "Sev",
-		key: "avg_rating_severity",
-		width: 80,
-		render: row => (row.avg_rating_severity == null ? "—" : row.avg_rating_severity.toFixed(2))
-	}
-])
 
 function openDrawer(r: AiAnalystReview) {
 	drawerReview.value = r
