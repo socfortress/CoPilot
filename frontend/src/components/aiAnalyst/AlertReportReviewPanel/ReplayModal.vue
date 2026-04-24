@@ -94,6 +94,7 @@ const showLocal = computed({
 async function loadTemplates() {
 	loading.value = true
 	selectedFilename.value = null
+
 	try {
 		const res = await Api.talon.getTemplates()
 		if (res.data.success) {
@@ -113,7 +114,9 @@ async function loadTemplates() {
 
 async function handleReplay() {
 	if (!selectedFilename.value) return
+
 	submitting.value = true
+
 	try {
 		const res = await Api.aiAnalyst.replayReport(props.report.id, {
 			template_override: selectedFilename.value,
