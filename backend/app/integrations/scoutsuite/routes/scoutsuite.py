@@ -4,8 +4,11 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import File
 from fastapi import HTTPException
+from fastapi import Security
 from fastapi import UploadFile
 from loguru import logger
+
+from app.auth.routes.auth import AuthHandler
 
 from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
@@ -38,6 +41,7 @@ integration_scoutsuite_router = APIRouter()
     "/report-generation-options",
     response_model=ScoutSuiteReportOptionsResponse,
     description="Get the available report generation options.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_report_generation_options():
     """
@@ -57,6 +61,7 @@ async def get_report_generation_options():
     "/available-reports",
     response_model=AvailableScoutSuiteReportsResponse,
     description="Get the available ScoutSuite reports.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_reports():
     """
@@ -88,6 +93,7 @@ async def get_available_reports():
 @integration_scoutsuite_router.post(
     "/generate-aws-report",
     response_model=ScoutSuiteReportResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def generate_aws_report(
     background_tasks: BackgroundTasks,
@@ -111,6 +117,7 @@ async def generate_aws_report(
 @integration_scoutsuite_router.post(
     "/generate-azure-report",
     response_model=ScoutSuiteReportResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def generate_azure_report(
     background_tasks: BackgroundTasks,
@@ -134,6 +141,7 @@ async def generate_azure_report(
 @integration_scoutsuite_router.post(
     "/generate-gcp-report",
     response_model=ScoutSuiteReportResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def generate_gcp_report(
     background_tasks: BackgroundTasks,
@@ -171,6 +179,7 @@ async def generate_gcp_report(
 @integration_scoutsuite_router.delete(
     "/delete-report/{report_name}",
     response_model=ScoutSuiteReportResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_report(
     report_name: str,
