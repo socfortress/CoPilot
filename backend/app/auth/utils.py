@@ -13,7 +13,6 @@ from passlib.context import CryptContext
 from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
 
-
 # Known-compromised value published in prior versions of .env.example and as a
 # hardcoded fallback. Refuse to boot if it reappears, regardless of source.
 _KNOWN_COMPROMISED_JWT_SECRET = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
