@@ -34,24 +34,25 @@
 					<template #value>{{ review.suggested_edits }}</template>
 				</CardKV>
 
-				<div v-if="review.ioc_reviews.length" class="flex flex-col gap-2">
-					<div class="font-medium">IOC corrections</div>
-					<div
-						v-for="ir of review.ioc_reviews"
-						:key="ir.id"
-						class="border-color bg-secondary rounded border p-2 text-sm"
-					>
-						<div class="flex items-center gap-2">
-							<Badge type="splitted" :color="ir.verdict_correct ? 'success' : 'danger'">
-								<template #label>IOC {{ ir.ioc_id }}</template>
-								<template #value>
-									{{ ir.verdict_correct ? "Correct" : "Wrong" }}
-								</template>
-							</Badge>
-						</div>
-						<div v-if="ir.note" class="text-secondary mt-1">{{ ir.note }}</div>
+				<n-card v-if="review.ioc_reviews.length" size="small" title="IOC corrections" embedded>
+					<div class="flex flex-col gap-2">
+						<CardEntity v-for="ir of review.ioc_reviews" :key="ir.id" embedded size="small">
+							<template #default>
+								<div class="flex items-center gap-2">
+									<Badge type="splitted" :color="ir.verdict_correct ? 'success' : 'danger'">
+										<template #label>IOC {{ ir.ioc_id }}</template>
+										<template #value>
+											{{ ir.verdict_correct ? "Correct" : "Wrong" }}
+										</template>
+									</Badge>
+								</div>
+							</template>
+							<template v-if="ir.note" #mainExtra>
+								{{ ir.note }}
+							</template>
+						</CardEntity>
 					</div>
-				</div>
+				</n-card>
 			</div>
 		</n-drawer-content>
 	</n-drawer>
@@ -59,8 +60,9 @@
 
 <script setup lang="ts">
 import type { AiAnalystReview } from "@/types/aiAnalyst.d"
-import { NDrawer, NDrawerContent } from "naive-ui"
+import { NCard, NDrawer, NDrawerContent } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 
 defineProps<{
