@@ -218,6 +218,7 @@ async def generate_grafana_iframe_links(
     "/generate-report",
     response_model=GenerateReportResponse,
     description="Create a new report.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_report(request: GenerateReportRequest, session: AsyncSession = Depends(get_db)) -> GenerateReportResponse:
     logger.info("Generating report")
