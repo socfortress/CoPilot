@@ -11,6 +11,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Security
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from app.customers.routes.customers import get_customer
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.models import Alert
 from app.incidents.models import AlertToIoC
@@ -178,6 +180,7 @@ def generate_csv_content(rows: List[Dict[str, Any]]) -> StringIO:
 @incidents_report_router.post(
     "/generate-report-csv",
     description="Generate a report for all cases. Optionally filter by year and month.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_export_all_route(
     year: Optional[int] = Query(None, description="Filter by year (e.g. 2026)", ge=2000, le=2100),
@@ -199,6 +202,7 @@ async def get_cases_export_all_route(
 @incidents_report_router.post(
     "/generate-report-csv/{customer_code}",
     description="Generate a report for a customer. Optionally filter by year and month.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_export_customer_route(
     customer_code: str,
@@ -222,6 +226,7 @@ async def get_cases_export_customer_route(
 @incidents_report_router.post(
     "/generate-report-docx",
     description="Generate a docx report for a case.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_export_docx_route(
     request: CaseDownloadDocxRequest,
@@ -249,6 +254,7 @@ async def get_cases_export_docx_route(
 @incidents_report_router.post(
     "/generate-report-pdf",
     description="Generate a PDF report for a case.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_export_pdf_route(
     request: CaseDownloadDocxRequest,
