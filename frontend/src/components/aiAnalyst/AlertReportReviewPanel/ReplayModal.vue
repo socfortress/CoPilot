@@ -11,37 +11,32 @@
 			<div class="flex flex-col gap-4">
 				<div class="text-secondary text-sm">
 					Re-runs the investigation for alert
-					<code class="text-primary">#{{ report.alert_id }}</code> with a forced template. The
-					replay creates its own new job and report via Talon — nothing on this report is
-					modified.
+					<code class="text-primary">#{{ report.alert_id }}</code>
+					with a forced template. The replay creates its own new job and report via Talon — nothing on this
+					report is modified.
 				</div>
 
-				<div class="flex flex-wrap items-center gap-3">
-					<Badge type="splitted" bright>
-						<template #label>Customer</template>
-						<template #value>{{ report.customer_code }}</template>
-					</Badge>
-				</div>
-
-				<div>
-					<div class="mb-2 font-medium">Choose a template</div>
+				<div class="flex flex-col gap-2">
+					<div class="flex items-center justify-between gap-2">
+						<div class="text-sm">Choose a template</div>
+						<Badge type="splitted" bright>
+							<template #label>Customer</template>
+							<template #value>{{ report.customer_code }}</template>
+						</Badge>
+					</div>
 					<div v-if="!loading && !templates.length">
 						<n-empty description="No templates available" class="min-h-20 justify-center" />
 					</div>
-					<n-radio-group
-						v-else
-						v-model:value="selectedFilename"
-						class="flex max-h-80 w-full flex-col gap-2 overflow-y-auto pr-1"
-					>
+					<n-radio-group v-else v-model:value="selectedFilename" class="flex! w-full flex-col gap-2">
 						<n-radio
 							v-for="tpl of templates"
 							:key="tpl.filename"
 							:value="tpl.filename"
-							class="border-color hover:border-primary w-full rounded border p-3"
+							class="border-default hover:border-primary w-full rounded-lg border p-3 transition-colors [&_.n-radio\_\_label]:grow"
 							:class="selectedFilename === tpl.filename ? 'border-primary bg-primary/5' : ''"
 						>
-							<div class="flex w-full flex-col gap-1">
-								<div class="flex items-center justify-between gap-3">
+							<div class="flex w-full flex-col gap-1 pl-0.5">
+								<div class="flex w-full items-center justify-between gap-3">
 									<span class="font-medium">{{ tpl.filename }}</span>
 									<span class="text-secondary text-xs">{{ formatBytes(tpl.size_bytes) }}</span>
 								</div>
@@ -58,12 +53,7 @@
 		<template #action>
 			<div class="flex w-full items-center justify-end gap-3">
 				<n-button :disabled="submitting" @click="showLocal = false">Cancel</n-button>
-				<n-button
-					type="primary"
-					:disabled="!selectedFilename || submitting"
-					:loading="submitting"
-					@click="handleReplay"
-				>
+				<n-button type="primary" :disabled="!selectedFilename" :loading="submitting" @click="handleReplay">
 					Replay
 				</n-button>
 			</div>
@@ -104,6 +94,7 @@ const showLocal = computed({
 async function loadTemplates() {
 	loading.value = true
 	selectedFilename.value = null
+
 	try {
 		const res = await Api.talon.getTemplates()
 		if (res.data.success) {
@@ -123,7 +114,9 @@ async function loadTemplates() {
 
 async function handleReplay() {
 	if (!selectedFilename.value) return
+
 	submitting.value = true
+
 	try {
 		const res = await Api.aiAnalyst.replayReport(props.report.id, {
 			template_override: selectedFilename.value,

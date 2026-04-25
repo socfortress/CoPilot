@@ -3,7 +3,7 @@
 		<n-drawer-content closable>
 			<template #header>
 				Palace consolidation
-				<span v-if="customerCode" class="text-secondary ml-2 text-sm">· {{ customerCode }}</span>
+				<code v-if="customerCode" class="ml-2">{{ customerCode }}</code>
 			</template>
 
 			<n-spin :show="loading" class="min-h-40">
@@ -18,47 +18,25 @@
 				<div v-else-if="data" class="flex flex-col gap-4">
 					<!-- Summary tiles -->
 					<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Active</div>
-									<div class="text-2xl font-semibold">{{ data.total_lessons }}</div>
-									<div class="text-secondary text-xs">{{ data.total_pending }} pending</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Durable</div>
-									<div class="text-2xl font-semibold text-success">{{ data.total_durable }}</div>
-									<div class="text-secondary text-xs">never expire</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">One-off</div>
-									<div class="text-2xl font-semibold text-warning">{{ data.total_one_off }}</div>
-									<div class="text-secondary text-xs">7-day TTL</div>
-								</div>
-							</template>
-						</CardEntity>
-						<CardEntity size="small" embedded>
-							<template #default>
-								<div class="flex flex-col gap-1">
-									<div class="text-secondary text-xs tracking-wide uppercase">Duplicates</div>
-									<div
-										class="text-2xl font-semibold"
-										:class="data.duplicate_candidates.length ? 'text-warning' : ''"
-									>
-										{{ data.duplicate_candidates.length }}
-									</div>
-									<div class="text-secondary text-xs">near-dupe pairs</div>
-								</div>
-							</template>
-						</CardEntity>
+						<MetricTile label="Active" :value="data.total_lessons.toString()" :sub="`${data.total_pending} pending`" />
+						<MetricTile
+							label="Durable"
+							:value="data.total_durable.toString()"
+							sub="never expire"
+							color="success"
+						/>
+						<MetricTile
+							label="One-off"
+							:value="data.total_one_off.toString()"
+							sub="7-day TTL"
+							color="warning"
+						/>
+						<MetricTile
+							label="Duplicates"
+							:value="data.duplicate_candidates.length.toString()"
+							sub="near-dupe pairs"
+							:color="data.duplicate_candidates.length ? 'warning' : undefined"
+						/>
 					</div>
 
 					<!-- Upcoming expirations -->
@@ -81,7 +59,7 @@
 										</Badge>
 										<span class="text-secondary text-xs">id {{ ls.id }}</span>
 									</div>
-									<div class="break-words whitespace-pre-wrap">{{ ls.lesson_text }}</div>
+									<div class="wrap-break-word whitespace-pre-wrap">{{ ls.lesson_text }}</div>
 								</div>
 							</div>
 						</template>
@@ -100,22 +78,22 @@
 									class="border-color bg-secondary rounded border p-2 text-sm"
 								>
 									<div class="mb-1 flex flex-wrap items-center gap-2">
-										<Badge
-											type="splitted"
-											bright
-											:color="simColor(pair.similarity)"
-										>
+										<Badge type="splitted" bright :color="simColor(pair.similarity)">
 											<template #label>{{ pair.room }}</template>
 											<template #value>{{ Math.round(pair.similarity * 100) }}%</template>
 										</Badge>
 									</div>
 									<div class="mb-1">
 										<span class="text-secondary text-xs">#{{ pair.lesson_a_id }}</span>
-										<span class="ml-1 break-words whitespace-pre-wrap">{{ pair.lesson_a_text }}</span>
+										<span class="ml-1 wrap-break-word whitespace-pre-wrap">
+											{{ pair.lesson_a_text }}
+										</span>
 									</div>
 									<div>
 										<span class="text-secondary text-xs">#{{ pair.lesson_b_id }}</span>
-										<span class="ml-1 break-words whitespace-pre-wrap">{{ pair.lesson_b_text }}</span>
+										<span class="ml-1 wrap-break-word whitespace-pre-wrap">
+											{{ pair.lesson_b_text }}
+										</span>
 									</div>
 								</div>
 							</div>
@@ -132,11 +110,7 @@
 								class="min-h-20 justify-center"
 							/>
 							<n-collapse v-else>
-								<n-collapse-item
-									v-for="group of data.rooms"
-									:key="group.room"
-									:name="group.room"
-								>
+								<n-collapse-item v-for="group of data.rooms" :key="group.room" :name="group.room">
 									<template #header>
 										<div class="flex items-center gap-2">
 											<span class="font-medium">{{ group.room }}</span>
@@ -155,54 +129,62 @@
 										</div>
 									</template>
 									<div class="flex flex-col gap-2">
-										<div
-											v-for="ls of group.lessons"
-											:key="ls.id"
-											class="border-color bg-secondary rounded border p-2 text-sm"
-										>
-											<div class="mb-1 flex flex-wrap items-center gap-2">
-												<Badge
-													type="splitted"
-													:color="ls.durability === 'durable' ? 'success' : 'warning'"
-												>
-													<template #label>{{ ls.durability }}</template>
-													<template #value>
-														{{ ls.durability === "one_off"
-															? expiryLabel(ls.days_until_expiry)
-															: "∞" }}
-													</template>
-												</Badge>
-												<Badge type="splitted" :color="statusColor(ls.status)">
-													<template #label>Status</template>
-													<template #value>{{ ls.status }}</template>
-												</Badge>
-												<span class="text-secondary text-xs">
-													id {{ ls.id }} · {{ formatDate(ls.created_at, "MMM D") }}
-												</span>
-											</div>
-											<div class="break-words whitespace-pre-wrap">{{ ls.lesson_text }}</div>
-										</div>
+										<CardEntity v-for="ls of group.lessons" :key="ls.id" size="small">
+											<template #default>
+												<div class="flex flex-wrap items-center gap-2">
+													<Badge
+														type="splitted"
+														:color="ls.durability === 'durable' ? 'success' : 'warning'"
+													>
+														<template #label>{{ ls.durability }}</template>
+														<template #value>
+															{{
+																ls.durability === "one_off"
+																	? expiryLabel(ls.days_until_expiry)
+																	: "∞"
+															}}
+														</template>
+													</Badge>
+													<Badge type="splitted" :color="statusColor(ls.status)">
+														<template #label>Status</template>
+														<template #value>{{ ls.status }}</template>
+													</Badge>
+													<Badge type="splitted">
+														<template #label>ID</template>
+														<template #value>{{ ls.id }}</template>
+													</Badge>
+													<Badge type="splitted">
+														<template #label>Created at</template>
+														<template #value>
+															{{ formatDate(ls.created_at, "MMM D") }}
+														</template>
+													</Badge>
+												</div>
+											</template>
+											<template #mainExtra>
+												{{ ls.lesson_text }}
+											</template>
+										</CardEntity>
 									</div>
 								</n-collapse-item>
 							</n-collapse>
 						</template>
 					</CardEntity>
 
-					<div class="text-secondary text-xs">
-						Generated {{ formatDate(data.generated_at, "MMM D, YYYY HH:mm") }} UTC
-					</div>
+					<p class="text-xs">Generated {{ formatDate(data.generated_at, "MMM D, YYYY HH:mm") }} UTC</p>
 				</div>
 			</n-spin>
 
 			<template #footer>
 				<div class="flex w-full items-center justify-between gap-2">
-					<div class="text-secondary text-xs">
+					<p class="text-sm">
 						<template v-if="data">
 							{{ data.total_lessons }} lesson(s) · {{ data.rooms.length }} room(s)
 						</template>
-					</div>
+					</p>
 					<div class="flex items-center gap-2">
 						<n-button
+							v-if="isCopySupported"
 							size="small"
 							:disabled="!data || !data.markdown"
 							@click="copyMarkdown"
@@ -210,13 +192,11 @@
 							<template #icon>
 								<Icon :name="CopyIcon" :size="14" />
 							</template>
-							Copy markdown
+							<div class="min-w-28 text-left">
+								{{ showCopyTooltip ? "Copied!" : "Copy markdown" }}
+							</div>
 						</n-button>
-						<n-button
-							size="small"
-							:disabled="!customerCode || loading"
-							@click="load()"
-						>
+						<n-button size="small" :disabled="!customerCode" :loading @click="load()">
 							<template #icon>
 								<Icon :name="RefreshIcon" :size="14" />
 							</template>
@@ -231,6 +211,7 @@
 
 <script setup lang="ts">
 import type { PalaceConsolidation } from "@/types/aiAnalyst.d"
+import { useClipboard } from "@vueuse/core"
 import { NButton, NCollapse, NCollapseItem, NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
@@ -239,6 +220,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import MetricTile from "./FeedbackMetricTile.vue"
 
 const props = defineProps<{
 	show: boolean
@@ -254,6 +236,7 @@ const CopyIcon = "carbon:copy"
 const WarningIcon = "carbon:warning"
 
 const message = useMessage()
+const { copy: copyMarkdownText, copied: showCopyTooltip, isSupported: isCopySupported } = useClipboard()
 
 // v-model:show bridge — local ref mirrors the prop so the drawer's
 // internal close button also propagates back to the parent.
@@ -311,12 +294,8 @@ async function load() {
 
 async function copyMarkdown() {
 	if (!data.value?.markdown) return
-	try {
-		await navigator.clipboard.writeText(data.value.markdown)
-		message.success("Markdown copied to clipboard")
-	} catch {
-		message.error("Clipboard unavailable — select + copy from the drawer body")
-	}
+
+	copyMarkdownText(data.value.markdown)
 }
 
 // Auto-load on open (and reload if customer changes while open).

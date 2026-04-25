@@ -95,7 +95,7 @@ ASSET_NAME     →  ${source.agent_name}
 | Setting | Value |
 |---|---|
 | **Title** | Give it a descriptive name (e.g., `CoPilot Threshold Webhook`) |
-| **URL** | `https://<your-copilot-url>/api/incidents/alerts/create/threshold` |
+| **URL** | `http://<your-copilot-url>:5000/api/incidents/alerts/create/threshold` |
 
 4. **Save** the notification.
 

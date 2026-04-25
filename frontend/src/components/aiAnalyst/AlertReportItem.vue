@@ -68,7 +68,11 @@
 
 		<n-modal
 			v-model:show="showDetails"
-			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
+			:style="{
+				maxWidth: tabActive === 'compare' ? 'min(1650px, 90vw)' : 'min(850px, 90vw)',
+				minHeight: 'min(540px, 90vh)',
+				overflow: 'hidden'
+			}"
 			content-class="p-0!"
 			display-directive="show"
 			preset="card"
@@ -76,7 +80,7 @@
 			:bordered="false"
 			segmented
 		>
-			<AlertReportDetails v-if="alert" :alert />
+			<AlertReportDetails v-if="alert" :alert @tab-change="handleTabChange" />
 		</n-modal>
 	</div>
 </template>
@@ -110,6 +114,8 @@ const showDetails = ref(false)
 const alert = computed(() => alertData.value)
 const alertNameTruncated = computed(() => _truncate(alert.value?.alert_name, { length: 50 }))
 
+const tabActive = ref<string | null>(null)
+
 const severityColor = computed(() => {
 	const severity = alert.value?.report.severity_assessment
 	if (severity === "Critical" || severity === "High") return "danger"
@@ -120,5 +126,9 @@ const severityColor = computed(() => {
 
 function openDetails() {
 	showDetails.value = true
+}
+
+function handleTabChange(value: string) {
+	tabActive.value = value || null
 }
 </script>
