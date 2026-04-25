@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
 from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
@@ -18,6 +20,7 @@ integration_mimecast_scheduler_router = APIRouter()
     "/provision",
     response_model=ProvisionMimecastResponse,
     description="Provision a mimecast integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_mimecast_route(
     provision_mimecast_request: ProvisionMimecastRequest,
@@ -62,6 +65,7 @@ async def provision_mimecast_route(
 @integration_mimecast_scheduler_router.post(
     "/invoke/scheduler/siem",
     description="Invoke a mimecast integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_mimecast_siem_schedule_create(
     time_interval: int,
@@ -91,6 +95,7 @@ async def invoke_mimecast_siem_schedule_create(
 @integration_mimecast_scheduler_router.post(
     "/invoke/scheduler/ttp",
     description="Invoke a mimecast integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_mimecast_ttp_schedule_create(
     time_interval: int,
