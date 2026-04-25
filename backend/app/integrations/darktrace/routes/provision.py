@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.darktrace.schema.provision import ProvisionDarktraceRequest
 from app.integrations.darktrace.schema.provision import ProvisionDarktraceResponse
@@ -17,6 +19,7 @@ integration_darktrace_provision_router = APIRouter()
     "/provision",
     response_model=ProvisionDarktraceResponse,
     description="Provision a Darktrace integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_darktrace_route(
     provision_darktrace_request: ProvisionDarktraceRequest,
