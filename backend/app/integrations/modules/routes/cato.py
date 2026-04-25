@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.modules.schema.cato import CatoAuthKeys
 from app.integrations.modules.schema.cato import CollectCato
@@ -61,6 +63,7 @@ async def get_collect_cato_data(cato_request, session, auth_keys):
     "",
     response_model=InvokeCatoResponse,
     description="Invoke the cato module.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def collect_cato_route(cato_request: InvokeCatoRequest, session: AsyncSession = Depends(get_db)):
     """Pull down cato Events."""
