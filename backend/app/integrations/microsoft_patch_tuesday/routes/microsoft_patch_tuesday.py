@@ -3,7 +3,10 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Query
+from fastapi import Security
 from loguru import logger
+
+from app.auth.routes.auth import AuthHandler
 
 from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     AvailableCyclesResponse,
@@ -37,6 +40,7 @@ microsoft_patch_tuesday_router = APIRouter()
     "",
     response_model=PatchTuesdayResponse,
     description="Get full Patch Tuesday data for a specific cycle",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_patch_tuesday_data(
     cycle: Optional[str] = Query(
@@ -78,6 +82,7 @@ async def get_patch_tuesday_data(
     "/summary",
     response_model=PatchTuesdaySummaryResponse,
     description="Get Patch Tuesday summary with top prioritized items",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_patch_tuesday_summary_endpoint(
     cycle: Optional[str] = Query(
@@ -110,6 +115,7 @@ async def get_patch_tuesday_summary_endpoint(
     "/cycles",
     response_model=AvailableCyclesResponse,
     description="Get available Patch Tuesday cycles",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cycles() -> AvailableCyclesResponse:
     """
@@ -126,6 +132,7 @@ async def get_cycles() -> AvailableCyclesResponse:
     "/search",
     response_model=PatchTuesdayResponse,
     description="Search for specific CVEs in Patch Tuesday data",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def search_cves(
     cve_ids: List[str] = Query(..., description="List of CVE IDs to search for"),
@@ -149,6 +156,7 @@ async def search_cves(
     "/priority/{priority_level}",
     response_model=PatchTuesdayResponse,
     description="Get vulnerabilities by priority level",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_by_priority(
     priority_level: str,
@@ -232,6 +240,7 @@ async def get_by_priority(
     "/kev",
     response_model=PatchTuesdayResponse,
     description="Get only CISA KEV (Known Exploited Vulnerabilities) items",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_kev_items(
     cycle: Optional[str] = Query(
