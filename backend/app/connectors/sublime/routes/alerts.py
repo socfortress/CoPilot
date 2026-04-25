@@ -18,6 +18,7 @@ sublime_alerts_router = APIRouter()
 @sublime_alerts_router.post(
     "/alert",
     description="Receive alert from Sublime and store it in the database",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def receive_sublime_alert(
     alert_request_body: AlertRequestBody,
