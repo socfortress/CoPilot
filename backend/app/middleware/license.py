@@ -11,6 +11,7 @@ import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
@@ -18,6 +19,7 @@ from sqlalchemy import delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.connectors.schema import UpdateConnector
 from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
@@ -650,6 +652,7 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
     "/subscription_features",
     description="Get the subscription features available",
     response_model=GetSubscriptionCatalogFeaturesResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_subscription_catalog():
     """
@@ -690,6 +693,7 @@ async def get_subscription_catalog():
     "/retrieve_license_by_email",
     description="Retrieve a license by email",
     response_model=GetLicenseResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def retrieve_license_by_email(request: GetLicenseByEmailRequest, session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
     """
@@ -739,6 +743,7 @@ async def retrieve_license_by_email(request: GetLicenseByEmailRequest, session: 
     "/create_checkout_session",
     description="Create a checkout session",
     response_model=CheckoutSessionResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_checkout_session(request: FeatureSubscriptionRequest):
     """
@@ -775,6 +780,7 @@ async def create_checkout_session(request: FeatureSubscriptionRequest):
     "/trial_license",
     description="Create a trial license",
     response_model=TrialLicenseResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncSession = Depends(get_db)) -> TrialLicenseResponse:
     """
@@ -826,6 +832,7 @@ async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncS
     "/cancel_subscription",
     description="Cancel a subscription",
     response_model=CancelSubscriptionResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubscriptionResponse:
     results = await send_post_request(
@@ -850,6 +857,7 @@ async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubsc
     "/verify_license",
     response_model=VerifyLicenseResponse,
     description="Verify a license key",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyLicenseResponse:
     license = await get_license(session)
@@ -918,6 +926,7 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
 @license_router.get(
     "/get_license",
     description="Get a license",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
     license = await get_license(session)
@@ -971,6 +980,7 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
     "/is_feature_enabled/{feature_name}",
     response_model=IsFeatureEnabledResponse,
     description="Check if a feature is enabled in a license",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def is_feature_enabled_route(feature_name: str, session: AsyncSession = Depends(get_db)) -> IsFeatureEnabledResponse:
     try:
@@ -994,6 +1004,7 @@ async def is_feature_enabled_route(feature_name: str, session: AsyncSession = De
     "/get_license_features",
     response_model=GetLicenseFeaturesResponse,
     description="Get license features",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLicenseFeaturesResponse:
     license = await get_license(session)
@@ -1049,6 +1060,7 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
 @license_router.post(
     "/replace_license_in_db",
     description="Replace a license or create one if it doesn't exist",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSession = Depends(get_db)):
     # Get license without raising error if it doesn't exist
@@ -1101,6 +1113,7 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
     "/retrieve-docker-compose",
     response_model=RetrieveDockerCompose,
     description="Retrieve Docker Compose for features enabled",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def retrieve_docker_compose(session: AsyncSession = Depends(get_db)) -> RetrieveDockerCompose:
     license = await get_license(session)
@@ -1121,6 +1134,7 @@ async def retrieve_docker_compose(session: AsyncSession = Depends(get_db)) -> Re
 @license_router.post(
     "/invalidate_cache",
     description="Manually invalidate license cache",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invalidate_cache_route(session: AsyncSession = Depends(get_db)):
     """
