@@ -179,6 +179,7 @@ async def invoke_sap_siem_same_user_failed_login_from_different_ip_route(
     "Prerequisite: \n\n"
     "- At least 3 failed login attempts with the same user name from at least two different GEO IP country locations\n\n"
     "Result: User compressed, IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -219,6 +220,7 @@ async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_rou
     "- At 12:10, another failed login attempt is made by `user2` from IP `5.5.5.5` also located in the US.\n"
     "- At 12:15, a successful login attempt is made by `user2` from IP `6.6.6.6` located in the US.\n"
     "- In this case, the function would not trigger a suspicious login for `user2` because all the login attempts are from the same country (US).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_same_user_successful_login_from_different_geo_location_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
