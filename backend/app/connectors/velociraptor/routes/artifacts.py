@@ -567,55 +567,6 @@ async def quarantine(
     return quarantine_response
 
 
-@velociraptor_artifacts_router.post(
-    "/velociraptor-artifact-recommendation",
-    description="Retrieve artifact to run based on alert. Invokes the `copilot-ai-module",
-)
-async def get_artifact_recommendation(request: ArtifactReccomendationAIRequest):
-    """
-    Retrieve the artifact to run based on the alert.
-
-    Returns:
-        str: The artifact to run based on the alert.
-    """
-    logger.info("Fetching artifact recommendation based on alert")
-    artifacts = await get_artifacts()
-    logger.info(f"Artifacts: {artifacts.artifacts}")
-    return await post_to_copilot_ai_module(
-        data=ArtifactReccomendationRequest(
-            artifacts=artifacts.artifacts,
-            os=request.os,
-            prompt=request.prompt,
-        ),
-    )
-
-
-# ! WIP ! #
-@velociraptor_artifacts_router.post(
-    "/collect/file",
-    response_model=CollectArtifactResponse,
-    description="Run an the artifact to collect a file",
-)
-async def collect_file(collect_artifact_body: CollectFileBody, session: AsyncSession = Depends(get_db)):
-    """
-    Collects a file based on the artifact.
-
-    Returns:
-        CollectArtifactResponse: The response containing the collected file.
-    """
-    logger.info(f"Received request to collect artifact {collect_artifact_body}")
-
-    collect_artifact_body.velociraptor_id = await get_velociraptor_id(
-        session,
-        collect_artifact_body.hostname,
-    )
-
-    collect_artifact_body.velociraptor_org = await get_velociraptor_org(
-        session,
-        collect_artifact_body.hostname,
-    )
-    return await run_file_collection(collect_artifact_body, session)
-
 
 # Add this new route after the existing collect_file route
 
