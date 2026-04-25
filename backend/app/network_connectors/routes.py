@@ -651,7 +651,7 @@ async def get_customer_network_connectors_meta_by_customer_code(
     "/create_network_connector",
     response_model=CustomerNetworkConnectorsCreateResponse,
     description="Create a new customer network_connector.",
-    # dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_network_connector(
     customer_network_connector_create: CustomerNetworkConnectorsCreate,
@@ -716,7 +716,7 @@ async def create_network_connector(
     "/create_network_connector_meta",
     response_model=CustomerNetworkConnectorsMetaResponse,
     description="Create a new customer network_connector metadata.",
-    # dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_network_connector_meta(
     customer_network_connector_meta: CustomerNetworkConnectorsMetaSchema,
