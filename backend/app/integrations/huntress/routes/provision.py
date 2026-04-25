@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.huntress.schema.provision import ProvisionHuntressRequest
 from app.integrations.huntress.schema.provision import ProvisionHuntressResponse
@@ -17,6 +19,7 @@ integration_huntress_provision_scheduler_router = APIRouter()
     "/provision",
     response_model=ProvisionHuntressResponse,
     description="Provision a Huntress integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_huntress_route(
     provision_huntress_request: ProvisionHuntressRequest,
