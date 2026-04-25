@@ -10,8 +10,6 @@ from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
-from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
-from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
@@ -28,7 +26,6 @@ from app.connectors.velociraptor.services.artifacts import (
     get_artifact_parameters_by_prefix_service,
 )
 from app.connectors.velociraptor.services.artifacts import get_artifacts
-from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_file_collection
@@ -565,7 +562,6 @@ async def quarantine(
     await update_agent_quarantine_status(session, quarantine_body, quarantine_response)
 
     return quarantine_response
-
 
 
 # Add this new route after the existing collect_file route

@@ -8,7 +8,6 @@ from fastapi import Security
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.routes.auth import AuthHandler
 from app.active_response.schema.sysmon_config import SysmonConfigContentResponse
 from app.active_response.schema.sysmon_config import SysmonConfigDeploymentResult
 from app.active_response.schema.sysmon_config import SysmonConfigListResponse
@@ -16,6 +15,7 @@ from app.active_response.schema.sysmon_config import SysmonConfigUploadResponse
 from app.active_response.services.sysmon_config import check_config_exists
 from app.active_response.services.sysmon_config import deploy_sysmon_config_to_worker
 from app.active_response.services.sysmon_config import validate_sysmon_config
+from app.auth.routes.auth import AuthHandler
 from app.data_store.data_store_operations import download_sysmon_config
 from app.data_store.data_store_operations import list_sysmon_configs
 from app.data_store.data_store_operations import upload_sysmon_config
@@ -24,7 +24,11 @@ from app.db.db_session import get_db
 sysmon_config_router = APIRouter()
 
 
-@sysmon_config_router.post("/upload", response_model=SysmonConfigUploadResponse, dependencies=[Security(AuthHandler().require_any_scope("admin"))])
+@sysmon_config_router.post(
+    "/upload",
+    response_model=SysmonConfigUploadResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def upload_customer_sysmon_config(
     customer_code: str = Form(...),
     file: UploadFile = File(...),
@@ -62,7 +66,11 @@ async def upload_customer_sysmon_config(
 
 
 # This route must come before the /{customer_code} route
-@sysmon_config_router.get("/content/{customer_code}", response_model=SysmonConfigContentResponse, dependencies=[Security(AuthHandler().require_any_scope("admin"))])
+@sysmon_config_router.get(
+    "/content/{customer_code}",
+    response_model=SysmonConfigContentResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def get_customer_sysmon_config_content(customer_code: str, session: AsyncSession = Depends(get_db)):
     """Get the sysmon config for a specific customer as a string."""
     try:
@@ -111,7 +119,11 @@ async def get_customer_sysmon_config(customer_code: str, session: AsyncSession =
         raise HTTPException(status_code=500, detail=f"Error retrieving config: {str(e)}")
 
 
-@sysmon_config_router.post("/deploy/{customer_code}", response_model=SysmonConfigDeploymentResult, dependencies=[Security(AuthHandler().require_any_scope("admin"))])
+@sysmon_config_router.post(
+    "/deploy/{customer_code}",
+    response_model=SysmonConfigDeploymentResult,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def deploy_sysmon_config(customer_code: str, session: AsyncSession = Depends(get_db)):
     """
     Deploy a customer's Sysmon config to the Wazuh master.

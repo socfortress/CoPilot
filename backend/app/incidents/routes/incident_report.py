@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from app.customers.routes.customers import get_customer
 from app.auth.routes.auth import AuthHandler
+from app.customers.routes.customers import get_customer
 from app.db.db_session import get_db
 from app.incidents.models import Alert
 from app.incidents.models import AlertToIoC

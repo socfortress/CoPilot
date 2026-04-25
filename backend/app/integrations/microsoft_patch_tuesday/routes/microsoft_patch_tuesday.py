@@ -7,7 +7,6 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
-
 from app.integrations.microsoft_patch_tuesday.schema.microsoft_patch_tuesday import (
     AvailableCyclesResponse,
 )

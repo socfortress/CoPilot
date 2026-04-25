@@ -6,7 +6,6 @@ from fastapi import Query
 from fastapi import Security
 
 from app.auth.routes.auth import AuthHandler
-
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
