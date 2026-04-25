@@ -717,7 +717,7 @@ async def get_customer_integrations_meta_by_customer_code(
     "/create_integration",
     response_model=CustomerIntegrationCreateResponse,
     description="Create a new customer integration.",
-    # dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_integration(
     customer_integration_create: CustomerIntegrationCreate,
@@ -789,7 +789,7 @@ async def create_integration(
     "/create_integration_meta",
     response_model=CustomerIntegrationsMetaResponse,
     description="Create a new customer integration metadata.",
-    # dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_integration_meta(
     customer_integration_meta: CustomerIntegrationsMetaSchema,
