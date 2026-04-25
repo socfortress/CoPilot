@@ -3,10 +3,12 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.connectors.graylog.services.streams import get_streams
@@ -671,6 +673,7 @@ async def check_if_event_definition_exists(event_definition: str) -> bool:
     "/available",
     response_model=AvailableMonitoringAlertsResponse,
     description="Get the available monitoring alerts.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsResponse:
     """
@@ -688,6 +691,7 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
     "/provision",
     response_model=ProvisionWazuhMonitoringAlertResponse,
     description="Provisions monitoring alerts.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_monitoring_alert_route(
     request: ProvisionMonitoringAlertRequest,
@@ -713,6 +717,7 @@ async def provision_monitoring_alert_route(
     "/provision/custom",
     response_model=ProvisionWazuhMonitoringAlertResponse,
     description="Provisions custom monitoring alerts.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_custom_monitoring_alert_route(
     request: CustomMonitoringAlertProvisionModel,
@@ -743,6 +748,7 @@ async def provision_custom_monitoring_alert_route(
     "/provision/testing",
     response_model=ProvisionWazuhMonitoringAlertResponse,
     description="Used for testing purposes. To test, upload a JSON document.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_monitoring_alert_testing_route(
     request: dict,

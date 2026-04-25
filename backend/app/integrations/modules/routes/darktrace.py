@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.modules.schema.darktrace import CollectDarktrace
 from app.integrations.modules.schema.darktrace import DarktraceAuthKeys
@@ -62,6 +64,7 @@ async def get_collect_darktrace_data(darktrace_request, session, auth_keys):
     "",
     response_model=InvokeDarktraceResponse,
     description="Invoke the Darktrace module.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def collect_darktrace_route(darktrace_request: InvokeDarktraceRequest, session: AsyncSession = Depends(get_db)):
     """Pull down Darktrace Events."""

@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.modules.schema.sap_siem import CollectSapSiemRequest
 from app.integrations.modules.schema.sap_siem import CustomerDetails
@@ -46,6 +48,7 @@ module_sap_siem_router = APIRouter()
     "",
     response_model=InvokeSAPSiemResponse,
     description="Pull down SAP SIEM Events.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncSession = Depends(get_db)):
     """Pull down SAP SIEM Events."""
@@ -126,6 +129,7 @@ async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session
     "- Login attempts from different IP addresses, regardless of login status (at least 2 failed IP addresses)\n\n"
     "- Successful login afterwards (from the third successful IP address)\n\n"
     "Result: User compressed, IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_successful_user_login_with_different_ip_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -150,6 +154,7 @@ async def invoke_sap_siem_successful_user_login_with_different_ip_route(
     "Prerequisite: \n\n"
     "- At least 3 failed login attempts with the same user name from 3 different IP addresses\n\n"
     "Result: User compressed, IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_same_user_failed_login_from_different_ip_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -174,6 +179,7 @@ async def invoke_sap_siem_same_user_failed_login_from_different_ip_route(
     "Prerequisite: \n\n"
     "- At least 3 failed login attempts with the same user name from at least two different GEO IP country locations\n\n"
     "Result: User compressed, IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -214,6 +220,7 @@ async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_rou
     "- At 12:10, another failed login attempt is made by `user2` from IP `5.5.5.5` also located in the US.\n"
     "- At 12:15, a successful login attempt is made by `user2` from IP `6.6.6.6` located in the US.\n"
     "- In this case, the function would not trigger a suspicious login for `user2` because all the login attempts are from the same country (US).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_same_user_successful_login_from_different_geo_location_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -238,6 +245,7 @@ async def invoke_sap_siem_same_user_successful_login_from_different_geo_location
     "Prerequisite: \n\n"
     "- At least 25 failed login attempts from different IP addresses\n\n"
     "Result: IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_brute_force_failed_logins_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -262,6 +270,7 @@ async def invoke_sap_siem_brute_force_failed_logins_route(
     "Prerequisite: \n\n"
     "- At least 10 different user name failed login attempts from the same IP address\n\n"
     "Result: IP addresses belong to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_brute_force_failed_logins_same_ip_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,
@@ -287,6 +296,7 @@ async def invoke_sap_siem_brute_force_failed_logins_same_ip_route(
     "- At least 3 different user names that have failed from the same IP addressn\n"
     "- At least one successful login from the same IP address after 3 different user names. \n\n"
     "Result: User compromised, IP address belongs to an attack network",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_sap_siem_successful_login_after_multiple_failed_logins_route(
     invoke_siem_analysis: InvokeSapSiemAnalysis,

@@ -176,6 +176,7 @@ async def enable_wazuh_rule(
     "/rule/exclude",
     response_model=RuleExcludeResponse,
     description="Retrieve recommended exclusion for a Wazuh Rule",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def exclude_wazuh_rule(request: RuleExcludeRequest) -> RuleExcludeResponse:
     return await post_to_copilot_ai_module(data=request)

@@ -1292,6 +1292,7 @@ async def delete_agent(
 @agents_router.get(
     "/sync/vulnerabilities",
     description="Sync agent vulnerabilities",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def sync_vulnerabilities_route(
     session: AsyncSession = Depends(get_db),

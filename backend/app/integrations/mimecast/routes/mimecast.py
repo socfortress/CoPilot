@@ -69,6 +69,7 @@ async def invoke_mimecast_route(
     response_model=MimecastResponse,
     description="Pull down Mimecast TTP URLs for a given time range. "
     "Link to docs: https://integrations.mimecast.com/documentation/endpoint-reference/logs-and-statistics/get-ttp-url-logs/ ",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def mimecast_ttp_url_route(
     mimecast_request: MimecastRequest,

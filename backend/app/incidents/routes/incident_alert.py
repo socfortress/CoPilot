@@ -63,6 +63,7 @@ async def verify_velociraptor_header(velociraptor: str = Header(None)):
     "/index/names",
     response_model=IndexNamesResponse,
     description="Get the Graylog event indices",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_index_names_route() -> IndexNamesResponse:
     """
@@ -91,6 +92,7 @@ async def get_alerts_not_created_route() -> AlertsPayload:
 @incidents_alerts_router.post(
     "/alert/details",
     description="Get the details of a single alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_single_alert_details_route(
     create_alert_request: CreateAlertRequestRoute,
@@ -117,6 +119,7 @@ async def get_single_alert_details_route(
 @incidents_alerts_router.post(
     "/alert/timeline",
     description="Get the timeline of an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_alert_timeline_route(
     alert: CreateAlertRequestRoute,

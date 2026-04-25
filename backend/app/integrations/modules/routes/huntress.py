@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.modules.schema.huntress import CollectHuntress
 from app.integrations.modules.schema.huntress import HuntressAuthKeys
@@ -74,6 +76,7 @@ async def get_collect_huntress_data(huntress_request, session, auth_keys):
     "",
     response_model=InvokeHuntressResponse,
     description="Invoke the Huntress module.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def collect_huntress_route(huntress_request: InvokeHuntressRequest, session: AsyncSession = Depends(get_db)):
     """Pull down Huntress Events."""

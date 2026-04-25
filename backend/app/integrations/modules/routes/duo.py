@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.modules.schema.duo import CollectDuo
 from app.integrations.modules.schema.duo import DuoAuthKeys
@@ -62,6 +64,7 @@ async def get_collect_duo_data(duo_request, session, auth_keys):
     "",
     response_model=InvokeDuoResponse,
     description="Invoke the Duo module.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def collect_duo_route(duo_request: InvokeDuoRequest, session: AsyncSession = Depends(get_db)):
     """Pull down Duo Events."""

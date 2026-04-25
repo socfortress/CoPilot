@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.duo.schema.provision import ProvisionDuoRequest
 from app.integrations.duo.schema.provision import ProvisionDuoResponse
@@ -17,6 +19,7 @@ integration_duo_provision_router = APIRouter()
     "/provision",
     response_model=ProvisionDuoResponse,
     description="Provision a Duo integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_duo_route(
     provision_duo_request: ProvisionDuoRequest,

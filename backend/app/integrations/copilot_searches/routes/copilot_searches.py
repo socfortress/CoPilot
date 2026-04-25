@@ -3,7 +3,9 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Security
 
+from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -90,6 +92,7 @@ async def check_if_event_definition_exists(event_definition_title: str) -> bool:
     "",
     response_model=RuleListResponse,
     description="List all detection rules with optional filtering",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_rules(
     platform: PlatformFilter = Query(
@@ -148,6 +151,7 @@ async def list_rules(
     "/linux",
     response_model=RuleListResponse,
     description="List all Linux detection rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_linux_rules(
     status: Optional[RuleStatus] = Query(None),
@@ -177,6 +181,7 @@ async def list_linux_rules(
     "/windows",
     response_model=RuleListResponse,
     description="List all Windows detection rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_windows_rules(
     status: Optional[RuleStatus] = Query(None),
@@ -206,6 +211,7 @@ async def list_windows_rules(
     "/powershell",
     response_model=RuleListResponse,
     description="List all PowerShell detection rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_powershell_rules(
     status: Optional[RuleStatus] = Query(None),
@@ -235,6 +241,7 @@ async def list_powershell_rules(
     "/cve",
     response_model=RuleListResponse,
     description="List all detection rules that have CVE tags",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_cve_rules(
     status: Optional[RuleStatus] = Query(None),
@@ -267,6 +274,7 @@ async def list_cve_rules(
     "/stats",
     response_model=RuleStatsResponse,
     description="Get statistics about loaded detection rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_rule_stats():
     """Get statistics about loaded detection rules."""
@@ -279,6 +287,7 @@ async def get_rule_stats():
     "/id/{rule_id}",
     response_model=RuleDetailResponse,
     description="Get full details of a specific rule by its ID",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_rule_by_id_endpoint(rule_id: str):
     """
@@ -301,6 +310,7 @@ async def get_rule_by_id_endpoint(rule_id: str):
     "/name/{rule_name:path}",
     response_model=RuleDetailResponse,
     description="Get full details of a specific rule by its name",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_rule_by_name_endpoint(rule_name: str):
     """
@@ -328,6 +338,7 @@ async def get_rule_by_name_endpoint(rule_name: str):
     "/mitre/{technique_id}",
     response_model=RuleListResponse,
     description="Get all rules that detect a specific MITRE ATT&CK technique",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_rules_by_mitre(
     technique_id: str,
@@ -353,6 +364,7 @@ async def get_rules_by_mitre(
     "/refresh",
     response_model=RefreshResponse,
     description="Manually refresh the rules cache from GitHub",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def refresh_rules():
     """
@@ -374,6 +386,7 @@ async def refresh_rules():
     "/execute",
     response_model=ExecuteSearchResponse,
     description="Execute a detection rule search against the Wazuh indexer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def execute_search(request: ExecuteSearchRequest):
     """
@@ -424,6 +437,7 @@ async def execute_search(request: ExecuteSearchRequest):
     "/graylog",
     response_model=GraylogQueryResponse,
     description="Generate a Graylog query from a rule with parameter substitution",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def generate_graylog_query_endpoint(request: ExecuteGraylogQueryRequest):
     """
@@ -479,6 +493,7 @@ async def generate_graylog_query_endpoint(request: ExecuteGraylogQueryRequest):
     "/provision/graylog",
     response_model=ProvisionGraylogAlertResponse,
     description="Provision a Graylog event definition from a CoPilot Search rule",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_graylog_alert(request: ProvisionGraylogAlertRequest):
     """

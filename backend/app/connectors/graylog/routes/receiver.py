@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+from fastapi import Security
 from loguru import logger
 
+from app.auth.routes.auth import AuthHandler
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 
@@ -17,6 +19,7 @@ graylog_receiver_router = APIRouter()
 @graylog_receiver_router.post(
     "/receiver",
     description="Forward a message to Graylog",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def forward_to_graylog(payload: dict) -> dict:
     """
