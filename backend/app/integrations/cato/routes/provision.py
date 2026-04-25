@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.cato.schema.provision import ProvisionCatoRequest
 from app.integrations.cato.schema.provision import ProvisionCatoResponse
@@ -17,6 +19,7 @@ integration_cato_provision_scheduler_router = APIRouter()
     "/provision",
     response_model=ProvisionCatoResponse,
     description="Provision a Cato integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_Cato_route(
     provision_cato_request: ProvisionCatoRequest,
