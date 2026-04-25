@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest
 from app.integrations.sap_siem.schema.provision import ProvisionSapSiemResponse
@@ -17,6 +19,7 @@ integration_sap_siem_provision_scheduler_router = APIRouter()
     "/provision",
     response_model=ProvisionSapSiemResponse,
     description="Provision a SAP SIEM integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_sap_siem_route(
     provision_sap_siem_request: ProvisionSapSiemRequest,
