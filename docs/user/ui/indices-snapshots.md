@@ -80,10 +80,11 @@ Each schedule has four optional fields that pin execution to a maintenance windo
 
 | Field | Type | Purpose |
 |---|---|---|
+| **Day of Week** | `Monday … Sunday` (or empty) | Restrict execution to a single weekday. Empty = any day. |
 | **Scheduled Hour** | `0–23` (or empty) | Hour of day the schedule is allowed to run. Empty = any hour (legacy behavior — runs every poll). |
 | **Scheduled Minute** | `0–59` (or empty) | Minute of hour. Pairs with Scheduled Hour to form a **15-minute window** starting at this minute. Empty = any minute in the chosen hour. Disabled until Scheduled Hour is set. |
-| **Interval (Days)** | `≥ 1`, default `1` | Minimum days between executions. `1` = at most once per day. `7` = at most once per 7 days. |
-| **Timezone** | IANA name, default `UTC` | Used to evaluate Scheduled Hour/Minute. Examples: `UTC`, `America/Chicago`, `Europe/London`. DST is handled automatically. |
+| **Interval (Days)** | `≥ 1`, default `1` | Minimum days between executions. `1` = at most once per day. `14` paired with **Day of Week** = "every other Sunday". |
+| **Timezone** | IANA name, default `UTC` | Used to evaluate Day of Week / Scheduled Hour / Scheduled Minute. Examples: `UTC`, `America/Chicago`, `Europe/London`. DST is handled automatically. |
 
 When the current time is outside the window, the schedule's **Last Execution** column shows a `DEFERRED` tag and **no Wazuh Indexer API calls are made** — there's effectively zero cluster load on deferred polls. The next poll inside the window picks up where it left off, and the existing "no new indices = SKIPPED" deduplication still applies.
 
@@ -100,26 +101,29 @@ Result: between 02:00 and 02:14 UTC each day, the schedule fires (assuming new i
 
 #### Example — weekly on Sunday at 01:00 US Central
 
-CoPilot does **not** currently expose an explicit "day of week" field. To pin a schedule to Sundays:
-
 | Field | Value |
 |---|---|
+| Day of Week | `Sunday` |
 | Scheduled Hour | `1` |
 | Scheduled Minute | `0` |
-| Interval (Days) | `7` |
+| Interval (Days) | `1` |
 | Timezone | `America/Chicago` |
 
 > `America/Chicago` correctly handles US Central time year-round — CST in winter (UTC-6) and CDT in summer (UTC-5).
 
-The first execution will land on whichever day is naturally hit first inside the 01:00 hour Central. Once that first run completes, **`Interval (Days) = 7` keeps the schedule anchored to that same weekday for every subsequent run**.
+Result: only fires on Sundays between 01:00 and 01:14 Central. All other days/times defer.
 
-To force the anchor onto a Sunday specifically:
+#### Example — every other Sunday at 01:00 US Central
 
-1. Create the schedule with the values above.
-2. Wait for the first run (or manually trigger one) on a Sunday between 01:00 and 01:14 Central.
-3. From that point on, the schedule will only fire on Sundays.
+| Field | Value |
+|---|---|
+| Day of Week | `Sunday` |
+| Scheduled Hour | `1` |
+| Scheduled Minute | `0` |
+| Interval (Days) | `14` |
+| Timezone | `America/Chicago` |
 
-Alternatively, an admin with database access can manually set `last_execution_time` on the schedule row to the most recent Sunday at 01:00 Central before enabling the schedule — that anchors the 7-day cadence onto Sundays from the start.
+The `Interval (Days) = 14` blocks runs for 13 days after the last successful execution, so the next eligible Sunday after a fired run lands exactly two weeks later.
 
 #### Backward compatibility
 

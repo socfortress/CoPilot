@@ -54,6 +54,19 @@
 
 		<n-divider title-placement="left">Schedule Window</n-divider>
 
+		<n-form-item label="Day of Week" path="day_of_week">
+			<n-select
+				v-model:value="formData.day_of_week"
+				:options="weekdayOptions"
+				placeholder="Any day"
+				clearable
+			/>
+			<template #feedback>
+				Restrict execution to a single day of the week. Leave empty to allow any day.
+				Combines with Interval (Days) for patterns like "every other Sunday".
+			</template>
+		</n-form-item>
+
 		<n-form-item label="Scheduled Hour" path="scheduled_hour">
 			<n-input-number
 				v-model:value="formData.scheduled_hour"
@@ -156,6 +169,7 @@ const formData = ref<SnapshotScheduleCreate>({
 	scheduled_hour: null,
 	scheduled_minute: null,
 	interval_days: 1,
+	day_of_week: null,
 	timezone: "UTC"
 })
 
@@ -165,6 +179,17 @@ const repositoryOptions = computed<SelectOption[]>(() =>
 		value: repo.name
 	}))
 )
+
+// Python convention: Monday=0 ... Sunday=6 (matches datetime.weekday()).
+const weekdayOptions: SelectOption[] = [
+	{ label: "Monday", value: 0 },
+	{ label: "Tuesday", value: 1 },
+	{ label: "Wednesday", value: 2 },
+	{ label: "Thursday", value: 3 },
+	{ label: "Friday", value: 4 },
+	{ label: "Saturday", value: 5 },
+	{ label: "Sunday", value: 6 }
+]
 
 const timezoneOptions: SelectOption[] = [
 	{ label: "UTC", value: "UTC" },
@@ -214,6 +239,7 @@ watch(
 				scheduled_hour: newSchedule.scheduled_hour ?? null,
 				scheduled_minute: newSchedule.scheduled_minute ?? null,
 				interval_days: newSchedule.interval_days ?? 1,
+				day_of_week: newSchedule.day_of_week ?? null,
 				timezone: newSchedule.timezone ?? "UTC"
 			}
 		}

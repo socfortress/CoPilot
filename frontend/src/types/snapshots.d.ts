@@ -132,6 +132,7 @@ export interface SnapshotScheduleCreate {
 	scheduled_hour?: number | null
 	scheduled_minute?: number | null
 	interval_days?: number
+	day_of_week?: number | null
 	timezone?: string
 }
 
@@ -147,6 +148,7 @@ export interface SnapshotScheduleUpdate {
 	scheduled_hour?: number | null
 	scheduled_minute?: number | null
 	interval_days?: number
+	day_of_week?: number | null
 	timezone?: string
 }
 
@@ -166,6 +168,7 @@ export interface SnapshotScheduleResponse {
 	scheduled_hour?: number | null
 	scheduled_minute?: number | null
 	interval_days: number
+	day_of_week?: number | null
 	timezone: string
 	created_at: string
 	updated_at: string

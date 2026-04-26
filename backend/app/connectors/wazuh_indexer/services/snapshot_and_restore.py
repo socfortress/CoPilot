@@ -252,6 +252,18 @@ def _is_schedule_due(schedule: SnapshotSchedule, now_utc: Optional[datetime] = N
                 f"DEFERRED: interval_days={interval_days}, last run {days_elapsed} day(s) ago",
             )
 
+    # Day-of-week gate (Python convention: Monday=0 ... Sunday=6).
+    # Combines with interval_days for patterns like "every other Sunday".
+    if schedule.day_of_week is not None:
+        if now_local.weekday() != schedule.day_of_week:
+            weekday_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            return (
+                False,
+                f"DEFERRED: not scheduled day "
+                f"(want={weekday_names[schedule.day_of_week]}, "
+                f"today={weekday_names[now_local.weekday()]} {tz.key})",
+            )
+
     # Time-of-day gate — only enforced when scheduled_hour is set.
     if schedule.scheduled_hour is not None:
         if now_local.hour != schedule.scheduled_hour:
@@ -286,6 +298,7 @@ def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleRespons
         scheduled_hour=schedule.scheduled_hour,
         scheduled_minute=schedule.scheduled_minute,
         interval_days=schedule.interval_days,
+        day_of_week=schedule.day_of_week,
         timezone=schedule.timezone,
         created_at=schedule.created_at.isoformat(),
         updated_at=schedule.updated_at.isoformat(),
@@ -717,6 +730,7 @@ async def create_snapshot_schedule(
             scheduled_hour=request.scheduled_hour,
             scheduled_minute=request.scheduled_minute,
             interval_days=request.interval_days if request.interval_days is not None else 1,
+            day_of_week=request.day_of_week,
             timezone=request.timezone or "UTC",
         )
 
@@ -882,6 +896,8 @@ async def update_snapshot_schedule(
             schedule.scheduled_minute = request.scheduled_minute
         if request.interval_days is not None:
             schedule.interval_days = request.interval_days
+        if "day_of_week" in fields_set:
+            schedule.day_of_week = request.day_of_week
         if request.timezone is not None:
             schedule.timezone = request.timezone
 

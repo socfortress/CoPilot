@@ -111,12 +111,21 @@ const columns: DataTableColumns<SnapshotScheduleResponse> = [
 			const minute = row.scheduled_minute
 			const interval = row.interval_days ?? 1
 			const tz = row.timezone || "UTC"
+			const dow = row.day_of_week
+			// Python convention: Monday=0 ... Sunday=6.
+			const weekdayNames = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"]
 
-			const intervalLabel = interval === 1 ? "Daily" : `Every ${interval} days`
+			let cadence: string
+			if (dow != null) {
+				const dayLabel = weekdayNames[dow] ?? `Day ${dow}`
+				cadence = interval > 1 ? `${dayLabel} every ${interval} days` : dayLabel
+			} else {
+				cadence = interval === 1 ? "Daily" : `Every ${interval} days`
+			}
 
 			if (hour == null) {
 				return h("div", { class: "flex flex-col" }, [
-					h("span", {}, intervalLabel),
+					h("span", {}, cadence),
 					h("span", { class: "text-xs text-gray-500" }, "Any hour")
 				])
 			}
@@ -125,7 +134,7 @@ const columns: DataTableColumns<SnapshotScheduleResponse> = [
 			const minStr = String(minute ?? 0).padStart(2, "0")
 
 			return h("div", { class: "flex flex-col" }, [
-				h("span", {}, `${intervalLabel} at ${hourStr}:${minStr}`),
+				h("span", {}, `${cadence} at ${hourStr}:${minStr}`),
 				h("span", { class: "text-xs text-gray-500" }, tz)
 			])
 		}

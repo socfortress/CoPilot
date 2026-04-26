@@ -323,6 +323,12 @@ class SnapshotScheduleUpdate(BaseModel):
         ge=1,
         description="Minimum number of days between executions.",
     )
+    day_of_week: Optional[int] = Field(
+        None,
+        ge=0,
+        le=6,
+        description="Day of week (0=Monday ... 6=Sunday) when this schedule should run.",
+    )
     timezone: Optional[str] = Field(
         None,
         description="IANA timezone name used to evaluate scheduled_hour/minute.",
@@ -347,6 +353,7 @@ class SnapshotScheduleResponse(BaseModel):
     scheduled_hour: Optional[int] = Field(None, description="Hour of day (0-23) when this schedule runs. NULL = any hour.")
     scheduled_minute: Optional[int] = Field(None, description="Minute of hour (0-59) when this schedule runs. NULL = any minute.")
     interval_days: int = Field(1, description="Minimum number of days between executions.")
+    day_of_week: Optional[int] = Field(None, description="Day of week (0=Monday ... 6=Sunday). NULL = any day.")
     timezone: str = Field("UTC", description="IANA timezone name used to evaluate scheduled_hour/minute.")
     created_at: str = Field(..., description="When this schedule was created")
     updated_at: str = Field(..., description="When this schedule was last updated")
