@@ -36,6 +36,15 @@ class SnapshotSchedule(SQLModel, table=True):
         ge=1,
         description="Minimum number of days between executions. Default 1 = at most once per day.",
     )
+    day_of_week: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=6,
+        description=(
+            "Day of week (0=Monday ... 6=Sunday) when this schedule is allowed to run. "
+            "NULL = any day. Combines with interval_days for patterns like 'every other Sunday'."
+        ),
+    )
     timezone: str = Field(
         default="UTC",
         description="IANA timezone name used to evaluate scheduled_hour/minute (e.g., 'UTC', 'America/New_York').",

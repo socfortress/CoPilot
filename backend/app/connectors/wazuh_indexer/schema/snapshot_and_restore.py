@@ -283,6 +283,12 @@ class SnapshotScheduleCreate(BaseModel):
         ge=1,
         description="Minimum number of days between executions. Default 1 = at most once per day.",
     )
+    day_of_week: Optional[int] = Field(
+        None,
+        ge=0,
+        le=6,
+        description="Day of week (0=Monday ... 6=Sunday) when this schedule should run. NULL = any day.",
+    )
     timezone: Optional[str] = Field(
         "UTC",
         description="IANA timezone name used to evaluate scheduled_hour/minute (e.g., 'UTC', 'America/New_York').",
