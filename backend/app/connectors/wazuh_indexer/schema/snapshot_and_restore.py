@@ -266,6 +266,27 @@ class SnapshotScheduleCreate(BaseModel):
         None,
         description="Number of days to retain snapshots (None = forever)",
     )
+    scheduled_hour: Optional[int] = Field(
+        None,
+        ge=0,
+        le=23,
+        description="Hour of day (0-23) when this schedule should run. NULL = any hour.",
+    )
+    scheduled_minute: Optional[int] = Field(
+        None,
+        ge=0,
+        le=59,
+        description="Minute of hour (0-59) when this schedule should run. NULL = any minute.",
+    )
+    interval_days: Optional[int] = Field(
+        1,
+        ge=1,
+        description="Minimum number of days between executions. Default 1 = at most once per day.",
+    )
+    timezone: Optional[str] = Field(
+        "UTC",
+        description="IANA timezone name used to evaluate scheduled_hour/minute (e.g., 'UTC', 'America/New_York').",
+    )
 
 
 class SnapshotScheduleUpdate(BaseModel):
@@ -279,6 +300,27 @@ class SnapshotScheduleUpdate(BaseModel):
     include_global_state: Optional[bool] = Field(None, description="Include global cluster state")
     skip_write_indices: Optional[bool] = Field(None, description="Skip indices currently being written to")
     retention_days: Optional[int] = Field(None, description="Number of days to retain snapshots")
+    scheduled_hour: Optional[int] = Field(
+        None,
+        ge=0,
+        le=23,
+        description="Hour of day (0-23) when this schedule should run.",
+    )
+    scheduled_minute: Optional[int] = Field(
+        None,
+        ge=0,
+        le=59,
+        description="Minute of hour (0-59) when this schedule should run.",
+    )
+    interval_days: Optional[int] = Field(
+        None,
+        ge=1,
+        description="Minimum number of days between executions.",
+    )
+    timezone: Optional[str] = Field(
+        None,
+        description="IANA timezone name used to evaluate scheduled_hour/minute.",
+    )
 
 
 class SnapshotScheduleResponse(BaseModel):
@@ -296,6 +338,10 @@ class SnapshotScheduleResponse(BaseModel):
     last_execution_time: Optional[str] = Field(None, description="Last execution time")
     last_snapshot_name: Optional[str] = Field(None, description="Name of the last snapshot created")
     last_execution_status: Optional[str] = Field(None, description="Status of the last execution")
+    scheduled_hour: Optional[int] = Field(None, description="Hour of day (0-23) when this schedule runs. NULL = any hour.")
+    scheduled_minute: Optional[int] = Field(None, description="Minute of hour (0-59) when this schedule runs. NULL = any minute.")
+    interval_days: int = Field(1, description="Minimum number of days between executions.")
+    timezone: str = Field("UTC", description="IANA timezone name used to evaluate scheduled_hour/minute.")
     created_at: str = Field(..., description="When this schedule was created")
     updated_at: str = Field(..., description="When this schedule was last updated")
 

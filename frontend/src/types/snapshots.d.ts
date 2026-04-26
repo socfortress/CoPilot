@@ -129,6 +129,10 @@ export interface SnapshotScheduleCreate {
 	include_global_state?: boolean
 	skip_write_indices?: boolean
 	retention_days?: number | null
+	scheduled_hour?: number | null
+	scheduled_minute?: number | null
+	interval_days?: number
+	timezone?: string
 }
 
 export interface SnapshotScheduleUpdate {
@@ -140,6 +144,10 @@ export interface SnapshotScheduleUpdate {
 	include_global_state?: boolean
 	skip_write_indices?: boolean
 	retention_days?: number | null
+	scheduled_hour?: number | null
+	scheduled_minute?: number | null
+	interval_days?: number
+	timezone?: string
 }
 
 export interface SnapshotScheduleResponse {
@@ -155,6 +163,10 @@ export interface SnapshotScheduleResponse {
 	last_execution_time?: string | null
 	last_snapshot_name?: string | null
 	last_execution_status?: string | null
+	scheduled_hour?: number | null
+	scheduled_minute?: number | null
+	interval_days: number
+	timezone: string
 	created_at: string
 	updated_at: string
 }

@@ -104,24 +104,53 @@ const columns: DataTableColumns<SnapshotScheduleResponse> = [
 		}
 	},
 	{
+		title: "Schedule",
+		key: "scheduled_hour",
+		render(row) {
+			const hour = row.scheduled_hour
+			const minute = row.scheduled_minute
+			const interval = row.interval_days ?? 1
+			const tz = row.timezone || "UTC"
+
+			const intervalLabel = interval === 1 ? "Daily" : `Every ${interval} days`
+
+			if (hour == null) {
+				return h("div", { class: "flex flex-col" }, [
+					h("span", {}, intervalLabel),
+					h("span", { class: "text-xs text-gray-500" }, "Any hour")
+				])
+			}
+
+			const hourStr = String(hour).padStart(2, "0")
+			const minStr = String(minute ?? 0).padStart(2, "0")
+
+			return h("div", { class: "flex flex-col" }, [
+				h("span", {}, `${intervalLabel} at ${hourStr}:${minStr}`),
+				h("span", { class: "text-xs text-gray-500" }, tz)
+			])
+		}
+	},
+	{
 		title: "Last Execution",
 		key: "last_execution_time",
 		render(row) {
 			if (!row.last_execution_time) return "-"
+			const status = row.last_execution_status || ""
+			const tagType = status.startsWith("SUCCESS")
+				? "success"
+				: status.startsWith("SKIPPED") || status.startsWith("DEFERRED")
+					? "warning"
+					: "error"
 			return h("div", { class: "flex flex-col" }, [
 				h("span", {}, new Date(row.last_execution_time).toLocaleString()),
 				h(
 					NTag,
 					{
-						type: row.last_execution_status?.startsWith("SUCCESS")
-							? "success"
-							: row.last_execution_status?.startsWith("SKIPPED")
-								? "warning"
-								: "error",
+						type: tagType,
 						size: "small",
 						class: "mt-1"
 					},
-					() => row.last_execution_status?.split(":")[0] || "Unknown"
+					() => status.split(":")[0] || "Unknown"
 				)
 			])
 		}

@@ -155,7 +155,11 @@ async def initialize_job_metadata():
             },
             {
                 "job_id": "invoke_snapshot_schedules",
-                "time_interval": 60,
+                # Poll every 15 min so per-schedule scheduled_hour/minute gating
+                # in execute_snapshot_schedule has tight enough resolution.
+                # See SCHEDULE_MATCH_TOLERANCE_MINUTES in
+                # app/connectors/wazuh_indexer/services/snapshot_and_restore.py.
+                "time_interval": 15,
                 "function": invoke_snapshot_schedules,
                 "description": "Invokes Index snapshot schedules execution.",
             },

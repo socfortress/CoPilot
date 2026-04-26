@@ -52,6 +52,64 @@
 			</template>
 		</n-form-item>
 
+		<n-divider title-placement="left">Schedule Window</n-divider>
+
+		<n-form-item label="Scheduled Hour" path="scheduled_hour">
+			<n-input-number
+				v-model:value="formData.scheduled_hour"
+				:min="0"
+				:max="23"
+				placeholder="Leave empty for any hour"
+				clearable
+				style="width: 100%"
+			/>
+			<template #feedback>
+				Hour of day (0-23) when this schedule is allowed to run. Leave empty to allow any hour
+				(legacy behavior — runs every poll).
+			</template>
+		</n-form-item>
+
+		<n-form-item label="Scheduled Minute" path="scheduled_minute">
+			<n-input-number
+				v-model:value="formData.scheduled_minute"
+				:min="0"
+				:max="59"
+				placeholder="Leave empty for any minute"
+				clearable
+				style="width: 100%"
+				:disabled="formData.scheduled_hour == null"
+			/>
+			<template #feedback>
+				Minute of hour. The schedule runs within a 15-minute tolerance window starting at
+				this minute. Requires Scheduled Hour to be set.
+			</template>
+		</n-form-item>
+
+		<n-form-item label="Interval (Days)" path="interval_days">
+			<n-input-number
+				v-model:value="formData.interval_days"
+				:min="1"
+				:max="365"
+				style="width: 100%"
+			/>
+			<template #feedback>
+				Minimum number of days between executions. Default 1 = at most once per day.
+			</template>
+		</n-form-item>
+
+		<n-form-item label="Timezone" path="timezone">
+			<n-select
+				v-model:value="formData.timezone"
+				:options="timezoneOptions"
+				filterable
+				tag
+				placeholder="Select or type IANA timezone"
+			/>
+			<template #feedback>
+				IANA timezone used to evaluate Scheduled Hour/Minute (e.g., UTC, America/New_York).
+			</template>
+		</n-form-item>
+
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading @click="handleSubmit">
@@ -65,7 +123,7 @@
 // TODO-FE: refactor
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
+import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 
@@ -94,7 +152,11 @@ const formData = ref<SnapshotScheduleCreate>({
 	snapshot_prefix: "scheduled",
 	include_global_state: false,
 	skip_write_indices: true,
-	retention_days: null
+	retention_days: null,
+	scheduled_hour: null,
+	scheduled_minute: null,
+	interval_days: 1,
+	timezone: "UTC"
 })
 
 const repositoryOptions = computed<SelectOption[]>(() =>
@@ -103,6 +165,20 @@ const repositoryOptions = computed<SelectOption[]>(() =>
 		value: repo.name
 	}))
 )
+
+const timezoneOptions: SelectOption[] = [
+	{ label: "UTC", value: "UTC" },
+	{ label: "America/New_York", value: "America/New_York" },
+	{ label: "America/Chicago", value: "America/Chicago" },
+	{ label: "America/Denver", value: "America/Denver" },
+	{ label: "America/Los_Angeles", value: "America/Los_Angeles" },
+	{ label: "Europe/London", value: "Europe/London" },
+	{ label: "Europe/Berlin", value: "Europe/Berlin" },
+	{ label: "Europe/Paris", value: "Europe/Paris" },
+	{ label: "Asia/Tokyo", value: "Asia/Tokyo" },
+	{ label: "Asia/Singapore", value: "Asia/Singapore" },
+	{ label: "Australia/Sydney", value: "Australia/Sydney" }
+]
 
 const rules: FormRules = {
 	name: {
@@ -134,7 +210,11 @@ watch(
 				snapshot_prefix: newSchedule.snapshot_prefix,
 				include_global_state: newSchedule.include_global_state,
 				skip_write_indices: newSchedule.skip_write_indices,
-				retention_days: newSchedule.retention_days
+				retention_days: newSchedule.retention_days,
+				scheduled_hour: newSchedule.scheduled_hour ?? null,
+				scheduled_minute: newSchedule.scheduled_minute ?? null,
+				interval_days: newSchedule.interval_days ?? 1,
+				timezone: newSchedule.timezone ?? "UTC"
 			}
 		}
 	},
