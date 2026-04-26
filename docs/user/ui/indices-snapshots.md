@@ -72,6 +72,63 @@ Restoring brings historical data back so you can:
 
 If you regularly offload older logs, scheduled snapshots help keep disk usage stable.
 
+### Schedule window (time-of-day + day interval)
+
+By default a snapshot schedule is evaluated every 15 minutes — and if there are new indices to snapshot, it fires immediately. That can mean snapshot operations hit the Wazuh Indexer during business hours, when the cluster is busiest.
+
+Each schedule has four optional fields that pin execution to a maintenance window:
+
+| Field | Type | Purpose |
+|---|---|---|
+| **Day of Week** | `Monday … Sunday` (or empty) | Restrict execution to a single weekday. Empty = any day. |
+| **Scheduled Hour** | `0–23` (or empty) | Hour of day the schedule is allowed to run. Empty = any hour (legacy behavior — runs every poll). |
+| **Scheduled Minute** | `0–59` (or empty) | Minute of hour. Pairs with Scheduled Hour to form a **15-minute window** starting at this minute. Empty = any minute in the chosen hour. Disabled until Scheduled Hour is set. |
+| **Interval (Days)** | `≥ 1`, default `1` | Minimum days between executions. `1` = at most once per day. `14` paired with **Day of Week** = "every other Sunday". |
+| **Timezone** | IANA name, default `UTC` | Used to evaluate Day of Week / Scheduled Hour / Scheduled Minute. Examples: `UTC`, `America/Chicago`, `Europe/London`. DST is handled automatically. |
+
+When the current time is outside the window, the schedule's **Last Execution** column shows a `DEFERRED` tag and **no Wazuh Indexer API calls are made** — there's effectively zero cluster load on deferred polls. The next poll inside the window picks up where it left off, and the existing "no new indices = SKIPPED" deduplication still applies.
+
+#### Example — daily at 02:00 UTC
+
+| Field | Value |
+|---|---|
+| Scheduled Hour | `2` |
+| Scheduled Minute | `0` |
+| Interval (Days) | `1` |
+| Timezone | `UTC` |
+
+Result: between 02:00 and 02:14 UTC each day, the schedule fires (assuming new indices exist). All other polls are deferred.
+
+#### Example — weekly on Sunday at 01:00 US Central
+
+| Field | Value |
+|---|---|
+| Day of Week | `Sunday` |
+| Scheduled Hour | `1` |
+| Scheduled Minute | `0` |
+| Interval (Days) | `1` |
+| Timezone | `America/Chicago` |
+
+> `America/Chicago` correctly handles US Central time year-round — CST in winter (UTC-6) and CDT in summer (UTC-5).
+
+Result: only fires on Sundays between 01:00 and 01:14 Central. All other days/times defer.
+
+#### Example — every other Sunday at 01:00 US Central
+
+| Field | Value |
+|---|---|
+| Day of Week | `Sunday` |
+| Scheduled Hour | `1` |
+| Scheduled Minute | `0` |
+| Interval (Days) | `14` |
+| Timezone | `America/Chicago` |
+
+The `Interval (Days) = 14` blocks runs for 13 days after the last successful execution, so the next eligible Sunday after a fired run lands exactly two weeks later.
+
+#### Backward compatibility
+
+Schedules created before this feature was introduced — and any new schedule where Scheduled Hour is left empty — keep their original behavior: they run on every 15-minute poll and rely solely on the "new indices needed" check.
+
 ---
 
 ## Common gotchas

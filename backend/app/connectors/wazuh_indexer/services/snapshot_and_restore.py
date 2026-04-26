@@ -2,10 +2,13 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfoNotFoundError
 
 from loguru import logger
 from sqlalchemy import select
@@ -204,6 +207,76 @@ async def filter_write_indices(
     return indices_to_snapshot, skipped_write_indices
 
 
+# Tolerance window (minutes) used when matching scheduled_minute. Should be
+# >= the master poll cadence to avoid missing a slot. Master poll runs every
+# 15 minutes (see app/schedulers/scheduler.py initialize_job_metadata).
+SCHEDULE_MATCH_TOLERANCE_MINUTES = 15
+
+
+def _is_schedule_due(schedule: SnapshotSchedule, now_utc: Optional[datetime] = None) -> Tuple[bool, str]:
+    """
+    Determine whether a snapshot schedule is due to run based on its
+    scheduled_hour, scheduled_minute, interval_days, and timezone fields.
+
+    Returns:
+        (due, reason). When due is False, reason explains why so it can be
+        recorded as last_execution_status (e.g., "DEFERRED: outside window").
+    """
+    if now_utc is None:
+        now_utc = datetime.now(dt_timezone.utc)
+    elif now_utc.tzinfo is None:
+        now_utc = now_utc.replace(tzinfo=dt_timezone.utc)
+
+    # Resolve the schedule's timezone (fall back to UTC on any issue).
+    try:
+        tz = ZoneInfo(schedule.timezone or "UTC")
+    except ZoneInfoNotFoundError:
+        logger.warning(
+            f"Schedule {schedule.name}: invalid timezone '{schedule.timezone}', falling back to UTC",
+        )
+        tz = ZoneInfo("UTC")
+    now_local = now_utc.astimezone(tz)
+
+    # interval_days gate — compare local calendar dates so a schedule with
+    # interval_days=1 fires at most once per local day.
+    interval_days = schedule.interval_days or 1
+    if schedule.last_execution_time is not None:
+        last_utc = schedule.last_execution_time
+        if last_utc.tzinfo is None:
+            last_utc = last_utc.replace(tzinfo=dt_timezone.utc)
+        last_local_date = last_utc.astimezone(tz).date()
+        days_elapsed = (now_local.date() - last_local_date).days
+        if days_elapsed < interval_days:
+            return (
+                False,
+                f"DEFERRED: interval_days={interval_days}, last run {days_elapsed} day(s) ago",
+            )
+
+    # Day-of-week gate (Python convention: Monday=0 ... Sunday=6).
+    # Combines with interval_days for patterns like "every other Sunday".
+    if schedule.day_of_week is not None:
+        if now_local.weekday() != schedule.day_of_week:
+            weekday_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            reason = f"DEFERRED: not scheduled day (want={weekday_names[schedule.day_of_week]}, today={weekday_names[now_local.weekday()]} {tz.key})"
+            logger.info(reason)
+            return False, reason
+
+    # Time-of-day gate — only enforced when scheduled_hour is set.
+    if schedule.scheduled_hour is not None:
+        if now_local.hour != schedule.scheduled_hour:
+            reason = f"DEFERRED: outside scheduled hour ({schedule.scheduled_hour:02d}:xx {tz.key})"
+            logger.info(reason)
+            return False, reason
+        if schedule.scheduled_minute is not None:
+            in_window = schedule.scheduled_minute <= now_local.minute < schedule.scheduled_minute + SCHEDULE_MATCH_TOLERANCE_MINUTES
+            if not in_window:
+                reason = f"DEFERRED: outside scheduled minute window ({schedule.scheduled_hour:02d}:{schedule.scheduled_minute:02d} +{SCHEDULE_MATCH_TOLERANCE_MINUTES}min {tz.key})"
+                logger.info(reason)
+                return False, reason
+
+    return True, ""
+
+
 def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleResponse:
     """Convert a SnapshotSchedule model to a response model."""
     return SnapshotScheduleResponse(
@@ -219,6 +292,11 @@ def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleRespons
         last_execution_time=schedule.last_execution_time.isoformat() if schedule.last_execution_time else None,
         last_snapshot_name=schedule.last_snapshot_name,
         last_execution_status=schedule.last_execution_status,
+        scheduled_hour=schedule.scheduled_hour,
+        scheduled_minute=schedule.scheduled_minute,
+        interval_days=schedule.interval_days,
+        day_of_week=schedule.day_of_week,
+        timezone=schedule.timezone,
         created_at=schedule.created_at.isoformat(),
         updated_at=schedule.updated_at.isoformat(),
     )
@@ -646,6 +724,11 @@ async def create_snapshot_schedule(
             include_global_state=request.include_global_state if request.include_global_state is not None else False,
             skip_write_indices=request.skip_write_indices if request.skip_write_indices is not None else True,
             retention_days=request.retention_days,
+            scheduled_hour=request.scheduled_hour,
+            scheduled_minute=request.scheduled_minute,
+            interval_days=request.interval_days if request.interval_days is not None else 1,
+            day_of_week=request.day_of_week,
+            timezone=request.timezone or "UTC",
         )
 
         session.add(schedule)
@@ -801,6 +884,19 @@ async def update_snapshot_schedule(
             schedule.skip_write_indices = request.skip_write_indices
         if request.retention_days is not None:
             schedule.retention_days = request.retention_days
+        # Allow explicit NULL on scheduled_hour/minute so users can clear
+        # the time-of-day gate via the API (Pydantic tracks set fields).
+        fields_set = request.__fields_set__
+        if "scheduled_hour" in fields_set:
+            schedule.scheduled_hour = request.scheduled_hour
+        if "scheduled_minute" in fields_set:
+            schedule.scheduled_minute = request.scheduled_minute
+        if request.interval_days is not None:
+            schedule.interval_days = request.interval_days
+        if "day_of_week" in fields_set:
+            schedule.day_of_week = request.day_of_week
+        if request.timezone is not None:
+            schedule.timezone = request.timezone
 
         schedule.updated_at = datetime.utcnow()
 
@@ -1012,6 +1108,30 @@ async def execute_snapshot_schedule(
     logger.info(f"Executing snapshot schedule: {schedule.name} (ID: {schedule.id})")
 
     try:
+        # Time-of-day / day-interval gate. Cheap check that runs before any
+        # indexer API calls — defers the snapshot until it falls inside the
+        # configured window. Legacy schedules with no scheduling fields set
+        # behave exactly as before (always due, every poll).
+        due, defer_reason = _is_schedule_due(schedule)
+        if not due:
+            logger.info(f"Schedule {schedule.name}: {defer_reason}")
+            schedule.last_execution_status = defer_reason
+            schedule.updated_at = datetime.utcnow()
+            try:
+                await session.commit()
+            except Exception:
+                await session.rollback()
+            return ScheduledSnapshotExecutionResponse(
+                schedule_id=schedule.id,
+                schedule_name=schedule.name,
+                snapshot_name=None,
+                indices_snapshotted=[],
+                skipped_write_indices=[],
+                already_snapshotted_indices=[],
+                success=True,
+                message=defer_reason,
+            )
+
         # Determine which indices need to be snapshotted
         indices_to_snapshot, skipped_write_indices, already_snapshotted = await get_indices_needing_snapshot(schedule)
 
