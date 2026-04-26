@@ -255,20 +255,15 @@ def _is_schedule_due(schedule: SnapshotSchedule, now_utc: Optional[datetime] = N
     # Time-of-day gate — only enforced when scheduled_hour is set.
     if schedule.scheduled_hour is not None:
         if now_local.hour != schedule.scheduled_hour:
-            return (
-                False,
-                f"DEFERRED: outside scheduled hour ({schedule.scheduled_hour:02d}:xx {tz.key})",
-            )
+            reason = f"DEFERRED: outside scheduled hour ({schedule.scheduled_hour:02d}:xx {tz.key})"
+            logger.info(reason)
+            return False, reason
         if schedule.scheduled_minute is not None:
-            start = schedule.scheduled_minute
-            end = start + SCHEDULE_MATCH_TOLERANCE_MINUTES
-            if not (start <= now_local.minute < end):
-                return (
-                    False,
-                    f"DEFERRED: outside scheduled minute window "
-                    f"({schedule.scheduled_hour:02d}:{schedule.scheduled_minute:02d} "
-                    f"+{SCHEDULE_MATCH_TOLERANCE_MINUTES}min {tz.key})",
-                )
+            in_window = schedule.scheduled_minute <= now_local.minute < schedule.scheduled_minute + SCHEDULE_MATCH_TOLERANCE_MINUTES
+            if not in_window:
+                reason = f"DEFERRED: outside scheduled minute window ({schedule.scheduled_hour:02d}:{schedule.scheduled_minute:02d} +{SCHEDULE_MATCH_TOLERANCE_MINUTES}min {tz.key})"
+                logger.info(reason)
+                return False, reason
 
     return True, ""
 
