@@ -257,13 +257,9 @@ def _is_schedule_due(schedule: SnapshotSchedule, now_utc: Optional[datetime] = N
     if schedule.day_of_week is not None:
         if now_local.weekday() != schedule.day_of_week:
             weekday_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-            return (
-                False,
-                f"DEFERRED: not scheduled day "
-                f"(want={weekday_names[schedule.day_of_week]}, "
-                f"today={weekday_names[now_local.weekday()]} {tz.key},
-            )",
-            )
+            reason = f"DEFERRED: not scheduled day (want={weekday_names[schedule.day_of_week]}, today={weekday_names[now_local.weekday()]} {tz.key})"
+            logger.info(reason)
+            return False, reason
 
     # Time-of-day gate — only enforced when scheduled_hour is set.
     if schedule.scheduled_hour is not None:
