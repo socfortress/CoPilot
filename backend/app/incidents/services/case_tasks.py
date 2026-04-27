@@ -31,6 +31,7 @@ from app.incidents.models import CaseTask
 from app.incidents.models import CaseTemplate
 from app.incidents.models import CaseTemplateTask
 from app.incidents.schema.case_templates import CaseCloseWarningResponse
+from app.incidents.schema.case_templates import CaseEventType
 from app.incidents.schema.case_templates import CaseTaskCreate
 from app.incidents.schema.case_templates import CaseTaskListResponse
 from app.incidents.schema.case_templates import CaseTaskOperationResponse
