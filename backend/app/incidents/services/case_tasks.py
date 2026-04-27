@@ -196,6 +196,46 @@ async def apply_template_to_case(
         session.add(case_task)
         new_tasks.append(case_task)
 
+    # Audit emits (Phase 4): one template_applied event for the operation,
+    # plus one task_added event per snapshotted task. Imported lazily to
+    # avoid a circular import — case_events doesn't depend on case_tasks
+    # but isort/lint sometimes resolves these eagerly.
+    from app.incidents.services.case_events import (
+        emit_case_event,
+        payload_task,
+        payload_template_applied,
+    )
+
+    await session.flush()  # ensure case_task.id is populated for the audit payloads
+
+    await emit_case_event(
+        session=session,
+        case_id=case_id,
+        event_type=CaseEventType.TEMPLATE_APPLIED,
+        actor=actor,
+        payload=payload_template_applied(
+            template_id=template.id,
+            template_name=template.name,
+            tasks_added=len(new_tasks),
+        ),
+        commit=False,
+    )
+    for ct in new_tasks:
+        await emit_case_event(
+            session=session,
+            case_id=case_id,
+            event_type=CaseEventType.TASK_ADDED,
+            actor=actor,
+            payload=payload_task(
+                task_id=ct.id,
+                title=ct.title,
+                mandatory=ct.mandatory,
+                source="template",
+                template_id=template.id,
+            ),
+            commit=False,
+        )
+
     if commit:
         await session.commit()
         for t in new_tasks:
@@ -205,7 +245,6 @@ async def apply_template_to_case(
             f"{len(new_tasks)} task(s) created by {actor}",
         )
     else:
-        await session.flush()
         logger.info(
             f"Staged template id={template_id} ('{template.name}') for case id={case_id}: "
             f"{len(new_tasks)} task(s) (uncommitted)",
@@ -305,6 +344,24 @@ async def add_case_task(
             created_by=actor,
         )
         session.add(task)
+        await session.flush()
+
+        from app.incidents.services.case_events import emit_case_event, payload_task
+
+        await emit_case_event(
+            session=session,
+            case_id=case_id,
+            event_type=CaseEventType.TASK_ADDED,
+            actor=actor,
+            payload=payload_task(
+                task_id=task.id,
+                title=task.title,
+                mandatory=task.mandatory,
+                source="custom",
+            ),
+            commit=False,
+        )
+
         await session.commit()
         await session.refresh(task)
 
@@ -345,6 +402,8 @@ async def update_case_task(
             )
 
         fields_set = request.__fields_set__
+        previous_status = task.status
+        status_changed = False
 
         if "status" in fields_set and request.status is not None:
             new_status = request.status
@@ -354,7 +413,9 @@ async def update_case_task(
                     success=False,
                     message="Mandatory tasks cannot be marked NOT_NECESSARY.",
                 )
-            task.status = new_status.value
+            if new_status.value != task.status:
+                task.status = new_status.value
+                status_changed = True
 
             # Maintain completed_by / completed_at to reflect the resulting state.
             if new_status in (CaseTaskStatus.DONE, CaseTaskStatus.NOT_NECESSARY):
@@ -365,11 +426,49 @@ async def update_case_task(
                 task.completed_by = None
                 task.completed_at = None
 
-        if "evidence_comment" in fields_set:
+        comment_set_this_call = "evidence_comment" in fields_set
+        if comment_set_this_call:
             task.evidence_comment = request.evidence_comment
 
         task.updated_at = datetime.utcnow()
         session.add(task)
+
+        # Audit emits (Phase 4): two distinct events when both fire — the UI
+        # can render them as a single block but the data model keeps them
+        # separate so a comment-only update still appears in the timeline.
+        from app.incidents.services.case_events import emit_case_event, payload_task
+
+        if status_changed:
+            await emit_case_event(
+                session=session,
+                case_id=task.case_id,
+                event_type=CaseEventType.TASK_STATUS_CHANGED,
+                actor=actor,
+                payload=payload_task(
+                    task_id=task.id,
+                    title=task.title,
+                    mandatory=task.mandatory,
+                    from_status=previous_status,
+                    to_status=task.status,
+                ),
+                commit=False,
+            )
+
+        if comment_set_this_call and request.evidence_comment:
+            await emit_case_event(
+                session=session,
+                case_id=task.case_id,
+                event_type=CaseEventType.TASK_COMMENTED,
+                actor=actor,
+                payload=payload_task(
+                    task_id=task.id,
+                    title=task.title,
+                    mandatory=task.mandatory,
+                    snippet=request.evidence_comment[:140],
+                ),
+                commit=False,
+            )
+
         await session.commit()
         await session.refresh(task)
 
