@@ -96,10 +96,11 @@ export default {
 			payload
 		)
 	},
-	updateCaseTask(taskId: number, payload: CaseTaskUpdatePayload) {
+	updateCaseTask(taskId: number, payload: CaseTaskUpdatePayload, signal?: AbortSignal) {
 		return HttpClient.patch<FlaskBaseResponse & { task: CaseTask | null }>(
 			`/incidents/db_operations/case/tasks/${taskId}`,
-			payload
+			payload,
+			{ signal }
 		)
 	},
 	deleteCaseTask(taskId: number) {
