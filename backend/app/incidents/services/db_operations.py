@@ -1417,12 +1417,38 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
     return alerts_out
 
 
-async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
+async def create_case(
+    case: CaseCreate,
+    db: AsyncSession,
+    *,
+    actor: Optional[str] = None,
+    template_id: Optional[int] = None,
+) -> Case:
+    """
+    Create a Case manually (no originating alert).
+
+    When ``template_id`` is supplied, the named CaseTemplate is applied
+    immediately. Otherwise tasks are NOT auto-applied — the manual path
+    has no source hint to pick from. Analysts can apply a template later
+    via ``POST /case/{id}/apply-template/{template_id}``.
+    """
     db_case = Case(**case.dict())
     db.add(db_case)
     try:
         await db.flush()
         await db.refresh(db_case)
+
+        if template_id is not None:
+            from app.incidents.services.case_tasks import apply_template_to_case
+
+            await apply_template_to_case(
+                case_id=db_case.id,
+                template_id=template_id,
+                actor=actor or "system",
+                session=db,
+                commit=False,
+            )
+
         await db.commit()
     except IntegrityError:
         await db.rollback()
@@ -1430,7 +1456,28 @@ async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
     return db_case
 
 
-async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
+async def create_case_from_alert(
+    alert_id: int,
+    db: AsyncSession,
+    *,
+    actor: Optional[str] = None,
+    template_id: Optional[int] = None,
+) -> Case:
+    """
+    Create a Case from an Alert and (Phase 3, issue #792) auto-apply a
+    matching CaseTemplate.
+
+    Template selection (when ``template_id`` is not supplied):
+        first-alert-wins — pick by (alert.customer_code, alert.source)
+        with the priority order documented in
+        ``app.incidents.services.case_tasks.pick_template_for_case``.
+        If no template matches, no tasks are created and the case is
+        returned unchanged.
+
+    ``actor`` is the username performing the action; used as
+    ``CaseTask.created_by`` for snapshot rows. Defaults to "system" when
+    the caller doesn't have it (legacy code paths).
+    """
     logger.info(f"Creating case from alert {alert_id}")
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
@@ -1448,6 +1495,29 @@ async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
     try:
         await db.flush()
         await db.refresh(case)
+
+        # Apply a case template (Phase 3, issue #792). Imported lazily to
+        # avoid a circular import — case_tasks pulls from this module too.
+        from app.incidents.services.case_tasks import apply_template_to_case
+        from app.incidents.services.case_tasks import auto_apply_template_for_new_case
+
+        actor_name = actor or "system"
+        if template_id is not None:
+            await apply_template_to_case(
+                case_id=case.id,
+                template_id=template_id,
+                actor=actor_name,
+                session=db,
+                commit=False,
+            )
+        else:
+            await auto_apply_template_for_new_case(
+                case=case,
+                actor=actor_name,
+                session=db,
+                source_hint=alert.source,
+            )
+
         await db.commit()
     except IntegrityError:
         await db.rollback()
