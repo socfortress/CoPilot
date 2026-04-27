@@ -104,11 +104,15 @@ export default {
 			case_id: caseId
 		})
 	},
-	updateCaseStatus(caseId: number, status: CaseStatus) {
-		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
-			case_id: caseId,
-			status
-		})
+	updateCaseStatus(caseId: number, status: CaseStatus, force = false) {
+		return HttpClient.put<FlaskBaseResponse>(
+			`/incidents/db_operations/case/status`,
+			{
+				case_id: caseId,
+				status
+			},
+			{ params: force ? { force: true } : {} }
+		)
 	},
 	updateCaseAssignedUser(caseId: number, user: string) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/assigned-to`, {

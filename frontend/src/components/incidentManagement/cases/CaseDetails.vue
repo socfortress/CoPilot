@@ -30,6 +30,20 @@
 					</template>
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="Tasks" tab="Tasks" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<CaseTasksList
+						:case-id="caseEntity.id"
+						:customer-code="caseEntity.customer_code"
+						:can-edit="canEditTasks"
+					/>
+				</div>
+			</n-tab-pane>
+			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<CaseTimelineFeed :case-id="caseEntity.id" />
+				</div>
+			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
 				<div class="p-7 pt-4">
 					<CaseCommentsList
@@ -52,8 +66,10 @@
 import type { Case, CaseComment } from "@/types/incidentManagement/cases.d"
 import _clone from "lodash/cloneDeep"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
+import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth.d"
 
 const props = defineProps<{
 	caseData?: Case
@@ -66,7 +82,15 @@ const emit = defineEmits<{
 const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
 const CaseDataStore = defineAsyncComponent(() => import("./CaseDataStore.vue"))
 const CaseCommentsList = defineAsyncComponent(() => import("./CaseCommentsList.vue"))
+const CaseTasksList = defineAsyncComponent(() => import("./CaseTasksList.vue"))
+const CaseTimelineFeed = defineAsyncComponent(() => import("./CaseTimelineFeed.vue"))
 const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
+
+// Customer-portal users see Tasks + Timeline read-only. The /frontend app is
+// primarily analyst-facing, but role-conditional rendering keeps it correct
+// if a customer_user happens to land on this view.
+const authStore = useAuthStore()
+const canEditTasks = computed(() => authStore.userRole !== AuthUserRole.CustomerUser)
 
 const { caseData, caseId } = toRefs(props)
 
