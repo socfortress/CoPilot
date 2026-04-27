@@ -5,9 +5,9 @@
 			<div class="flex flex-col gap-1">
 				<h2 class="text-lg font-semibold">Case Templates</h2>
 				<p class="text-secondary text-sm">
-					Reusable investigation playbooks. Templates are matched to new cases by
-					customer + alert source on case creation, with priority
-					customer+source &gt; customer-only &gt; source-only &gt; global default.
+					Reusable investigation playbooks. Templates are matched to new cases by customer + alert source on
+					case creation, with priority customer+source &gt; customer-only &gt; source-only &gt; global
+					default.
 				</p>
 			</div>
 			<div class="flex items-center gap-2">
@@ -43,9 +43,7 @@
 				clearable
 				style="width: 220px"
 			/>
-			<n-checkbox v-model:checked="includeGlobal" size="small">
-				Include global / source-agnostic
-			</n-checkbox>
+			<n-checkbox v-model:checked="includeGlobal" size="small">Include global / source-agnostic</n-checkbox>
 			<n-button size="small" quaternary @click="fetchTemplates">
 				<template #icon><Icon name="carbon:renew" :size="14" /></template>
 				Refresh
@@ -56,7 +54,7 @@
 
 		<n-spin :show="loading">
 			<n-data-table
-				:columns="columns"
+				:columns
 				:data="filteredRows"
 				:row-key="(row: CaseTemplate) => row.id"
 				:bordered="false"
@@ -84,21 +82,10 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
-import {
-	NButton,
-	NCheckbox,
-	NDataTable,
-	NDivider,
-	NInput,
-	NModal,
-	NSpin,
-	NTag,
-	useDialog,
-	useMessage
-} from "naive-ui"
+import { NButton, NCheckbox, NDataTable, NDivider, NInput, NModal, NSpin, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, h, onMounted, ref, watch } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils/format"
 import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 
@@ -136,16 +123,10 @@ const columns: DataTableColumns<CaseTemplate> = [
 				h("div", { class: "flex items-center gap-2" }, [
 					h("span", { class: "font-medium" }, row.name),
 					row.is_default
-						? h(
-								NTag,
-								{ size: "tiny", type: "info", bordered: false } as any,
-								{ default: () => "default" }
-							)
+						? h(NTag, { size: "tiny", type: "info", bordered: false } as any, { default: () => "default" })
 						: null
 				]),
-				row.description
-					? h("span", { class: "text-secondary text-xs" }, row.description)
-					: null
+				row.description ? h("span", { class: "text-secondary text-xs" }, row.description) : null
 			])
 		}
 	},
@@ -174,9 +155,7 @@ const columns: DataTableColumns<CaseTemplate> = [
 			const mandatory = row.tasks?.filter(t => t.mandatory).length ?? 0
 			return h("div", { class: "flex flex-col text-xs" }, [
 				h("span", null, `${total} total`),
-				mandatory > 0
-					? h("span", { class: "text-warning" }, `${mandatory} mandatory`)
-					: null
+				mandatory > 0 ? h("span", { class: "text-warning" }, `${mandatory} mandatory`) : null
 			])
 		}
 	},

@@ -15,25 +15,15 @@
 
 		<div class="grid grid-cols-2 gap-4">
 			<n-form-item label="Customer code" path="customer_code">
-				<n-input
-					v-model:value="form.customer_code"
-					placeholder="Leave empty for global"
-					clearable
-				/>
+				<n-input v-model:value="form.customer_code" placeholder="Leave empty for global" clearable />
 			</n-form-item>
 			<n-form-item label="Alert source" path="source">
-				<n-input
-					v-model:value="form.source"
-					placeholder="e.g., wazuh (leave empty for any)"
-					clearable
-				/>
+				<n-input v-model:value="form.source" placeholder="e.g., wazuh (leave empty for any)" clearable />
 			</n-form-item>
 		</div>
 
 		<n-form-item path="is_default">
-			<n-checkbox v-model:checked="form.is_default">
-				Default for this (customer, source) scope
-			</n-checkbox>
+			<n-checkbox v-model:checked="form.is_default">Default for this (customer, source) scope</n-checkbox>
 		</n-form-item>
 
 		<n-divider title-placement="left">Tasks</n-divider>
@@ -42,16 +32,12 @@
 			Add at least one task. You can edit / reorder tasks after the template is created.
 		</div>
 		<div v-else class="text-secondary mb-2 text-xs">
-			Tasks below are saved immediately on add / edit / delete. Editing the template
-			does NOT mutate task snapshots already attached to real cases.
+			Tasks below are saved immediately on add / edit / delete. Editing the template does NOT mutate task
+			snapshots already attached to real cases.
 		</div>
 
 		<div class="flex flex-col gap-2">
-			<div
-				v-for="(task, idx) in tasks"
-				:key="task._key"
-				class="border-border rounded-md border p-3"
-			>
+			<div v-for="(task, idx) in tasks" :key="task._key" class="border-border rounded-md border p-3">
 				<div class="mb-2 flex items-center gap-2">
 					<n-input
 						v-model:value="task.title"
@@ -60,9 +46,7 @@
 						style="flex: 1"
 						@blur="saveTask(idx)"
 					/>
-					<n-checkbox v-model:checked="task.mandatory" @update:checked="saveTask(idx)">
-						mandatory
-					</n-checkbox>
+					<n-checkbox v-model:checked="task.mandatory" @update:checked="saveTask(idx)">mandatory</n-checkbox>
 					<n-button-group size="tiny">
 						<n-button :disabled="idx === 0" @click="moveTask(idx, -1)">
 							<template #icon><Icon name="carbon:arrow-up" :size="14" /></template>
@@ -112,19 +96,10 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
-import {
-	NButton,
-	NButtonGroup,
-	NCheckbox,
-	NDivider,
-	NForm,
-	NFormItem,
-	NInput,
-	useMessage
-} from "naive-ui"
+import { NButton, NButtonGroup, NCheckbox, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 interface DraftTask {
 	_key: string // stable client-side key for v-for
@@ -267,10 +242,7 @@ async function saveTask(idx: number) {
 
 	try {
 		if (draft.id == null) {
-			const res = await Api.incidentManagement.caseTemplates.addTemplateTask(
-				props.template.id,
-				payload
-			)
+			const res = await Api.incidentManagement.caseTemplates.addTemplateTask(props.template.id, payload)
 			if (res.data.success && res.data.task) {
 				draft.id = res.data.task.id
 			} else {
@@ -304,10 +276,7 @@ async function handleSave() {
 	try {
 		if (props.template) {
 			// Update flow — metadata only; task edits already streamed via saveTask.
-			const res = await Api.incidentManagement.caseTemplates.updateTemplate(
-				props.template.id,
-				payload
-			)
+			const res = await Api.incidentManagement.caseTemplates.updateTemplate(props.template.id, payload)
 			if (res.data.success && res.data.template) {
 				emit("saved", res.data.template)
 			} else {
