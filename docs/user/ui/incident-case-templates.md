@@ -183,6 +183,143 @@ Marked non-default. Auto-applies on create-from-CrowdStrike-alert. Analysts can 
 
 ---
 
+## How to use templates well
+
+The mechanics above describe what templates *can* do. This section is about *how to actually use them* so they accelerate investigations instead of cluttering them.
+
+### Start with one global default per source, then layer
+
+Resist the urge to author per-customer templates on day one. The path that scales:
+
+1. **Pick your top 2–3 alert sources** (Wazuh, CrowdStrike, Velociraptor — whatever drives the most cases). Author one **global default** per source. Each should have 3–6 mandatory tasks that capture the universal triage flow, plus 2–4 optional tasks for common follow-ups.
+2. **Run for two weeks.** Watch which tasks consistently get marked NOT_NECESSARY. Watch what custom tasks analysts add (the Tasks tab "Add task" button — those are unmet template needs). Track close-with-force events in the timeline.
+3. **Tune the global default** based on what you saw. Demote noisy mandatory tasks to optional, promote frequently-added custom tasks into the template.
+4. **Only then** start adding customer-specific overrides for the customers that actually have a different runbook (PCI environments, regulated industries, customer-specific evidence requirements, etc.).
+
+You can always create more templates. Removing them later is harder once analysts have memorized the workflow.
+
+### Mandatory discipline — what *should* block close
+
+The soft warning fires on close when a mandatory task isn't DONE. The override is recorded as `forced=true` in the timeline.
+
+A task should be **mandatory** only if:
+
+- Skipping it would leave you unable to answer "what did you actually find?" later
+- Skipping it would fail a compliance/audit review
+- Skipping it would leave the customer with an unsupported claim ("the alert was benign")
+
+A task should be **optional** if:
+
+- It only applies in some scenarios (e.g., "Pull memory dump" — only matters if hash is unknown)
+- It's nice-to-have but the case can close honestly without it
+- It's expensive (analyst time, customer time) and not always justified
+
+> **Anti-pattern:** marking everything mandatory. Analysts will start force-closing routinely, the timeline fills with `forced=true`, and the soft warning becomes background noise instead of a real safety net.
+
+### Use guidelines as the runbook quick-reference
+
+The `guidelines` field renders as a collapsible panel under each task. Treat it as the **5-second runbook** — what the analyst needs without leaving the case page.
+
+Good guidelines content:
+
+- 1–3 sentences of "what success looks like for this task"
+- A direct link to the deeper runbook in your wiki/SharePoint/Confluence
+- 2–3 bullet hints if there's a common gotcha
+- Actual command snippets if the task involves running something
+
+```
+Bad:  "Investigate the alert."
+Good: "Confirm the alert isn't a known false positive (check our exception list
+       at <wiki link>). If new, pull the matching events from the last 24h via
+       Graylog query: source.ip:X.X.X.X AND event.action:authentication_failure"
+```
+
+### Evidence comments are the compliance trail
+
+Every task has an evidence comment textarea. The customer-portal user sees this read-only.
+
+What to put there:
+
+- **Logs / command output** — paste the actual snippet, don't just describe it
+- **Reference IDs** — Jira ticket, ServiceNow change number, Velociraptor hunt ID, Graylog query URL
+- **Decisions and reasoning** — "marked NOT_NECESSARY because the affected host is decommissioned, see asset CMDB"
+- **Customer communication** — "notified customer at 14:32 EST via portal comment"
+
+What *not* to put there:
+
+- Sensitive data the customer shouldn't see (the customer-portal will surface it)
+- Internal-team chatter (use case Comments tab for that — also visible to customer but framed as conversation)
+
+### Reorder for natural investigation flow
+
+The order_index dictates display order on the case Tasks tab. Sequence tasks the way an analyst actually works the case:
+
+1. Triage / scope (is this real? how big?)
+2. Identify (who/what/where)
+3. Investigate (logs, processes, network)
+4. Decide (true positive / false positive / inconclusive)
+5. Act (contain / notify / document)
+6. Close (notify customer, retro)
+
+Tasks higher in the list should be cheaper and faster — get to a triage decision early so the analyst doesn't burn 30 minutes investigating before realizing it's a known false positive.
+
+### The two-template pattern: source + capability
+
+Many investigations are "Wazuh detection that needs EDR follow-up". Rather than authoring one giant Wazuh-with-EDR template, use two:
+
+- `Wazuh — Default` (auto-applies via source match)
+- `CrowdStrike — Investigation` (manually layered when EDR work is needed)
+
+Analyst flow:
+1. Case auto-opens from Wazuh alert with the Wazuh template
+2. Initial triage reveals lateral movement → analyst clicks "Apply template" and picks the CrowdStrike one
+3. Both templates' tasks are now on the case, separately tracked
+
+This keeps each template focused (and reusable for non-co-occurring scenarios) and lets you grow the library without exploding the matrix.
+
+### Custom-task adds as a feedback loop
+
+The "Add task" button on the case Tasks tab is for one-off needs that don't fit any template. But it's also a *signal*. If you find:
+
+- The same custom task being added across many cases → promote to a template task
+- A custom task being added on cases for one specific customer → maybe that customer needs an override template
+- Custom tasks consistently appearing *before* the template's first task → reorder so the template starts where investigations actually start
+
+Schedule a 30-minute monthly template review and look at recent custom tasks. The data is in the timeline (`task_added` events with `source: "custom"`).
+
+### Timeline as compliance + handoff tool
+
+The timeline is more than an audit log — it's the case's **narrative**. When you hand a case to another analyst (shift change, escalation), they should be able to read the timeline top-to-bottom and understand:
+
+- What's been done
+- What's left
+- What the analyst was thinking (via task evidence comments and case Comments)
+
+For compliance reviews, the timeline answers: "Was the procedure followed? When? By whom? If it wasn't, was the deviation documented?" The `forced=true` flag on close, the evidence comments on each task, and the actor/timestamp on each event give you that story without manually reconstructing it.
+
+### Customer-portal as transparency tool
+
+Customers see Tasks + Timeline read-only. Use this deliberately:
+
+- **Mandatory tasks signal effort.** A customer seeing 5 mandatory tasks completed with evidence understands their alert was investigated, not just dismissed.
+- **Status changes signal velocity.** OPEN → IN_PROGRESS → CLOSED with reasonable timestamps in the timeline shows responsiveness.
+- **Evidence comments signal substance.** A task marked DONE with no evidence looks like a checkbox tick. A task with `"Pulled process tree from EDR, no suspicious children. See Velociraptor hunt vh-1234"` shows real work.
+
+If you don't want the customer to see a particular detail, put it in the case Comments tab (still visible) framed as analyst-to-analyst conversation, or in your internal wiki and reference the link from the evidence comment.
+
+### Quarterly template review checklist
+
+Set a recurring 30-minute meeting with your analyst leads:
+
+- [ ] What's the close-with-force rate per template? (Anything > 20% suggests a mandatory task is wrong.)
+- [ ] What custom tasks were added this quarter? Any patterns?
+- [ ] Are there customers consistently force-closing with the global template? Time for an override.
+- [ ] Are there templates with > 80% NOT_NECESSARY on a specific task? Demote it.
+- [ ] Have any new alert sources been onboarded that need their own template?
+- [ ] Any guideline links that 404? (Wiki rot is real.)
+
+---
+
 ## Common gotchas
 
 ### "I edited the template but the existing case didn't change"
