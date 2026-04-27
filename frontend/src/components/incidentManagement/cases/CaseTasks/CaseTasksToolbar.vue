@@ -17,7 +17,7 @@
 				</Badge>
 				<Badge v-if="totalDone > 0" color="success" type="splitted" bright>
 					<template #label>Done</template>
-					<template #value>{{ totalDone }} / {{ tasks.length }}</template>
+					<template #value>{{ totalDone }}</template>
 				</Badge>
 			</div>
 			<div v-if="canEdit" class="flex items-center gap-2">
