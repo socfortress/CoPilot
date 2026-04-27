@@ -21,7 +21,7 @@
 				</Badge>
 			</div>
 			<div v-if="canEdit" class="flex items-center gap-2">
-				<n-button size="small" @click="openApplyTemplate">
+				<n-button size="small" secondary @click="openApplyTemplate">
 					<template #icon>
 						<Icon :name="ApplyIcon" />
 					</template>
