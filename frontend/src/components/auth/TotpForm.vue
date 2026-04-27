@@ -50,7 +50,7 @@
 import type { InputOtpInst } from "naive-ui"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
-import { computed, nextTick, onMounted, ref, watch } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
