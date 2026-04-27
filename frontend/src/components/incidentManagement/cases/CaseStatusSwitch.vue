@@ -3,7 +3,7 @@
 		v-model:value="statusSelected"
 		v-model:show="listVisible"
 		:options="statusOptions"
-		:disabled="loading"
+		:loading
 		size="medium"
 		scrollable
 		to="body"
@@ -14,8 +14,14 @@
 	<!-- Soft-warning modal (issue #792 Phase 3 backend / Phase 5 UI). Fires
 		 when closing a case with mandatory tasks not marked DONE. Cancel
 		 reverts the dropdown; "Close anyway" re-submits with force=true. -->
-	<n-modal v-model:show="showWarning" preset="card" title="Mandatory tasks incomplete" style="max-width: 560px">
-		<p class="mb-3">
+	<n-modal
+		v-model:show="showWarning"
+		preset="card"
+		title="Mandatory tasks incomplete"
+		style="max-width: 560px"
+		display-directive="show"
+	>
+		<p>
 			This case has {{ pendingTasks.length }} mandatory task{{ pendingTasks.length === 1 ? "" : "s" }} that
 			{{ pendingTasks.length === 1 ? "is" : "are" }} not marked
 			<strong>Done</strong>
@@ -39,11 +45,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates.d"
 import { NButton, NModal, NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	caseData: Case
@@ -99,8 +107,8 @@ async function callUpdate(target: CaseStatus, force = false) {
 			// Revert dropdown on plain failure.
 			revertDropdown()
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		revertDropdown()
 	} finally {
 		loading.value = false
