@@ -55,15 +55,10 @@
 		<n-divider title-placement="left">Schedule Window</n-divider>
 
 		<n-form-item label="Day of Week" path="day_of_week">
-			<n-select
-				v-model:value="formData.day_of_week"
-				:options="weekdayOptions"
-				placeholder="Any day"
-				clearable
-			/>
+			<n-select v-model:value="formData.day_of_week" :options="weekdayOptions" placeholder="Any day" clearable />
 			<template #feedback>
-				Restrict execution to a single day of the week. Leave empty to allow any day.
-				Combines with Interval (Days) for patterns like "every other Sunday".
+				Restrict execution to a single day of the week. Leave empty to allow any day. Combines with Interval
+				(Days) for patterns like "every other Sunday".
 			</template>
 		</n-form-item>
 
@@ -77,8 +72,8 @@
 				style="width: 100%"
 			/>
 			<template #feedback>
-				Hour of day (0-23) when this schedule is allowed to run. Leave empty to allow any hour
-				(legacy behavior — runs every poll).
+				Hour of day (0-23) when this schedule is allowed to run. Leave empty to allow any hour (legacy behavior
+				— runs every poll).
 			</template>
 		</n-form-item>
 
@@ -93,21 +88,14 @@
 				:disabled="formData.scheduled_hour == null"
 			/>
 			<template #feedback>
-				Minute of hour. The schedule runs within a 15-minute tolerance window starting at
-				this minute. Requires Scheduled Hour to be set.
+				Minute of hour. The schedule runs within a 15-minute tolerance window starting at this minute. Requires
+				Scheduled Hour to be set.
 			</template>
 		</n-form-item>
 
 		<n-form-item label="Interval (Days)" path="interval_days">
-			<n-input-number
-				v-model:value="formData.interval_days"
-				:min="1"
-				:max="365"
-				style="width: 100%"
-			/>
-			<template #feedback>
-				Minimum number of days between executions. Default 1 = at most once per day.
-			</template>
+			<n-input-number v-model:value="formData.interval_days" :min="1" :max="365" style="width: 100%" />
+			<template #feedback>Minimum number of days between executions. Default 1 = at most once per day.</template>
 		</n-form-item>
 
 		<n-form-item label="Timezone" path="timezone">
