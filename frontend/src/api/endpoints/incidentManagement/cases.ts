@@ -68,15 +68,20 @@ export default {
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},
-	createCase(payload: CasePayload) {
-		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload)
+	createCase(payload: CasePayload, params: Record<string, number | string | boolean> = {}) {
+		return HttpClient.post<FlaskBaseResponse & { case: Case }>(
+			`/incidents/db_operations/case/create`,
+			payload,
+			{ params }
+		)
 	},
-	createCaseFromAlert(alertId: number) {
+	createCaseFromAlert(alertId: number, params: Record<string, number | string | boolean> = {}) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
 			`/incidents/db_operations/case/from-alert`,
 			{
 				alert_id: alertId
-			}
+			},
+			{ params }
 		)
 	},
 	/** @deprecated in favor of multiLinkCase */
