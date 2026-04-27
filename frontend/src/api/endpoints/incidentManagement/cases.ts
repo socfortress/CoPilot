@@ -69,11 +69,9 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},
 	createCase(payload: CasePayload, params: Record<string, number | string | boolean> = {}) {
-		return HttpClient.post<FlaskBaseResponse & { case: Case }>(
-			`/incidents/db_operations/case/create`,
-			payload,
-			{ params }
-		)
+		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload, {
+			params
+		})
 	},
 	createCaseFromAlert(alertId: number, params: Record<string, number | string | boolean> = {}) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(

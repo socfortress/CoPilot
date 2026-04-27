@@ -30,10 +30,9 @@ export default {
 		if (filters.source !== undefined) params.source = filters.source
 		if (filters.includeGlobal !== undefined) params.include_global = filters.includeGlobal
 
-		return HttpClient.get<FlaskBaseResponse & { templates: CaseTemplate[] }>(
-			`/incidents/case_templates`,
-			{ params }
-		)
+		return HttpClient.get<FlaskBaseResponse & { templates: CaseTemplate[] }>(`/incidents/case_templates`, {
+			params
+		})
 	},
 	getTemplate(templateId: number) {
 		return HttpClient.get<FlaskBaseResponse & { template: CaseTemplate | null }>(
