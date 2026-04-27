@@ -39,8 +39,8 @@
 import type { CaseEvent } from "@/types/incidentManagement/caseTemplates.d"
 import { NButton, NEmpty, NSpin, NTag, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { h, onMounted, ref } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -88,9 +88,7 @@ function summary(event: CaseEvent): string {
 	const p = (event.payload || {}) as Record<string, any>
 	switch (event.event_type) {
 		case "case_created":
-			return p.source === "from_alert"
-				? `Case created from alert #${p.alert_id}`
-				: "Case created"
+			return p.source === "from_alert" ? `Case created from alert #${p.alert_id}` : "Case created"
 		case "case_status_changed":
 			return p.forced
 				? `Status forced from ${p.from ?? "—"} to ${p.to} (mandatory tasks bypassed)`
@@ -102,9 +100,7 @@ function summary(event: CaseEvent): string {
 		case "case_escalated":
 			return p.escalated ? "Case escalated" : "Case de-escalated"
 		case "alert_linked":
-			return p.alert_ids
-				? `${p.alert_ids.length} alert(s) linked to case`
-				: `Alert #${p.alert_id} linked`
+			return p.alert_ids ? `${p.alert_ids.length} alert(s) linked to case` : `Alert #${p.alert_id} linked`
 		case "alert_unlinked":
 			return `Alert #${p.alert_id} unlinked`
 		case "comment_added":
@@ -118,13 +114,11 @@ function summary(event: CaseEvent): string {
 		case "task_commented":
 			return `Evidence added on task: ${p.title ?? `#${p.task_id}`}`
 		default:
-			return event.event_type.replace(/_/g, " ")
+			return String(event.event_type).replace(/_/g, " ")
 	}
 }
 
-function timelineType(
-	event: CaseEvent
-): "default" | "success" | "info" | "warning" | "error" {
+function timelineType(event: CaseEvent): "default" | "success" | "info" | "warning" | "error" {
 	const p = (event.payload || {}) as Record<string, any>
 	switch (event.event_type) {
 		case "case_created":
@@ -134,11 +128,7 @@ function timelineType(
 		case "case_status_changed":
 			return p.to === "CLOSED" ? "success" : p.to === "OPEN" ? "info" : "warning"
 		case "task_status_changed":
-			return p.to_status === "DONE"
-				? "success"
-				: p.to_status === "NOT_NECESSARY"
-					? "warning"
-					: "default"
+			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"
 		case "case_escalated":
 			return p.escalated ? "warning" : "default"
 		case "alert_unlinked":
@@ -189,12 +179,10 @@ function hasDetail(event: CaseEvent): boolean {
 function renderDetail(event: CaseEvent) {
 	const p = (event.payload || {}) as Record<string, any>
 	if (event.event_type === "comment_added" && p.snippet) {
-		return () =>
-			h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
+		return () => h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
 	}
 	if (event.event_type === "task_commented" && p.snippet) {
-		return () =>
-			h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
+		return () => h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
 	}
 	if (event.event_type === "alert_linked" && Array.isArray(p.alert_ids)) {
 		return () =>

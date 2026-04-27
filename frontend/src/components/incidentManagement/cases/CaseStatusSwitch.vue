@@ -14,31 +14,25 @@
 	<!-- Soft-warning modal (issue #792 Phase 3 backend / Phase 5 UI). Fires
 		 when closing a case with mandatory tasks not marked DONE. Cancel
 		 reverts the dropdown; "Close anyway" re-submits with force=true. -->
-	<n-modal
-		v-model:show="showWarning"
-		preset="card"
-		title="Mandatory tasks incomplete"
-		style="max-width: 560px"
-	>
+	<n-modal v-model:show="showWarning" preset="card" title="Mandatory tasks incomplete" style="max-width: 560px">
 		<p class="mb-3">
-			This case has {{ pendingTasks.length }} mandatory task{{ pendingTasks.length === 1 ? "" : "s" }}
-			that {{ pendingTasks.length === 1 ? "is" : "are" }} not marked
-			<strong>Done</strong>. Closing anyway will record the override in the case timeline.
+			This case has {{ pendingTasks.length }} mandatory task{{ pendingTasks.length === 1 ? "" : "s" }} that
+			{{ pendingTasks.length === 1 ? "is" : "are" }} not marked
+			<strong>Done</strong>
+			. Closing anyway will record the override in the case timeline.
 		</p>
 
 		<ul class="text-sm">
 			<li v-for="t in pendingTasks" :key="t.id" class="mb-1">
 				<span class="font-medium">{{ t.title }}</span>
-				<span class="text-tertiary"> — {{ humanStatus(t.status) }}</span>
+				<span class="text-tertiary">— {{ humanStatus(t.status) }}</span>
 			</li>
 		</ul>
 
 		<template #footer>
 			<div class="flex justify-end gap-2">
 				<n-button @click="cancelClose">Cancel</n-button>
-				<n-button type="warning" :loading="loading" @click="confirmForceClose">
-					Close anyway
-				</n-button>
+				<n-button type="warning" :loading @click="confirmForceClose">Close anyway</n-button>
 			</div>
 		</template>
 	</n-modal>
@@ -86,11 +80,7 @@ function humanStatus(s: CaseTaskStatus): string {
 async function callUpdate(target: CaseStatus, force = false) {
 	loading.value = true
 	try {
-		const res = await Api.incidentManagement.cases.updateCaseStatus(
-			caseData.value.id,
-			target,
-			force
-		)
+		const res = await Api.incidentManagement.cases.updateCaseStatus(caseData.value.id, target, force)
 		const data: any = res.data
 
 		// Soft-warning shape from backend: success=false, requires_confirmation=true,

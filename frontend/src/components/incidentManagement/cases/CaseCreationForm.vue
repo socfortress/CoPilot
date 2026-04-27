@@ -65,8 +65,8 @@
 						/>
 					</n-form-item>
 					<p class="text-secondary -mt-2 text-xs">
-						Applies the template's predefined tasks to the case. Filtered by the selected
-						customer; global templates are always shown.
+						Applies the template's predefined tasks to the case. Filtered by the selected customer; global
+						templates are always shown.
 					</p>
 				</div>
 
@@ -114,11 +114,7 @@ const loadingCustomersList = ref(false)
 const loadingTemplates = ref(false)
 const submitting = ref(false)
 const loading = computed(
-	() =>
-		loadingAvailableUsers.value ||
-		loadingCustomersList.value ||
-		loadingTemplates.value ||
-		submitting.value
+	() => loadingAvailableUsers.value || loadingCustomersList.value || loadingTemplates.value || submitting.value
 )
 // Template picker state. Lives outside form because it's a query param to the
 // API call, not a body field on CasePayload.
@@ -126,10 +122,9 @@ const availableTemplates = ref<CaseTemplate[]>([])
 const selectedTemplateId = ref<number | null>(null)
 const templateOptions = computed(() =>
 	availableTemplates.value.map(t => ({
-		label:
-			`${t.name}${t.is_default ? " (default)" : ""}` +
-			(t.customer_code ? ` — ${t.customer_code}` : "") +
-			(t.source ? ` · ${t.source}` : ""),
+		label: `${t.name}${t.is_default ? " (default)" : ""}${
+			t.customer_code ? ` — ${t.customer_code}` : ""
+		}${t.source ? ` · ${t.source}` : ""}`,
 		value: t.id
 	}))
 )

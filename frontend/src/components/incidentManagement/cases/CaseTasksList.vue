@@ -108,7 +108,7 @@
 							:autosize="{ minRows: 2, maxRows: 8 }"
 							@blur="onCommentBlur(task, ($event.target as HTMLTextAreaElement).value)"
 						/>
-						<p v-else-if="task.evidence_comment" class="whitespace-pre-line text-sm">
+						<p v-else-if="task.evidence_comment" class="text-sm whitespace-pre-line">
 							{{ task.evidence_comment }}
 						</p>
 						<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
@@ -119,9 +119,12 @@
 						<span v-if="task.completed_by">
 							{{ task.status === "DONE" ? "Completed" : "Marked" }} by
 							<strong>{{ task.completed_by }}</strong>
-							<template v-if="task.completed_at"> · {{ formatDateTime(task.completed_at) }}</template>
+							<template v-if="task.completed_at">· {{ formatDateTime(task.completed_at) }}</template>
 						</span>
-						<span v-else>Created by <strong>{{ task.created_by }}</strong></span>
+						<span v-else>
+							Created by
+							<strong>{{ task.created_by }}</strong>
+						</span>
 					</div>
 				</div>
 			</div>
@@ -150,9 +153,7 @@
 					/>
 				</n-form-item>
 				<n-form-item path="mandatory">
-					<n-checkbox v-model:checked="addForm.mandatory">
-						Mandatory (blocks close-with-warning)
-					</n-checkbox>
+					<n-checkbox v-model:checked="addForm.mandatory">Mandatory (blocks close-with-warning)</n-checkbox>
 				</n-form-item>
 			</n-form>
 			<template #footer>
@@ -176,8 +177,8 @@
 						/>
 					</n-form-item>
 					<p class="text-secondary text-xs">
-						Adds the template's tasks to this case. Existing tasks are preserved — you can layer
-						multiple templates over a single investigation.
+						Adds the template's tasks to this case. Existing tasks are preserved — you can layer multiple
+						templates over a single investigation.
 					</p>
 				</n-form>
 			</n-spin>
@@ -200,11 +201,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type {
-	CaseTask,
-	CaseTaskStatus,
-	CaseTemplate
-} from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTask, CaseTaskStatus, CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import {
 	NButton,
 	NCheckbox,
@@ -221,8 +218,8 @@ import {
 	useMessage
 } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
-import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -246,9 +243,7 @@ const tasks = ref<CaseTask[]>([])
 const loading = ref(false)
 
 const totalDone = computed(() => tasks.value.filter(t => t.status === "DONE").length)
-const mandatoryIncomplete = computed(
-	() => tasks.value.filter(t => t.mandatory && t.status !== "DONE").length
-)
+const mandatoryIncomplete = computed(() => tasks.value.filter(t => t.mandatory && t.status !== "DONE").length)
 
 function statusOptionsFor(task: CaseTask) {
 	const opts: { label: string; value: CaseTaskStatus; disabled?: boolean }[] = [
@@ -416,9 +411,9 @@ const selectedTemplateId = ref<number | null>(null)
 
 const templateOptions = computed(() =>
 	availableTemplates.value.map(t => ({
-		label: `${t.name}${t.is_default ? " (default)" : ""}` +
-			(t.customer_code ? ` — ${t.customer_code}` : "") +
-			(t.source ? ` · ${t.source}` : ""),
+		label: `${t.name}${t.is_default ? " (default)" : ""}${
+			t.customer_code ? ` — ${t.customer_code}` : ""
+		}${t.source ? ` · ${t.source}` : ""}`,
 		value: t.id
 	}))
 )
