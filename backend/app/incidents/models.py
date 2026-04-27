@@ -292,6 +292,149 @@ class ThresholdAlertMetadata(SQLModel, table=True):
     alert: Alert = Relationship()
 
 
+class CaseTemplate(SQLModel, table=True):
+    """
+    Reusable investigation playbook applied to a Case at creation time.
+
+    Templates are scoped via ``customer_code`` (NULL = global) and ``source``
+    (NULL = any alert source). Selection priority on case creation is
+    customer+source > customer > source > is_default. Templates carry a
+    set of ``CaseTemplateTask`` rows that are snapshot-copied into
+    ``CaseTask`` rows on the target case.
+    """
+
+    __tablename__ = "incident_management_case_template"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(max_length=255, nullable=False, description="Friendly template name")
+    description: Optional[str] = Field(sa_column=Text, nullable=True, description="What this template is for")
+    customer_code: Optional[str] = Field(
+        max_length=50,
+        nullable=True,
+        description="Customer this template applies to. NULL = global / any customer.",
+    )
+    source: Optional[str] = Field(
+        max_length=50,
+        nullable=True,
+        description="Alert source this template applies to (e.g., wazuh, velociraptor). NULL = any source.",
+    )
+    is_default: bool = Field(
+        default=False,
+        nullable=False,
+        description="Default template for its (customer_code, source) scope. Used as the final fallback in selection.",
+    )
+    created_by: str = Field(max_length=100, nullable=False, description="User who created this template")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    tasks: List["CaseTemplateTask"] = Relationship(back_populates="template")
+
+
+class CaseTemplateTask(SQLModel, table=True):
+    """A predefined task on a CaseTemplate. Definition only — instances live in CaseTask."""
+
+    __tablename__ = "incident_management_case_template_task"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    template_id: int = Field(foreign_key="incident_management_case_template.id", nullable=False)
+    title: str = Field(max_length=500, nullable=False)
+    description: Optional[str] = Field(sa_column=Text, nullable=True)
+    guidelines: Optional[str] = Field(
+        sa_column=Text,
+        nullable=True,
+        description="Best practices / steps the analyst should follow when executing this task",
+    )
+    mandatory: bool = Field(
+        default=False,
+        nullable=False,
+        description="If true, NOT_NECESSARY status is rejected and closing the case with this task incomplete triggers a soft warning.",
+    )
+    order_index: int = Field(default=0, nullable=False, description="Display order; lower = first")
+
+    template: "CaseTemplate" = Relationship(back_populates="tasks")
+
+
+class CaseTask(SQLModel, table=True):
+    """
+    Instance of a task attached to a real Case.
+
+    Rows are snapshots created by copying CaseTemplateTask fields when a
+    template is applied. ``template_task_id`` is an informational soft link
+    only — editing the source template does NOT mutate existing CaseTask rows.
+    Custom tasks added by analysts during investigation have ``template_task_id``
+    set to NULL.
+    """
+
+    __tablename__ = "incident_management_case_task"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    case_id: int = Field(foreign_key="incident_management_case.id", nullable=False)
+    template_task_id: Optional[int] = Field(
+        default=None,
+        foreign_key="incident_management_case_template_task.id",
+        nullable=True,
+        description="Soft link back to the source template task. NULL for custom-added tasks.",
+    )
+
+    # Snapshot of template task definition at the time of application.
+    title: str = Field(max_length=500, nullable=False)
+    description: Optional[str] = Field(sa_column=Text, nullable=True)
+    guidelines: Optional[str] = Field(sa_column=Text, nullable=True)
+    mandatory: bool = Field(default=False, nullable=False)
+    order_index: int = Field(default=0, nullable=False)
+
+    # Lifecycle.
+    status: str = Field(
+        default="TODO",
+        max_length=50,
+        nullable=False,
+        description="One of TODO, DONE, NOT_NECESSARY (NOT_NECESSARY only valid when mandatory=False).",
+    )
+    evidence_comment: Optional[str] = Field(
+        sa_column=Text,
+        nullable=True,
+        description="Free-form notes / evidence (logs, command output) attached when status changes.",
+    )
+    completed_by: Optional[str] = Field(max_length=100, nullable=True)
+    completed_at: Optional[datetime] = Field(default=None, nullable=True)
+
+    created_by: str = Field(max_length=100, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class CaseEvent(SQLModel, table=True):
+    """
+    Append-only audit log of mutations against a Case.
+
+    Every case-level mutation (status change, alert link/unlink, assignment,
+    template application, task add/status change/comment) emits one row.
+    Used to power the case timeline view.
+    """
+
+    __tablename__ = "incident_management_case_event"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    case_id: int = Field(foreign_key="incident_management_case.id", nullable=False, index=True)
+    event_type: str = Field(
+        max_length=64,
+        nullable=False,
+        index=True,
+        description=(
+            "One of: case_created, case_status_changed, case_assigned, case_escalated, "
+            "alert_linked, alert_unlinked, comment_added, template_applied, "
+            "task_added, task_status_changed, task_commented"
+        ),
+    )
+    actor: str = Field(max_length=100, nullable=False, description="user_name that performed the action")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    payload: Optional[Dict] = Field(
+        sa_column=Column(JSON),
+        nullable=True,
+        description="Event-type-specific JSON payload (e.g., from_status/to_status, alert_id, task_id).",
+    )
+
+
 class TagAccessSettings(SQLModel, table=True):
     """Global settings for tag-based access control."""
 

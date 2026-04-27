@@ -35,6 +35,8 @@ from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
+from app.incidents.schema.case_templates import CaseTaskCreate
+from app.incidents.schema.case_templates import CaseTaskUpdate
 from app.incidents.schema.db_operations import AITriggerResponse
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
@@ -660,7 +662,21 @@ async def create_case_comment_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
 
-    return CaseCommentResponse(comment=await create_case_comment(comment, db), success=True, message="Case comment created successfully")
+    created = await create_case_comment(comment, db)
+
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_comment
+
+    await emit_case_event(
+        session=db,
+        case_id=comment.case_id,
+        event_type=CaseEventType.COMMENT_ADDED,
+        actor=current_user.username,
+        payload=payload_comment(comment_id=created.id, snippet=created.comment),
+        commit=True,
+    )
+
+    return CaseCommentResponse(comment=created, success=True, message="Case comment created successfully")
 
 
 @incidents_db_operations_router.put(
@@ -929,8 +945,31 @@ async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession 
     response_model=CaseResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def create_case_endpoint(case: CaseCreate, db: AsyncSession = Depends(get_db)):
-    return CaseResponse(case=await create_case(case, db), success=True, message="Case created successfully")
+async def create_case_endpoint(
+    case: CaseCreate,
+    template_id: Optional[int] = Query(
+        None,
+        description="Optional CaseTemplate id to apply on creation. Skips auto-selection (manual path has no alert source).",
+    ),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    created = await create_case(case, db, actor=current_user.username, template_id=template_id)
+
+    # Phase 4 audit emit
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event
+
+    await emit_case_event(
+        session=db,
+        case_id=created.id,
+        event_type=CaseEventType.CASE_CREATED,
+        actor=current_user.username,
+        payload={"source": "manual", "template_id": template_id},
+        commit=True,
+    )
+
+    return CaseResponse(case=created, success=True, message="Case created successfully")
 
 
 @incidents_db_operations_router.post(
@@ -938,9 +977,27 @@ async def create_case_endpoint(case: CaseCreate, db: AsyncSession = Depends(get_
     response_model=CaseAlertLinkResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, db: AsyncSession = Depends(get_db)):
+async def create_case_alert_link_endpoint(
+    case_alert_link: CaseAlertLinkCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    link = await create_case_alert_link(case_alert_link, db)
+
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_alert_link
+
+    await emit_case_event(
+        session=db,
+        case_id=case_alert_link.case_id,
+        event_type=CaseEventType.ALERT_LINKED,
+        actor=current_user.username,
+        payload=payload_alert_link(alert_id=case_alert_link.alert_id),
+        commit=True,
+    )
+
     return CaseAlertLinkResponse(
-        case_alert_link=await create_case_alert_link(case_alert_link, db),
+        case_alert_link=link,
         success=True,
         message="Case alert link created successfully",
     )
@@ -951,9 +1008,29 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
     response_model=CaseAlertLinksResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreate, db: AsyncSession = Depends(get_db)):
+async def create_case_alert_links_endpoint(
+    case_alert_links: CaseAlertLinksCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    links = await create_case_alert_links_bulk(case_alert_links, db)
+
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_alert_links_bulk
+
+    # One aggregated event for the bulk operation rather than N individual
+    # ones — keeps the timeline readable when 50 alerts are bulk-attached.
+    await emit_case_event(
+        session=db,
+        case_id=case_alert_links.case_id,
+        event_type=CaseEventType.ALERT_LINKED,
+        actor=current_user.username,
+        payload=payload_alert_links_bulk(alert_ids=case_alert_links.alert_ids),
+        commit=True,
+    )
+
     return CaseAlertLinksResponse(
-        case_alert_links=await create_case_alert_links_bulk(case_alert_links, db),
+        case_alert_links=links,
         success=True,
         message="Case alert links created successfully",
     )
@@ -964,8 +1041,26 @@ async def create_case_alert_links_endpoint(case_alert_links: CaseAlertLinksCreat
     response_model=CaseAlertUnLinkResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def case_alert_unlink_endpoint(case_alert_link: CaseAlertUnLink, db: AsyncSession = Depends(get_db)):
-    return await case_alert_unlink(case_alert_link, db)
+async def case_alert_unlink_endpoint(
+    case_alert_link: CaseAlertUnLink,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    response = await case_alert_unlink(case_alert_link, db)
+
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_alert_link
+
+    await emit_case_event(
+        session=db,
+        case_id=case_alert_link.case_id,
+        event_type=CaseEventType.ALERT_UNLINKED,
+        actor=current_user.username,
+        payload=payload_alert_link(alert_id=case_alert_link.alert_id),
+        commit=True,
+    )
+
+    return response
 
 
 @incidents_db_operations_router.post(
@@ -973,12 +1068,59 @@ async def case_alert_unlink_endpoint(case_alert_link: CaseAlertUnLink, db: Async
     response_model=CaseAlertLinkResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: AsyncSession = Depends(get_db)):
-    case = await create_case_from_alert(alert_id.alert_id, db)
+async def create_case_from_alert_endpoint(
+    alert_id: CaseCreateFromAlert,
+    template_id: Optional[int] = Query(
+        None,
+        description=(
+            "Optional CaseTemplate id to apply on creation. When omitted, the best matching "
+            "template is auto-selected from the alert's (customer_code, source). First-alert-wins "
+            "semantics: subsequent alerts linked to the case do not retrigger template selection."
+        ),
+    ),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    case = await create_case_from_alert(
+        alert_id.alert_id,
+        db,
+        actor=current_user.username,
+        template_id=template_id,
+    )
     if case is None:
         return CaseResponse(case=None, success=False, message="Case not created")
+
+    link = await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db)
+
+    # Phase 4 audit emits: case_created + alert_linked (the originating
+    # alert is the first link). template_applied / task_added events are
+    # already emitted by the apply_template_to_case service inside
+    # create_case_from_alert, so we don't re-emit them here.
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import (
+        emit_case_event,
+        payload_alert_link,
+    )
+
+    await emit_case_event(
+        session=db,
+        case_id=case.id,
+        event_type=CaseEventType.CASE_CREATED,
+        actor=current_user.username,
+        payload={"source": "from_alert", "alert_id": alert_id.alert_id, "template_id": template_id},
+        commit=False,
+    )
+    await emit_case_event(
+        session=db,
+        case_id=case.id,
+        event_type=CaseEventType.ALERT_LINKED,
+        actor=current_user.username,
+        payload=payload_alert_link(alert_id=alert_id.alert_id),
+        commit=True,
+    )
+
     return CaseAlertLinkResponse(
-        case_alert_link=await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db),
+        case_alert_link=link,
         success=True,
         message="Case created from alert successfully",
     )
@@ -1650,15 +1792,42 @@ async def list_cases_endpoint(
 
 @incidents_db_operations_router.put(
     "/case/status",
-    response_model=CaseOutResponse,
+    # Response can be either CaseOutResponse (normal close) or
+    # CaseCloseWarningResponse (soft warning when mandatory tasks are
+    # incomplete). FastAPI doesn't model Union responses cleanly under
+    # Pydantic v1, so we drop response_model and document the contract
+    # in the docstring + responses dict.
+    response_model=None,
+    responses={
+        200: {
+            "description": (
+                "Either the updated case or a soft-warning payload when closing a case with "
+                "incomplete mandatory tasks. See CaseCloseWarningResponse — re-submit with "
+                "?force=true to confirm."
+            ),
+        },
+    },
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def update_case_status_endpoint(
     case_status: UpdateCaseStatus,
+    force: bool = Query(
+        False,
+        description=(
+            "When closing a case, set force=true to bypass the soft warning that fires when "
+            "mandatory tasks are not all marked DONE. Has no effect for non-CLOSED transitions."
+        ),
+    ),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update case status with customer access validation and auto-update linked alerts"""
+    """Update case status with customer access validation and auto-update linked alerts.
+
+    Phase 3 (issue #792) adds a soft-warning gate: closing a case with
+    incomplete mandatory tasks returns a CaseCloseWarningResponse and
+    does NOT actually close the case. The caller re-submits with
+    force=true to override.
+    """
     logger.info(f"Updating case {case_status.case_id} status to {case_status.status} for user: {current_user.username}")
 
     # Get the case first to check customer access
@@ -1675,6 +1844,23 @@ async def update_case_status_endpoint(
     new_status_value = case_status.status.value if hasattr(case_status.status, "value") else str(case_status.status)
 
     logger.info(f"Case status transition: {old_status} -> {new_status_value}")
+
+    # Phase 3 (issue #792) soft-warning gate: if the case is being closed
+    # and any mandatory CaseTask is not DONE, return a warning payload
+    # without performing the close. force=true overrides.
+    if new_status_value == "CLOSED" and old_status != "CLOSED" and not force:
+        from app.incidents.services.case_tasks import (
+            build_close_warning_response,
+            get_incomplete_mandatory_tasks,
+        )
+
+        incomplete = await get_incomplete_mandatory_tasks(case_status.case_id, db)
+        if incomplete:
+            logger.info(
+                f"Case {case_status.case_id} close blocked by soft warning: "
+                f"{len(incomplete)} mandatory task(s) not DONE",
+            )
+            return build_close_warning_response(incomplete)
 
     try:
         # Get all alert IDs linked to this case BEFORE updating
@@ -1736,6 +1922,25 @@ async def update_case_status_endpoint(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update case status: {str(e)}")
 
+    # Phase 4 audit emit. Records the from/to status, plus a forced flag
+    # when the soft-warning was bypassed so it shows up in the timeline.
+    from app.incidents.schema.case_templates import CaseEventType as _ET
+    from app.incidents.services.case_events import emit_case_event as _emit
+    from app.incidents.services.case_events import payload_status_change as _psc
+
+    await _emit(
+        session=db,
+        case_id=case_status.case_id,
+        event_type=_ET.CASE_STATUS_CHANGED,
+        actor=current_user.username,
+        payload=_psc(
+            from_status=old_status,
+            to_status=new_status_value,
+            forced=(force and new_status_value == "CLOSED"),
+        ),
+        commit=True,
+    )
+
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(case_status.case_id, db)
 
@@ -1771,6 +1976,19 @@ async def update_case_escalated_endpoint(
     # Update the case escalated status
     await update_case_escalated(escalate_case.case_id, escalate_case.escalated, db)
 
+    # Phase 4 audit emit
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_escalation
+
+    await emit_case_event(
+        session=db,
+        case_id=escalate_case.case_id,
+        event_type=CaseEventType.CASE_ESCALATED,
+        actor=current_user.username,
+        payload=payload_escalation(escalated=escalate_case.escalated),
+        commit=True,
+    )
+
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(escalate_case.case_id, db)
     return CaseOutResponse(cases=[updated_case], success=True, message="Case escalated status updated successfully")
@@ -1801,8 +2019,24 @@ async def update_case_assigned_to_endpoint(
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
 
+    # Capture previous assignee BEFORE the mutation so the audit payload is accurate.
+    previous_assignee = case.assigned_to
+
     # Update the case assigned_to
     await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)
+
+    # Phase 4 audit emit
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event, payload_assignment
+
+    await emit_case_event(
+        session=db,
+        case_id=assigned_to.case_id,
+        event_type=CaseEventType.CASE_ASSIGNED,
+        actor=current_user.username,
+        payload=payload_assignment(from_assignee=previous_assignee, to_assignee=assigned_to.assigned_to),
+        commit=True,
+    )
 
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(assigned_to.case_id, db)
@@ -2305,3 +2539,172 @@ async def upload_case_report_template_endpoint(
 async def delete_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)):
     await delete_report_template(file_name, db)
     return {"message": "File deleted successfully", "success": True}
+
+
+# ============================================================================
+# Case Tasks (Phase 3, issue #792)
+#
+# Customer portal users have read-only visibility on tasks (GET allowed),
+# but creation, status updates, and deletion are restricted to admin/analyst.
+# Customer access is enforced per-case using customer_access_handler.
+# ============================================================================
+
+# Authorization handles imported lazily here to avoid a circular import: the
+# case_tasks service imports from this services/db_operations module too.
+_admin_analyst_dep = Security(AuthHandler().require_any_scope("admin", "analyst"))
+_all_scopes_dep = Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))
+
+
+async def _ensure_case_access(case_id: int, current_user: User, db: AsyncSession) -> None:
+    """Shared helper: 404 if case missing, 403 if user lacks customer access."""
+    case = await get_case_by_id(case_id, db)
+    if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to case {case_id} - insufficient customer permissions",
+        )
+
+
+@incidents_db_operations_router.get(
+    "/case/{case_id}/tasks",
+    description="List CaseTask rows for a case. Visible to admin, analyst, and customer_user (read-only).",
+    dependencies=[_all_scopes_dep],
+)
+async def list_case_tasks_endpoint(
+    case_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.services.case_tasks import list_case_tasks
+
+    await _ensure_case_access(case_id, current_user, db)
+    return await list_case_tasks(case_id, db)
+
+
+@incidents_db_operations_router.post(
+    "/case/{case_id}/tasks",
+    description="Add a custom task to a case during investigation. Admin/analyst only.",
+    dependencies=[_admin_analyst_dep],
+)
+async def add_case_task_endpoint(
+    case_id: int,
+    request: CaseTaskCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.services.case_tasks import add_case_task
+
+    await _ensure_case_access(case_id, current_user, db)
+    return await add_case_task(case_id, request, current_user.username, db)
+
+
+@incidents_db_operations_router.patch(
+    "/case/tasks/{task_id}",
+    description=(
+        "Update a CaseTask: change status (TODO/DONE/NOT_NECESSARY) and/or attach an evidence "
+        "comment. NOT_NECESSARY is rejected for mandatory tasks. Admin/analyst only."
+    ),
+    dependencies=[_admin_analyst_dep],
+)
+async def update_case_task_endpoint(
+    task_id: int,
+    request: CaseTaskUpdate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.models import CaseTask
+    from app.incidents.services.case_tasks import update_case_task
+
+    # Resolve task -> case -> customer access. We do this here rather than
+    # in the service so service layer stays auth-agnostic.
+    result = await db.execute(select(CaseTask).where(CaseTask.id == task_id))
+    task_row = result.scalar_one_or_none()
+    if task_row is None:
+        raise HTTPException(status_code=404, detail=f"Case task {task_id} not found")
+    await _ensure_case_access(task_row.case_id, current_user, db)
+
+    return await update_case_task(task_id, request, current_user.username, db)
+
+
+@incidents_db_operations_router.delete(
+    "/case/tasks/{task_id}",
+    description="Delete a CaseTask (template-derived or custom). Admin/analyst only.",
+    dependencies=[_admin_analyst_dep],
+)
+async def delete_case_task_endpoint(
+    task_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.models import CaseTask
+    from app.incidents.services.case_tasks import delete_case_task
+
+    result = await db.execute(select(CaseTask).where(CaseTask.id == task_id))
+    task_row = result.scalar_one_or_none()
+    if task_row is None:
+        raise HTTPException(status_code=404, detail=f"Case task {task_id} not found")
+    await _ensure_case_access(task_row.case_id, current_user, db)
+
+    return await delete_case_task(task_id, db)
+
+
+@incidents_db_operations_router.post(
+    "/case/{case_id}/apply-template/{template_id}",
+    description=(
+        "Manually apply a CaseTemplate to an existing case (snapshot-copies its tasks). "
+        "Adds to existing tasks rather than replacing them — the analyst can apply multiple "
+        "templates over the life of an investigation. Admin/analyst only."
+    ),
+    dependencies=[_admin_analyst_dep],
+)
+async def apply_template_to_case_endpoint(
+    case_id: int,
+    template_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.services.case_tasks import apply_template_to_case
+
+    await _ensure_case_access(case_id, current_user, db)
+    new_tasks = await apply_template_to_case(
+        case_id=case_id,
+        template_id=template_id,
+        actor=current_user.username,
+        session=db,
+        commit=True,
+    )
+    return {
+        "success": True,
+        "message": f"Applied template id={template_id} to case id={case_id}: {len(new_tasks)} task(s) added",
+        "tasks_added": len(new_tasks),
+    }
+
+
+# ============================================================================
+# Case Timeline (Phase 4, issue #792)
+#
+# Append-only audit log of every meaningful case mutation. Visible to admin,
+# analyst, and customer_user (read-only) — same scope as the case itself.
+# ============================================================================
+
+
+@incidents_db_operations_router.get(
+    "/case/{case_id}/timeline",
+    description=(
+        "Return the case timeline (append-only audit log of mutations). "
+        "Most-recent-first, paginated via limit/offset. Visible to admin, "
+        "analyst, and customer_user (read-only)."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_case_timeline_endpoint(
+    case_id: int,
+    limit: int = Query(500, ge=1, le=2000, description="Max events to return"),
+    offset: int = Query(0, ge=0, description="Skip this many events from the top"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.incidents.services.case_events import list_case_events
+
+    await _ensure_case_access(case_id, current_user, db)
+    return await list_case_events(case_id, db, limit=limit, offset=offset)

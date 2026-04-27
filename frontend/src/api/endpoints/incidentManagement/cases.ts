@@ -68,15 +68,20 @@ export default {
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},
-	createCase(payload: CasePayload) {
-		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload)
+	createCase(payload: CasePayload, params: Record<string, number | string | boolean> = {}) {
+		return HttpClient.post<FlaskBaseResponse & { case: Case }>(
+			`/incidents/db_operations/case/create`,
+			payload,
+			{ params }
+		)
 	},
-	createCaseFromAlert(alertId: number) {
+	createCaseFromAlert(alertId: number, params: Record<string, number | string | boolean> = {}) {
 		return HttpClient.post<FlaskBaseResponse & { case_alert_link: { case_id: number; alert_id: number } }>(
 			`/incidents/db_operations/case/from-alert`,
 			{
 				alert_id: alertId
-			}
+			},
+			{ params }
 		)
 	},
 	/** @deprecated in favor of multiLinkCase */
@@ -104,11 +109,15 @@ export default {
 			case_id: caseId
 		})
 	},
-	updateCaseStatus(caseId: number, status: CaseStatus) {
-		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/status`, {
-			case_id: caseId,
-			status
-		})
+	updateCaseStatus(caseId: number, status: CaseStatus, force = false) {
+		return HttpClient.put<FlaskBaseResponse>(
+			`/incidents/db_operations/case/status`,
+			{
+				case_id: caseId,
+				status
+			},
+			{ params: force ? { force: true } : {} }
+		)
 	},
 	updateCaseAssignedUser(caseId: number, user: string) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/assigned-to`, {
