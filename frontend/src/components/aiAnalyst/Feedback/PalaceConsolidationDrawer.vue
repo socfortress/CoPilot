@@ -18,7 +18,11 @@
 				<div v-else-if="data" class="flex flex-col gap-4">
 					<!-- Summary tiles -->
 					<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-						<MetricTile label="Active" :value="data.total_lessons.toString()" :sub="`${data.total_pending} pending`" />
+						<MetricTile
+							label="Active"
+							:value="data.total_lessons.toString()"
+							:sub="`${data.total_pending} pending`"
+						/>
 						<MetricTile
 							label="Durable"
 							:value="data.total_durable.toString()"
