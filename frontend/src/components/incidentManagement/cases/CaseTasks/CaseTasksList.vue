@@ -4,7 +4,15 @@
 
 		<n-spin :show="loading">
 			<div v-if="tasks.length" class="flex flex-col gap-3">
-				<CaseTaskItem v-for="task in tasks" :key="task.id" :task :case-id :can-edit @deleted="fetchTasks" />
+				<CaseTaskItem
+					v-for="task in tasks"
+					:key="task.id"
+					:task
+					:case-id
+					:can-edit
+					@deleted="fetchTasks"
+					@updated="handleTaskUpdated"
+				/>
 			</div>
 			<n-empty v-else-if="!loading" description="No tasks on this case" class="h-32 justify-center" />
 		</n-spin>
@@ -46,6 +54,10 @@ function fetchTasks() {
 		.finally(() => {
 			loading.value = false
 		})
+}
+
+function handleTaskUpdated(task: CaseTask) {
+	tasks.value = tasks.value.map(t => (t.id === task.id ? task : t))
 }
 
 onBeforeMount(fetchTasks)

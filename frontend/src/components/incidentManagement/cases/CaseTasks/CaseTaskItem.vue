@@ -1,91 +1,107 @@
 <template>
-	<div
-		class="task-card border-border rounded-md border p-4"
-		:class="{
-			'task-card--done': taskData?.status === 'DONE',
-			'task-card--skipped': taskData?.status === 'NOT_NECESSARY'
-		}"
+	<CardEntity
+		:status="taskData?.status === 'DONE' ? 'success' : taskData?.status === 'NOT_NECESSARY' ? 'warning' : undefined"
+		embedded
 	>
-		<div v-if="taskData" class="flex flex-wrap items-start justify-between gap-3">
-			<div class="flex flex-1 flex-col gap-1">
+		<template #headerMain>
+			<span class="text-default font-sans text-base">
+				{{ taskData?.title }}
+			</span>
+		</template>
+		<template #headerExtra>
+			<n-tag v-if="taskData?.mandatory" :bordered="false" type="error" size="small">mandatory</n-tag>
+			<n-tag v-if="taskData?.template_task_id == null" :bordered="false" type="default" size="small">
+				custom
+			</n-tag>
+		</template>
+		<template #default>
+			<div class="flex flex-col gap-3">
+				<p v-if="taskData?.description" class="text-secondary text-sm">{{ taskData.description }}</p>
+
+				<details v-if="taskData?.guidelines" class="text-sm">
+					<summary class="cursor-pointer font-medium">Guidelines</summary>
+					<p class="text-secondary mt-1 whitespace-pre-line">{{ taskData.guidelines }}</p>
+				</details>
+			</div>
+		</template>
+		<template v-if="taskData" #mainExtra>
+			<div class="flex flex-col gap-4 pt-3">
 				<div class="flex items-center gap-2">
-					<span class="font-medium">{{ taskData.title }}</span>
-					<n-tag v-if="taskData.mandatory" :bordered="false" type="error" size="tiny">mandatory</n-tag>
-					<n-tag v-if="taskData.template_task_id == null" :bordered="false" type="default" size="tiny">
-						custom
+					<n-select
+						v-if="canEdit"
+						v-model:value="taskData.status"
+						:options="statusOptions"
+						size="small"
+						class="w-28!"
+						:consistent-menu-width="false"
+						:loading="savingStatus"
+					/>
+					<n-tag v-else :bordered="false" :type="statusTagType(taskData.status)" size="small">
+						{{ statusLabel(taskData.status) }}
 					</n-tag>
 				</div>
-				<p v-if="taskData.description" class="text-secondary text-sm">{{ taskData.description }}</p>
+
+				<!-- Evidence comment -->
+				<div class="flex flex-col gap-1">
+					<div class="text-secondary text-xs uppercase">Evidence / notes</div>
+					<div v-if="canEdit" class="flex flex-col gap-1">
+						<n-input
+							v-model:value="taskData.evidence_comment"
+							type="textarea"
+							clearable
+							placeholder="Logs, command output, links — what proves this was done?"
+							:autosize="{ minRows: 2, maxRows: 8 }"
+						/>
+						<div
+							class="text-secondary text-right text-xs opacity-0 transition-opacity duration-300"
+							:class="{ 'animate-pulse opacity-100': savingEvidenceComment }"
+						>
+							saving...
+						</div>
+					</div>
+					<p v-else-if="taskData.evidence_comment" class="text-sm whitespace-pre-line">
+						{{ taskData.evidence_comment }}
+					</p>
+					<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
+				</div>
 			</div>
+		</template>
+		<template v-if="taskData" #footer>
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<div class="text-secondary flex flex-wrap gap-x-4 gap-y-1 text-sm">
+					<span v-if="taskData.completed_by">
+						{{ task.status === "DONE" ? "Completed" : "Marked" }} by
+						<strong>{{ taskData.completed_by }}</strong>
+						<template v-if="taskData.completed_at">
+							· {{ formatDate(taskData.completed_at, dFormats.datetime) }}
+						</template>
+					</span>
+					<span v-else>
+						Created by
+						<strong>{{ task.created_by }}</strong>
+					</span>
+				</div>
 
-			<!-- Status pill / dropdown -->
-			<div class="flex shrink-0 items-center gap-2">
-				<n-select
-					v-if="canEdit"
-					v-model:value="taskData.status"
-					:options="statusOptions"
-					size="small"
-					class="w-48"
-					:loading="savingStatus"
-				/>
-				<n-tag v-else :bordered="false" :type="statusTagType(taskData.status)" size="small">
-					{{ statusLabel(taskData.status) }}
-				</n-tag>
-				<n-button
-					v-if="canEdit && taskData.template_task_id == null"
-					size="tiny"
-					quaternary
-					type="error"
-					@click="confirmDelete(taskData)"
-				>
-					<template #icon>
-						<Icon :name="DeleteIcon" :size="14" />
-					</template>
-				</n-button>
+				<div>
+					<div class="flex items-center justify-end gap-2">
+						<n-button
+							v-if="canEdit && taskData.template_task_id == null"
+							size="tiny"
+							quaternary
+							type="error"
+							:loading="deleting"
+							@click="confirmDelete(taskData)"
+						>
+							<template #icon>
+								<Icon :name="DeleteIcon" />
+							</template>
+							Delete
+						</n-button>
+					</div>
+				</div>
 			</div>
-		</div>
-
-		<!-- Guidelines (collapsible) -->
-		<div v-if="taskData?.guidelines" class="mt-3">
-			<details class="text-sm">
-				<summary class="cursor-pointer font-medium">Guidelines</summary>
-				<p class="text-secondary mt-1 whitespace-pre-line">{{ taskData.guidelines }}</p>
-			</details>
-		</div>
-
-		<!-- Evidence comment -->
-		<div v-if="taskData" class="mt-3">
-			<div class="text-secondary mb-1 text-xs uppercase">Evidence / notes</div>
-			<div v-if="canEdit">
-				<n-input
-					v-model:value="taskData.evidence_comment"
-					type="textarea"
-					placeholder="Logs, command output, links — what proves this was done?"
-					:autosize="{ minRows: 2, maxRows: 8 }"
-				/>
-				<div v-if="savingEvidenceComment" class="text-secondary animate-pulse text-xs">saving...</div>
-			</div>
-			<p v-else-if="taskData.evidence_comment" class="text-sm whitespace-pre-line">
-				{{ taskData.evidence_comment }}
-			</p>
-			<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
-		</div>
-
-		<!-- Audit footer -->
-		<div v-if="taskData" class="text-tertiary mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-			<span v-if="taskData.completed_by">
-				{{ task.status === "DONE" ? "Completed" : "Marked" }} by
-				<strong>{{ taskData.completed_by }}</strong>
-				<template v-if="taskData.completed_at">
-					· {{ formatDate(taskData.completed_at, dFormats.datetime) }}
-				</template>
-			</span>
-			<span v-else>
-				Created by
-				<strong>{{ task.created_by }}</strong>
-			</span>
-		</div>
-	</div>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
@@ -96,6 +112,7 @@ import axios from "axios"
 import { NButton, NInput, NSelect, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
@@ -121,6 +138,7 @@ const taskData = ref<CaseTask | null>(props.task)
 
 const savingStatus = ref(false)
 const savingEvidenceComment = ref(false)
+const deleting = ref(false)
 
 const statusOptions = computed(() => {
 	const opts: { label: string; value: CaseTaskStatus; disabled?: boolean }[] = [
@@ -168,7 +186,7 @@ const onStatusChange = useDebounceFn((newStatus: CaseTaskStatus) => {
 				message.error(getApiErrorMessage(err as ApiError) || "Failed to update task status")
 			}
 		})
-}, 500)
+}, 250)
 
 const onCommentChange = useDebounceFn((value: string | null) => {
 	if (!taskData.value) return
@@ -207,6 +225,8 @@ function confirmDelete(task: CaseTask) {
 		positiveText: "Delete",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
+			deleting.value = true
+
 			Api.incidentManagement.caseTemplates
 				.deleteCaseTask(task.id)
 				.then(res => {
@@ -218,6 +238,9 @@ function confirmDelete(task: CaseTask) {
 				})
 				.catch(err => {
 					message.error(getApiErrorMessage(err as ApiError) || "Failed to delete task")
+				})
+				.finally(() => {
+					deleting.value = false
 				})
 		}
 	})
