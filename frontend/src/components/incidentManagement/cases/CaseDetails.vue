@@ -82,7 +82,7 @@ const emit = defineEmits<{
 const CaseOverview = defineAsyncComponent(() => import("./CaseOverview.vue"))
 const CaseDataStore = defineAsyncComponent(() => import("./CaseDataStore.vue"))
 const CaseCommentsList = defineAsyncComponent(() => import("./CaseCommentsList.vue"))
-const CaseTasksList = defineAsyncComponent(() => import("./CaseTasksList.vue"))
+const CaseTasksList = defineAsyncComponent(() => import("./CaseTasks/CaseTasksList.vue"))
 const CaseTimelineFeed = defineAsyncComponent(() => import("./CaseTimelineFeed.vue"))
 const AlertItem = defineAsyncComponent(() => import("../alerts/AlertItem.vue"))
 
