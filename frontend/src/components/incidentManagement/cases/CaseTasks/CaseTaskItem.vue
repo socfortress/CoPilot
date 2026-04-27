@@ -4,14 +4,32 @@
 		embedded
 	>
 		<template #headerMain>
-			<span class="text-default font-sans text-base">
-				{{ taskData?.title }}
-			</span>
+			<div class="flex flex-wrap items-center gap-3">
+				<span class="text-default font-sans text-base">
+					{{ taskData?.title }}
+				</span>
+
+				<n-tag v-if="taskData?.mandatory" :bordered="false" type="error" size="small">mandatory</n-tag>
+				<n-tag v-if="taskData?.template_task_id == null" :bordered="false" type="default" size="small">
+					custom
+				</n-tag>
+			</div>
 		</template>
-		<template #headerExtra>
-			<n-tag v-if="taskData?.mandatory" :bordered="false" type="error" size="small">mandatory</n-tag>
-			<n-tag v-if="taskData?.template_task_id == null" :bordered="false" type="default" size="small">
-				custom
+		<template v-if="taskData" #headerExtra>
+			<n-select
+				v-if="canEdit"
+				v-model:value="taskData.status"
+				:options="statusOptions"
+				:status="
+					taskData.status === 'DONE' ? 'success' : taskData.status === 'NOT_NECESSARY' ? 'warning' : undefined
+				"
+				size="small"
+				class="w-38!"
+				:consistent-menu-width="false"
+				:loading="savingStatus"
+			/>
+			<n-tag v-else :bordered="false" :type="statusTagType(taskData.status)" size="small">
+				{{ statusLabel(taskData.status) }}
 			</n-tag>
 		</template>
 		<template #default>
@@ -25,45 +43,30 @@
 			</div>
 		</template>
 		<template v-if="taskData" #mainExtra>
-			<div class="flex flex-col gap-4 pt-3">
-				<div class="flex items-center gap-2">
-					<n-select
-						v-if="canEdit"
-						v-model:value="taskData.status"
-						:options="statusOptions"
-						size="small"
-						class="w-28!"
-						:consistent-menu-width="false"
-						:loading="savingStatus"
-					/>
-					<n-tag v-else :bordered="false" :type="statusTagType(taskData.status)" size="small">
-						{{ statusLabel(taskData.status) }}
-					</n-tag>
-				</div>
-
-				<!-- Evidence comment -->
-				<div class="flex flex-col gap-1">
+			<div class="flex flex-col gap-1">
+				<div class="flex items-center justify-between">
 					<div class="text-secondary text-xs uppercase">Evidence / notes</div>
-					<div v-if="canEdit" class="flex flex-col gap-1">
-						<n-input
-							v-model:value="taskData.evidence_comment"
-							type="textarea"
-							clearable
-							placeholder="Logs, command output, links — what proves this was done?"
-							:autosize="{ minRows: 2, maxRows: 8 }"
-						/>
-						<div
-							class="text-secondary text-right text-xs opacity-0 transition-opacity duration-300"
-							:class="{ 'animate-pulse opacity-100': savingEvidenceComment }"
-						>
-							saving...
-						</div>
+
+					<div
+						class="text-secondary text-right text-xs opacity-0 transition-opacity duration-300"
+						:class="{ 'animate-pulse opacity-100': savingEvidenceComment }"
+					>
+						saving...
 					</div>
-					<p v-else-if="taskData.evidence_comment" class="text-sm whitespace-pre-line">
-						{{ taskData.evidence_comment }}
-					</p>
-					<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
 				</div>
+				<div v-if="canEdit" class="flex flex-col gap-1">
+					<n-input
+						v-model:value="taskData.evidence_comment"
+						type="textarea"
+						clearable
+						placeholder="Logs, command output, links — what proves this was done?"
+						:autosize="{ minRows: 2, maxRows: 8 }"
+					/>
+				</div>
+				<p v-else-if="taskData.evidence_comment" class="text-sm whitespace-pre-line">
+					{{ taskData.evidence_comment }}
+				</p>
+				<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
 			</div>
 		</template>
 		<template v-if="taskData" #footer>
