@@ -1,11 +1,15 @@
 <template>
-	<div class="case-timeline flex flex-col gap-3">
-		<div class="flex items-center justify-between">
-			<n-tag :bordered="false" type="info" size="small">
-				{{ events.length }} event{{ events.length === 1 ? "" : "s" }}
-			</n-tag>
-			<n-button size="tiny" quaternary @click="fetchTimeline">
-				<template #icon><Icon name="carbon:renew" :size="14" /></template>
+	<div class="case-timeline flex flex-col gap-6">
+		<div class="flex items-center justify-between gap-3">
+			<Badge type="splitted">
+				<template #label>Events</template>
+				<template #value>
+					{{ events.length }}
+				</template>
+			</Badge>
+
+			<n-button size="small" secondary @click="fetchTimeline">
+				<template #icon><Icon name="carbon:renew" /></template>
 				Refresh
 			</n-button>
 		</div>
@@ -16,7 +20,7 @@
 					v-for="event in events"
 					:key="event.id"
 					:type="timelineType(event)"
-					:time="formatDateTime(event.timestamp)"
+					:time="formatDate(event.timestamp, dFormats.datetimesec).toString()"
 				>
 					<template #header>
 						<div class="flex flex-wrap items-center gap-2">
@@ -38,14 +42,18 @@
 <script setup lang="ts">
 import type { CaseEvent } from "@/types/incidentManagement/caseTemplates.d"
 import { NButton, NEmpty, NSpin, NTag, NTimeline, NTimelineItem, useMessage } from "naive-ui"
-import { h, onMounted, ref } from "vue"
+import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	caseId: number
 }>()
+
+const dFormats = useSettingsStore().dateFormat
 
 const message = useMessage()
 const events = ref<CaseEvent[]>([])
@@ -68,18 +76,6 @@ function fetchTimeline() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-defineExpose({ refresh: fetchTimeline })
-
-onMounted(fetchTimeline)
-
-function formatDateTime(iso: string): string {
-	try {
-		return formatDate(iso, "MMM D, YYYY HH:mm:ss") as string
-	} catch {
-		return iso
-	}
 }
 
 // Per-event-type rendering. Falls back gracefully on unknown event types
@@ -194,4 +190,8 @@ function renderDetail(event: CaseEvent) {
 	}
 	return () => h("span")
 }
+
+defineExpose({ refresh: fetchTimeline })
+
+onBeforeMount(fetchTimeline)
 </script>
