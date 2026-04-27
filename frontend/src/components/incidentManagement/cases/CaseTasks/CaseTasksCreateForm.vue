@@ -3,7 +3,7 @@
 		<n-form-item label="Title" path="title">
 			<n-input v-model:value="addForm.title" placeholder="What needs to be done?" />
 		</n-form-item>
-		<n-form-item path="mandatory">
+		<n-form-item path="mandatory" :show-label="false">
 			<n-checkbox v-model:checked="addForm.mandatory">Mandatory (blocks close-with-warning)</n-checkbox>
 		</n-form-item>
 		<n-form-item label="Description (optional)" path="description">
@@ -60,6 +60,10 @@ const isValid = computed(() => {
 	return addForm.value.title.trim() !== ""
 })
 
+function resetForm() {
+	addForm.value = { title: "", description: "", guidelines: "", mandatory: false }
+}
+
 async function submitAddTask() {
 	try {
 		await addFormRef.value?.validate()
@@ -76,6 +80,7 @@ async function submitAddTask() {
 			mandatory: addForm.value.mandatory
 		})
 		if (res.data.success && res.data.task) {
+			resetForm()
 			emit("success")
 		} else {
 			message.warning(res.data.message)
