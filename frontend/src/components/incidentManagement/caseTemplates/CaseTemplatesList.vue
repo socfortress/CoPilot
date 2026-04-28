@@ -1,7 +1,6 @@
 <template>
 	<div class="case-templates-list flex flex-col gap-4">
 		<!-- Header / actions -->
-
 		<div class="flex flex-col gap-2">
 			<div class="flex items-center gap-4">
 				<h2>Case Templates</h2>
@@ -54,9 +53,7 @@
 			</n-checkbox>
 		</div>
 
-		<n-spin :show="loading">
-			<n-data-table :columns :data="filteredRows" size="small" />
-		</n-spin>
+		<n-data-table :columns :data="filteredRows" :loading size="small" />
 
 		<!-- Editor modal -->
 		<n-modal
@@ -82,7 +79,7 @@ import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { useDebounceFn } from "@vueuse/core"
-import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NSpin, NTag, useDialog, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
