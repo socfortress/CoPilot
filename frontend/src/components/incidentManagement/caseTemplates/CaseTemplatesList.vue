@@ -83,7 +83,7 @@ import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { useDebounceFn } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NSpin, NTag, useDialog, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -132,33 +132,43 @@ const columns: DataTableColumns<CaseTemplate> = [
 	{
 		title: "Name",
 		key: "name",
-		render(row) {
-			return h("div", { class: "flex flex-col gap-1" }, [
-				h("div", { class: "flex items-center gap-2" }, [
-					h("span", { class: "font-medium" }, row.name),
-					row.is_default
-						? h(NTag, { size: "tiny", type: "info", bordered: false } as any, { default: () => "default" })
-						: null
-				]),
-				row.description ? h("span", { class: "text-secondary text-xs" }, row.description) : null
-			])
-		}
+		render: row => (
+			<div class="flex flex-col gap-1">
+				<div class="flex items-center gap-2">
+					<span class="font-medium">{row.name}</span>
+					{row.is_default
+						? (
+							<NTag size="tiny" type="info" bordered={false}>
+								default
+							</NTag>
+						)
+						: null}
+				</div>
+				{row.description
+					? (
+						<span class="text-secondary text-xs">
+							{row.description}
+						</span>
+					)
+					: null}
+			</div>
+		)
 	},
 	{
 		title: "Scope",
 		key: "scope",
-		render(row) {
-			return h("div", { class: "flex flex-col gap-1 text-xs" }, [
-				h("span", null, [
-					h("span", { class: "text-tertiary" }, "customer: "),
-					row.customer_code ?? h("em", { class: "text-tertiary" }, "any")
-				]),
-				h("span", null, [
-					h("span", { class: "text-tertiary" }, "source: "),
-					row.source ?? h("em", { class: "text-tertiary" }, "any")
-				])
-			])
-		}
+		render: row => (
+			<div class="flex flex-col gap-1 text-xs">
+				<span>
+					<span class="text-tertiary">customer: </span>
+					{row.customer_code ?? <em class="text-tertiary">any</em>}
+				</span>
+				<span>
+					<span class="text-tertiary">source: </span>
+					{row.source ?? <em class="text-tertiary">any</em>}
+				</span>
+			</div>
+		)
 	},
 	{
 		title: "Tasks",
@@ -167,10 +177,23 @@ const columns: DataTableColumns<CaseTemplate> = [
 		render(row) {
 			const total = row.tasks?.length ?? 0
 			const mandatory = row.tasks?.filter(t => t.mandatory).length ?? 0
-			return h("div", { class: "flex flex-col text-xs" }, [
-				h("span", null, `${total} total`),
-				mandatory > 0 ? h("span", { class: "text-warning" }, `${mandatory} mandatory`) : null
-			])
+
+			return (
+				<div class="flex flex-col text-xs">
+					<span>
+						{total}
+						{" total"}
+					</span>
+					{mandatory > 0
+						? (
+							<span class="text-warning">
+								{mandatory}
+								{" mandatory"}
+							</span>
+						)
+						: null}
+				</div>
+			)
 		}
 	},
 	{
@@ -187,30 +210,22 @@ const columns: DataTableColumns<CaseTemplate> = [
 		title: "Actions",
 		key: "actions",
 		width: 120,
-		render(row) {
-			return h("div", { class: "flex gap-2" }, [
-				h(
-					NButton,
-					{
-						size: "small",
-						secondary: true,
-						onClick: () => openEdit(row)
-					},
-					{ default: () => "Edit" }
-				),
-				h(
-					NButton,
-					{
-						size: "small",
-						secondary: true,
-						type: "error",
-						loading: deletingId.value === row.id,
-						onClick: () => confirmDelete(row)
-					},
-					{ default: () => "Delete" }
-				)
-			])
-		}
+		render: row => (
+			<div class="flex gap-2">
+				<NButton size="small" secondary onClick={() => openEdit(row)}>
+					Edit
+				</NButton>
+				<NButton
+					size="small"
+					secondary
+					type="error"
+					loading={deletingId.value === row.id}
+					onClick={() => confirmDelete(row)}
+				>
+					Delete
+				</NButton>
+			</div>
+		)
 	}
 ]
 
